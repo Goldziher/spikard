@@ -5,6 +5,7 @@ package dev.spikard.kt
 import dev.spikard.Spikard as Bridge
 
 typealias UploadFile = dev.spikard.UploadFile
+typealias ResponseSnapshot = dev.spikard.ResponseSnapshot
 typealias CorsConfig = dev.spikard.CorsConfig
 typealias CompressionConfig = dev.spikard.CompressionConfig
 typealias RateLimitConfig = dev.spikard.RateLimitConfig
@@ -15,6 +16,14 @@ typealias SchemaConfig = dev.spikard.SchemaConfig
 typealias QueryOnlyConfig = dev.spikard.QueryOnlyConfig
 typealias QueryMutationConfig = dev.spikard.QueryMutationConfig
 typealias FullSchemaConfig = dev.spikard.FullSchemaConfig
+typealias AsyncApiConfig = dev.spikard.AsyncApiConfig
+typealias ParsedChannel = dev.spikard.ParsedChannel
+typealias ParsedOperation = dev.spikard.ParsedOperation
+typealias ParsedMessage = dev.spikard.ParsedMessage
+typealias ParseResult = dev.spikard.ParseResult
+typealias ParseRequest = dev.spikard.ParseRequest
+typealias ValidationResponse = dev.spikard.ValidationResponse
+typealias ValidateRequest = dev.spikard.ValidateRequest
 typealias BackgroundTaskConfig = dev.spikard.BackgroundTaskConfig
 typealias BackgroundJobMetadata = dev.spikard.BackgroundJobMetadata
 typealias GrpcConfig = dev.spikard.GrpcConfig
@@ -29,7 +38,11 @@ typealias JwtConfig = dev.spikard.JwtConfig
 typealias ApiKeyConfig = dev.spikard.ApiKeyConfig
 typealias StaticFilesConfig = dev.spikard.StaticFilesConfig
 typealias ServerConfig = dev.spikard.ServerConfig
+typealias GraphQLSubscriptionSnapshot = dev.spikard.GraphQLSubscriptionSnapshot
+typealias TestClient = dev.spikard.TestClient
 
+typealias SnapshotError = dev.spikard.SnapshotError
+typealias WebSocketMessage = dev.spikard.WebSocketMessage
 typealias Method = dev.spikard.Method
 typealias SecuritySchemeInfo = dev.spikard.SecuritySchemeInfo
 

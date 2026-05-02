@@ -27,6 +27,9 @@ import RustBridge
 /// ```
 public typealias UploadFile = RustBridge.UploadFile
 
+/// Snapshot of an Axum response used by higher-level language bindings.
+public typealias ResponseSnapshot = RustBridge.ResponseSnapshot
+
 /// CORS configuration for a route
 public typealias CorsConfig = RustBridge.CorsConfig
 
@@ -127,6 +130,30 @@ public typealias QueryMutationConfig = RustBridge.QueryMutationConfig
 /// Configuration for fully-featured schemas with Query, Mutation, and Subscription types
 public typealias FullSchemaConfig = RustBridge.FullSchemaConfig
 
+/// AsyncAPI HTTP endpoint configuration
+public typealias AsyncApiConfig = RustBridge.AsyncApiConfig
+
+/// A single channel extracted from an AsyncAPI spec
+public typealias ParsedChannel = RustBridge.ParsedChannel
+
+/// A single operation extracted from an AsyncAPI spec
+public typealias ParsedOperation = RustBridge.ParsedOperation
+
+/// A resolved message (name + JSON Schema)
+public typealias ParsedMessage = RustBridge.ParsedMessage
+
+/// Full parse result returned by `POST /asyncapi/parse`
+public typealias ParseResult = RustBridge.ParseResult
+
+/// Request body for `POST /asyncapi/parse`
+public typealias ParseRequest = RustBridge.ParseRequest
+
+/// Response body for `POST /asyncapi/validate`
+public typealias ValidationResponse = RustBridge.ValidationResponse
+
+/// Request body for `POST /asyncapi/validate`
+public typealias ValidateRequest = RustBridge.ValidateRequest
+
 /// Configuration for in-process background task execution.
 public typealias BackgroundTaskConfig = RustBridge.BackgroundTaskConfig
 
@@ -153,10 +180,10 @@ public typealias BackgroundJobMetadata = RustBridge.BackgroundJobMetadata
 ///   returns GOAWAY frames when exceeded. Applications should not rely on
 ///   custom enforcement of this limit.
 ///
-/// - **Stream Length Limits**: There is currently no built-in limit on the
-///   total number of messages in a stream. Handlers should implement their own
-///   message counting if needed. Future versions may add a `max_stream_response_bytes`
-///   field to limit total response size per stream.
+/// - **Stream Response Size Limits**: The `max_stream_response_bytes` field caps the
+///   total encoded bytes emitted across a server-streaming or bidi-streaming response.
+///   When the cumulative size exceeds the limit, the stream is terminated with
+///   `tonic::Status::resource_exhausted`. Defaults to `None` (unbounded).
 ///
 /// # Example
 ///
@@ -219,6 +246,23 @@ public typealias StaticFilesConfig = RustBridge.StaticFilesConfig
 
 /// Server configuration
 public typealias ServerConfig = RustBridge.ServerConfig
+
+/// Snapshot of a GraphQL subscription exchange over WebSocket.
+public typealias GraphQLSubscriptionSnapshot = RustBridge.GraphQLSubscriptionSnapshot
+
+/// Core test client for making HTTP requests to a Spikard application.
+///
+/// This struct wraps axum-test's TestServer and provides a language-agnostic
+/// interface for making HTTP requests, sending WebSocket connections, and
+/// handling Server-Sent Events. Language bindings wrap this to provide
+/// native API surfaces.
+public typealias TestClient = RustBridge.TestClient
+
+/// Possible errors while converting an Axum response into a snapshot.
+public typealias SnapshotError = RustBridge.SnapshotError
+
+/// A WebSocket message that can be text or binary.
+public typealias WebSocketMessage = RustBridge.WebSocketMessage
 
 /// HTTP method
 public typealias Method = RustBridge.Method

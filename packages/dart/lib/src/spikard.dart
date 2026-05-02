@@ -53,6 +53,23 @@ class UploadFile {
   });
 }
 
+/// Snapshot of an Axum response used by higher-level language bindings.
+class ResponseSnapshot {
+  /// HTTP status code.
+  final int status;
+
+  /// Response headers (lowercase keys for predictable lookups).
+  final Map<String, String> headers;
+
+  /// Response body bytes (decoded for supported encodings).
+  final Uint8List body;
+  ResponseSnapshot({
+    required this.status,
+    required this.headers,
+    required this.body,
+  });
+}
+
 /// CORS configuration for a route
 class CorsConfig {
   final List<String> allowedOrigins;
@@ -318,6 +335,118 @@ class FullSchemaConfig {
   });
 }
 
+/// AsyncAPI HTTP endpoint configuration
+class AsyncApiConfig {
+  /// Enable AsyncAPI endpoints (default: false)
+  final bool enabled;
+
+  /// Pre-registered AsyncAPI spec to serve from GET /asyncapi.json
+  final String? spec;
+  AsyncApiConfig({
+    required this.enabled,
+    required this.spec,
+  });
+}
+
+/// A single channel extracted from an AsyncAPI spec
+class ParsedChannel {
+  /// Channel key from the spec (e.g. "chat/messages")
+  final String name;
+
+  /// Channel address / path
+  final String address;
+
+  /// Message names declared on this channel
+  final List<String> messages;
+
+  /// Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility
+  final String? bindings;
+  ParsedChannel({
+    required this.name,
+    required this.address,
+    required this.messages,
+    required this.bindings,
+  });
+}
+
+/// A single operation extracted from an AsyncAPI spec
+class ParsedOperation {
+  /// Operation name
+  final String name;
+
+  /// Operation action: "send" or "receive"
+  final String action;
+
+  /// Channel reference (resolved to the channel name)
+  final String channel;
+  ParsedOperation({
+    required this.name,
+    required this.action,
+    required this.channel,
+  });
+}
+
+/// A resolved message (name + JSON Schema)
+class ParsedMessage {
+  /// Message name
+  final String name;
+
+  /// Resolved JSON Schema for the message payload, if available
+  final String? schema;
+  ParsedMessage({
+    required this.name,
+    required this.schema,
+  });
+}
+
+/// Full parse result returned by `POST /asyncapi/parse`
+class ParseResult {
+  final String specVersion;
+  final String title;
+  final String apiVersion;
+  final List<ParsedChannel> channels;
+  final List<ParsedOperation> operations;
+  final List<ParsedMessage> messages;
+  ParseResult({
+    required this.specVersion,
+    required this.title,
+    required this.apiVersion,
+    required this.channels,
+    required this.operations,
+    required this.messages,
+  });
+}
+
+/// Request body for `POST /asyncapi/parse`
+class ParseRequest {
+  final String spec;
+  ParseRequest(this.spec);
+}
+
+/// Response body for `POST /asyncapi/validate`
+class ValidationResponse {
+  final bool valid;
+  final List<String> errors;
+  ValidationResponse({
+    required this.valid,
+    required this.errors,
+  });
+}
+
+/// Request body for `POST /asyncapi/validate`
+class ValidateRequest {
+  final String spec;
+  final String channel;
+  final String message;
+  final String payload;
+  ValidateRequest({
+    required this.spec,
+    required this.channel,
+    required this.message,
+    required this.payload,
+  });
+}
+
 /// Configuration for in-process background task execution.
 class BackgroundTaskConfig {
   final int maxQueueSize;
@@ -360,10 +489,10 @@ class BackgroundJobMetadata {
 ///   returns GOAWAY frames when exceeded. Applications should not rely on
 ///   custom enforcement of this limit.
 ///
-/// - **Stream Length Limits**: There is currently no built-in limit on the
-///   total number of messages in a stream. Handlers should implement their own
-///   message counting if needed. Future versions may add a `max_stream_response_bytes`
-///   field to limit total response size per stream.
+/// - **Stream Response Size Limits**: The `max_stream_response_bytes` field caps the
+///   total encoded bytes emitted across a server-streaming or bidi-streaming response.
+///   When the cumulative size exceeds the limit, the stream is terminated with
+///   `tonic::Status::resource_exhausted`. Defaults to `None` (unbounded).
 ///
 /// # Example
 ///
@@ -411,10 +540,6 @@ class GrpcConfig {
   /// - **Streaming Requests**: In server streaming or bidi streaming, each logical
   ///   RPC consumes one stream slot. Message ordering within a stream follows
   ///   HTTP/2 frame ordering.
-  ///
-  /// # Future Enhancement
-  /// A future `max_stream_response_bytes` field may be added to limit the total
-  /// response size in streaming RPCs (separate from per-message limits).
   final int maxConcurrentStreams;
 
   /// Enable HTTP/2 keepalive
@@ -425,6 +550,19 @@ class GrpcConfig {
 
   /// HTTP/2 keepalive timeout in seconds
   final int keepaliveTimeout;
+
+  /// Total byte cap across an entire streaming response.
+  ///
+  /// When `Some(n)`, the streaming adapter aborts the stream with
+  /// `tonic::Status::resource_exhausted` once the cumulative encoded message
+  /// bytes exceed `n`. The stream yields the error item and then terminates.
+  ///
+  /// Per-message cap remains `max_message_size`. This limit applies to
+  /// server-streaming and bidirectional-streaming RPCs only; unary RPCs are
+  /// governed solely by `max_message_size`.
+  ///
+  /// Default: `None` (unbounded total response size).
+  final int? maxStreamResponseBytes;
   GrpcConfig({
     required this.enabled,
     required this.maxMessageSize,
@@ -434,6 +572,7 @@ class GrpcConfig {
     required this.enableKeepalive,
     required this.keepaliveInterval,
     required this.keepaliveTimeout,
+    required this.maxStreamResponseBytes,
   });
 }
 
@@ -697,14 +836,26 @@ class ServerConfig {
   /// Graceful shutdown timeout (seconds)
   final int shutdownTimeout;
 
+  /// AsyncAPI HTTP endpoint configuration
+  final AsyncApiConfig? asyncapi;
+
   /// OpenAPI documentation configuration
   final OpenApiConfig? openapi;
 
   /// JSON-RPC configuration
   final JsonRpcConfig? jsonrpc;
 
+  /// gRPC configuration
+  final GrpcConfig? grpc;
+
   /// Lifecycle hooks for request/response processing
   final String? lifecycleHooks;
+
+  /// Background task executor configuration
+  final BackgroundTaskConfig backgroundTasks;
+
+  /// Enable per-request HTTP tracing (tower-http `TraceLayer`)
+  final bool enableHttpTrace;
 
   /// Dependency injection container (requires 'di' feature)
   final String? diContainer;
@@ -722,11 +873,103 @@ class ServerConfig {
     required this.staticFiles,
     required this.gracefulShutdown,
     required this.shutdownTimeout,
+    required this.asyncapi,
     required this.openapi,
     required this.jsonrpc,
+    required this.grpc,
     required this.lifecycleHooks,
+    required this.backgroundTasks,
+    required this.enableHttpTrace,
     required this.diContainer,
   });
+}
+
+/// Snapshot of a GraphQL subscription exchange over WebSocket.
+class GraphQLSubscriptionSnapshot {
+  /// Operation id used for the subscription request.
+  final String operationId;
+
+  /// Whether the server acknowledged the GraphQL WebSocket connection.
+  final bool acknowledged;
+
+  /// First `next.payload` received for this subscription, if any.
+  final String? event;
+
+  /// GraphQL protocol errors emitted by the server.
+  final List<String> errors;
+
+  /// Whether a `complete` frame was observed for this operation.
+  final bool completeReceived;
+  GraphQLSubscriptionSnapshot({
+    required this.operationId,
+    required this.acknowledged,
+    required this.event,
+    required this.errors,
+    required this.completeReceived,
+  });
+}
+
+/// Core test client for making HTTP requests to a Spikard application.
+///
+/// This struct wraps axum-test's TestServer and provides a language-agnostic
+/// interface for making HTTP requests, sending WebSocket connections, and
+/// handling Server-Sent Events. Language bindings wrap this to provide
+/// native API surfaces.
+class TestClient {}
+
+/// Possible errors while converting an Axum response into a snapshot.
+sealed class SnapshotError {}
+
+/// Response header could not be decoded to UTF-8.
+final class InvalidHeader extends SnapshotError {
+  final String field0;
+  InvalidHeader(this.field0);
+}
+
+/// Body decompression failed.
+final class Decompression extends SnapshotError {
+  final String field0;
+  Decompression(this.field0);
+}
+
+/// A WebSocket message that can be text or binary.
+sealed class WebSocketMessage {}
+
+/// A text message.
+final class Text extends WebSocketMessage {
+  final String field0;
+  Text(this.field0);
+}
+
+/// A binary message.
+final class Binary extends WebSocketMessage {
+  final Uint8List field0;
+  Binary(this.field0);
+}
+
+/// A close message with a numeric close code (RFC 6455) and optional reason text.
+///
+/// Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received,
+/// 1006 Abnormal Closure.
+final class Close extends WebSocketMessage {
+  final int code;
+  final String reason;
+  Close({
+    required this.code,
+    required this.reason,
+  });
+}
+
+/// A ping message.
+final class Ping extends WebSocketMessage {
+  final Uint8List field0;
+  Ping(this.field0);
+}
+
+/// A pong message.
+final class Pong extends WebSocketMessage {
+  final Uint8List field0;
+  Pong(this.field0);
 }
 
 /// HTTP method

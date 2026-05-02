@@ -3,58 +3,58 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 
-describe('websocket', () => {
-  it.skip('ws_binary_frame_round_trip: Tests that binary frames received from the client are echoed back verbatim', async () => {
-    // no assertions configured for this fixture in node e2e
-  });
+describe("websocket", () => {
+	it.skip("ws_binary_frame_round_trip: Tests that binary frames received from the client are echoed back verbatim", async () => {
+		// no assertions configured for this fixture in node e2e
+	});
 
-  it.skip('ws_close_abnormal_code_1006: Tests that an abrupt connection drop is reported with close code 1006 (abnormal closure)', async () => {
-    // no assertions configured for this fixture in node e2e
-  });
+	it.skip("ws_close_abnormal_code_1006: Tests that an abrupt connection drop is reported with close code 1006 (abnormal closure)", async () => {
+		// no assertions configured for this fixture in node e2e
+	});
 
-  it.skip('ws_close_normal_code_1000: Tests that sending a close frame with code 1000 (normal closure) terminates the session cleanly', async () => {
-    // no assertions configured for this fixture in node e2e
-  });
+	it.skip("ws_close_normal_code_1000: Tests that sending a close frame with code 1000 (normal closure) terminates the session cleanly", async () => {
+		// no assertions configured for this fixture in node e2e
+	});
 
-  it.skip('ws_handler_no_response: Tests that when a handler returns None, no response frame is sent to the client', async () => {
-    // no assertions configured for this fixture in node e2e
-  });
+	it.skip("ws_handler_no_response: Tests that when a handler returns None, no response frame is sent to the client", async () => {
+		// no assertions configured for this fixture in node e2e
+	});
 
-  it.skip('ws_invalid_json_error_response: Tests that sending non-JSON text receives a structured error message', async () => {
-    // no assertions configured for this fixture in node e2e
-  });
+	it.skip("ws_invalid_json_error_response: Tests that sending non-JSON text receives a structured error message", async () => {
+		// no assertions configured for this fixture in node e2e
+	});
 
-  it.skip('ws_json_echo_round_trip: Tests JSON message sent by client is echoed back unchanged', async () => {
-    // no assertions configured for this fixture in node e2e
-  });
+	it.skip("ws_json_echo_round_trip: Tests JSON message sent by client is echoed back unchanged", async () => {
+		// no assertions configured for this fixture in node e2e
+	});
 
-  it.skip('ws_message_ordering_preserved: Tests that multiple sequential messages are processed and echoed back in the same order they were sent', async () => {
-    // no assertions configured for this fixture in node e2e
-  });
+	it.skip("ws_message_ordering_preserved: Tests that multiple sequential messages are processed and echoed back in the same order they were sent", async () => {
+		// no assertions configured for this fixture in node e2e
+	});
 
-  it.skip('ws_on_connect_fires: Tests that on_connect lifecycle callback is invoked when a WebSocket connection opens', async () => {
-    // no assertions configured for this fixture in node e2e
-  });
+	it.skip("ws_on_connect_fires: Tests that on_connect lifecycle callback is invoked when a WebSocket connection opens", async () => {
+		// no assertions configured for this fixture in node e2e
+	});
 
-  it.skip('ws_on_disconnect_fires: Tests that on_disconnect lifecycle callback is invoked after the connection closes', async () => {
-    // no assertions configured for this fixture in node e2e
-  });
+	it.skip("ws_on_disconnect_fires: Tests that on_disconnect lifecycle callback is invoked after the connection closes", async () => {
+		// no assertions configured for this fixture in node e2e
+	});
 
-  it.skip('ws_ping_pong_heartbeat: Tests that a Ping frame from the client receives a matching Pong frame response', async () => {
-    // no assertions configured for this fixture in node e2e
-  });
+	it.skip("ws_ping_pong_heartbeat: Tests that a Ping frame from the client receives a matching Pong frame response", async () => {
+		// no assertions configured for this fixture in node e2e
+	});
 
-  it.skip('ws_schema_validated_message_rejected: Tests that a message failing schema validation receives an error envelope instead of being processed', async () => {
-    // no assertions configured for this fixture in node e2e
-  });
+	it.skip("ws_schema_validated_message_rejected: Tests that a message failing schema validation receives an error envelope instead of being processed", async () => {
+		// no assertions configured for this fixture in node e2e
+	});
 
-  it.skip('ws_subscribe_pattern: Tests schema-validated subscribe message pattern where client subscribes to a named channel', async () => {
-    // no assertions configured for this fixture in node e2e
-  });
+	it.skip("ws_subscribe_pattern: Tests schema-validated subscribe message pattern where client subscribes to a named channel", async () => {
+		// no assertions configured for this fixture in node e2e
+	});
 
-  it.skip('ws_upgrade_handshake: Tests WebSocket upgrade returns 101 Switching Protocols with correct Sec-WebSocket-Accept header', async () => {
-    // HTTP 101 WebSocket upgrade cannot be tested via fetch
-  });
+	it.skip("ws_upgrade_handshake: Tests WebSocket upgrade returns 101 Switching Protocols with correct Sec-WebSocket-Accept header", async () => {
+		// HTTP 101 WebSocket upgrade cannot be tested via fetch
+	});
 });

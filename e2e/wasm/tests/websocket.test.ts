@@ -3,10 +3,10 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 
-describe('websocket', () => {
-  it.skip('ws_upgrade_handshake: Tests WebSocket upgrade returns 101 Switching Protocols with correct Sec-WebSocket-Accept header', async () => {
-    // HTTP 101 WebSocket upgrade cannot be tested via fetch
-  });
+describe("websocket", () => {
+	it.skip("ws_upgrade_handshake: Tests WebSocket upgrade returns 101 Switching Protocols with correct Sec-WebSocket-Accept header", async () => {
+		// HTTP 101 WebSocket upgrade cannot be tested via fetch
+	});
 });

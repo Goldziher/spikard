@@ -21,6 +21,13 @@ pub struct UploadFile {
     pub cursor: String,
 }
 
+#[frb(mirror(ResponseSnapshot))]
+pub struct ResponseSnapshot {
+    pub status: i64,
+    pub headers: std::collections::HashMap<String, String>,
+    pub body: Vec<u8>,
+}
+
 #[frb(mirror(CorsConfig))]
 pub struct CorsConfig {
     pub allowed_origins: Vec<String>,
@@ -97,6 +104,62 @@ pub struct FullSchemaConfig {
     pub introspection_enabled: bool,
     pub complexity_limit: Option<i64>,
     pub depth_limit: Option<i64>,
+}
+
+#[frb(mirror(AsyncApiConfig))]
+pub struct AsyncApiConfig {
+    pub enabled: bool,
+    pub spec: Option<String>,
+}
+
+#[frb(mirror(ParsedChannel))]
+pub struct ParsedChannel {
+    pub name: String,
+    pub address: String,
+    pub messages: Vec<String>,
+    pub bindings: Option<String>,
+}
+
+#[frb(mirror(ParsedOperation))]
+pub struct ParsedOperation {
+    pub name: String,
+    pub action: String,
+    pub channel: String,
+}
+
+#[frb(mirror(ParsedMessage))]
+pub struct ParsedMessage {
+    pub name: String,
+    pub schema: Option<String>,
+}
+
+#[frb(mirror(ParseResult))]
+pub struct ParseResult {
+    pub spec_version: String,
+    pub title: String,
+    pub api_version: String,
+    pub channels: Vec<ParsedChannel>,
+    pub operations: Vec<ParsedOperation>,
+    pub messages: Vec<ParsedMessage>,
+}
+
+#[frb(mirror(ParseRequest))]
+pub struct ParseRequest {
+    pub spec: String,
+}
+
+#[frb(mirror(ValidationResponse))]
+pub struct ValidationResponse {
+    pub valid: bool,
+    pub errors: Vec<String>,
+}
+
+#[frb(mirror(ValidateRequest))]
+pub struct ValidateRequest {
+    pub spec: String,
+    pub channel: String,
+    pub message: String,
+    pub payload: String,
 }
 
 #[frb(mirror(BackgroundTaskConfig))]
@@ -220,10 +283,41 @@ pub struct ServerConfig {
     pub static_files: Vec<StaticFilesConfig>,
     pub graceful_shutdown: bool,
     pub shutdown_timeout: i64,
+    pub asyncapi: Option<AsyncApiConfig>,
     pub openapi: Option<OpenApiConfig>,
     pub jsonrpc: Option<JsonRpcConfig>,
+    pub grpc: Option<GrpcConfig>,
     pub lifecycle_hooks: Option<String>,
+    pub background_tasks: BackgroundTaskConfig,
+    pub enable_http_trace: bool,
     pub di_container: Option<String>,
+}
+
+#[frb(mirror(GraphQLSubscriptionSnapshot))]
+pub struct GraphQLSubscriptionSnapshot {
+    pub operation_id: String,
+    pub acknowledged: bool,
+    pub event: Option<String>,
+    pub errors: Vec<String>,
+    pub complete_received: bool,
+}
+
+#[frb(mirror(TestClient))]
+pub struct TestClient {}
+
+#[frb(mirror(SnapshotError))]
+pub enum SnapshotError {
+    InvalidHeader { field0: String },
+    Decompression { field0: String },
+}
+
+#[frb(mirror(WebSocketMessage))]
+pub enum WebSocketMessage {
+    Text { field0: String },
+    Binary { field0: Vec<u8> },
+    Close { code: i64, reason: String },
+    Ping { field0: Vec<u8> },
+    Pong { field0: Vec<u8> },
 }
 
 #[frb(mirror(Method))]

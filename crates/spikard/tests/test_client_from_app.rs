@@ -5,7 +5,7 @@
 
 use axum::body::Body;
 use axum::http::StatusCode;
-use spikard::{App, RouteBuilder, Method, testing::test_client_from_app};
+use spikard::{App, Method, RouteBuilder, testing::test_client_from_app};
 
 #[tokio::test]
 async fn test_client_from_app_get_hello() {
@@ -26,10 +26,7 @@ async fn test_client_from_app_get_hello() {
 
     let client = test_client_from_app(app).expect("test client from app");
 
-    let snapshot = client
-        .get("/", None, None)
-        .await
-        .expect("GET /");
+    let snapshot = client.get("/", None, None).await.expect("GET /");
 
     assert_eq!(snapshot.status, 200);
 

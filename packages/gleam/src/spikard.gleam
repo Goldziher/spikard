@@ -18,6 +18,11 @@ pub type UploadFile {
   )
 }
 
+/// Snapshot of an Axum response used by higher-level language bindings.
+pub type ResponseSnapshot {
+  ResponseSnapshot(status: Int, headers: Dict(String, String), body: BitArray)
+}
+
 /// CORS configuration for a route
 pub type CorsConfig {
   CorsConfig(
@@ -126,6 +131,63 @@ pub type FullSchemaConfig {
   )
 }
 
+/// AsyncAPI HTTP endpoint configuration
+pub type AsyncApiConfig {
+  AsyncApiConfig(enabled: Bool, spec: Option(String))
+}
+
+/// A single channel extracted from an AsyncAPI spec
+pub type ParsedChannel {
+  ParsedChannel(
+    name: String,
+    address: String,
+    messages: List(String),
+    bindings: Option(String),
+  )
+}
+
+/// A single operation extracted from an AsyncAPI spec
+pub type ParsedOperation {
+  ParsedOperation(name: String, action: String, channel: String)
+}
+
+/// A resolved message (name + JSON Schema)
+pub type ParsedMessage {
+  ParsedMessage(name: String, schema: Option(String))
+}
+
+/// Full parse result returned by `POST /asyncapi/parse`
+pub type ParseResult {
+  ParseResult(
+    spec_version: String,
+    title: String,
+    api_version: String,
+    channels: List(ParsedChannel),
+    operations: List(ParsedOperation),
+    messages: List(ParsedMessage),
+  )
+}
+
+/// Request body for `POST /asyncapi/parse`
+pub type ParseRequest {
+  ParseRequest(spec: String)
+}
+
+/// Response body for `POST /asyncapi/validate`
+pub type ValidationResponse {
+  ValidationResponse(valid: Bool, errors: List(String))
+}
+
+/// Request body for `POST /asyncapi/validate`
+pub type ValidateRequest {
+  ValidateRequest(
+    spec: String,
+    channel: String,
+    message: String,
+    payload: String,
+  )
+}
+
 /// Configuration for in-process background task execution.
 pub type BackgroundTaskConfig {
   BackgroundTaskConfig(
@@ -160,10 +222,10 @@ pub type BackgroundJobMetadata {
 ///   returns GOAWAY frames when exceeded. Applications should not rely on
 ///   custom enforcement of this limit.
 ///
-/// - **Stream Length Limits**: There is currently no built-in limit on the
-///   total number of messages in a stream. Handlers should implement their own
-///   message counting if needed. Future versions may add a `max_stream_response_bytes`
-///   field to limit total response size per stream.
+/// - **Stream Response Size Limits**: The `max_stream_response_bytes` field caps the
+///   total encoded bytes emitted across a server-streaming or bidi-streaming response.
+///   When the cumulative size exceeds the limit, the stream is terminated with
+///   `tonic.Status.resource_exhausted`. Defaults to `null` (unbounded).
 pub type GrpcConfig {
   GrpcConfig(
     enabled: Bool,
@@ -174,6 +236,7 @@ pub type GrpcConfig {
     enable_keepalive: Bool,
     keepalive_interval: Int,
     keepalive_timeout: Int,
+    max_stream_response_bytes: Option(Int),
   )
 }
 
@@ -293,11 +356,51 @@ pub type ServerConfig {
     static_files: List(StaticFilesConfig),
     graceful_shutdown: Bool,
     shutdown_timeout: Int,
+    asyncapi: Option(AsyncApiConfig),
     openapi: Option(OpenApiConfig),
     jsonrpc: Option(JsonRpcConfig),
+    grpc: Option(GrpcConfig),
     lifecycle_hooks: Option(String),
+    background_tasks: BackgroundTaskConfig,
+    enable_http_trace: Bool,
     di_container: Option(String),
   )
+}
+
+/// Snapshot of a GraphQL subscription exchange over WebSocket.
+pub type GraphQLSubscriptionSnapshot {
+  GraphQLSubscriptionSnapshot(
+    operation_id: String,
+    acknowledged: Bool,
+    event: Option(String),
+    errors: List(String),
+    complete_received: Bool,
+  )
+}
+
+/// Core test client for making HTTP requests to a Spikard application.
+///
+/// This struct wraps axum-test's TestServer and provides a language-agnostic
+/// interface for making HTTP requests, sending WebSocket connections, and
+/// handling Server-Sent Events. Language bindings wrap this to provide
+/// native API surfaces.
+pub type TestClient {
+  TestClient
+}
+
+/// Possible errors while converting an Axum response into a snapshot.
+pub type SnapshotError {
+  InvalidHeader(String)
+  Decompression(String)
+}
+
+/// A WebSocket message that can be text or binary.
+pub type WebSocketMessage {
+  Text(String)
+  Binary(BitArray)
+  Close(code: Int, reason: Option(String))
+  Ping(BitArray)
+  Pong(BitArray)
 }
 
 /// HTTP method

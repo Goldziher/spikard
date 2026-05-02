@@ -3,177 +3,269 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 
-describe('graphql_schema', () => {
-  it('graphql_authentication_error_variant: Tests GraphQL authentication error when auth fails', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_authentication_error_variant`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
-      "Content-Type": "application/json",
-    }, body: JSON.stringify({ query: "{ user { id } }" }) });
-    expect(response.status).toBe(401);
-    const data = await response.json();
-    expect(data).toEqual({ error: "<<present>>" });
-  });
+describe("graphql_schema", () => {
+	it("graphql_authentication_error_variant: Tests GraphQL authentication error when auth fails", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_authentication_error_variant`;
+		const response = await fetch(mockUrl, {
+			method: "POST",
+			redirect: "manual",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ query: "{ user { id } }" }),
+		});
+		expect(response.status).toBe(401);
+		const data = await response.json();
+		expect(data).toEqual({ error: "<<present>>" });
+	});
 
-  it('graphql_authorization_error_variant: Tests GraphQL authorization error when access denied', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_authorization_error_variant`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer invalid",
-    }, body: JSON.stringify({ query: "{ admin { id } }" }) });
-    expect(response.status).toBe(403);
-    const data = await response.json();
-    expect(data).toEqual({ error: "<<present>>" });
-  });
+	it("graphql_authorization_error_variant: Tests GraphQL authorization error when access denied", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_authorization_error_variant`;
+		const response = await fetch(mockUrl, {
+			method: "POST",
+			redirect: "manual",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: "Bearer invalid",
+			},
+			body: JSON.stringify({ query: "{ admin { id } }" }),
+		});
+		expect(response.status).toBe(403);
+		const data = await response.json();
+		expect(data).toEqual({ error: "<<present>>" });
+	});
 
-  it('graphql_complexity_limit_exceeded: Tests GraphQL query complexity validation rejects overly complex queries', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_complexity_limit_exceeded`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
-      "Content-Type": "application/json",
-    }, body: JSON.stringify({ query: "{ user { id name email posts { id title comments { id text } } } }" }) });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ errors: [{ message: "Query complexity limit exceeded" }] });
-  });
+	it("graphql_complexity_limit_exceeded: Tests GraphQL query complexity validation rejects overly complex queries", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_complexity_limit_exceeded`;
+		const response = await fetch(mockUrl, {
+			method: "POST",
+			redirect: "manual",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ query: "{ user { id name email posts { id title comments { id text } } } }" }),
+		});
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({ errors: [{ message: "Query complexity limit exceeded" }] });
+	});
 
-  it('graphql_custom_endpoint_configuration: Tests GraphQL route configured at custom endpoint', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_custom_endpoint_configuration`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
-      "Content-Type": "application/json",
-    }, body: JSON.stringify({ query: "{ user { id } }" }) });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ data: { user: { id: "1" } } });
-  });
+	it("graphql_custom_endpoint_configuration: Tests GraphQL route configured at custom endpoint", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_custom_endpoint_configuration`;
+		const response = await fetch(mockUrl, {
+			method: "POST",
+			redirect: "manual",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ query: "{ user { id } }" }),
+		});
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({ data: { user: { id: "1" } } });
+	});
 
-  it('graphql_depth_limit_exceeded: Tests GraphQL query depth validation rejects deeply nested queries', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_depth_limit_exceeded`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
-      "Content-Type": "application/json",
-    }, body: JSON.stringify({ query: "{ user { posts { comments { author { posts { title } } } } } }" }) });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ errors: [{ message: "Query depth limit exceeded" }] });
-  });
+	it("graphql_depth_limit_exceeded: Tests GraphQL query depth validation rejects deeply nested queries", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_depth_limit_exceeded`;
+		const response = await fetch(mockUrl, {
+			method: "POST",
+			redirect: "manual",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ query: "{ user { posts { comments { author { posts { title } } } } } }" }),
+		});
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({ errors: [{ message: "Query depth limit exceeded" }] });
+	});
 
-  it('graphql_error_response_format: Tests GraphQL error response format with correct structure', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_error_response_format`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
-      "Content-Type": "application/json",
-    }, body: JSON.stringify({ query: "{ invalidField }" }) });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ errors: [{ extensions: { code: "GRAPHQL_VALIDATION_FAILED" }, message: "Cannot query field 'invalidField' on type 'Query'" }] });
-  });
+	it("graphql_error_response_format: Tests GraphQL error response format with correct structure", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_error_response_format`;
+		const response = await fetch(mockUrl, {
+			method: "POST",
+			redirect: "manual",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ query: "{ invalidField }" }),
+		});
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({
+			errors: [
+				{
+					extensions: { code: "GRAPHQL_VALIDATION_FAILED" },
+					message: "Cannot query field 'invalidField' on type 'Query'",
+				},
+			],
+		});
+	});
 
-  it('graphql_execution_error_variant: Tests GraphQL execution error response', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_execution_error_variant`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
-      "Content-Type": "application/json",
-    }, body: JSON.stringify({ query: "{ invalidField }" }) });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ errors: [{ message: "<<present>>" }] });
-  });
+	it("graphql_execution_error_variant: Tests GraphQL execution error response", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_execution_error_variant`;
+		const response = await fetch(mockUrl, {
+			method: "POST",
+			redirect: "manual",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ query: "{ invalidField }" }),
+		});
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({ errors: [{ message: "<<present>>" }] });
+	});
 
-  it('graphql_full_schema_with_subscriptions: Tests GraphQL schema with queries, mutations, and subscriptions', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_full_schema_with_subscriptions`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
-      "Content-Type": "application/json",
-    }, body: JSON.stringify({ query: "{ __typename }" }) });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ data: { __typename: "Query" } });
-  });
+	it("graphql_full_schema_with_subscriptions: Tests GraphQL schema with queries, mutations, and subscriptions", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_full_schema_with_subscriptions`;
+		const response = await fetch(mockUrl, {
+			method: "POST",
+			redirect: "manual",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ query: "{ __typename }" }),
+		});
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({ data: { __typename: "Query" } });
+	});
 
-  it('graphql_introspection_disabled: Tests GraphQL introspection returns error when disabled', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_introspection_disabled`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
-      "Content-Type": "application/json",
-    }, body: JSON.stringify({ query: "{ __schema { types { name } } }" }) });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ errors: [{ message: "GraphQL introspection is disabled" }] });
-  });
+	it("graphql_introspection_disabled: Tests GraphQL introspection returns error when disabled", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_introspection_disabled`;
+		const response = await fetch(mockUrl, {
+			method: "POST",
+			redirect: "manual",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ query: "{ __schema { types { name } } }" }),
+		});
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({ errors: [{ message: "GraphQL introspection is disabled" }] });
+	});
 
-  it('graphql_introspection_enabled: Tests GraphQL introspection is available', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_introspection_enabled`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
-      "Content-Type": "application/json",
-    }, body: JSON.stringify({ query: "{ __schema { types { name } } }" }) });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ data: { __schema: { types: null } } });
-  });
+	it("graphql_introspection_enabled: Tests GraphQL introspection is available", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_introspection_enabled`;
+		const response = await fetch(mockUrl, {
+			method: "POST",
+			redirect: "manual",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ query: "{ __schema { types { name } } }" }),
+		});
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({ data: { __schema: { types: null } } });
+	});
 
-  it('graphql_invalid_input_error_variant: Tests GraphQL invalid input error', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_invalid_input_error_variant`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
-      "Content-Type": "application/json",
-    }, body: JSON.stringify({ query: "mutation { createUser(age: -5) { id } }" }) });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ errors: [{ message: "<<present>>" }] });
-  });
+	it("graphql_invalid_input_error_variant: Tests GraphQL invalid input error", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_invalid_input_error_variant`;
+		const response = await fetch(mockUrl, {
+			method: "POST",
+			redirect: "manual",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ query: "mutation { createUser(age: -5) { id } }" }),
+		});
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({ errors: [{ message: "<<present>>" }] });
+	});
 
-  it('graphql_not_found_error_variant: Tests GraphQL not found error for missing resource', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_not_found_error_variant`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
-      "Content-Type": "application/json",
-    }, body: JSON.stringify({ query: "{ user(id: \"nonexistent\") { id } }" }) });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ errors: [{ message: "<<present>>" }] });
-  });
+	it("graphql_not_found_error_variant: Tests GraphQL not found error for missing resource", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_not_found_error_variant`;
+		const response = await fetch(mockUrl, {
+			method: "POST",
+			redirect: "manual",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ query: '{ user(id: "nonexistent") { id } }' }),
+		});
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({ errors: [{ message: "<<present>>" }] });
+	});
 
-  it('graphql_query_and_mutation_schema: Tests GraphQL schema with queries and mutations', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_query_and_mutation_schema`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
-      "Content-Type": "application/json",
-    }, body: JSON.stringify({ query: "mutation { createUser(name: \"New\") { id name } }" }) });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ data: { createUser: { id: "2", name: "New" } } });
-  });
+	it("graphql_query_and_mutation_schema: Tests GraphQL schema with queries and mutations", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_query_and_mutation_schema`;
+		const response = await fetch(mockUrl, {
+			method: "POST",
+			redirect: "manual",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ query: 'mutation { createUser(name: "New") { id name } }' }),
+		});
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({ data: { createUser: { id: "2", name: "New" } } });
+	});
 
-  it('graphql_query_only_schema: Tests GraphQL schema configured with queries only', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_query_only_schema`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
-      "Content-Type": "application/json",
-    }, body: JSON.stringify({ query: "{ user { id name } }" }) });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ data: { user: { id: "1", name: "Test User" } } });
-  });
+	it("graphql_query_only_schema: Tests GraphQL schema configured with queries only", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_query_only_schema`;
+		const response = await fetch(mockUrl, {
+			method: "POST",
+			redirect: "manual",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ query: "{ user { id name } }" }),
+		});
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({ data: { user: { id: "1", name: "Test User" } } });
+	});
 
-  it('graphql_rate_limit_error_variant: Tests GraphQL rate limit exceeded error', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_rate_limit_error_variant`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
-      "Content-Type": "application/json",
-    }, body: JSON.stringify({ query: "{ user { id } }" }) });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ data: "<<present>>" });
-  });
+	it("graphql_rate_limit_error_variant: Tests GraphQL rate limit exceeded error", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_rate_limit_error_variant`;
+		const response = await fetch(mockUrl, {
+			method: "POST",
+			redirect: "manual",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ query: "{ user { id } }" }),
+		});
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({ data: "<<present>>" });
+	});
 
-  it('graphql_schema_build_error_variant: Tests GraphQL schema build error', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_schema_build_error_variant`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
-      "Content-Type": "application/json",
-    }, body: JSON.stringify({ query: "{ test }" }) });
-    expect(response.status).toBe(500);
-    const data = await response.json();
-    expect(data).toEqual({ error: "<<present>>" });
-  });
+	it("graphql_schema_build_error_variant: Tests GraphQL schema build error", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_schema_build_error_variant`;
+		const response = await fetch(mockUrl, {
+			method: "POST",
+			redirect: "manual",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ query: "{ test }" }),
+		});
+		expect(response.status).toBe(500);
+		const data = await response.json();
+		expect(data).toEqual({ error: "<<present>>" });
+	});
 
-  it('graphql_serialization_error_variant: Tests GraphQL serialization error for invalid response', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_serialization_error_variant`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
-      "Content-Type": "application/json",
-    }, body: JSON.stringify({ query: "{ user { id } }" }) });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ data: "<<present>>" });
-  });
+	it("graphql_serialization_error_variant: Tests GraphQL serialization error for invalid response", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/graphql_serialization_error_variant`;
+		const response = await fetch(mockUrl, {
+			method: "POST",
+			redirect: "manual",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ query: "{ user { id } }" }),
+		});
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({ data: "<<present>>" });
+	});
 });

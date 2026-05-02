@@ -3,20 +3,20 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 
-describe('request_timeout', () => {
-  it('request_completes_before_timeout: Simulated handler sleeps briefly and should complete before the timeout middleware fires.', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/request_completes_before_timeout`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ duration: "fast", status: "ok" });
-  });
+describe("request_timeout", () => {
+	it("request_completes_before_timeout: Simulated handler sleeps briefly and should complete before the timeout middleware fires.", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/request_completes_before_timeout`;
+		const response = await fetch(mockUrl, { method: "GET", redirect: "manual" });
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({ duration: "fast", status: "ok" });
+	});
 
-  it('request_exceeds_timeout: Simulates a handler that sleeps longer than the configured timeout to ensure a 408 response.', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/request_exceeds_timeout`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
-    expect(response.status).toBe(408);
-  });
+	it("request_exceeds_timeout: Simulates a handler that sleeps longer than the configured timeout to ensure a 408 response.", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/request_exceeds_timeout`;
+		const response = await fetch(mockUrl, { method: "GET", redirect: "manual" });
+		expect(response.status).toBe(408);
+	});
 });

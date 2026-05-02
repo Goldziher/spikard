@@ -3,53 +3,79 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 
-describe('background_tasks', () => {
-  it('background_task_cancellation: Tests background task cancellation via request', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/background_task_cancellation`;
-    const response = await fetch(mockUrl, { method: 'DELETE', redirect: 'manual' });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ cancelled: true, task_id: "task-001" });
-  });
+describe("background_tasks", () => {
+	it("background_task_cancellation: Tests background task cancellation via request", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/background_task_cancellation`;
+		const response = await fetch(mockUrl, { method: "DELETE", redirect: "manual" });
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({ cancelled: true, task_id: "task-001" });
+	});
 
-  it('background_task_custom_max_concurrent: Tests background task with custom max_concurrent setting', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/background_task_custom_max_concurrent`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
-      "Content-Type": "application/json",
-    }, body: JSON.stringify({ data: "process this", task_id: "task-001" }) });
-    expect(response.status).toBe(202);
-    const data = await response.json();
-    expect(data).toEqual({ status: "queued", task_id: "task-001" });
-  });
+	it("background_task_custom_max_concurrent: Tests background task with custom max_concurrent setting", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/background_task_custom_max_concurrent`;
+		const response = await fetch(mockUrl, {
+			method: "POST",
+			redirect: "manual",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ data: "process this", task_id: "task-001" }),
+		});
+		expect(response.status).toBe(202);
+		const data = await response.json();
+		expect(data).toEqual({ status: "queued", task_id: "task-001" });
+	});
 
-  it('background_task_custom_timeout: Tests background task with custom timeout configuration', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/background_task_custom_timeout`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
-      "Content-Type": "application/json",
-    }, body: JSON.stringify({ duration_ms: 5000 }) });
-    expect(response.status).toBe(202);
-    expect(response.headers.get('content-type')).toBe('application/json');
-  });
+	it("background_task_custom_timeout: Tests background task with custom timeout configuration", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/background_task_custom_timeout`;
+		const response = await fetch(mockUrl, {
+			method: "POST",
+			redirect: "manual",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ duration_ms: 5000 }),
+		});
+		expect(response.status).toBe(202);
+		expect(response.headers.get("content-type")).toBe("application/json");
+	});
 
-  it('background_task_error_handling: Tests background task error handling and retry behavior', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/background_task_error_handling`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
-      "Content-Type": "application/json",
-    }, body: JSON.stringify({ should_fail: true }) });
-    expect(response.status).toBe(202);
-    const data = await response.json();
-    expect(data).toEqual({ status: "queued", will_retry: true });
-  });
+	it("background_task_error_handling: Tests background task error handling and retry behavior", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/background_task_error_handling`;
+		const response = await fetch(mockUrl, {
+			method: "POST",
+			redirect: "manual",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ should_fail: true }),
+		});
+		expect(response.status).toBe(202);
+		const data = await response.json();
+		expect(data).toEqual({ status: "queued", will_retry: true });
+	});
 
-  it('background_task_multiple_concurrent: Tests multiple concurrent background tasks are queued', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/background_task_multiple_concurrent`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
-      "Content-Type": "application/json",
-    }, body: JSON.stringify({ tasks: [{ id: "task-1", payload: "data1" }, { id: "task-2", payload: "data2" }, { id: "task-3", payload: "data3" }] }) });
-    expect(response.status).toBe(202);
-    const data = await response.json();
-    expect(data).toEqual({ queued: 3, status: "all_queued" });
-  });
+	it("background_task_multiple_concurrent: Tests multiple concurrent background tasks are queued", async () => {
+		const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/background_task_multiple_concurrent`;
+		const response = await fetch(mockUrl, {
+			method: "POST",
+			redirect: "manual",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				tasks: [
+					{ id: "task-1", payload: "data1" },
+					{ id: "task-2", payload: "data2" },
+					{ id: "task-3", payload: "data3" },
+				],
+			}),
+		});
+		expect(response.status).toBe(202);
+		const data = await response.json();
+		expect(data).toEqual({ queued: 3, status: "all_queued" });
+	});
 });

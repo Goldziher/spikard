@@ -72,6 +72,13 @@ pub const UploadFile = struct {
     cursor: [:0]const u8,
 };
 
+/// Snapshot of an Axum response used by higher-level language bindings.
+pub const ResponseSnapshot = struct {
+    status: u16,
+    headers: std.StringHashMap([:0]const u8),
+    body: []const u8,
+};
+
 /// CORS configuration for a route
 pub const CorsConfig = struct {
     allowed_origins: []const [:0]const u8,
@@ -169,6 +176,62 @@ pub const FullSchemaConfig = struct {
     depth_limit: ?u64,
 };
 
+/// AsyncAPI HTTP endpoint configuration
+pub const AsyncApiConfig = struct {
+    enabled: bool,
+    spec: ?[:0]const u8,
+};
+
+/// A single channel extracted from an AsyncAPI spec
+pub const ParsedChannel = struct {
+    name: [:0]const u8,
+    address: [:0]const u8,
+    messages: []const [:0]const u8,
+    bindings: ?[:0]const u8,
+};
+
+/// A single operation extracted from an AsyncAPI spec
+pub const ParsedOperation = struct {
+    name: [:0]const u8,
+    action: [:0]const u8,
+    channel: [:0]const u8,
+};
+
+/// A resolved message (name + JSON Schema)
+pub const ParsedMessage = struct {
+    name: [:0]const u8,
+    schema: ?[:0]const u8,
+};
+
+/// Full parse result returned by `POST /asyncapi/parse`
+pub const ParseResult = struct {
+    spec_version: [:0]const u8,
+    title: [:0]const u8,
+    api_version: [:0]const u8,
+    channels: []const ParsedChannel,
+    operations: []const ParsedOperation,
+    messages: []const ParsedMessage,
+};
+
+/// Request body for `POST /asyncapi/parse`
+pub const ParseRequest = struct {
+    spec: [:0]const u8,
+};
+
+/// Response body for `POST /asyncapi/validate`
+pub const ValidationResponse = struct {
+    valid: bool,
+    errors: []const [:0]const u8,
+};
+
+/// Request body for `POST /asyncapi/validate`
+pub const ValidateRequest = struct {
+    spec: [:0]const u8,
+    channel: [:0]const u8,
+    message: [:0]const u8,
+    payload: [:0]const u8,
+};
+
 /// Configuration for in-process background task execution.
 pub const BackgroundTaskConfig = struct {
     max_queue_size: u64,
@@ -202,10 +265,10 @@ pub const BackgroundJobMetadata = struct {
 ///   returns GOAWAY frames when exceeded. Applications should not rely on
 ///   custom enforcement of this limit.
 ///
-/// - **Stream Length Limits**: There is currently no built-in limit on the
-///   total number of messages in a stream. Handlers should implement their own
-///   message counting if needed. Future versions may add a `max_stream_response_bytes`
-///   field to limit total response size per stream.
+/// - **Stream Response Size Limits**: The `max_stream_response_bytes` field caps the
+///   total encoded bytes emitted across a server-streaming or bidi-streaming response.
+///   When the cumulative size exceeds the limit, the stream is terminated with
+///   `tonic.Status.resource_exhausted`. Defaults to `null` (unbounded).
 pub const GrpcConfig = struct {
     enabled: bool,
     max_message_size: u64,
@@ -215,6 +278,7 @@ pub const GrpcConfig = struct {
     enable_keepalive: bool,
     keepalive_interval: u64,
     keepalive_timeout: u64,
+    max_stream_response_bytes: ?u64,
 };
 
 /// JSON-RPC server configuration
@@ -325,10 +389,49 @@ pub const ServerConfig = struct {
     static_files: []const StaticFilesConfig,
     graceful_shutdown: bool,
     shutdown_timeout: u64,
+    asyncapi: ?AsyncApiConfig,
     openapi: ?OpenApiConfig,
     jsonrpc: ?JsonRpcConfig,
+    grpc: ?GrpcConfig,
     lifecycle_hooks: ?[:0]const u8,
+    background_tasks: BackgroundTaskConfig,
+    enable_http_trace: bool,
     di_container: ?[:0]const u8,
+};
+
+/// Snapshot of a GraphQL subscription exchange over WebSocket.
+pub const GraphQLSubscriptionSnapshot = struct {
+    operation_id: [:0]const u8,
+    acknowledged: bool,
+    event: ?[:0]const u8,
+    errors: []const [:0]const u8,
+    complete_received: bool,
+};
+
+/// Core test client for making HTTP requests to a Spikard application.
+///
+/// This struct wraps axum-test's TestServer and provides a language-agnostic
+/// interface for making HTTP requests, sending WebSocket connections, and
+/// handling Server-Sent Events. Language bindings wrap this to provide
+/// native API surfaces.
+pub const TestClient = struct {};
+
+/// Possible errors while converting an Axum response into a snapshot.
+pub const SnapshotError = union(enum) {
+    invalid_header: [:0]const u8,
+    decompression: [:0]const u8,
+};
+
+/// A WebSocket message that can be text or binary.
+pub const WebSocketMessage = union(enum) {
+    text: [:0]const u8,
+    binary: []const u8,
+    close: struct {
+        code: u16,
+        reason: ?[:0]const u8,
+    },
+    ping: []const u8,
+    pong: []const u8,
 };
 
 /// HTTP method

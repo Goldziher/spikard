@@ -1,7 +1,5 @@
 """Smoke tests: verify TestClient surface is importable and has expected methods."""
 
-import inspect
-
 
 def test_test_client_is_importable() -> None:
     """TestClient class is accessible from the spikard binding."""

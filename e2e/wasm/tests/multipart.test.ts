@@ -3,198 +3,278 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 
-describe('multipart', () => {
-  it('_file_magic_number_png_success: File with correct PNG magic number and matching MIME type should be accepted', async () => {
-    const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
-    const mockUrl = `${baseUrl}/fixtures/17_file_magic_number_png_success`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual' });
-    expect(response.status).toBe(201);
-  });
+describe("multipart", () => {
+	it("_file_magic_number_png_success: File with correct PNG magic number and matching MIME type should be accepted", async () => {
+		const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
+		const mockUrl = `${baseUrl}/fixtures/17_file_magic_number_png_success`;
+		const response = await fetch(mockUrl, { method: "POST", redirect: "manual" });
+		expect(response.status).toBe(201);
+	});
 
-  it('_file_magic_number_jpeg_success: File with correct JPEG magic number and matching MIME type should be accepted', async () => {
-    const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
-    const mockUrl = `${baseUrl}/fixtures/18_file_magic_number_jpeg_success`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual' });
-    expect(response.status).toBe(201);
-  });
+	it("_file_magic_number_jpeg_success: File with correct JPEG magic number and matching MIME type should be accepted", async () => {
+		const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
+		const mockUrl = `${baseUrl}/fixtures/18_file_magic_number_jpeg_success`;
+		const response = await fetch(mockUrl, { method: "POST", redirect: "manual" });
+		expect(response.status).toBe(201);
+	});
 
-  it('_file_mime_spoofing_png_as_jpeg: File with PNG magic number but JPEG MIME type should be rejected (spoofing detection)', async () => {
-    const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
-    const mockUrl = `${baseUrl}/fixtures/19_file_mime_spoofing_png_as_jpeg`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual' });
-    expect(response.status).toBe(422);
-    const data = await response.json();
-    expect(data).toEqual({ detail: "1 validation error in request", errors: [{ ctx: { declared_mime: "image/jpeg", detected_type: "image/png", magic_bytes: "89504e470d0a1a0a" }, loc: ["files", "image"], msg: "File type mismatch: MIME type is image/jpeg but magic numbers indicate image/png", type: "validation_error" }], status: 422, title: "Request Validation Failed", type: "https://spikard.dev/errors/validation-error" });
-  });
+	it("_file_mime_spoofing_png_as_jpeg: File with PNG magic number but JPEG MIME type should be rejected (spoofing detection)", async () => {
+		const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
+		const mockUrl = `${baseUrl}/fixtures/19_file_mime_spoofing_png_as_jpeg`;
+		const response = await fetch(mockUrl, { method: "POST", redirect: "manual" });
+		expect(response.status).toBe(422);
+		const data = await response.json();
+		expect(data).toEqual({
+			detail: "1 validation error in request",
+			errors: [
+				{
+					ctx: { declared_mime: "image/jpeg", detected_type: "image/png", magic_bytes: "89504e470d0a1a0a" },
+					loc: ["files", "image"],
+					msg: "File type mismatch: MIME type is image/jpeg but magic numbers indicate image/png",
+					type: "validation_error",
+				},
+			],
+			status: 422,
+			title: "Request Validation Failed",
+			type: "https://spikard.dev/errors/validation-error",
+		});
+	});
 
-  it('_file_mime_spoofing_jpeg_as_png: File with JPEG magic number but PNG MIME type should be rejected (spoofing detection)', async () => {
-    const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
-    const mockUrl = `${baseUrl}/fixtures/20_file_mime_spoofing_jpeg_as_png`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual' });
-    expect(response.status).toBe(422);
-    const data = await response.json();
-    expect(data).toEqual({ detail: "1 validation error in request", errors: [{ ctx: { declared_mime: "image/png", detected_type: "image/jpeg", magic_bytes: "ffd8ffe0" }, loc: ["files", "image"], msg: "File type mismatch: MIME type is image/png but magic numbers indicate image/jpeg", type: "validation_error" }], status: 422, title: "Request Validation Failed", type: "https://spikard.dev/errors/validation-error" });
-  });
+	it("_file_mime_spoofing_jpeg_as_png: File with JPEG magic number but PNG MIME type should be rejected (spoofing detection)", async () => {
+		const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
+		const mockUrl = `${baseUrl}/fixtures/20_file_mime_spoofing_jpeg_as_png`;
+		const response = await fetch(mockUrl, { method: "POST", redirect: "manual" });
+		expect(response.status).toBe(422);
+		const data = await response.json();
+		expect(data).toEqual({
+			detail: "1 validation error in request",
+			errors: [
+				{
+					ctx: { declared_mime: "image/png", detected_type: "image/jpeg", magic_bytes: "ffd8ffe0" },
+					loc: ["files", "image"],
+					msg: "File type mismatch: MIME type is image/png but magic numbers indicate image/jpeg",
+					type: "validation_error",
+				},
+			],
+			status: 422,
+			title: "Request Validation Failed",
+			type: "https://spikard.dev/errors/validation-error",
+		});
+	});
 
-  it('_file_pdf_magic_number_success: File with correct PDF magic number should be accepted', async () => {
-    const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
-    const mockUrl = `${baseUrl}/fixtures/21_file_pdf_magic_number_success`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual' });
-    expect(response.status).toBe(201);
-  });
+	it("_file_pdf_magic_number_success: File with correct PDF magic number should be accepted", async () => {
+		const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
+		const mockUrl = `${baseUrl}/fixtures/21_file_pdf_magic_number_success`;
+		const response = await fetch(mockUrl, { method: "POST", redirect: "manual" });
+		expect(response.status).toBe(201);
+	});
 
-  it('_file_empty_buffer: File with empty buffer should fail validation', async () => {
-    const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
-    const mockUrl = `${baseUrl}/fixtures/22_file_empty_buffer`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual' });
-    expect(response.status).toBe(422);
-    const data = await response.json();
-    expect(data).toEqual({ detail: "1 validation error in request", errors: [{ ctx: { buffer_size: 0 }, loc: ["files", "file"], msg: "File buffer is empty", type: "validation_error" }], status: 422, title: "Request Validation Failed", type: "https://spikard.dev/errors/validation-error" });
-  });
+	it("_file_empty_buffer: File with empty buffer should fail validation", async () => {
+		const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
+		const mockUrl = `${baseUrl}/fixtures/22_file_empty_buffer`;
+		const response = await fetch(mockUrl, { method: "POST", redirect: "manual" });
+		expect(response.status).toBe(422);
+		const data = await response.json();
+		expect(data).toEqual({
+			detail: "1 validation error in request",
+			errors: [
+				{ ctx: { buffer_size: 0 }, loc: ["files", "file"], msg: "File buffer is empty", type: "validation_error" },
+			],
+			status: 422,
+			title: "Request Validation Failed",
+			type: "https://spikard.dev/errors/validation-error",
+		});
+	});
 
-  it('content_type_validation_invalid_type: Tests file upload with disallowed content type', async () => {
-    const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
-    const mockUrl = `${baseUrl}/fixtures/content_type_validation_invalid_type`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual' });
-    expect(response.status).toBe(422);
-    const data = await response.json();
-    expect(data).toEqual({ detail: "1 validation error in request", errors: [{ loc: ["files", "file"], msg: "Invalid content type 'application/x-sh'. Allowed types: image/jpeg, image/png, image/gif", type: "validation_error" }], status: 422, title: "Request Validation Failed", type: "https://spikard.dev/errors/validation-error" });
-  });
+	it("content_type_validation_invalid_type: Tests file upload with disallowed content type", async () => {
+		const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
+		const mockUrl = `${baseUrl}/fixtures/content_type_validation_invalid_type`;
+		const response = await fetch(mockUrl, { method: "POST", redirect: "manual" });
+		expect(response.status).toBe(422);
+		const data = await response.json();
+		expect(data).toEqual({
+			detail: "1 validation error in request",
+			errors: [
+				{
+					loc: ["files", "file"],
+					msg: "Invalid content type 'application/x-sh'. Allowed types: image/jpeg, image/png, image/gif",
+					type: "validation_error",
+				},
+			],
+			status: 422,
+			title: "Request Validation Failed",
+			type: "https://spikard.dev/errors/validation-error",
+		});
+	});
 
-  it('empty_file_upload: Tests uploading a file with zero bytes', async () => {
-    const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
-    const mockUrl = `${baseUrl}/fixtures/empty_file_upload`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual' });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ filename: "empty.txt", size: 0 });
-  });
+	it("empty_file_upload: Tests uploading a file with zero bytes", async () => {
+		const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
+		const mockUrl = `${baseUrl}/fixtures/empty_file_upload`;
+		const response = await fetch(mockUrl, { method: "POST", redirect: "manual" });
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({ filename: "empty.txt", size: 0 });
+	});
 
-  it('file_list_upload_array_of_files: Tests uploading multiple files as a list parameter', async () => {
-    const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
-    const mockUrl = `${baseUrl}/fixtures/file_list_upload_array_of_files`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual' });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ filenames: ["file1.txt", "file2.txt"], total_size: 35 });
-  });
+	it("file_list_upload_array_of_files: Tests uploading multiple files as a list parameter", async () => {
+		const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
+		const mockUrl = `${baseUrl}/fixtures/file_list_upload_array_of_files`;
+		const response = await fetch(mockUrl, { method: "POST", redirect: "manual" });
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({ filenames: ["file1.txt", "file2.txt"], total_size: 35 });
+	});
 
-  it('file_size_validation_too_large: Tests file upload exceeding max size limit', async () => {
-    const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
-    const mockUrl = `${baseUrl}/fixtures/file_size_validation_too_large`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual' });
-    expect(response.status).toBe(413);
-    const data = await response.json();
-    expect(data).toEqual({ detail: "File too large. Maximum size is 1MB" });
-  });
+	it("file_size_validation_too_large: Tests file upload exceeding max size limit", async () => {
+		const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
+		const mockUrl = `${baseUrl}/fixtures/file_size_validation_too_large`;
+		const response = await fetch(mockUrl, { method: "POST", redirect: "manual" });
+		expect(response.status).toBe(413);
+		const data = await response.json();
+		expect(data).toEqual({ detail: "File too large. Maximum size is 1MB" });
+	});
 
-  it('file_upload_with_custom_headers: File upload with additional custom headers in the multipart section', async () => {
-    const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
-    const mockUrl = `${baseUrl}/fixtures/file_upload_with_custom_headers`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual' });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ test2: { content: "<file2 content>", content_type: "text/plain", filename: "test2.txt", headers: [["content-disposition", "form-data; name=\"test2\"; filename=\"test2.txt\""], ["content-type", "text/plain"], ["x-custom", "f2"]], size: 15 } });
-  });
+	it("file_upload_with_custom_headers: File upload with additional custom headers in the multipart section", async () => {
+		const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
+		const mockUrl = `${baseUrl}/fixtures/file_upload_with_custom_headers`;
+		const response = await fetch(mockUrl, { method: "POST", redirect: "manual" });
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({
+			test2: {
+				content: "<file2 content>",
+				content_type: "text/plain",
+				filename: "test2.txt",
+				headers: [
+					["content-disposition", 'form-data; name="test2"; filename="test2.txt"'],
+					["content-type", "text/plain"],
+					["x-custom", "f2"],
+				],
+				size: 15,
+			},
+		});
+	});
 
-  it('file_upload_without_filename: Upload file content without providing a filename', async () => {
-    const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
-    const mockUrl = `${baseUrl}/fixtures/file_upload_without_filename`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual' });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ test1: "<file1 content>" });
-  });
+	it("file_upload_without_filename: Upload file content without providing a filename", async () => {
+		const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
+		const mockUrl = `${baseUrl}/fixtures/file_upload_without_filename`;
+		const response = await fetch(mockUrl, { method: "POST", redirect: "manual" });
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({ test1: "<file1 content>" });
+	});
 
-  it('form_data_without_files: Multipart form with only text fields, no file uploads', async () => {
-    const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
-    const mockUrl = `${baseUrl}/fixtures/form_data_without_files`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual' });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ some: "data" });
-  });
+	it("form_data_without_files: Multipart form with only text fields, no file uploads", async () => {
+		const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
+		const mockUrl = `${baseUrl}/fixtures/form_data_without_files`;
+		const response = await fetch(mockUrl, { method: "POST", redirect: "manual" });
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({ some: "data" });
+	});
 
-  it('image_file_upload: Tests uploading an image file (JPEG)', async () => {
-    const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
-    const mockUrl = `${baseUrl}/fixtures/image_file_upload`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual' });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ content_type: "image/jpeg", filename: "photo.jpg", size: 22 });
-  });
+	it("image_file_upload: Tests uploading an image file (JPEG)", async () => {
+		const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
+		const mockUrl = `${baseUrl}/fixtures/image_file_upload`;
+		const response = await fetch(mockUrl, { method: "POST", redirect: "manual" });
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({ content_type: "image/jpeg", filename: "photo.jpg", size: 22 });
+	});
 
-  it('mixed_files_and_form_data: Multipart request with both file uploads and regular form fields', async () => {
-    const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
-    const mockUrl = `${baseUrl}/fixtures/mixed_files_and_form_data`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual' });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ active: "true", age: "25", file: { content: "file data here", content_type: "text/plain", filename: "upload.txt", size: 14 }, username: "testuser" });
-  });
+	it("mixed_files_and_form_data: Multipart request with both file uploads and regular form fields", async () => {
+		const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
+		const mockUrl = `${baseUrl}/fixtures/mixed_files_and_form_data`;
+		const response = await fetch(mockUrl, { method: "POST", redirect: "manual" });
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({
+			active: "true",
+			age: "25",
+			file: { content: "file data here", content_type: "text/plain", filename: "upload.txt", size: 14 },
+			username: "testuser",
+		});
+	});
 
-  it('multiple_file_uploads: Upload multiple files in a single multipart request', async () => {
-    const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
-    const mockUrl = `${baseUrl}/fixtures/multiple_file_uploads`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual' });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ test1: { content: "<file1 content>", content_type: "text/plain", filename: "test1.txt", size: 15 }, test2: { content: "<file2 content>", content_type: "text/plain", filename: "test2.txt", size: 15 } });
-  });
+	it("multiple_file_uploads: Upload multiple files in a single multipart request", async () => {
+		const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
+		const mockUrl = `${baseUrl}/fixtures/multiple_file_uploads`;
+		const response = await fetch(mockUrl, { method: "POST", redirect: "manual" });
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({
+			test1: { content: "<file1 content>", content_type: "text/plain", filename: "test1.txt", size: 15 },
+			test2: { content: "<file2 content>", content_type: "text/plain", filename: "test2.txt", size: 15 },
+		});
+	});
 
-  it('multiple_values_for_same_field_name: Multiple files uploaded with the same field name (array-like behavior)', async () => {
-    const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
-    const mockUrl = `${baseUrl}/fixtures/multiple_values_for_same_field_name`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual' });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ files: [{ content: "first file", content_type: "text/plain", filename: "file1.txt", size: 10 }, { content: "second file", content_type: "text/plain", filename: "file2.txt", size: 11 }], tags: ["python", "rust", "web"] });
-  });
+	it("multiple_values_for_same_field_name: Multiple files uploaded with the same field name (array-like behavior)", async () => {
+		const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
+		const mockUrl = `${baseUrl}/fixtures/multiple_values_for_same_field_name`;
+		const response = await fetch(mockUrl, { method: "POST", redirect: "manual" });
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({
+			files: [
+				{ content: "first file", content_type: "text/plain", filename: "file1.txt", size: 10 },
+				{ content: "second file", content_type: "text/plain", filename: "file2.txt", size: 11 },
+			],
+			tags: ["python", "rust", "web"],
+		});
+	});
 
-  it('optional_file_upload_missing: Tests optional file parameter when no file is provided', async () => {
-    const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
-    const mockUrl = `${baseUrl}/fixtures/optional_file_upload_missing`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual' });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ file: null });
-  });
+	it("optional_file_upload_missing: Tests optional file parameter when no file is provided", async () => {
+		const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
+		const mockUrl = `${baseUrl}/fixtures/optional_file_upload_missing`;
+		const response = await fetch(mockUrl, { method: "POST", redirect: "manual" });
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({ file: null });
+	});
 
-  it('optional_file_upload_provided: Tests optional file parameter when file is provided', async () => {
-    const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
-    const mockUrl = `${baseUrl}/fixtures/optional_file_upload_provided`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual' });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ content_type: "text/plain", filename: "optional.txt", size: 21 });
-  });
+	it("optional_file_upload_provided: Tests optional file parameter when file is provided", async () => {
+		const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
+		const mockUrl = `${baseUrl}/fixtures/optional_file_upload_provided`;
+		const response = await fetch(mockUrl, { method: "POST", redirect: "manual" });
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({ content_type: "text/plain", filename: "optional.txt", size: 21 });
+	});
 
-  it('pdf_file_upload: Tests uploading a PDF document', async () => {
-    const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
-    const mockUrl = `${baseUrl}/fixtures/pdf_file_upload`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual' });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ content_type: "application/pdf", filename: "report.pdf", size: 16 });
-  });
+	it("pdf_file_upload: Tests uploading a PDF document", async () => {
+		const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
+		const mockUrl = `${baseUrl}/fixtures/pdf_file_upload`;
+		const response = await fetch(mockUrl, { method: "POST", redirect: "manual" });
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({ content_type: "application/pdf", filename: "report.pdf", size: 16 });
+	});
 
-  it('required_file_upload_missing: Tests required file parameter when no file is provided', async () => {
-    const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
-    const mockUrl = `${baseUrl}/fixtures/required_file_upload_missing`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual' });
-    expect(response.status).toBe(422);
-    const data = await response.json();
-    expect(data).toEqual({ detail: "1 validation error in request", errors: [{ input: [], loc: ["body", "file"], msg: "Field required", type: "missing" }], status: 422, title: "Request Validation Failed", type: "https://spikard.dev/errors/validation-error" });
-  });
+	it("required_file_upload_missing: Tests required file parameter when no file is provided", async () => {
+		const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
+		const mockUrl = `${baseUrl}/fixtures/required_file_upload_missing`;
+		const response = await fetch(mockUrl, { method: "POST", redirect: "manual" });
+		expect(response.status).toBe(422);
+		const data = await response.json();
+		expect(data).toEqual({
+			detail: "1 validation error in request",
+			errors: [{ input: [], loc: ["body", "file"], msg: "Field required", type: "missing" }],
+			status: 422,
+			title: "Request Validation Failed",
+			type: "https://spikard.dev/errors/validation-error",
+		});
+	});
 
-  it('simple_file_upload: Single file upload with text/plain content type', async () => {
-    const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
-    const mockUrl = `${baseUrl}/fixtures/simple_file_upload`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual' });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ test: { content: "<file content>", content_type: "text/plain", filename: "test.txt", size: 14 } });
-  });
+	it("simple_file_upload: Single file upload with text/plain content type", async () => {
+		const baseUrl = process.env.MOCK_SERVER_URL ?? "http://localhost:8080";
+		const mockUrl = `${baseUrl}/fixtures/simple_file_upload`;
+		const response = await fetch(mockUrl, { method: "POST", redirect: "manual" });
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data).toEqual({
+			test: { content: "<file content>", content_type: "text/plain", filename: "test.txt", size: 14 },
+		});
+	});
 });
