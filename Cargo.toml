@@ -18,7 +18,9 @@ exclude = [
     "e2e/*",
     "examples/*",
     "packages/dart/rust",
+    "packages/swift/rust",
     "packages/elixir/native/spikard_nif",
+    "packages/ruby/ext/spikard_rb/native",
     "test_apps/*",
 ]
 
