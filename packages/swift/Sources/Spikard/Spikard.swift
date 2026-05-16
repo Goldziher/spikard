@@ -7,10 +7,73 @@ import RustBridge
 public typealias CorsConfig = RustBridge.CorsConfig
 
 /// Compression configuration shared across runtimes
-public typealias CompressionConfig = RustBridge.CompressionConfig
+public struct CompressionConfig: Codable, Sendable, Hashable {
+  /// Enable gzip compression
+  public let gzip: Bool
+  /// Enable brotli compression
+  public let brotli: Bool
+  /// Minimum response size to compress (bytes)
+  public let minSize: UInt
+  /// Compression quality (0-11 for brotli, 0-9 for gzip)
+  public let quality: UInt32
+  public init(gzip: Bool, brotli: Bool, minSize: UInt, quality: UInt32) {
+    self.gzip = gzip
+    self.brotli = brotli
+    self.minSize = minSize
+    self.quality = quality
+  }
+  private enum CodingKeys: String, CodingKey {
+    case gzip = "gzip"
+    case brotli = "brotli"
+    case minSize = "min_size"
+    case quality = "quality"
+  }
+}
+
+// MARK: - Internal FFI conversions for CompressionConfig
+extension CompressionConfig {
+  init(_ rb: RustBridge.CompressionConfig) throws {
+    self.gzip = rb.gzip()
+    self.brotli = rb.brotli()
+    self.minSize = rb.min_size()
+    self.quality = rb.quality()
+  }
+  func intoRust() throws -> RustBridge.CompressionConfig {
+    return RustBridge.CompressionConfig(self.gzip, self.brotli, self.minSize, self.quality)
+  }
+}
 
 /// Rate limiting configuration shared across runtimes
-public typealias RateLimitConfig = RustBridge.RateLimitConfig
+public struct RateLimitConfig: Codable, Sendable, Hashable {
+  /// Requests per second
+  public let perSecond: UInt64
+  /// Burst allowance
+  public let burst: UInt32
+  /// Use IP-based rate limiting
+  public let ipBased: Bool
+  public init(perSecond: UInt64, burst: UInt32, ipBased: Bool) {
+    self.perSecond = perSecond
+    self.burst = burst
+    self.ipBased = ipBased
+  }
+  private enum CodingKeys: String, CodingKey {
+    case perSecond = "per_second"
+    case burst = "burst"
+    case ipBased = "ip_based"
+  }
+}
+
+// MARK: - Internal FFI conversions for RateLimitConfig
+extension RateLimitConfig {
+  init(_ rb: RustBridge.RateLimitConfig) throws {
+    self.perSecond = rb.per_second()
+    self.burst = rb.burst()
+    self.ipBased = rb.ip_based()
+  }
+  func intoRust() throws -> RustBridge.RateLimitConfig {
+    return RustBridge.RateLimitConfig(self.perSecond, self.burst, self.ipBased)
+  }
+}
 
 /// JSON-RPC method metadata for routes that support JSON-RPC
 ///
@@ -71,16 +134,135 @@ public typealias ProblemDetails = RustBridge.ProblemDetails
 ///
 /// Encapsulates all schema-level configuration options including
 /// introspection control, complexity limits, and depth limits.
-public typealias SchemaConfig = RustBridge.SchemaConfig
+public struct SchemaConfig: Codable, Sendable, Hashable {
+  /// Enable introspection queries
+  public let introspectionEnabled: Bool
+  /// Maximum query complexity (None = unlimited)
+  public let complexityLimit: UInt?
+  /// Maximum query depth (None = unlimited)
+  public let depthLimit: UInt?
+  public init(introspectionEnabled: Bool, complexityLimit: UInt? = nil, depthLimit: UInt? = nil) {
+    self.introspectionEnabled = introspectionEnabled
+    self.complexityLimit = complexityLimit
+    self.depthLimit = depthLimit
+  }
+  private enum CodingKeys: String, CodingKey {
+    case introspectionEnabled = "introspection_enabled"
+    case complexityLimit = "complexity_limit"
+    case depthLimit = "depth_limit"
+  }
+}
+
+// MARK: - Internal FFI conversions for SchemaConfig
+extension SchemaConfig {
+  init(_ rb: RustBridge.SchemaConfig) throws {
+    self.introspectionEnabled = rb.introspection_enabled()
+    self.complexityLimit = rb.complexity_limit()
+    self.depthLimit = rb.depth_limit()
+  }
+  func intoRust() throws -> RustBridge.SchemaConfig {
+    return RustBridge.SchemaConfig(self.introspectionEnabled, self.complexityLimit, self.depthLimit)
+  }
+}
 
 /// Configuration for schemas with only Query type
-public typealias QueryOnlyConfig = RustBridge.QueryOnlyConfig
+public struct QueryOnlyConfig: Codable, Sendable, Hashable {
+  /// Enable introspection queries
+  public let introspectionEnabled: Bool
+  /// Maximum query complexity (None = unlimited)
+  public let complexityLimit: UInt?
+  /// Maximum query depth (None = unlimited)
+  public let depthLimit: UInt?
+  public init(introspectionEnabled: Bool, complexityLimit: UInt? = nil, depthLimit: UInt? = nil) {
+    self.introspectionEnabled = introspectionEnabled
+    self.complexityLimit = complexityLimit
+    self.depthLimit = depthLimit
+  }
+  private enum CodingKeys: String, CodingKey {
+    case introspectionEnabled = "introspection_enabled"
+    case complexityLimit = "complexity_limit"
+    case depthLimit = "depth_limit"
+  }
+}
+
+// MARK: - Internal FFI conversions for QueryOnlyConfig
+extension QueryOnlyConfig {
+  init(_ rb: RustBridge.QueryOnlyConfig) throws {
+    self.introspectionEnabled = rb.introspection_enabled()
+    self.complexityLimit = rb.complexity_limit()
+    self.depthLimit = rb.depth_limit()
+  }
+  func intoRust() throws -> RustBridge.QueryOnlyConfig {
+    return RustBridge.QueryOnlyConfig(
+      self.introspectionEnabled, self.complexityLimit, self.depthLimit)
+  }
+}
 
 /// Configuration for schemas with Query and Mutation types
-public typealias QueryMutationConfig = RustBridge.QueryMutationConfig
+public struct QueryMutationConfig: Codable, Sendable, Hashable {
+  /// Enable introspection queries
+  public let introspectionEnabled: Bool
+  /// Maximum query complexity (None = unlimited)
+  public let complexityLimit: UInt?
+  /// Maximum query depth (None = unlimited)
+  public let depthLimit: UInt?
+  public init(introspectionEnabled: Bool, complexityLimit: UInt? = nil, depthLimit: UInt? = nil) {
+    self.introspectionEnabled = introspectionEnabled
+    self.complexityLimit = complexityLimit
+    self.depthLimit = depthLimit
+  }
+  private enum CodingKeys: String, CodingKey {
+    case introspectionEnabled = "introspection_enabled"
+    case complexityLimit = "complexity_limit"
+    case depthLimit = "depth_limit"
+  }
+}
+
+// MARK: - Internal FFI conversions for QueryMutationConfig
+extension QueryMutationConfig {
+  init(_ rb: RustBridge.QueryMutationConfig) throws {
+    self.introspectionEnabled = rb.introspection_enabled()
+    self.complexityLimit = rb.complexity_limit()
+    self.depthLimit = rb.depth_limit()
+  }
+  func intoRust() throws -> RustBridge.QueryMutationConfig {
+    return RustBridge.QueryMutationConfig(
+      self.introspectionEnabled, self.complexityLimit, self.depthLimit)
+  }
+}
 
 /// Configuration for fully-featured schemas with Query, Mutation, and Subscription types
-public typealias FullSchemaConfig = RustBridge.FullSchemaConfig
+public struct FullSchemaConfig: Codable, Sendable, Hashable {
+  /// Enable introspection queries
+  public let introspectionEnabled: Bool
+  /// Maximum query complexity (None = unlimited)
+  public let complexityLimit: UInt?
+  /// Maximum query depth (None = unlimited)
+  public let depthLimit: UInt?
+  public init(introspectionEnabled: Bool, complexityLimit: UInt? = nil, depthLimit: UInt? = nil) {
+    self.introspectionEnabled = introspectionEnabled
+    self.complexityLimit = complexityLimit
+    self.depthLimit = depthLimit
+  }
+  private enum CodingKeys: String, CodingKey {
+    case introspectionEnabled = "introspection_enabled"
+    case complexityLimit = "complexity_limit"
+    case depthLimit = "depth_limit"
+  }
+}
+
+// MARK: - Internal FFI conversions for FullSchemaConfig
+extension FullSchemaConfig {
+  init(_ rb: RustBridge.FullSchemaConfig) throws {
+    self.introspectionEnabled = rb.introspection_enabled()
+    self.complexityLimit = rb.complexity_limit()
+    self.depthLimit = rb.depth_limit()
+  }
+  func intoRust() throws -> RustBridge.FullSchemaConfig {
+    return RustBridge.FullSchemaConfig(
+      self.introspectionEnabled, self.complexityLimit, self.depthLimit)
+  }
+}
 
 /// AsyncAPI HTTP endpoint configuration
 public typealias AsyncApiConfig = RustBridge.AsyncApiConfig
@@ -107,9 +289,58 @@ public typealias ValidationResponse = RustBridge.ValidationResponse
 public typealias ValidateRequest = RustBridge.ValidateRequest
 
 /// Configuration for in-process background task execution.
-public typealias BackgroundTaskConfig = RustBridge.BackgroundTaskConfig
+public struct BackgroundTaskConfig: Codable, Sendable, Hashable {
+  public let maxQueueSize: UInt
+  public let maxConcurrentTasks: UInt
+  public let drainTimeoutSecs: UInt64
+  public init(maxQueueSize: UInt, maxConcurrentTasks: UInt, drainTimeoutSecs: UInt64) {
+    self.maxQueueSize = maxQueueSize
+    self.maxConcurrentTasks = maxConcurrentTasks
+    self.drainTimeoutSecs = drainTimeoutSecs
+  }
+  private enum CodingKeys: String, CodingKey {
+    case maxQueueSize = "max_queue_size"
+    case maxConcurrentTasks = "max_concurrent_tasks"
+    case drainTimeoutSecs = "drain_timeout_secs"
+  }
+}
 
-public typealias BackgroundJobMetadata = RustBridge.BackgroundJobMetadata
+// MARK: - Internal FFI conversions for BackgroundTaskConfig
+extension BackgroundTaskConfig {
+  init(_ rb: RustBridge.BackgroundTaskConfig) throws {
+    self.maxQueueSize = rb.max_queue_size()
+    self.maxConcurrentTasks = rb.max_concurrent_tasks()
+    self.drainTimeoutSecs = rb.drain_timeout_secs()
+  }
+  func intoRust() throws -> RustBridge.BackgroundTaskConfig {
+    return RustBridge.BackgroundTaskConfig(
+      self.maxQueueSize, self.maxConcurrentTasks, self.drainTimeoutSecs)
+  }
+}
+
+public struct BackgroundJobMetadata: Codable, Sendable, Hashable {
+  public let name: String
+  public let requestId: String?
+  public init(name: String, requestId: String? = nil) {
+    self.name = name
+    self.requestId = requestId
+  }
+  private enum CodingKeys: String, CodingKey {
+    case name = "name"
+    case requestId = "request_id"
+  }
+}
+
+// MARK: - Internal FFI conversions for BackgroundJobMetadata
+extension BackgroundJobMetadata {
+  init(_ rb: RustBridge.BackgroundJobMetadata) throws {
+    self.name = rb.name().toString()
+    self.requestId = rb.request_id()?.toString()
+  }
+  func intoRust() throws -> RustBridge.BackgroundJobMetadata {
+    return RustBridge.BackgroundJobMetadata(self.name, self.requestId)
+  }
+}
 
 /// Configuration for gRPC support
 ///
@@ -144,10 +375,146 @@ public typealias BackgroundJobMetadata = RustBridge.BackgroundJobMetadata
 /// config.max_message_size = 10 * 1024 * 1024; // 10MB per message
 /// config.max_concurrent_streams = 50; // Advised to HTTP/2 layer
 /// ```
-public typealias GrpcConfig = RustBridge.GrpcConfig
+public struct GrpcConfig: Codable, Sendable, Hashable {
+  /// Enable gRPC support
+  public let enabled: Bool
+  /// Maximum message size in bytes (for both sending and receiving)
+  ///
+  /// This limit applies to individual messages in both unary and streaming RPCs.
+  /// When a single message exceeds this size, the request is rejected with HTTP 413
+  /// (Payload Too Large).
+  ///
+  /// Default: 4MB (4194304 bytes)
+  ///
+  /// # Note
+  /// This limit does NOT apply to the total response size in streaming RPCs.
+  /// For multi-message streams, the total response can exceed this limit as long
+  /// as each individual message stays within the limit.
+  public let maxMessageSize: UInt
+  /// Enable gzip compression for gRPC messages
+  public let enableCompression: Bool
+  /// Timeout for gRPC requests in seconds (None = no timeout)
+  public let requestTimeout: UInt64?
+  /// Maximum number of concurrent streams per connection (HTTP/2 advisory)
+  ///
+  /// This value is communicated to HTTP/2 clients as the server's flow control limit.
+  /// The HTTP/2 transport layer enforces this limit automatically via SETTINGS frames
+  /// and GOAWAY responses. Applications should NOT implement custom enforcement.
+  ///
+  /// Default: 100 streams per connection
+  ///
+  /// # Stream Limiting Strategy
+  /// - **Per Connection**: This limit applies per HTTP/2 connection, not globally
+  /// - **Transport Enforcement**: HTTP/2 handles all stream limiting; applications
+  ///   need not implement custom checks
+  /// - **Streaming Requests**: In server streaming or bidi streaming, each logical
+  ///   RPC consumes one stream slot. Message ordering within a stream follows
+  ///   HTTP/2 frame ordering.
+  public let maxConcurrentStreams: UInt32
+  /// Enable HTTP/2 keepalive
+  public let enableKeepalive: Bool
+  /// HTTP/2 keepalive interval in seconds
+  public let keepaliveInterval: UInt64
+  /// HTTP/2 keepalive timeout in seconds
+  public let keepaliveTimeout: UInt64
+  /// Total byte cap across an entire streaming response.
+  ///
+  /// When `Some(n)`, the streaming adapter aborts the stream with
+  /// `tonic::Status::resource_exhausted` once the cumulative encoded message
+  /// bytes exceed `n`. The stream yields the error item and then terminates.
+  ///
+  /// Per-message cap remains `max_message_size`. This limit applies to
+  /// server-streaming and bidirectional-streaming RPCs only; unary RPCs are
+  /// governed solely by `max_message_size`.
+  ///
+  /// Default: `None` (unbounded total response size).
+  public let maxStreamResponseBytes: UInt?
+  public init(
+    enabled: Bool, maxMessageSize: UInt, enableCompression: Bool, requestTimeout: UInt64? = nil,
+    maxConcurrentStreams: UInt32, enableKeepalive: Bool, keepaliveInterval: UInt64,
+    keepaliveTimeout: UInt64, maxStreamResponseBytes: UInt? = nil
+  ) {
+    self.enabled = enabled
+    self.maxMessageSize = maxMessageSize
+    self.enableCompression = enableCompression
+    self.requestTimeout = requestTimeout
+    self.maxConcurrentStreams = maxConcurrentStreams
+    self.enableKeepalive = enableKeepalive
+    self.keepaliveInterval = keepaliveInterval
+    self.keepaliveTimeout = keepaliveTimeout
+    self.maxStreamResponseBytes = maxStreamResponseBytes
+  }
+  private enum CodingKeys: String, CodingKey {
+    case enabled = "enabled"
+    case maxMessageSize = "max_message_size"
+    case enableCompression = "enable_compression"
+    case requestTimeout = "request_timeout"
+    case maxConcurrentStreams = "max_concurrent_streams"
+    case enableKeepalive = "enable_keepalive"
+    case keepaliveInterval = "keepalive_interval"
+    case keepaliveTimeout = "keepalive_timeout"
+    case maxStreamResponseBytes = "max_stream_response_bytes"
+  }
+}
+
+// MARK: - Internal FFI conversions for GrpcConfig
+extension GrpcConfig {
+  init(_ rb: RustBridge.GrpcConfig) throws {
+    self.enabled = rb.enabled()
+    self.maxMessageSize = rb.max_message_size()
+    self.enableCompression = rb.enable_compression()
+    self.requestTimeout = rb.request_timeout()
+    self.maxConcurrentStreams = rb.max_concurrent_streams()
+    self.enableKeepalive = rb.enable_keepalive()
+    self.keepaliveInterval = rb.keepalive_interval()
+    self.keepaliveTimeout = rb.keepalive_timeout()
+    self.maxStreamResponseBytes = rb.max_stream_response_bytes()
+  }
+  func intoRust() throws -> RustBridge.GrpcConfig {
+    return RustBridge.GrpcConfig(
+      self.enabled, self.maxMessageSize, self.enableCompression, self.requestTimeout,
+      self.maxConcurrentStreams, self.enableKeepalive, self.keepaliveInterval,
+      self.keepaliveTimeout, self.maxStreamResponseBytes)
+  }
+}
 
 /// JSON-RPC server configuration
-public typealias JsonRpcConfig = RustBridge.JsonRpcConfig
+public struct JsonRpcConfig: Codable, Sendable, Hashable {
+  /// Enable JSON-RPC endpoint
+  public let enabled: Bool
+  /// HTTP endpoint path for JSON-RPC requests (default: "/rpc")
+  public let endpointPath: String
+  /// Enable batch request processing (default: true)
+  public let enableBatch: Bool
+  /// Maximum number of requests in a batch (default: 100)
+  public let maxBatchSize: UInt
+  public init(enabled: Bool, endpointPath: String, enableBatch: Bool, maxBatchSize: UInt) {
+    self.enabled = enabled
+    self.endpointPath = endpointPath
+    self.enableBatch = enableBatch
+    self.maxBatchSize = maxBatchSize
+  }
+  private enum CodingKeys: String, CodingKey {
+    case enabled = "enabled"
+    case endpointPath = "endpoint_path"
+    case enableBatch = "enable_batch"
+    case maxBatchSize = "max_batch_size"
+  }
+}
+
+// MARK: - Internal FFI conversions for JsonRpcConfig
+extension JsonRpcConfig {
+  init(_ rb: RustBridge.JsonRpcConfig) throws {
+    self.enabled = rb.enabled()
+    self.endpointPath = rb.endpoint_path().toString()
+    self.enableBatch = rb.enable_batch()
+    self.maxBatchSize = rb.max_batch_size()
+  }
+  func intoRust() throws -> RustBridge.JsonRpcConfig {
+    return RustBridge.JsonRpcConfig(
+      self.enabled, self.endpointPath, self.enableBatch, self.maxBatchSize)
+  }
+}
 
 /// OpenAPI configuration
 public typealias OpenApiConfig = RustBridge.OpenApiConfig

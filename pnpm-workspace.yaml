@@ -3,6 +3,5 @@ packages:
   - "crates/spikard-node"
   - "e2e/node"
   - "examples/*"
-  - "test_apps/node"
 allowBuilds:
   esbuild: true

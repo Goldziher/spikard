@@ -19,7 +19,7 @@ A `QueryOnlyConfig` with default settings
 **Signature:**
 
 ```dart
-// Phase 1: dart backend signature generation
+QueryOnlyConfig schemaQueryOnly()
 ```
 
 **Returns:** `QueryOnlyConfig`
@@ -39,7 +39,7 @@ A `QueryMutationConfig` with default settings
 **Signature:**
 
 ```dart
-// Phase 1: dart backend signature generation
+QueryMutationConfig schemaQueryMutation()
 ```
 
 **Returns:** `QueryMutationConfig`
@@ -59,7 +59,7 @@ A `FullSchemaConfig` with default settings
 **Signature:**
 
 ```dart
-// Phase 1: dart backend signature generation
+FullSchemaConfig schemaFull()
 ```
 
 **Returns:** `FullSchemaConfig`
@@ -104,7 +104,7 @@ AsyncAPI HTTP endpoint configuration
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+static BackgroundJobMetadata default()
 ```
 
 ---
@@ -126,7 +126,7 @@ Configuration for in-process background task execution.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+static BackgroundTaskConfig default()
 ```
 
 ---
@@ -149,7 +149,7 @@ Compression configuration shared across runtimes
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+static CompressionConfig default()
 ```
 
 ---
@@ -170,14 +170,16 @@ Contact information
 
 CORS configuration for a route
 
-| Field              | Type            | Default | Description       |
-| ------------------ | --------------- | ------- | ----------------- |
-| `allowedOrigins`   | `List<String>`  | `[]`    | Allowed origins   |
-| `allowedMethods`   | `List<String>`  | `[]`    | Allowed methods   |
-| `allowedHeaders`   | `List<String>`  | `[]`    | Allowed headers   |
-| `exposeHeaders`    | `List<String>?` | `null`  | Expose headers    |
-| `maxAge`           | `int?`          | `null`  | Maximum age       |
-| `allowCredentials` | `bool?`         | `null`  | Allow credentials |
+| Field                | Type            | Default | Description          |
+| -------------------- | --------------- | ------- | -------------------- |
+| `allowedOrigins`     | `List<String>`  | `[]`    | Allowed origins      |
+| `allowedMethods`     | `List<String>`  | `[]`    | Allowed methods      |
+| `allowedHeaders`     | `List<String>`  | `[]`    | Allowed headers      |
+| `exposeHeaders`      | `List<String>?` | `null`  | Expose headers       |
+| `maxAge`             | `int?`          | `null`  | Maximum age          |
+| `allowCredentials`   | `bool?`         | `null`  | Allow credentials    |
+| `methodsJoinedCache` | `String`        | —       | Methods joined cache |
+| `headersJoinedCache` | `String`        | —       | Headers joined cache |
 
 ##### Methods
 
@@ -188,7 +190,7 @@ Get the cached joined methods string for preflight responses
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+String allowedMethodsJoined()
 ```
 
 ###### allowedHeadersJoined()
@@ -198,7 +200,7 @@ Get the cached joined headers string for preflight responses
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+String allowedHeadersJoined()
 ```
 
 ###### isOriginAllowed()
@@ -208,7 +210,7 @@ Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+bool isOriginAllowed(String origin)
 ```
 
 ###### isMethodAllowed()
@@ -218,7 +220,7 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+bool isMethodAllowed(String method)
 ```
 
 ###### areHeadersAllowed()
@@ -228,7 +230,7 @@ Check if all requested headers are allowed (O(n) where n = num requested headers
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+bool areHeadersAllowed(List<String> requested)
 ```
 
 ###### default()
@@ -236,7 +238,7 @@ Check if all requested headers are allowed (O(n) where n = num requested headers
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+static CorsConfig default()
 ```
 
 ---
@@ -258,7 +260,7 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+static FullSchemaConfig default()
 ```
 
 ---
@@ -279,7 +281,7 @@ Set the HTTP path for the GraphQL endpoint
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+GraphQlRouteConfig path(String path)
 ```
 
 ###### method()
@@ -289,7 +291,7 @@ Set the HTTP method for the GraphQL endpoint
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+GraphQlRouteConfig method(String method)
 ```
 
 ###### enablePlayground()
@@ -299,7 +301,7 @@ Enable or disable the GraphQL Playground UI
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+GraphQlRouteConfig enablePlayground(bool enable)
 ```
 
 ###### description()
@@ -309,7 +311,7 @@ Set a custom description for documentation
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+GraphQlRouteConfig description(String description)
 ```
 
 ###### getPath()
@@ -319,7 +321,7 @@ Get the configured path
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+String getPath()
 ```
 
 ###### getMethod()
@@ -329,7 +331,7 @@ Get the configured method
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+String getMethod()
 ```
 
 ###### isPlaygroundEnabled()
@@ -339,7 +341,7 @@ Check if playground is enabled
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+bool isPlaygroundEnabled()
 ```
 
 ###### getDescription()
@@ -349,7 +351,7 @@ Get the description if set
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+String? getDescription()
 ```
 
 ###### default()
@@ -357,7 +359,7 @@ Get the description if set
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+static GraphQlRouteConfig default()
 ```
 
 ---
@@ -383,7 +385,7 @@ Configuration for gRPC support
 Controls how the server handles gRPC requests, including compression,
 timeouts, and protocol settings.
 
-# Stream Limits
+## Stream Limits
 
 This configuration enforces message-level size limits but delegates
 concurrent stream limiting to the HTTP/2 transport layer:
@@ -416,19 +418,19 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `keepaliveTimeout`       | `int`  | —       | HTTP/2 keepalive timeout in seconds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `maxStreamResponseBytes` | `int?` | `null`  | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `null` (unbounded total response size).                                                                                                                                                                                                                                                            |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+static GrpcConfig default()
 ```
 
 ---
 
-#### JsonRpcConfig
+##### JsonRpcConfig
 
 JSON-RPC server configuration
 
@@ -439,19 +441,19 @@ JSON-RPC server configuration
 | `enableBatch`  | `bool`   | —       | Enable batch request processing (default: true)            |
 | `maxBatchSize` | `int`    | —       | Maximum number of requests in a batch (default: 100)       |
 
-##### Methods
+###### Methods
 
 ###### default()
 
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+static JsonRpcConfig default()
 ```
 
 ---
 
-#### JsonRpcMethodInfo
+##### JsonRpcMethodInfo
 
 JSON-RPC method metadata for routes that support JSON-RPC
 
@@ -469,7 +471,7 @@ enabling discovery and documentation of RPC-compatible endpoints.
 
 ---
 
-#### JwtConfig
+##### JwtConfig
 
 JWT authentication configuration
 
@@ -483,7 +485,7 @@ JWT authentication configuration
 
 ---
 
-#### LicenseInfo
+##### LicenseInfo
 
 License information
 
@@ -494,7 +496,7 @@ License information
 
 ---
 
-#### OpenApiConfig
+##### OpenApiConfig
 
 OpenAPI configuration
 
@@ -512,19 +514,19 @@ OpenAPI configuration
 | `servers`         | `List<ServerInfo>`                | `[]`      | Server definitions                                               |
 | `securitySchemes` | `Map<String, SecuritySchemeInfo>` | `{}`      | Security schemes (auto-detected from middleware if not provided) |
 
-##### Methods
+###### Methods
 
 ###### default()
 
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+static OpenApiConfig default()
 ```
 
 ---
 
-#### ParseRequest
+##### ParseRequest
 
 Request body for `POST /asyncapi/parse`
 
@@ -534,7 +536,7 @@ Request body for `POST /asyncapi/parse`
 
 ---
 
-#### ParseResult
+##### ParseResult
 
 Full parse result returned by `POST /asyncapi/parse`
 
@@ -549,7 +551,7 @@ Full parse result returned by `POST /asyncapi/parse`
 
 ---
 
-#### ParsedChannel
+##### ParsedChannel
 
 A single channel extracted from an AsyncAPI spec
 
@@ -562,7 +564,7 @@ A single channel extracted from an AsyncAPI spec
 
 ---
 
-#### ParsedMessage
+##### ParsedMessage
 
 A resolved message (name + JSON Schema)
 
@@ -573,7 +575,7 @@ A resolved message (name + JSON Schema)
 
 ---
 
-#### ParsedOperation
+##### ParsedOperation
 
 A single operation extracted from an AsyncAPI spec
 
@@ -585,7 +587,7 @@ A single operation extracted from an AsyncAPI spec
 
 ---
 
-#### ProblemDetails
+##### ProblemDetails
 
 RFC 9457 Problem Details for HTTP APIs
 
@@ -593,7 +595,7 @@ A machine-readable format for specifying errors in HTTP API responses.
 Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
 if not specified.
 
-# Content-Type
+## Content-Type
 
 Responses using this struct should set:
 
@@ -620,26 +622,26 @@ Content-Type: application/problem+json
 | `instance`   | `String?`             | `null`  | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced.                         |
 | `extensions` | `Map<String, String>` | —       | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array.                                            |
 
-##### Methods
+### Methods
 
-###### withDetail()
+#### withDetail()
 
 Set the detail field
 
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+ProblemDetails withDetail(String detail)
 ```
 
-###### withInstance()
+##### withInstance()
 
 Set the instance field
 
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+ProblemDetails withInstance(String instance)
 ```
 
 ###### notFound()
@@ -649,7 +651,7 @@ Create a not found error
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+static ProblemDetails notFound(String detail)
 ```
 
 ###### methodNotAllowed()
@@ -659,7 +661,7 @@ Create a method not allowed error
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+static ProblemDetails methodNotAllowed(String detail)
 ```
 
 ###### internalServerError()
@@ -669,7 +671,7 @@ Create an internal server error
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+static ProblemDetails internalServerError(String detail)
 ```
 
 ###### badRequest()
@@ -679,7 +681,7 @@ Create a bad request error
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+static ProblemDetails badRequest(String detail)
 ```
 
 ###### toJson()
@@ -692,7 +694,7 @@ Returns an error if the serialization fails.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+String toJson()
 ```
 
 ###### toJsonPretty()
@@ -705,12 +707,12 @@ Returns an error if the serialization fails.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+String toJsonPretty()
 ```
 
 ---
 
-#### QueryMutationConfig
+##### QueryMutationConfig
 
 Configuration for schemas with Query and Mutation types
 
@@ -720,19 +722,19 @@ Configuration for schemas with Query and Mutation types
 | `complexityLimit`      | `int?` | `null`  | Maximum query complexity (None = unlimited) |
 | `depthLimit`           | `int?` | `null`  | Maximum query depth (None = unlimited)      |
 
-##### Methods
+###### Methods
 
 ###### default()
 
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+static QueryMutationConfig default()
 ```
 
 ---
 
-#### QueryOnlyConfig
+##### QueryOnlyConfig
 
 Configuration for schemas with only Query type
 
@@ -742,19 +744,19 @@ Configuration for schemas with only Query type
 | `complexityLimit`      | `int?` | `null`  | Maximum query complexity (None = unlimited) |
 | `depthLimit`           | `int?` | `null`  | Maximum query depth (None = unlimited)      |
 
-##### Methods
+###### Methods
 
 ###### default()
 
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+static QueryOnlyConfig default()
 ```
 
 ---
 
-#### RateLimitConfig
+##### RateLimitConfig
 
 Rate limiting configuration shared across runtimes
 
@@ -764,19 +766,19 @@ Rate limiting configuration shared across runtimes
 | `burst`     | `int`  | `200`   | Burst allowance            |
 | `ipBased`   | `bool` | `true`  | Use IP-based rate limiting |
 
-##### Methods
+###### Methods
 
 ###### default()
 
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+static RateLimitConfig default()
 ```
 
 ---
 
-#### Response
+##### Response
 
 HTTP Response with custom status code, headers, and content
 
@@ -786,7 +788,7 @@ HTTP Response with custom status code, headers, and content
 | `statusCode` | `int`                 | —       | HTTP status code (defaults to 200) |
 | `headers`    | `Map<String, String>` | `{}`    | Response headers                   |
 
-##### Methods
+###### Methods
 
 ###### setHeader()
 
@@ -795,7 +797,7 @@ Set a header
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+void setHeader(String key, String value)
 ```
 
 ###### setCookie()
@@ -805,7 +807,7 @@ Set a cookie in the response
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+void setCookie(String key, String value, bool secure, bool httpOnly, [int? maxAge, String? domain, String? path, String? sameSite])
 ```
 
 ###### default()
@@ -813,12 +815,12 @@ Set a cookie in the response
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+static Response default()
 ```
 
 ---
 
-#### ResponseSnapshot
+##### ResponseSnapshot
 
 Snapshot of an Axum response used by higher-level language bindings.
 
@@ -828,7 +830,7 @@ Snapshot of an Axum response used by higher-level language bindings.
 | `headers` | `Map<String, String>` | —       | Response headers (lowercase keys for predictable lookups). |
 | `body`    | `Uint8List`           | —       | Response body bytes (decoded for supported encodings).     |
 
-##### Methods
+###### Methods
 
 ###### text()
 
@@ -837,7 +839,7 @@ Return response body as UTF-8 string.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+String text()
 ```
 
 ###### json()
@@ -847,7 +849,7 @@ Parse response body as JSON.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+String json()
 ```
 
 ###### header()
@@ -857,7 +859,7 @@ Lookup header by case-insensitive name.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+String? header(String name)
 ```
 
 ###### graphqlData()
@@ -867,7 +869,7 @@ Extract GraphQL data from response
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+String graphqlData()
 ```
 
 ###### graphqlErrors()
@@ -877,12 +879,12 @@ Extract GraphQL errors from response
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+List<String> graphqlErrors()
 ```
 
 ---
 
-#### SchemaConfig
+##### SchemaConfig
 
 Configuration for GraphQL schema building.
 
@@ -895,19 +897,19 @@ introspection control, complexity limits, and depth limits.
 | `complexityLimit`      | `int?` | `null`  | Maximum query complexity (None = unlimited) |
 | `depthLimit`           | `int?` | `null`  | Maximum query depth (None = unlimited)      |
 
-##### Methods
+###### Methods
 
 ###### default()
 
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+static SchemaConfig default()
 ```
 
 ---
 
-#### ServerConfig
+##### ServerConfig
 
 Server configuration
 
@@ -930,22 +932,24 @@ Server configuration
 | `openapi`          | `OpenApiConfig?`          | `null`        | OpenAPI documentation configuration                                            |
 | `jsonrpc`          | `JsonRpcConfig?`          | `null`        | JSON-RPC configuration                                                         |
 | `grpc`             | `GrpcConfig?`             | `null`        | gRPC configuration                                                             |
+| `lifecycleHooks`   | `String?`                 | `null`        | Lifecycle hooks for request/response processing                                |
 | `backgroundTasks`  | `BackgroundTaskConfig`    | —             | Background task executor configuration                                         |
 | `enableHttpTrace`  | `bool`                    | `false`       | Enable per-request HTTP tracing (tower-http `TraceLayer`)                      |
+| `diContainer`      | `String?`                 | `null`        | Dependency injection container (requires 'di' feature)                         |
 
-##### Methods
+###### Methods
 
 ###### default()
 
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+static ServerConfig default()
 ```
 
 ---
 
-#### ServerInfo
+##### ServerInfo
 
 Server information
 
@@ -956,14 +960,14 @@ Server information
 
 ---
 
-#### SseEvent
+##### SseEvent
 
 An individual SSE event
 
 Represents a single Server-Sent Event to be sent to a connected client.
 Events can have an optional type, ID, and retry timeout for advanced scenarios.
 
-# SSE Format
+## SSE Format
 
 Events are serialized to the following text format:
 
@@ -981,9 +985,9 @@ retry: 3000
 | `id`        | `String?` | `null`  | Event ID (optional, for client-side reconnection) |
 | `retry`     | `int?`    | `null`  | Retry timeout in milliseconds (optional)          |
 
-##### Methods
+### Methods
 
-###### withId()
+#### withId()
 
 Set the event ID for client-side reconnection support
 
@@ -993,10 +997,10 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+SseEvent withId(String id)
 ```
 
-###### withRetry()
+##### withRetry()
 
 Set the retry timeout for client reconnection
 
@@ -1006,12 +1010,12 @@ if the connection is lost. The client browser will automatically handle reconnec
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+SseEvent withRetry(int retryMs)
 ```
 
 ---
 
-#### StaticFilesConfig
+##### StaticFilesConfig
 
 Static file serving configuration
 
@@ -1024,7 +1028,7 @@ Static file serving configuration
 
 ---
 
-#### TestClient
+##### TestClient
 
 Core test client for making HTTP requests to a Spikard application.
 
@@ -1033,7 +1037,7 @@ interface for making HTTP requests, sending WebSocket connections, and
 handling Server-Sent Events. Language bindings wrap this to provide
 native API surfaces.
 
-##### Methods
+###### Methods
 
 ###### get()
 
@@ -1042,7 +1046,7 @@ Make a GET request
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+ResponseSnapshot get(String path, [List<String>? queryParams, List<String>? headers])
 ```
 
 ###### post()
@@ -1052,7 +1056,7 @@ Make a POST request
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+ResponseSnapshot post(String path, String multipart, [String? json, List<String>? formData, List<String>? queryParams, List<String>? headers])
 ```
 
 ###### requestRaw()
@@ -1062,7 +1066,7 @@ Make a request with a raw body payload.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+ResponseSnapshot requestRaw(Method method, String path, Uint8List body, [List<String>? queryParams, List<String>? headers])
 ```
 
 ###### put()
@@ -1072,7 +1076,7 @@ Make a PUT request
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+ResponseSnapshot put(String path, [String? json, List<String>? queryParams, List<String>? headers])
 ```
 
 ###### patch()
@@ -1082,7 +1086,7 @@ Make a PATCH request
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+ResponseSnapshot patch(String path, [String? json, List<String>? queryParams, List<String>? headers])
 ```
 
 ###### delete()
@@ -1092,7 +1096,7 @@ Make a DELETE request
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+ResponseSnapshot delete(String path, [List<String>? queryParams, List<String>? headers])
 ```
 
 ###### options()
@@ -1102,7 +1106,7 @@ Make an OPTIONS request
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+ResponseSnapshot options(String path, [List<String>? queryParams, List<String>? headers])
 ```
 
 ###### head()
@@ -1112,7 +1116,7 @@ Make a HEAD request
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+ResponseSnapshot head(String path, [List<String>? queryParams, List<String>? headers])
 ```
 
 ###### trace()
@@ -1122,7 +1126,7 @@ Make a TRACE request
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+ResponseSnapshot trace(String path, [List<String>? queryParams, List<String>? headers])
 ```
 
 ###### graphqlAt()
@@ -1132,7 +1136,7 @@ Send a GraphQL query/mutation to a custom endpoint
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+ResponseSnapshot graphqlAt(String endpoint, String query, [String? variables, String? operationName])
 ```
 
 ###### graphql()
@@ -1142,7 +1146,7 @@ Send a GraphQL query/mutation
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+ResponseSnapshot graphql(String query, [String? variables, String? operationName])
 ```
 
 ###### graphqlWithStatus()
@@ -1157,7 +1161,7 @@ This method allows tests to distinguish between:
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+String graphqlWithStatus(String query, [String? variables, String? operationName])
 ```
 
 ###### graphqlSubscriptionAt()
@@ -1170,7 +1174,7 @@ After the first payload is received, this client sends `complete` to unsubscribe
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+GraphQlSubscriptionSnapshot graphqlSubscriptionAt(String endpoint, String query, [String? variables, String? operationName])
 ```
 
 ###### graphqlSubscription()
@@ -1182,12 +1186,12 @@ Uses `/graphql` as the default subscription endpoint.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+GraphQlSubscriptionSnapshot graphqlSubscription(String query, [String? variables, String? operationName])
 ```
 
 ---
 
-#### UploadFile
+##### UploadFile
 
 Represents an uploaded file from multipart/form-data requests.
 
@@ -1203,7 +1207,7 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `contentEncoding` | `String?`   | `null`  | Content encoding type                    |
 | `cursor`          | `String`    | —       | Internal cursor for Read/Seek operations |
 
-##### Methods
+###### Methods
 
 ###### asBytes()
 
@@ -1214,7 +1218,7 @@ This provides zero-copy access to the underlying buffer.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+Uint8List asBytes()
 ```
 
 ###### readToString()
@@ -1228,7 +1232,7 @@ Returns an error if the content is not valid UTF-8.
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+String readToString()
 ```
 
 ###### contentTypeOrDefault()
@@ -1238,12 +1242,12 @@ Get the content type, defaulting to "application/octet-stream".
 **Signature:**
 
 ```dart
-// Phase 1: dart backend method signature generation
+String contentTypeOrDefault()
 ```
 
 ---
 
-#### ValidateRequest
+##### ValidateRequest
 
 Request body for `POST /asyncapi/validate`
 
@@ -1256,7 +1260,7 @@ Request body for `POST /asyncapi/validate`
 
 ---
 
-#### ValidationResponse
+##### ValidationResponse
 
 Response body for `POST /asyncapi/validate`
 
@@ -1267,9 +1271,9 @@ Response body for `POST /asyncapi/validate`
 
 ---
 
-### Enums
+#### Enums
 
-#### SnapshotError
+##### SnapshotError
 
 Possible errors while converting an Axum response into a snapshot.
 
@@ -1280,7 +1284,7 @@ Possible errors while converting an Axum response into a snapshot.
 
 ---
 
-#### WebSocketMessage
+##### WebSocketMessage
 
 A WebSocket message that can be text or binary.
 
@@ -1294,7 +1298,7 @@ A WebSocket message that can be text or binary.
 
 ---
 
-#### Method
+##### Method
 
 HTTP method
 
@@ -1311,7 +1315,7 @@ HTTP method
 
 ---
 
-#### SecuritySchemeInfo
+##### SecuritySchemeInfo
 
 Security scheme types
 
@@ -1322,9 +1326,9 @@ Security scheme types
 
 ---
 
-### Errors
+#### Errors
 
-#### GraphQlError
+##### GraphQlError
 
 Errors that can occur during GraphQL operations
 
@@ -1351,7 +1355,7 @@ converted to structured HTTP responses matching the project's error fixtures.
 
 ---
 
-#### SchemaError
+##### SchemaError
 
 Error type for schema building operations
 

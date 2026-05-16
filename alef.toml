@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.16.12"
+alef_version = "0.16.21"
 languages = [
   "python",
   "node",
@@ -260,8 +260,8 @@ project_file = "packages/csharp/Spikard/Spikard.csproj"
 
 [crates.build_commands.csharp]
 precondition = "command -v dotnet >/dev/null 2>&1"
-build = "dotnet build packages/csharp/Spikard/Spikard.csproj --configuration Debug -q -p:NuGetAudit=false"
-build_release = "dotnet build packages/csharp/Spikard/Spikard.csproj --configuration Release -q -p:NuGetAudit=false"
+build = "dotnet build packages/csharp/Spikard/Spikard.csproj --configuration Debug --verbosity quiet -p:NuGetAudit=false"
+build_release = "dotnet build packages/csharp/Spikard/Spikard.csproj --configuration Release --verbosity quiet -p:NuGetAudit=false"
 
 [crates.build_commands.kotlin]
 precondition = "command -v gradle >/dev/null 2>&1"
@@ -294,7 +294,7 @@ wasm = "crates/spikard-wasm/src/"
 go = "packages/go/"
 java = "packages/java/src/main/java/"
 csharp = "packages/csharp/src/"
-kotlin = "packages/kotlin/src/main/kotlin/dev/spikard/"
+kotlin = "packages/kotlin/src/main/kotlin/dev/spikard/kt/"
 dart = "packages/dart/lib/src/"
 swift = "packages/swift/Sources/Spikard/"
 zig = "packages/zig/src/"
@@ -549,8 +549,8 @@ typecheck = "mypy packages/python/"
 
 [crates.lint.node]
 precondition = "command -v pnpm >/dev/null 2>&1"
-format = "pnpm biome format --write packages/node/"
-check = "pnpm biome lint packages/node/"
+format = "pnpm dlx oxfmt packages/node packages/typescript"
+check = "pnpm dlx oxlint --fix packages/node packages/typescript"
 typecheck = "pnpm tsc --noEmit -p packages/node/tsconfig.json"
 
 [crates.lint.ruby]
@@ -561,8 +561,8 @@ typecheck = "cd packages/ruby && bundle exec steep check"
 
 [crates.lint.php]
 precondition = "command -v php >/dev/null 2>&1"
-format = "cd packages/php && vendor/bin/php-cs-fixer fix"
-check = "cd packages/php && vendor/bin/phpstan analyse"
+format = "cd packages/php && composer run format"
+check = "cd packages/php && composer run lint"
 
 [crates.lint.elixir]
 precondition = "command -v mix >/dev/null 2>&1"
@@ -603,9 +603,9 @@ format = "cd packages/zig && zig fmt src"
 check = "cd packages/zig && zig fmt --check src"
 
 [crates.lint.wasm]
-precondition = "test -d crates/spikard-wasm/typescript"
-format = "npx oxfmt crates/spikard-wasm/typescript"
-check = "npx oxlint crates/spikard-wasm/typescript"
+precondition = "command -v pnpm >/dev/null 2>&1"
+format = "pnpm dlx oxfmt packages/wasm"
+check = "pnpm dlx oxlint --fix packages/wasm"
 
 [crates.lint.ffi]
 precondition = "test -d crates/spikard-ffi/include"

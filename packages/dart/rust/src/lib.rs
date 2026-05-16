@@ -14,23 +14,54 @@ mod frb_generated;
 pub use flutter_rust_bridge::DartFnFuture;
 use flutter_rust_bridge::frb;
 
+/// Represents an uploaded file from multipart/form-data requests.
+///
+/// This struct provides efficient access to file content with automatic
+/// base64 decoding and implements standard I/O traits for compatibility.
+///
+/// # Example
+///
+/// ```rust
+/// use spikard::UploadFile;
+/// use serde::Deserialize;
+///
+/// #[derive(Deserialize)]
+/// struct UploadRequest {
+///     file: UploadFile,
+///     description: String,
+/// }
+///
+/// // In a handler:
+/// // let body: UploadRequest = ctx.json()?;
+/// // let content = body.file.as_bytes();
+/// // let filename = &body.file.filename;
+/// ```
 #[frb(mirror(UploadFile))]
 pub struct UploadFile {
+    /// Original filename from the client
     pub filename: String,
+    /// MIME type of the uploaded file
     pub content_type: Option<String>,
+    /// Size of the file in bytes
     pub size: Option<i64>,
+    /// File content (may be base64 encoded)
     pub content: Vec<u8>,
+    /// Content encoding type
     pub content_encoding: Option<String>,
-    pub cursor: String,
 }
 
+/// Snapshot of an Axum response used by higher-level language bindings.
 #[frb(mirror(ResponseSnapshot))]
 pub struct ResponseSnapshot {
+    /// HTTP status code.
     pub status: i64,
+    /// Response headers (lowercase keys for predictable lookups).
     pub headers: std::collections::HashMap<String, String>,
+    /// Response body bytes (decoded for supported encodings).
     pub body: Vec<u8>,
 }
 
+/// CORS configuration for a route
 #[frb(mirror(CorsConfig))]
 pub struct CorsConfig {
     pub allowed_origins: Vec<String>,
@@ -41,41 +72,137 @@ pub struct CorsConfig {
     pub allow_credentials: Option<bool>,
 }
 
+/// Compression configuration shared across runtimes
 #[frb(mirror(CompressionConfig))]
 pub struct CompressionConfig {
+    /// Enable gzip compression
     pub gzip: bool,
+    /// Enable brotli compression
     pub brotli: bool,
+    /// Minimum response size to compress (bytes)
     pub min_size: i64,
+    /// Compression quality (0-11 for brotli, 0-9 for gzip)
     pub quality: i64,
 }
 
+/// Rate limiting configuration shared across runtimes
 #[frb(mirror(RateLimitConfig))]
 pub struct RateLimitConfig {
+    /// Requests per second
     pub per_second: i64,
+    /// Burst allowance
     pub burst: i64,
+    /// Use IP-based rate limiting
     pub ip_based: bool,
 }
 
+/// JSON-RPC method metadata for routes that support JSON-RPC
+///
+/// This struct captures the metadata needed to expose HTTP routes as JSON-RPC methods,
+/// enabling discovery and documentation of RPC-compatible endpoints.
+///
+/// # Examples
+///
+/// ```ignore
+/// use spikard_core::router::JsonRpcMethodInfo;
+/// use serde_json::json;
+///
+/// let rpc_info = JsonRpcMethodInfo {
+///     method_name: "user.create".to_string(),
+///     description: Some("Creates a new user".to_string()),
+///     params_schema: Some(json!({
+///         "type": "object",
+///         "properties": {
+///             "name": {"type": "string"}
+///         }
+///     })),
+///     result_schema: Some(json!({
+///         "type": "object",
+///         "properties": {
+///             "id": {"type": "integer"}
+///         }
+///     })),
+///     deprecated: false,
+///     tags: vec!["users".to_string()],
+/// };
+/// ```
 #[frb(mirror(JsonRpcMethodInfo))]
 pub struct JsonRpcMethodInfo {
+    /// The JSON-RPC method name (e.g., "user.create")
     pub method_name: String,
+    /// Optional description of what the method does
     pub description: Option<String>,
+    /// Optional JSON Schema for method parameters
     pub params_schema: Option<String>,
+    /// Optional JSON Schema for the result
     pub result_schema: Option<String>,
+    /// Whether this method is deprecated
     pub deprecated: bool,
+    /// Tags for categorizing and grouping methods
     pub tags: Vec<String>,
 }
 
+/// RFC 9457 Problem Details for HTTP APIs
+///
+/// A machine-readable format for specifying errors in HTTP API responses.
+/// Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
+/// if not specified.
+///
+/// # Content-Type
+/// Responses using this struct should set:
+/// ```text
+/// Content-Type: application/problem+json
+/// ```
+///
+/// ```json
+/// {
+///   "type": "https://spikard.dev/errors/validation-error",
+///   "title": "Request Validation Failed",
+///   "status": 422,
+///   "detail": "2 validation errors in request body",
+///   "errors": [...]
+/// }
+/// ```
 #[frb(mirror(ProblemDetails))]
 pub struct ProblemDetails {
+    /// A URI reference that identifies the problem type.
+    /// Defaults to "about:blank" when absent.
+    /// Should be a stable, human-readable identifier for the problem type.
     pub type_uri: String,
+    /// A short, human-readable summary of the problem type.
+    /// Should not change from occurrence to occurrence of the problem.
     pub title: String,
+    /// The HTTP status code generated by the origin server.
+    /// This is advisory; the actual HTTP status code takes precedence.
     pub status: i64,
+    /// A human-readable explanation specific to this occurrence of the problem.
     pub detail: Option<String>,
+    /// A URI reference that identifies the specific occurrence of the problem.
+    /// It may or may not yield further information if dereferenced.
     pub instance: Option<String>,
+    /// Extension members - problem-type-specific data.
+    /// For validation errors, this typically contains an "errors" array.
     pub extensions: std::collections::HashMap<String, String>,
 }
 
+/// Configuration for GraphQL routes
+///
+/// Provides a builder pattern for configuring GraphQL route parameters
+/// for the Spikard HTTP server's routing system.
+///
+/// # Example
+///
+/// ```
+/// use spikard_graphql::routes::GraphQLRouteConfig;
+///
+/// let config = GraphQLRouteConfig::new()
+///     .path("/graphql")
+///     .method("POST")
+///     .enable_playground(true);
+///
+/// assert_eq!(config.get_path(), "/graphql");
+/// assert_eq!(config.get_method(), "POST");
+/// ```
 #[frb(opaque)]
 pub struct GraphQLRouteConfig {
     pub(crate) inner: spikard_graphql::GraphQLRouteConfig,
@@ -93,61 +220,96 @@ impl From<GraphQLRouteConfig> for spikard_graphql::GraphQLRouteConfig {
     }
 }
 
+/// Configuration for GraphQL schema building.
+///
+/// Encapsulates all schema-level configuration options including
+/// introspection control, complexity limits, and depth limits.
 #[frb(mirror(SchemaConfig))]
 pub struct SchemaConfig {
+    /// Enable introspection queries
     pub introspection_enabled: bool,
+    /// Maximum query complexity (None = unlimited)
     pub complexity_limit: Option<i64>,
+    /// Maximum query depth (None = unlimited)
     pub depth_limit: Option<i64>,
 }
 
+/// Configuration for schemas with only Query type
 #[frb(mirror(QueryOnlyConfig))]
 pub struct QueryOnlyConfig {
+    /// Enable introspection queries
     pub introspection_enabled: bool,
+    /// Maximum query complexity (None = unlimited)
     pub complexity_limit: Option<i64>,
+    /// Maximum query depth (None = unlimited)
     pub depth_limit: Option<i64>,
 }
 
+/// Configuration for schemas with Query and Mutation types
 #[frb(mirror(QueryMutationConfig))]
 pub struct QueryMutationConfig {
+    /// Enable introspection queries
     pub introspection_enabled: bool,
+    /// Maximum query complexity (None = unlimited)
     pub complexity_limit: Option<i64>,
+    /// Maximum query depth (None = unlimited)
     pub depth_limit: Option<i64>,
 }
 
+/// Configuration for fully-featured schemas with Query, Mutation, and Subscription types
 #[frb(mirror(FullSchemaConfig))]
 pub struct FullSchemaConfig {
+    /// Enable introspection queries
     pub introspection_enabled: bool,
+    /// Maximum query complexity (None = unlimited)
     pub complexity_limit: Option<i64>,
+    /// Maximum query depth (None = unlimited)
     pub depth_limit: Option<i64>,
 }
 
+/// AsyncAPI HTTP endpoint configuration
 #[frb(mirror(AsyncApiConfig))]
 pub struct AsyncApiConfig {
+    /// Enable AsyncAPI endpoints (default: false)
     pub enabled: bool,
+    /// Pre-registered AsyncAPI spec to serve from GET /asyncapi.json
     pub spec: Option<String>,
 }
 
+/// A single channel extracted from an AsyncAPI spec
 #[frb(mirror(ParsedChannel))]
 pub struct ParsedChannel {
+    /// Channel key from the spec (e.g. "chat/messages")
     pub name: String,
+    /// Channel address / path
     pub address: String,
+    /// Message names declared on this channel
     pub messages: Vec<String>,
+    /// Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility
     pub bindings: Option<String>,
 }
 
+/// A single operation extracted from an AsyncAPI spec
 #[frb(mirror(ParsedOperation))]
 pub struct ParsedOperation {
+    /// Operation name
     pub name: String,
+    /// Operation action: "send" or "receive"
     pub action: String,
+    /// Channel reference (resolved to the channel name)
     pub channel: String,
 }
 
+/// A resolved message (name + JSON Schema)
 #[frb(mirror(ParsedMessage))]
 pub struct ParsedMessage {
+    /// Message name
     pub name: String,
+    /// Resolved JSON Schema for the message payload, if available
     pub schema: Option<String>,
 }
 
+/// Full parse result returned by `POST /asyncapi/parse`
 #[frb(mirror(ParseResult))]
 pub struct ParseResult {
     pub spec_version: String,
@@ -158,17 +320,20 @@ pub struct ParseResult {
     pub messages: Vec<ParsedMessage>,
 }
 
+/// Request body for `POST /asyncapi/parse`
 #[frb(mirror(ParseRequest))]
 pub struct ParseRequest {
     pub spec: String,
 }
 
+/// Response body for `POST /asyncapi/validate`
 #[frb(mirror(ValidationResponse))]
 pub struct ValidationResponse {
     pub valid: bool,
     pub errors: Vec<String>,
 }
 
+/// Request body for `POST /asyncapi/validate`
 #[frb(mirror(ValidateRequest))]
 pub struct ValidateRequest {
     pub spec: String,
@@ -177,6 +342,7 @@ pub struct ValidateRequest {
     pub payload: String,
 }
 
+/// Configuration for in-process background task execution.
 #[frb(mirror(BackgroundTaskConfig))]
 pub struct BackgroundTaskConfig {
     pub max_queue_size: i64,
@@ -190,42 +356,137 @@ pub struct BackgroundJobMetadata {
     pub request_id: Option<String>,
 }
 
+/// Configuration for gRPC support
+///
+/// Controls how the server handles gRPC requests, including compression,
+/// timeouts, and protocol settings.
+///
+/// # Stream Limits
+///
+/// This configuration enforces message-level size limits but delegates
+/// concurrent stream limiting to the HTTP/2 transport layer:
+///
+/// - **Message Size Limits**: The `max_message_size` field is enforced per
+///   individual message (request or response) in both unary and streaming RPCs.
+///   When a single message exceeds this limit, the request is rejected with
+///   `PAYLOAD_TOO_LARGE` (HTTP 413).
+///
+/// - **Concurrent Stream Limits**: The `max_concurrent_streams` is an advisory
+///   configuration passed to the HTTP/2 layer for connection-level stream
+///   negotiation. The HTTP/2 transport automatically enforces this limit and
+///   returns GOAWAY frames when exceeded. Applications should not rely on
+///   custom enforcement of this limit.
+///
+/// - **Stream Response Size Limits**: The `max_stream_response_bytes` field caps the
+///   total encoded bytes emitted across a server-streaming or bidi-streaming response.
+///   When the cumulative size exceeds the limit, the stream is terminated with
+///   `tonic::Status::resource_exhausted`. Defaults to `None` (unbounded).
+///
+/// # Example
+///
+/// ```ignore
+/// let mut config = GrpcConfig::default();
+/// config.max_message_size = 10 * 1024 * 1024; // 10MB per message
+/// config.max_concurrent_streams = 50; // Advised to HTTP/2 layer
+/// ```
 #[frb(mirror(GrpcConfig))]
 pub struct GrpcConfig {
+    /// Enable gRPC support
     pub enabled: bool,
+    /// Maximum message size in bytes (for both sending and receiving)
+    ///
+    /// This limit applies to individual messages in both unary and streaming RPCs.
+    /// When a single message exceeds this size, the request is rejected with HTTP 413
+    /// (Payload Too Large).
+    ///
+    /// Default: 4MB (4194304 bytes)
+    ///
+    /// # Note
+    /// This limit does NOT apply to the total response size in streaming RPCs.
+    /// For multi-message streams, the total response can exceed this limit as long
+    /// as each individual message stays within the limit.
     pub max_message_size: i64,
+    /// Enable gzip compression for gRPC messages
     pub enable_compression: bool,
+    /// Timeout for gRPC requests in seconds (None = no timeout)
     pub request_timeout: Option<i64>,
+    /// Maximum number of concurrent streams per connection (HTTP/2 advisory)
+    ///
+    /// This value is communicated to HTTP/2 clients as the server's flow control limit.
+    /// The HTTP/2 transport layer enforces this limit automatically via SETTINGS frames
+    /// and GOAWAY responses. Applications should NOT implement custom enforcement.
+    ///
+    /// Default: 100 streams per connection
+    ///
+    /// # Stream Limiting Strategy
+    /// - **Per Connection**: This limit applies per HTTP/2 connection, not globally
+    /// - **Transport Enforcement**: HTTP/2 handles all stream limiting; applications
+    ///   need not implement custom checks
+    /// - **Streaming Requests**: In server streaming or bidi streaming, each logical
+    ///   RPC consumes one stream slot. Message ordering within a stream follows
+    ///   HTTP/2 frame ordering.
     pub max_concurrent_streams: i64,
+    /// Enable HTTP/2 keepalive
     pub enable_keepalive: bool,
+    /// HTTP/2 keepalive interval in seconds
     pub keepalive_interval: i64,
+    /// HTTP/2 keepalive timeout in seconds
     pub keepalive_timeout: i64,
+    /// Total byte cap across an entire streaming response.
+    ///
+    /// When `Some(n)`, the streaming adapter aborts the stream with
+    /// `tonic::Status::resource_exhausted` once the cumulative encoded message
+    /// bytes exceed `n`. The stream yields the error item and then terminates.
+    ///
+    /// Per-message cap remains `max_message_size`. This limit applies to
+    /// server-streaming and bidirectional-streaming RPCs only; unary RPCs are
+    /// governed solely by `max_message_size`.
+    ///
+    /// Default: `None` (unbounded total response size).
     pub max_stream_response_bytes: Option<i64>,
 }
 
+/// JSON-RPC server configuration
 #[frb(mirror(JsonRpcConfig))]
 pub struct JsonRpcConfig {
+    /// Enable JSON-RPC endpoint
     pub enabled: bool,
+    /// HTTP endpoint path for JSON-RPC requests (default: "/rpc")
     pub endpoint_path: String,
+    /// Enable batch request processing (default: true)
     pub enable_batch: bool,
+    /// Maximum number of requests in a batch (default: 100)
     pub max_batch_size: i64,
 }
 
+/// OpenAPI configuration
 #[frb(mirror(OpenApiConfig))]
 pub struct OpenApiConfig {
+    /// Enable OpenAPI generation (default: false for zero overhead)
     pub enabled: bool,
+    /// API title
     pub title: String,
+    /// API version
     pub version: String,
+    /// API description (supports markdown)
     pub description: Option<String>,
+    /// Path to serve Swagger UI (default: "/docs")
     pub swagger_ui_path: String,
+    /// Path to serve Redoc (default: "/redoc")
     pub redoc_path: String,
+    /// Path to serve OpenAPI JSON spec (default: "/openapi.json")
     pub openapi_json_path: String,
+    /// Contact information
     pub contact: Option<ContactInfo>,
+    /// License information
     pub license: Option<LicenseInfo>,
+    /// Server definitions
     pub servers: Vec<ServerInfo>,
+    /// Security schemes (auto-detected from middleware if not provided)
     pub security_schemes: std::collections::HashMap<String, SecuritySchemeInfo>,
 }
 
+/// Contact information
 #[frb(mirror(ContactInfo))]
 pub struct ContactInfo {
     pub name: Option<String>,
@@ -233,88 +494,165 @@ pub struct ContactInfo {
     pub url: Option<String>,
 }
 
+/// License information
 #[frb(mirror(LicenseInfo))]
 pub struct LicenseInfo {
     pub name: String,
     pub url: Option<String>,
 }
 
+/// Server information
 #[frb(mirror(ServerInfo))]
 pub struct ServerInfo {
     pub url: String,
     pub description: Option<String>,
 }
 
+/// HTTP Response with custom status code, headers, and content
 #[frb(mirror(Response))]
 pub struct Response {
+    /// Response body content
     pub content: Option<String>,
+    /// HTTP status code (defaults to 200)
     pub status_code: i64,
+    /// Response headers
     pub headers: std::collections::HashMap<String, String>,
 }
 
+/// An individual SSE event
+///
+/// Represents a single Server-Sent Event to be sent to a connected client.
+/// Events can have an optional type, ID, and retry timeout for advanced scenarios.
+///
+/// # Fields
+///
+/// * `event_type` - Optional event type string (used for client-side event filtering)
+/// * `data` - JSON data payload to send to the client
+/// * `id` - Optional event ID (clients can use this to resume after disconnect)
+/// * `retry` - Optional retry timeout in milliseconds (tells client when to reconnect)
+///
+/// # SSE Format
+///
+/// Events are serialized to the following text format:
+/// ```text
+/// event: event_type
+/// data: {"json":"value"}
+/// id: event-123
+/// retry: 3000
+/// ```
 #[frb(mirror(SseEvent))]
 pub struct SseEvent {
+    /// Event type (optional)
     pub event_type: Option<String>,
+    /// Event data (JSON value)
     pub data: String,
+    /// Event ID (optional, for client-side reconnection)
     pub id: Option<String>,
+    /// Retry timeout in milliseconds (optional)
     pub retry: Option<i64>,
 }
 
+/// JWT authentication configuration
 #[frb(mirror(JwtConfig))]
 pub struct JwtConfig {
+    /// Secret key for JWT verification
     pub secret: String,
+    /// Required algorithm (HS256, HS384, HS512, RS256, etc.)
     pub algorithm: String,
+    /// Required audience claim
     pub audience: Option<Vec<String>>,
+    /// Required issuer claim
     pub issuer: Option<String>,
+    /// Leeway for expiration checks (seconds)
     pub leeway: i64,
 }
 
+/// API Key authentication configuration
 #[frb(mirror(ApiKeyConfig))]
 pub struct ApiKeyConfig {
+    /// Valid API keys
     pub keys: Vec<String>,
+    /// Header name to check (e.g., "X-API-Key")
     pub header_name: String,
 }
 
+/// Static file serving configuration
 #[frb(mirror(StaticFilesConfig))]
 pub struct StaticFilesConfig {
+    /// Directory path to serve
     pub directory: String,
+    /// URL path prefix (e.g., "/static")
     pub route_prefix: String,
+    /// Fallback to index.html for directories
     pub index_file: bool,
+    /// Cache-Control header value
     pub cache_control: Option<String>,
 }
 
+/// Server configuration
 #[frb(mirror(ServerConfig))]
 pub struct ServerConfig {
+    /// Host to bind to
     pub host: String,
+    /// Port to bind to
     pub port: i64,
+    /// Number of Tokio runtime worker threads used by binding-managed server runtimes
     pub workers: i64,
+    /// Enable request ID generation and propagation
     pub enable_request_id: bool,
+    /// Maximum request body size in bytes (None = unlimited, not recommended)
     pub max_body_size: Option<i64>,
+    /// Request timeout in seconds (None = no timeout)
     pub request_timeout: Option<i64>,
+    /// Enable compression middleware
     pub compression: Option<CompressionConfig>,
+    /// Enable rate limiting
     pub rate_limit: Option<RateLimitConfig>,
+    /// JWT authentication configuration
     pub jwt_auth: Option<JwtConfig>,
+    /// API Key authentication configuration
     pub api_key_auth: Option<ApiKeyConfig>,
+    /// Static file serving configuration
     pub static_files: Vec<StaticFilesConfig>,
+    /// Enable graceful shutdown on SIGTERM/SIGINT
     pub graceful_shutdown: bool,
+    /// Graceful shutdown timeout (seconds)
     pub shutdown_timeout: i64,
+    /// AsyncAPI HTTP endpoint configuration
     pub asyncapi: Option<AsyncApiConfig>,
+    /// OpenAPI documentation configuration
     pub openapi: Option<OpenApiConfig>,
+    /// JSON-RPC configuration
     pub jsonrpc: Option<JsonRpcConfig>,
+    /// gRPC configuration
     pub grpc: Option<GrpcConfig>,
+    /// Background task executor configuration
     pub background_tasks: BackgroundTaskConfig,
+    /// Enable per-request HTTP tracing (tower-http `TraceLayer`)
     pub enable_http_trace: bool,
 }
 
+/// Snapshot of a GraphQL subscription exchange over WebSocket.
 #[frb(mirror(GraphQLSubscriptionSnapshot))]
 pub struct GraphQLSubscriptionSnapshot {
+    /// Operation id used for the subscription request.
     pub operation_id: String,
+    /// Whether the server acknowledged the GraphQL WebSocket connection.
     pub acknowledged: bool,
+    /// First `next.payload` received for this subscription, if any.
     pub event: Option<String>,
+    /// GraphQL protocol errors emitted by the server.
     pub errors: Vec<String>,
+    /// Whether a `complete` frame was observed for this operation.
     pub complete_received: bool,
 }
 
+/// Core test client for making HTTP requests to a Spikard application.
+///
+/// This struct wraps axum-test's TestServer and provides a language-agnostic
+/// interface for making HTTP requests, sending WebSocket connections, and
+/// handling Server-Sent Events. Language bindings wrap this to provide
+/// native API surfaces.
 #[frb(opaque)]
 pub struct TestClient {
     pub(crate) inner: spikard_http::testing::test_client::TestClient,
@@ -453,21 +791,39 @@ impl TestClient {
     }
 }
 
+/// Possible errors while converting an Axum response into a snapshot.
 #[frb(mirror(SnapshotError))]
 pub enum SnapshotError {
+    /// Response header could not be decoded to UTF-8.
     InvalidHeader { field0: String },
+    /// Body decompression failed.
     Decompression { field0: String },
 }
 
+/// A WebSocket message that can be text or binary.
 #[frb(mirror(WebSocketMessage))]
 pub enum WebSocketMessage {
+    /// A text message.
     Text { field0: String },
+    /// A binary message.
     Binary { field0: Vec<u8> },
-    Close { code: i64, reason: String },
+    /// A close message with a numeric close code (RFC 6455) and optional reason text.
+    ///
+    /// Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received,
+    /// 1006 Abnormal Closure.
+    Close {
+        /// RFC 6455 close code.
+        code: i64,
+        /// Optional human-readable reason string.
+        reason: String,
+    },
+    /// A ping message.
     Ping { field0: Vec<u8> },
+    /// A pong message.
     Pong { field0: Vec<u8> },
 }
 
+/// HTTP method
 #[frb(mirror(Method))]
 pub enum Method {
     Get,
@@ -480,6 +836,7 @@ pub enum Method {
     Trace,
 }
 
+/// Security scheme types
 #[frb(mirror(SecuritySchemeInfo))]
 pub enum SecuritySchemeInfo {
     Http { scheme: String, bearer_format: String },
@@ -496,7 +853,6 @@ impl From<spikard::UploadFile> for UploadFile {
             size: v.size.map(|x| x as _),
             content: v.content.into(),
             content_encoding: v.content_encoding.map(|s| s.into()),
-            cursor: Default::default(),
         }
     }
 }

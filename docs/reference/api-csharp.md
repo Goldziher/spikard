@@ -170,14 +170,16 @@ Contact information
 
 CORS configuration for a route
 
-| Field              | Type            | Default              | Description       |
-| ------------------ | --------------- | -------------------- | ----------------- |
-| `AllowedOrigins`   | `List<string>`  | `new List<string>()` | Allowed origins   |
-| `AllowedMethods`   | `List<string>`  | `new List<string>()` | Allowed methods   |
-| `AllowedHeaders`   | `List<string>`  | `new List<string>()` | Allowed headers   |
-| `ExposeHeaders`    | `List<string>?` | `null`               | Expose headers    |
-| `MaxAge`           | `uint?`         | `null`               | Maximum age       |
-| `AllowCredentials` | `bool?`         | `null`               | Allow credentials |
+| Field                | Type            | Default              | Description          |
+| -------------------- | --------------- | -------------------- | -------------------- |
+| `AllowedOrigins`     | `List<string>`  | `new List<string>()` | Allowed origins      |
+| `AllowedMethods`     | `List<string>`  | `new List<string>()` | Allowed methods      |
+| `AllowedHeaders`     | `List<string>`  | `new List<string>()` | Allowed headers      |
+| `ExposeHeaders`      | `List<string>?` | `null`               | Expose headers       |
+| `MaxAge`             | `uint?`         | `null`               | Maximum age          |
+| `AllowCredentials`   | `bool?`         | `null`               | Allow credentials    |
+| `MethodsJoinedCache` | `string`        | —                    | Methods joined cache |
+| `HeadersJoinedCache` | `string`        | —                    | Headers joined cache |
 
 ##### Methods
 
@@ -383,7 +385,7 @@ Configuration for gRPC support
 Controls how the server handles gRPC requests, including compression,
 timeouts, and protocol settings.
 
-# Stream Limits
+## Stream Limits
 
 This configuration enforces message-level size limits but delegates
 concurrent stream limiting to the HTTP/2 transport layer:
@@ -416,9 +418,9 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `KeepaliveTimeout`       | `ulong`  | —       | HTTP/2 keepalive timeout in seconds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `MaxStreamResponseBytes` | `nuint?` | `null`  | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `null` (unbounded total response size).                                                                                                                                                                                                                                                            |
 
-##### Methods
+### Methods
 
-###### CreateDefault()
+#### CreateDefault()
 
 **Signature:**
 
@@ -428,7 +430,7 @@ public GrpcConfig CreateDefault()
 
 ---
 
-#### JsonRpcConfig
+##### JsonRpcConfig
 
 JSON-RPC server configuration
 
@@ -439,7 +441,7 @@ JSON-RPC server configuration
 | `EnableBatch`  | `bool`   | —       | Enable batch request processing (default: true)            |
 | `MaxBatchSize` | `nuint`  | —       | Maximum number of requests in a batch (default: 100)       |
 
-##### Methods
+###### Methods
 
 ###### CreateDefault()
 
@@ -451,7 +453,7 @@ public JsonRpcConfig CreateDefault()
 
 ---
 
-#### JsonRpcMethodInfo
+##### JsonRpcMethodInfo
 
 JSON-RPC method metadata for routes that support JSON-RPC
 
@@ -469,7 +471,7 @@ enabling discovery and documentation of RPC-compatible endpoints.
 
 ---
 
-#### JwtConfig
+##### JwtConfig
 
 JWT authentication configuration
 
@@ -483,7 +485,7 @@ JWT authentication configuration
 
 ---
 
-#### LicenseInfo
+##### LicenseInfo
 
 License information
 
@@ -494,7 +496,7 @@ License information
 
 ---
 
-#### OpenApiConfig
+##### OpenApiConfig
 
 OpenAPI configuration
 
@@ -512,7 +514,7 @@ OpenAPI configuration
 | `Servers`         | `List<ServerInfo>`                       | `new List<ServerInfo>()`                       | Server definitions                                               |
 | `SecuritySchemes` | `Dictionary<string, SecuritySchemeInfo>` | `new Dictionary<string, SecuritySchemeInfo>()` | Security schemes (auto-detected from middleware if not provided) |
 
-##### Methods
+###### Methods
 
 ###### CreateDefault()
 
@@ -524,7 +526,7 @@ public OpenApiConfig CreateDefault()
 
 ---
 
-#### ParseRequest
+##### ParseRequest
 
 Request body for `POST /asyncapi/parse`
 
@@ -534,7 +536,7 @@ Request body for `POST /asyncapi/parse`
 
 ---
 
-#### ParseResult
+##### ParseResult
 
 Full parse result returned by `POST /asyncapi/parse`
 
@@ -549,7 +551,7 @@ Full parse result returned by `POST /asyncapi/parse`
 
 ---
 
-#### ParsedChannel
+##### ParsedChannel
 
 A single channel extracted from an AsyncAPI spec
 
@@ -562,7 +564,7 @@ A single channel extracted from an AsyncAPI spec
 
 ---
 
-#### ParsedMessage
+##### ParsedMessage
 
 A resolved message (name + JSON Schema)
 
@@ -573,7 +575,7 @@ A resolved message (name + JSON Schema)
 
 ---
 
-#### ParsedOperation
+##### ParsedOperation
 
 A single operation extracted from an AsyncAPI spec
 
@@ -585,7 +587,7 @@ A single operation extracted from an AsyncAPI spec
 
 ---
 
-#### ProblemDetails
+##### ProblemDetails
 
 RFC 9457 Problem Details for HTTP APIs
 
@@ -593,7 +595,7 @@ A machine-readable format for specifying errors in HTTP API responses.
 Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
 if not specified.
 
-# Content-Type
+## Content-Type
 
 Responses using this struct should set:
 
@@ -620,9 +622,9 @@ Content-Type: application/problem+json
 | `Instance`   | `string?`                    | `null`  | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced.                         |
 | `Extensions` | `Dictionary<string, object>` | —       | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array.                                            |
 
-##### Methods
+### Methods
 
-###### WithDetail()
+#### WithDetail()
 
 Set the detail field
 
@@ -632,7 +634,7 @@ Set the detail field
 public ProblemDetails WithDetail(string detail)
 ```
 
-###### WithInstance()
+##### WithInstance()
 
 Set the instance field
 
@@ -710,7 +712,7 @@ public string ToJsonPretty()
 
 ---
 
-#### QueryMutationConfig
+##### QueryMutationConfig
 
 Configuration for schemas with Query and Mutation types
 
@@ -720,7 +722,7 @@ Configuration for schemas with Query and Mutation types
 | `ComplexityLimit`      | `nuint?` | `null`  | Maximum query complexity (None = unlimited) |
 | `DepthLimit`           | `nuint?` | `null`  | Maximum query depth (None = unlimited)      |
 
-##### Methods
+###### Methods
 
 ###### CreateDefault()
 
@@ -732,7 +734,7 @@ public QueryMutationConfig CreateDefault()
 
 ---
 
-#### QueryOnlyConfig
+##### QueryOnlyConfig
 
 Configuration for schemas with only Query type
 
@@ -742,7 +744,7 @@ Configuration for schemas with only Query type
 | `ComplexityLimit`      | `nuint?` | `null`  | Maximum query complexity (None = unlimited) |
 | `DepthLimit`           | `nuint?` | `null`  | Maximum query depth (None = unlimited)      |
 
-##### Methods
+###### Methods
 
 ###### CreateDefault()
 
@@ -754,7 +756,7 @@ public QueryOnlyConfig CreateDefault()
 
 ---
 
-#### RateLimitConfig
+##### RateLimitConfig
 
 Rate limiting configuration shared across runtimes
 
@@ -764,7 +766,7 @@ Rate limiting configuration shared across runtimes
 | `Burst`     | `uint`  | `200`   | Burst allowance            |
 | `IpBased`   | `bool`  | `true`  | Use IP-based rate limiting |
 
-##### Methods
+###### Methods
 
 ###### CreateDefault()
 
@@ -776,7 +778,7 @@ public RateLimitConfig CreateDefault()
 
 ---
 
-#### Response
+##### Response
 
 HTTP Response with custom status code, headers, and content
 
@@ -786,7 +788,7 @@ HTTP Response with custom status code, headers, and content
 | `StatusCode` | `ushort`                     | —                                  | HTTP status code (defaults to 200) |
 | `Headers`    | `Dictionary<string, string>` | `new Dictionary<string, string>()` | Response headers                   |
 
-##### Methods
+###### Methods
 
 ###### SetHeader()
 
@@ -818,7 +820,7 @@ public Response CreateDefault()
 
 ---
 
-#### ResponseSnapshot
+##### ResponseSnapshot
 
 Snapshot of an Axum response used by higher-level language bindings.
 
@@ -828,7 +830,7 @@ Snapshot of an Axum response used by higher-level language bindings.
 | `Headers` | `Dictionary<string, string>` | —       | Response headers (lowercase keys for predictable lookups). |
 | `Body`    | `byte[]`                     | —       | Response body bytes (decoded for supported encodings).     |
 
-##### Methods
+###### Methods
 
 ###### Text()
 
@@ -882,7 +884,7 @@ public List<object> GraphqlErrors()
 
 ---
 
-#### SchemaConfig
+##### SchemaConfig
 
 Configuration for GraphQL schema building.
 
@@ -895,7 +897,7 @@ introspection control, complexity limits, and depth limits.
 | `ComplexityLimit`      | `nuint?` | `null`  | Maximum query complexity (None = unlimited) |
 | `DepthLimit`           | `nuint?` | `null`  | Maximum query depth (None = unlimited)      |
 
-##### Methods
+###### Methods
 
 ###### CreateDefault()
 
@@ -907,7 +909,7 @@ public SchemaConfig CreateDefault()
 
 ---
 
-#### ServerConfig
+##### ServerConfig
 
 Server configuration
 
@@ -930,10 +932,12 @@ Server configuration
 | `Openapi`          | `OpenApiConfig?`          | `null`                          | OpenAPI documentation configuration                                            |
 | `Jsonrpc`          | `JsonRpcConfig?`          | `null`                          | JSON-RPC configuration                                                         |
 | `Grpc`             | `GrpcConfig?`             | `null`                          | gRPC configuration                                                             |
+| `LifecycleHooks`   | `string?`                 | `null`                          | Lifecycle hooks for request/response processing                                |
 | `BackgroundTasks`  | `BackgroundTaskConfig`    | —                               | Background task executor configuration                                         |
 | `EnableHttpTrace`  | `bool`                    | `false`                         | Enable per-request HTTP tracing (tower-http `TraceLayer`)                      |
+| `DiContainer`      | `string?`                 | `null`                          | Dependency injection container (requires 'di' feature)                         |
 
-##### Methods
+###### Methods
 
 ###### CreateDefault()
 
@@ -945,7 +949,7 @@ public ServerConfig CreateDefault()
 
 ---
 
-#### ServerInfo
+##### ServerInfo
 
 Server information
 
@@ -956,14 +960,14 @@ Server information
 
 ---
 
-#### SseEvent
+##### SseEvent
 
 An individual SSE event
 
 Represents a single Server-Sent Event to be sent to a connected client.
 Events can have an optional type, ID, and retry timeout for advanced scenarios.
 
-# SSE Format
+## SSE Format
 
 Events are serialized to the following text format:
 
@@ -981,9 +985,9 @@ retry: 3000
 | `Id`        | `string?` | `null`  | Event ID (optional, for client-side reconnection) |
 | `Retry`     | `ulong?`  | `null`  | Retry timeout in milliseconds (optional)          |
 
-##### Methods
+### Methods
 
-###### WithId()
+#### WithId()
 
 Set the event ID for client-side reconnection support
 
@@ -996,7 +1000,7 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 public SseEvent WithId(string id)
 ```
 
-###### WithRetry()
+##### WithRetry()
 
 Set the retry timeout for client reconnection
 
@@ -1011,7 +1015,7 @@ public SseEvent WithRetry(ulong retryMs)
 
 ---
 
-#### StaticFilesConfig
+##### StaticFilesConfig
 
 Static file serving configuration
 
@@ -1024,7 +1028,7 @@ Static file serving configuration
 
 ---
 
-#### TestClient
+##### TestClient
 
 Core test client for making HTTP requests to a Spikard application.
 
@@ -1033,7 +1037,7 @@ interface for making HTTP requests, sending WebSocket connections, and
 handling Server-Sent Events. Language bindings wrap this to provide
 native API surfaces.
 
-##### Methods
+###### Methods
 
 ###### Get()
 
@@ -1187,7 +1191,7 @@ public async Task<GraphQlSubscriptionSnapshot> GraphqlSubscriptionAsync(string q
 
 ---
 
-#### UploadFile
+##### UploadFile
 
 Represents an uploaded file from multipart/form-data requests.
 
@@ -1203,7 +1207,7 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `ContentEncoding` | `string?` | `null`  | Content encoding type                    |
 | `Cursor`          | `string`  | —       | Internal cursor for Read/Seek operations |
 
-##### Methods
+###### Methods
 
 ###### AsBytes()
 
@@ -1243,7 +1247,7 @@ public string ContentTypeOrDefault()
 
 ---
 
-#### ValidateRequest
+##### ValidateRequest
 
 Request body for `POST /asyncapi/validate`
 
@@ -1256,7 +1260,7 @@ Request body for `POST /asyncapi/validate`
 
 ---
 
-#### ValidationResponse
+##### ValidationResponse
 
 Response body for `POST /asyncapi/validate`
 
@@ -1267,9 +1271,9 @@ Response body for `POST /asyncapi/validate`
 
 ---
 
-### Enums
+#### Enums
 
-#### SnapshotError
+##### SnapshotError
 
 Possible errors while converting an Axum response into a snapshot.
 
@@ -1280,7 +1284,7 @@ Possible errors while converting an Axum response into a snapshot.
 
 ---
 
-#### WebSocketMessage
+##### WebSocketMessage
 
 A WebSocket message that can be text or binary.
 
@@ -1294,7 +1298,7 @@ A WebSocket message that can be text or binary.
 
 ---
 
-#### Method
+##### Method
 
 HTTP method
 
@@ -1311,7 +1315,7 @@ HTTP method
 
 ---
 
-#### SecuritySchemeInfo
+##### SecuritySchemeInfo
 
 Security scheme types
 
@@ -1322,9 +1326,9 @@ Security scheme types
 
 ---
 
-### Errors
+#### Errors
 
-#### GraphQlError
+##### GraphQlError
 
 Errors that can occur during GraphQL operations
 
@@ -1351,7 +1355,7 @@ converted to structured HTTP responses matching the project's error fixtures.
 
 ---
 
-#### SchemaError
+##### SchemaError
 
 Error type for schema building operations
 

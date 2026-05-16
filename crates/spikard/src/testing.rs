@@ -43,8 +43,8 @@ pub use spikard_http::testing::SseEvent as TestSseEvent;
 pub fn test_client_from_app(app: App) -> Result<TestClient, SnapshotError> {
     let router = app
         .into_router()
-        .map_err(|e| SnapshotError::Decompression(format!("Failed to build app router: {}", e)))?;
-    TestClient::from_router(router).map_err(|e| SnapshotError::Decompression(e))
+        .map_err(|e| SnapshotError::Decompression(format!("Failed to build app router: {e}")))?;
+    TestClient::from_router(router).map_err(SnapshotError::Decompression)
 }
 
 /// Spikard-native test server wrapper that hides the Axum test harness.

@@ -19,7 +19,7 @@ A `QueryOnlyConfig` with default settings
 **Signature:**
 
 ```zig
-// Phase 1: zig backend signature generation
+pub fn schema_query_only() QueryOnlyConfig
 ```
 
 **Returns:** `QueryOnlyConfig`
@@ -39,7 +39,7 @@ A `QueryMutationConfig` with default settings
 **Signature:**
 
 ```zig
-// Phase 1: zig backend signature generation
+pub fn schema_query_mutation() QueryMutationConfig
 ```
 
 **Returns:** `QueryMutationConfig`
@@ -59,7 +59,7 @@ A `FullSchemaConfig` with default settings
 **Signature:**
 
 ```zig
-// Phase 1: zig backend signature generation
+pub fn schema_full() FullSchemaConfig
 ```
 
 **Returns:** `FullSchemaConfig`
@@ -104,7 +104,7 @@ AsyncAPI HTTP endpoint configuration
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn default() BackgroundJobMetadata
 ```
 
 ---
@@ -126,7 +126,7 @@ Configuration for in-process background task execution.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn default() BackgroundTaskConfig
 ```
 
 ---
@@ -149,7 +149,7 @@ Compression configuration shared across runtimes
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn default() CompressionConfig
 ```
 
 ---
@@ -170,14 +170,16 @@ Contact information
 
 CORS configuration for a route
 
-| Field              | Type                    | Default | Description       |
-| ------------------ | ----------------------- | ------- | ----------------- |
-| `allowedOrigins`   | `[]const [:0]const u8`  | `[]`    | Allowed origins   |
-| `allowedMethods`   | `[]const [:0]const u8`  | `[]`    | Allowed methods   |
-| `allowedHeaders`   | `[]const [:0]const u8`  | `[]`    | Allowed headers   |
-| `exposeHeaders`    | `[]const [:0]const u8?` | `null`  | Expose headers    |
-| `maxAge`           | `u32?`                  | `null`  | Maximum age       |
-| `allowCredentials` | `bool?`                 | `null`  | Allow credentials |
+| Field                | Type                    | Default | Description          |
+| -------------------- | ----------------------- | ------- | -------------------- |
+| `allowedOrigins`     | `[]const [:0]const u8`  | `[]`    | Allowed origins      |
+| `allowedMethods`     | `[]const [:0]const u8`  | `[]`    | Allowed methods      |
+| `allowedHeaders`     | `[]const [:0]const u8`  | `[]`    | Allowed headers      |
+| `exposeHeaders`      | `[]const [:0]const u8?` | `null`  | Expose headers       |
+| `maxAge`             | `u32?`                  | `null`  | Maximum age          |
+| `allowCredentials`   | `bool?`                 | `null`  | Allow credentials    |
+| `methodsJoinedCache` | `[:0]const u8`          | —       | Methods joined cache |
+| `headersJoinedCache` | `[:0]const u8`          | —       | Headers joined cache |
 
 ##### Methods
 
@@ -188,7 +190,7 @@ Get the cached joined methods string for preflight responses
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn allowedMethodsJoined(self: *const CorsConfig) [:0]const u8
 ```
 
 ###### allowedHeadersJoined()
@@ -198,7 +200,7 @@ Get the cached joined headers string for preflight responses
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn allowedHeadersJoined(self: *const CorsConfig) [:0]const u8
 ```
 
 ###### isOriginAllowed()
@@ -208,7 +210,7 @@ Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn isOriginAllowed(self: *const CorsConfig, origin: [:0]const u8) bool
 ```
 
 ###### isMethodAllowed()
@@ -218,7 +220,7 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn isMethodAllowed(self: *const CorsConfig, method: [:0]const u8) bool
 ```
 
 ###### areHeadersAllowed()
@@ -228,7 +230,7 @@ Check if all requested headers are allowed (O(n) where n = num requested headers
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn areHeadersAllowed(self: *const CorsConfig, requested: []const [:0]const u8) bool
 ```
 
 ###### default()
@@ -236,7 +238,7 @@ Check if all requested headers are allowed (O(n) where n = num requested headers
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn default() CorsConfig
 ```
 
 ---
@@ -258,7 +260,7 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn default() FullSchemaConfig
 ```
 
 ---
@@ -279,7 +281,7 @@ Set the HTTP path for the GraphQL endpoint
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn path(self: *const GraphQlRouteConfig, path: [:0]const u8) GraphQlRouteConfig
 ```
 
 ###### method()
@@ -289,7 +291,7 @@ Set the HTTP method for the GraphQL endpoint
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn method(self: *const GraphQlRouteConfig, method: [:0]const u8) GraphQlRouteConfig
 ```
 
 ###### enablePlayground()
@@ -299,7 +301,7 @@ Enable or disable the GraphQL Playground UI
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn enablePlayground(self: *const GraphQlRouteConfig, enable: bool) GraphQlRouteConfig
 ```
 
 ###### description()
@@ -309,7 +311,7 @@ Set a custom description for documentation
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn description(self: *const GraphQlRouteConfig, description: [:0]const u8) GraphQlRouteConfig
 ```
 
 ###### getPath()
@@ -319,7 +321,7 @@ Get the configured path
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn getPath(self: *const GraphQlRouteConfig) [:0]const u8
 ```
 
 ###### getMethod()
@@ -329,7 +331,7 @@ Get the configured method
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn getMethod(self: *const GraphQlRouteConfig) [:0]const u8
 ```
 
 ###### isPlaygroundEnabled()
@@ -339,7 +341,7 @@ Check if playground is enabled
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn isPlaygroundEnabled(self: *const GraphQlRouteConfig) bool
 ```
 
 ###### getDescription()
@@ -349,7 +351,7 @@ Get the description if set
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn getDescription(self: *const GraphQlRouteConfig) ?[:0]const u8
 ```
 
 ###### default()
@@ -357,7 +359,7 @@ Get the description if set
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn default() GraphQlRouteConfig
 ```
 
 ---
@@ -383,7 +385,7 @@ Configuration for gRPC support
 Controls how the server handles gRPC requests, including compression,
 timeouts, and protocol settings.
 
-# Stream Limits
+## Stream Limits
 
 This configuration enforces message-level size limits but delegates
 concurrent stream limiting to the HTTP/2 transport layer:
@@ -416,19 +418,19 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `keepaliveTimeout`       | `u64`  | —       | HTTP/2 keepalive timeout in seconds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `maxStreamResponseBytes` | `u64?` | `null`  | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `null` (unbounded total response size).                                                                                                                                                                                                                                                            |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn default() GrpcConfig
 ```
 
 ---
 
-#### JsonRpcConfig
+##### JsonRpcConfig
 
 JSON-RPC server configuration
 
@@ -439,19 +441,19 @@ JSON-RPC server configuration
 | `enableBatch`  | `bool`         | —       | Enable batch request processing (default: true)            |
 | `maxBatchSize` | `u64`          | —       | Maximum number of requests in a batch (default: 100)       |
 
-##### Methods
+###### Methods
 
 ###### default()
 
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn default() JsonRpcConfig
 ```
 
 ---
 
-#### JsonRpcMethodInfo
+##### JsonRpcMethodInfo
 
 JSON-RPC method metadata for routes that support JSON-RPC
 
@@ -469,7 +471,7 @@ enabling discovery and documentation of RPC-compatible endpoints.
 
 ---
 
-#### JwtConfig
+##### JwtConfig
 
 JWT authentication configuration
 
@@ -483,7 +485,7 @@ JWT authentication configuration
 
 ---
 
-#### LicenseInfo
+##### LicenseInfo
 
 License information
 
@@ -494,7 +496,7 @@ License information
 
 ---
 
-#### OpenApiConfig
+##### OpenApiConfig
 
 OpenAPI configuration
 
@@ -512,19 +514,19 @@ OpenAPI configuration
 | `servers`         | `[]const ServerInfo`                    | `[]`      | Server definitions                                               |
 | `securitySchemes` | `std.StringHashMap(SecuritySchemeInfo)` | `{}`      | Security schemes (auto-detected from middleware if not provided) |
 
-##### Methods
+###### Methods
 
 ###### default()
 
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn default() OpenApiConfig
 ```
 
 ---
 
-#### ParseRequest
+##### ParseRequest
 
 Request body for `POST /asyncapi/parse`
 
@@ -534,7 +536,7 @@ Request body for `POST /asyncapi/parse`
 
 ---
 
-#### ParseResult
+##### ParseResult
 
 Full parse result returned by `POST /asyncapi/parse`
 
@@ -549,7 +551,7 @@ Full parse result returned by `POST /asyncapi/parse`
 
 ---
 
-#### ParsedChannel
+##### ParsedChannel
 
 A single channel extracted from an AsyncAPI spec
 
@@ -562,7 +564,7 @@ A single channel extracted from an AsyncAPI spec
 
 ---
 
-#### ParsedMessage
+##### ParsedMessage
 
 A resolved message (name + JSON Schema)
 
@@ -573,7 +575,7 @@ A resolved message (name + JSON Schema)
 
 ---
 
-#### ParsedOperation
+##### ParsedOperation
 
 A single operation extracted from an AsyncAPI spec
 
@@ -585,7 +587,7 @@ A single operation extracted from an AsyncAPI spec
 
 ---
 
-#### ProblemDetails
+##### ProblemDetails
 
 RFC 9457 Problem Details for HTTP APIs
 
@@ -593,7 +595,7 @@ A machine-readable format for specifying errors in HTTP API responses.
 Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
 if not specified.
 
-# Content-Type
+## Content-Type
 
 Responses using this struct should set:
 
@@ -620,26 +622,26 @@ Content-Type: application/problem+json
 | `instance`   | `[:0]const u8?`                   | `null`  | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced.                         |
 | `extensions` | `std.StringHashMap([:0]const u8)` | —       | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array.                                            |
 
-##### Methods
+### Methods
 
-###### withDetail()
+#### withDetail()
 
 Set the detail field
 
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn withDetail(self: *const ProblemDetails, detail: [:0]const u8) ProblemDetails
 ```
 
-###### withInstance()
+##### withInstance()
 
 Set the instance field
 
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn withInstance(self: *const ProblemDetails, instance: [:0]const u8) ProblemDetails
 ```
 
 ###### notFound()
@@ -649,7 +651,7 @@ Create a not found error
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn notFound(detail: [:0]const u8) ProblemDetails
 ```
 
 ###### methodNotAllowed()
@@ -659,7 +661,7 @@ Create a method not allowed error
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn methodNotAllowed(detail: [:0]const u8) ProblemDetails
 ```
 
 ###### internalServerError()
@@ -669,7 +671,7 @@ Create an internal server error
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn internalServerError(detail: [:0]const u8) ProblemDetails
 ```
 
 ###### badRequest()
@@ -679,7 +681,7 @@ Create a bad request error
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn badRequest(detail: [:0]const u8) ProblemDetails
 ```
 
 ###### toJson()
@@ -692,7 +694,7 @@ Returns an error if the serialization fails.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn toJson(self: *const ProblemDetails) Error![:0]const u8
 ```
 
 ###### toJsonPretty()
@@ -705,12 +707,12 @@ Returns an error if the serialization fails.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn toJsonPretty(self: *const ProblemDetails) Error![:0]const u8
 ```
 
 ---
 
-#### QueryMutationConfig
+##### QueryMutationConfig
 
 Configuration for schemas with Query and Mutation types
 
@@ -720,19 +722,19 @@ Configuration for schemas with Query and Mutation types
 | `complexityLimit`      | `u64?` | `null`  | Maximum query complexity (None = unlimited) |
 | `depthLimit`           | `u64?` | `null`  | Maximum query depth (None = unlimited)      |
 
-##### Methods
+###### Methods
 
 ###### default()
 
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn default() QueryMutationConfig
 ```
 
 ---
 
-#### QueryOnlyConfig
+##### QueryOnlyConfig
 
 Configuration for schemas with only Query type
 
@@ -742,19 +744,19 @@ Configuration for schemas with only Query type
 | `complexityLimit`      | `u64?` | `null`  | Maximum query complexity (None = unlimited) |
 | `depthLimit`           | `u64?` | `null`  | Maximum query depth (None = unlimited)      |
 
-##### Methods
+###### Methods
 
 ###### default()
 
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn default() QueryOnlyConfig
 ```
 
 ---
 
-#### RateLimitConfig
+##### RateLimitConfig
 
 Rate limiting configuration shared across runtimes
 
@@ -764,19 +766,19 @@ Rate limiting configuration shared across runtimes
 | `burst`     | `u32`  | `200`   | Burst allowance            |
 | `ipBased`   | `bool` | `true`  | Use IP-based rate limiting |
 
-##### Methods
+###### Methods
 
 ###### default()
 
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn default() RateLimitConfig
 ```
 
 ---
 
-#### Response
+##### Response
 
 HTTP Response with custom status code, headers, and content
 
@@ -786,7 +788,7 @@ HTTP Response with custom status code, headers, and content
 | `statusCode` | `u16`                             | —       | HTTP status code (defaults to 200) |
 | `headers`    | `std.StringHashMap([:0]const u8)` | `{}`    | Response headers                   |
 
-##### Methods
+###### Methods
 
 ###### setHeader()
 
@@ -795,7 +797,7 @@ Set a header
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn setHeader(self: *const Response, key: [:0]const u8, value: [:0]const u8) void
 ```
 
 ###### setCookie()
@@ -805,7 +807,7 @@ Set a cookie in the response
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn setCookie(self: *const Response, key: [:0]const u8, value: [:0]const u8, secure: bool, http_only: bool, max_age: ?i64, domain: ?[:0]const u8, path: ?[:0]const u8, same_site: ?[:0]const u8) void
 ```
 
 ###### default()
@@ -813,12 +815,12 @@ Set a cookie in the response
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn default() Response
 ```
 
 ---
 
-#### ResponseSnapshot
+##### ResponseSnapshot
 
 Snapshot of an Axum response used by higher-level language bindings.
 
@@ -828,7 +830,7 @@ Snapshot of an Axum response used by higher-level language bindings.
 | `headers` | `std.StringHashMap([:0]const u8)` | —       | Response headers (lowercase keys for predictable lookups). |
 | `body`    | `[]const u8`                      | —       | Response body bytes (decoded for supported encodings).     |
 
-##### Methods
+###### Methods
 
 ###### text()
 
@@ -837,7 +839,7 @@ Return response body as UTF-8 string.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn text(self: *const ResponseSnapshot) FromUtf8Error![:0]const u8
 ```
 
 ###### json()
@@ -847,7 +849,7 @@ Parse response body as JSON.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn json(self: *const ResponseSnapshot) Error![:0]const u8
 ```
 
 ###### header()
@@ -857,7 +859,7 @@ Lookup header by case-insensitive name.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn header(self: *const ResponseSnapshot, name: [:0]const u8) ?[:0]const u8
 ```
 
 ###### graphqlData()
@@ -867,7 +869,7 @@ Extract GraphQL data from response
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn graphqlData(self: *const ResponseSnapshot) SnapshotError![:0]const u8
 ```
 
 ###### graphqlErrors()
@@ -877,12 +879,12 @@ Extract GraphQL errors from response
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn graphqlErrors(self: *const ResponseSnapshot) SnapshotError![]const [:0]const u8
 ```
 
 ---
 
-#### SchemaConfig
+##### SchemaConfig
 
 Configuration for GraphQL schema building.
 
@@ -895,19 +897,19 @@ introspection control, complexity limits, and depth limits.
 | `complexityLimit`      | `u64?` | `null`  | Maximum query complexity (None = unlimited) |
 | `depthLimit`           | `u64?` | `null`  | Maximum query depth (None = unlimited)      |
 
-##### Methods
+###### Methods
 
 ###### default()
 
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn default() SchemaConfig
 ```
 
 ---
 
-#### ServerConfig
+##### ServerConfig
 
 Server configuration
 
@@ -930,22 +932,24 @@ Server configuration
 | `openapi`          | `OpenApiConfig?`            | `null`        | OpenAPI documentation configuration                                            |
 | `jsonrpc`          | `JsonRpcConfig?`            | `null`        | JSON-RPC configuration                                                         |
 | `grpc`             | `GrpcConfig?`               | `null`        | gRPC configuration                                                             |
+| `lifecycleHooks`   | `[:0]const u8?`             | `null`        | Lifecycle hooks for request/response processing                                |
 | `backgroundTasks`  | `BackgroundTaskConfig`      | —             | Background task executor configuration                                         |
 | `enableHttpTrace`  | `bool`                      | `false`       | Enable per-request HTTP tracing (tower-http `TraceLayer`)                      |
+| `diContainer`      | `[:0]const u8?`             | `null`        | Dependency injection container (requires 'di' feature)                         |
 
-##### Methods
+###### Methods
 
 ###### default()
 
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn default() ServerConfig
 ```
 
 ---
 
-#### ServerInfo
+##### ServerInfo
 
 Server information
 
@@ -956,14 +960,14 @@ Server information
 
 ---
 
-#### SseEvent
+##### SseEvent
 
 An individual SSE event
 
 Represents a single Server-Sent Event to be sent to a connected client.
 Events can have an optional type, ID, and retry timeout for advanced scenarios.
 
-# SSE Format
+## SSE Format
 
 Events are serialized to the following text format:
 
@@ -981,9 +985,9 @@ retry: 3000
 | `id`        | `[:0]const u8?` | `null`  | Event ID (optional, for client-side reconnection) |
 | `retry`     | `u64?`          | `null`  | Retry timeout in milliseconds (optional)          |
 
-##### Methods
+### Methods
 
-###### withId()
+#### withId()
 
 Set the event ID for client-side reconnection support
 
@@ -993,10 +997,10 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn withId(self: *const SseEvent, id: [:0]const u8) SseEvent
 ```
 
-###### withRetry()
+##### withRetry()
 
 Set the retry timeout for client reconnection
 
@@ -1006,12 +1010,12 @@ if the connection is lost. The client browser will automatically handle reconnec
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn withRetry(self: *const SseEvent, retry_ms: u64) SseEvent
 ```
 
 ---
 
-#### StaticFilesConfig
+##### StaticFilesConfig
 
 Static file serving configuration
 
@@ -1024,7 +1028,7 @@ Static file serving configuration
 
 ---
 
-#### TestClient
+##### TestClient
 
 Core test client for making HTTP requests to a Spikard application.
 
@@ -1033,7 +1037,7 @@ interface for making HTTP requests, sending WebSocket connections, and
 handling Server-Sent Events. Language bindings wrap this to provide
 native API surfaces.
 
-##### Methods
+###### Methods
 
 ###### get()
 
@@ -1042,7 +1046,7 @@ Make a GET request
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn get(self: *const TestClient, path: [:0]const u8, query_params: ?[]const [:0]const u8, headers: ?[]const [:0]const u8) SnapshotError!ResponseSnapshot
 ```
 
 ###### post()
@@ -1052,7 +1056,7 @@ Make a POST request
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn post(self: *const TestClient, path: [:0]const u8, json: ?[:0]const u8, form_data: ?[]const [:0]const u8, multipart: [:0]const u8, query_params: ?[]const [:0]const u8, headers: ?[]const [:0]const u8) SnapshotError!ResponseSnapshot
 ```
 
 ###### requestRaw()
@@ -1062,7 +1066,7 @@ Make a request with a raw body payload.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn requestRaw(self: *const TestClient, method: Method, path: [:0]const u8, body: []const u8, query_params: ?[]const [:0]const u8, headers: ?[]const [:0]const u8) SnapshotError!ResponseSnapshot
 ```
 
 ###### put()
@@ -1072,7 +1076,7 @@ Make a PUT request
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn put(self: *const TestClient, path: [:0]const u8, json: ?[:0]const u8, query_params: ?[]const [:0]const u8, headers: ?[]const [:0]const u8) SnapshotError!ResponseSnapshot
 ```
 
 ###### patch()
@@ -1082,7 +1086,7 @@ Make a PATCH request
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn patch(self: *const TestClient, path: [:0]const u8, json: ?[:0]const u8, query_params: ?[]const [:0]const u8, headers: ?[]const [:0]const u8) SnapshotError!ResponseSnapshot
 ```
 
 ###### delete()
@@ -1092,7 +1096,7 @@ Make a DELETE request
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn delete(self: *const TestClient, path: [:0]const u8, query_params: ?[]const [:0]const u8, headers: ?[]const [:0]const u8) SnapshotError!ResponseSnapshot
 ```
 
 ###### options()
@@ -1102,7 +1106,7 @@ Make an OPTIONS request
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn options(self: *const TestClient, path: [:0]const u8, query_params: ?[]const [:0]const u8, headers: ?[]const [:0]const u8) SnapshotError!ResponseSnapshot
 ```
 
 ###### head()
@@ -1112,7 +1116,7 @@ Make a HEAD request
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn head(self: *const TestClient, path: [:0]const u8, query_params: ?[]const [:0]const u8, headers: ?[]const [:0]const u8) SnapshotError!ResponseSnapshot
 ```
 
 ###### trace()
@@ -1122,7 +1126,7 @@ Make a TRACE request
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn trace(self: *const TestClient, path: [:0]const u8, query_params: ?[]const [:0]const u8, headers: ?[]const [:0]const u8) SnapshotError!ResponseSnapshot
 ```
 
 ###### graphqlAt()
@@ -1132,7 +1136,7 @@ Send a GraphQL query/mutation to a custom endpoint
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn graphqlAt(self: *const TestClient, endpoint: [:0]const u8, query: [:0]const u8, variables: ?[:0]const u8, operation_name: ?[:0]const u8) SnapshotError!ResponseSnapshot
 ```
 
 ###### graphql()
@@ -1142,7 +1146,7 @@ Send a GraphQL query/mutation
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn graphql(self: *const TestClient, query: [:0]const u8, variables: ?[:0]const u8, operation_name: ?[:0]const u8) SnapshotError!ResponseSnapshot
 ```
 
 ###### graphqlWithStatus()
@@ -1157,7 +1161,7 @@ This method allows tests to distinguish between:
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn graphqlWithStatus(self: *const TestClient, query: [:0]const u8, variables: ?[:0]const u8, operation_name: ?[:0]const u8) SnapshotError![:0]const u8
 ```
 
 ###### graphqlSubscriptionAt()
@@ -1170,7 +1174,7 @@ After the first payload is received, this client sends `complete` to unsubscribe
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn graphqlSubscriptionAt(self: *const TestClient, endpoint: [:0]const u8, query: [:0]const u8, variables: ?[:0]const u8, operation_name: ?[:0]const u8) SnapshotError!GraphQlSubscriptionSnapshot
 ```
 
 ###### graphqlSubscription()
@@ -1182,12 +1186,12 @@ Uses `/graphql` as the default subscription endpoint.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn graphqlSubscription(self: *const TestClient, query: [:0]const u8, variables: ?[:0]const u8, operation_name: ?[:0]const u8) SnapshotError!GraphQlSubscriptionSnapshot
 ```
 
 ---
 
-#### UploadFile
+##### UploadFile
 
 Represents an uploaded file from multipart/form-data requests.
 
@@ -1203,7 +1207,7 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `contentEncoding` | `[:0]const u8?` | `null`  | Content encoding type                    |
 | `cursor`          | `[:0]const u8`  | —       | Internal cursor for Read/Seek operations |
 
-##### Methods
+###### Methods
 
 ###### asBytes()
 
@@ -1214,7 +1218,7 @@ This provides zero-copy access to the underlying buffer.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn asBytes(self: *const UploadFile) []const u8
 ```
 
 ###### readToString()
@@ -1228,7 +1232,7 @@ Returns an error if the content is not valid UTF-8.
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn readToString(self: *const UploadFile) Error![:0]const u8
 ```
 
 ###### contentTypeOrDefault()
@@ -1238,12 +1242,12 @@ Get the content type, defaulting to "application/octet-stream".
 **Signature:**
 
 ```zig
-// Phase 1: zig backend method signature generation
+pub fn contentTypeOrDefault(self: *const UploadFile) [:0]const u8
 ```
 
 ---
 
-#### ValidateRequest
+##### ValidateRequest
 
 Request body for `POST /asyncapi/validate`
 
@@ -1256,7 +1260,7 @@ Request body for `POST /asyncapi/validate`
 
 ---
 
-#### ValidationResponse
+##### ValidationResponse
 
 Response body for `POST /asyncapi/validate`
 
@@ -1267,9 +1271,9 @@ Response body for `POST /asyncapi/validate`
 
 ---
 
-### Enums
+#### Enums
 
-#### SnapshotError
+##### SnapshotError
 
 Possible errors while converting an Axum response into a snapshot.
 
@@ -1280,7 +1284,7 @@ Possible errors while converting an Axum response into a snapshot.
 
 ---
 
-#### WebSocketMessage
+##### WebSocketMessage
 
 A WebSocket message that can be text or binary.
 
@@ -1294,7 +1298,7 @@ A WebSocket message that can be text or binary.
 
 ---
 
-#### Method
+##### Method
 
 HTTP method
 
@@ -1311,7 +1315,7 @@ HTTP method
 
 ---
 
-#### SecuritySchemeInfo
+##### SecuritySchemeInfo
 
 Security scheme types
 
@@ -1322,9 +1326,9 @@ Security scheme types
 
 ---
 
-### Errors
+#### Errors
 
-#### GraphQlError
+##### GraphQlError
 
 Errors that can occur during GraphQL operations
 
@@ -1351,7 +1355,7 @@ converted to structured HTTP responses matching the project's error fixtures.
 
 ---
 
-#### SchemaError
+##### SchemaError
 
 Error type for schema building operations
 

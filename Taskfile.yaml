@@ -156,17 +156,30 @@ tasks:
 
   # === Update / Upgrade ===
   update:
-    desc: "Update dependencies (compatible only)"
+    desc: "Update dependencies within declared compatibility ranges"
     cmds:
+      - npx --yes actions-up@latest --yes --style preserve
       - task: rust:update
+      - uv sync --all-packages --all-extras --upgrade
       - alef update
       - prek autoupdate
 
   upgrade:
-    desc: "Upgrade dependencies aggressively (cargo upgrade --incompatible, pnpm up --latest, uv sync --upgrade, etc.)"
+    desc: "Upgrade dependencies aggressively, including breaking changes where supported"
     cmds:
+      - npx --yes actions-up@latest --yes --style preserve
       - rustup update stable
-      - task: rust:upgrade
+      - cargo upgrade --incompatible
+      - cargo update
+      - uv sync --all-packages --all-extras --upgrade
+      - cmd: cargo upgrade --incompatible --manifest-path packages/ruby/ext/spikard_rb/native/Cargo.toml
+        ignore_error: true
+      - cmd: cargo update --manifest-path packages/ruby/ext/spikard_rb/native/Cargo.toml
+        ignore_error: true
+      - cmd: cargo upgrade --incompatible --manifest-path packages/swift/rust/Cargo.toml
+        ignore_error: true
+      - cmd: cargo update --manifest-path packages/swift/rust/Cargo.toml
+        ignore_error: true
       - alef update --latest
       - prek autoupdate
 

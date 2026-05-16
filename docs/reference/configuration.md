@@ -10,14 +10,16 @@ This page documents all configuration types and their defaults across all langua
 
 CORS configuration for a route
 
-| Field               | Type                | Default | Description       |
-| ------------------- | ------------------- | ------- | ----------------- |
-| `allowed_origins`   | `list[str]`         | `[]`    | Allowed origins   |
-| `allowed_methods`   | `list[str]`         | `[]`    | Allowed methods   |
-| `allowed_headers`   | `list[str]`         | `[]`    | Allowed headers   |
-| `expose_headers`    | `list[str] \| None` | `None`  | Expose headers    |
-| `max_age`           | `int \| None`       | `None`  | Maximum age       |
-| `allow_credentials` | `bool \| None`      | `None`  | Allow credentials |
+| Field                  | Type                | Default | Description          |
+| ---------------------- | ------------------- | ------- | -------------------- |
+| `allowed_origins`      | `list[str]`         | `[]`    | Allowed origins      |
+| `allowed_methods`      | `list[str]`         | `[]`    | Allowed methods      |
+| `allowed_headers`      | `list[str]`         | `[]`    | Allowed headers      |
+| `expose_headers`       | `list[str] \| None` | `None`  | Expose headers       |
+| `max_age`              | `int \| None`       | `None`  | Maximum age          |
+| `allow_credentials`    | `bool \| None`      | `None`  | Allow credentials    |
+| `methods_joined_cache` | `str`               | —       | Methods joined cache |
+| `headers_joined_cache` | `str`               | —       | Headers joined cache |
 
 ---
 
@@ -136,7 +138,7 @@ Configuration for gRPC support
 Controls how the server handles gRPC requests, including compression,
 timeouts, and protocol settings.
 
-# Stream Limits
+## Stream Limits
 
 This configuration enforces message-level size limits but delegates
 concurrent stream limiting to the HTTP/2 transport layer:
@@ -184,7 +186,7 @@ JSON-RPC server configuration
 
 ---
 
-### OpenApiConfig
+#### OpenApiConfig
 
 OpenAPI configuration
 
@@ -204,7 +206,7 @@ OpenAPI configuration
 
 ---
 
-### Response
+#### Response
 
 HTTP Response with custom status code, headers, and content
 
@@ -216,7 +218,7 @@ HTTP Response with custom status code, headers, and content
 
 ---
 
-### JwtConfig
+#### JwtConfig
 
 JWT authentication configuration
 
@@ -230,7 +232,7 @@ JWT authentication configuration
 
 ---
 
-### ApiKeyConfig
+#### ApiKeyConfig
 
 API Key authentication configuration
 
@@ -241,7 +243,7 @@ API Key authentication configuration
 
 ---
 
-### StaticFilesConfig
+#### StaticFilesConfig
 
 Static file serving configuration
 
@@ -254,7 +256,7 @@ Static file serving configuration
 
 ---
 
-### ServerConfig
+#### ServerConfig
 
 Server configuration
 
@@ -277,14 +279,16 @@ Server configuration
 | `openapi`           | `OpenApiConfig \| None`     | `None`        | OpenAPI documentation configuration                                            |
 | `jsonrpc`           | `JsonRpcConfig \| None`     | `None`        | JSON-RPC configuration                                                         |
 | `grpc`              | `GrpcConfig \| None`        | `None`        | gRPC configuration                                                             |
+| `lifecycle_hooks`   | `str \| None`               | `None`        | Lifecycle hooks for request/response processing                                |
 | `background_tasks`  | `BackgroundTaskConfig`      | —             | Background task executor configuration                                         |
 | `enable_http_trace` | `bool`                      | `False`       | Enable per-request HTTP tracing (tower-http `TraceLayer`)                      |
+| `di_container`      | `str \| None`               | `None`        | Dependency injection container (requires 'di' feature)                         |
 
 ---
 
-### Enums
+#### Enums
 
-#### SecuritySchemeInfo
+##### SecuritySchemeInfo
 
 Security scheme types
 

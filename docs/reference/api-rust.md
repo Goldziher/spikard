@@ -170,14 +170,16 @@ Contact information
 
 CORS configuration for a route
 
-| Field               | Type                  | Default  | Description       |
-| ------------------- | --------------------- | -------- | ----------------- |
-| `allowed_origins`   | `Vec<String>`         | `vec![]` | Allowed origins   |
-| `allowed_methods`   | `Vec<String>`         | `vec![]` | Allowed methods   |
-| `allowed_headers`   | `Vec<String>`         | `vec![]` | Allowed headers   |
-| `expose_headers`    | `Option<Vec<String>>` | `None`   | Expose headers    |
-| `max_age`           | `Option<u32>`         | `None`   | Maximum age       |
-| `allow_credentials` | `Option<bool>`        | `None`   | Allow credentials |
+| Field                  | Type                  | Default  | Description          |
+| ---------------------- | --------------------- | -------- | -------------------- |
+| `allowed_origins`      | `Vec<String>`         | `vec![]` | Allowed origins      |
+| `allowed_methods`      | `Vec<String>`         | `vec![]` | Allowed methods      |
+| `allowed_headers`      | `Vec<String>`         | `vec![]` | Allowed headers      |
+| `expose_headers`       | `Option<Vec<String>>` | `None`   | Expose headers       |
+| `max_age`              | `Option<u32>`         | `None`   | Maximum age          |
+| `allow_credentials`    | `Option<bool>`        | `None`   | Allow credentials    |
+| `methods_joined_cache` | `String`              | —        | Methods joined cache |
+| `headers_joined_cache` | `String`              | —        | Headers joined cache |
 
 ##### Methods
 
@@ -383,7 +385,7 @@ Configuration for gRPC support
 Controls how the server handles gRPC requests, including compression,
 timeouts, and protocol settings.
 
-# Stream Limits
+## Stream Limits
 
 This configuration enforces message-level size limits but delegates
 concurrent stream limiting to the HTTP/2 transport layer:
@@ -416,9 +418,9 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `keepalive_timeout`         | `u64`           | —       | HTTP/2 keepalive timeout in seconds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `max_stream_response_bytes` | `Option<usize>` | `None`  | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `None` (unbounded total response size).                                                                                                                                                                                                                                                            |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -428,7 +430,7 @@ pub fn default() -> GrpcConfig
 
 ---
 
-#### JsonRpcConfig
+##### JsonRpcConfig
 
 JSON-RPC server configuration
 
@@ -439,7 +441,7 @@ JSON-RPC server configuration
 | `enable_batch`   | `bool`   | —       | Enable batch request processing (default: true)            |
 | `max_batch_size` | `usize`  | —       | Maximum number of requests in a batch (default: 100)       |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -451,7 +453,7 @@ pub fn default() -> JsonRpcConfig
 
 ---
 
-#### JsonRpcMethodInfo
+##### JsonRpcMethodInfo
 
 JSON-RPC method metadata for routes that support JSON-RPC
 
@@ -469,7 +471,7 @@ enabling discovery and documentation of RPC-compatible endpoints.
 
 ---
 
-#### JwtConfig
+##### JwtConfig
 
 JWT authentication configuration
 
@@ -483,7 +485,7 @@ JWT authentication configuration
 
 ---
 
-#### LicenseInfo
+##### LicenseInfo
 
 License information
 
@@ -494,7 +496,7 @@ License information
 
 ---
 
-#### OpenApiConfig
+##### OpenApiConfig
 
 OpenAPI configuration
 
@@ -512,7 +514,7 @@ OpenAPI configuration
 | `servers`           | `Vec<ServerInfo>`                     | `vec![]`         | Server definitions                                               |
 | `security_schemes`  | `HashMap<String, SecuritySchemeInfo>` | `HashMap::new()` | Security schemes (auto-detected from middleware if not provided) |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -524,7 +526,7 @@ pub fn default() -> OpenApiConfig
 
 ---
 
-#### ParseRequest
+##### ParseRequest
 
 Request body for `POST /asyncapi/parse`
 
@@ -534,7 +536,7 @@ Request body for `POST /asyncapi/parse`
 
 ---
 
-#### ParseResult
+##### ParseResult
 
 Full parse result returned by `POST /asyncapi/parse`
 
@@ -549,7 +551,7 @@ Full parse result returned by `POST /asyncapi/parse`
 
 ---
 
-#### ParsedChannel
+##### ParsedChannel
 
 A single channel extracted from an AsyncAPI spec
 
@@ -562,7 +564,7 @@ A single channel extracted from an AsyncAPI spec
 
 ---
 
-#### ParsedMessage
+##### ParsedMessage
 
 A resolved message (name + JSON Schema)
 
@@ -573,7 +575,7 @@ A resolved message (name + JSON Schema)
 
 ---
 
-#### ParsedOperation
+##### ParsedOperation
 
 A single operation extracted from an AsyncAPI spec
 
@@ -585,7 +587,7 @@ A single operation extracted from an AsyncAPI spec
 
 ---
 
-#### ProblemDetails
+##### ProblemDetails
 
 RFC 9457 Problem Details for HTTP APIs
 
@@ -593,7 +595,7 @@ A machine-readable format for specifying errors in HTTP API responses.
 Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
 if not specified.
 
-# Content-Type
+## Content-Type
 
 Responses using this struct should set:
 
@@ -620,9 +622,9 @@ Content-Type: application/problem+json
 | `instance`   | `Option<String>`                     | `None`  | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced.                         |
 | `extensions` | `HashMap<String, serde_json::Value>` | —       | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array.                                            |
 
-##### Methods
+### Methods
 
-###### with_detail()
+#### with_detail()
 
 Set the detail field
 
@@ -632,7 +634,7 @@ Set the detail field
 pub fn with_detail(&self, detail: &str) -> ProblemDetails
 ```
 
-###### with_instance()
+##### with_instance()
 
 Set the instance field
 
@@ -710,7 +712,7 @@ pub fn to_json_pretty(&self) -> String
 
 ---
 
-#### QueryMutationConfig
+##### QueryMutationConfig
 
 Configuration for schemas with Query and Mutation types
 
@@ -720,7 +722,7 @@ Configuration for schemas with Query and Mutation types
 | `complexity_limit`      | `Option<usize>` | `None`  | Maximum query complexity (None = unlimited) |
 | `depth_limit`           | `Option<usize>` | `None`  | Maximum query depth (None = unlimited)      |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -732,7 +734,7 @@ pub fn default() -> QueryMutationConfig
 
 ---
 
-#### QueryOnlyConfig
+##### QueryOnlyConfig
 
 Configuration for schemas with only Query type
 
@@ -742,7 +744,7 @@ Configuration for schemas with only Query type
 | `complexity_limit`      | `Option<usize>` | `None`  | Maximum query complexity (None = unlimited) |
 | `depth_limit`           | `Option<usize>` | `None`  | Maximum query depth (None = unlimited)      |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -754,7 +756,7 @@ pub fn default() -> QueryOnlyConfig
 
 ---
 
-#### RateLimitConfig
+##### RateLimitConfig
 
 Rate limiting configuration shared across runtimes
 
@@ -764,7 +766,7 @@ Rate limiting configuration shared across runtimes
 | `burst`      | `u32`  | `200`   | Burst allowance            |
 | `ip_based`   | `bool` | `true`  | Use IP-based rate limiting |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -776,7 +778,7 @@ pub fn default() -> RateLimitConfig
 
 ---
 
-#### Response
+##### Response
 
 HTTP Response with custom status code, headers, and content
 
@@ -786,7 +788,7 @@ HTTP Response with custom status code, headers, and content
 | `status_code` | `u16`                       | —                    | HTTP status code (defaults to 200) |
 | `headers`     | `HashMap<String, String>`   | `HashMap::new()`     | Response headers                   |
 
-##### Methods
+###### Methods
 
 ###### set_header()
 
@@ -818,7 +820,7 @@ pub fn default() -> Response
 
 ---
 
-#### ResponseSnapshot
+##### ResponseSnapshot
 
 Snapshot of an Axum response used by higher-level language bindings.
 
@@ -828,7 +830,7 @@ Snapshot of an Axum response used by higher-level language bindings.
 | `headers` | `HashMap<String, String>` | —       | Response headers (lowercase keys for predictable lookups). |
 | `body`    | `Vec<u8>`                 | —       | Response body bytes (decoded for supported encodings).     |
 
-##### Methods
+###### Methods
 
 ###### text()
 
@@ -882,7 +884,7 @@ pub fn graphql_errors(&self) -> Vec<serde_json::Value>
 
 ---
 
-#### SchemaConfig
+##### SchemaConfig
 
 Configuration for GraphQL schema building.
 
@@ -895,7 +897,7 @@ introspection control, complexity limits, and depth limits.
 | `complexity_limit`      | `Option<usize>` | `None`  | Maximum query complexity (None = unlimited) |
 | `depth_limit`           | `Option<usize>` | `None`  | Maximum query depth (None = unlimited)      |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -907,7 +909,7 @@ pub fn default() -> SchemaConfig
 
 ---
 
-#### ServerConfig
+##### ServerConfig
 
 Server configuration
 
@@ -930,10 +932,12 @@ Server configuration
 | `openapi`           | `Option<OpenApiConfig>`     | `None`               | OpenAPI documentation configuration                                            |
 | `jsonrpc`           | `Option<JsonRpcConfig>`     | `None`               | JSON-RPC configuration                                                         |
 | `grpc`              | `Option<GrpcConfig>`        | `None`               | gRPC configuration                                                             |
+| `lifecycle_hooks`   | `Option<String>`            | `None`               | Lifecycle hooks for request/response processing                                |
 | `background_tasks`  | `BackgroundTaskConfig`      | —                    | Background task executor configuration                                         |
 | `enable_http_trace` | `bool`                      | `false`              | Enable per-request HTTP tracing (tower-http `TraceLayer`)                      |
+| `di_container`      | `Option<String>`            | `None`               | Dependency injection container (requires 'di' feature)                         |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -945,7 +949,7 @@ pub fn default() -> ServerConfig
 
 ---
 
-#### ServerInfo
+##### ServerInfo
 
 Server information
 
@@ -956,14 +960,14 @@ Server information
 
 ---
 
-#### SseEvent
+##### SseEvent
 
 An individual SSE event
 
 Represents a single Server-Sent Event to be sent to a connected client.
 Events can have an optional type, ID, and retry timeout for advanced scenarios.
 
-# SSE Format
+## SSE Format
 
 Events are serialized to the following text format:
 
@@ -981,9 +985,9 @@ retry: 3000
 | `id`         | `Option<String>`    | `None`  | Event ID (optional, for client-side reconnection) |
 | `retry`      | `Option<u64>`       | `None`  | Retry timeout in milliseconds (optional)          |
 
-##### Methods
+### Methods
 
-###### with_id()
+#### with_id()
 
 Set the event ID for client-side reconnection support
 
@@ -996,7 +1000,7 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 pub fn with_id(&self, id: &str) -> SseEvent
 ```
 
-###### with_retry()
+##### with_retry()
 
 Set the retry timeout for client reconnection
 
@@ -1011,7 +1015,7 @@ pub fn with_retry(&self, retry_ms: u64) -> SseEvent
 
 ---
 
-#### StaticFilesConfig
+##### StaticFilesConfig
 
 Static file serving configuration
 
@@ -1024,7 +1028,7 @@ Static file serving configuration
 
 ---
 
-#### TestClient
+##### TestClient
 
 Core test client for making HTTP requests to a Spikard application.
 
@@ -1033,7 +1037,7 @@ interface for making HTTP requests, sending WebSocket connections, and
 handling Server-Sent Events. Language bindings wrap this to provide
 native API surfaces.
 
-##### Methods
+###### Methods
 
 ###### get()
 
@@ -1187,7 +1191,7 @@ pub fn graphql_subscription(&self, query: &str, variables: Option<serde_json::Va
 
 ---
 
-#### UploadFile
+##### UploadFile
 
 Represents an uploaded file from multipart/form-data requests.
 
@@ -1203,7 +1207,7 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `content_encoding` | `Option<String>` | `None`  | Content encoding type                    |
 | `cursor`           | `String`         | —       | Internal cursor for Read/Seek operations |
 
-##### Methods
+###### Methods
 
 ###### as_bytes()
 
@@ -1243,7 +1247,7 @@ pub fn content_type_or_default(&self) -> String
 
 ---
 
-#### ValidateRequest
+##### ValidateRequest
 
 Request body for `POST /asyncapi/validate`
 
@@ -1256,7 +1260,7 @@ Request body for `POST /asyncapi/validate`
 
 ---
 
-#### ValidationResponse
+##### ValidationResponse
 
 Response body for `POST /asyncapi/validate`
 
@@ -1267,9 +1271,9 @@ Response body for `POST /asyncapi/validate`
 
 ---
 
-### Enums
+#### Enums
 
-#### SnapshotError
+##### SnapshotError
 
 Possible errors while converting an Axum response into a snapshot.
 
@@ -1280,7 +1284,7 @@ Possible errors while converting an Axum response into a snapshot.
 
 ---
 
-#### WebSocketMessage
+##### WebSocketMessage
 
 A WebSocket message that can be text or binary.
 
@@ -1294,7 +1298,7 @@ A WebSocket message that can be text or binary.
 
 ---
 
-#### Method
+##### Method
 
 HTTP method
 
@@ -1311,7 +1315,7 @@ HTTP method
 
 ---
 
-#### SecuritySchemeInfo
+##### SecuritySchemeInfo
 
 Security scheme types
 
@@ -1322,9 +1326,9 @@ Security scheme types
 
 ---
 
-### Errors
+#### Errors
 
-#### GraphQlError
+##### GraphQlError
 
 Errors that can occur during GraphQL operations
 
@@ -1351,7 +1355,7 @@ converted to structured HTTP responses matching the project's error fixtures.
 
 ---
 
-#### SchemaError
+##### SchemaError
 
 Error type for schema building operations
 

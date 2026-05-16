@@ -1133,7 +1133,6 @@ class UploadFile {
   final PlatformInt64? size;
   final Uint8List content;
   final String? contentEncoding;
-  final String cursor;
 
   const UploadFile({
     required this.filename,
@@ -1141,7 +1140,6 @@ class UploadFile {
     this.size,
     required this.content,
     this.contentEncoding,
-    required this.cursor,
   });
 
   @override
@@ -1150,8 +1148,7 @@ class UploadFile {
       contentType.hashCode ^
       size.hashCode ^
       content.hashCode ^
-      contentEncoding.hashCode ^
-      cursor.hashCode;
+      contentEncoding.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -1162,6 +1159,5 @@ class UploadFile {
           contentType == other.contentType &&
           size == other.size &&
           content == other.content &&
-          contentEncoding == other.contentEncoding &&
-          cursor == other.cursor;
+          contentEncoding == other.contentEncoding;
 }

@@ -34,3 +34,5 @@ ure = "ure"
 fre = "fre"
 bre = "bre"
 wre = "wre"
+# Jackson package segment: com.fasterxml.jackson.databind.ser.std
+ser = "ser"

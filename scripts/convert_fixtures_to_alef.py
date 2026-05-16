@@ -14,6 +14,7 @@ import json
 import re
 import sys
 from pathlib import Path
+from typing import Any
 
 
 def to_snake_case(name: str) -> str:
@@ -24,7 +25,7 @@ def to_snake_case(name: str) -> str:
     return s.strip("_")
 
 
-def convert_fixture(fixture: dict, category: str, seen_ids: set[str]) -> dict | None:
+def convert_fixture(fixture: dict[str, Any], category: str, seen_ids: set[str]) -> dict[str, Any] | None:
     """Convert a single spikard fixture to alef HTTP fixture format."""
     name = fixture.get("name", "")
     if not name:
@@ -87,7 +88,7 @@ def convert_fixture(fixture: dict, category: str, seen_ids: set[str]) -> dict | 
         alef_request["content_type"] = request["content_type"]
 
     # Build expected response
-    alef_expected: dict = {}
+    alef_expected: dict[str, Any] = {}
     status = expected.get("status_code")
     if isinstance(status, int):
         alef_expected["status_code"] = status
@@ -107,7 +108,7 @@ def convert_fixture(fixture: dict, category: str, seen_ids: set[str]) -> dict | 
         alef_expected["validation_errors"] = expected["validation_errors"]
 
     # Build alef fixture
-    result: dict = {
+    result: dict[str, Any] = {
         "id": fixture_id,
         "description": description,
         "category": category,
@@ -130,7 +131,7 @@ def convert_fixture(fixture: dict, category: str, seen_ids: set[str]) -> dict | 
     return result
 
 
-def process_category(category_dir: Path, category: str, seen_ids: set[str]) -> list[dict]:
+def process_category(category_dir: Path, category: str, seen_ids: set[str]) -> list[dict[str, Any]]:
     """Process all fixtures in a category directory."""
     fixtures = []
     for json_file in sorted(category_dir.glob("**/*.json")):

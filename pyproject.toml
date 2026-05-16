@@ -21,15 +21,15 @@ dev = [
   "uvicorn>=0.46.0",
   "websockets>=16.0",
 ]
-docs = ["zensical"]
-doc = ["zensical"]
+docs = [ "zensical" ]
+doc = [ "zensical" ]
 
 [tool.setuptools]
 packages = []
 
 [tool.uv]
 sources.uv-bump = { git = "https://github.com/Goldziher/uv-bump" }
-workspace.members = ["packages/python"]
+workspace.members = [ "packages/python" ]
 cache-keys = [
   { file = "pyproject.toml" },
   { file = "Cargo.toml" },
@@ -41,10 +41,10 @@ cache-keys = [
 [tool.ruff]
 target-version = "py310"
 line-length = 120
-src = ["packages/python"]
+src = [ "packages/python" ]
 format.docstring-code-line-length = 120
 format.docstring-code-format = true
-lint.select = ["ALL"]
+lint.select = [ "ALL" ]
 lint.ignore = [
   "ANN401",   # Dynamically typed ANY for kwargs
   "ASYNC109", # Async function definition with a timeout parameter
@@ -73,7 +73,7 @@ lint.ignore = [
   "TD",       # We allow todo and fixme comments
   "TRY",      # Try except block, rules are too strict
 ]
-lint.exclude = ["e2e/python/**"]
+lint.exclude = [ "e2e/python/**" ]
 lint.per-file-ignores."**/tests/**/*.*" = [
   "A005",    # Module shadows standard library
   "ANN",     # Disable all annotation rules for tests
@@ -135,7 +135,7 @@ lint.per-file-ignores."tests/*.py" = [
 lint.per-file-ignores."tools/benchmark-harness/apps/**/*.py" = [
   "ALL", # Generated benchmark code - disable all linting
 ]
-lint.isort.known-first-party = ["spikard"]
+lint.isort.known-first-party = [ "spikard" ]
 lint.mccabe.max-complexity = 15
 lint.pydocstyle.convention = "google"
 lint.pylint.max-args = 10
@@ -181,9 +181,9 @@ overrides = [
 
 [tool.pytest]
 ini_options.timeout = 300
-ini_options.testpaths = ["packages/python/tests"]
-ini_options.python_files = ["test_*.py", "*_test.py"]
-ini_options.norecursedirs = ["dist", "build", "*.egg"]
+ini_options.testpaths = [ "packages/python/tests" ]
+ini_options.python_files = [ "test_*.py", "*_test.py" ]
+ini_options.norecursedirs = [ "dist", "build", "*.egg" ]
 ini_options.asyncio_mode = "auto"
 ini_options.asyncio_default_fixture_loop_scope = "function"
 
@@ -205,7 +205,7 @@ run.omit = [
   "scripts/*",
 ]
 run.relative_files = true
-run.source = ["packages/python/spikard"]
+run.source = [ "packages/python/spikard" ]
 report.exclude_lines = [
   "@(abc\\.)?abstractmethod",
   "class .*\\bProtocol\\):",

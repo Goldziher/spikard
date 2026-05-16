@@ -1,6 +1,6 @@
 {
   "name": "spikard-workspace",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "private": true,
   "description": "Spikard HTTP framework - Multi-language workspace",
   "scripts": {
@@ -11,7 +11,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.15",
-    "oxlint": "^1.64.0",
+    "oxlint": "^1.65.0",
     "typescript": "^6.0.3",
     "zod": "^4.4.3"
   },

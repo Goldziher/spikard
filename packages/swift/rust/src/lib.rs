@@ -411,6 +411,36 @@ mod ffi {
         #[swift_bridge(swift_name = "schemaFull")]
         fn schema_full() -> FullSchemaConfig;
     }
+
+    extern "Rust" {
+
+        #[swift_bridge(swift_name = "jsonRpcMethodInfoFromJson")]
+        fn json_rpc_method_info_from_json(json: String) -> Result<JsonRpcMethodInfo, String>;
+        #[swift_bridge(swift_name = "problemDetailsFromJson")]
+        fn problem_details_from_json(json: String) -> Result<ProblemDetails, String>;
+        #[swift_bridge(swift_name = "parsedChannelFromJson")]
+        fn parsed_channel_from_json(json: String) -> Result<ParsedChannel, String>;
+        #[swift_bridge(swift_name = "parsedOperationFromJson")]
+        fn parsed_operation_from_json(json: String) -> Result<ParsedOperation, String>;
+        #[swift_bridge(swift_name = "parsedMessageFromJson")]
+        fn parsed_message_from_json(json: String) -> Result<ParsedMessage, String>;
+        #[swift_bridge(swift_name = "parseResultFromJson")]
+        fn parse_result_from_json(json: String) -> Result<ParseResult, String>;
+        #[swift_bridge(swift_name = "contactInfoFromJson")]
+        fn contact_info_from_json(json: String) -> Result<ContactInfo, String>;
+        #[swift_bridge(swift_name = "licenseInfoFromJson")]
+        fn license_info_from_json(json: String) -> Result<LicenseInfo, String>;
+        #[swift_bridge(swift_name = "serverInfoFromJson")]
+        fn server_info_from_json(json: String) -> Result<ServerInfo, String>;
+        #[swift_bridge(swift_name = "sseEventFromJson")]
+        fn sse_event_from_json(json: String) -> Result<SseEvent, String>;
+        #[swift_bridge(swift_name = "jwtConfigFromJson")]
+        fn jwt_config_from_json(json: String) -> Result<JwtConfig, String>;
+        #[swift_bridge(swift_name = "apiKeyConfigFromJson")]
+        fn api_key_config_from_json(json: String) -> Result<ApiKeyConfig, String>;
+        #[swift_bridge(swift_name = "staticFilesConfigFromJson")]
+        fn static_files_config_from_json(json: String) -> Result<StaticFilesConfig, String>;
+    }
 }
 
 pub struct CorsConfig(pub spikard_core::CorsConfig);
@@ -492,12 +522,12 @@ impl CorsConfig {
 pub struct CompressionConfig(pub spikard_core::CompressionConfig);
 impl CompressionConfig {
     pub fn new(gzip: bool, brotli: bool, min_size: usize, quality: u32) -> CompressionConfig {
-        let mut __target: spikard_core::CompressionConfig = ::std::default::Default::default();
-        __target.gzip = gzip;
-        __target.brotli = brotli;
-        __target.min_size = min_size;
-        __target.quality = quality;
-        CompressionConfig(__target)
+        CompressionConfig(spikard_core::CompressionConfig {
+            gzip,
+            brotli,
+            min_size,
+            quality,
+        })
     }
     pub fn gzip(&self) -> bool {
         ::serde_json::to_value(&self.0.gzip)
@@ -528,11 +558,11 @@ impl CompressionConfig {
 pub struct RateLimitConfig(pub spikard_core::RateLimitConfig);
 impl RateLimitConfig {
     pub fn new(per_second: u64, burst: u32, ip_based: bool) -> RateLimitConfig {
-        let mut __target: spikard_core::RateLimitConfig = ::std::default::Default::default();
-        __target.per_second = per_second;
-        __target.burst = burst;
-        __target.ip_based = ip_based;
-        RateLimitConfig(__target)
+        RateLimitConfig(spikard_core::RateLimitConfig {
+            per_second,
+            burst,
+            ip_based,
+        })
     }
     pub fn per_second(&self) -> u64 {
         ::serde_json::to_value(&self.0.per_second)
@@ -647,11 +677,11 @@ impl SchemaConfig {
         complexity_limit: Option<usize>,
         depth_limit: Option<usize>,
     ) -> SchemaConfig {
-        let mut __target: spikard_graphql::SchemaConfig = ::std::default::Default::default();
-        __target.introspection_enabled = introspection_enabled;
-        __target.complexity_limit = complexity_limit;
-        __target.depth_limit = depth_limit;
-        SchemaConfig(__target)
+        SchemaConfig(spikard_graphql::SchemaConfig {
+            introspection_enabled,
+            complexity_limit,
+            depth_limit,
+        })
     }
     pub fn introspection_enabled(&self) -> bool {
         ::serde_json::to_value(&self.0.introspection_enabled)
@@ -682,11 +712,11 @@ impl QueryOnlyConfig {
         complexity_limit: Option<usize>,
         depth_limit: Option<usize>,
     ) -> QueryOnlyConfig {
-        let mut __target: spikard_graphql::QueryOnlyConfig = ::std::default::Default::default();
-        __target.introspection_enabled = introspection_enabled;
-        __target.complexity_limit = complexity_limit;
-        __target.depth_limit = depth_limit;
-        QueryOnlyConfig(__target)
+        QueryOnlyConfig(spikard_graphql::QueryOnlyConfig {
+            introspection_enabled,
+            complexity_limit,
+            depth_limit,
+        })
     }
     pub fn introspection_enabled(&self) -> bool {
         ::serde_json::to_value(&self.0.introspection_enabled)
@@ -717,11 +747,11 @@ impl QueryMutationConfig {
         complexity_limit: Option<usize>,
         depth_limit: Option<usize>,
     ) -> QueryMutationConfig {
-        let mut __target: spikard_graphql::QueryMutationConfig = ::std::default::Default::default();
-        __target.introspection_enabled = introspection_enabled;
-        __target.complexity_limit = complexity_limit;
-        __target.depth_limit = depth_limit;
-        QueryMutationConfig(__target)
+        QueryMutationConfig(spikard_graphql::QueryMutationConfig {
+            introspection_enabled,
+            complexity_limit,
+            depth_limit,
+        })
     }
     pub fn introspection_enabled(&self) -> bool {
         ::serde_json::to_value(&self.0.introspection_enabled)
@@ -752,11 +782,11 @@ impl FullSchemaConfig {
         complexity_limit: Option<usize>,
         depth_limit: Option<usize>,
     ) -> FullSchemaConfig {
-        let mut __target: spikard_graphql::FullSchemaConfig = ::std::default::Default::default();
-        __target.introspection_enabled = introspection_enabled;
-        __target.complexity_limit = complexity_limit;
-        __target.depth_limit = depth_limit;
-        FullSchemaConfig(__target)
+        FullSchemaConfig(spikard_graphql::FullSchemaConfig {
+            introspection_enabled,
+            complexity_limit,
+            depth_limit,
+        })
     }
     pub fn introspection_enabled(&self) -> bool {
         ::serde_json::to_value(&self.0.introspection_enabled)
@@ -907,11 +937,11 @@ impl ValidateRequest {
 pub struct BackgroundTaskConfig(pub spikard_http::BackgroundTaskConfig);
 impl BackgroundTaskConfig {
     pub fn new(max_queue_size: usize, max_concurrent_tasks: usize, drain_timeout_secs: u64) -> BackgroundTaskConfig {
-        let mut __target: spikard_http::BackgroundTaskConfig = ::std::default::Default::default();
-        __target.max_queue_size = max_queue_size;
-        __target.max_concurrent_tasks = max_concurrent_tasks;
-        __target.drain_timeout_secs = drain_timeout_secs;
-        BackgroundTaskConfig(__target)
+        BackgroundTaskConfig(spikard_http::BackgroundTaskConfig {
+            max_queue_size,
+            max_concurrent_tasks,
+            drain_timeout_secs,
+        })
     }
     pub fn max_queue_size(&self) -> usize {
         ::serde_json::to_value(&self.0.max_queue_size)
@@ -972,17 +1002,17 @@ impl GrpcConfig {
         keepalive_timeout: u64,
         max_stream_response_bytes: Option<usize>,
     ) -> GrpcConfig {
-        let mut __target: spikard_http::GrpcConfig = ::std::default::Default::default();
-        __target.enabled = enabled;
-        __target.max_message_size = max_message_size;
-        __target.enable_compression = enable_compression;
-        __target.request_timeout = request_timeout;
-        __target.max_concurrent_streams = max_concurrent_streams;
-        __target.enable_keepalive = enable_keepalive;
-        __target.keepalive_interval = keepalive_interval;
-        __target.keepalive_timeout = keepalive_timeout;
-        __target.max_stream_response_bytes = max_stream_response_bytes;
-        GrpcConfig(__target)
+        GrpcConfig(spikard_http::GrpcConfig {
+            enabled,
+            max_message_size,
+            enable_compression,
+            request_timeout,
+            max_concurrent_streams,
+            enable_keepalive,
+            keepalive_interval,
+            keepalive_timeout,
+            max_stream_response_bytes,
+        })
     }
     pub fn enabled(&self) -> bool {
         ::serde_json::to_value(&self.0.enabled)
@@ -1550,4 +1580,82 @@ pub fn schema_query_mutation() -> QueryMutationConfig {
 
 pub fn schema_full() -> FullSchemaConfig {
     FullSchemaConfig(spikard_graphql::schema_full())
+}
+
+pub fn json_rpc_method_info_from_json(json: String) -> Result<JsonRpcMethodInfo, String> {
+    serde_json::from_str::<spikard_core::JsonRpcMethodInfo>(&json)
+        .map(JsonRpcMethodInfo)
+        .map_err(|e| e.to_string())
+}
+
+pub fn problem_details_from_json(json: String) -> Result<ProblemDetails, String> {
+    serde_json::from_str::<spikard_core::ProblemDetails>(&json)
+        .map(ProblemDetails)
+        .map_err(|e| e.to_string())
+}
+
+pub fn parsed_channel_from_json(json: String) -> Result<ParsedChannel, String> {
+    serde_json::from_str::<spikard_http::ParsedChannel>(&json)
+        .map(ParsedChannel)
+        .map_err(|e| e.to_string())
+}
+
+pub fn parsed_operation_from_json(json: String) -> Result<ParsedOperation, String> {
+    serde_json::from_str::<spikard_http::ParsedOperation>(&json)
+        .map(ParsedOperation)
+        .map_err(|e| e.to_string())
+}
+
+pub fn parsed_message_from_json(json: String) -> Result<ParsedMessage, String> {
+    serde_json::from_str::<spikard_http::ParsedMessage>(&json)
+        .map(ParsedMessage)
+        .map_err(|e| e.to_string())
+}
+
+pub fn parse_result_from_json(json: String) -> Result<ParseResult, String> {
+    serde_json::from_str::<spikard_http::ParseResult>(&json)
+        .map(ParseResult)
+        .map_err(|e| e.to_string())
+}
+
+pub fn contact_info_from_json(json: String) -> Result<ContactInfo, String> {
+    serde_json::from_str::<spikard_http::ContactInfo>(&json)
+        .map(ContactInfo)
+        .map_err(|e| e.to_string())
+}
+
+pub fn license_info_from_json(json: String) -> Result<LicenseInfo, String> {
+    serde_json::from_str::<spikard_http::LicenseInfo>(&json)
+        .map(LicenseInfo)
+        .map_err(|e| e.to_string())
+}
+
+pub fn server_info_from_json(json: String) -> Result<ServerInfo, String> {
+    serde_json::from_str::<spikard_http::ServerInfo>(&json)
+        .map(ServerInfo)
+        .map_err(|e| e.to_string())
+}
+
+pub fn sse_event_from_json(json: String) -> Result<SseEvent, String> {
+    serde_json::from_str::<spikard_http::SseEvent>(&json)
+        .map(SseEvent)
+        .map_err(|e| e.to_string())
+}
+
+pub fn jwt_config_from_json(json: String) -> Result<JwtConfig, String> {
+    serde_json::from_str::<spikard_http::JwtConfig>(&json)
+        .map(JwtConfig)
+        .map_err(|e| e.to_string())
+}
+
+pub fn api_key_config_from_json(json: String) -> Result<ApiKeyConfig, String> {
+    serde_json::from_str::<spikard_http::ApiKeyConfig>(&json)
+        .map(ApiKeyConfig)
+        .map_err(|e| e.to_string())
+}
+
+pub fn static_files_config_from_json(json: String) -> Result<StaticFilesConfig, String> {
+    serde_json::from_str::<spikard_http::StaticFilesConfig>(&json)
+        .map(StaticFilesConfig)
+        .map_err(|e| e.to_string())
 }

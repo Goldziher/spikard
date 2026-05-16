@@ -24,11 +24,23 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  lint-prose:
+    name: Lint prose
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - name: Setup textlint
+        uses: kreuzberg-dev/actions/setup-textlint@v1
+
+      - name: Run textlint
+        run: scripts/ci/docs/textlint.sh
+
   build:
     name: Build docs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
 
       - name: Setup Python
         uses: kreuzberg-dev/actions/setup-python-env@v1
@@ -50,14 +62,14 @@ jobs:
         run: task docs:build
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5.0.0
         with:
           path: site
 
   deploy:
     name: Deploy docs
     if: github.ref == 'refs/heads/main'
-    needs: build
+    needs: [build, lint-prose]
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -65,4 +77,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5.0.0

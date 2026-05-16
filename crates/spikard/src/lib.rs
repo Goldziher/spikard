@@ -636,6 +636,7 @@ impl RequestContext {
 
 /// Convert user-facing handler functions into the low-level `Handler` trait.
 pub trait IntoHandler {
+    /// Convert this value into a shared request handler.
     fn into_handler(self) -> Arc<dyn Handler>;
 }
 

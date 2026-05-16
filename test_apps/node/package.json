@@ -7,7 +7,7 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@spikard/node": "workspace:*",
-    "vitest": "^4.1.6"
+    "@spikard/node": "0.14.0",
+    "vitest": "^3.0.0"
   }
 }

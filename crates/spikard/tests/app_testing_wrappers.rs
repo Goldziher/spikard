@@ -95,5 +95,5 @@ async fn app_testing_server_supports_http_sse_and_websocket_helpers() {
     assert_eq!(msg.as_json().expect("json")["hello"], "ws");
     assert!(!msg.is_close());
     assert!(matches!(msg, WebSocketMessage::Text(_)));
-    ws.close().await;
+    let _ = ws.close().await;
 }

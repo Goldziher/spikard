@@ -2601,15 +2601,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   UploadFile dco_decode_upload_file(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 6)
-      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return UploadFile(
       filename: dco_decode_String(arr[0]),
       contentType: dco_decode_opt_String(arr[1]),
       size: dco_decode_opt_box_autoadd_i_64(arr[2]),
       content: dco_decode_list_prim_u_8_strict(arr[3]),
       contentEncoding: dco_decode_opt_String(arr[4]),
-      cursor: dco_decode_String(arr[5]),
     );
   }
 
@@ -3659,14 +3658,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_size = sse_decode_opt_box_autoadd_i_64(deserializer);
     var var_content = sse_decode_list_prim_u_8_strict(deserializer);
     var var_contentEncoding = sse_decode_opt_String(deserializer);
-    var var_cursor = sse_decode_String(deserializer);
     return UploadFile(
       filename: var_filename,
       contentType: var_contentType,
       size: var_size,
       content: var_content,
       contentEncoding: var_contentEncoding,
-      cursor: var_cursor,
     );
   }
 
@@ -4585,7 +4582,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_box_autoadd_i_64(self.size, serializer);
     sse_encode_list_prim_u_8_strict(self.content, serializer);
     sse_encode_opt_String(self.contentEncoding, serializer);
-    sse_encode_String(self.cursor, serializer);
   }
 
   @protected

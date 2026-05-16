@@ -50,7 +50,7 @@ repos:
 
   # Shared kreuzberg-dev polyglot hooks
   - repo: https://github.com/kreuzberg-dev/pre-commit-hooks
-    rev: v1.0.10
+    rev: v1.1.2
     hooks:
       - id: cargo-sort
         exclude: ^(crates/spikard-(wasm|node|py|php|ffi)|packages/(dart|swift)/rust|packages/ruby/ext/spikard_rb/native)/Cargo\.toml$
@@ -87,10 +87,64 @@ repos:
             "warnings",
           ]
       - id: cargo-machete
-        args: ["crates/", "packages/", "tools/"]
+        args:
+          [
+            "crates/spikard",
+            "crates/spikard-core",
+            "crates/spikard-http",
+            "crates/spikard-graphql",
+            "crates/spikard-codegen",
+            "crates/spikard-cli",
+            "tools/",
+          ]
         exclude: ^e2e/
       - id: cargo-deny
         args: ["check"]
+      - id: rustdoc-lint
+        args: ["--package", "spikard"]
+        pass_filenames: false
+        files: ^crates/spikard/.*\.rs$
+        exclude: ^crates/spikard/tests/
+      - id: pydocstyle
+        files: ^packages/python/spikard/.*\.py$
+      # tsdoc-lint disabled: the generated TypeScript/WASM wrappers use oxlint
+      # and oxfmt, and the shared hook expects an eslint toolchain that this
+      # package intentionally does not carry.
+      # - id: tsdoc-lint
+      #   files: ^packages/(typescript|wasm)/src/.*\.ts$
+      #   exclude: \.d\.ts$
+      - id: alef-docs-fresh
+      # yard-coverage disabled: the root Ruby test path does not provide a
+      # YARD toolchain for the generated native wrapper.
+      # - id: yard-coverage
+      #   files: ^packages/ruby/lib/.*\.rb$
+      #   exclude: ^packages/ruby/lib/spikard/native\.rb$
+      # godoc-lint disabled: shared hook v1.1.2 invokes the removed
+      # golangci-lint v1 --disable-all flag against golangci-lint v2.
+      # - id: godoc-lint
+      #   files: ^packages/go/.*\.go$
+      #   exclude: ^(e2e/|test_apps/)
+      #   env:
+      #     KREUZBERG_GO_MOD_DIRS: "packages/go"
+      - id: javadoc-lint
+        files: ^packages/java/src/main/java/dev/spikard/.*\.java$
+      - id: cs-xmldoc-lint
+        files: ^packages/csharp/src/Spikard/.*\.cs$
+      - id: ex-doc-coverage
+        files: ^(packages/elixir/.*\.exs?|crates/spikard-elixir/src/.*\.ex)$
+        args: ["packages/elixir/mix.exs"]
+        env:
+          MIX_ENV: "dev"
+          SPIKARD_BUILD: "1"
+      - id: phpdoc-lint
+        files: ^packages/php/src/.*\.php$
+      - id: dart-doc-lint
+        files: ^packages/dart/lib/.*\.dart$
+        exclude: ^packages/dart/lib/src/spikard_bridge_generated/
+      - id: swift-doc-coverage
+        files: ^packages/swift/Sources/Spikard/.*\.swift$
+      - id: zig-doc-lint
+        files: ^packages/zig/src/.*\.zig$
       - id: shfmt
         args: ["-w", "-i", "2"]
       - id: shellcheck
@@ -116,17 +170,25 @@ repos:
         files: ^packages/csharp/.*\.cs$
       - id: php-cs-fixer
         files: ^packages/php/.*\.php$
+        exclude: ^packages/php/stubs/
       - id: phpstan
-        files: ^packages/php/.*\.php$
+        files: ^packages/php/(src|tests)/.*\.php$
+        args: ["analyse", "--no-progress", "--configuration", "packages/php/phpstan.neon"]
       - id: mix-format
         files: ^packages/elixir/
       - id: mix-credo
         files: ^packages/elixir/
-      - id: ktfmt
-        args: ["--kotlinlang-style"]
-        files: ^packages/kotlin/.*\.kts?$
+      - id: java-verify
+        files: ^packages/java/
+      # ktfmt disabled: ktfmt 0.62 formats Gradle Kotlin scripts with
+      # indentation that ktlint 1.8 rejects. Use ktlint as the single Kotlin
+      # formatter/linter for this package.
+      # - id: ktfmt
+      #   files: ^packages/kotlin/.*\.kts?$
       - id: detekt
         args: ["--build-upon-default-config"]
+        files: ^packages/kotlin/.*\.kts?$
+      - id: ktlint
         files: ^packages/kotlin/.*\.kts?$
       - id: swift-format
         files: ^packages/swift/.*\.swift$
@@ -142,13 +204,19 @@ repos:
         files: ^packages/zig/.*\.zig$
       - id: oxlint
       - id: oxfmt
+      - id: textlint
+        files: ^docs/.*\.md$
+        exclude: ^docs/(reference/|snippets/)
+        args: ["--fix", "--config", ".textlintrc.json"]
       - id: rumdl-fmt
         exclude: ^templates/
       - id: cpd
+        args: ["--minimum-tokens=120"]
+        exclude: ^packages/java/src/main/java/dev/spikard/
 
   # Alef: verify generated bindings are up to date and sync package versions
   - repo: https://github.com/kreuzberg-dev/alef
-    rev: v0.16.6
+    rev: v0.16.20
     hooks:
       - id: alef-verify
       - id: alef-sync-versions

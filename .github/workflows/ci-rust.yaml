@@ -50,7 +50,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
 
       - name: Free disk space
         if: runner.os == 'Linux'
@@ -87,7 +87,7 @@ jobs:
           otp-version: "27"
 
       - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@v1.307.0
         with:
           ruby-version: "3.4"
           bundler-cache: true

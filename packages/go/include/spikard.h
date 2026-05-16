@@ -10,45 +10,297 @@
 #include <stdint.h>
 #include <stdlib.h>
 /* Opaque type forward declarations */
+/**
+ * API Key authentication configuration
+ */
 typedef struct SPIKARDApiKeyConfig SPIKARDApiKeyConfig;
+/**
+ * AsyncAPI HTTP endpoint configuration
+ */
 typedef struct SPIKARDAsyncApiConfig SPIKARDAsyncApiConfig;
 typedef struct SPIKARDBackgroundJobMetadata SPIKARDBackgroundJobMetadata;
+/**
+ * Configuration for in-process background task execution.
+ */
 typedef struct SPIKARDBackgroundTaskConfig SPIKARDBackgroundTaskConfig;
+/**
+ * Compression configuration shared across runtimes
+ */
 typedef struct SPIKARDCompressionConfig SPIKARDCompressionConfig;
+/**
+ * Contact information
+ */
 typedef struct SPIKARDContactInfo SPIKARDContactInfo;
+/**
+ * CORS configuration for a route
+ */
 typedef struct SPIKARDCorsConfig SPIKARDCorsConfig;
+/**
+ * Configuration for fully-featured schemas with Query, Mutation, and Subscription types
+ */
 typedef struct SPIKARDFullSchemaConfig SPIKARDFullSchemaConfig;
+/**
+ * Configuration for GraphQL routes
+ *
+ * Provides a builder pattern for configuring GraphQL route parameters
+ * for the Spikard HTTP server's routing system.
+ * \code
+ * use spikard_graphql::routes::GraphQLRouteConfig;
+ *
+ * let config = GraphQLRouteConfig::new()
+ *     .path("/graphql")
+ *     .method("POST")
+ *     .enable_playground(true);
+ *
+ * assert_eq!(config.get_path(), "/graphql");
+ * assert_eq!(config.get_method(), "POST");
+ * \endcode
+ */
 typedef struct SPIKARDGraphQLRouteConfig SPIKARDGraphQLRouteConfig;
+/**
+ * Snapshot of a GraphQL subscription exchange over WebSocket.
+ */
 typedef struct SPIKARDGraphQLSubscriptionSnapshot SPIKARDGraphQLSubscriptionSnapshot;
+/**
+ * Configuration for gRPC support
+ *
+ * Controls how the server handles gRPC requests, including compression,
+ * timeouts, and protocol settings.
+ *
+ * # Stream Limits
+ *
+ * This configuration enforces message-level size limits but delegates
+ * concurrent stream limiting to the HTTP/2 transport layer:
+ *
+ * - **Message Size Limits**: The `max_message_size` field is enforced per
+ *   individual message (request or response) in both unary and streaming RPCs.
+ *   When a single message exceeds this limit, the request is rejected with
+ *   `PAYLOAD_TOO_LARGE` (HTTP 413).
+ *
+ * - **Concurrent Stream Limits**: The `max_concurrent_streams` is an advisory
+ *   configuration passed to the HTTP/2 layer for connection-level stream
+ *   negotiation. The HTTP/2 transport automatically enforces this limit and
+ *   returns GOAWAY frames when exceeded. Applications should not rely on
+ *   custom enforcement of this limit.
+ *
+ * - **Stream Response Size Limits**: The `max_stream_response_bytes` field caps the
+ *   total encoded bytes emitted across a server-streaming or bidi-streaming response.
+ *   When the cumulative size exceeds the limit, the stream is terminated with
+ *   `tonic::Status::resource_exhausted`. Defaults to `None` (unbounded).
+ * \code
+ * let mut config = GrpcConfig::default();
+ * config.max_message_size = 10 * 1024 * 1024; // 10MB per message
+ * config.max_concurrent_streams = 50; // Advised to HTTP/2 layer
+ * \endcode
+ */
 typedef struct SPIKARDGrpcConfig SPIKARDGrpcConfig;
+/**
+ * JSON-RPC server configuration
+ */
 typedef struct SPIKARDJsonRpcConfig SPIKARDJsonRpcConfig;
+/**
+ * JSON-RPC method metadata for routes that support JSON-RPC
+ *
+ * This struct captures the metadata needed to expose HTTP routes as JSON-RPC methods,
+ * enabling discovery and documentation of RPC-compatible endpoints.
+ * \code
+ * use spikard_core::router::JsonRpcMethodInfo;
+ * use serde_json::json;
+ *
+ * let rpc_info = JsonRpcMethodInfo {
+ *     method_name: "user.create".to_string(),
+ *     description: Some("Creates a new user".to_string()),
+ *     params_schema: Some(json!({
+ *         "type": "object",
+ *         "properties": {
+ *             "name": {"type": "string"}
+ *         }
+ *     })),
+ *     result_schema: Some(json!({
+ *         "type": "object",
+ *         "properties": {
+ *             "id": {"type": "integer"}
+ *         }
+ *     })),
+ *     deprecated: false,
+ *     tags: vec!["users".to_string()],
+ * };
+ * \endcode
+ */
 typedef struct SPIKARDJsonRpcMethodInfo SPIKARDJsonRpcMethodInfo;
+/**
+ * JWT authentication configuration
+ */
 typedef struct SPIKARDJwtConfig SPIKARDJwtConfig;
+/**
+ * License information
+ */
 typedef struct SPIKARDLicenseInfo SPIKARDLicenseInfo;
+/**
+ * HTTP method
+ */
 typedef struct SPIKARDMethod SPIKARDMethod;
+/**
+ * OpenAPI configuration
+ */
 typedef struct SPIKARDOpenApiConfig SPIKARDOpenApiConfig;
+/**
+ * Request body for `POST /asyncapi/parse`
+ */
 typedef struct SPIKARDParseRequest SPIKARDParseRequest;
+/**
+ * Full parse result returned by `POST /asyncapi/parse`
+ */
 typedef struct SPIKARDParseResult SPIKARDParseResult;
+/**
+ * A single channel extracted from an AsyncAPI spec
+ */
 typedef struct SPIKARDParsedChannel SPIKARDParsedChannel;
+/**
+ * A resolved message (name + JSON Schema)
+ */
 typedef struct SPIKARDParsedMessage SPIKARDParsedMessage;
+/**
+ * A single operation extracted from an AsyncAPI spec
+ */
 typedef struct SPIKARDParsedOperation SPIKARDParsedOperation;
+/**
+ * RFC 9457 Problem Details for HTTP APIs
+ *
+ * A machine-readable format for specifying errors in HTTP API responses.
+ * Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
+ * if not specified.
+ *
+ * # Content-Type
+ * Responses using this struct should set:
+ * ```text
+ * Content-Type: application/problem+json
+ * ```
+ *
+ * ```json
+ * {
+ *   "type": "https://spikard.dev/errors/validation-error",
+ *   "title": "Request Validation Failed",
+ *   "status": 422,
+ *   "detail": "2 validation errors in request body",
+ *   "errors": [...]
+ * }
+ * ```
+ */
 typedef struct SPIKARDProblemDetails SPIKARDProblemDetails;
+/**
+ * Configuration for schemas with Query and Mutation types
+ */
 typedef struct SPIKARDQueryMutationConfig SPIKARDQueryMutationConfig;
+/**
+ * Configuration for schemas with only Query type
+ */
 typedef struct SPIKARDQueryOnlyConfig SPIKARDQueryOnlyConfig;
+/**
+ * Rate limiting configuration shared across runtimes
+ */
 typedef struct SPIKARDRateLimitConfig SPIKARDRateLimitConfig;
+/**
+ * HTTP Response with custom status code, headers, and content
+ */
 typedef struct SPIKARDResponse SPIKARDResponse;
+/**
+ * Snapshot of an Axum response used by higher-level language bindings.
+ */
 typedef struct SPIKARDResponseSnapshot SPIKARDResponseSnapshot;
+/**
+ * Configuration for GraphQL schema building.
+ *
+ * Encapsulates all schema-level configuration options including
+ * introspection control, complexity limits, and depth limits.
+ */
 typedef struct SPIKARDSchemaConfig SPIKARDSchemaConfig;
+/**
+ * Security scheme types
+ */
 typedef struct SPIKARDSecuritySchemeInfo SPIKARDSecuritySchemeInfo;
+/**
+ * Server configuration
+ */
 typedef struct SPIKARDServerConfig SPIKARDServerConfig;
+/**
+ * Server information
+ */
 typedef struct SPIKARDServerInfo SPIKARDServerInfo;
+/**
+ * Possible errors while converting an Axum response into a snapshot.
+ */
 typedef struct SPIKARDSnapshotError SPIKARDSnapshotError;
+/**
+ * An individual SSE event
+ *
+ * Represents a single Server-Sent Event to be sent to a connected client.
+ * Events can have an optional type, ID, and retry timeout for advanced scenarios.
+ *
+ * # Fields
+ *
+ * * `event_type` - Optional event type string (used for client-side event filtering)
+ * * `data` - JSON data payload to send to the client
+ * * `id` - Optional event ID (clients can use this to resume after disconnect)
+ * * `retry` - Optional retry timeout in milliseconds (tells client when to reconnect)
+ *
+ * # SSE Format
+ *
+ * Events are serialized to the following text format:
+ * ```text
+ * event: event_type
+ * data: {"json":"value"}
+ * id: event-123
+ * retry: 3000
+ * ```
+ */
 typedef struct SPIKARDSseEvent SPIKARDSseEvent;
+/**
+ * Static file serving configuration
+ */
 typedef struct SPIKARDStaticFilesConfig SPIKARDStaticFilesConfig;
+/**
+ * Core test client for making HTTP requests to a Spikard application.
+ *
+ * This struct wraps axum-test's TestServer and provides a language-agnostic
+ * interface for making HTTP requests, sending WebSocket connections, and
+ * handling Server-Sent Events. Language bindings wrap this to provide
+ * native API surfaces.
+ */
 typedef struct SPIKARDTestClient SPIKARDTestClient;
+/**
+ * Represents an uploaded file from multipart/form-data requests.
+ *
+ * This struct provides efficient access to file content with automatic
+ * base64 decoding and implements standard I/O traits for compatibility.
+ * \code
+ * use spikard::UploadFile;
+ * use serde::Deserialize;
+ *
+ * #[derive(Deserialize)]
+ * struct UploadRequest {
+ *     file: UploadFile,
+ *     description: String,
+ * }
+ *
+ * // In a handler:
+ * // let body: UploadRequest = ctx.json()?;
+ * // let content = body.file.as_bytes();
+ * // let filename = &body.file.filename;
+ * \endcode
+ */
 typedef struct SPIKARDUploadFile SPIKARDUploadFile;
+/**
+ * Request body for `POST /asyncapi/validate`
+ */
 typedef struct SPIKARDValidateRequest SPIKARDValidateRequest;
+/**
+ * Response body for `POST /asyncapi/validate`
+ */
 typedef struct SPIKARDValidationResponse SPIKARDValidationResponse;
+/**
+ * A WebSocket message that can be text or binary.
+ */
 typedef struct SPIKARDWebSocketMessage SPIKARDWebSocketMessage;
 
 
@@ -158,29 +410,23 @@ char *spikard_upload_file_content_encoding(const SPIKARDUploadFile *ptr);
  * Get the raw file content as bytes.
  *
  * This provides zero-copy access to the underlying buffer.
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 uint8_t *spikard_upload_file_as_bytes(const SPIKARDUploadFile *this_);
 
 /**
  * Read the file content as a UTF-8 string.
- *
- * # Errors
- *
- * Returns an error if the content is not valid UTF-8.
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note Returns an error if the content is not valid UTF-8.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 char *spikard_upload_file_read_to_string(const SPIKARDUploadFile *this_);
 
 /**
  * Get the content type, defaulting to "application/octet-stream".
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 char *spikard_upload_file_content_type_or_default(const SPIKARDUploadFile *this_);
 
@@ -251,51 +497,45 @@ int32_t spikard_cors_config_allow_credentials(const SPIKARDCorsConfig *ptr);
 
 /**
  * Get the cached joined methods string for preflight responses
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 char *spikard_cors_config_allowed_methods_joined(const SPIKARDCorsConfig *this_);
 
 /**
  * Get the cached joined headers string for preflight responses
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 char *spikard_cors_config_allowed_headers_joined(const SPIKARDCorsConfig *this_);
 
 /**
  * Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 int32_t spikard_cors_config_is_origin_allowed(const SPIKARDCorsConfig *this_,
                                               const char *origin);
 
 /**
  * Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 int32_t spikard_cors_config_is_method_allowed(const SPIKARDCorsConfig *this_,
                                               const char *method);
 
 /**
  * Check if all requested headers are allowed (O(n) where n = num requested headers)
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 int32_t spikard_cors_config_are_headers_allowed(const SPIKARDCorsConfig *this_,
                                                 const char *requested);
 
 /**
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDCorsConfig *spikard_cors_config_default(void);
 
@@ -351,9 +591,8 @@ uintptr_t spikard_compression_config_min_size(const SPIKARDCompressionConfig *pt
 uint32_t spikard_compression_config_quality(const SPIKARDCompressionConfig *ptr);
 
 /**
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDCompressionConfig *spikard_compression_config_default(void);
 
@@ -402,9 +641,8 @@ uint32_t spikard_rate_limit_config_burst(const SPIKARDRateLimitConfig *ptr);
 int32_t spikard_rate_limit_config_ip_based(const SPIKARDRateLimitConfig *ptr);
 
 /**
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDRateLimitConfig *spikard_rate_limit_config_default(void);
 
@@ -532,73 +770,61 @@ char *spikard_problem_details_extensions(const SPIKARDProblemDetails *ptr);
 
 /**
  * Set the detail field
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDProblemDetails *spikard_problem_details_with_detail(SPIKARDProblemDetails *this_,
                                                            const char *detail);
 
 /**
  * Set the instance field
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDProblemDetails *spikard_problem_details_with_instance(SPIKARDProblemDetails *this_,
                                                              const char *instance);
 
 /**
  * Create a not found error
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDProblemDetails *spikard_problem_details_not_found(const char *detail);
 
 /**
  * Create a method not allowed error
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDProblemDetails *spikard_problem_details_method_not_allowed(const char *detail);
 
 /**
  * Create an internal server error
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDProblemDetails *spikard_problem_details_internal_server_error(const char *detail);
 
 /**
  * Create a bad request error
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDProblemDetails *spikard_problem_details_bad_request(const char *detail);
 
 /**
  * Serialize to JSON string
- *
- * # Errors
- * Returns an error if the serialization fails.
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note Returns an error if the serialization fails.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 char *spikard_problem_details_to_json(const SPIKARDProblemDetails *this_);
 
 /**
  * Serialize to pretty JSON string
- *
- * # Errors
- * Returns an error if the serialization fails.
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note Returns an error if the serialization fails.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 char *spikard_problem_details_to_json_pretty(const SPIKARDProblemDetails *this_);
 
@@ -611,92 +837,71 @@ void spikard_graph_ql_route_config_free(SPIKARDGraphQLRouteConfig *ptr);
 
 /**
  * Set the HTTP path for the GraphQL endpoint
- *
- * # Arguments
- *
- * * `path` - The URL path (e.g., "/graphql", "/api/graphql")
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \param path The URL path (e.g., "/graphql", "/api/graphql")
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDGraphQLRouteConfig *spikard_graph_ql_route_config_path(SPIKARDGraphQLRouteConfig *this_,
                                                               const char *path);
 
 /**
  * Set the HTTP method for the GraphQL endpoint
- *
- * # Arguments
- *
- * * `method` - The HTTP method (typically "POST")
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \param method The HTTP method (typically "POST")
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDGraphQLRouteConfig *spikard_graph_ql_route_config_method(SPIKARDGraphQLRouteConfig *this_,
                                                                 const char *method);
 
 /**
  * Enable or disable the GraphQL Playground UI
- *
- * # Arguments
- *
- * * `enable` - Whether to enable playground
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \param enable Whether to enable playground
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDGraphQLRouteConfig *spikard_graph_ql_route_config_enable_playground(SPIKARDGraphQLRouteConfig *this_,
                                                                            int32_t enable);
 
 /**
  * Set a custom description for documentation
- *
- * # Arguments
- *
- * * `description` - Documentation string
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \param description Documentation string
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDGraphQLRouteConfig *spikard_graph_ql_route_config_description(SPIKARDGraphQLRouteConfig *this_,
                                                                      const char *description);
 
 /**
  * Get the configured path
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 char *spikard_graph_ql_route_config_get_path(const SPIKARDGraphQLRouteConfig *this_);
 
 /**
  * Get the configured method
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 char *spikard_graph_ql_route_config_get_method(const SPIKARDGraphQLRouteConfig *this_);
 
 /**
  * Check if playground is enabled
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 int32_t spikard_graph_ql_route_config_is_playground_enabled(const SPIKARDGraphQLRouteConfig *this_);
 
 /**
  * Get the description if set
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 char *spikard_graph_ql_route_config_get_description(const SPIKARDGraphQLRouteConfig *this_);
 
 /**
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDGraphQLRouteConfig *spikard_graph_ql_route_config_default(void);
 
@@ -745,9 +950,8 @@ uintptr_t spikard_schema_config_complexity_limit(const SPIKARDSchemaConfig *ptr)
 uintptr_t spikard_schema_config_depth_limit(const SPIKARDSchemaConfig *ptr);
 
 /**
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDSchemaConfig *spikard_schema_config_default(void);
 
@@ -796,9 +1000,8 @@ uintptr_t spikard_query_only_config_complexity_limit(const SPIKARDQueryOnlyConfi
 uintptr_t spikard_query_only_config_depth_limit(const SPIKARDQueryOnlyConfig *ptr);
 
 /**
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDQueryOnlyConfig *spikard_query_only_config_default(void);
 
@@ -847,9 +1050,8 @@ uintptr_t spikard_query_mutation_config_complexity_limit(const SPIKARDQueryMutat
 uintptr_t spikard_query_mutation_config_depth_limit(const SPIKARDQueryMutationConfig *ptr);
 
 /**
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDQueryMutationConfig *spikard_query_mutation_config_default(void);
 
@@ -898,9 +1100,8 @@ uintptr_t spikard_full_schema_config_complexity_limit(const SPIKARDFullSchemaCon
 uintptr_t spikard_full_schema_config_depth_limit(const SPIKARDFullSchemaConfig *ptr);
 
 /**
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDFullSchemaConfig *spikard_full_schema_config_default(void);
 
@@ -1253,9 +1454,8 @@ uintptr_t spikard_background_task_config_max_concurrent_tasks(const SPIKARDBackg
 uint64_t spikard_background_task_config_drain_timeout_secs(const SPIKARDBackgroundTaskConfig *ptr);
 
 /**
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDBackgroundTaskConfig *spikard_background_task_config_default(void);
 
@@ -1290,9 +1490,8 @@ void spikard_background_job_metadata_free(SPIKARDBackgroundJobMetadata *ptr);
 char *spikard_background_job_metadata_request_id(const SPIKARDBackgroundJobMetadata *ptr);
 
 /**
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDBackgroundJobMetadata *spikard_background_job_metadata_default(void);
 
@@ -1383,9 +1582,8 @@ uint64_t spikard_grpc_config_keepalive_timeout(const SPIKARDGrpcConfig *ptr);
 uintptr_t spikard_grpc_config_max_stream_response_bytes(const SPIKARDGrpcConfig *ptr);
 
 /**
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDGrpcConfig *spikard_grpc_config_default(void);
 
@@ -1441,9 +1639,8 @@ int32_t spikard_json_rpc_config_enable_batch(const SPIKARDJsonRpcConfig *ptr);
 uintptr_t spikard_json_rpc_config_max_batch_size(const SPIKARDJsonRpcConfig *ptr);
 
 /**
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDJsonRpcConfig *spikard_json_rpc_config_default(void);
 
@@ -1548,9 +1745,8 @@ char *spikard_open_api_config_servers(const SPIKARDOpenApiConfig *ptr);
 char *spikard_open_api_config_security_schemes(const SPIKARDOpenApiConfig *ptr);
 
 /**
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDOpenApiConfig *spikard_open_api_config_default(void);
 
@@ -1718,9 +1914,8 @@ char *spikard_response_headers(const SPIKARDResponse *ptr);
 
 /**
  * Set a header
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 void spikard_response_set_header(SPIKARDResponse *this_,
                                  const char *key,
@@ -1728,9 +1923,8 @@ void spikard_response_set_header(SPIKARDResponse *this_,
 
 /**
  * Set a cookie in the response
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 void spikard_response_set_cookie(SPIKARDResponse *this_,
                                  const char *key,
@@ -1743,9 +1937,8 @@ void spikard_response_set_cookie(SPIKARDResponse *this_,
                                  const char *same_site);
 
 /**
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDResponse *spikard_response_default(void);
 
@@ -1805,22 +1998,16 @@ uint64_t spikard_sse_event_retry(const SPIKARDSseEvent *ptr);
  *
  * Sets an ID that clients can use to resume from this point if they disconnect.
  * The client sends this ID back in the `Last-Event-ID` header when reconnecting.
- *
- * # Arguments
- * * `id` - Unique identifier for this event
- *
- * # Example
- *
- * ```ignore
+ * \param id Unique identifier for this event
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ * \code
  * use serde_json::json;
  * use spikard_http::sse::SseEvent;
  *
  * let event = SseEvent::new(json!({"count": 1}))
  *     .with_id("event-1");
- * ```
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \endcode
  */
 SPIKARDSseEvent *spikard_sse_event_with_id(SPIKARDSseEvent *this_,
                                            const char *id);
@@ -1830,22 +2017,16 @@ SPIKARDSseEvent *spikard_sse_event_with_id(SPIKARDSseEvent *this_,
  *
  * Sets the time in milliseconds clients should wait before attempting to reconnect
  * if the connection is lost. The client browser will automatically handle reconnection.
- *
- * # Arguments
- * * `retry_ms` - Retry timeout in milliseconds
- *
- * # Example
- *
- * ```ignore
+ * \param retry_ms Retry timeout in milliseconds
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ * \code
  * use serde_json::json;
  * use spikard_http::sse::SseEvent;
  *
  * let event = SseEvent::new(json!({"data": "value"}))
  *     .with_retry(5000); // Reconnect after 5 seconds
- * ```
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \endcode
  */
 SPIKARDSseEvent *spikard_sse_event_with_retry(SPIKARDSseEvent *this_,
                                               uint64_t retry_ms);
@@ -2153,9 +2334,8 @@ SPIKARDBackgroundTaskConfig *spikard_server_config_background_tasks(const SPIKAR
 int32_t spikard_server_config_enable_http_trace(const SPIKARDServerConfig *ptr);
 
 /**
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDServerConfig *spikard_server_config_default(void);
 
@@ -2223,13 +2403,9 @@ int32_t spikard_security_scheme_info_from_str(const char *name);
  * Create a simple schema configuration with only Query type.
  *
  * This is a convenience function for schemas that only have queries.
- *
- * # Returns
- *
- * A `QueryOnlyConfig` with default settings
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \return A `QueryOnlyConfig` with default settings
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDQueryOnlyConfig *spikard_schema_query_only(void);
 
@@ -2237,13 +2413,9 @@ SPIKARDQueryOnlyConfig *spikard_schema_query_only(void);
  * Create a schema configuration with Query and Mutation types.
  *
  * This is a convenience function for schemas with queries and mutations but no subscriptions.
- *
- * # Returns
- *
- * A `QueryMutationConfig` with default settings
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \return A `QueryMutationConfig` with default settings
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDQueryMutationConfig *spikard_schema_query_mutation(void);
 
@@ -2251,13 +2423,9 @@ SPIKARDQueryMutationConfig *spikard_schema_query_mutation(void);
  * Create a schema configuration with all three root types.
  *
  * This is a convenience function for fully-featured schemas.
- *
- * # Returns
- *
- * A `FullSchemaConfig` with default settings
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * \return A `FullSchemaConfig` with default settings
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
 SPIKARDFullSchemaConfig *spikard_schema_full(void);
 

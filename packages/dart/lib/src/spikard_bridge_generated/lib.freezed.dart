@@ -176,7 +176,7 @@ return apiKey(_that.location,_that.name);case _:
 
 class SecuritySchemeInfo_Http extends SecuritySchemeInfo {
   const SecuritySchemeInfo_Http({required this.scheme, required this.bearerFormat}): super._();
-  
+
 
  final  String scheme;
  final  String bearerFormat;
@@ -244,7 +244,7 @@ as String,
 
 class SecuritySchemeInfo_ApiKey extends SecuritySchemeInfo {
   const SecuritySchemeInfo_ApiKey({required this.location, required this.name}): super._();
-  
+
 
  final  String location;
  final  String name;

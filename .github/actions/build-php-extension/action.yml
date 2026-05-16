@@ -23,14 +23,14 @@ runs:
   using: composite
   steps:
     - name: Setup PHP ${{ inputs.php-version }}
-      uses: shivammathur/setup-php@v2
+      uses: shivammathur/setup-php@2.37.1
       with:
         php-version: ${{ inputs.php-version }}
         tools: composer:2.9.1
         coverage: none
 
     - name: Setup Rust
-      uses: actions-rust-lang/setup-rust-toolchain@v1
+      uses: actions-rust-lang/setup-rust-toolchain@v1.16.1
 
     - name: Add Rust target
       if: ${{ inputs.target-platform != '' }}

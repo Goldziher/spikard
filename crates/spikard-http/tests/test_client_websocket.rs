@@ -39,7 +39,7 @@ fn echo_server(disconnected: Arc<AtomicBool>) -> axum_test::TestServer {
     )
 }
 
-/// Test: `close_with(1001, Some("going away"))` triggers on_disconnect.
+/// Test: `close_with(1001, Some("going away"))` triggers `on_disconnect`.
 #[tokio::test]
 async fn close_with_going_away_triggers_on_disconnect() {
     let disconnected = Arc::new(AtomicBool::new(false));

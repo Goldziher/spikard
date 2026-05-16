@@ -29,7 +29,7 @@ runs:
   using: composite
   steps:
     - name: Setup Rust
-      uses: actions-rust-lang/setup-rust-toolchain@v1
+      uses: actions-rust-lang/setup-rust-toolchain@v1.16.1
       with:
         toolchain: ${{ inputs.toolchain }}
         components: ${{ inputs.components }}
@@ -37,7 +37,7 @@ runs:
 
     - name: Setup sccache
       if: inputs.use-sccache == 'true'
-      uses: mozilla-actions/sccache-action@v0.0.9
+      uses: mozilla-actions/sccache-action@v0.0.10
 
     - name: Verify sccache installation (Unix)
       if: inputs.use-sccache == 'true' && runner.os != 'Windows'
@@ -104,7 +104,7 @@ runs:
     - name: Cache Rust build artifacts
       if: inputs.use-sccache != 'true'
       id: cache-rust
-      uses: actions/cache@v5
+      uses: actions/cache@v5.0.5
       with:
         path: |
           ~/.cargo/registry/index
@@ -117,7 +117,7 @@ runs:
 
     - name: Cache cargo home (when sccache enabled)
       if: inputs.use-sccache == 'true' && inputs.cache-cargo-home == 'true'
-      uses: actions/cache@v5
+      uses: actions/cache@v5.0.5
       with:
         path: |
           ~/.cargo/registry/index
@@ -128,7 +128,7 @@ runs:
           cargo-home-${{ runner.os }}-
 
     - name: Cache cargo-llvm-cov
-      uses: actions/cache@v5
+      uses: actions/cache@v5.0.5
       with:
         path: ~/.cargo/bin/cargo-llvm-cov
         key: cargo-llvm-cov-${{ runner.os }}

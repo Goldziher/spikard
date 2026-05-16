@@ -1,7 +1,7 @@
-//! Integration tests for AsyncAPI HTTP endpoints
+//! Integration tests for `AsyncAPI` HTTP endpoints
 //!
 //! Covers:
-//! - POST /asyncapi/parse   — valid spec → 200; bad spec → 400 ProblemDetails
+//! - POST /asyncapi/parse   — valid spec → 200; bad spec → 400 `ProblemDetails`
 //! - POST /asyncapi/validate — valid payload → {"valid":true}; bad payload → {"valid":false, "errors":[…]}
 //! - GET  /asyncapi.json    — registered spec → 200; unregistered → 404
 
@@ -217,7 +217,7 @@ async fn post_asyncapi_parse_summary_fields_fixture() {
     assert_eq!(body["spec_version"], "3.0.0");
     assert_eq!(body["title"], "Inventory Service");
     assert_eq!(body["api_version"], "3.2.1");
-    assert_eq!(body["channels"].as_array().map(|a| a.len()), Some(1));
+    assert_eq!(body["channels"].as_array().map(std::vec::Vec::len), Some(1));
 }
 
 // ── POST /asyncapi/validate ───────────────────────────────────────────────────

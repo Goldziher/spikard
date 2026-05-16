@@ -19,7 +19,7 @@ A `QueryOnlyConfig` with default settings
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend signature generation
+fun schemaQueryOnly(): QueryOnlyConfig
 ```
 
 **Returns:** `QueryOnlyConfig`
@@ -39,7 +39,7 @@ A `QueryMutationConfig` with default settings
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend signature generation
+fun schemaQueryMutation(): QueryMutationConfig
 ```
 
 **Returns:** `QueryMutationConfig`
@@ -59,7 +59,7 @@ A `FullSchemaConfig` with default settings
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend signature generation
+fun schemaFull(): FullSchemaConfig
 ```
 
 **Returns:** `FullSchemaConfig`
@@ -104,7 +104,8 @@ AsyncAPI HTTP endpoint configuration
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@JvmStatic
+fun default(): BackgroundJobMetadata
 ```
 
 ---
@@ -126,7 +127,8 @@ Configuration for in-process background task execution.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@JvmStatic
+fun default(): BackgroundTaskConfig
 ```
 
 ---
@@ -149,7 +151,8 @@ Compression configuration shared across runtimes
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@JvmStatic
+fun default(): CompressionConfig
 ```
 
 ---
@@ -170,14 +173,16 @@ Contact information
 
 CORS configuration for a route
 
-| Field              | Type            | Default | Description       |
-| ------------------ | --------------- | ------- | ----------------- |
-| `allowedOrigins`   | `List<String>`  | `[]`    | Allowed origins   |
-| `allowedMethods`   | `List<String>`  | `[]`    | Allowed methods   |
-| `allowedHeaders`   | `List<String>`  | `[]`    | Allowed headers   |
-| `exposeHeaders`    | `List<String>?` | `null`  | Expose headers    |
-| `maxAge`           | `Int?`          | `null`  | Maximum age       |
-| `allowCredentials` | `Boolean?`      | `null`  | Allow credentials |
+| Field                | Type            | Default | Description          |
+| -------------------- | --------------- | ------- | -------------------- |
+| `allowedOrigins`     | `List<String>`  | `[]`    | Allowed origins      |
+| `allowedMethods`     | `List<String>`  | `[]`    | Allowed methods      |
+| `allowedHeaders`     | `List<String>`  | `[]`    | Allowed headers      |
+| `exposeHeaders`      | `List<String>?` | `null`  | Expose headers       |
+| `maxAge`             | `Int?`          | `null`  | Maximum age          |
+| `allowCredentials`   | `Boolean?`      | `null`  | Allow credentials    |
+| `methodsJoinedCache` | `String`        | —       | Methods joined cache |
+| `headersJoinedCache` | `String`        | —       | Headers joined cache |
 
 ##### Methods
 
@@ -188,7 +193,7 @@ Get the cached joined methods string for preflight responses
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+fun allowedMethodsJoined(): String
 ```
 
 ###### allowedHeadersJoined()
@@ -198,7 +203,7 @@ Get the cached joined headers string for preflight responses
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+fun allowedHeadersJoined(): String
 ```
 
 ###### isOriginAllowed()
@@ -208,7 +213,7 @@ Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+fun isOriginAllowed(origin: String): Boolean
 ```
 
 ###### isMethodAllowed()
@@ -218,7 +223,7 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+fun isMethodAllowed(method: String): Boolean
 ```
 
 ###### areHeadersAllowed()
@@ -228,7 +233,7 @@ Check if all requested headers are allowed (O(n) where n = num requested headers
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+fun areHeadersAllowed(requested: List<String>): Boolean
 ```
 
 ###### default()
@@ -236,7 +241,8 @@ Check if all requested headers are allowed (O(n) where n = num requested headers
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@JvmStatic
+fun default(): CorsConfig
 ```
 
 ---
@@ -258,7 +264,8 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@JvmStatic
+fun default(): FullSchemaConfig
 ```
 
 ---
@@ -279,7 +286,7 @@ Set the HTTP path for the GraphQL endpoint
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+fun path(path: String): GraphQlRouteConfig
 ```
 
 ###### method()
@@ -289,7 +296,7 @@ Set the HTTP method for the GraphQL endpoint
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+fun method(method: String): GraphQlRouteConfig
 ```
 
 ###### enablePlayground()
@@ -299,7 +306,7 @@ Enable or disable the GraphQL Playground UI
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+fun enablePlayground(enable: Boolean): GraphQlRouteConfig
 ```
 
 ###### description()
@@ -309,7 +316,7 @@ Set a custom description for documentation
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+fun description(description: String): GraphQlRouteConfig
 ```
 
 ###### getPath()
@@ -319,7 +326,7 @@ Get the configured path
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+fun getPath(): String
 ```
 
 ###### getMethod()
@@ -329,7 +336,7 @@ Get the configured method
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+fun getMethod(): String
 ```
 
 ###### isPlaygroundEnabled()
@@ -339,7 +346,7 @@ Check if playground is enabled
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+fun isPlaygroundEnabled(): Boolean
 ```
 
 ###### getDescription()
@@ -349,7 +356,7 @@ Get the description if set
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+fun getDescription(): String?
 ```
 
 ###### default()
@@ -357,7 +364,8 @@ Get the description if set
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@JvmStatic
+fun default(): GraphQlRouteConfig
 ```
 
 ---
@@ -383,7 +391,7 @@ Configuration for gRPC support
 Controls how the server handles gRPC requests, including compression,
 timeouts, and protocol settings.
 
-# Stream Limits
+## Stream Limits
 
 This configuration enforces message-level size limits but delegates
 concurrent stream limiting to the HTTP/2 transport layer:
@@ -416,19 +424,20 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `keepaliveTimeout`       | `Long`    | —       | HTTP/2 keepalive timeout in seconds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `maxStreamResponseBytes` | `Long?`   | `null`  | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `null` (unbounded total response size).                                                                                                                                                                                                                                                            |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@JvmStatic
+fun default(): GrpcConfig
 ```
 
 ---
 
-#### JsonRpcConfig
+##### JsonRpcConfig
 
 JSON-RPC server configuration
 
@@ -439,19 +448,20 @@ JSON-RPC server configuration
 | `enableBatch`  | `Boolean` | —       | Enable batch request processing (default: true)            |
 | `maxBatchSize` | `Long`    | —       | Maximum number of requests in a batch (default: 100)       |
 
-##### Methods
+###### Methods
 
 ###### default()
 
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@JvmStatic
+fun default(): JsonRpcConfig
 ```
 
 ---
 
-#### JsonRpcMethodInfo
+##### JsonRpcMethodInfo
 
 JSON-RPC method metadata for routes that support JSON-RPC
 
@@ -469,7 +479,7 @@ enabling discovery and documentation of RPC-compatible endpoints.
 
 ---
 
-#### JwtConfig
+##### JwtConfig
 
 JWT authentication configuration
 
@@ -483,7 +493,7 @@ JWT authentication configuration
 
 ---
 
-#### LicenseInfo
+##### LicenseInfo
 
 License information
 
@@ -494,7 +504,7 @@ License information
 
 ---
 
-#### OpenApiConfig
+##### OpenApiConfig
 
 OpenAPI configuration
 
@@ -512,19 +522,20 @@ OpenAPI configuration
 | `servers`         | `List<ServerInfo>`                | `[]`      | Server definitions                                               |
 | `securitySchemes` | `Map<String, SecuritySchemeInfo>` | `{}`      | Security schemes (auto-detected from middleware if not provided) |
 
-##### Methods
+###### Methods
 
 ###### default()
 
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@JvmStatic
+fun default(): OpenApiConfig
 ```
 
 ---
 
-#### ParseRequest
+##### ParseRequest
 
 Request body for `POST /asyncapi/parse`
 
@@ -534,7 +545,7 @@ Request body for `POST /asyncapi/parse`
 
 ---
 
-#### ParseResult
+##### ParseResult
 
 Full parse result returned by `POST /asyncapi/parse`
 
@@ -549,7 +560,7 @@ Full parse result returned by `POST /asyncapi/parse`
 
 ---
 
-#### ParsedChannel
+##### ParsedChannel
 
 A single channel extracted from an AsyncAPI spec
 
@@ -562,7 +573,7 @@ A single channel extracted from an AsyncAPI spec
 
 ---
 
-#### ParsedMessage
+##### ParsedMessage
 
 A resolved message (name + JSON Schema)
 
@@ -573,7 +584,7 @@ A resolved message (name + JSON Schema)
 
 ---
 
-#### ParsedOperation
+##### ParsedOperation
 
 A single operation extracted from an AsyncAPI spec
 
@@ -585,7 +596,7 @@ A single operation extracted from an AsyncAPI spec
 
 ---
 
-#### ProblemDetails
+##### ProblemDetails
 
 RFC 9457 Problem Details for HTTP APIs
 
@@ -593,7 +604,7 @@ A machine-readable format for specifying errors in HTTP API responses.
 Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
 if not specified.
 
-# Content-Type
+## Content-Type
 
 Responses using this struct should set:
 
@@ -620,26 +631,26 @@ Content-Type: application/problem+json
 | `instance`   | `String?`          | `null`  | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced.                         |
 | `extensions` | `Map<String, Any>` | —       | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array.                                            |
 
-##### Methods
+### Methods
 
-###### withDetail()
+#### withDetail()
 
 Set the detail field
 
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+fun withDetail(detail: String): ProblemDetails
 ```
 
-###### withInstance()
+##### withInstance()
 
 Set the instance field
 
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+fun withInstance(instance: String): ProblemDetails
 ```
 
 ###### notFound()
@@ -649,7 +660,8 @@ Create a not found error
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@JvmStatic
+fun notFound(detail: String): ProblemDetails
 ```
 
 ###### methodNotAllowed()
@@ -659,7 +671,8 @@ Create a method not allowed error
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@JvmStatic
+fun methodNotAllowed(detail: String): ProblemDetails
 ```
 
 ###### internalServerError()
@@ -669,7 +682,8 @@ Create an internal server error
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@JvmStatic
+fun internalServerError(detail: String): ProblemDetails
 ```
 
 ###### badRequest()
@@ -679,7 +693,8 @@ Create a bad request error
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@JvmStatic
+fun badRequest(detail: String): ProblemDetails
 ```
 
 ###### toJson()
@@ -692,7 +707,8 @@ Returns an error if the serialization fails.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@Throws(Error::class)
+fun toJson(): String
 ```
 
 ###### toJsonPretty()
@@ -705,12 +721,13 @@ Returns an error if the serialization fails.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@Throws(Error::class)
+fun toJsonPretty(): String
 ```
 
 ---
 
-#### QueryMutationConfig
+##### QueryMutationConfig
 
 Configuration for schemas with Query and Mutation types
 
@@ -720,19 +737,20 @@ Configuration for schemas with Query and Mutation types
 | `complexityLimit`      | `Long?`   | `null`  | Maximum query complexity (None = unlimited) |
 | `depthLimit`           | `Long?`   | `null`  | Maximum query depth (None = unlimited)      |
 
-##### Methods
+###### Methods
 
 ###### default()
 
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@JvmStatic
+fun default(): QueryMutationConfig
 ```
 
 ---
 
-#### QueryOnlyConfig
+##### QueryOnlyConfig
 
 Configuration for schemas with only Query type
 
@@ -742,19 +760,20 @@ Configuration for schemas with only Query type
 | `complexityLimit`      | `Long?`   | `null`  | Maximum query complexity (None = unlimited) |
 | `depthLimit`           | `Long?`   | `null`  | Maximum query depth (None = unlimited)      |
 
-##### Methods
+###### Methods
 
 ###### default()
 
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@JvmStatic
+fun default(): QueryOnlyConfig
 ```
 
 ---
 
-#### RateLimitConfig
+##### RateLimitConfig
 
 Rate limiting configuration shared across runtimes
 
@@ -764,19 +783,20 @@ Rate limiting configuration shared across runtimes
 | `burst`     | `Int`     | `200`   | Burst allowance            |
 | `ipBased`   | `Boolean` | `true`  | Use IP-based rate limiting |
 
-##### Methods
+###### Methods
 
 ###### default()
 
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@JvmStatic
+fun default(): RateLimitConfig
 ```
 
 ---
 
-#### Response
+##### Response
 
 HTTP Response with custom status code, headers, and content
 
@@ -786,7 +806,7 @@ HTTP Response with custom status code, headers, and content
 | `statusCode` | `Short`               | —       | HTTP status code (defaults to 200) |
 | `headers`    | `Map<String, String>` | `{}`    | Response headers                   |
 
-##### Methods
+###### Methods
 
 ###### setHeader()
 
@@ -795,7 +815,7 @@ Set a header
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+fun setHeader(key: String, value: String)
 ```
 
 ###### setCookie()
@@ -805,7 +825,7 @@ Set a cookie in the response
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+fun setCookie(key: String, value: String, secure: Boolean, httpOnly: Boolean, maxAge: Long? = null, domain: String? = null, path: String? = null, sameSite: String? = null)
 ```
 
 ###### default()
@@ -813,12 +833,13 @@ Set a cookie in the response
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@JvmStatic
+fun default(): Response
 ```
 
 ---
 
-#### ResponseSnapshot
+##### ResponseSnapshot
 
 Snapshot of an Axum response used by higher-level language bindings.
 
@@ -828,7 +849,7 @@ Snapshot of an Axum response used by higher-level language bindings.
 | `headers` | `Map<String, String>` | —       | Response headers (lowercase keys for predictable lookups). |
 | `body`    | `ByteArray`           | —       | Response body bytes (decoded for supported encodings).     |
 
-##### Methods
+###### Methods
 
 ###### text()
 
@@ -837,7 +858,8 @@ Return response body as UTF-8 string.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@Throws(FromUtf8Error::class)
+fun text(): String
 ```
 
 ###### json()
@@ -847,7 +869,8 @@ Parse response body as JSON.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@Throws(Error::class)
+fun json(): Any
 ```
 
 ###### header()
@@ -857,7 +880,7 @@ Lookup header by case-insensitive name.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+fun header(name: String): String?
 ```
 
 ###### graphqlData()
@@ -867,7 +890,8 @@ Extract GraphQL data from response
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@Throws(SnapshotError::class)
+fun graphqlData(): Any
 ```
 
 ###### graphqlErrors()
@@ -877,12 +901,13 @@ Extract GraphQL errors from response
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@Throws(SnapshotError::class)
+fun graphqlErrors(): List<Any>
 ```
 
 ---
 
-#### SchemaConfig
+##### SchemaConfig
 
 Configuration for GraphQL schema building.
 
@@ -895,19 +920,20 @@ introspection control, complexity limits, and depth limits.
 | `complexityLimit`      | `Long?`   | `null`  | Maximum query complexity (None = unlimited) |
 | `depthLimit`           | `Long?`   | `null`  | Maximum query depth (None = unlimited)      |
 
-##### Methods
+###### Methods
 
 ###### default()
 
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@JvmStatic
+fun default(): SchemaConfig
 ```
 
 ---
 
-#### ServerConfig
+##### ServerConfig
 
 Server configuration
 
@@ -930,22 +956,25 @@ Server configuration
 | `openapi`          | `OpenApiConfig?`          | `null`        | OpenAPI documentation configuration                                            |
 | `jsonrpc`          | `JsonRpcConfig?`          | `null`        | JSON-RPC configuration                                                         |
 | `grpc`             | `GrpcConfig?`             | `null`        | gRPC configuration                                                             |
+| `lifecycleHooks`   | `String?`                 | `null`        | Lifecycle hooks for request/response processing                                |
 | `backgroundTasks`  | `BackgroundTaskConfig`    | —             | Background task executor configuration                                         |
 | `enableHttpTrace`  | `Boolean`                 | `false`       | Enable per-request HTTP tracing (tower-http `TraceLayer`)                      |
+| `diContainer`      | `String?`                 | `null`        | Dependency injection container (requires 'di' feature)                         |
 
-##### Methods
+###### Methods
 
 ###### default()
 
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@JvmStatic
+fun default(): ServerConfig
 ```
 
 ---
 
-#### ServerInfo
+##### ServerInfo
 
 Server information
 
@@ -956,14 +985,14 @@ Server information
 
 ---
 
-#### SseEvent
+##### SseEvent
 
 An individual SSE event
 
 Represents a single Server-Sent Event to be sent to a connected client.
 Events can have an optional type, ID, and retry timeout for advanced scenarios.
 
-# SSE Format
+## SSE Format
 
 Events are serialized to the following text format:
 
@@ -981,9 +1010,9 @@ retry: 3000
 | `id`        | `String?` | `null`  | Event ID (optional, for client-side reconnection) |
 | `retry`     | `Long?`   | `null`  | Retry timeout in milliseconds (optional)          |
 
-##### Methods
+### Methods
 
-###### withId()
+#### withId()
 
 Set the event ID for client-side reconnection support
 
@@ -993,10 +1022,10 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+fun withId(id: String): SseEvent
 ```
 
-###### withRetry()
+##### withRetry()
 
 Set the retry timeout for client reconnection
 
@@ -1006,12 +1035,12 @@ if the connection is lost. The client browser will automatically handle reconnec
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+fun withRetry(retryMs: Long): SseEvent
 ```
 
 ---
 
-#### StaticFilesConfig
+##### StaticFilesConfig
 
 Static file serving configuration
 
@@ -1024,7 +1053,7 @@ Static file serving configuration
 
 ---
 
-#### TestClient
+##### TestClient
 
 Core test client for making HTTP requests to a Spikard application.
 
@@ -1033,7 +1062,7 @@ interface for making HTTP requests, sending WebSocket connections, and
 handling Server-Sent Events. Language bindings wrap this to provide
 native API surfaces.
 
-##### Methods
+###### Methods
 
 ###### get()
 
@@ -1042,7 +1071,8 @@ Make a GET request
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@Throws(SnapshotError::class)
+fun get(path: String, queryParams: List<String>? = null, headers: List<String>? = null): ResponseSnapshot
 ```
 
 ###### post()
@@ -1052,7 +1082,8 @@ Make a POST request
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@Throws(SnapshotError::class)
+fun post(path: String, json: Any? = null, formData: List<String>? = null, multipart: String, queryParams: List<String>? = null, headers: List<String>? = null): ResponseSnapshot
 ```
 
 ###### requestRaw()
@@ -1062,7 +1093,8 @@ Make a request with a raw body payload.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@Throws(SnapshotError::class)
+fun requestRaw(method: Method, path: String, body: ByteArray, queryParams: List<String>? = null, headers: List<String>? = null): ResponseSnapshot
 ```
 
 ###### put()
@@ -1072,7 +1104,8 @@ Make a PUT request
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@Throws(SnapshotError::class)
+fun put(path: String, json: Any? = null, queryParams: List<String>? = null, headers: List<String>? = null): ResponseSnapshot
 ```
 
 ###### patch()
@@ -1082,7 +1115,8 @@ Make a PATCH request
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@Throws(SnapshotError::class)
+fun patch(path: String, json: Any? = null, queryParams: List<String>? = null, headers: List<String>? = null): ResponseSnapshot
 ```
 
 ###### delete()
@@ -1092,7 +1126,8 @@ Make a DELETE request
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@Throws(SnapshotError::class)
+fun delete(path: String, queryParams: List<String>? = null, headers: List<String>? = null): ResponseSnapshot
 ```
 
 ###### options()
@@ -1102,7 +1137,8 @@ Make an OPTIONS request
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@Throws(SnapshotError::class)
+fun options(path: String, queryParams: List<String>? = null, headers: List<String>? = null): ResponseSnapshot
 ```
 
 ###### head()
@@ -1112,7 +1148,8 @@ Make a HEAD request
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@Throws(SnapshotError::class)
+fun head(path: String, queryParams: List<String>? = null, headers: List<String>? = null): ResponseSnapshot
 ```
 
 ###### trace()
@@ -1122,7 +1159,8 @@ Make a TRACE request
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@Throws(SnapshotError::class)
+fun trace(path: String, queryParams: List<String>? = null, headers: List<String>? = null): ResponseSnapshot
 ```
 
 ###### graphqlAt()
@@ -1132,7 +1170,8 @@ Send a GraphQL query/mutation to a custom endpoint
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@Throws(SnapshotError::class)
+fun graphqlAt(endpoint: String, query: String, variables: Any? = null, operationName: String? = null): ResponseSnapshot
 ```
 
 ###### graphql()
@@ -1142,7 +1181,8 @@ Send a GraphQL query/mutation
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@Throws(SnapshotError::class)
+fun graphql(query: String, variables: Any? = null, operationName: String? = null): ResponseSnapshot
 ```
 
 ###### graphqlWithStatus()
@@ -1157,7 +1197,8 @@ This method allows tests to distinguish between:
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@Throws(SnapshotError::class)
+fun graphqlWithStatus(query: String, variables: Any? = null, operationName: String? = null): String
 ```
 
 ###### graphqlSubscriptionAt()
@@ -1170,7 +1211,8 @@ After the first payload is received, this client sends `complete` to unsubscribe
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@Throws(SnapshotError::class)
+fun graphqlSubscriptionAt(endpoint: String, query: String, variables: Any? = null, operationName: String? = null): GraphQlSubscriptionSnapshot
 ```
 
 ###### graphqlSubscription()
@@ -1182,12 +1224,13 @@ Uses `/graphql` as the default subscription endpoint.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@Throws(SnapshotError::class)
+fun graphqlSubscription(query: String, variables: Any? = null, operationName: String? = null): GraphQlSubscriptionSnapshot
 ```
 
 ---
 
-#### UploadFile
+##### UploadFile
 
 Represents an uploaded file from multipart/form-data requests.
 
@@ -1203,7 +1246,7 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `contentEncoding` | `String?`   | `null`  | Content encoding type                    |
 | `cursor`          | `String`    | —       | Internal cursor for Read/Seek operations |
 
-##### Methods
+###### Methods
 
 ###### asBytes()
 
@@ -1214,7 +1257,7 @@ This provides zero-copy access to the underlying buffer.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+fun asBytes(): ByteArray
 ```
 
 ###### readToString()
@@ -1228,7 +1271,8 @@ Returns an error if the content is not valid UTF-8.
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+@Throws(Error::class)
+fun readToString(): String
 ```
 
 ###### contentTypeOrDefault()
@@ -1238,12 +1282,12 @@ Get the content type, defaulting to "application/octet-stream".
 **Signature:**
 
 ```kotlin
-// Phase 1: kotlin backend method signature generation
+fun contentTypeOrDefault(): String
 ```
 
 ---
 
-#### ValidateRequest
+##### ValidateRequest
 
 Request body for `POST /asyncapi/validate`
 
@@ -1256,7 +1300,7 @@ Request body for `POST /asyncapi/validate`
 
 ---
 
-#### ValidationResponse
+##### ValidationResponse
 
 Response body for `POST /asyncapi/validate`
 
@@ -1267,9 +1311,9 @@ Response body for `POST /asyncapi/validate`
 
 ---
 
-### Enums
+#### Enums
 
-#### SnapshotError
+##### SnapshotError
 
 Possible errors while converting an Axum response into a snapshot.
 
@@ -1280,7 +1324,7 @@ Possible errors while converting an Axum response into a snapshot.
 
 ---
 
-#### WebSocketMessage
+##### WebSocketMessage
 
 A WebSocket message that can be text or binary.
 
@@ -1294,7 +1338,7 @@ A WebSocket message that can be text or binary.
 
 ---
 
-#### Method
+##### Method
 
 HTTP method
 
@@ -1311,7 +1355,7 @@ HTTP method
 
 ---
 
-#### SecuritySchemeInfo
+##### SecuritySchemeInfo
 
 Security scheme types
 
@@ -1322,9 +1366,9 @@ Security scheme types
 
 ---
 
-### Errors
+#### Errors
 
-#### GraphQlError
+##### GraphQlError
 
 Errors that can occur during GraphQL operations
 
@@ -1351,7 +1395,7 @@ converted to structured HTTP responses matching the project's error fixtures.
 
 ---
 
-#### SchemaError
+##### SchemaError
 
 Error type for schema building operations
 

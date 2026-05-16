@@ -52,6 +52,8 @@ pub struct UploadFile {
 
     /// Internal cursor for Read/Seek operations
     #[serde(skip)]
+    #[doc(hidden)]
+    #[cfg_attr(alef, alef(skip))]
     pub cursor: Cursor<Bytes>,
 }
 
