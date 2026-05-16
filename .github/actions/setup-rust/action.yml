@@ -16,11 +16,11 @@ inputs:
   cache-cargo-home:
     description: Whether to cache cargo home directory
     required: false
-    default: 'true'
+    default: "true"
   use-sccache:
     description: Enable sccache as the Rust compiler wrapper
     required: false
-    default: 'true'
+    default: "true"
 outputs:
   cache-hit:
     description: Whether the Rust cache was restored
@@ -100,7 +100,6 @@ runs:
           "SCCACHE_GHA_ENABLED=false" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "RUSTC_WRAPPER=" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
         }
-
 
     - name: Cache Rust build artifacts
       if: inputs.use-sccache != 'true'

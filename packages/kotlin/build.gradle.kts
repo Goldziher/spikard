@@ -1,18 +1,10 @@
-import com.vanniktech.maven.publish.JavaLibrary
-import com.vanniktech.maven.publish.JavadocJar
-import com.vanniktech.maven.publish.SonatypeHost
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
   `java-library`
   kotlin("jvm") version "2.3.21"
   `maven-publish`
-  signing
-  // Drives publishing to Maven Central via the new Sonatype Central Portal.
-  // Reads MAVEN_USERNAME / MAVEN_PASSWORD / signingInMemoryKey* from
-  // ORG_GRADLE_PROJECT_* env vars set by the publish-maven-gradle composite.
-  id("com.vanniktech.maven.publish") version "0.30.0"
-  id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
+  id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
 }
 
 group = "dev.spikard"
@@ -26,10 +18,14 @@ dependencies {
   api("net.java.dev.jna:jna:5.18.1")
   // Jackson is on the public surface because the alef-emitted Java records
   // include `@JsonProperty` annotations for serialization round-tripping.
-  api("com.fasterxml.jackson.core:jackson-annotations:2.18.2")
-  api("com.fasterxml.jackson.core:jackson-databind:2.18.2")
-  api("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.18.2")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+  api("com.fasterxml.jackson.core:jackson-annotations:2.21")
+  api("com.fasterxml.jackson.core:jackson-databind:2.21.3")
+  api("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.21.3")
+  // jspecify ships the `@Nullable` / `@NonNull` annotations referenced by the
+  // alef-emitted Java facade; it must be on the api configuration so Kotlin
+  // consumers see the annotations on cross-language types.
+  api("org.jspecify:jspecify:1.0.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
   testImplementation("org.jetbrains.kotlin:kotlin-test:2.3.21")
   testImplementation("junit:junit:4.13.2")
 }
@@ -46,7 +42,18 @@ java {
 sourceSets {
   main {
     java {
-      srcDir("../java/src/main/java")
+      // Pull in the Java facade emitted by the alef Java backend so the
+      // Kotlin module compiles against the same on-disk sources. The alef
+      // Java backend writes to `packages/java/` (package-root layout), not
+      // the Maven `src/main/java/` convention.
+      srcDir("../java")
+    }
+    kotlin {
+      // The alef Kotlin backend emits binding sources at the project root
+      // (`packages/kotlin/`) rather than the Maven
+      // `src/main/kotlin/` convention. Pull them in explicitly so they end up
+      // in the compiled jar alongside any standard-layout sources.
+      srcDir(".")
     }
   }
 }
@@ -57,51 +64,46 @@ kotlin {
   }
 }
 
-// ktlint configuration — see .editorconfig for details
+// ktlint configuration — see .editorconfig for details. We deliberately exclude
+// the Java facade (which lives under `packages/java/`) and any build/generated
+// directories: ktlint cannot lint pure-Java files, and the FFM/Panama bindings
+// are kept in their own module.
 ktlint {
-  version.set("1.4.1")
+  version.set("1.8.0")
   outputToConsole.set(true)
   ignoreFailures.set(false)
+  filter {
+    exclude { entry -> entry.file.toString().contains("/packages/java/") }
+    exclude { entry -> entry.file.toString().endsWith("/Spikard.kt") }
+    exclude("**/build/**")
+    exclude("**/generated/**")
+  }
+}
+
+// Gradle 9.x flags an output-overlap validation error between
+// :ktlintKotlinScriptCheck / :ktlintMainSourceSetCheck and :compileKotlin.
+// Declare the explicit dependency so Gradle accepts the task graph.
+tasks.matching { it.name == "compileKotlin" }.configureEach {
+  mustRunAfter("ktlintKotlinScriptCheck")
+  mustRunAfter("ktlintMainSourceSetCheck")
 }
 
 // JNA needs the native lib on java.library.path; default to the workspace
-// `target/release` cargo output. Override with `-Pkb.lib.path=<dir>`.
+// `target/release` cargo output. Override with `-Pnative.lib.path=<dir>`.
 tasks.withType<Test>().configureEach {
-  val libPath = (project.findProperty("kb.lib.path") as String?) ?: "$rootDir/../../target/release"
+  val libPath = (project.findProperty("native.lib.path") as String?) ?: "$rootDir/../../target/release"
   systemProperty("jna.library.path", libPath)
   systemProperty("java.library.path", libPath)
   useJUnit()
 }
 
-mavenPublishing {
-  publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL, automaticRelease = true)
-  signAllPublications()
-
-  coordinates("dev.spikard", "spikard-kotlin", project.version.toString())
-
-  configure(JavaLibrary(javadocJar = JavadocJar.Empty(), sourcesJar = true))
-
-  pom {
-    name.set("Spikard Kotlin")
-    description.set("Kotlin/JVM bindings for the Spikard polyglot HTTP framework.")
-    url.set("https://github.com/Goldziher/spikard")
-    licenses {
-      license {
-        name.set("MIT")
-        url.set("https://opensource.org/licenses/MIT")
-      }
-    }
-    developers {
-      developer {
-        id.set("Goldziher")
-        name.set("Na'aman Hirschfeld")
-        email.set("nhirschfeld@gmail.com")
-      }
-    }
-    scm {
-      connection.set("scm:git:git://github.com/Goldziher/spikard.git")
-      developerConnection.set("scm:git:ssh://github.com:Goldziher/spikard.git")
-      url.set("https://github.com/Goldziher/spikard")
+// Publish under a Kotlin-specific artifactId so consumers can disambiguate
+// the Kotlin module from the sibling Java facade in the same Maven group.
+publishing {
+  publications {
+    create<MavenPublication>("maven") {
+      artifactId = "spikard-kotlin"
+      from(components["java"])
     }
   }
 }

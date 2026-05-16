@@ -10,7 +10,7 @@ it("rejects invalid input", async () => {
 
   const client = new TestClient(app);
   const response = await client.post("/users", {
-    json: { name: "Bob", age: "invalid" }
+    json: { name: "Bob", age: "invalid" },
   });
 
   expect(response.statusCode).toBe(400);

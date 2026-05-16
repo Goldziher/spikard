@@ -114,10 +114,10 @@ Located in `/crates/spikard-node/`:
 
 ```typescript
 export class Handler {
-    async handle(requestData: RequestData): Promise<HandlerResponse> {
-        // Process request
-        return { status: 200, body: { message: "OK" } };
-    }
+  async handle(requestData: RequestData): Promise<HandlerResponse> {
+    // Process request
+    return { status: 200, body: { message: "OK" } };
+  }
 }
 ```
 

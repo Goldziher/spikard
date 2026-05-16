@@ -92,7 +92,7 @@ pnpm tsx examples/node/src/grpc/error-handling.ts
 All handlers implement the gRPC handler interface from `@spikard/node`:
 
 ```typescript
-import { GrpcRequest, GrpcResponse } from '@spikard/node';
+import { GrpcRequest, GrpcResponse } from "@spikard/node";
 
 interface GrpcHandler {
   // Unary RPC - required method
@@ -116,16 +116,16 @@ interface GrpcHandler {
 ```typescript
 // GrpcRequest properties
 interface GrpcRequest {
-  serviceName: string;   // e.g., "stock.v1.StockService"
-  methodName: string;    // e.g., "StreamPrices"
-  payload: Buffer;       // Serialized protobuf
-  metadata: Record<string, string>;  // Optional metadata
+  serviceName: string; // e.g., "stock.v1.StockService"
+  methodName: string; // e.g., "StreamPrices"
+  payload: Buffer; // Serialized protobuf
+  metadata: Record<string, string>; // Optional metadata
 }
 
 // GrpcResponse creation
 const response: GrpcResponse = {
-  payload: Buffer.from(protoMessage.serializeBinary()),  // Buffer
-  metadata: { 'custom-header': 'value' }  // Optional
+  payload: Buffer.from(protoMessage.serializeBinary()), // Buffer
+  metadata: { "custom-header": "value" }, // Optional
 };
 ```
 
@@ -137,10 +137,10 @@ const reqPb = MyRequest.deserializeBinary(request.payload);
 
 // Serialize response
 const respPb = new MyResponse();
-respPb.setField('value');
+respPb.setField("value");
 return {
   payload: Buffer.from(respPb.serializeBinary()),
-  metadata: {}
+  metadata: {},
 };
 ```
 
@@ -285,14 +285,14 @@ pnpm test:grpc -- --grep "error_handling"
 
 ## Comparison with Python Implementation
 
-| Feature | Python (PyO3) | Node.js (napi-rs) |
-|---------|---------------|-------------------|
-| Unary RPC | ✅ Full support | ✅ Full support |
-| Server Streaming | ✅ Async generators | ⚠️ Collection pattern |
-| Client Streaming | ✅ Async iterators | ⚠️ Async iterator (limited) |
-| Bidirectional | ✅ Async gen + iter | ⚠️ Collection pattern |
-| Error Handling | ✅ Full support | ✅ Full support |
-| Metadata | ✅ Full support | ✅ Full support |
+| Feature          | Python (PyO3)       | Node.js (napi-rs)           |
+| ---------------- | ------------------- | --------------------------- |
+| Unary RPC        | ✅ Full support     | ✅ Full support             |
+| Server Streaming | ✅ Async generators | ⚠️ Collection pattern       |
+| Client Streaming | ✅ Async iterators  | ⚠️ Async iterator (limited) |
+| Bidirectional    | ✅ Async gen + iter | ⚠️ Collection pattern       |
+| Error Handling   | ✅ Full support     | ✅ Full support             |
+| Metadata         | ✅ Full support     | ✅ Full support             |
 
 **Why the difference?**
 

@@ -23,10 +23,10 @@ Tests field-level JSON Schema validation constraints:
 
 ```json
 {
-  "name": {"type": "string", "minLength": 2, "maxLength": 50},
-  "age": {"type": "integer", "minimum": 0, "maximum": 150},
-  "email": {"type": "string", "format": "email"},
-  "tags": {"type": "array", "items": {"type": "string"}, "minItems": 1}
+  "name": { "type": "string", "minLength": 2, "maxLength": 50 },
+  "age": { "type": "integer", "minimum": 0, "maximum": 150 },
+  "email": { "type": "string", "format": "email" },
+  "tags": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
 }
 ```
 
@@ -89,10 +89,10 @@ Tests required field enforcement:
 {
   "required": ["id", "name", "email"],
   "properties": {
-    "id": {"type": "string"},
-    "name": {"type": "string"},
-    "email": {"type": "string"},
-    "phone": {"type": "string"}
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "email": { "type": "string" },
+    "phone": { "type": "string" }
   }
 }
 ```
@@ -167,8 +167,8 @@ Tests deeply nested object validation:
             "address": {
               "type": "object",
               "properties": {
-                "street": {"type": "string"},
-                "zip": {"type": "string", "pattern": "^[0-9]{5}$"}
+                "street": { "type": "string" },
+                "zip": { "type": "string", "pattern": "^[0-9]{5}$" }
               },
               "required": ["street", "zip"]
             }
@@ -254,20 +254,20 @@ When multiple fields fail, error response includes an `errors` array:
 
 ## Validation Constraints Covered
 
-| Constraint | Description | Example |
-|------------|-------------|---------|
-| `type` | Type mismatch | "25" instead of 25 |
-| `required` | Missing required field | omitted name |
-| `minLength` | String too short | "A" (min 2) |
-| `maxLength` | String too long | 51+ chars (max 50) |
-| `minimum` | Number too small | -5 (min 0) |
-| `maximum` | Number too large | 200 (max 150) |
-| `pattern` | Regex pattern mismatch | "123" (pattern ^[0-9]{5}$) |
-| `format` | Format validation | "noatsign" (email format) |
-| `minItems` | Array too small | [] (min 1) |
-| `maxItems` | Array too large | 6+ items (max 5) |
-| `uniqueItems` | Duplicate items | [1, 2, 1] |
-| `additionalProperties` | Extra fields not allowed | extra_field: true |
+| Constraint             | Description              | Example                    |
+| ---------------------- | ------------------------ | -------------------------- |
+| `type`                 | Type mismatch            | "25" instead of 25         |
+| `required`             | Missing required field   | omitted name               |
+| `minLength`            | String too short         | "A" (min 2)                |
+| `maxLength`            | String too long          | 51+ chars (max 50)         |
+| `minimum`              | Number too small         | -5 (min 0)                 |
+| `maximum`              | Number too large         | 200 (max 150)              |
+| `pattern`              | Regex pattern mismatch   | "123" (pattern ^[0-9]{5}$) |
+| `format`               | Format validation        | "noatsign" (email format)  |
+| `minItems`             | Array too small          | [] (min 1)                 |
+| `maxItems`             | Array too large          | 6+ items (max 5)           |
+| `uniqueItems`          | Duplicate items          | [1, 2, 1]                  |
+| `additionalProperties` | Extra fields not allowed | extra_field: true          |
 
 ## Integration with Tests
 
@@ -363,12 +363,16 @@ Each fixture file is a JSON array of test case objects:
   {
     "name": "unique_test_case_name",
     "method": "module.method",
-    "params": { /* JSON-RPC params object */ },
+    "params": {
+      /* JSON-RPC params object */
+    },
     "expectedSuccess": true,
     "expectedError": {
       "code": "-32602",
       "message": "Invalid params",
-      "data": { /* error details */ }
+      "data": {
+        /* error details */
+      }
     }
   }
 ]

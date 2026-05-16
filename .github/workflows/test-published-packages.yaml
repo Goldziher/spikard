@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Package version to test (e.g., 0.6.0)'
+        description: "Package version to test (e.g., 0.6.0)"
         required: true
         type: string
 
@@ -171,7 +171,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Update package.json version
         working-directory: test_apps/node

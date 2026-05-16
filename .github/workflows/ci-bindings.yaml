@@ -1,0 +1,196 @@
+name: CI Bindings
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "alef.toml"
+      - "crates/**"
+      - "packages/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "Taskfile.yaml"
+      - ".task/**"
+      - ".github/workflows/ci-bindings.yaml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "alef.toml"
+      - "crates/**"
+      - "packages/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "Taskfile.yaml"
+      - ".task/**"
+      - ".github/workflows/ci-bindings.yaml"
+
+concurrency:
+  group: ci-bindings-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_DEV_DEBUG: 0
+  RUST_BACKTRACE: short
+  BUILD_PROFILE: ci
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+permissions:
+  contents: read
+
+jobs:
+  bindings:
+    name: ${{ matrix.language }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: python
+            os: ubuntu-latest
+            command: uv run pytest packages/python/tests/
+          - language: node
+            os: ubuntu-latest
+            command: pnpm --filter @spikard/node test
+          - language: ruby
+            os: ubuntu-latest
+            command: cd packages/ruby && bundle exec rspec
+          - language: php
+            os: ubuntu-latest
+            command: cd packages/php && composer install --no-interaction --no-progress && composer run lint
+          - language: elixir
+            os: ubuntu-latest
+            command: cd packages/elixir && mix deps.get && mix compile --warnings-as-errors
+          - language: go
+            os: ubuntu-latest
+            command: cd packages/go && go test ./...
+          - language: java
+            os: ubuntu-latest
+            command: cd packages/java && mvn -B verify
+          - language: csharp
+            os: ubuntu-latest
+            command: dotnet build packages/csharp/Spikard --configuration Release
+          - language: kotlin
+            os: ubuntu-latest
+            command: cd packages/kotlin && gradle test --no-daemon
+          - language: dart
+            os: ubuntu-latest
+            command: cd packages/dart && dart pub get && dart test
+          - language: swift
+            os: macos-latest
+            command: ""
+          - language: zig
+            os: ubuntu-latest
+            command: cd packages/zig && zig build test
+          - language: wasm
+            os: ubuntu-latest
+            command: wasm-pack build crates/spikard-wasm --release --target bundler
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          cache-key-prefix: bindings-${{ matrix.language }}-${{ matrix.os }}
+          use-sccache: "true"
+
+      - name: Install Alef
+        uses: kreuzberg-dev/actions/install-alef@v1
+
+      - name: Install Task
+        uses: kreuzberg-dev/actions/install-task@v1
+
+      - name: Setup Python
+        if: matrix.language == 'python'
+        uses: kreuzberg-dev/actions/setup-python-env@v1
+        with:
+          python-version: "3.14"
+
+      - name: Setup Node
+        if: matrix.language == 'node'
+        uses: kreuzberg-dev/actions/setup-node-workspace@v1
+        with:
+          node-version: "24"
+
+      - name: Setup Ruby
+        if: matrix.language == 'ruby'
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+          working-directory: packages/ruby
+
+      - name: Setup PHP
+        if: matrix.language == 'php'
+        uses: kreuzberg-dev/actions/setup-php@v1
+        with:
+          php-version: "8.4"
+
+      - name: Setup Elixir
+        if: matrix.language == 'elixir'
+        uses: kreuzberg-dev/actions/setup-elixir@v1
+        with:
+          elixir-version: "1.18"
+          otp-version: "27"
+
+      - name: Setup Go
+        if: matrix.language == 'go'
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: packages/go/go.mod
+
+      - name: Setup Maven
+        if: matrix.language == 'java'
+        uses: kreuzberg-dev/actions/setup-maven@v1
+        with:
+          java-version: "21"
+
+      - name: Setup .NET
+        if: matrix.language == 'csharp'
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Setup Gradle
+        if: matrix.language == 'kotlin'
+        uses: kreuzberg-dev/actions/setup-gradle@v1
+        with:
+          java-version: "21"
+
+      - name: Setup Dart
+        if: matrix.language == 'dart'
+        uses: dart-lang/setup-dart@v1
+
+      - name: Setup Swift
+        if: matrix.language == 'swift'
+        uses: kreuzberg-dev/actions/setup-swift@v1
+
+      - name: Setup Zig
+        if: matrix.language == 'zig'
+        uses: kreuzberg-dev/actions/setup-zig@v1
+
+      - name: Setup wasm-pack
+        if: matrix.language == 'wasm'
+        uses: kreuzberg-dev/actions/setup-wasm-pack@v1
+
+      - name: Build shared FFI
+        if: contains(fromJSON('["go","java","csharp","kotlin","dart","swift","zig"]'), matrix.language)
+        run: cargo build --release -p spikard-ffi
+
+      - name: Build Swift package
+        if: matrix.language == 'swift'
+        uses: kreuzberg-dev/actions/build-swift-package@v1
+        with:
+          package-dir: packages/swift
+          crate-name: spikard-swift
+
+      - name: Check Swift package
+        if: matrix.language == 'swift'
+        run: cd packages/swift && swift build
+
+      - name: Run binding check
+        if: matrix.language != 'swift'
+        run: ${{ matrix.command }}

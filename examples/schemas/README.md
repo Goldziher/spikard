@@ -49,7 +49,7 @@ REST API for file handling demonstrating:
 - MIME type restrictions
 - Binary response streams (file downloads)
 - Progress tracking headers
-- Rate limiting headers (X-RateLimit-*)
+- Rate limiting headers (X-RateLimit-\*)
 - Conditional requests (If-Modified-Since, ETag)
 - Multiple status codes for upload scenarios (202 Accepted, 413 Payload Too Large)
 
@@ -267,7 +267,7 @@ All schemas document where lifecycle hooks apply:
 
 - [x] Multiple status codes per endpoint
 - [x] Different response schemas per status
-- [x] Headers (X-RateLimit-*, ETag, Cache-Control)
+- [x] Headers (X-RateLimit-\*, ETag, Cache-Control)
 - [x] Streaming responses (file downloads)
 - [x] Binary content (application/octet-stream)
 

@@ -19,7 +19,7 @@ it("completes user workflow", async () => {
 
   // Create user
   const createRes = await client.post("/users", {
-    json: { name: "Alice" }
+    json: { name: "Alice" },
   });
   const user = createRes.json();
   expect(user.name).toBe("Alice");

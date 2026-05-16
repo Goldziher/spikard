@@ -318,12 +318,14 @@ end
 ## Key Patterns
 
 ### Message Collection
+
 - All client messages are collected in a single `messages` array via `request.messages`
 - Messages are binary strings (serialized protobuf)
 - No streaming iteration needed - full array is provided
 - Use `.each.with_index` or `.map.with_index` to process with index
 
 ### Processing Strategy
+
 1. **Collect**: All input messages received as array via `request.messages`
 2. **Validate**: Check all messages before processing with `.each` or `.filter_map`
 3. **Transform**: Process and generate output using blocks
@@ -331,6 +333,7 @@ end
 5. **Return**: Hash with `:messages` and `:metadata` keys for bidi; `Response` object for client stream
 
 ### Error Handling
+
 - Use Ruby exceptions (`ArgumentError`, `StandardError`, custom errors) to signal failures
 - Catch exceptions in `handle_request` and convert to `Spikard::Grpc::Response.error(message, status_code)`
 - Errors in message deserialization should use `INVALID_ARGUMENT` status
@@ -338,6 +341,7 @@ end
 - Per-message errors can be included in response messages (with ERROR status)
 
 ### Metadata
+
 - Client streaming: Metadata passed in request, can be included in response
 - Bidirectional streaming: Metadata passed in request, can be included in response
 - Use metadata for non-payload information (timestamps, counts, filters)
@@ -556,13 +560,13 @@ end
 
 ## Comparison with Other Patterns
 
-| Aspect | Client Streaming | Bidirectional | Unary |
-|--------|------------------|---------------|-------|
-| Input | Multiple messages | Multiple messages | Single message |
-| Output | Single response | Multiple messages | Single response |
-| Use case | Batch operations | Stream processing | Simple requests |
-| Message order | Important | Important | N/A |
-| Atomicity | Full batch atomic | Per-message or batch | Single atomic |
+| Aspect        | Client Streaming  | Bidirectional        | Unary           |
+| ------------- | ----------------- | -------------------- | --------------- |
+| Input         | Multiple messages | Multiple messages    | Single message  |
+| Output        | Single response   | Multiple messages    | Single response |
+| Use case      | Batch operations  | Stream processing    | Simple requests |
+| Message order | Important         | Important            | N/A             |
+| Atomicity     | Full batch atomic | Per-message or batch | Single atomic   |
 
 ## Ruby-Specific Patterns
 

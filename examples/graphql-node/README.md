@@ -23,7 +23,7 @@ The Spikard GraphQL bindings provide a high-performance, type-safe API for confi
 ### Basic Usage
 
 ```typescript
-import { GraphQL } from 'spikard';
+import { GraphQL } from "spikard";
 
 // Create a new schema builder
 const builder = GraphQL.schemaBuilder();
@@ -58,9 +58,9 @@ const defaultConfig = GraphQL.defaultSchemaConfig();
 ```typescript
 // Production-grade configuration
 const prodBuilder = GraphQL.schemaBuilder();
-prodBuilder.enableIntrospection(false);  // Disable introspection
-prodBuilder.complexityLimit(1000);       // Strict complexity limit
-prodBuilder.depthLimit(20);              // Strict depth limit
+prodBuilder.enableIntrospection(false); // Disable introspection
+prodBuilder.complexityLimit(1000); // Strict complexity limit
+prodBuilder.depthLimit(20); // Strict depth limit
 const prodConfig = prodBuilder.finish();
 ```
 
@@ -69,9 +69,9 @@ const prodConfig = prodBuilder.finish();
 ```typescript
 // Permissive development configuration
 const devBuilder = GraphQL.schemaBuilder();
-devBuilder.enableIntrospection(true);   // Enable introspection
-devBuilder.complexityLimit(10000);      // Higher limit
-devBuilder.depthLimit(100);             // Higher depth
+devBuilder.enableIntrospection(true); // Enable introspection
+devBuilder.complexityLimit(10000); // Higher limit
+devBuilder.depthLimit(100); // Higher depth
 const devConfig = devBuilder.finish();
 ```
 
@@ -145,7 +145,7 @@ npm run dev
 The GraphQL configuration can be integrated with the Spikard HTTP server:
 
 ```typescript
-import { runServer } from 'spikard';
+import { runServer } from "spikard";
 
 const graphqlConfig = GraphQL.schemaBuilder()
   .enableIntrospection(true)
@@ -185,10 +185,10 @@ Make sure you're using the correct types:
 
 ```typescript
 // Correct
-builder.complexityLimit(5000);  // number
+builder.complexityLimit(5000); // number
 
 // Incorrect
-builder.complexityLimit('5000');  // string - will cause type error
+builder.complexityLimit("5000"); // string - will cause type error
 ```
 
 ## Further Reading

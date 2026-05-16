@@ -1,9 +1,15 @@
 default_install_hook_types:
   - pre-commit
   - commit-msg
-exclude: ^docs/snippets/|vendor/|node_modules/|target/|invalid*|dist/|artifacts/|test_documents/|test_apps/|scripts/ci/|packages/.*/tools/vendor-
+exclude: ^docs/snippets/|vendor/|node_modules/|target/|invalid*|dist/|artifacts/|test_documents/|test_apps/|scripts/ci/|^e2e/|\.cache/|\.venv/
 
 repos:
+  # AI-Rulez: auto-generate AI assistant configuration files
+  - repo: https://github.com/Goldziher/ai-rulez
+    rev: v4.1.6
+    hooks:
+      - id: ai-rulez-generate
+
   # Commit message linting
   - repo: https://github.com/Goldziher/gitfluff
     rev: v0.8.0
@@ -11,13 +17,6 @@ repos:
       - id: gitfluff-lint
         args: ["--write"]
         stages: [commit-msg]
-
-  # AI-Rulez: validate config and auto-generate AI assistant configuration files
-  - repo: https://github.com/Goldziher/ai-rulez
-    rev: v4.1.6
-    hooks:
-      - id: ai-rulez-validate
-      - id: ai-rulez-generate
 
   # General file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -41,19 +40,7 @@ repos:
     hooks:
       - id: pyproject-fmt
 
-  - repo: https://github.com/DevinR528/cargo-sort
-    rev: "v2.1.4"
-    hooks:
-      - id: cargo-sort
-        args: [-w]
-
-  - repo: https://github.com/ComPWA/taplo-pre-commit
-    rev: v0.9.3
-    hooks:
-      - id: taplo-format
-        exclude: "pyproject.toml|Cargo.toml"
-
-  # Python: ruff (linting + formatting) + mypy (type checking)
+  # Python
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.13
     hooks:
@@ -61,110 +48,72 @@ repos:
         args: [--fix]
       - id: ruff-format
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v2.1.0
-    hooks:
-      - id: mypy
-        exclude: "e2e/|scripts/|examples/|tests/test_apps/|benchmarks/|tools/"
-
-  # Rust: formatting, linting, and license checking
-  - repo: https://github.com/AndrejOrsula/pre-commit-cargo
-    rev: 0.5.0
-    hooks:
-      - id: cargo-fmt
-        args: ["--all"]
-        types: [rust]
-      # Clippy: split by compilation unit so only changed code recompiles
-      - id: cargo-clippy
-        args: [
-          "--fix",
-          "--allow-dirty",
-          "--allow-staged",
-          "--workspace",
-          "--exclude=spikard-php",
-          "--exclude=spikard-py",
-          "--exclude=spikard-node",
-          "--exclude=spikard-rb",
-          "--exclude=spikard-rb-macros",
-          "--exclude=spikard-elixir",
-          "--exclude=spikard-ffi",
-          "--exclude=benchmark-harness",
-          "--all-features",
-          "--all-targets",
-          "--",
-          "-D",
-          "warnings",
-        ]
-
-  - repo: https://github.com/bnjbvr/cargo-machete
-    rev: v0.9.2
-    hooks:
-      - id: cargo-machete
-
-  - repo: https://github.com/EmbarkStudios/cargo-deny
-    rev: 0.19.6
-    hooks:
-      - id: cargo-deny
-        args: ["check"]
-
-  # JavaScript/TypeScript/JSON/CSS: biome (formatting + linting with autofixes)
-  # e2e/ is excluded — those files are alef-generated and already formatted by
-  # alef's own biome pass; running biome-format here a second time produces
-  # subtly different output (string escape handling) and breaks alef-verify.
-  - repo: https://github.com/biomejs/pre-commit
-    rev: v2.4.15
-    hooks:
-      - id: biome-format
-        exclude: ^(tools/benchmark-harness/fixtures/|e2e/)
-      - id: biome-lint
-        exclude: ^e2e/
-
-  # Shell scripts: formatting and linting
-  - repo: https://github.com/scop/pre-commit-shfmt
-    rev: v3.13.1-1
-    hooks:
-      - id: shfmt
-        args: ["-w", "-i", "2"]
-
-  - repo: https://github.com/koalaman/shellcheck-precommit
-    rev: v0.11.0
-    hooks:
-      - id: shellcheck
-        args: ['-x']
-        exclude: ^test_apps/docker/tests/
-
-  # Markdown: linting
-  - repo: https://github.com/rvben/rumdl-pre-commit
-    rev: "v0.1.93"
-    hooks:
-      - id: rumdl-fmt
-        exclude: '^(test_apps/|tools/benchmark-harness/vendored/|docs/index\.md|docs/getting-started/installation\.md)'
-
-  # Spelling: fast Rust-based spell checker
-  - repo: https://github.com/crate-ci/typos
-    rev: v1.46.1
-    hooks:
-      - id: typos
-        args: [--force-exclude]
-
-  # GitHub Actions: linting
-  - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.12
-    hooks:
-      - id: actionlint
-
-  # Shared kreuzberg-dev polyglot hooks — replaces a previous set of local
-  # `bash -c '... || echo skip'` hooks per language. The shared repo handles
-  # toolchain detection consistently across kreuzberg, alef, and spikard.
+  # Shared kreuzberg-dev polyglot hooks
   - repo: https://github.com/kreuzberg-dev/pre-commit-hooks
     rev: v1.0.10
     hooks:
+      - id: cargo-sort
+        exclude: ^(crates/spikard-(wasm|node|py|php|ffi)|packages/(dart|swift)/rust|packages/ruby/ext/spikard_rb/native)/Cargo\.toml$
+      - id: cargo-fmt
+        args: ["--all"]
+      - id: cargo-check
+        args:
+          [
+            "--workspace",
+            "--exclude=spikard-ffi",
+            "--exclude=spikard-py",
+            "--exclude=spikard-node",
+            "--exclude=spikard-php",
+            "--exclude=spikard-wasm",
+            "--all-features",
+            "--all-targets",
+          ]
+      - id: cargo-clippy
+        args:
+          [
+            "--fix",
+            "--allow-dirty",
+            "--allow-staged",
+            "--workspace",
+            "--exclude=spikard-ffi",
+            "--exclude=spikard-py",
+            "--exclude=spikard-node",
+            "--exclude=spikard-php",
+            "--exclude=spikard-wasm",
+            "--all-features",
+            "--all-targets",
+            "--",
+            "-D",
+            "warnings",
+          ]
+      - id: cargo-machete
+        args: ["crates/", "packages/", "tools/"]
+        exclude: ^e2e/
+      - id: cargo-deny
+        args: ["check"]
+      - id: shfmt
+        args: ["-w", "-i", "2"]
+      - id: shellcheck
+        args: ["-x"]
+      - id: mypy
+        files: ^(packages/python|tools|scripts)/.*\.py$
+        exclude: "e2e/|tests/|scripts/publish/"
+      - id: go-fmt
+        exclude: ^(e2e/|test_apps/|tools/)
+      - id: golangci-lint
+        exclude: ^(e2e/|test_apps/|tools/)
+      - id: govulncheck
+        exclude: ^(e2e/|test_apps/|tools/)
       - id: rubocop
         files: ^packages/ruby/.*\.rb$
       - id: rubocop-lint
         files: ^packages/ruby/.*\.(rb|rbs)$
       - id: steep
         files: ^packages/ruby/.*\.(rb|rbs)$
+      - id: dotnet-format
+        files: ^packages/csharp/.*\.cs$
+      - id: dotnet-format-check
+        files: ^packages/csharp/.*\.cs$
       - id: php-cs-fixer
         files: ^packages/php/.*\.php$
       - id: phpstan
@@ -173,38 +122,29 @@ repos:
         files: ^packages/elixir/
       - id: mix-credo
         files: ^packages/elixir/
-      - id: go-fmt
-        exclude: ^(e2e/|test_apps/|tools/)
-      - id: golangci-lint
-        exclude: ^(e2e/|test_apps/|tools/)
-      - id: govulncheck
-        exclude: ^(e2e/|test_apps/|tools/)
-      - id: java-verify
-        files: ^packages/java/
-      - id: dotnet-format
-        files: ^packages/csharp/.*\.cs$
-      - id: dotnet-format-check
-        files: ^packages/csharp/.*\.cs$
       - id: ktfmt
-        files: ^packages/kotlin/.*\.kt$
+        args: ["--kotlinlang-style"]
+        files: ^packages/kotlin/.*\.kts?$
       - id: detekt
-        files: ^packages/kotlin/.*\.kt$
-      - id: dart-format
-        files: ^packages/dart/.*\.dart$
-      - id: dart-analyze
-        files: ^packages/dart/.*\.dart$
-      - id: gleam-format
-        files: ^packages/gleam/.*\.gleam$
-      - id: gleam-check
-        files: ^packages/gleam/.*\.gleam$
+        args: ["--build-upon-default-config"]
+        files: ^packages/kotlin/.*\.kts?$
       - id: swift-format
         files: ^packages/swift/.*\.swift$
       - id: swiftlint
         files: ^packages/swift/.*\.swift$
+      - id: dart-format
+        files: ^packages/dart/.*\.dart$
+      - id: dart-analyze
+        files: ^packages/dart/.*\.dart$
       - id: zig-fmt
         files: ^packages/zig/.*\.zig$
       - id: zig-build-check
         files: ^packages/zig/.*\.zig$
+      - id: oxlint
+      - id: oxfmt
+      - id: rumdl-fmt
+        exclude: ^templates/
+      - id: cpd
 
   # Alef: verify generated bindings are up to date and sync package versions
   - repo: https://github.com/kreuzberg-dev/alef
@@ -212,3 +152,16 @@ repos:
     hooks:
       - id: alef-verify
       - id: alef-sync-versions
+
+  # GitHub Actions: linting
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.12
+    hooks:
+      - id: actionlint
+
+  # Spelling: fast Rust-based spell checker (last — runs after all formatters)
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.46.1
+    hooks:
+      - id: typos
+        args: [--force-exclude]

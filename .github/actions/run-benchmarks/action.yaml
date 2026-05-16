@@ -3,31 +3,31 @@ description: Run benchmark harness for a specific language and frameworks
 
 inputs:
   language:
-    description: 'Language binding (python, node, ruby, rust)'
+    description: "Language binding (python, node, ruby, rust)"
     required: true
   spikard-framework:
-    description: 'Spikard framework name (e.g., spikard-python)'
+    description: "Spikard framework name (e.g., spikard-python)"
     required: true
   comparison-frameworks:
-    description: 'Comma-separated list of frameworks to compare against'
+    description: "Comma-separated list of frameworks to compare against"
     required: true
   workload-suite:
-    description: 'Workload suite to run'
+    description: "Workload suite to run"
     required: true
   duration:
-    description: 'Duration per workload in seconds'
+    description: "Duration per workload in seconds"
     required: true
   concurrency:
-    description: 'Concurrent connections'
+    description: "Concurrent connections"
     required: true
   warmup:
-    description: 'Warmup requests'
+    description: "Warmup requests"
     required: true
   significance:
-    description: 'Statistical significance threshold'
+    description: "Statistical significance threshold"
     required: true
   port:
-    description: 'Base port for servers'
+    description: "Base port for servers"
     required: true
 
 runs:

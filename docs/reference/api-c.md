@@ -72,19 +72,30 @@ SpikardFullSchemaConfig* spikard_schema_full();
 
 API Key authentication configuration
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `keys` | `const char**` | — | Valid API keys |
-| `header_name` | `const char*` | — | Header name to check (e.g., "X-API-Key") |
+| Field         | Type           | Default | Description                              |
+| ------------- | -------------- | ------- | ---------------------------------------- |
+| `keys`        | `const char**` | —       | Valid API keys                           |
+| `header_name` | `const char*`  | —       | Header name to check (e.g., "X-API-Key") |
+
+---
+
+#### SpikardAsyncApiConfig
+
+AsyncAPI HTTP endpoint configuration
+
+| Field     | Type     | Default | Description                                                   |
+| --------- | -------- | ------- | ------------------------------------------------------------- |
+| `enabled` | `bool`   | —       | Enable AsyncAPI endpoints (default: false)                    |
+| `spec`    | `void**` | `NULL`  | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 
 #### SpikardBackgroundJobMetadata
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `name` | `const char*` | — | The name |
-| `request_id` | `const char**` | `NULL` | Request id |
+| Field        | Type           | Default | Description |
+| ------------ | -------------- | ------- | ----------- |
+| `name`       | `const char*`  | —       | The name    |
+| `request_id` | `const char**` | `NULL`  | Request id  |
 
 ##### Methods
 
@@ -102,11 +113,11 @@ SpikardBackgroundJobMetadata spikard_default();
 
 Configuration for in-process background task execution.
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `max_queue_size` | `uintptr_t` | `1024` | Maximum queue size |
-| `max_concurrent_tasks` | `uintptr_t` | `128` | Maximum concurrent tasks |
-| `drain_timeout_secs` | `uint64_t` | `30` | Drain timeout secs |
+| Field                  | Type        | Default | Description              |
+| ---------------------- | ----------- | ------- | ------------------------ |
+| `max_queue_size`       | `uintptr_t` | `1024`  | Maximum queue size       |
+| `max_concurrent_tasks` | `uintptr_t` | `128`   | Maximum concurrent tasks |
+| `drain_timeout_secs`   | `uint64_t`  | `30`    | Drain timeout secs       |
 
 ##### Methods
 
@@ -124,12 +135,12 @@ SpikardBackgroundTaskConfig spikard_default();
 
 Compression configuration shared across runtimes
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `gzip` | `bool` | `true` | Enable gzip compression |
-| `brotli` | `bool` | `true` | Enable brotli compression |
-| `min_size` | `uintptr_t` | — | Minimum response size to compress (bytes) |
-| `quality` | `uint32_t` | — | Compression quality (0-11 for brotli, 0-9 for gzip) |
+| Field      | Type        | Default | Description                                         |
+| ---------- | ----------- | ------- | --------------------------------------------------- |
+| `gzip`     | `bool`      | `true`  | Enable gzip compression                             |
+| `brotli`   | `bool`      | `true`  | Enable brotli compression                           |
+| `min_size` | `uintptr_t` | —       | Minimum response size to compress (bytes)           |
+| `quality`  | `uint32_t`  | —       | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
 ##### Methods
 
@@ -147,11 +158,11 @@ SpikardCompressionConfig spikard_default();
 
 Contact information
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `name` | `const char**` | `NULL` | The name |
-| `email` | `const char**` | `NULL` | Email |
-| `url` | `const char**` | `NULL` | Url |
+| Field   | Type           | Default | Description |
+| ------- | -------------- | ------- | ----------- |
+| `name`  | `const char**` | `NULL`  | The name    |
+| `email` | `const char**` | `NULL`  | Email       |
+| `url`   | `const char**` | `NULL`  | Url         |
 
 ---
 
@@ -159,16 +170,14 @@ Contact information
 
 CORS configuration for a route
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `allowed_origins` | `const char**` | `NULL` | Allowed origins |
-| `allowed_methods` | `const char**` | `NULL` | Allowed methods |
-| `allowed_headers` | `const char**` | `NULL` | Allowed headers |
-| `expose_headers` | `const char***` | `NULL` | Expose headers |
-| `max_age` | `uint32_t*` | `NULL` | Maximum age |
-| `allow_credentials` | `bool*` | `NULL` | Allow credentials |
-| `methods_joined_cache` | `const char*` | — | Methods joined cache |
-| `headers_joined_cache` | `const char*` | — | Headers joined cache |
+| Field               | Type            | Default | Description       |
+| ------------------- | --------------- | ------- | ----------------- |
+| `allowed_origins`   | `const char**`  | `NULL`  | Allowed origins   |
+| `allowed_methods`   | `const char**`  | `NULL`  | Allowed methods   |
+| `allowed_headers`   | `const char**`  | `NULL`  | Allowed headers   |
+| `expose_headers`    | `const char***` | `NULL`  | Expose headers    |
+| `max_age`           | `uint32_t*`     | `NULL`  | Maximum age       |
+| `allow_credentials` | `bool*`         | `NULL`  | Allow credentials |
 
 ##### Methods
 
@@ -236,11 +245,11 @@ SpikardCorsConfig spikard_default();
 
 Configuration for fully-featured schemas with Query, Mutation, and Subscription types
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `introspection_enabled` | `bool` | `true` | Enable introspection queries |
-| `complexity_limit` | `uintptr_t*` | `NULL` | Maximum query complexity (None = unlimited) |
-| `depth_limit` | `uintptr_t*` | `NULL` | Maximum query depth (None = unlimited) |
+| Field                   | Type         | Default | Description                                 |
+| ----------------------- | ------------ | ------- | ------------------------------------------- |
+| `introspection_enabled` | `bool`       | `true`  | Enable introspection queries                |
+| `complexity_limit`      | `uintptr_t*` | `NULL`  | Maximum query complexity (None = unlimited) |
+| `depth_limit`           | `uintptr_t*` | `NULL`  | Maximum query depth (None = unlimited)      |
 
 ##### Methods
 
@@ -250,33 +259,6 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 
 ```c
 SpikardFullSchemaConfig spikard_default();
-```
-
----
-
-#### SpikardGraphQlError
-
-##### Methods
-
-###### spikard_status_code()
-
-Convert error to HTTP status code
-
-Maps GraphQL error types to appropriate HTTP status codes:
-
-- 400: Bad Request for parse/request-handling errors
-- 401: Unauthorized for authentication errors
-- 403: Forbidden for authorization errors
-- 404: Not Found for resource not found
-- 422: Unprocessable Entity for validation failures
-- 429: Too Many Requests for rate limit errors
-- 500: Internal Server Error for schema/serialization/internal errors
-- 200: OK for GraphQL execution errors returned in GraphQL response body
-
-**Signature:**
-
-```c
-uint16_t spikard_status_code();
 ```
 
 ---
@@ -380,6 +362,20 @@ SpikardGraphQlRouteConfig spikard_default();
 
 ---
 
+#### SpikardGraphQlSubscriptionSnapshot
+
+Snapshot of a GraphQL subscription exchange over WebSocket.
+
+| Field               | Type          | Default | Description                                                       |
+| ------------------- | ------------- | ------- | ----------------------------------------------------------------- |
+| `operation_id`      | `const char*` | —       | Operation id used for the subscription request.                   |
+| `acknowledged`      | `bool`        | —       | Whether the server acknowledged the GraphQL WebSocket connection. |
+| `event`             | `void**`      | `NULL`  | First `next.payload` received for this subscription, if any.      |
+| `errors`            | `void**`      | —       | GraphQL protocol errors emitted by the server.                    |
+| `complete_received` | `bool`        | —       | Whether a `complete` frame was observed for this operation.       |
+
+---
+
 #### SpikardGrpcConfig
 
 Configuration for gRPC support
@@ -387,7 +383,7 @@ Configuration for gRPC support
 Controls how the server handles gRPC requests, including compression,
 timeouts, and protocol settings.
 
-## Stream Limits
+# Stream Limits
 
 This configuration enforces message-level size limits but delegates
 concurrent stream limiting to the HTTP/2 transport layer:
@@ -403,25 +399,26 @@ concurrent stream limiting to the HTTP/2 transport layer:
   returns GOAWAY frames when exceeded. Applications should not rely on
   custom enforcement of this limit.
 
-- **Stream Length Limits**: There is currently no built-in limit on the
-  total number of messages in a stream. Handlers should implement their own
-  message counting if needed. Future versions may add a `max_stream_response_bytes`
-  field to limit total response size per stream.
+- **Stream Response Size Limits**: The `max_stream_response_bytes` field caps the
+  total encoded bytes emitted across a server-streaming or bidi-streaming response.
+  When the cumulative size exceeds the limit, the stream is terminated with
+  `tonic.Status.resource_exhausted`. Defaults to `NULL` (unbounded).
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `enabled` | `bool` | `true` | Enable gRPC support |
-| `max_message_size` | `uintptr_t` | — | Maximum message size in bytes (for both sending and receiving) This limit applies to individual messages in both unary and streaming RPCs. When a single message exceeds this size, the request is rejected with HTTP 413 (Payload Too Large). Default: 4MB (4194304 bytes) **Note:** This limit does NOT apply to the total response size in streaming RPCs. For multi-message streams, the total response can exceed this limit as long as each individual message stays within the limit. |
-| `enable_compression` | `bool` | `true` | Enable gzip compression for gRPC messages |
-| `request_timeout` | `uint64_t*` | `NULL` | Timeout for gRPC requests in seconds (None = no timeout) |
-| `max_concurrent_streams` | `uint32_t` | — | Maximum number of concurrent streams per connection (HTTP/2 advisory) This value is communicated to HTTP/2 clients as the server's flow control limit. The HTTP/2 transport layer enforces this limit automatically via SETTINGS frames and GOAWAY responses. Applications should NOT implement custom enforcement. Default: 100 streams per connection # Stream Limiting Strategy - **Per Connection**: This limit applies per HTTP/2 connection, not globally - **Transport Enforcement**: HTTP/2 handles all stream limiting; applications need not implement custom checks - **Streaming Requests**: In server streaming or bidi streaming, each logical RPC consumes one stream slot. Message ordering within a stream follows HTTP/2 frame ordering. # Future Enhancement A future `max_stream_response_bytes` field may be added to limit the total response size in streaming RPCs (separate from per-message limits). |
-| `enable_keepalive` | `bool` | `true` | Enable HTTP/2 keepalive |
-| `keepalive_interval` | `uint64_t` | — | HTTP/2 keepalive interval in seconds |
-| `keepalive_timeout` | `uint64_t` | — | HTTP/2 keepalive timeout in seconds |
+| Field                       | Type         | Default | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| --------------------------- | ------------ | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `enabled`                   | `bool`       | `true`  | Enable gRPC support                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `max_message_size`          | `uintptr_t`  | —       | Maximum message size in bytes (for both sending and receiving) This limit applies to individual messages in both unary and streaming RPCs. When a single message exceeds this size, the request is rejected with HTTP 413 (Payload Too Large). Default: 4MB (4194304 bytes) **Note:** This limit does NOT apply to the total response size in streaming RPCs. For multi-message streams, the total response can exceed this limit as long as each individual message stays within the limit.                                                                                                                                                                                                                                                               |
+| `enable_compression`        | `bool`       | `true`  | Enable gzip compression for gRPC messages                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `request_timeout`           | `uint64_t*`  | `NULL`  | Timeout for gRPC requests in seconds (None = no timeout)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `max_concurrent_streams`    | `uint32_t`   | —       | Maximum number of concurrent streams per connection (HTTP/2 advisory) This value is communicated to HTTP/2 clients as the server's flow control limit. The HTTP/2 transport layer enforces this limit automatically via SETTINGS frames and GOAWAY responses. Applications should NOT implement custom enforcement. Default: 100 streams per connection # Stream Limiting Strategy - **Per Connection**: This limit applies per HTTP/2 connection, not globally - **Transport Enforcement**: HTTP/2 handles all stream limiting; applications need not implement custom checks - **Streaming Requests**: In server streaming or bidi streaming, each logical RPC consumes one stream slot. Message ordering within a stream follows HTTP/2 frame ordering. |
+| `enable_keepalive`          | `bool`       | `true`  | Enable HTTP/2 keepalive                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `keepalive_interval`        | `uint64_t`   | —       | HTTP/2 keepalive interval in seconds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `keepalive_timeout`         | `uint64_t`   | —       | HTTP/2 keepalive timeout in seconds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `max_stream_response_bytes` | `uintptr_t*` | `NULL`  | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `NULL` (unbounded total response size).                                                                                                                                                                                                                                                            |
 
-### Methods
+##### Methods
 
-#### spikard_default()
+###### spikard_default()
 
 **Signature:**
 
@@ -431,18 +428,18 @@ SpikardGrpcConfig spikard_default();
 
 ---
 
-##### SpikardJsonRpcConfig
+#### SpikardJsonRpcConfig
 
 JSON-RPC server configuration
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `enabled` | `bool` | `true` | Enable JSON-RPC endpoint |
-| `endpoint_path` | `const char*` | — | HTTP endpoint path for JSON-RPC requests (default: "/rpc") |
-| `enable_batch` | `bool` | — | Enable batch request processing (default: true) |
-| `max_batch_size` | `uintptr_t` | — | Maximum number of requests in a batch (default: 100) |
+| Field            | Type          | Default | Description                                                |
+| ---------------- | ------------- | ------- | ---------------------------------------------------------- |
+| `enabled`        | `bool`        | `true`  | Enable JSON-RPC endpoint                                   |
+| `endpoint_path`  | `const char*` | —       | HTTP endpoint path for JSON-RPC requests (default: "/rpc") |
+| `enable_batch`   | `bool`        | —       | Enable batch request processing (default: true)            |
+| `max_batch_size` | `uintptr_t`   | —       | Maximum number of requests in a batch (default: 100)       |
 
-###### Methods
+##### Methods
 
 ###### spikard_default()
 
@@ -454,68 +451,68 @@ SpikardJsonRpcConfig spikard_default();
 
 ---
 
-##### SpikardJsonRpcMethodInfo
+#### SpikardJsonRpcMethodInfo
 
 JSON-RPC method metadata for routes that support JSON-RPC
 
 This struct captures the metadata needed to expose HTTP routes as JSON-RPC methods,
 enabling discovery and documentation of RPC-compatible endpoints.
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `method_name` | `const char*` | — | The JSON-RPC method name (e.g., "user.create") |
-| `description` | `const char**` | `NULL` | Optional description of what the method does |
-| `params_schema` | `const char**` | `NULL` | Optional JSON Schema for method parameters |
-| `result_schema` | `const char**` | `NULL` | Optional JSON Schema for the result |
-| `deprecated` | `bool` | — | Whether this method is deprecated |
-| `tags` | `const char**` | — | Tags for categorizing and grouping methods |
+| Field           | Type           | Default | Description                                    |
+| --------------- | -------------- | ------- | ---------------------------------------------- |
+| `method_name`   | `const char*`  | —       | The JSON-RPC method name (e.g., "user.create") |
+| `description`   | `const char**` | `NULL`  | Optional description of what the method does   |
+| `params_schema` | `void**`       | `NULL`  | Optional JSON Schema for method parameters     |
+| `result_schema` | `void**`       | `NULL`  | Optional JSON Schema for the result            |
+| `deprecated`    | `bool`         | —       | Whether this method is deprecated              |
+| `tags`          | `const char**` | —       | Tags for categorizing and grouping methods     |
 
 ---
 
-##### SpikardJwtConfig
+#### SpikardJwtConfig
 
 JWT authentication configuration
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `secret` | `const char*` | — | Secret key for JWT verification |
-| `algorithm` | `const char*` | — | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
-| `audience` | `const char***` | `NULL` | Required audience claim |
-| `issuer` | `const char**` | `NULL` | Required issuer claim |
-| `leeway` | `uint64_t` | — | Leeway for expiration checks (seconds) |
+| Field       | Type            | Default | Description                                           |
+| ----------- | --------------- | ------- | ----------------------------------------------------- |
+| `secret`    | `const char*`   | —       | Secret key for JWT verification                       |
+| `algorithm` | `const char*`   | —       | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
+| `audience`  | `const char***` | `NULL`  | Required audience claim                               |
+| `issuer`    | `const char**`  | `NULL`  | Required issuer claim                                 |
+| `leeway`    | `uint64_t`      | —       | Leeway for expiration checks (seconds)                |
 
 ---
 
-##### SpikardLicenseInfo
+#### SpikardLicenseInfo
 
 License information
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `name` | `const char*` | — | The name |
-| `url` | `const char**` | `NULL` | Url |
+| Field  | Type           | Default | Description |
+| ------ | -------------- | ------- | ----------- |
+| `name` | `const char*`  | —       | The name    |
+| `url`  | `const char**` | `NULL`  | Url         |
 
 ---
 
-##### SpikardOpenApiConfig
+#### SpikardOpenApiConfig
 
 OpenAPI configuration
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `enabled` | `bool` | `false` | Enable OpenAPI generation (default: false for zero overhead) |
-| `title` | `const char*` | `"API"` | API title |
-| `version` | `const char*` | `"1.0.0"` | API version |
-| `description` | `const char**` | `NULL` | API description (supports markdown) |
-| `swagger_ui_path` | `const char*` | — | Path to serve Swagger UI (default: "/docs") |
-| `redoc_path` | `const char*` | — | Path to serve Redoc (default: "/redoc") |
-| `openapi_json_path` | `const char*` | — | Path to serve OpenAPI JSON spec (default: "/openapi.json") |
-| `contact` | `SpikardContactInfo*` | `NULL` | Contact information |
-| `license` | `SpikardLicenseInfo*` | `NULL` | License information |
-| `servers` | `SpikardServerInfo*` | `NULL` | Server definitions |
-| `security_schemes` | `void*` | `NULL` | Security schemes (auto-detected from middleware if not provided) |
+| Field               | Type                  | Default   | Description                                                      |
+| ------------------- | --------------------- | --------- | ---------------------------------------------------------------- |
+| `enabled`           | `bool`                | `false`   | Enable OpenAPI generation (default: false for zero overhead)     |
+| `title`             | `const char*`         | `"API"`   | API title                                                        |
+| `version`           | `const char*`         | `"1.0.0"` | API version                                                      |
+| `description`       | `const char**`        | `NULL`    | API description (supports markdown)                              |
+| `swagger_ui_path`   | `const char*`         | —         | Path to serve Swagger UI (default: "/docs")                      |
+| `redoc_path`        | `const char*`         | —         | Path to serve Redoc (default: "/redoc")                          |
+| `openapi_json_path` | `const char*`         | —         | Path to serve OpenAPI JSON spec (default: "/openapi.json")       |
+| `contact`           | `SpikardContactInfo*` | `NULL`    | Contact information                                              |
+| `license`           | `SpikardLicenseInfo*` | `NULL`    | License information                                              |
+| `servers`           | `SpikardServerInfo*`  | `NULL`    | Server definitions                                               |
+| `security_schemes`  | `void*`               | `NULL`    | Security schemes (auto-detected from middleware if not provided) |
 
-###### Methods
+##### Methods
 
 ###### spikard_default()
 
@@ -527,7 +524,68 @@ SpikardOpenApiConfig spikard_default();
 
 ---
 
-##### SpikardProblemDetails
+#### SpikardParseRequest
+
+Request body for `POST /asyncapi/parse`
+
+| Field  | Type    | Default | Description |
+| ------ | ------- | ------- | ----------- |
+| `spec` | `void*` | —       | Spec        |
+
+---
+
+#### SpikardParseResult
+
+Full parse result returned by `POST /asyncapi/parse`
+
+| Field          | Type                      | Default | Description  |
+| -------------- | ------------------------- | ------- | ------------ |
+| `spec_version` | `const char*`             | —       | Spec version |
+| `title`        | `const char*`             | —       | Title        |
+| `api_version`  | `const char*`             | —       | Api version  |
+| `channels`     | `SpikardParsedChannel*`   | —       | Channels     |
+| `operations`   | `SpikardParsedOperation*` | —       | Operations   |
+| `messages`     | `SpikardParsedMessage*`   | —       | Messages     |
+
+---
+
+#### SpikardParsedChannel
+
+A single channel extracted from an AsyncAPI spec
+
+| Field      | Type           | Default | Description                                                           |
+| ---------- | -------------- | ------- | --------------------------------------------------------------------- |
+| `name`     | `const char*`  | —       | Channel key from the spec (e.g. "chat/messages")                      |
+| `address`  | `const char*`  | —       | Channel address / path                                                |
+| `messages` | `const char**` | —       | Message names declared on this channel                                |
+| `bindings` | `void**`       | `NULL`  | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
+
+---
+
+#### SpikardParsedMessage
+
+A resolved message (name + JSON Schema)
+
+| Field    | Type          | Default | Description                                                |
+| -------- | ------------- | ------- | ---------------------------------------------------------- |
+| `name`   | `const char*` | —       | Message name                                               |
+| `schema` | `void**`      | `NULL`  | Resolved JSON Schema for the message payload, if available |
+
+---
+
+#### SpikardParsedOperation
+
+A single operation extracted from an AsyncAPI spec
+
+| Field     | Type          | Default | Description                                      |
+| --------- | ------------- | ------- | ------------------------------------------------ |
+| `name`    | `const char*` | —       | Operation name                                   |
+| `action`  | `const char*` | —       | Operation action: "send" or "receive"            |
+| `channel` | `const char*` | —       | Channel reference (resolved to the channel name) |
+
+---
+
+#### SpikardProblemDetails
 
 RFC 9457 Problem Details for HTTP APIs
 
@@ -535,7 +593,7 @@ A machine-readable format for specifying errors in HTTP API responses.
 Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
 if not specified.
 
-## Content-Type
+# Content-Type
 
 Responses using this struct should set:
 
@@ -543,18 +601,28 @@ Responses using this struct should set:
 Content-Type: application/problem+json
 ```
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `type_uri` | `const char*` | — | A URI reference that identifies the problem type. Defaults to "about:blank" when absent. Should be a stable, human-readable identifier for the problem type. |
-| `title` | `const char*` | — | A short, human-readable summary of the problem type. Should not change from occurrence to occurrence of the problem. |
-| `status` | `uint16_t` | — | The HTTP status code generated by the origin server. This is advisory; the actual HTTP status code takes precedence. |
-| `detail` | `const char**` | `NULL` | A human-readable explanation specific to this occurrence of the problem. |
-| `instance` | `const char**` | `NULL` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
-| `extensions` | `void*` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
+```json
+{
+  "type": "<https://spikard.dev/errors/validation-error",>
+  "title": "Request Validation Failed",
+  "status": 422,
+  "detail": "2 validation errors in request body",
+  "errors": [...]
+}
+```
 
-### Methods
+| Field        | Type           | Default | Description                                                                                                                                                  |
+| ------------ | -------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `type_uri`   | `const char*`  | —       | A URI reference that identifies the problem type. Defaults to "about:blank" when absent. Should be a stable, human-readable identifier for the problem type. |
+| `title`      | `const char*`  | —       | A short, human-readable summary of the problem type. Should not change from occurrence to occurrence of the problem.                                         |
+| `status`     | `uint16_t`     | —       | The HTTP status code generated by the origin server. This is advisory; the actual HTTP status code takes precedence.                                         |
+| `detail`     | `const char**` | `NULL`  | A human-readable explanation specific to this occurrence of the problem.                                                                                     |
+| `instance`   | `const char**` | `NULL`  | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced.                         |
+| `extensions` | `void*`        | —       | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array.                                            |
 
-#### spikard_with_detail()
+##### Methods
+
+###### spikard_with_detail()
 
 Set the detail field
 
@@ -564,7 +632,7 @@ Set the detail field
 SpikardProblemDetails spikard_with_detail(const char* detail);
 ```
 
-##### spikard_with_instance()
+###### spikard_with_instance()
 
 Set the instance field
 
@@ -642,17 +710,17 @@ const char* spikard_to_json_pretty();
 
 ---
 
-##### SpikardQueryMutationConfig
+#### SpikardQueryMutationConfig
 
 Configuration for schemas with Query and Mutation types
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `introspection_enabled` | `bool` | `true` | Enable introspection queries |
-| `complexity_limit` | `uintptr_t*` | `NULL` | Maximum query complexity (None = unlimited) |
-| `depth_limit` | `uintptr_t*` | `NULL` | Maximum query depth (None = unlimited) |
+| Field                   | Type         | Default | Description                                 |
+| ----------------------- | ------------ | ------- | ------------------------------------------- |
+| `introspection_enabled` | `bool`       | `true`  | Enable introspection queries                |
+| `complexity_limit`      | `uintptr_t*` | `NULL`  | Maximum query complexity (None = unlimited) |
+| `depth_limit`           | `uintptr_t*` | `NULL`  | Maximum query depth (None = unlimited)      |
 
-###### Methods
+##### Methods
 
 ###### spikard_default()
 
@@ -664,17 +732,17 @@ SpikardQueryMutationConfig spikard_default();
 
 ---
 
-##### SpikardQueryOnlyConfig
+#### SpikardQueryOnlyConfig
 
 Configuration for schemas with only Query type
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `introspection_enabled` | `bool` | `true` | Enable introspection queries |
-| `complexity_limit` | `uintptr_t*` | `NULL` | Maximum query complexity (None = unlimited) |
-| `depth_limit` | `uintptr_t*` | `NULL` | Maximum query depth (None = unlimited) |
+| Field                   | Type         | Default | Description                                 |
+| ----------------------- | ------------ | ------- | ------------------------------------------- |
+| `introspection_enabled` | `bool`       | `true`  | Enable introspection queries                |
+| `complexity_limit`      | `uintptr_t*` | `NULL`  | Maximum query complexity (None = unlimited) |
+| `depth_limit`           | `uintptr_t*` | `NULL`  | Maximum query depth (None = unlimited)      |
 
-###### Methods
+##### Methods
 
 ###### spikard_default()
 
@@ -686,17 +754,17 @@ SpikardQueryOnlyConfig spikard_default();
 
 ---
 
-##### SpikardRateLimitConfig
+#### SpikardRateLimitConfig
 
 Rate limiting configuration shared across runtimes
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `per_second` | `uint64_t` | `100` | Requests per second |
-| `burst` | `uint32_t` | `200` | Burst allowance |
-| `ip_based` | `bool` | `true` | Use IP-based rate limiting |
+| Field        | Type       | Default | Description                |
+| ------------ | ---------- | ------- | -------------------------- |
+| `per_second` | `uint64_t` | `100`   | Requests per second        |
+| `burst`      | `uint32_t` | `200`   | Burst allowance            |
+| `ip_based`   | `bool`     | `true`  | Use IP-based rate limiting |
 
-###### Methods
+##### Methods
 
 ###### spikard_default()
 
@@ -708,17 +776,17 @@ SpikardRateLimitConfig spikard_default();
 
 ---
 
-##### SpikardResponse
+#### SpikardResponse
 
 HTTP Response with custom status code, headers, and content
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `content` | `const char**` | `NULL` | Response body content |
-| `status_code` | `uint16_t` | — | HTTP status code (defaults to 200) |
-| `headers` | `void*` | `NULL` | Response headers |
+| Field         | Type       | Default | Description                        |
+| ------------- | ---------- | ------- | ---------------------------------- |
+| `content`     | `void**`   | `NULL`  | Response body content              |
+| `status_code` | `uint16_t` | —       | HTTP status code (defaults to 200) |
+| `headers`     | `void*`    | `NULL`  | Response headers                   |
 
-###### Methods
+##### Methods
 
 ###### spikard_set_header()
 
@@ -750,20 +818,84 @@ SpikardResponse spikard_default();
 
 ---
 
-##### SpikardSchemaConfig
+#### SpikardResponseSnapshot
+
+Snapshot of an Axum response used by higher-level language bindings.
+
+| Field     | Type             | Default | Description                                                |
+| --------- | ---------------- | ------- | ---------------------------------------------------------- |
+| `status`  | `uint16_t`       | —       | HTTP status code.                                          |
+| `headers` | `void*`          | —       | Response headers (lowercase keys for predictable lookups). |
+| `body`    | `const uint8_t*` | —       | Response body bytes (decoded for supported encodings).     |
+
+##### Methods
+
+###### spikard_text()
+
+Return response body as UTF-8 string.
+
+**Signature:**
+
+```c
+const char* spikard_text();
+```
+
+###### spikard_json()
+
+Parse response body as JSON.
+
+**Signature:**
+
+```c
+void* spikard_json();
+```
+
+###### spikard_header()
+
+Lookup header by case-insensitive name.
+
+**Signature:**
+
+```c
+const char** spikard_header(const char* name);
+```
+
+###### spikard_graphql_data()
+
+Extract GraphQL data from response
+
+**Signature:**
+
+```c
+void* spikard_graphql_data();
+```
+
+###### spikard_graphql_errors()
+
+Extract GraphQL errors from response
+
+**Signature:**
+
+```c
+void** spikard_graphql_errors();
+```
+
+---
+
+#### SpikardSchemaConfig
 
 Configuration for GraphQL schema building.
 
 Encapsulates all schema-level configuration options including
 introspection control, complexity limits, and depth limits.
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `introspection_enabled` | `bool` | `true` | Enable introspection queries |
-| `complexity_limit` | `uintptr_t*` | `NULL` | Maximum query complexity (None = unlimited) |
-| `depth_limit` | `uintptr_t*` | `NULL` | Maximum query depth (None = unlimited) |
+| Field                   | Type         | Default | Description                                 |
+| ----------------------- | ------------ | ------- | ------------------------------------------- |
+| `introspection_enabled` | `bool`       | `true`  | Enable introspection queries                |
+| `complexity_limit`      | `uintptr_t*` | `NULL`  | Maximum query complexity (None = unlimited) |
+| `depth_limit`           | `uintptr_t*` | `NULL`  | Maximum query depth (None = unlimited)      |
 
-###### Methods
+##### Methods
 
 ###### spikard_default()
 
@@ -775,34 +907,33 @@ SpikardSchemaConfig spikard_default();
 
 ---
 
-##### SpikardServerConfig
+#### SpikardServerConfig
 
 Server configuration
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `host` | `const char*` | `"127.0.0.1"` | Host to bind to |
-| `port` | `uint16_t` | `8000` | Port to bind to |
-| `workers` | `uintptr_t` | `1` | Number of Tokio runtime worker threads used by binding-managed server runtimes |
-| `enable_request_id` | `bool` | `false` | Enable request ID generation and propagation |
-| `max_body_size` | `uintptr_t*` | `NULL` | Maximum request body size in bytes (None = unlimited, not recommended) |
-| `request_timeout` | `uint64_t*` | `NULL` | Request timeout in seconds (None = no timeout) |
-| `compression` | `SpikardCompressionConfig*` | `NULL` | Enable compression middleware |
-| `rate_limit` | `SpikardRateLimitConfig*` | `NULL` | Enable rate limiting |
-| `jwt_auth` | `SpikardJwtConfig*` | `NULL` | JWT authentication configuration |
-| `api_key_auth` | `SpikardApiKeyConfig*` | `NULL` | API Key authentication configuration |
-| `static_files` | `SpikardStaticFilesConfig*` | `NULL` | Static file serving configuration |
-| `graceful_shutdown` | `bool` | `true` | Enable graceful shutdown on SIGTERM/SIGINT |
-| `shutdown_timeout` | `uint64_t` | `30` | Graceful shutdown timeout (seconds) |
-| `openapi` | `SpikardOpenApiConfig*` | `NULL` | OpenAPI documentation configuration |
-| `jsonrpc` | `SpikardJsonRpcConfig*` | `NULL` | JSON-RPC configuration |
-| `grpc` | `SpikardGrpcConfig*` | `NULL` | gRPC configuration |
-| `lifecycle_hooks` | `const char**` | `NULL` | Lifecycle hooks for request/response processing |
-| `background_tasks` | `SpikardBackgroundTaskConfig` | — | Background task executor configuration |
-| `enable_http_trace` | `bool` | `false` | Enable per-request HTTP tracing (tower-http `TraceLayer`) |
-| `di_container` | `const char**` | `NULL` | Dependency injection container (requires 'di' feature) |
+| Field               | Type                          | Default       | Description                                                                    |
+| ------------------- | ----------------------------- | ------------- | ------------------------------------------------------------------------------ |
+| `host`              | `const char*`                 | `"127.0.0.1"` | Host to bind to                                                                |
+| `port`              | `uint16_t`                    | `8000`        | Port to bind to                                                                |
+| `workers`           | `uintptr_t`                   | `1`           | Number of Tokio runtime worker threads used by binding-managed server runtimes |
+| `enable_request_id` | `bool`                        | `false`       | Enable request ID generation and propagation                                   |
+| `max_body_size`     | `uintptr_t*`                  | `NULL`        | Maximum request body size in bytes (None = unlimited, not recommended)         |
+| `request_timeout`   | `uint64_t*`                   | `NULL`        | Request timeout in seconds (None = no timeout)                                 |
+| `compression`       | `SpikardCompressionConfig*`   | `NULL`        | Enable compression middleware                                                  |
+| `rate_limit`        | `SpikardRateLimitConfig*`     | `NULL`        | Enable rate limiting                                                           |
+| `jwt_auth`          | `SpikardJwtConfig*`           | `NULL`        | JWT authentication configuration                                               |
+| `api_key_auth`      | `SpikardApiKeyConfig*`        | `NULL`        | API Key authentication configuration                                           |
+| `static_files`      | `SpikardStaticFilesConfig*`   | `NULL`        | Static file serving configuration                                              |
+| `graceful_shutdown` | `bool`                        | `true`        | Enable graceful shutdown on SIGTERM/SIGINT                                     |
+| `shutdown_timeout`  | `uint64_t`                    | `30`          | Graceful shutdown timeout (seconds)                                            |
+| `asyncapi`          | `SpikardAsyncApiConfig*`      | `NULL`        | AsyncAPI HTTP endpoint configuration                                           |
+| `openapi`           | `SpikardOpenApiConfig*`       | `NULL`        | OpenAPI documentation configuration                                            |
+| `jsonrpc`           | `SpikardJsonRpcConfig*`       | `NULL`        | JSON-RPC configuration                                                         |
+| `grpc`              | `SpikardGrpcConfig*`          | `NULL`        | gRPC configuration                                                             |
+| `background_tasks`  | `SpikardBackgroundTaskConfig` | —             | Background task executor configuration                                         |
+| `enable_http_trace` | `bool`                        | `false`       | Enable per-request HTTP tracing (tower-http `TraceLayer`)                      |
 
-###### Methods
+##### Methods
 
 ###### spikard_default()
 
@@ -814,25 +945,25 @@ SpikardServerConfig spikard_default();
 
 ---
 
-##### SpikardServerInfo
+#### SpikardServerInfo
 
 Server information
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `url` | `const char*` | — | Url |
-| `description` | `const char**` | `NULL` | Human-readable description |
+| Field         | Type           | Default | Description                |
+| ------------- | -------------- | ------- | -------------------------- |
+| `url`         | `const char*`  | —       | Url                        |
+| `description` | `const char**` | `NULL`  | Human-readable description |
 
 ---
 
-##### SpikardSseEvent
+#### SpikardSseEvent
 
 An individual SSE event
 
 Represents a single Server-Sent Event to be sent to a connected client.
 Events can have an optional type, ID, and retry timeout for advanced scenarios.
 
-## SSE Format
+# SSE Format
 
 Events are serialized to the following text format:
 
@@ -843,16 +974,16 @@ id: event-123
 retry: 3000
 ```
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `event_type` | `const char**` | `NULL` | Event type (optional) |
-| `data` | `const char*` | — | Event data (JSON value) |
-| `id` | `const char**` | `NULL` | Event ID (optional, for client-side reconnection) |
-| `retry` | `uint64_t*` | `NULL` | Retry timeout in milliseconds (optional) |
+| Field        | Type           | Default | Description                                       |
+| ------------ | -------------- | ------- | ------------------------------------------------- |
+| `event_type` | `const char**` | `NULL`  | Event type (optional)                             |
+| `data`       | `void*`        | —       | Event data (JSON value)                           |
+| `id`         | `const char**` | `NULL`  | Event ID (optional, for client-side reconnection) |
+| `retry`      | `uint64_t*`    | `NULL`  | Retry timeout in milliseconds (optional)          |
 
-### Methods
+##### Methods
 
-#### spikard_with_id()
+###### spikard_with_id()
 
 Set the event ID for client-side reconnection support
 
@@ -865,7 +996,7 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 SpikardSseEvent spikard_with_id(const char* id);
 ```
 
-##### spikard_with_retry()
+###### spikard_with_retry()
 
 Set the retry timeout for client reconnection
 
@@ -880,36 +1011,199 @@ SpikardSseEvent spikard_with_retry(uint64_t retry_ms);
 
 ---
 
-##### SpikardStaticFilesConfig
+#### SpikardStaticFilesConfig
 
 Static file serving configuration
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `directory` | `const char*` | — | Directory path to serve |
-| `route_prefix` | `const char*` | — | URL path prefix (e.g., "/static") |
-| `index_file` | `bool` | — | Fallback to index.html for directories |
-| `cache_control` | `const char**` | `NULL` | Cache-Control header value |
+| Field           | Type           | Default | Description                            |
+| --------------- | -------------- | ------- | -------------------------------------- |
+| `directory`     | `const char*`  | —       | Directory path to serve                |
+| `route_prefix`  | `const char*`  | —       | URL path prefix (e.g., "/static")      |
+| `index_file`    | `bool`         | —       | Fallback to index.html for directories |
+| `cache_control` | `const char**` | `NULL`  | Cache-Control header value             |
 
 ---
 
-##### SpikardUploadFile
+#### SpikardTestClient
+
+Core test client for making HTTP requests to a Spikard application.
+
+This struct wraps axum-test's TestServer and provides a language-agnostic
+interface for making HTTP requests, sending WebSocket connections, and
+handling Server-Sent Events. Language bindings wrap this to provide
+native API surfaces.
+
+##### Methods
+
+###### spikard_get()
+
+Make a GET request
+
+**Signature:**
+
+```c
+SpikardResponseSnapshot spikard_get(const char* path, const char** query_params, const char** headers);
+```
+
+###### spikard_post()
+
+Make a POST request
+
+**Signature:**
+
+```c
+SpikardResponseSnapshot spikard_post(const char* path, void* json, const char** form_data, const char* multipart, const char** query_params, const char** headers);
+```
+
+###### spikard_request_raw()
+
+Make a request with a raw body payload.
+
+**Signature:**
+
+```c
+SpikardResponseSnapshot spikard_request_raw(SpikardMethod method, const char* path, const uint8_t* body, const char** query_params, const char** headers);
+```
+
+###### spikard_put()
+
+Make a PUT request
+
+**Signature:**
+
+```c
+SpikardResponseSnapshot spikard_put(const char* path, void* json, const char** query_params, const char** headers);
+```
+
+###### spikard_patch()
+
+Make a PATCH request
+
+**Signature:**
+
+```c
+SpikardResponseSnapshot spikard_patch(const char* path, void* json, const char** query_params, const char** headers);
+```
+
+###### spikard_delete()
+
+Make a DELETE request
+
+**Signature:**
+
+```c
+SpikardResponseSnapshot spikard_delete(const char* path, const char** query_params, const char** headers);
+```
+
+###### spikard_options()
+
+Make an OPTIONS request
+
+**Signature:**
+
+```c
+SpikardResponseSnapshot spikard_options(const char* path, const char** query_params, const char** headers);
+```
+
+###### spikard_head()
+
+Make a HEAD request
+
+**Signature:**
+
+```c
+SpikardResponseSnapshot spikard_head(const char* path, const char** query_params, const char** headers);
+```
+
+###### spikard_trace()
+
+Make a TRACE request
+
+**Signature:**
+
+```c
+SpikardResponseSnapshot spikard_trace(const char* path, const char** query_params, const char** headers);
+```
+
+###### spikard_graphql_at()
+
+Send a GraphQL query/mutation to a custom endpoint
+
+**Signature:**
+
+```c
+SpikardResponseSnapshot spikard_graphql_at(const char* endpoint, const char* query, void* variables, const char* operation_name);
+```
+
+###### spikard_graphql()
+
+Send a GraphQL query/mutation
+
+**Signature:**
+
+```c
+SpikardResponseSnapshot spikard_graphql(const char* query, void* variables, const char* operation_name);
+```
+
+###### spikard_graphql_with_status()
+
+Send a GraphQL query and return HTTP status code separately
+
+This method allows tests to distinguish between:
+
+- HTTP-level errors (400/422 for invalid requests)
+- GraphQL-level errors (200 with errors in response body)
+
+**Signature:**
+
+```c
+const char* spikard_graphql_with_status(const char* query, void* variables, const char* operation_name);
+```
+
+###### spikard_graphql_subscription_at()
+
+Send a GraphQL subscription (WebSocket) to a custom endpoint.
+
+Uses the `graphql-transport-ws` protocol and captures the first `next` payload.
+After the first payload is received, this client sends `complete` to unsubscribe.
+
+**Signature:**
+
+```c
+SpikardGraphQlSubscriptionSnapshot spikard_graphql_subscription_at(const char* endpoint, const char* query, void* variables, const char* operation_name);
+```
+
+###### spikard_graphql_subscription()
+
+Send a GraphQL subscription (WebSocket).
+
+Uses `/graphql` as the default subscription endpoint.
+
+**Signature:**
+
+```c
+SpikardGraphQlSubscriptionSnapshot spikard_graphql_subscription(const char* query, void* variables, const char* operation_name);
+```
+
+---
+
+#### SpikardUploadFile
 
 Represents an uploaded file from multipart/form-data requests.
 
 This struct provides efficient access to file content with automatic
 base64 decoding and implements standard I/O traits for compatibility.
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `filename` | `const char*` | — | Original filename from the client |
-| `content_type` | `const char**` | `NULL` | MIME type of the uploaded file |
-| `size` | `uintptr_t*` | `NULL` | Size of the file in bytes |
-| `content` | `const uint8_t*` | — | File content (may be base64 encoded) |
-| `content_encoding` | `const char**` | `NULL` | Content encoding type |
-| `cursor` | `const char*` | — | Internal cursor for Read/Seek operations |
+| Field              | Type             | Default | Description                              |
+| ------------------ | ---------------- | ------- | ---------------------------------------- |
+| `filename`         | `const char*`    | —       | Original filename from the client        |
+| `content_type`     | `const char**`   | `NULL`  | MIME type of the uploaded file           |
+| `size`             | `uintptr_t*`     | `NULL`  | Size of the file in bytes                |
+| `content`          | `const uint8_t*` | —       | File content (may be base64 encoded)     |
+| `content_encoding` | `const char**`   | `NULL`  | Content encoding type                    |
+| `cursor`           | `const char*`    | —       | Internal cursor for Read/Seek operations |
 
-###### Methods
+##### Methods
 
 ###### spikard_as_bytes()
 
@@ -949,74 +1243,123 @@ const char* spikard_content_type_or_default();
 
 ---
 
-#### Enums
+#### SpikardValidateRequest
 
-##### SpikardMethod
+Request body for `POST /asyncapi/validate`
+
+| Field     | Type          | Default | Description |
+| --------- | ------------- | ------- | ----------- |
+| `spec`    | `void*`       | —       | Spec        |
+| `channel` | `const char*` | —       | Channel     |
+| `message` | `const char*` | —       | Message     |
+| `payload` | `void*`       | —       | Payload     |
+
+---
+
+#### SpikardValidationResponse
+
+Response body for `POST /asyncapi/validate`
+
+| Field    | Type           | Default | Description |
+| -------- | -------------- | ------- | ----------- |
+| `valid`  | `bool`         | —       | Valid       |
+| `errors` | `const char**` | —       | Errors      |
+
+---
+
+### Enums
+
+#### SpikardSnapshotError
+
+Possible errors while converting an Axum response into a snapshot.
+
+| Value                    | Description                                                                 |
+| ------------------------ | --------------------------------------------------------------------------- |
+| `SPIKARD_INVALID_HEADER` | Response header could not be decoded to UTF-8. — Fields: `0`: `const char*` |
+| `SPIKARD_DECOMPRESSION`  | Body decompression failed. — Fields: `0`: `const char*`                     |
+
+---
+
+#### SpikardWebSocketMessage
+
+A WebSocket message that can be text or binary.
+
+| Value            | Description                                                                                                                                                                                                                              |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SPIKARD_TEXT`   | A text message. — Fields: `0`: `const char*`                                                                                                                                                                                             |
+| `SPIKARD_BINARY` | A binary message. — Fields: `0`: `const uint8_t*`                                                                                                                                                                                        |
+| `SPIKARD_CLOSE`  | A close message with a numeric close code (RFC 6455) and optional reason text. Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received, 1006 Abnormal Closure. — Fields: `code`: `uint16_t`, `reason`: `const char*` |
+| `SPIKARD_PING`   | A ping message. — Fields: `0`: `const uint8_t*`                                                                                                                                                                                          |
+| `SPIKARD_PONG`   | A pong message. — Fields: `0`: `const uint8_t*`                                                                                                                                                                                          |
+
+---
+
+#### SpikardMethod
 
 HTTP method
 
-| Value | Description |
-|-------|-------------|
-| `SPIKARD_GET` | Get |
-| `SPIKARD_POST` | Post |
-| `SPIKARD_PUT` | Put |
-| `SPIKARD_PATCH` | Patch |
-| `SPIKARD_DELETE` | Delete |
-| `SPIKARD_HEAD` | Head |
-| `SPIKARD_OPTIONS` | Options |
-| `SPIKARD_TRACE` | Trace |
+| Value             | Description |
+| ----------------- | ----------- |
+| `SPIKARD_GET`     | Get         |
+| `SPIKARD_POST`    | Post        |
+| `SPIKARD_PUT`     | Put         |
+| `SPIKARD_PATCH`   | Patch       |
+| `SPIKARD_DELETE`  | Delete      |
+| `SPIKARD_HEAD`    | Head        |
+| `SPIKARD_OPTIONS` | Options     |
+| `SPIKARD_TRACE`   | Trace       |
 
 ---
 
-##### SpikardSecuritySchemeInfo
+#### SpikardSecuritySchemeInfo
 
 Security scheme types
 
-| Value | Description |
-|-------|-------------|
-| `SPIKARD_HTTP` | Http — Fields: `scheme`: `const char*`, `bearer_format`: `const char*` |
-| `SPIKARD_API_KEY` | Api key — Fields: `location`: `const char*`, `name`: `const char*` |
+| Value             | Description                                                            |
+| ----------------- | ---------------------------------------------------------------------- |
+| `SPIKARD_HTTP`    | Http — Fields: `scheme`: `const char*`, `bearer_format`: `const char*` |
+| `SPIKARD_API_KEY` | Api key — Fields: `location`: `const char*`, `name`: `const char*`     |
 
 ---
 
-#### Errors
+### Errors
 
-##### SpikardGraphQlError
+#### SpikardGraphQlError
 
 Errors that can occur during GraphQL operations
 
 These errors are compatible with async-graphql error handling and can be
 converted to structured HTTP responses matching the project's error fixtures.
 
-| Variant | Description |
-|---------|-------------|
-| `SPIKARD_EXECUTION_ERROR` | Error during schema execution Occurs when the GraphQL executor encounters a runtime error during query execution. |
-| `SPIKARD_SCHEMA_BUILD_ERROR` | Error during schema building Occurs when schema construction fails due to invalid definitions or conflicts. |
-| `SPIKARD_REQUEST_HANDLING_ERROR` | Error during request handling Occurs when the HTTP request cannot be properly handled or parsed. |
-| `SPIKARD_SERIALIZATION_ERROR` | Serialization error Occurs during JSON serialization/deserialization of GraphQL values. |
-| `SPIKARD_JSON_ERROR` | JSON parsing error Occurs when JSON input cannot be parsed. |
-| `SPIKARD_VALIDATION_ERROR` | GraphQL validation error Occurs when a GraphQL query fails schema validation. |
-| `SPIKARD_PARSE_ERROR` | GraphQL parse error Occurs when the GraphQL query string cannot be parsed. |
-| `SPIKARD_AUTHENTICATION_ERROR` | Authentication error Occurs when request authentication fails. |
-| `SPIKARD_AUTHORIZATION_ERROR` | Authorization error Occurs when user lacks required permissions. |
-| `SPIKARD_NOT_FOUND` | Not found error Occurs when a requested resource is not found. |
-| `SPIKARD_RATE_LIMIT_EXCEEDED` | Rate limit error Occurs when rate limit is exceeded. |
-| `SPIKARD_INVALID_INPUT` | Invalid input error with validation details Occurs during input validation with detailed error information. |
-| `SPIKARD_COMPLEXITY_LIMIT_EXCEEDED` | Query complexity limit exceeded Occurs when a GraphQL query exceeds the configured complexity limit. |
-| `SPIKARD_DEPTH_LIMIT_EXCEEDED` | Query depth limit exceeded Occurs when a GraphQL query exceeds the configured depth limit. |
-| `SPIKARD_INTERNAL_ERROR` | Internal server error Occurs when an unexpected internal error happens. |
+| Variant                             | Description                                                                                                       |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `SPIKARD_EXECUTION_ERROR`           | Error during schema execution Occurs when the GraphQL executor encounters a runtime error during query execution. |
+| `SPIKARD_SCHEMA_BUILD_ERROR`        | Error during schema building Occurs when schema construction fails due to invalid definitions or conflicts.       |
+| `SPIKARD_REQUEST_HANDLING_ERROR`    | Error during request handling Occurs when the HTTP request cannot be properly handled or parsed.                  |
+| `SPIKARD_SERIALIZATION_ERROR`       | Serialization error Occurs during JSON serialization/deserialization of GraphQL values.                           |
+| `SPIKARD_JSON_ERROR`                | JSON parsing error Occurs when JSON input cannot be parsed.                                                       |
+| `SPIKARD_VALIDATION_ERROR`          | GraphQL validation error Occurs when a GraphQL query fails schema validation.                                     |
+| `SPIKARD_PARSE_ERROR`               | GraphQL parse error Occurs when the GraphQL query string cannot be parsed.                                        |
+| `SPIKARD_AUTHENTICATION_ERROR`      | Authentication error Occurs when request authentication fails.                                                    |
+| `SPIKARD_AUTHORIZATION_ERROR`       | Authorization error Occurs when user lacks required permissions.                                                  |
+| `SPIKARD_NOT_FOUND`                 | Not found error Occurs when a requested resource is not found.                                                    |
+| `SPIKARD_RATE_LIMIT_EXCEEDED`       | Rate limit error Occurs when rate limit is exceeded.                                                              |
+| `SPIKARD_INVALID_INPUT`             | Invalid input error with validation details Occurs during input validation with detailed error information.       |
+| `SPIKARD_COMPLEXITY_LIMIT_EXCEEDED` | Query complexity limit exceeded Occurs when a GraphQL query exceeds the configured complexity limit.              |
+| `SPIKARD_DEPTH_LIMIT_EXCEEDED`      | Query depth limit exceeded Occurs when a GraphQL query exceeds the configured depth limit.                        |
+| `SPIKARD_INTERNAL_ERROR`            | Internal server error Occurs when an unexpected internal error happens.                                           |
 
 ---
 
-##### SpikardSchemaError
+#### SpikardSchemaError
 
 Error type for schema building operations
 
-| Variant | Description |
-|---------|-------------|
-| `SPIKARD_BUILDING_FAILED` | Generic schema building error |
-| `SPIKARD_VALIDATION_ERROR` | Configuration validation error |
-| `SPIKARD_COMPLEXITY_LIMIT_EXCEEDED` | Complexity limit exceeded |
-| `SPIKARD_DEPTH_LIMIT_EXCEEDED` | Depth limit exceeded |
+| Variant                             | Description                    |
+| ----------------------------------- | ------------------------------ |
+| `SPIKARD_BUILDING_FAILED`           | Generic schema building error  |
+| `SPIKARD_VALIDATION_ERROR`          | Configuration validation error |
+| `SPIKARD_COMPLEXITY_LIMIT_EXCEEDED` | Complexity limit exceeded      |
+| `SPIKARD_DEPTH_LIMIT_EXCEEDED`      | Depth limit exceeded           |
 
 ---

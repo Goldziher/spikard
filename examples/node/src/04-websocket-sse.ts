@@ -10,10 +10,10 @@ import { get, post, type Request, Spikard, StreamingResponse } from "@spikard/no
 const app = new Spikard();
 
 interface Message {
-	id: number;
-	user: string;
-	text: string;
-	timestamp: string;
+  id: number;
+  user: string;
+  text: string;
+  timestamp: string;
 }
 
 const messages: Message[] = [];
@@ -23,176 +23,180 @@ let messageId = 0;
  * WebSocket endpoint for real-time chat
  */
 app.websocket(
-	"/ws/chat",
-	async (message: unknown) => {
-		if (typeof message === "string") {
-			try {
-				const data = JSON.parse(message);
-				const userName = data.user || "Anonymous";
-				const text = data.message || "";
+  "/ws/chat",
+  async (message: unknown) => {
+    if (typeof message === "string") {
+      try {
+        const data = JSON.parse(message);
+        const userName = data.user || "Anonymous";
+        const text = data.message || "";
 
-				if (!text) {
-					return {
-						type: "error",
-						error: "Empty message",
-					};
-				}
+        if (!text) {
+          return {
+            type: "error",
+            error: "Empty message",
+          };
+        }
 
-				const msg: Message = {
-					id: ++messageId,
-					user: userName,
-					text,
-					timestamp: new Date().toISOString(),
-				};
-				messages.push(msg);
+        const msg: Message = {
+          id: ++messageId,
+          user: userName,
+          text,
+          timestamp: new Date().toISOString(),
+        };
+        messages.push(msg);
 
-				return {
-					type: "message",
-					data: msg,
-					totalMessages: messages.length,
-				};
-			} catch {
-				return {
-					type: "error",
-					error: "Invalid message format",
-				};
-			}
-		}
+        return {
+          type: "message",
+          data: msg,
+          totalMessages: messages.length,
+        };
+      } catch {
+        return {
+          type: "error",
+          error: "Invalid message format",
+        };
+      }
+    }
 
-		return null;
-	},
-	{
-		onConnect: async () => {
-			console.log("Client connected to chat");
-		},
-		onDisconnect: async () => {
-			console.log("Client disconnected from chat");
-		},
-	},
+    return null;
+  },
+  {
+    onConnect: async () => {
+      console.log("Client connected to chat");
+    },
+    onDisconnect: async () => {
+      console.log("Client disconnected from chat");
+    },
+  },
 );
 
 /**
  * WebSocket endpoint for real-time notifications
  */
 app.websocket(
-	"/ws/notifications",
-	async (message: unknown) => {
-		return {
-			type: "echo",
-			received: message,
-			timestamp: new Date().toISOString(),
-		};
-	},
-	{
-		onConnect: async () => {
-			console.log("Client connected to notifications");
-		},
-		onDisconnect: async () => {
-			console.log("Client disconnected from notifications");
-		},
-	},
+  "/ws/notifications",
+  async (message: unknown) => {
+    return {
+      type: "echo",
+      received: message,
+      timestamp: new Date().toISOString(),
+    };
+  },
+  {
+    onConnect: async () => {
+      console.log("Client connected to notifications");
+    },
+    onDisconnect: async () => {
+      console.log("Client disconnected from notifications");
+    },
+  },
 );
 
 /**
  * POST endpoint to retrieve chat history via SSE
  */
 post("/sse/chat-history")(async function chatHistorySse(req: Request) {
-	const startId = (req.query?.since as string | undefined) ? parseInt(req.query.since as string, 10) : 0;
+  const startId = (req.query?.since as string | undefined)
+    ? parseInt(req.query.since as string, 10)
+    : 0;
 
-	async function* generateHistory() {
-		yield {
-			event: "history_start",
-			data: JSON.stringify({
-				total: messages.length,
-				since: startId,
-				timestamp: new Date().toISOString(),
-			}),
-		};
+  async function* generateHistory() {
+    yield {
+      event: "history_start",
+      data: JSON.stringify({
+        total: messages.length,
+        since: startId,
+        timestamp: new Date().toISOString(),
+      }),
+    };
 
-		for (const msg of messages.filter((m) => m.id > startId)) {
-			yield {
-				event: "message",
-				data: JSON.stringify(msg),
-			};
+    for (const msg of messages.filter((m) => m.id > startId)) {
+      yield {
+        event: "message",
+        data: JSON.stringify(msg),
+      };
 
-			await new Promise((resolve) => setTimeout(resolve, 10));
-		}
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
 
-		yield {
-			event: "history_complete",
-			data: JSON.stringify({
-				total: messages.length,
-				timestamp: new Date().toISOString(),
-			}),
-		};
-	}
+    yield {
+      event: "history_complete",
+      data: JSON.stringify({
+        total: messages.length,
+        timestamp: new Date().toISOString(),
+      }),
+    };
+  }
 
-	return new StreamingResponse(generateHistory(), {
-		statusCode: 200,
-		headers: {
-			"Content-Type": "text/event-stream",
-			"Cache-Control": "no-cache",
-			Connection: "keep-alive",
-			"Access-Control-Allow-Origin": "*",
-		},
-	});
+  return new StreamingResponse(generateHistory(), {
+    statusCode: 200,
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+      "Access-Control-Allow-Origin": "*",
+    },
+  });
 });
 
 /**
  * GET endpoint for metrics stream via SSE
  */
 get("/sse/metrics")(async function metricsStream(req: Request) {
-	const interval = (req.query?.interval as string | undefined) ? parseInt(req.query.interval as string, 10) : 1000;
+  const interval = (req.query?.interval as string | undefined)
+    ? parseInt(req.query.interval as string, 10)
+    : 1000;
 
-	async function* generateMetrics() {
-		let iteration = 0;
+  async function* generateMetrics() {
+    let iteration = 0;
 
-		while (iteration < 60) {
-			const cpuUsage = Math.random() * 100;
-			const memoryUsage = Math.random() * 100;
-			const requestCount = Math.floor(Math.random() * 1000);
+    while (iteration < 60) {
+      const cpuUsage = Math.random() * 100;
+      const memoryUsage = Math.random() * 100;
+      const requestCount = Math.floor(Math.random() * 1000);
 
-			yield {
-				event: "metrics",
-				data: JSON.stringify({
-					timestamp: new Date().toISOString(),
-					cpu: cpuUsage.toFixed(2),
-					memory: memoryUsage.toFixed(2),
-					requests: requestCount,
-					iteration,
-				}),
-			};
+      yield {
+        event: "metrics",
+        data: JSON.stringify({
+          timestamp: new Date().toISOString(),
+          cpu: cpuUsage.toFixed(2),
+          memory: memoryUsage.toFixed(2),
+          requests: requestCount,
+          iteration,
+        }),
+      };
 
-			iteration++;
-			await new Promise((resolve) => setTimeout(resolve, interval));
-		}
+      iteration++;
+      await new Promise((resolve) => setTimeout(resolve, interval));
+    }
 
-		yield {
-			event: "complete",
-			data: JSON.stringify({
-				message: "Metrics collection complete",
-				iterations: iteration,
-			}),
-		};
-	}
+    yield {
+      event: "complete",
+      data: JSON.stringify({
+        message: "Metrics collection complete",
+        iterations: iteration,
+      }),
+    };
+  }
 
-	return new StreamingResponse(generateMetrics(), {
-		statusCode: 200,
-		headers: {
-			"Content-Type": "text/event-stream",
-			"Cache-Control": "no-cache",
-			Connection: "keep-alive",
-		},
-	});
+  return new StreamingResponse(generateMetrics(), {
+    statusCode: 200,
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  });
 });
 
 /**
  * Serve demo HTML page
  */
 get("/")(async function servePage() {
-	return {
-		status: 200,
-		body: `
+  return {
+    status: 200,
+    body: `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -333,10 +337,10 @@ get("/")(async function servePage() {
 </body>
 </html>
 	`,
-		headers: {
-			"Content-Type": "text/html; charset=utf-8",
-		},
-	};
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+    },
+  };
 });
 
 console.log("Starting WebSocket & SSE Example on http://127.0.0.1:8000");

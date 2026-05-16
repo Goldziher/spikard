@@ -9,8 +9,8 @@ import {
   GrpcStatusCode,
   createServiceHandler,
   createUnaryHandler,
-} from 'spikard';
-import * as userservice from './userservice_pb';  // Generated protobufjs types
+} from "spikard";
+import * as userservice from "./userservice_pb"; // Generated protobufjs types
 
 class UserServiceHandler implements GrpcHandler {
   constructor(private userRepository: UserRepository) {}
@@ -21,14 +21,14 @@ class UserServiceHandler implements GrpcHandler {
      * Routes to appropriate method based on request.methodName.
      */
     switch (request.methodName) {
-      case 'GetUser':
+      case "GetUser":
         return this.getUser(request);
-      case 'CreateUser':
+      case "CreateUser":
         return this.createUser(request);
       default:
         throw new GrpcError(
           GrpcStatusCode.UNIMPLEMENTED,
-          `Method ${request.methodName} not implemented`
+          `Method ${request.methodName} not implemented`,
         );
     }
   }
@@ -39,19 +39,13 @@ class UserServiceHandler implements GrpcHandler {
 
     // 2. Validate input
     if (req.id <= 0) {
-      throw new GrpcError(
-        GrpcStatusCode.INVALID_ARGUMENT,
-        'User ID must be positive'
-      );
+      throw new GrpcError(GrpcStatusCode.INVALID_ARGUMENT, "User ID must be positive");
     }
 
     // 3. Business logic
     const user = await this.userRepository.findById(req.id);
     if (!user) {
-      throw new GrpcError(
-        GrpcStatusCode.NOT_FOUND,
-        `User ${req.id} not found`
-      );
+      throw new GrpcError(GrpcStatusCode.NOT_FOUND, `User ${req.id} not found`);
     }
 
     // 4. Build response
@@ -66,7 +60,7 @@ class UserServiceHandler implements GrpcHandler {
     const encoded = userservice.User.encode(responseUser).finish();
     return {
       payload: Buffer.from(encoded),
-      metadata: { 'x-user-found': 'true' },
+      metadata: { "x-user-found": "true" },
     };
   }
 
@@ -76,19 +70,13 @@ class UserServiceHandler implements GrpcHandler {
 
     // 2. Validate input
     if (!req.name || !req.email) {
-      throw new GrpcError(
-        GrpcStatusCode.INVALID_ARGUMENT,
-        'Name and email are required'
-      );
+      throw new GrpcError(GrpcStatusCode.INVALID_ARGUMENT, "Name and email are required");
     }
 
     // 3. Check authorization from metadata
-    const authToken = request.metadata['authorization'];
+    const authToken = request.metadata["authorization"];
     if (!authToken) {
-      throw new GrpcError(
-        GrpcStatusCode.UNAUTHENTICATED,
-        'Authentication required'
-      );
+      throw new GrpcError(GrpcStatusCode.UNAUTHENTICATED, "Authentication required");
     }
 
     // 4. Business logic
@@ -110,8 +98,8 @@ class UserServiceHandler implements GrpcHandler {
     return {
       payload: Buffer.from(encoded),
       metadata: {
-        'x-user-id': user.id.toString(),
-        'x-created': 'true',
+        "x-user-id": user.id.toString(),
+        "x-created": "true",
       },
     };
   }
@@ -126,40 +114,40 @@ For simpler handlers, use the factory helper pattern:
 // Create handler using helper function
 const userServiceHandler = createServiceHandler({
   GetUser: createUnaryHandler<GetUserRequest, User>(
-    'GetUser',
+    "GetUser",
     async (req, metadata) => {
       // Validate
       if (req.id <= 0) {
-        throw new GrpcError(GrpcStatusCode.INVALID_ARGUMENT, 'Invalid ID');
+        throw new GrpcError(GrpcStatusCode.INVALID_ARGUMENT, "Invalid ID");
       }
 
       // Business logic
       const user = await userRepository.findById(req.id);
       if (!user) {
-        throw new GrpcError(GrpcStatusCode.NOT_FOUND, 'User not found');
+        throw new GrpcError(GrpcStatusCode.NOT_FOUND, "User not found");
       }
 
       // Return with metadata
       return {
         response: user,
-        metadata: { 'x-user-found': 'true' },
+        metadata: { "x-user-found": "true" },
       };
     },
     userservice.GetUserRequest,
-    userservice.User
+    userservice.User,
   ),
 
   CreateUser: createUnaryHandler<CreateUserRequest, User>(
-    'CreateUser',
+    "CreateUser",
     async (req, metadata) => {
       // Validate
       if (!req.name || !req.email) {
-        throw new GrpcError(GrpcStatusCode.INVALID_ARGUMENT, 'Missing fields');
+        throw new GrpcError(GrpcStatusCode.INVALID_ARGUMENT, "Missing fields");
       }
 
       // Check auth
-      if (!metadata['authorization']) {
-        throw new GrpcError(GrpcStatusCode.UNAUTHENTICATED, 'Auth required');
+      if (!metadata["authorization"]) {
+        throw new GrpcError(GrpcStatusCode.UNAUTHENTICATED, "Auth required");
       }
 
       // Business logic
@@ -167,15 +155,16 @@ const userServiceHandler = createServiceHandler({
 
       return {
         response: user,
-        metadata: { 'x-created': 'true' },
+        metadata: { "x-created": "true" },
       };
     },
     userservice.CreateUserRequest,
-    userservice.User
+    userservice.User,
   ),
 });
 ```
 
 **When to use each:**
+
 - **Class-based**: Complex services with shared state, dependency injection, multiple methods
 - **Helper functions**: Simple services, functional style, less boilerplate

@@ -3,7 +3,7 @@ description: Download and setup the benchmark harness binary
 
 inputs:
   timestamp:
-    description: 'Timestamp for artifact name'
+    description: "Timestamp for artifact name"
     required: true
 
 runs:

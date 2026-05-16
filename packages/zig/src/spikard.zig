@@ -4,6 +4,7 @@ const std = @import("std");
 pub const c = @cImport(@cInclude("spikard.h"));
 
 /// Free a string allocated by the FFI layer.
+/// Free a string allocated by the FFI layer.
 /// The pointer must have been returned by a `spikard_*` C function.
 /// Do NOT call this twice on the same pointer.
 pub fn _free_string(ptr: [*c]u8) void {
@@ -24,7 +25,7 @@ pub fn _last_error() ?[]const u8 {
 /// Coarse fallback: returns the first declared variant. Per-code dispatch
 /// will replace this once the IR exposes per-variant numeric codes.
 inline fn _first_error(comptime E: type) E {
-    const fields = @typeInfo(E).ErrorSet orelse return @as(E, error.Unknown);
+    const fields = @typeInfo(E).error_set orelse return @as(E, error.Unknown);
     if (fields.len == 0) unreachable;
     return @field(E, fields[0].name);
 }
@@ -72,13 +73,6 @@ pub const UploadFile = struct {
     cursor: [:0]const u8,
 };
 
-/// Snapshot of an Axum response used by higher-level language bindings.
-pub const ResponseSnapshot = struct {
-    status: u16,
-    headers: std.StringHashMap([:0]const u8),
-    body: []const u8,
-};
-
 /// CORS configuration for a route
 pub const CorsConfig = struct {
     allowed_origins: []const [:0]const u8,
@@ -87,8 +81,6 @@ pub const CorsConfig = struct {
     expose_headers: ?[]const [:0]const u8,
     max_age: ?u32,
     allow_credentials: ?bool,
-    methods_joined_cache: [:0]const u8,
-    headers_joined_cache: [:0]const u8,
 };
 
 /// Compression configuration shared across runtimes
@@ -130,6 +122,16 @@ pub const JsonRpcMethodInfo = struct {
 /// ```text
 /// Content-Type: application/problem+json
 /// ```
+///
+/// ```json
+/// {
+///   "type": "https://spikard.dev/errors/validation-error",
+///   "title": "Request Validation Failed",
+///   "status": 422,
+///   "detail": "2 validation errors in request body",
+///   "errors": [...]
+/// }
+/// ```
 pub const ProblemDetails = struct {
     type_uri: [:0]const u8,
     title: [:0]const u8,
@@ -138,12 +140,6 @@ pub const ProblemDetails = struct {
     instance: ?[:0]const u8,
     extensions: std.StringHashMap([:0]const u8),
 };
-
-/// Configuration for GraphQL routes
-///
-/// Provides a builder pattern for configuring GraphQL route parameters
-/// for the Spikard HTTP server's routing system.
-pub const GraphQLRouteConfig = struct {};
 
 /// Configuration for GraphQL schema building.
 ///
@@ -211,25 +207,6 @@ pub const ParseResult = struct {
     channels: []const ParsedChannel,
     operations: []const ParsedOperation,
     messages: []const ParsedMessage,
-};
-
-/// Request body for `POST /asyncapi/parse`
-pub const ParseRequest = struct {
-    spec: [:0]const u8,
-};
-
-/// Response body for `POST /asyncapi/validate`
-pub const ValidationResponse = struct {
-    valid: bool,
-    errors: []const [:0]const u8,
-};
-
-/// Request body for `POST /asyncapi/validate`
-pub const ValidateRequest = struct {
-    spec: [:0]const u8,
-    channel: [:0]const u8,
-    message: [:0]const u8,
-    payload: [:0]const u8,
 };
 
 /// Configuration for in-process background task execution.
@@ -393,45 +370,8 @@ pub const ServerConfig = struct {
     openapi: ?OpenApiConfig,
     jsonrpc: ?JsonRpcConfig,
     grpc: ?GrpcConfig,
-    lifecycle_hooks: ?[:0]const u8,
     background_tasks: BackgroundTaskConfig,
     enable_http_trace: bool,
-    di_container: ?[:0]const u8,
-};
-
-/// Snapshot of a GraphQL subscription exchange over WebSocket.
-pub const GraphQLSubscriptionSnapshot = struct {
-    operation_id: [:0]const u8,
-    acknowledged: bool,
-    event: ?[:0]const u8,
-    errors: []const [:0]const u8,
-    complete_received: bool,
-};
-
-/// Core test client for making HTTP requests to a Spikard application.
-///
-/// This struct wraps axum-test's TestServer and provides a language-agnostic
-/// interface for making HTTP requests, sending WebSocket connections, and
-/// handling Server-Sent Events. Language bindings wrap this to provide
-/// native API surfaces.
-pub const TestClient = struct {};
-
-/// Possible errors while converting an Axum response into a snapshot.
-pub const SnapshotError = union(enum) {
-    invalid_header: [:0]const u8,
-    decompression: [:0]const u8,
-};
-
-/// A WebSocket message that can be text or binary.
-pub const WebSocketMessage = union(enum) {
-    text: [:0]const u8,
-    binary: []const u8,
-    close: struct {
-        code: u16,
-        reason: ?[:0]const u8,
-    },
-    ping: []const u8,
-    pong: []const u8,
 };
 
 /// HTTP method
@@ -465,9 +405,16 @@ pub const SecuritySchemeInfo = union(enum) {
 /// **Returns:**
 ///
 /// A `QueryOnlyConfig` with default settings
-pub fn schema_query_only() QueryOnlyConfig {
+pub fn schema_query_only() error{OutOfMemory}![]u8 {
     const _result = c.spikard_schema_query_only();
-    return _result;
+    return blk: {
+        const _json_ptr = c.spikard_query_only_config_to_json(_result.?);
+        defer _free_string(_json_ptr);
+        c.spikard_query_only_config_free(_result.?);
+        const slice = std.mem.sliceTo(_json_ptr, 0);
+        const owned = try std.heap.c_allocator.dupe(u8, slice);
+        break :blk owned;
+    };
 }
 
 /// Create a schema configuration with Query and Mutation types.
@@ -477,9 +424,16 @@ pub fn schema_query_only() QueryOnlyConfig {
 /// **Returns:**
 ///
 /// A `QueryMutationConfig` with default settings
-pub fn schema_query_mutation() QueryMutationConfig {
+pub fn schema_query_mutation() error{OutOfMemory}![]u8 {
     const _result = c.spikard_schema_query_mutation();
-    return _result;
+    return blk: {
+        const _json_ptr = c.spikard_query_mutation_config_to_json(_result.?);
+        defer _free_string(_json_ptr);
+        c.spikard_query_mutation_config_free(_result.?);
+        const slice = std.mem.sliceTo(_json_ptr, 0);
+        const owned = try std.heap.c_allocator.dupe(u8, slice);
+        break :blk owned;
+    };
 }
 
 /// Create a schema configuration with all three root types.
@@ -489,7 +443,121 @@ pub fn schema_query_mutation() QueryMutationConfig {
 /// **Returns:**
 ///
 /// A `FullSchemaConfig` with default settings
-pub fn schema_full() FullSchemaConfig {
+pub fn schema_full() error{OutOfMemory}![]u8 {
     const _result = c.spikard_schema_full();
-    return _result;
+    return blk: {
+        const _json_ptr = c.spikard_full_schema_config_to_json(_result.?);
+        defer _free_string(_json_ptr);
+        c.spikard_full_schema_config_free(_result.?);
+        const slice = std.mem.sliceTo(_json_ptr, 0);
+        const owned = try std.heap.c_allocator.dupe(u8, slice);
+        break :blk owned;
+    };
 }
+
+/// Configuration for GraphQL routes
+///
+/// Provides a builder pattern for configuring GraphQL route parameters
+/// for the Spikard HTTP server's routing system.
+pub const GraphQLRouteConfig = struct {
+    _handle: *anyopaque,
+
+    /// Set the HTTP path for the GraphQL endpoint
+    pub fn path(self: *GraphQLRouteConfig, value: []const u8) error{OutOfMemory}!GraphQLRouteConfig {
+        const value_z = try std.heap.c_allocator.dupeZ(u8, value);
+        defer std.heap.c_allocator.free(value_z);
+        const _result = c.spikard_graph_ql_route_config_path(@as(*c.SPIKARDGraphQLRouteConfig, @ptrCast(self._handle)), value_z);
+        return GraphQLRouteConfig{ ._handle = _result.? };
+    }
+
+    /// Set the HTTP method for the GraphQL endpoint
+    pub fn method(self: *GraphQLRouteConfig, value: []const u8) error{OutOfMemory}!GraphQLRouteConfig {
+        const value_z = try std.heap.c_allocator.dupeZ(u8, value);
+        defer std.heap.c_allocator.free(value_z);
+        const _result = c.spikard_graph_ql_route_config_method(@as(*c.SPIKARDGraphQLRouteConfig, @ptrCast(self._handle)), value_z);
+        return GraphQLRouteConfig{ ._handle = _result.? };
+    }
+
+    /// Enable or disable the GraphQL Playground UI
+    pub fn enable_playground(self: *GraphQLRouteConfig, enable: bool) GraphQLRouteConfig {
+        const _result = c.spikard_graph_ql_route_config_enable_playground(@as(*c.SPIKARDGraphQLRouteConfig, @ptrCast(self._handle)), enable);
+        return GraphQLRouteConfig{ ._handle = _result.? };
+    }
+
+    /// Set a custom description for documentation
+    pub fn description(self: *GraphQLRouteConfig, value: []const u8) error{OutOfMemory}!GraphQLRouteConfig {
+        const value_z = try std.heap.c_allocator.dupeZ(u8, value);
+        defer std.heap.c_allocator.free(value_z);
+        const _result = c.spikard_graph_ql_route_config_description(@as(*c.SPIKARDGraphQLRouteConfig, @ptrCast(self._handle)), value_z);
+        return GraphQLRouteConfig{ ._handle = _result.? };
+    }
+
+    /// Get the configured path
+    pub fn get_path(self: *GraphQLRouteConfig) error{OutOfMemory}![]u8 {
+        const _result = c.spikard_graph_ql_route_config_get_path(@as(*c.SPIKARDGraphQLRouteConfig, @ptrCast(self._handle)));
+        return blk: {
+            const slice = std.mem.span(_result);
+            const owned = try std.heap.c_allocator.dupe(u8, slice);
+            c.spikard_free_string(_result);
+            break :blk owned;
+        };
+    }
+
+    /// Get the configured method
+    pub fn get_method(self: *GraphQLRouteConfig) error{OutOfMemory}![]u8 {
+        const _result = c.spikard_graph_ql_route_config_get_method(@as(*c.SPIKARDGraphQLRouteConfig, @ptrCast(self._handle)));
+        return blk: {
+            const slice = std.mem.span(_result);
+            const owned = try std.heap.c_allocator.dupe(u8, slice);
+            c.spikard_free_string(_result);
+            break :blk owned;
+        };
+    }
+
+    /// Check if playground is enabled
+    pub fn is_playground_enabled(self: *GraphQLRouteConfig) bool {
+        const _result = c.spikard_graph_ql_route_config_is_playground_enabled(@as(*c.SPIKARDGraphQLRouteConfig, @ptrCast(self._handle)));
+        return _result;
+    }
+
+    /// Get the description if set
+    pub fn get_description(self: *GraphQLRouteConfig) ?[]u8 {
+        const _result = c.spikard_graph_ql_route_config_get_description(@as(*c.SPIKARDGraphQLRouteConfig, @ptrCast(self._handle)));
+        return _result;
+    }
+
+    /// Release the underlying FFI handle. Safe to call once per instance.
+    pub fn free(self: *GraphQLRouteConfig) void {
+        c.spikard_graph_ql_route_config_free(@as(*c.SPIKARDGraphQLRouteConfig, @ptrCast(self._handle)));
+    }
+};
+
+/// Request body for `POST /asyncapi/parse`
+pub const ParseRequest = struct {
+    _handle: *anyopaque,
+
+    /// Release the underlying FFI handle. Safe to call once per instance.
+    pub fn free(self: *ParseRequest) void {
+        c.spikard_parse_request_free(@as(*c.SPIKARDParseRequest, @ptrCast(self._handle)));
+    }
+};
+
+/// Response body for `POST /asyncapi/validate`
+pub const ValidationResponse = struct {
+    _handle: *anyopaque,
+
+    /// Release the underlying FFI handle. Safe to call once per instance.
+    pub fn free(self: *ValidationResponse) void {
+        c.spikard_validation_response_free(@as(*c.SPIKARDValidationResponse, @ptrCast(self._handle)));
+    }
+};
+
+/// Request body for `POST /asyncapi/validate`
+pub const ValidateRequest = struct {
+    _handle: *anyopaque,
+
+    /// Release the underlying FFI handle. Safe to call once per instance.
+    pub fn free(self: *ValidateRequest) void {
+        c.spikard_validate_request_free(@as(*c.SPIKARDValidateRequest, @ptrCast(self._handle)));
+    }
+};

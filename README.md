@@ -122,7 +122,7 @@ if __name__ == "__main__":
 **TypeScript/Node.js:**
 
 ```typescript
-import { Spikard, ServerConfig } from '@spikard/node';
+import { Spikard, ServerConfig } from "@spikard/node";
 
 interface User {
   id: number;

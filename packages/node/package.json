@@ -2,29 +2,39 @@
 	"name": "@spikard/node",
 	"version": "0.14.0",
 	"description": "Rust-centric multi-language HTTP framework with polyglot bindings",
-	"license": "MIT",
-	"main": "index.js",
-	"types": "index.d.ts",
-	"repository": "https://github.com/Goldziher/spikard",
-	"homepage": "https://github.com/Goldziher/spikard",
-	"author": "Na'aman Hirschfeld <nhirschfeld@gmail.com>",
 	"keywords": [
-		"http",
-		"web",
 		"framework",
+		"http",
 		"polyglot",
-		"rust"
+		"rust",
+		"web"
 	],
+	"homepage": "https://github.com/Goldziher/spikard",
+	"license": "MIT",
+	"author": "Na'aman Hirschfeld <nhirschfeld@gmail.com>",
+	"repository": "https://github.com/Goldziher/spikard",
 	"files": [
 		"index.js",
 		"index.d.ts",
 		"**/*.node"
 	],
+	"main": "index.js",
+	"types": "index.d.ts",
 	"scripts": {
 		"build": "napi build --release",
 		"build:debug": "napi build",
 		"build:ts": "echo 'No TypeScript wrapper to build'",
-		"test": "node -e \"console.log('Add test command')\""
+		"test": "node -e \"console.log('Add test command')\"",
+		"format": "oxfmt",
+		"format:check": "oxfmt --check",
+		"lint": "oxlint",
+		"lint:fix": "oxlint --fix"
+	},
+	"devDependencies": {
+		"@napi-rs/cli": "^3.0.0",
+		"oxfmt": "latest",
+		"oxlint": "latest",
+		"typescript": "^6.0.3"
 	},
 	"napi": {
 		"name": "spikard",
@@ -34,8 +44,5 @@
 			"aarch64-apple-darwin",
 			"x86_64-pc-windows-msvc"
 		]
-	},
-	"devDependencies": {
-		"@napi-rs/cli": "^3.6.2"
 	}
 }

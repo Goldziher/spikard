@@ -5,15 +5,15 @@ includes:
   platforms: ../config/platforms.yml
 
 vars:
-  RUST_LOG: "{{.RUST_LOG | default \"info\"}}"
-  BUILD_PROFILE: "{{.BUILD_PROFILE | default \"release\"}}"
-  RUST_BACKTRACE: "{{.RUST_BACKTRACE | default \"1\"}}"
+  RUST_LOG: '{{.RUST_LOG | default "info"}}'
+  BUILD_PROFILE: '{{.BUILD_PROFILE | default "release"}}'
+  RUST_BACKTRACE: '{{.RUST_BACKTRACE | default "1"}}'
   CARGO_TERM_COLOR: "always"
 
   # Crates that build through alef (cdylib/staticlib/native NIFs/extensions) and
   # are excluded from the workspace clippy/build sweep so they don't get
   # double-built.
-  ALEF_EXCLUDES: "--exclude spikard-py --exclude spikard-node --exclude spikard-rb --exclude spikard-php --exclude spikard-elixir --exclude spikard-ffi --exclude benchmark-harness"
+  ALEF_EXCLUDES: "--exclude spikard-py --exclude spikard-node --exclude spikard-rb --exclude spikard-php --exclude spikard-elixir --exclude spikard-ffi --exclude spikard-swift --exclude benchmark-harness"
 
 tasks:
   install:
@@ -154,12 +154,24 @@ tasks:
     desc: "Update Rust dependencies (compatible only)"
     cmds:
       - cargo update
+      - cmd: cargo update --manifest-path packages/ruby/ext/spikard_rb/native/Cargo.toml
+        ignore_error: true
+      - cmd: cargo update --manifest-path packages/swift/rust/Cargo.toml
+        ignore_error: true
 
   upgrade:
     desc: "Upgrade Rust dependencies aggressively (cargo upgrade --incompatible)"
     cmds:
       - cargo upgrade --incompatible
       - cargo update
+      - cmd: cargo upgrade --incompatible --manifest-path packages/ruby/ext/spikard_rb/native/Cargo.toml
+        ignore_error: true
+      - cmd: cargo update --manifest-path packages/ruby/ext/spikard_rb/native/Cargo.toml
+        ignore_error: true
+      - cmd: cargo upgrade --incompatible --manifest-path packages/swift/rust/Cargo.toml
+        ignore_error: true
+      - cmd: cargo update --manifest-path packages/swift/rust/Cargo.toml
+        ignore_error: true
 
   e2e:format:
     desc: "Format generated Rust E2E sources"

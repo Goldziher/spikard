@@ -193,21 +193,21 @@ curl -H "Authorization: Bearer bob:secret" http://127.0.0.1:8000/admin/stats  # 
 
 ## Feature Status
 
-| Feature | Status | Example |
-|---------|--------|---------|
-| Basic routing | ✅ Complete | 01, 02 |
-| JSON responses | ✅ Complete | 02 |
-| Query parameters | ✅ Complete | 02, 03 |
-| Path parameters | ✅ Complete | 02 |
-| Request validation | ✅ Complete | 02 |
-| Streaming responses | ✅ Complete | 03 |
-| Server-Sent Events | ✅ Complete | 03, 04 |
-| WebSockets | ✅ Complete | 04 |
-| Lifecycle hooks | ✅ Complete | 05 |
-| Request/response logging | ✅ Complete | 05 |
-| Authentication | ✅ Complete | 05 |
-| Authorization | ✅ Complete | 05 |
-| Error handling | ✅ Complete | 02, 05 |
+| Feature                  | Status      | Example |
+| ------------------------ | ----------- | ------- |
+| Basic routing            | ✅ Complete | 01, 02  |
+| JSON responses           | ✅ Complete | 02      |
+| Query parameters         | ✅ Complete | 02, 03  |
+| Path parameters          | ✅ Complete | 02      |
+| Request validation       | ✅ Complete | 02      |
+| Streaming responses      | ✅ Complete | 03      |
+| Server-Sent Events       | ✅ Complete | 03, 04  |
+| WebSockets               | ✅ Complete | 04      |
+| Lifecycle hooks          | ✅ Complete | 05      |
+| Request/response logging | ✅ Complete | 05      |
+| Authentication           | ✅ Complete | 05      |
+| Authorization            | ✅ Complete | 05      |
+| Error handling           | ✅ Complete | 02, 05  |
 
 ## Next Steps
 
@@ -226,12 +226,12 @@ Return structured error responses:
 
 ```typescript
 return {
-	status: 400,
-	body: {
-		error: "Invalid input",
-		code: "validation_error",
-		details: { field: "email" },
-	},
+  status: 400,
+  body: {
+    error: "Invalid input",
+    code: "validation_error",
+    details: { field: "email" },
+  },
 };
 ```
 
@@ -241,12 +241,12 @@ Use lifecycle hooks to check Bearer tokens:
 
 ```typescript
 pre_handler: async (req) => {
-	const token = req.headers?.["authorization"]?.split(" ")[1];
-	if (!token || !isValidToken(token)) {
-		return { status: 401, body: { error: "Unauthorized" } };
-	}
-	return req;
-}
+  const token = req.headers?.["authorization"]?.split(" ")[1];
+  if (!token || !isValidToken(token)) {
+    return { status: 401, body: { error: "Unauthorized" } };
+  }
+  return req;
+};
 ```
 
 ### Streaming Responses
@@ -255,10 +255,10 @@ Use TypeScript generators with `StreamingResponse`:
 
 ```typescript
 async function* generateData() {
-	for (let i = 0; i < 1000; i++) {
-		yield { item: i };
-		await new Promise(r => setTimeout(r, 10));
-	}
+  for (let i = 0; i < 1000; i++) {
+    yield { item: i };
+    await new Promise((r) => setTimeout(r, 10));
+  }
 }
 
 return new StreamingResponse(generateData());

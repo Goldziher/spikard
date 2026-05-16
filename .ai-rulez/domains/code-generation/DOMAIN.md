@@ -80,12 +80,12 @@ Located in `/testing_data/`:
 
 ## Specification Support Matrix
 
-| Format   | Parser      | Codegen | Tests               |
-|----------|-------------|---------|---------------------|
-| OpenAPI  | openapiv3   | Yes     | /testing_data/openapi_schemas/ |
-| GraphQL  | graphql-parser | Yes  | /testing_data/graphql/        |
-| AsyncAPI | asyncapiv3  | Yes     | /testing_data/asyncapi_schemas/ |
-| OpenRPC  | Custom      | Yes     | /testing_data/jsonrpc/        |
+| Format   | Parser         | Codegen | Tests                           |
+| -------- | -------------- | ------- | ------------------------------- |
+| OpenAPI  | openapiv3      | Yes     | /testing_data/openapi_schemas/  |
+| GraphQL  | graphql-parser | Yes     | /testing_data/graphql/          |
+| AsyncAPI | asyncapiv3     | Yes     | /testing_data/asyncapi_schemas/ |
+| OpenRPC  | Custom         | Yes     | /testing_data/jsonrpc/          |
 
 ## Integration with HTTP Framework
 

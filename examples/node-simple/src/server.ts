@@ -12,10 +12,10 @@ const app = new Spikard();
  * Root endpoint - returns welcome message
  */
 const handleRoot: HandlerFunction = async () => {
-	return {
-		message: "Hello from Spikard Node!",
-		timestamp: new Date().toISOString(),
-	};
+  return {
+    message: "Hello from Spikard Node!",
+    timestamp: new Date().toISOString(),
+  };
 };
 get("/")(handleRoot);
 
@@ -23,10 +23,10 @@ get("/")(handleRoot);
  * Health check endpoint
  */
 const handleHealth: HandlerFunction = async () => {
-	return {
-		status: "healthy",
-		uptime: process.uptime(),
-	};
+  return {
+    status: "healthy",
+    uptime: process.uptime(),
+  };
 };
 get("/health")(handleHealth);
 
@@ -34,11 +34,11 @@ get("/health")(handleHealth);
  * Get user by ID
  */
 const getUserById: HandlerFunction = async (req) => {
-	const userId = req.params.id ?? "unknown";
-	return {
-		user_id: userId,
-		name: "Test User",
-	};
+  const userId = req.params.id ?? "unknown";
+  return {
+    user_id: userId,
+    name: "Test User",
+  };
 };
 get("/users/:id")(getUserById);
 
@@ -46,12 +46,12 @@ get("/users/:id")(getUserById);
  * Echo endpoint - returns request body
  */
 const handleEcho: HandlerFunction = async (req) => {
-	const body = req.body ? req.json() : null;
-	return {
-		echoed: true,
-		body,
-		receivedAt: new Date().toISOString(),
-	};
+  const body = req.body ? req.json() : null;
+  return {
+    echoed: true,
+    body,
+    receivedAt: new Date().toISOString(),
+  };
 };
 post("/echo")(handleEcho);
 

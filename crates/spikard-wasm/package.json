@@ -1,0 +1,35 @@
+{
+  "name": "@spikard/node-wasm",
+  "version": "0.14.0",
+  "private": false,
+  "description": "Rust-centric multi-language HTTP framework with polyglot bindings",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Goldziher/spikard",
+    "directory": "crates/spikard-wasm"
+  },
+  "files": [
+    "pkg",
+    "*.wasm",
+    "*.d.ts",
+    "README.md"
+  ],
+  "type": "module",
+  "main": "pkg/nodejs/spikard_wasm.js",
+  "module": "pkg/web/spikard_wasm.js",
+  "types": "pkg/nodejs/spikard_wasm.d.ts",
+  "scripts": {
+    "build": "wasm-pack build --target nodejs --out-dir pkg/nodejs",
+    "build:ci": "wasm-pack build --release --target nodejs --out-dir pkg/nodejs",
+    "build:wasm:web": "wasm-pack build --release --target web --out-dir pkg/web",
+    "build:wasm:bundler": "wasm-pack build --release --target bundler --out-dir pkg/bundler",
+    "build:wasm:nodejs": "wasm-pack build --release --target nodejs --out-dir pkg/nodejs",
+    "build:wasm:deno": "wasm-pack build --release --target deno --out-dir pkg/deno",
+    "build:all": "npm run build:wasm:web && npm run build:wasm:bundler && npm run build:wasm:nodejs && npm run build:wasm:deno && find pkg -name .gitignore -delete",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage",
+    "clean": "rm -rf pkg dist"
+  }
+}

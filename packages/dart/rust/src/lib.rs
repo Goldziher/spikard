@@ -7,8 +7,11 @@
     clippy::manual_flatten,
     clippy::too_many_arguments,
     clippy::unit_arg,
-    clippy::type_complexity
+    clippy::type_complexity,
+    clippy::useless_conversion
 )]
+mod frb_generated;
+pub use flutter_rust_bridge::DartFnFuture;
 use flutter_rust_bridge::frb;
 
 #[frb(mirror(UploadFile))]
@@ -36,8 +39,6 @@ pub struct CorsConfig {
     pub expose_headers: Option<Vec<String>>,
     pub max_age: Option<i64>,
     pub allow_credentials: Option<bool>,
-    pub methods_joined_cache: String,
-    pub headers_joined_cache: String,
 }
 
 #[frb(mirror(CompressionConfig))]
@@ -75,8 +76,22 @@ pub struct ProblemDetails {
     pub extensions: std::collections::HashMap<String, String>,
 }
 
-#[frb(mirror(GraphQLRouteConfig))]
-pub struct GraphQLRouteConfig {}
+#[frb(opaque)]
+pub struct GraphQLRouteConfig {
+    pub(crate) inner: spikard_graphql::GraphQLRouteConfig,
+}
+
+impl From<spikard_graphql::GraphQLRouteConfig> for GraphQLRouteConfig {
+    fn from(inner: spikard_graphql::GraphQLRouteConfig) -> Self {
+        Self { inner }
+    }
+}
+
+impl From<GraphQLRouteConfig> for spikard_graphql::GraphQLRouteConfig {
+    fn from(value: GraphQLRouteConfig) -> Self {
+        value.inner
+    }
+}
 
 #[frb(mirror(SchemaConfig))]
 pub struct SchemaConfig {
@@ -287,10 +302,8 @@ pub struct ServerConfig {
     pub openapi: Option<OpenApiConfig>,
     pub jsonrpc: Option<JsonRpcConfig>,
     pub grpc: Option<GrpcConfig>,
-    pub lifecycle_hooks: Option<String>,
     pub background_tasks: BackgroundTaskConfig,
     pub enable_http_trace: bool,
-    pub di_container: Option<String>,
 }
 
 #[frb(mirror(GraphQLSubscriptionSnapshot))]
@@ -302,8 +315,143 @@ pub struct GraphQLSubscriptionSnapshot {
     pub complete_received: bool,
 }
 
-#[frb(mirror(TestClient))]
-pub struct TestClient {}
+#[frb(opaque)]
+pub struct TestClient {
+    pub(crate) inner: spikard_http::testing::test_client::TestClient,
+}
+
+impl From<spikard_http::testing::test_client::TestClient> for TestClient {
+    fn from(inner: spikard_http::testing::test_client::TestClient) -> Self {
+        Self { inner }
+    }
+}
+
+impl From<TestClient> for spikard_http::testing::test_client::TestClient {
+    fn from(value: TestClient) -> Self {
+        value.inner
+    }
+}
+
+impl GraphQLRouteConfig {
+    #[frb]
+    pub fn path(self, path: String) -> GraphQLRouteConfig {
+        (|v| GraphQLRouteConfig::from(v))(self.inner.path(path))
+    }
+    #[frb]
+    pub fn method(self, method: String) -> GraphQLRouteConfig {
+        (|v| GraphQLRouteConfig::from(v))(self.inner.method(method))
+    }
+    #[frb]
+    pub fn enable_playground(self, enable: bool) -> GraphQLRouteConfig {
+        (|v| GraphQLRouteConfig::from(v))(self.inner.enable_playground(enable))
+    }
+    #[frb]
+    pub fn description(self, description: String) -> GraphQLRouteConfig {
+        (|v| GraphQLRouteConfig::from(v))(self.inner.description(description))
+    }
+    #[frb]
+    pub fn get_path(&self) -> String {
+        (|v: &str| v.to_string())(self.inner.get_path())
+    }
+    #[frb]
+    pub fn get_method(&self) -> String {
+        (|v: &str| v.to_string())(self.inner.get_method())
+    }
+    #[frb]
+    pub fn is_playground_enabled(&self) -> bool {
+        self.inner.is_playground_enabled()
+    }
+    #[frb]
+    pub fn get_description(&self) -> Option<String> {
+        (|v: Option<&str>| v.map(|s| s.to_string()))(self.inner.get_description())
+    }
+    // Method `default` is a static/associated function and is not yet bridged through FRB — skipped.
+}
+
+impl TestClient {
+    // Method `get` has a sanitized return type that cannot be bridged through FRB — skipped.
+    // Method `post` has a sanitized return type that cannot be bridged through FRB — skipped.
+    // Method `request_raw` has a sanitized return type that cannot be bridged through FRB — skipped.
+    // Method `put` has a sanitized return type that cannot be bridged through FRB — skipped.
+    // Method `patch` has a sanitized return type that cannot be bridged through FRB — skipped.
+    // Method `delete` has a sanitized return type that cannot be bridged through FRB — skipped.
+    // Method `options` has a sanitized return type that cannot be bridged through FRB — skipped.
+    // Method `head` has a sanitized return type that cannot be bridged through FRB — skipped.
+    // Method `trace` has a sanitized return type that cannot be bridged through FRB — skipped.
+    #[frb]
+    pub async fn graphql_at(
+        &self,
+        endpoint: String,
+        query: String,
+        variables: Option<String>,
+        operation_name: Option<String>,
+    ) -> Result<ResponseSnapshot, String> {
+        self.inner
+            .graphql_at(
+                &endpoint,
+                &query,
+                variables.as_deref().and_then(|s| serde_json::from_str(s).ok()),
+                operation_name.as_deref(),
+            )
+            .await
+            .map(|v| ResponseSnapshot::from(v))
+            .map_err(|e| e.to_string())
+    }
+    #[frb]
+    pub async fn graphql(
+        &self,
+        query: String,
+        variables: Option<String>,
+        operation_name: Option<String>,
+    ) -> Result<ResponseSnapshot, String> {
+        self.inner
+            .graphql(
+                &query,
+                variables.as_deref().and_then(|s| serde_json::from_str(s).ok()),
+                operation_name.as_deref(),
+            )
+            .await
+            .map(|v| ResponseSnapshot::from(v))
+            .map_err(|e| e.to_string())
+    }
+    // Method `graphql_with_status` has a sanitized return type that cannot be bridged through FRB — skipped.
+    #[frb]
+    pub async fn graphql_subscription_at(
+        &self,
+        endpoint: String,
+        query: String,
+        variables: Option<String>,
+        operation_name: Option<String>,
+    ) -> Result<GraphQLSubscriptionSnapshot, String> {
+        self.inner
+            .graphql_subscription_at(
+                &endpoint,
+                &query,
+                variables.as_deref().and_then(|s| serde_json::from_str(s).ok()),
+                operation_name.as_deref(),
+            )
+            .await
+            .map(|v| GraphQLSubscriptionSnapshot::from(v))
+            .map_err(|e| e.to_string())
+    }
+    #[frb]
+    pub async fn graphql_subscription(
+        &self,
+        query: String,
+        variables: Option<String>,
+        operation_name: Option<String>,
+    ) -> Result<GraphQLSubscriptionSnapshot, String> {
+        self.inner
+            .graphql_subscription(
+                &query,
+                variables.as_deref().and_then(|s| serde_json::from_str(s).ok()),
+                operation_name.as_deref(),
+            )
+            .await
+            .map(|v| GraphQLSubscriptionSnapshot::from(v))
+            .map_err(|e| e.to_string())
+    }
+}
 
 #[frb(mirror(SnapshotError))]
 pub enum SnapshotError {
@@ -338,6 +486,463 @@ pub enum SecuritySchemeInfo {
     ApiKey { location: String, name: String },
 }
 
+// From<SourceT> conversions for bridge return types.
+
+impl From<spikard::UploadFile> for UploadFile {
+    fn from(v: spikard::UploadFile) -> Self {
+        UploadFile {
+            filename: v.filename.into(),
+            content_type: v.content_type.map(|s| s.into()),
+            size: v.size.map(|x| x as _),
+            content: v.content.into(),
+            content_encoding: v.content_encoding.map(|s| s.into()),
+            cursor: Default::default(),
+        }
+    }
+}
+
+impl From<spikard::ResponseSnapshot> for ResponseSnapshot {
+    fn from(v: spikard::ResponseSnapshot) -> Self {
+        ResponseSnapshot {
+            status: v.status as _,
+            headers: v.headers.into_iter().map(|(k, v)| (k.into(), v.into())).collect(),
+            body: v.body.into(),
+        }
+    }
+}
+
+impl From<spikard_core::CorsConfig> for CorsConfig {
+    fn from(v: spikard_core::CorsConfig) -> Self {
+        CorsConfig {
+            allowed_origins: v.allowed_origins.into_iter().map(|s| s.into()).collect(),
+            allowed_methods: v.allowed_methods.into_iter().map(|s| s.into()).collect(),
+            allowed_headers: v.allowed_headers.into_iter().map(|s| s.into()).collect(),
+            expose_headers: v.expose_headers.map(|vec| vec.into_iter().map(|s| s.into()).collect()),
+            max_age: v.max_age.map(|x| x as _),
+            allow_credentials: v.allow_credentials.map(|x| x as _),
+        }
+    }
+}
+
+impl From<spikard_core::CompressionConfig> for CompressionConfig {
+    fn from(v: spikard_core::CompressionConfig) -> Self {
+        CompressionConfig {
+            gzip: v.gzip as _,
+            brotli: v.brotli as _,
+            min_size: v.min_size as _,
+            quality: v.quality as _,
+        }
+    }
+}
+
+impl From<spikard_core::RateLimitConfig> for RateLimitConfig {
+    fn from(v: spikard_core::RateLimitConfig) -> Self {
+        RateLimitConfig {
+            per_second: v.per_second as _,
+            burst: v.burst as _,
+            ip_based: v.ip_based as _,
+        }
+    }
+}
+
+impl From<spikard_core::JsonRpcMethodInfo> for JsonRpcMethodInfo {
+    fn from(v: spikard_core::JsonRpcMethodInfo) -> Self {
+        JsonRpcMethodInfo {
+            method_name: v.method_name.into(),
+            description: v.description.map(|s| s.into()),
+            params_schema: v.params_schema.map(|j| serde_json::to_string(&j).unwrap_or_default()),
+            result_schema: v.result_schema.map(|j| serde_json::to_string(&j).unwrap_or_default()),
+            deprecated: v.deprecated as _,
+            tags: v.tags.into_iter().map(|s| s.into()).collect(),
+        }
+    }
+}
+
+impl From<spikard_core::ProblemDetails> for ProblemDetails {
+    fn from(v: spikard_core::ProblemDetails) -> Self {
+        ProblemDetails {
+            type_uri: v.type_uri.into(),
+            title: v.title.into(),
+            status: v.status as _,
+            detail: v.detail.map(|s| s.into()),
+            instance: v.instance.map(|s| s.into()),
+            extensions: v
+                .extensions
+                .into_iter()
+                .map(|(k, v)| (k.into(), serde_json::to_string(&v).unwrap_or_default()))
+                .collect(),
+        }
+    }
+}
+
+impl From<spikard_graphql::SchemaConfig> for SchemaConfig {
+    fn from(v: spikard_graphql::SchemaConfig) -> Self {
+        SchemaConfig {
+            introspection_enabled: v.introspection_enabled as _,
+            complexity_limit: v.complexity_limit.map(|x| x as _),
+            depth_limit: v.depth_limit.map(|x| x as _),
+        }
+    }
+}
+
+impl From<spikard_graphql::QueryOnlyConfig> for QueryOnlyConfig {
+    fn from(v: spikard_graphql::QueryOnlyConfig) -> Self {
+        QueryOnlyConfig {
+            introspection_enabled: v.introspection_enabled as _,
+            complexity_limit: v.complexity_limit.map(|x| x as _),
+            depth_limit: v.depth_limit.map(|x| x as _),
+        }
+    }
+}
+
+impl From<spikard_graphql::QueryMutationConfig> for QueryMutationConfig {
+    fn from(v: spikard_graphql::QueryMutationConfig) -> Self {
+        QueryMutationConfig {
+            introspection_enabled: v.introspection_enabled as _,
+            complexity_limit: v.complexity_limit.map(|x| x as _),
+            depth_limit: v.depth_limit.map(|x| x as _),
+        }
+    }
+}
+
+impl From<spikard_graphql::FullSchemaConfig> for FullSchemaConfig {
+    fn from(v: spikard_graphql::FullSchemaConfig) -> Self {
+        FullSchemaConfig {
+            introspection_enabled: v.introspection_enabled as _,
+            complexity_limit: v.complexity_limit.map(|x| x as _),
+            depth_limit: v.depth_limit.map(|x| x as _),
+        }
+    }
+}
+
+impl From<spikard_http::AsyncApiConfig> for AsyncApiConfig {
+    fn from(v: spikard_http::AsyncApiConfig) -> Self {
+        AsyncApiConfig {
+            enabled: v.enabled as _,
+            spec: v.spec.map(|j| serde_json::to_string(&j).unwrap_or_default()),
+        }
+    }
+}
+
+impl From<spikard_http::ParsedChannel> for ParsedChannel {
+    fn from(v: spikard_http::ParsedChannel) -> Self {
+        ParsedChannel {
+            name: v.name.into(),
+            address: v.address.into(),
+            messages: v.messages.into_iter().map(|s| s.into()).collect(),
+            bindings: v.bindings.map(|j| serde_json::to_string(&j).unwrap_or_default()),
+        }
+    }
+}
+
+impl From<spikard_http::ParsedOperation> for ParsedOperation {
+    fn from(v: spikard_http::ParsedOperation) -> Self {
+        ParsedOperation {
+            name: v.name.into(),
+            action: v.action.into(),
+            channel: v.channel.into(),
+        }
+    }
+}
+
+impl From<spikard_http::ParsedMessage> for ParsedMessage {
+    fn from(v: spikard_http::ParsedMessage) -> Self {
+        ParsedMessage {
+            name: v.name.into(),
+            schema: v.schema.map(|j| serde_json::to_string(&j).unwrap_or_default()),
+        }
+    }
+}
+
+impl From<spikard_http::ParseResult> for ParseResult {
+    fn from(v: spikard_http::ParseResult) -> Self {
+        ParseResult {
+            spec_version: v.spec_version.into(),
+            title: v.title.into(),
+            api_version: v.api_version.into(),
+            channels: v.channels.into_iter().map(ParsedChannel::from).collect(),
+            operations: v.operations.into_iter().map(ParsedOperation::from).collect(),
+            messages: v.messages.into_iter().map(ParsedMessage::from).collect(),
+        }
+    }
+}
+
+impl From<spikard_http::asyncapi::ParseRequest> for ParseRequest {
+    fn from(v: spikard_http::asyncapi::ParseRequest) -> Self {
+        ParseRequest {
+            spec: serde_json::to_string(&v.spec).unwrap_or_default(),
+        }
+    }
+}
+
+impl From<spikard_http::ValidationResponse> for ValidationResponse {
+    fn from(v: spikard_http::ValidationResponse) -> Self {
+        ValidationResponse {
+            valid: v.valid as _,
+            errors: v.errors.into_iter().map(|s| s.into()).collect(),
+        }
+    }
+}
+
+impl From<spikard_http::ValidateRequest> for ValidateRequest {
+    fn from(v: spikard_http::ValidateRequest) -> Self {
+        ValidateRequest {
+            spec: serde_json::to_string(&v.spec).unwrap_or_default(),
+            channel: v.channel.into(),
+            message: v.message.into(),
+            payload: serde_json::to_string(&v.payload).unwrap_or_default(),
+        }
+    }
+}
+
+impl From<spikard_http::BackgroundTaskConfig> for BackgroundTaskConfig {
+    fn from(v: spikard_http::BackgroundTaskConfig) -> Self {
+        BackgroundTaskConfig {
+            max_queue_size: v.max_queue_size as _,
+            max_concurrent_tasks: v.max_concurrent_tasks as _,
+            drain_timeout_secs: v.drain_timeout_secs as _,
+        }
+    }
+}
+
+impl From<spikard_http::BackgroundJobMetadata> for BackgroundJobMetadata {
+    fn from(v: spikard_http::BackgroundJobMetadata) -> Self {
+        BackgroundJobMetadata {
+            name: v.name.into_owned(),
+            request_id: v.request_id.map(|s| s.into()),
+        }
+    }
+}
+
+impl From<spikard_http::GrpcConfig> for GrpcConfig {
+    fn from(v: spikard_http::GrpcConfig) -> Self {
+        GrpcConfig {
+            enabled: v.enabled as _,
+            max_message_size: v.max_message_size as _,
+            enable_compression: v.enable_compression as _,
+            request_timeout: v.request_timeout.map(|x| x as _),
+            max_concurrent_streams: v.max_concurrent_streams as _,
+            enable_keepalive: v.enable_keepalive as _,
+            keepalive_interval: v.keepalive_interval as _,
+            keepalive_timeout: v.keepalive_timeout as _,
+            max_stream_response_bytes: v.max_stream_response_bytes.map(|x| x as _),
+        }
+    }
+}
+
+impl From<spikard_http::JsonRpcConfig> for JsonRpcConfig {
+    fn from(v: spikard_http::JsonRpcConfig) -> Self {
+        JsonRpcConfig {
+            enabled: v.enabled as _,
+            endpoint_path: v.endpoint_path.into(),
+            enable_batch: v.enable_batch as _,
+            max_batch_size: v.max_batch_size as _,
+        }
+    }
+}
+
+impl From<spikard_http::OpenApiConfig> for OpenApiConfig {
+    fn from(v: spikard_http::OpenApiConfig) -> Self {
+        OpenApiConfig {
+            enabled: v.enabled as _,
+            title: v.title.into(),
+            version: v.version.into(),
+            description: v.description.map(|s| s.into()),
+            swagger_ui_path: v.swagger_ui_path.into(),
+            redoc_path: v.redoc_path.into(),
+            openapi_json_path: v.openapi_json_path.into(),
+            contact: v.contact.map(ContactInfo::from),
+            license: v.license.map(LicenseInfo::from),
+            servers: v.servers.into_iter().map(ServerInfo::from).collect(),
+            security_schemes: v
+                .security_schemes
+                .into_iter()
+                .map(|(k, v)| (k.into(), SecuritySchemeInfo::from(v)))
+                .collect(),
+        }
+    }
+}
+
+impl From<spikard_http::ContactInfo> for ContactInfo {
+    fn from(v: spikard_http::ContactInfo) -> Self {
+        ContactInfo {
+            name: v.name.map(|s| s.into()),
+            email: v.email.map(|s| s.into()),
+            url: v.url.map(|s| s.into()),
+        }
+    }
+}
+
+impl From<spikard_http::LicenseInfo> for LicenseInfo {
+    fn from(v: spikard_http::LicenseInfo) -> Self {
+        LicenseInfo {
+            name: v.name.into(),
+            url: v.url.map(|s| s.into()),
+        }
+    }
+}
+
+impl From<spikard_http::ServerInfo> for ServerInfo {
+    fn from(v: spikard_http::ServerInfo) -> Self {
+        ServerInfo {
+            url: v.url.into(),
+            description: v.description.map(|s| s.into()),
+        }
+    }
+}
+
+impl From<spikard_http::Response> for Response {
+    fn from(v: spikard_http::Response) -> Self {
+        Response {
+            content: v.content.map(|j| serde_json::to_string(&j).unwrap_or_default()),
+            status_code: v.status_code as _,
+            headers: v.headers.into_iter().map(|(k, v)| (k.into(), v.into())).collect(),
+        }
+    }
+}
+
+impl From<spikard_http::SseEvent> for SseEvent {
+    fn from(v: spikard_http::SseEvent) -> Self {
+        SseEvent {
+            event_type: v.event_type.map(|s| s.into()),
+            data: serde_json::to_string(&v.data).unwrap_or_default(),
+            id: v.id.map(|s| s.into()),
+            retry: v.retry.map(|x| x as _),
+        }
+    }
+}
+
+impl From<spikard_http::JwtConfig> for JwtConfig {
+    fn from(v: spikard_http::JwtConfig) -> Self {
+        JwtConfig {
+            secret: v.secret.into(),
+            algorithm: v.algorithm.into(),
+            audience: v.audience.map(|vec| vec.into_iter().map(|s| s.into()).collect()),
+            issuer: v.issuer.map(|s| s.into()),
+            leeway: v.leeway as _,
+        }
+    }
+}
+
+impl From<spikard_http::ApiKeyConfig> for ApiKeyConfig {
+    fn from(v: spikard_http::ApiKeyConfig) -> Self {
+        ApiKeyConfig {
+            keys: v.keys.into_iter().map(|s| s.into()).collect(),
+            header_name: v.header_name.into(),
+        }
+    }
+}
+
+impl From<spikard_http::StaticFilesConfig> for StaticFilesConfig {
+    fn from(v: spikard_http::StaticFilesConfig) -> Self {
+        StaticFilesConfig {
+            directory: v.directory.into(),
+            route_prefix: v.route_prefix.into(),
+            index_file: v.index_file as _,
+            cache_control: v.cache_control.map(|s| s.into()),
+        }
+    }
+}
+
+impl From<spikard_http::ServerConfig> for ServerConfig {
+    fn from(v: spikard_http::ServerConfig) -> Self {
+        ServerConfig {
+            host: v.host.into(),
+            port: v.port as _,
+            workers: v.workers as _,
+            enable_request_id: v.enable_request_id as _,
+            max_body_size: v.max_body_size.map(|x| x as _),
+            request_timeout: v.request_timeout.map(|x| x as _),
+            compression: v.compression.map(CompressionConfig::from),
+            rate_limit: v.rate_limit.map(RateLimitConfig::from),
+            jwt_auth: v.jwt_auth.map(JwtConfig::from),
+            api_key_auth: v.api_key_auth.map(ApiKeyConfig::from),
+            static_files: v.static_files.into_iter().map(StaticFilesConfig::from).collect(),
+            graceful_shutdown: v.graceful_shutdown as _,
+            shutdown_timeout: v.shutdown_timeout as _,
+            asyncapi: v.asyncapi.map(AsyncApiConfig::from),
+            openapi: v.openapi.map(OpenApiConfig::from),
+            jsonrpc: v.jsonrpc.map(JsonRpcConfig::from),
+            grpc: v.grpc.map(GrpcConfig::from),
+            background_tasks: BackgroundTaskConfig::from(v.background_tasks),
+            enable_http_trace: v.enable_http_trace as _,
+        }
+    }
+}
+
+impl From<spikard_http::testing::test_client::GraphQLSubscriptionSnapshot> for GraphQLSubscriptionSnapshot {
+    fn from(v: spikard_http::testing::test_client::GraphQLSubscriptionSnapshot) -> Self {
+        GraphQLSubscriptionSnapshot {
+            operation_id: v.operation_id.into(),
+            acknowledged: v.acknowledged as _,
+            event: v.event.map(|j| serde_json::to_string(&j).unwrap_or_default()),
+            errors: v
+                .errors
+                .into_iter()
+                .map(|j| serde_json::to_string(&j).unwrap_or_default())
+                .collect(),
+            complete_received: v.complete_received as _,
+        }
+    }
+}
+
+impl From<spikard::SnapshotError> for SnapshotError {
+    fn from(v: spikard::SnapshotError) -> Self {
+        match v {
+            spikard::SnapshotError::InvalidHeader(f0) => SnapshotError::InvalidHeader { field0: f0 },
+            spikard::SnapshotError::Decompression(f0) => SnapshotError::Decompression { field0: f0 },
+        }
+    }
+}
+
+impl From<spikard::WebSocketMessage> for WebSocketMessage {
+    fn from(v: spikard::WebSocketMessage) -> Self {
+        match v {
+            spikard::WebSocketMessage::Text(f0) => WebSocketMessage::Text { field0: f0 },
+            spikard::WebSocketMessage::Binary(f0) => WebSocketMessage::Binary { field0: f0 },
+            spikard::WebSocketMessage::Close { code, reason } => WebSocketMessage::Close {
+                code: code as _,
+                reason: reason.unwrap_or_default(),
+            },
+            spikard::WebSocketMessage::Ping(f0) => WebSocketMessage::Ping { field0: f0 },
+            spikard::WebSocketMessage::Pong(f0) => WebSocketMessage::Pong { field0: f0 },
+        }
+    }
+}
+
+impl From<spikard_core::Method> for Method {
+    fn from(v: spikard_core::Method) -> Self {
+        match v {
+            spikard_core::Method::Get => Method::Get,
+            spikard_core::Method::Post => Method::Post,
+            spikard_core::Method::Put => Method::Put,
+            spikard_core::Method::Patch => Method::Patch,
+            spikard_core::Method::Delete => Method::Delete,
+            spikard_core::Method::Head => Method::Head,
+            spikard_core::Method::Options => Method::Options,
+            spikard_core::Method::Trace => Method::Trace,
+        }
+    }
+}
+
+impl From<spikard_http::SecuritySchemeInfo> for SecuritySchemeInfo {
+    fn from(v: spikard_http::SecuritySchemeInfo) -> Self {
+        match v {
+            spikard_http::SecuritySchemeInfo::Http { scheme, bearer_format } => SecuritySchemeInfo::Http {
+                scheme,
+                bearer_format: bearer_format.unwrap_or_default(),
+            },
+            spikard_http::SecuritySchemeInfo::ApiKey { location, name } => {
+                SecuritySchemeInfo::ApiKey { location, name }
+            }
+        }
+    }
+}
+
+// From<T> for SourceT conversions (mirror-to-core direction).
+// Used in bridge functions for types with sanitized fields, and by
+// nested conversions within those types.
+
 /// Create a simple schema configuration with only Query type.
 ///
 /// This is a convenience function for schemas that only have queries.
@@ -345,8 +950,8 @@ pub enum SecuritySchemeInfo {
 /// **Returns:**
 ///
 /// A `QueryOnlyConfig` with default settings
-pub fn schema_query_only() -> spikard_graphql::QueryOnlyConfig {
-    spikard_graphql::schema_query_only()
+pub fn schema_query_only() -> QueryOnlyConfig {
+    (QueryOnlyConfig::from)(spikard_graphql::schema_query_only())
 }
 
 /// Create a schema configuration with Query and Mutation types.
@@ -356,8 +961,8 @@ pub fn schema_query_only() -> spikard_graphql::QueryOnlyConfig {
 /// **Returns:**
 ///
 /// A `QueryMutationConfig` with default settings
-pub fn schema_query_mutation() -> spikard_graphql::QueryMutationConfig {
-    spikard_graphql::schema_query_mutation()
+pub fn schema_query_mutation() -> QueryMutationConfig {
+    (QueryMutationConfig::from)(spikard_graphql::schema_query_mutation())
 }
 
 /// Create a schema configuration with all three root types.
@@ -367,6 +972,218 @@ pub fn schema_query_mutation() -> spikard_graphql::QueryMutationConfig {
 /// **Returns:**
 ///
 /// A `FullSchemaConfig` with default settings
-pub fn schema_full() -> spikard_graphql::FullSchemaConfig {
-    spikard_graphql::schema_full()
+pub fn schema_full() -> FullSchemaConfig {
+    (FullSchemaConfig::from)(spikard_graphql::schema_full())
+}
+
+// `create_<Type>_from_json` helpers — deserialize a JSON string into a mirror type.
+
+#[frb]
+pub fn create_upload_file_from_json(json: String) -> Result<UploadFile, String> {
+    serde_json::from_str::<spikard::UploadFile>(&json)
+        .map(UploadFile::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_response_snapshot_from_json(json: String) -> Result<ResponseSnapshot, String> {
+    serde_json::from_str::<spikard::ResponseSnapshot>(&json)
+        .map(ResponseSnapshot::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_cors_config_from_json(json: String) -> Result<CorsConfig, String> {
+    serde_json::from_str::<spikard_core::CorsConfig>(&json)
+        .map(CorsConfig::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_compression_config_from_json(json: String) -> Result<CompressionConfig, String> {
+    serde_json::from_str::<spikard_core::CompressionConfig>(&json)
+        .map(CompressionConfig::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_rate_limit_config_from_json(json: String) -> Result<RateLimitConfig, String> {
+    serde_json::from_str::<spikard_core::RateLimitConfig>(&json)
+        .map(RateLimitConfig::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_json_rpc_method_info_from_json(json: String) -> Result<JsonRpcMethodInfo, String> {
+    serde_json::from_str::<spikard_core::JsonRpcMethodInfo>(&json)
+        .map(JsonRpcMethodInfo::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_problem_details_from_json(json: String) -> Result<ProblemDetails, String> {
+    serde_json::from_str::<spikard_core::ProblemDetails>(&json)
+        .map(ProblemDetails::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_schema_config_from_json(json: String) -> Result<SchemaConfig, String> {
+    serde_json::from_str::<spikard_graphql::SchemaConfig>(&json)
+        .map(SchemaConfig::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_query_only_config_from_json(json: String) -> Result<QueryOnlyConfig, String> {
+    serde_json::from_str::<spikard_graphql::QueryOnlyConfig>(&json)
+        .map(QueryOnlyConfig::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_query_mutation_config_from_json(json: String) -> Result<QueryMutationConfig, String> {
+    serde_json::from_str::<spikard_graphql::QueryMutationConfig>(&json)
+        .map(QueryMutationConfig::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_full_schema_config_from_json(json: String) -> Result<FullSchemaConfig, String> {
+    serde_json::from_str::<spikard_graphql::FullSchemaConfig>(&json)
+        .map(FullSchemaConfig::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_async_api_config_from_json(json: String) -> Result<AsyncApiConfig, String> {
+    serde_json::from_str::<spikard_http::AsyncApiConfig>(&json)
+        .map(AsyncApiConfig::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_parsed_channel_from_json(json: String) -> Result<ParsedChannel, String> {
+    serde_json::from_str::<spikard_http::ParsedChannel>(&json)
+        .map(ParsedChannel::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_parsed_operation_from_json(json: String) -> Result<ParsedOperation, String> {
+    serde_json::from_str::<spikard_http::ParsedOperation>(&json)
+        .map(ParsedOperation::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_parsed_message_from_json(json: String) -> Result<ParsedMessage, String> {
+    serde_json::from_str::<spikard_http::ParsedMessage>(&json)
+        .map(ParsedMessage::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_parse_result_from_json(json: String) -> Result<ParseResult, String> {
+    serde_json::from_str::<spikard_http::ParseResult>(&json)
+        .map(ParseResult::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_background_task_config_from_json(json: String) -> Result<BackgroundTaskConfig, String> {
+    serde_json::from_str::<spikard_http::BackgroundTaskConfig>(&json)
+        .map(BackgroundTaskConfig::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_background_job_metadata_from_json(json: String) -> Result<BackgroundJobMetadata, String> {
+    serde_json::from_str::<spikard_http::BackgroundJobMetadata>(&json)
+        .map(BackgroundJobMetadata::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_grpc_config_from_json(json: String) -> Result<GrpcConfig, String> {
+    serde_json::from_str::<spikard_http::GrpcConfig>(&json)
+        .map(GrpcConfig::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_json_rpc_config_from_json(json: String) -> Result<JsonRpcConfig, String> {
+    serde_json::from_str::<spikard_http::JsonRpcConfig>(&json)
+        .map(JsonRpcConfig::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_open_api_config_from_json(json: String) -> Result<OpenApiConfig, String> {
+    serde_json::from_str::<spikard_http::OpenApiConfig>(&json)
+        .map(OpenApiConfig::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_contact_info_from_json(json: String) -> Result<ContactInfo, String> {
+    serde_json::from_str::<spikard_http::ContactInfo>(&json)
+        .map(ContactInfo::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_license_info_from_json(json: String) -> Result<LicenseInfo, String> {
+    serde_json::from_str::<spikard_http::LicenseInfo>(&json)
+        .map(LicenseInfo::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_server_info_from_json(json: String) -> Result<ServerInfo, String> {
+    serde_json::from_str::<spikard_http::ServerInfo>(&json)
+        .map(ServerInfo::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_response_from_json(json: String) -> Result<Response, String> {
+    serde_json::from_str::<spikard_http::Response>(&json)
+        .map(Response::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_sse_event_from_json(json: String) -> Result<SseEvent, String> {
+    serde_json::from_str::<spikard_http::SseEvent>(&json)
+        .map(SseEvent::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_jwt_config_from_json(json: String) -> Result<JwtConfig, String> {
+    serde_json::from_str::<spikard_http::JwtConfig>(&json)
+        .map(JwtConfig::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_api_key_config_from_json(json: String) -> Result<ApiKeyConfig, String> {
+    serde_json::from_str::<spikard_http::ApiKeyConfig>(&json)
+        .map(ApiKeyConfig::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_static_files_config_from_json(json: String) -> Result<StaticFilesConfig, String> {
+    serde_json::from_str::<spikard_http::StaticFilesConfig>(&json)
+        .map(StaticFilesConfig::from)
+        .map_err(|e| e.to_string())
+}
+
+#[frb]
+pub fn create_server_config_from_json(json: String) -> Result<ServerConfig, String> {
+    serde_json::from_str::<spikard_http::ServerConfig>(&json)
+        .map(ServerConfig::from)
+        .map_err(|e| e.to_string())
 }

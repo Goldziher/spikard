@@ -2,14 +2,16 @@ name: Deploy Documentation
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
-      - 'docs/**'
-      - 'zensical.toml'
-      - 'README.md'
-      - 'CHANGELOG.md'
-      - '.github/workflows/docs.yaml'
+      - "docs/**"
+      - "templates/**"
+      - "crates/**"
+      - "packages/**"
+      - "alef.toml"
+      - "Taskfile.yaml"
+      - ".task/**"
+      - ".github/workflows/docs.yaml"
   workflow_dispatch:
 
 permissions:
@@ -18,41 +20,34 @@ permissions:
   id-token: write
 
 concurrency:
-  group: docs-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: docs-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   build:
+    name: Build docs
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v6
 
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: kreuzberg-dev/actions/setup-python-env@v1
         with:
-          python-version: "3.13"
+          python-version: "3.14"
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
+      - name: Setup Rust
+        uses: kreuzberg-dev/actions/setup-rust@v1
         with:
-          enable-cache: true
+          cache-key-prefix: docs
 
-      - name: Install cargo-binstall
-        uses: cargo-bins/cargo-binstall@main
+      - name: Install Alef
+        uses: kreuzberg-dev/actions/install-alef@v1
 
-      - name: Install alef
-        # scripts/docs/build-docs.sh shells out to `alef` to render API surface
-        # docs. Install via cargo-binstall (matches the ci-validate pattern).
-        run: cargo binstall --no-confirm --locked alef-cli@0.12.6
-
-      - name: Install dependencies
-        run: bash scripts/docs/install-doc-deps.sh
+      - name: Install Task
+        uses: kreuzberg-dev/actions/install-task@v1
 
       - name: Build documentation
-        run: bash scripts/docs/build-docs.sh
+        run: task docs:build
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
@@ -60,14 +55,13 @@ jobs:
           path: site
 
   deploy:
+    name: Deploy docs
+    if: github.ref == 'refs/heads/main'
     needs: build
-    permissions:
-      pages: write
-      id-token: write
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
     steps:
       - name: Deploy to GitHub Pages
         id: deployment

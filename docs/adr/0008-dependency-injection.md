@@ -331,21 +331,27 @@ async def get_users(db: AsyncSession) -> list[User]:
 #### TypeScript/Node
 
 ```typescript
-import { Server, Provide } from 'spikard';
+import { Server, Provide } from "spikard";
 
 const app = new Server();
 
 // Simple value
-app.provide('dbUrl', 'postgresql://localhost/mydb');
+app.provide("dbUrl", "postgresql://localhost/mydb");
 
 // Factory
-app.provide('db', Provide(async (dbUrl: string) => {
-  return await createConnection(dbUrl);
-}, { dependsOn: ['dbUrl'], singleton: true }));
+app.provide(
+  "db",
+  Provide(
+    async (dbUrl: string) => {
+      return await createConnection(dbUrl);
+    },
+    { dependsOn: ["dbUrl"], singleton: true },
+  ),
+);
 
 // Handler with destructuring
-app.get('/users', async (request, { db }: { db: Database }) => {
-  return await db.query('SELECT * FROM users');
+app.get("/users", async (request, { db }: { db: Database }) => {
+  return await db.query("SELECT * FROM users");
 });
 ```
 
@@ -522,22 +528,11 @@ Each fixture includes:
 
 ### Positive
 
--**Simple API** - Two methods to learn (`provide_value`, `provide_factory`)
--**Type-safe** - Rust's type system enforces correctness
--**Cross-language consistency** - Same semantics across all bindings
--**Zero-cost** - No overhead when not used
--**Testable** - Easy to mock dependencies in tests
--**Resource management** - First-class cleanup support
--**No external dependencies** - Built on Axum State (already in stack)
--**Incremental adoption** - Can add DI to existing apps gradually
--**Performance** - Batched parallel resolution, caching
+-**Simple API** - Two methods to learn (`provide_value`, `provide_factory`) -**Type-safe** - Rust's type system enforces correctness -**Cross-language consistency** - Same semantics across all bindings -**Zero-cost** - No overhead when not used -**Testable** - Easy to mock dependencies in tests -**Resource management** - First-class cleanup support -**No external dependencies** - Built on Axum State (already in stack) -**Incremental adoption** - Can add DI to existing apps gradually -**Performance** - Batched parallel resolution, caching
 
 ### Negative
 
--**Custom implementation** - We maintain it (not a third-party crate)
--**Initial development time** - ~2 months for full cross-language support
--**Learning curve** - Users must learn DI patterns
--**Complexity** - Adds conceptual overhead to framework
+-**Custom implementation** - We maintain it (not a third-party crate) -**Initial development time** - ~2 months for full cross-language support -**Learning curve** - Users must learn DI patterns -**Complexity** - Adds conceptual overhead to framework
 
 ### Neutral
 

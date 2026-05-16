@@ -191,6 +191,7 @@ pub struct ServerConfig {
     /// Lifecycle hooks for request/response processing
     // Not serializable: contains function pointers/closures
     #[serde(skip)]
+    #[cfg_attr(alef, alef(skip))]
     pub lifecycle_hooks: Option<std::sync::Arc<LifecycleHooks>>,
     /// Background task executor configuration
     // wasm: BackgroundTaskConfig is pure data (Serialize/Deserialize); the runtime is native-only
@@ -204,6 +205,7 @@ pub struct ServerConfig {
     // Not serializable: contains runtime dependency injection state
     #[cfg(feature = "di")]
     #[serde(skip)]
+    #[cfg_attr(alef, alef(skip))]
     pub di_container: Option<std::sync::Arc<spikard_core::di::DependencyContainer>>,
 }
 

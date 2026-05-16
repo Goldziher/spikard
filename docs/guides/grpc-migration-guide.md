@@ -192,7 +192,7 @@ import { Spikard, runServer, GrpcHandler, GrpcService } from "spikard";
 const config = {
   host: "0.0.0.0",
   port: 8080,
-  workers: 4
+  workers: 4,
 };
 
 const app = new Spikard();
@@ -200,7 +200,7 @@ const app = new Spikard();
 // REST endpoint
 app.addRoute(
   { method: "GET", path: "/health", handler_name: "health", is_async: true },
-  async () => ({ status: "ok" })
+  async () => ({ status: "ok" }),
 );
 
 // gRPC service
@@ -371,34 +371,34 @@ Use a proxy like Envoy or nginx to route protocols to different backends.
 # envoy.yaml example
 static_resources:
   listeners:
-  - address:
-      socket_address:
-        address: 0.0.0.0
-        port_value: 443
-    filter_chains:
-    - filters:
-      - name: envoy.filters.network.http_connection_manager
-        typed_config:
-          http_filters:
-          - name: envoy.filters.http.router
-          route_config:
-            virtual_hosts:
-            - name: backend
-              domains: ["*"]
-              routes:
-              # gRPC traffic
-              - match:
-                  prefix: "/"
-                  headers:
-                  - name: content-type
-                    prefix_match: application/grpc
-                route:
-                  cluster: grpc_cluster
-              # REST traffic
-              - match:
-                  prefix: "/"
-                route:
-                  cluster: rest_cluster
+    - address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 443
+      filter_chains:
+        - filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                http_filters:
+                  - name: envoy.filters.http.router
+                route_config:
+                  virtual_hosts:
+                    - name: backend
+                      domains: ["*"]
+                      routes:
+                        # gRPC traffic
+                        - match:
+                            prefix: "/"
+                            headers:
+                              - name: content-type
+                                prefix_match: application/grpc
+                          route:
+                            cluster: grpc_cluster
+                        # REST traffic
+                        - match:
+                            prefix: "/"
+                          route:
+                            cluster: rest_cluster
 ```
 
 **When to use**:
@@ -647,17 +647,17 @@ Adding gRPC to your server has measurable performance characteristics you should
 
 **Payload Size Comparison** (100 user records):
 
-| Format | Size | Reduction |
-|--------|------|-----------|
-| JSON (REST) | 4,823 bytes | Baseline |
+| Format                  | Size        | Reduction       |
+| ----------------------- | ----------- | --------------- |
+| JSON (REST)             | 4,823 bytes | Baseline        |
 | Protocol Buffers (gRPC) | 1,456 bytes | **70% smaller** |
 
 **Serialization Speed** (1M operations):
 
-| Operation | JSON | Protobuf | Winner |
-|-----------|------|----------|--------|
-| Serialize | 2,340ms | 890ms | Protobuf (2.6x faster) |
-| Deserialize | 1,980ms | 650ms | Protobuf (3.0x faster) |
+| Operation   | JSON    | Protobuf | Winner                 |
+| ----------- | ------- | -------- | ---------------------- |
+| Serialize   | 2,340ms | 890ms    | Protobuf (2.6x faster) |
+| Deserialize | 1,980ms | 650ms    | Protobuf (3.0x faster) |
 
 ### HTTP/2 Multiplexing Overhead
 
@@ -673,19 +673,19 @@ HTTP/2 adds minimal overhead compared to HTTP/1.1:
 
 **Single Request** (p50 latency):
 
-| Protocol | Latency | Notes |
-|----------|---------|-------|
-| REST (HTTP/1.1) | 12ms | Baseline |
-| REST (HTTP/2) | 13ms | +1ms for frame overhead |
-| gRPC | 8ms | Faster due to binary encoding |
+| Protocol        | Latency | Notes                         |
+| --------------- | ------- | ----------------------------- |
+| REST (HTTP/1.1) | 12ms    | Baseline                      |
+| REST (HTTP/2)   | 13ms    | +1ms for frame overhead       |
+| gRPC            | 8ms     | Faster due to binary encoding |
 
 **Concurrent Requests** (100 simultaneous, p50 latency):
 
-| Protocol | Latency | Connections |
-|----------|---------|-------------|
-| REST (HTTP/1.1) | 145ms | 100 connections |
-| REST (HTTP/2) | 38ms | 1 connection |
-| gRPC | 22ms | 1 connection |
+| Protocol        | Latency | Connections     |
+| --------------- | ------- | --------------- |
+| REST (HTTP/1.1) | 145ms   | 100 connections |
+| REST (HTTP/2)   | 38ms    | 1 connection    |
+| gRPC            | 22ms    | 1 connection    |
 
 **Key Insight**: gRPC's advantage grows with concurrency due to HTTP/2 multiplexing.
 
@@ -958,12 +958,12 @@ Maintain a migration tracker in your README:
 ```markdown
 ## API Endpoints
 
-| Endpoint | REST | gRPC | Notes |
-|----------|------|------|-------|
-| Get User | Yes | Yes | Both supported |
-| Create User | Yes | Yes | Both supported |
-| List Users | Yes | WIP | gRPC in progress |
-| Delete User | Yes | No | REST only (deprecated in gRPC v2) |
+| Endpoint    | REST | gRPC | Notes                             |
+| ----------- | ---- | ---- | --------------------------------- |
+| Get User    | Yes  | Yes  | Both supported                    |
+| Create User | Yes  | Yes  | Both supported                    |
+| List Users  | Yes  | WIP  | gRPC in progress                  |
+| Delete User | Yes  | No   | REST only (deprecated in gRPC v2) |
 ```
 
 This helps teams coordinate client upgrades.

@@ -151,18 +151,18 @@ curl http://127.0.0.1:8000/users
 
 ## Feature Status
 
-| Feature | Status | Example |
-|---------|--------|---------|
-| Basic routing | ✅ Complete | 01, 02 |
-| JSON responses | ✅ Complete | 02 |
-| Background tasks | ✅ Complete (P0.1) | 03 |
-| Streaming responses | ✅ Complete (P0.3) | 04 |
-| Server-Sent Events | ✅ Complete (P0.3) | 04 |
-| Dependency injection | ✅ Complete (P0.2) | 05 |
-| Parameter extraction | ⏳ Planned (P1.4) | - |
-| WebSockets | ✅ Available | - |
-| File uploads | ✅ Available | - |
-| Middleware | ✅ Available | - |
+| Feature              | Status             | Example |
+| -------------------- | ------------------ | ------- |
+| Basic routing        | ✅ Complete        | 01, 02  |
+| JSON responses       | ✅ Complete        | 02      |
+| Background tasks     | ✅ Complete (P0.1) | 03      |
+| Streaming responses  | ✅ Complete (P0.3) | 04      |
+| Server-Sent Events   | ✅ Complete (P0.3) | 04      |
+| Dependency injection | ✅ Complete (P0.2) | 05      |
+| Parameter extraction | ⏳ Planned (P1.4)  | -       |
+| WebSockets           | ✅ Available       | -       |
+| File uploads         | ✅ Available       | -       |
+| Middleware           | ✅ Available       | -       |
 
 ## More Examples
 

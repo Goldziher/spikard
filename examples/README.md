@@ -23,20 +23,20 @@ cd rust-lifecycle-hooks && cargo run --example lifecycle
 
 ## Available Examples
 
-| Example | Type | Language |
-|---------|------|----------|
-| **php/** | REST + middleware | PHP |
-| **ruby/** | REST + RBS types | Ruby |
-| **elixir/** | REST + Rustler NIFs | Elixir |
-| **node/** | Tutorial examples | TypeScript/Node.js |
-| **node-simple/** | Minimal setup | Node.js |
-| **graphql/** | GraphQL server | Rust |
-| **graphql-node/** | GraphQL API | Node.js |
-| **jsonrpc-php/** | JSON-RPC | PHP |
-| **jsonrpc-ruby/** | JSON-RPC | Ruby |
-| **rust-lifecycle-hooks/** | Lifecycle demo | Rust |
-| **asyncapi/** | WebSocket/SSE | AsyncAPI |
-| **di/** | Dependency injection | Multiple |
+| Example                   | Type                 | Language           |
+| ------------------------- | -------------------- | ------------------ |
+| **php/**                  | REST + middleware    | PHP                |
+| **ruby/**                 | REST + RBS types     | Ruby               |
+| **elixir/**               | REST + Rustler NIFs  | Elixir             |
+| **node/**                 | Tutorial examples    | TypeScript/Node.js |
+| **node-simple/**          | Minimal setup        | Node.js            |
+| **graphql/**              | GraphQL server       | Rust               |
+| **graphql-node/**         | GraphQL API          | Node.js            |
+| **jsonrpc-php/**          | JSON-RPC             | PHP                |
+| **jsonrpc-ruby/**         | JSON-RPC             | Ruby               |
+| **rust-lifecycle-hooks/** | Lifecycle demo       | Rust               |
+| **asyncapi/**             | WebSocket/SSE        | AsyncAPI           |
+| **di/**                   | Dependency injection | Multiple           |
 
 ## Schemas
 

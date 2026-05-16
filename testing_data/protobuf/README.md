@@ -6,18 +6,18 @@ This directory contains the first batch of test fixtures for the comprehensive p
 
 ### Batch 1: Core Functionality (10 fixtures)
 
-| # | Fixture | Description | RPC Type | Status Code |
-|---|---------|-------------|----------|------------|
-| 01 | `01_simple_unary.json` | Basic unary RPC with scalar types | Unary | OK |
-| 02 | `02_nested_messages.json` | Messages with nested types | Unary | OK |
-| 03 | `03_repeated_fields.json` | Arrays/repeated fields | Unary | OK |
-| 04 | `04_optional_fields.json` | Optional fields with presence | Unary | OK |
-| 05 | `05_enum_types.json` | Enum definitions and values | Unary | OK |
-| 06 | `06_server_streaming.json` | Server streaming RPC | Server Streaming | OK |
-| 07 | `07_client_streaming.json` | Client streaming RPC | Client Streaming | OK |
-| 08 | `08_bidirectional_streaming.json` | Bidirectional streaming RPC | Bidirectional | OK |
-| 09 | `09_error_handling.json` | gRPC status codes and errors | Unary | INVALID_ARGUMENT |
-| 10 | `10_metadata.json` | gRPC metadata (headers) | Unary | OK |
+| #   | Fixture                           | Description                       | RPC Type         | Status Code      |
+| --- | --------------------------------- | --------------------------------- | ---------------- | ---------------- |
+| 01  | `01_simple_unary.json`            | Basic unary RPC with scalar types | Unary            | OK               |
+| 02  | `02_nested_messages.json`         | Messages with nested types        | Unary            | OK               |
+| 03  | `03_repeated_fields.json`         | Arrays/repeated fields            | Unary            | OK               |
+| 04  | `04_optional_fields.json`         | Optional fields with presence     | Unary            | OK               |
+| 05  | `05_enum_types.json`              | Enum definitions and values       | Unary            | OK               |
+| 06  | `06_server_streaming.json`        | Server streaming RPC              | Server Streaming | OK               |
+| 07  | `07_client_streaming.json`        | Client streaming RPC              | Client Streaming | OK               |
+| 08  | `08_bidirectional_streaming.json` | Bidirectional streaming RPC       | Bidirectional    | OK               |
+| 09  | `09_error_handling.json`          | gRPC status codes and errors      | Unary            | INVALID_ARGUMENT |
+| 10  | `10_metadata.json`                | gRPC metadata (headers)           | Unary            | OK               |
 
 ## Streaming Mode Coverage
 
@@ -68,9 +68,7 @@ Each fixture follows the template from Phase 2.2:
     "enums": [
       {
         "name": "EnumName",
-        "values": [
-          {"name": "ENUM_VALUE", "number": 0}
-        ]
+        "values": [{ "name": "ENUM_VALUE", "number": 0 }]
       }
     ],
     "services": [
@@ -97,11 +95,15 @@ Each fixture follows the template from Phase 2.2:
       "authorization": "Bearer token",
       "content-type": "application/grpc"
     },
-    "message": { /* protobuf message */ }
+    "message": {
+      /* protobuf message */
+    }
   },
   "expected_response": {
     "status_code": "OK",
-    "message": { /* protobuf message */ }
+    "message": {
+      /* protobuf message */
+    }
   }
 }
 ```

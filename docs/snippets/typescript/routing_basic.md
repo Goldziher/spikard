@@ -13,10 +13,7 @@ const createUser = async (req: Request): Promise<User> => {
   return UserSchema.parse(req.json());
 };
 
-app.addRoute(
-  { method: "GET", path: "/health", handler_name: "health", is_async: true },
-  health,
-);
+app.addRoute({ method: "GET", path: "/health", handler_name: "health", is_async: true }, health);
 
 app.addRoute(
   {

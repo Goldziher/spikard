@@ -103,9 +103,11 @@ pub struct CorsConfig {
     // Optimized caches (lazy-initialized on first use)
     #[serde(skip)]
     #[doc(hidden)]
+    #[cfg_attr(alef, alef(skip))]
     pub methods_joined_cache: OnceLock<String>,
     #[serde(skip)]
     #[doc(hidden)]
+    #[cfg_attr(alef, alef(skip))]
     pub headers_joined_cache: OnceLock<String>,
 }
 

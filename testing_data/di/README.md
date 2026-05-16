@@ -143,11 +143,13 @@ Error handling and validation for dependency injection system.
   "title": "Dependency Resolution Failed",
   "status": 500,
   "detail": "Circular dependency detected",
-  "errors": [{
-    "type": "circular_dependency",
-    "msg": "Circular dependency detected in dependency graph",
-    "cycle": ["service_a", "service_b", "service_a"]
-  }]
+  "errors": [
+    {
+      "type": "circular_dependency",
+      "msg": "Circular dependency detected in dependency graph",
+      "cycle": ["service_a", "service_b", "service_a"]
+    }
+  ]
 }
 ```
 
@@ -168,11 +170,13 @@ Error handling and validation for dependency injection system.
 ```json
 {
   "type": "https://spikard.dev/errors/dependency-error",
-  "errors": [{
-    "type": "missing_dependency",
-    "msg": "Dependency 'non_existent_service' is not registered",
-    "dependency_key": "non_existent_service"
-  }]
+  "errors": [
+    {
+      "type": "missing_dependency",
+      "msg": "Dependency 'non_existent_service' is not registered",
+      "dependency_key": "non_existent_service"
+    }
+  ]
 }
 ```
 
@@ -194,12 +198,14 @@ Error handling and validation for dependency injection system.
 
 ```json
 {
-  "errors": [{
-    "type": "type_mismatch",
-    "msg": "Dependency 'config' type mismatch: expected object, got string",
-    "expected_type": "object",
-    "actual_type": "string"
-  }]
+  "errors": [
+    {
+      "type": "type_mismatch",
+      "msg": "Dependency 'config' type mismatch: expected object, got string",
+      "expected_type": "object",
+      "actual_type": "string"
+    }
+  ]
 }
 ```
 
@@ -321,9 +327,9 @@ def handler(db_pool, cache):
 **TypeScript Handler:**
 
 ```typescript
-async (request, { db, logger }: { db: Database, logger: Logger }) => {
+async (request, { db, logger }: { db: Database; logger: Logger }) => {
   // Dependencies injected via object destructuring
-}
+};
 ```
 
 **Injection Strategy:** `destructure`
@@ -489,9 +495,9 @@ Expected batched resolution order:
 
 ```json
 [
-  ["config"],                    // Batch 1 (parallel)
-  ["db_pool", "cache"],         // Batch 2 (parallel)
-  ["auth_service"]              // Batch 3 (sequential after batch 2)
+  ["config"], // Batch 1 (parallel)
+  ["db_pool", "cache"], // Batch 2 (parallel)
+  ["auth_service"] // Batch 3 (sequential after batch 2)
 ]
 ```
 

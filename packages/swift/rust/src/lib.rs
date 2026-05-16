@@ -11,28 +11,13 @@
     clippy::unnecessary_cast,
     clippy::manual_flatten,
     clippy::match_single_binding,
-    clippy::redundant_closure
+    clippy::redundant_closure,
+    clippy::useless_conversion,
+    clippy::inherent_to_string
 )]
 
 #[swift_bridge::bridge]
 mod ffi {
-    extern "Rust" {
-        type UploadFile;
-        fn filename(&self) -> String;
-        fn content_type(&self) -> Option<String>;
-        fn size(&self) -> Option<usize>;
-        fn content(&self) -> Vec<u8>;
-        fn content_encoding(&self) -> Option<String>;
-        fn cursor(&self) -> String;
-    }
-
-    extern "Rust" {
-        type ResponseSnapshot;
-        fn status(&self) -> u16;
-        fn headers(&self) -> String;
-        fn body(&self) -> Vec<u8>;
-    }
-
     extern "Rust" {
         type CorsConfig;
         #[swift_bridge(init)]
@@ -43,8 +28,6 @@ mod ffi {
             expose_headers: Option<Vec<String>>,
             max_age: Option<u32>,
             allow_credentials: Option<bool>,
-            methods_joined_cache: String,
-            headers_joined_cache: String,
         ) -> CorsConfig;
         fn allowed_origins(&self) -> Vec<String>;
         fn allowed_methods(&self) -> Vec<String>;
@@ -52,8 +35,6 @@ mod ffi {
         fn expose_headers(&self) -> Option<Vec<String>>;
         fn max_age(&self) -> Option<u32>;
         fn allow_credentials(&self) -> Option<bool>;
-        fn methods_joined_cache(&self) -> String;
-        fn headers_joined_cache(&self) -> String;
     }
 
     extern "Rust" {
@@ -97,6 +78,25 @@ mod ffi {
 
     extern "Rust" {
         type GraphQLRouteConfig;
+    }
+
+    extern "Rust" {
+        #[swift_bridge(swift_name = "graphQlRouteConfigPath")]
+        fn graph_ql_route_config_path(client: &GraphQLRouteConfig, path: String) -> GraphQLRouteConfig;
+        #[swift_bridge(swift_name = "graphQlRouteConfigMethod")]
+        fn graph_ql_route_config_method(client: &GraphQLRouteConfig, method: String) -> GraphQLRouteConfig;
+        #[swift_bridge(swift_name = "graphQlRouteConfigEnablePlayground")]
+        fn graph_ql_route_config_enable_playground(client: &GraphQLRouteConfig, enable: bool) -> GraphQLRouteConfig;
+        #[swift_bridge(swift_name = "graphQlRouteConfigDescription")]
+        fn graph_ql_route_config_description(client: &GraphQLRouteConfig, description: String) -> GraphQLRouteConfig;
+        #[swift_bridge(swift_name = "graphQlRouteConfigGetPath")]
+        fn graph_ql_route_config_get_path(client: &GraphQLRouteConfig) -> String;
+        #[swift_bridge(swift_name = "graphQlRouteConfigGetMethod")]
+        fn graph_ql_route_config_get_method(client: &GraphQLRouteConfig) -> String;
+        #[swift_bridge(swift_name = "graphQlRouteConfigIsPlaygroundEnabled")]
+        fn graph_ql_route_config_is_playground_enabled(client: &GraphQLRouteConfig) -> bool;
+        #[swift_bridge(swift_name = "graphQlRouteConfigGetDescription")]
+        fn graph_ql_route_config_get_description(client: &GraphQLRouteConfig) -> String;
     }
 
     extern "Rust" {
@@ -369,10 +369,8 @@ mod ffi {
             openapi: Option<OpenApiConfig>,
             jsonrpc: Option<JsonRpcConfig>,
             grpc: Option<GrpcConfig>,
-            lifecycle_hooks: Option<String>,
             background_tasks: BackgroundTaskConfig,
             enable_http_trace: bool,
-            di_container: Option<String>,
         ) -> ServerConfig;
         fn host(&self) -> String;
         fn port(&self) -> u16;
@@ -391,38 +389,18 @@ mod ffi {
         fn openapi(&self) -> Option<OpenApiConfig>;
         fn jsonrpc(&self) -> Option<JsonRpcConfig>;
         fn grpc(&self) -> Option<GrpcConfig>;
-        fn lifecycle_hooks(&self) -> Option<String>;
         fn background_tasks(&self) -> BackgroundTaskConfig;
         fn enable_http_trace(&self) -> bool;
-        fn di_container(&self) -> Option<String>;
-    }
-
-    extern "Rust" {
-        type GraphQLSubscriptionSnapshot;
-        fn operation_id(&self) -> String;
-        fn acknowledged(&self) -> bool;
-        fn event(&self) -> Option<String>;
-        fn complete_received(&self) -> bool;
-    }
-
-    extern "Rust" {
-        type TestClient;
-    }
-
-    extern "Rust" {
-        type SnapshotError;
-    }
-
-    extern "Rust" {
-        type WebSocketMessage;
     }
 
     extern "Rust" {
         type Method;
+        fn to_string(&self) -> String;
     }
 
     extern "Rust" {
         type SecuritySchemeInfo;
+        fn to_string(&self) -> String;
     }
 
     extern "Rust" {
@@ -435,55 +413,7 @@ mod ffi {
     }
 }
 
-pub struct UploadFile(pub spikard::UploadFile);
-
-impl UploadFile {
-    pub fn filename(&self) -> String {
-        serde_json::to_string(&self.0.filename).unwrap_or_default()
-    }
-    pub fn content_type(&self) -> Option<String> {
-        self.0.content_type.as_ref().and_then(|v| serde_json::to_string(v).ok())
-    }
-    pub fn size(&self) -> Option<usize> {
-        self.0.size.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
-    }
-    pub fn content(&self) -> Vec<u8> {
-        self.0.content.to_vec()
-    }
-    pub fn content_encoding(&self) -> Option<String> {
-        self.0
-            .content_encoding
-            .as_ref()
-            .and_then(|v| serde_json::to_string(v).ok())
-    }
-    pub fn cursor(&self) -> String {
-        serde_json::to_string(&self.0.cursor).unwrap_or_default()
-    }
-}
-
-pub struct ResponseSnapshot(pub spikard::ResponseSnapshot);
-
-impl ResponseSnapshot {
-    pub fn status(&self) -> u16 {
-        ::serde_json::to_value(&self.0.status)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
-    }
-    pub fn headers(&self) -> String {
-        serde_json::to_string(&self.0.headers).expect("serializable headers")
-    }
-    pub fn body(&self) -> Vec<u8> {
-        self.0.body.to_vec()
-    }
-}
-
 pub struct CorsConfig(pub spikard_core::CorsConfig);
-
 impl CorsConfig {
     pub fn new(
         allowed_origins: Vec<String>,
@@ -492,8 +422,6 @@ impl CorsConfig {
         expose_headers: Option<Vec<String>>,
         max_age: Option<u32>,
         allow_credentials: Option<bool>,
-        methods_joined_cache: String,
-        headers_joined_cache: String,
     ) -> CorsConfig {
         let mut __target: spikard_core::CorsConfig = ::std::default::Default::default();
         if let Ok(__v) = ::serde_json::to_value(allowed_origins) {
@@ -518,16 +446,6 @@ impl CorsConfig {
         }
         __target.max_age = max_age;
         __target.allow_credentials = allow_credentials;
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&methods_joined_cache) {
-            if let Ok(t) = ::serde_json::from_value(v) {
-                __target.methods_joined_cache = t;
-            }
-        }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&headers_joined_cache) {
-            if let Ok(t) = ::serde_json::from_value(v) {
-                __target.headers_joined_cache = t;
-            }
-        }
         CorsConfig(__target)
     }
     pub fn allowed_origins(&self) -> Vec<String> {
@@ -569,16 +487,9 @@ impl CorsConfig {
                 .and_then(|j| ::serde_json::from_value(j).ok())
         })
     }
-    pub fn methods_joined_cache(&self) -> String {
-        serde_json::to_string(&self.0.methods_joined_cache).unwrap_or_default()
-    }
-    pub fn headers_joined_cache(&self) -> String {
-        serde_json::to_string(&self.0.headers_joined_cache).unwrap_or_default()
-    }
 }
 
 pub struct CompressionConfig(pub spikard_core::CompressionConfig);
-
 impl CompressionConfig {
     pub fn new(gzip: bool, brotli: bool, min_size: usize, quality: u32) -> CompressionConfig {
         let mut __target: spikard_core::CompressionConfig = ::std::default::Default::default();
@@ -615,7 +526,6 @@ impl CompressionConfig {
 }
 
 pub struct RateLimitConfig(pub spikard_core::RateLimitConfig);
-
 impl RateLimitConfig {
     pub fn new(per_second: u64, burst: u32, ip_based: bool) -> RateLimitConfig {
         let mut __target: spikard_core::RateLimitConfig = ::std::default::Default::default();
@@ -645,13 +555,12 @@ impl RateLimitConfig {
 }
 
 pub struct JsonRpcMethodInfo(pub spikard_core::JsonRpcMethodInfo);
-
 impl JsonRpcMethodInfo {
     pub fn method_name(&self) -> String {
-        serde_json::to_string(&self.0.method_name).unwrap_or_default()
+        self.0.method_name.clone()
     }
     pub fn description(&self) -> Option<String> {
-        self.0.description.as_ref().and_then(|v| serde_json::to_string(v).ok())
+        self.0.description.clone()
     }
     pub fn params_schema(&self) -> Option<String> {
         self.0
@@ -680,13 +589,12 @@ impl JsonRpcMethodInfo {
 }
 
 pub struct ProblemDetails(pub spikard_core::ProblemDetails);
-
 impl ProblemDetails {
     pub fn type_uri(&self) -> String {
-        serde_json::to_string(&self.0.type_uri).unwrap_or_default()
+        self.0.type_uri.clone()
     }
     pub fn title(&self) -> String {
-        serde_json::to_string(&self.0.title).unwrap_or_default()
+        self.0.title.clone()
     }
     pub fn status(&self) -> u16 {
         ::serde_json::to_value(&self.0.status)
@@ -695,10 +603,10 @@ impl ProblemDetails {
             .unwrap_or_default()
     }
     pub fn detail(&self) -> Option<String> {
-        self.0.detail.as_ref().and_then(|v| serde_json::to_string(v).ok())
+        self.0.detail.clone()
     }
     pub fn instance(&self) -> Option<String> {
-        self.0.instance.as_ref().and_then(|v| serde_json::to_string(v).ok())
+        self.0.instance.clone()
     }
     pub fn extensions(&self) -> String {
         serde_json::to_string(&self.0.extensions).expect("serializable extensions")
@@ -707,8 +615,32 @@ impl ProblemDetails {
 
 pub struct GraphQLRouteConfig(pub spikard_graphql::GraphQLRouteConfig);
 
-pub struct SchemaConfig(pub spikard_graphql::SchemaConfig);
+pub fn graph_ql_route_config_path(client: &GraphQLRouteConfig, path: String) -> GraphQLRouteConfig {
+    GraphQLRouteConfig(client.0.clone().path(&path))
+}
+pub fn graph_ql_route_config_method(client: &GraphQLRouteConfig, method: String) -> GraphQLRouteConfig {
+    GraphQLRouteConfig(client.0.clone().method(&method))
+}
+pub fn graph_ql_route_config_enable_playground(client: &GraphQLRouteConfig, enable: bool) -> GraphQLRouteConfig {
+    GraphQLRouteConfig(client.0.clone().enable_playground(enable))
+}
+pub fn graph_ql_route_config_description(client: &GraphQLRouteConfig, description: String) -> GraphQLRouteConfig {
+    GraphQLRouteConfig(client.0.clone().description(&description))
+}
+pub fn graph_ql_route_config_get_path(client: &GraphQLRouteConfig) -> String {
+    client.0.get_path().to_string()
+}
+pub fn graph_ql_route_config_get_method(client: &GraphQLRouteConfig) -> String {
+    client.0.get_method().to_string()
+}
+pub fn graph_ql_route_config_is_playground_enabled(client: &GraphQLRouteConfig) -> bool {
+    client.0.is_playground_enabled()
+}
+pub fn graph_ql_route_config_get_description(client: &GraphQLRouteConfig) -> String {
+    serde_json::to_string(&(client.0.get_description())).expect("serializable return")
+}
 
+pub struct SchemaConfig(pub spikard_graphql::SchemaConfig);
 impl SchemaConfig {
     pub fn new(
         introspection_enabled: bool,
@@ -744,7 +676,6 @@ impl SchemaConfig {
 }
 
 pub struct QueryOnlyConfig(pub spikard_graphql::QueryOnlyConfig);
-
 impl QueryOnlyConfig {
     pub fn new(
         introspection_enabled: bool,
@@ -780,7 +711,6 @@ impl QueryOnlyConfig {
 }
 
 pub struct QueryMutationConfig(pub spikard_graphql::QueryMutationConfig);
-
 impl QueryMutationConfig {
     pub fn new(
         introspection_enabled: bool,
@@ -816,7 +746,6 @@ impl QueryMutationConfig {
 }
 
 pub struct FullSchemaConfig(pub spikard_graphql::FullSchemaConfig);
-
 impl FullSchemaConfig {
     pub fn new(
         introspection_enabled: bool,
@@ -852,7 +781,6 @@ impl FullSchemaConfig {
 }
 
 pub struct AsyncApiConfig(pub spikard_http::AsyncApiConfig);
-
 impl AsyncApiConfig {
     pub fn new(enabled: bool, spec: Option<String>) -> AsyncApiConfig {
         let mut __target: spikard_http::AsyncApiConfig = ::std::default::Default::default();
@@ -878,13 +806,12 @@ impl AsyncApiConfig {
 }
 
 pub struct ParsedChannel(pub spikard_http::ParsedChannel);
-
 impl ParsedChannel {
     pub fn name(&self) -> String {
-        serde_json::to_string(&self.0.name).unwrap_or_default()
+        self.0.name.clone()
     }
     pub fn address(&self) -> String {
-        serde_json::to_string(&self.0.address).unwrap_or_default()
+        self.0.address.clone()
     }
     pub fn messages(&self) -> Vec<String> {
         ::serde_json::to_value(&self.0.messages)
@@ -898,24 +825,22 @@ impl ParsedChannel {
 }
 
 pub struct ParsedOperation(pub spikard_http::ParsedOperation);
-
 impl ParsedOperation {
     pub fn name(&self) -> String {
-        serde_json::to_string(&self.0.name).unwrap_or_default()
+        self.0.name.clone()
     }
     pub fn action(&self) -> String {
-        serde_json::to_string(&self.0.action).unwrap_or_default()
+        self.0.action.clone()
     }
     pub fn channel(&self) -> String {
-        serde_json::to_string(&self.0.channel).unwrap_or_default()
+        self.0.channel.clone()
     }
 }
 
 pub struct ParsedMessage(pub spikard_http::ParsedMessage);
-
 impl ParsedMessage {
     pub fn name(&self) -> String {
-        serde_json::to_string(&self.0.name).unwrap_or_default()
+        self.0.name.clone()
     }
     pub fn schema(&self) -> Option<String> {
         self.0.schema.as_ref().and_then(|v| serde_json::to_string(v).ok())
@@ -923,16 +848,15 @@ impl ParsedMessage {
 }
 
 pub struct ParseResult(pub spikard_http::ParseResult);
-
 impl ParseResult {
     pub fn spec_version(&self) -> String {
-        serde_json::to_string(&self.0.spec_version).unwrap_or_default()
+        self.0.spec_version.clone()
     }
     pub fn title(&self) -> String {
-        serde_json::to_string(&self.0.title).unwrap_or_default()
+        self.0.title.clone()
     }
     pub fn api_version(&self) -> String {
-        serde_json::to_string(&self.0.api_version).unwrap_or_default()
+        self.0.api_version.clone()
     }
     pub fn channels(&self) -> Vec<ParsedChannel> {
         self.0.channels.iter().map(|elem| ParsedChannel(elem.clone())).collect()
@@ -950,7 +874,6 @@ impl ParseResult {
 }
 
 pub struct ParseRequest(pub spikard_http::asyncapi::ParseRequest);
-
 impl ParseRequest {
     pub fn spec(&self) -> String {
         format!("{:?}", &self.0.spec)
@@ -958,7 +881,6 @@ impl ParseRequest {
 }
 
 pub struct ValidationResponse(pub spikard_http::ValidationResponse);
-
 impl ValidationResponse {
     pub fn valid(&self) -> bool {
         self.0.valid.clone()
@@ -967,7 +889,6 @@ impl ValidationResponse {
 }
 
 pub struct ValidateRequest(pub spikard_http::ValidateRequest);
-
 impl ValidateRequest {
     pub fn spec(&self) -> String {
         format!("{:?}", &self.0.spec)
@@ -984,7 +905,6 @@ impl ValidateRequest {
 }
 
 pub struct BackgroundTaskConfig(pub spikard_http::BackgroundTaskConfig);
-
 impl BackgroundTaskConfig {
     pub fn new(max_queue_size: usize, max_concurrent_tasks: usize, drain_timeout_secs: u64) -> BackgroundTaskConfig {
         let mut __target: spikard_http::BackgroundTaskConfig = ::std::default::Default::default();
@@ -1014,7 +934,6 @@ impl BackgroundTaskConfig {
 }
 
 pub struct BackgroundJobMetadata(pub spikard_http::BackgroundJobMetadata);
-
 impl BackgroundJobMetadata {
     pub fn new(name: String, request_id: Option<String>) -> BackgroundJobMetadata {
         let mut __target: spikard_http::BackgroundJobMetadata = ::std::default::Default::default();
@@ -1033,15 +952,14 @@ impl BackgroundJobMetadata {
         BackgroundJobMetadata(__target)
     }
     pub fn name(&self) -> String {
-        serde_json::to_string(&self.0.name).unwrap_or_default()
+        self.0.name.to_string()
     }
     pub fn request_id(&self) -> Option<String> {
-        self.0.request_id.as_ref().and_then(|v| serde_json::to_string(v).ok())
+        self.0.request_id.clone()
     }
 }
 
 pub struct GrpcConfig(pub spikard_http::GrpcConfig);
-
 impl GrpcConfig {
     pub fn new(
         enabled: bool,
@@ -1125,7 +1043,6 @@ impl GrpcConfig {
 }
 
 pub struct JsonRpcConfig(pub spikard_http::JsonRpcConfig);
-
 impl JsonRpcConfig {
     pub fn new(enabled: bool, endpoint_path: String, enable_batch: bool, max_batch_size: usize) -> JsonRpcConfig {
         let mut __target: spikard_http::JsonRpcConfig = ::std::default::Default::default();
@@ -1146,7 +1063,7 @@ impl JsonRpcConfig {
             .unwrap_or_default()
     }
     pub fn endpoint_path(&self) -> String {
-        serde_json::to_string(&self.0.endpoint_path).unwrap_or_default()
+        self.0.endpoint_path.clone()
     }
     pub fn enable_batch(&self) -> bool {
         ::serde_json::to_value(&self.0.enable_batch)
@@ -1163,7 +1080,6 @@ impl JsonRpcConfig {
 }
 
 pub struct OpenApiConfig(pub spikard_http::OpenApiConfig);
-
 impl OpenApiConfig {
     pub fn new(
         enabled: bool,
@@ -1233,22 +1149,22 @@ impl OpenApiConfig {
             .unwrap_or_default()
     }
     pub fn title(&self) -> String {
-        serde_json::to_string(&self.0.title).unwrap_or_default()
+        self.0.title.clone()
     }
     pub fn version(&self) -> String {
-        serde_json::to_string(&self.0.version).unwrap_or_default()
+        self.0.version.clone()
     }
     pub fn description(&self) -> Option<String> {
-        self.0.description.as_ref().and_then(|v| serde_json::to_string(v).ok())
+        self.0.description.clone()
     }
     pub fn swagger_ui_path(&self) -> String {
-        serde_json::to_string(&self.0.swagger_ui_path).unwrap_or_default()
+        self.0.swagger_ui_path.clone()
     }
     pub fn redoc_path(&self) -> String {
-        serde_json::to_string(&self.0.redoc_path).unwrap_or_default()
+        self.0.redoc_path.clone()
     }
     pub fn openapi_json_path(&self) -> String {
-        serde_json::to_string(&self.0.openapi_json_path).unwrap_or_default()
+        self.0.openapi_json_path.clone()
     }
     pub fn contact(&self) -> Option<ContactInfo> {
         self.0.contact.clone().map(ContactInfo)
@@ -1265,43 +1181,39 @@ impl OpenApiConfig {
 }
 
 pub struct ContactInfo(pub spikard_http::ContactInfo);
-
 impl ContactInfo {
     pub fn name(&self) -> Option<String> {
-        self.0.name.as_ref().and_then(|v| serde_json::to_string(v).ok())
+        self.0.name.clone()
     }
     pub fn email(&self) -> Option<String> {
-        self.0.email.as_ref().and_then(|v| serde_json::to_string(v).ok())
+        self.0.email.clone()
     }
     pub fn url(&self) -> Option<String> {
-        self.0.url.as_ref().and_then(|v| serde_json::to_string(v).ok())
+        self.0.url.clone()
     }
 }
 
 pub struct LicenseInfo(pub spikard_http::LicenseInfo);
-
 impl LicenseInfo {
     pub fn name(&self) -> String {
-        serde_json::to_string(&self.0.name).unwrap_or_default()
+        self.0.name.clone()
     }
     pub fn url(&self) -> Option<String> {
-        self.0.url.as_ref().and_then(|v| serde_json::to_string(v).ok())
+        self.0.url.clone()
     }
 }
 
 pub struct ServerInfo(pub spikard_http::ServerInfo);
-
 impl ServerInfo {
     pub fn url(&self) -> String {
-        serde_json::to_string(&self.0.url).unwrap_or_default()
+        self.0.url.clone()
     }
     pub fn description(&self) -> Option<String> {
-        self.0.description.as_ref().and_then(|v| serde_json::to_string(v).ok())
+        self.0.description.clone()
     }
 }
 
 pub struct Response(pub spikard_http::Response);
-
 impl Response {
     pub fn new(content: Option<String>, status_code: u16, headers: String) -> Response {
         let mut __target: spikard_http::Response = ::std::default::Default::default();
@@ -1335,16 +1247,15 @@ impl Response {
 }
 
 pub struct SseEvent(pub spikard_http::SseEvent);
-
 impl SseEvent {
     pub fn event_type(&self) -> Option<String> {
-        self.0.event_type.as_ref().and_then(|v| serde_json::to_string(v).ok())
+        self.0.event_type.clone()
     }
     pub fn data(&self) -> String {
         serde_json::to_string(&self.0.data).unwrap_or_default()
     }
     pub fn id(&self) -> Option<String> {
-        self.0.id.as_ref().and_then(|v| serde_json::to_string(v).ok())
+        self.0.id.clone()
     }
     pub fn retry(&self) -> Option<u64> {
         self.0.retry.as_ref().and_then(|v| {
@@ -1356,13 +1267,12 @@ impl SseEvent {
 }
 
 pub struct JwtConfig(pub spikard_http::JwtConfig);
-
 impl JwtConfig {
     pub fn secret(&self) -> String {
-        serde_json::to_string(&self.0.secret).unwrap_or_default()
+        self.0.secret.clone()
     }
     pub fn algorithm(&self) -> String {
-        serde_json::to_string(&self.0.algorithm).unwrap_or_default()
+        self.0.algorithm.clone()
     }
     pub fn audience(&self) -> Option<Vec<String>> {
         self.0.audience.as_ref().and_then(|v| {
@@ -1372,7 +1282,7 @@ impl JwtConfig {
         })
     }
     pub fn issuer(&self) -> Option<String> {
-        self.0.issuer.as_ref().and_then(|v| serde_json::to_string(v).ok())
+        self.0.issuer.clone()
     }
     pub fn leeway(&self) -> u64 {
         ::serde_json::to_value(&self.0.leeway)
@@ -1383,7 +1293,6 @@ impl JwtConfig {
 }
 
 pub struct ApiKeyConfig(pub spikard_http::ApiKeyConfig);
-
 impl ApiKeyConfig {
     pub fn keys(&self) -> Vec<String> {
         ::serde_json::to_value(&self.0.keys)
@@ -1392,18 +1301,17 @@ impl ApiKeyConfig {
             .unwrap_or_default()
     }
     pub fn header_name(&self) -> String {
-        serde_json::to_string(&self.0.header_name).unwrap_or_default()
+        self.0.header_name.clone()
     }
 }
 
 pub struct StaticFilesConfig(pub spikard_http::StaticFilesConfig);
-
 impl StaticFilesConfig {
     pub fn directory(&self) -> String {
-        serde_json::to_string(&self.0.directory).unwrap_or_default()
+        self.0.directory.clone()
     }
     pub fn route_prefix(&self) -> String {
-        serde_json::to_string(&self.0.route_prefix).unwrap_or_default()
+        self.0.route_prefix.clone()
     }
     pub fn index_file(&self) -> bool {
         ::serde_json::to_value(&self.0.index_file)
@@ -1412,15 +1320,11 @@ impl StaticFilesConfig {
             .unwrap_or_default()
     }
     pub fn cache_control(&self) -> Option<String> {
-        self.0
-            .cache_control
-            .as_ref()
-            .and_then(|v| serde_json::to_string(v).ok())
+        self.0.cache_control.clone()
     }
 }
 
 pub struct ServerConfig(pub spikard_http::ServerConfig);
-
 impl ServerConfig {
     pub fn new(
         host: String,
@@ -1440,10 +1344,8 @@ impl ServerConfig {
         openapi: Option<OpenApiConfig>,
         jsonrpc: Option<JsonRpcConfig>,
         grpc: Option<GrpcConfig>,
-        lifecycle_hooks: Option<String>,
         background_tasks: BackgroundTaskConfig,
         enable_http_trace: bool,
-        di_container: Option<String>,
     ) -> ServerConfig {
         let mut __target: spikard_http::ServerConfig = ::std::default::Default::default();
         if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&host) {
@@ -1483,26 +1385,12 @@ impl ServerConfig {
         if let Some(w) = grpc {
             __target.grpc = Some(w.0);
         }
-        if let Some(s) = lifecycle_hooks {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.lifecycle_hooks = Some(t);
-                }
-            }
-        }
         __target.background_tasks = background_tasks.0;
         __target.enable_http_trace = enable_http_trace;
-        if let Some(s) = di_container {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.di_container = Some(t);
-                }
-            }
-        }
         ServerConfig(__target)
     }
     pub fn host(&self) -> String {
-        serde_json::to_string(&self.0.host).unwrap_or_default()
+        self.0.host.clone()
     }
     pub fn port(&self) -> u16 {
         ::serde_json::to_value(&self.0.port)
@@ -1579,12 +1467,6 @@ impl ServerConfig {
     pub fn grpc(&self) -> Option<GrpcConfig> {
         self.0.grpc.clone().map(GrpcConfig)
     }
-    pub fn lifecycle_hooks(&self) -> Option<String> {
-        self.0
-            .lifecycle_hooks
-            .as_ref()
-            .and_then(|v| serde_json::to_string(v).ok())
-    }
     pub fn background_tasks(&self) -> BackgroundTaskConfig {
         BackgroundTaskConfig(self.0.background_tasks.clone())
     }
@@ -1593,55 +1475,6 @@ impl ServerConfig {
             .ok()
             .and_then(|j| ::serde_json::from_value(j).ok())
             .unwrap_or_default()
-    }
-    pub fn di_container(&self) -> Option<String> {
-        self.0.di_container.as_ref().and_then(|v| serde_json::to_string(v).ok())
-    }
-}
-
-pub struct GraphQLSubscriptionSnapshot(pub spikard_http::testing::test_client::GraphQLSubscriptionSnapshot);
-
-impl GraphQLSubscriptionSnapshot {
-    pub fn operation_id(&self) -> String {
-        format!("{:?}", &self.0.operation_id)
-    }
-    pub fn acknowledged(&self) -> bool {
-        self.0.acknowledged.clone()
-    }
-    pub fn event(&self) -> Option<String> {
-        self.0.event.as_ref().map(|v| format!("{v:?}"))
-    }
-    // alef: skipped getter `errors` — type cannot be bridged through swift-bridge
-    pub fn complete_received(&self) -> bool {
-        self.0.complete_received.clone()
-    }
-}
-
-pub struct TestClient(pub spikard_http::testing::test_client::TestClient);
-
-pub enum SnapshotError {
-    /// Data variants not directly bridgeable — represented as Unknown.
-    Unknown,
-}
-
-impl From<spikard::SnapshotError> for SnapshotError {
-    fn from(val: spikard::SnapshotError) -> Self {
-        match val {
-            _ => Self::Unknown,
-        }
-    }
-}
-
-pub enum WebSocketMessage {
-    /// Data variants not directly bridgeable — represented as Unknown.
-    Unknown,
-}
-
-impl From<spikard::WebSocketMessage> for WebSocketMessage {
-    fn from(val: spikard::WebSocketMessage) -> Self {
-        match val {
-            _ => Self::Unknown,
-        }
     }
 }
 
@@ -1671,6 +1504,21 @@ impl From<spikard_core::Method> for Method {
     }
 }
 
+impl Method {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Get => "Get".to_string(),
+            Self::Post => "Post".to_string(),
+            Self::Put => "Put".to_string(),
+            Self::Patch => "Patch".to_string(),
+            Self::Delete => "Delete".to_string(),
+            Self::Head => "Head".to_string(),
+            Self::Options => "Options".to_string(),
+            Self::Trace => "Trace".to_string(),
+        }
+    }
+}
+
 pub enum SecuritySchemeInfo {
     /// Data variants not directly bridgeable — represented as Unknown.
     Unknown,
@@ -1680,6 +1528,14 @@ impl From<spikard_http::SecuritySchemeInfo> for SecuritySchemeInfo {
     fn from(val: spikard_http::SecuritySchemeInfo) -> Self {
         match val {
             _ => Self::Unknown,
+        }
+    }
+}
+
+impl SecuritySchemeInfo {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Unknown => "unknown".to_string(),
         }
     }
 }

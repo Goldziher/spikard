@@ -28,25 +28,25 @@ Spikard's gRPC runtime provides automatic error handling and status code mapping
 
 gRPC defines 17 standard status codes. Understanding when to use each code is essential for building services:
 
-| Code | Value | Use Case |
-|------|-------|----------|
-| `OK` | 0 | Success (not an error) |
-| `CANCELLED` | 1 | Operation was cancelled (typically by the caller) |
-| `UNKNOWN` | 2 | Unknown error (avoid when possible) |
-| `INVALID_ARGUMENT` | 3 | Client specified an invalid argument |
-| `DEADLINE_EXCEEDED` | 4 | Deadline expired before operation could complete |
-| `NOT_FOUND` | 5 | Some requested entity was not found |
-| `ALREADY_EXISTS` | 6 | Entity that we attempted to create already exists |
-| `PERMISSION_DENIED` | 7 | Caller lacks permission for the operation |
-| `RESOURCE_EXHAUSTED` | 8 | Resource has been exhausted (rate limits, quotas) |
-| `FAILED_PRECONDITION` | 9 | System not in required state for operation |
-| `ABORTED` | 10 | Operation was aborted (concurrency conflict) |
-| `OUT_OF_RANGE` | 11 | Operation attempted past the valid range |
-| `UNIMPLEMENTED` | 12 | Operation not implemented or not supported |
-| `INTERNAL` | 13 | Internal server error |
-| `UNAVAILABLE` | 14 | Service is currently unavailable |
-| `DATA_LOSS` | 15 | Unrecoverable data loss or corruption |
-| `UNAUTHENTICATED` | 16 | Request lacks valid authentication credentials |
+| Code                  | Value | Use Case                                          |
+| --------------------- | ----- | ------------------------------------------------- |
+| `OK`                  | 0     | Success (not an error)                            |
+| `CANCELLED`           | 1     | Operation was cancelled (typically by the caller) |
+| `UNKNOWN`             | 2     | Unknown error (avoid when possible)               |
+| `INVALID_ARGUMENT`    | 3     | Client specified an invalid argument              |
+| `DEADLINE_EXCEEDED`   | 4     | Deadline expired before operation could complete  |
+| `NOT_FOUND`           | 5     | Some requested entity was not found               |
+| `ALREADY_EXISTS`      | 6     | Entity that we attempted to create already exists |
+| `PERMISSION_DENIED`   | 7     | Caller lacks permission for the operation         |
+| `RESOURCE_EXHAUSTED`  | 8     | Resource has been exhausted (rate limits, quotas) |
+| `FAILED_PRECONDITION` | 9     | System not in required state for operation        |
+| `ABORTED`             | 10    | Operation was aborted (concurrency conflict)      |
+| `OUT_OF_RANGE`        | 11    | Operation attempted past the valid range          |
+| `UNIMPLEMENTED`       | 12    | Operation not implemented or not supported        |
+| `INTERNAL`            | 13    | Internal server error                             |
+| `UNAVAILABLE`         | 14    | Service is currently unavailable                  |
+| `DATA_LOSS`           | 15    | Unrecoverable data loss or corruption             |
+| `UNAUTHENTICATED`     | 16    | Request lacks valid authentication credentials    |
 
 ## Automatic Exception Mapping
 
@@ -105,57 +105,45 @@ class UserService:
 TypeScript uses the `GrpcError` class for explicit status code control. Standard `Error` objects map to `INTERNAL`:
 
 ```typescript
-import { GrpcHandler, GrpcRequest, GrpcResponse, GrpcError, GrpcStatusCode } from 'spikard';
+import { GrpcHandler, GrpcRequest, GrpcResponse, GrpcError, GrpcStatusCode } from "spikard";
 
 class UserServiceHandler implements GrpcHandler {
   async handleRequest(request: GrpcRequest): Promise<GrpcResponse> {
-    if (request.methodName === 'GetUser') {
+    if (request.methodName === "GetUser") {
       const userId = request.payload.readUInt32LE(0);
 
       // INVALID_ARGUMENT
       if (userId <= 0) {
-        throw new GrpcError(
-          GrpcStatusCode.INVALID_ARGUMENT,
-          'User ID must be positive'
-        );
+        throw new GrpcError(GrpcStatusCode.INVALID_ARGUMENT, "User ID must be positive");
       }
 
       // PERMISSION_DENIED
       if (!this.hasPermission(userId)) {
-        throw new GrpcError(
-          GrpcStatusCode.PERMISSION_DENIED,
-          'Access denied for this user'
-        );
+        throw new GrpcError(GrpcStatusCode.PERMISSION_DENIED, "Access denied for this user");
       }
 
       // NOT_FOUND
       const user = await this.db.get(userId);
       if (!user) {
-        throw new GrpcError(
-          GrpcStatusCode.NOT_FOUND,
-          `User ${userId} not found`
-        );
+        throw new GrpcError(GrpcStatusCode.NOT_FOUND, `User ${userId} not found`);
       }
 
       // UNIMPLEMENTED
-      if (request.methodName === 'AdvancedFeature') {
-        throw new GrpcError(
-          GrpcStatusCode.UNIMPLEMENTED,
-          'Feature not yet available'
-        );
+      if (request.methodName === "AdvancedFeature") {
+        throw new GrpcError(GrpcStatusCode.UNIMPLEMENTED, "Feature not yet available");
       }
 
       // Regular Error → INTERNAL
       // throw new Error('Something went wrong');
 
       return {
-        payload: Buffer.from(user.serialize())
+        payload: Buffer.from(user.serialize()),
       };
     }
 
     throw new GrpcError(
       GrpcStatusCode.UNIMPLEMENTED,
-      `Method ${request.methodName} not implemented`
+      `Method ${request.methodName} not implemented`,
     );
   }
 }
@@ -317,14 +305,13 @@ throw new GrpcError(
   `Validation failed:
    - Field 'email' must be a valid email address
    - Field 'age' must be between 0 and 120
-   Current value: ${email}`
+   Current value: ${email}`,
 );
 
 // Error with context
 throw new GrpcError(
   GrpcStatusCode.RESOURCE_EXHAUSTED,
-  `Rate limit exceeded. Maximum 100 requests per minute. ` +
-  `Retry after: ${retryAfter}s`
+  `Rate limit exceeded. Maximum 100 requests per minute. ` + `Retry after: ${retryAfter}s`,
 );
 ```
 
@@ -398,7 +385,7 @@ async def handle_request(self, request: GrpcRequest) -> GrpcResponse:
 ```typescript
 class UserServiceHandler {
   async handleRequest(request: GrpcRequest): Promise<GrpcResponse> {
-    if (request.methodName === 'CreateUser') {
+    if (request.methodName === "CreateUser") {
       const { email } = this.parseRequest(request.payload);
 
       // Check for duplicates
@@ -406,23 +393,20 @@ class UserServiceHandler {
       if (existing) {
         throw new GrpcError(
           GrpcStatusCode.ALREADY_EXISTS,
-          `User with email '${email}' already exists`
+          `User with email '${email}' already exists`,
         );
       }
 
       // Validate email format
       if (!this.isValidEmail(email)) {
-        throw new GrpcError(
-          GrpcStatusCode.INVALID_ARGUMENT,
-          `Invalid email format: '${email}'`
-        );
+        throw new GrpcError(GrpcStatusCode.INVALID_ARGUMENT, `Invalid email format: '${email}'`);
       }
 
       // Check rate limits
       if (await this.isRateLimited()) {
         throw new GrpcError(
           GrpcStatusCode.RESOURCE_EXHAUSTED,
-          'Too many requests. Please try again later.'
+          "Too many requests. Please try again later.",
         );
       }
 
@@ -430,7 +414,7 @@ class UserServiceHandler {
       return { payload: Buffer.from(newUser.serialize()) };
     }
 
-    throw new GrpcError(GrpcStatusCode.UNIMPLEMENTED, 'Method not implemented');
+    throw new GrpcError(GrpcStatusCode.UNIMPLEMENTED, "Method not implemented");
   }
 }
 ```
@@ -466,7 +450,7 @@ def validate_user_data(data):
 // Include operation context in error messages
 class OrderService implements GrpcHandler {
   async handleRequest(request: GrpcRequest): Promise<GrpcResponse> {
-    if (request.methodName === 'PlaceOrder') {
+    if (request.methodName === "PlaceOrder") {
       const order = this.parseOrder(request.payload);
 
       // Check inventory
@@ -475,7 +459,7 @@ class OrderService implements GrpcHandler {
         throw new GrpcError(
           GrpcStatusCode.FAILED_PRECONDITION,
           `Insufficient inventory for product ${order.productId}. ` +
-          `Requested: ${order.quantity}, Available: ${available}`
+            `Requested: ${order.quantity}, Available: ${available}`,
         );
       }
 
@@ -553,15 +537,15 @@ async def test_error_message_preservation():
 **TypeScript (Vitest):**
 
 ```typescript
-import { describe, it, expect } from 'vitest';
-import { GrpcError, GrpcStatusCode } from 'spikard';
+import { describe, it, expect } from "vitest";
+import { GrpcError, GrpcStatusCode } from "spikard";
 
-describe('UserServiceHandler', () => {
-  it('should throw INVALID_ARGUMENT for invalid input', async () => {
+describe("UserServiceHandler", () => {
+  it("should throw INVALID_ARGUMENT for invalid input", async () => {
     const handler = new UserServiceHandler();
     const request: GrpcRequest = {
-      serviceName: 'test.UserService',
-      methodName: 'GetUser',
+      serviceName: "test.UserService",
+      methodName: "GetUser",
       payload: Buffer.from([0xff, 0xff, 0xff, 0xff]),
       metadata: {},
     };
@@ -569,15 +553,15 @@ describe('UserServiceHandler', () => {
     await expect(handler.handleRequest(request)).rejects.toThrow(GrpcError);
     await expect(handler.handleRequest(request)).rejects.toMatchObject({
       code: GrpcStatusCode.INVALID_ARGUMENT,
-      message: expect.stringContaining('User ID must be positive'),
+      message: expect.stringContaining("User ID must be positive"),
     });
   });
 
-  it('should throw NOT_FOUND for missing resource', async () => {
+  it("should throw NOT_FOUND for missing resource", async () => {
     const handler = new UserServiceHandler();
     const request: GrpcRequest = {
-      serviceName: 'test.UserService',
-      methodName: 'GetUser',
+      serviceName: "test.UserService",
+      methodName: "GetUser",
       payload: Buffer.from([99, 0, 0, 0]),
       metadata: {},
     };
@@ -585,15 +569,15 @@ describe('UserServiceHandler', () => {
     await expect(handler.handleRequest(request)).rejects.toThrow(GrpcError);
     await expect(handler.handleRequest(request)).rejects.toMatchObject({
       code: GrpcStatusCode.NOT_FOUND,
-      message: expect.stringContaining('User 99 not found'),
+      message: expect.stringContaining("User 99 not found"),
     });
   });
 
-  it('should throw PERMISSION_DENIED for unauthorized access', async () => {
+  it("should throw PERMISSION_DENIED for unauthorized access", async () => {
     const handler = new UserServiceHandler();
     const request: GrpcRequest = {
-      serviceName: 'test.UserService',
-      methodName: 'DeleteUser',
+      serviceName: "test.UserService",
+      methodName: "DeleteUser",
       payload: Buffer.from([1, 0, 0, 0]),
       metadata: {},
     };
@@ -601,7 +585,7 @@ describe('UserServiceHandler', () => {
     await expect(handler.handleRequest(request)).rejects.toThrow(GrpcError);
     await expect(handler.handleRequest(request)).rejects.toMatchObject({
       code: GrpcStatusCode.PERMISSION_DENIED,
-      message: expect.stringContaining('Access denied'),
+      message: expect.stringContaining("Access denied"),
     });
   });
 });
@@ -775,17 +759,14 @@ if user is None:
 // Good:Use ALREADY_EXISTS for duplicate resources
 const existing = await db.findByEmail(email);
 if (existing) {
-  throw new GrpcError(
-    GrpcStatusCode.ALREADY_EXISTS,
-    `User with email '${email}' already exists`
-  );
+  throw new GrpcError(GrpcStatusCode.ALREADY_EXISTS, `User with email '${email}' already exists`);
 }
 
 // Bad:Using wrong status code
 if (existing) {
   throw new GrpcError(
-    GrpcStatusCode.INVALID_ARGUMENT,  // Wrong code
-    `User with email '${email}' already exists`
+    GrpcStatusCode.INVALID_ARGUMENT, // Wrong code
+    `User with email '${email}' already exists`,
   );
 }
 ```
@@ -827,18 +808,12 @@ def get_user(user_id: int) -> User:
 // Good:TypeScript with explicit types
 function getUser(userId: number): User {
   if (userId <= 0) {
-    throw new GrpcError(
-      GrpcStatusCode.INVALID_ARGUMENT,
-      'User ID must be positive'
-    );
+    throw new GrpcError(GrpcStatusCode.INVALID_ARGUMENT, "User ID must be positive");
   }
 
   const user = db.get(userId);
   if (!user) {
-    throw new GrpcError(
-      GrpcStatusCode.NOT_FOUND,
-      `User ${userId} not found`
-    );
+    throw new GrpcError(GrpcStatusCode.NOT_FOUND, `User ${userId} not found`);
   }
 
   return user;
@@ -999,15 +974,12 @@ if not self.verify_password(user, password):
 
 ```typescript
 // Good:Don't expose internal paths
-throw new GrpcError(
-  GrpcStatusCode.INTERNAL,
-  'Database error occurred'
-);
+throw new GrpcError(GrpcStatusCode.INTERNAL, "Database error occurred");
 
 // Bad:Exposes internal details
 throw new GrpcError(
   GrpcStatusCode.INTERNAL,
-  `Database connection failed: host=db.internal.company.com:5432`
+  `Database connection failed: host=db.internal.company.com:5432`,
 );
 ```
 

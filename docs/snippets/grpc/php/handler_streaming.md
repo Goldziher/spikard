@@ -431,11 +431,13 @@ class RecordServiceHandler
 ## Key Patterns
 
 ### Message Collection
+
 - All client messages are collected in the `messages` array property
 - Messages are already serialized as binary strings (use `mergeFromString()` to deserialize)
 - No streaming iteration needed - full array is provided
 
 ### Processing Strategy
+
 1. **Collect**: All input messages received as array
 2. **Validate**: Check all messages before processing
 3. **Transform**: Process and generate output
@@ -443,12 +445,14 @@ class RecordServiceHandler
 5. **Return**: Array of response messages in response object
 
 ### Error Handling
+
 - Return `Response::error()` for fatal errors that abort the stream
 - Per-message errors can be included in response messages (with ERROR status)
 - Deserialization errors should return error response immediately
 - Processing errors can return partial results (successful messages + error messages)
 
 ### Metadata
+
 - Client streaming: Metadata passed in request, can be included in response
 - Bidirectional streaming: Metadata passed in request, can be included in response
 - Use metadata for non-payload information (timestamps, counts, filters)
@@ -866,33 +870,37 @@ class FilterStreamHandlerTest extends TestCase
 
 ## Comparison with Other Patterns
 
-| Aspect | Client Streaming | Bidirectional | Unary |
-|--------|------------------|---------------|-------|
-| Input | Multiple messages | Multiple messages | Single message |
-| Output | Single response | Multiple messages | Single response |
-| Use case | Batch operations | Stream processing | Simple requests |
-| Message order | Important | Important | N/A |
-| Atomicity | Full batch atomic | Per-message or batch | Single atomic |
-| PHP Pattern | `handleClientStream()` | `handleBidiStream()` | `handleRequest()` |
+| Aspect        | Client Streaming       | Bidirectional        | Unary             |
+| ------------- | ---------------------- | -------------------- | ----------------- |
+| Input         | Multiple messages      | Multiple messages    | Single message    |
+| Output        | Single response        | Multiple messages    | Single response   |
+| Use case      | Batch operations       | Stream processing    | Simple requests   |
+| Message order | Important              | Important            | N/A               |
+| Atomicity     | Full batch atomic      | Per-message or batch | Single atomic     |
+| PHP Pattern   | `handleClientStream()` | `handleBidiStream()` | `handleRequest()` |
 
 ## Key PHP-Specific Patterns
 
 ### Using `serializeToString()` and `mergeFromString()`
+
 - Always use `mergeFromString()` to deserialize protobuf messages
 - Always use `serializeToString()` to serialize protobuf responses
 - Never use `parse()` for deserialization in handlers
 
 ### Error Handling
+
 - Prefer returning error responses over throwing exceptions
 - Use try-catch to handle deserialization and business logic errors
 - Include context in error messages (index, original value, etc.)
 
 ### Metadata Access
+
 - Use `getMetadata(string $key)` to safely access metadata with null coalescing
 - Return metadata in response for logging and debugging
 - Use standard header names (e.g., 'x-batch-id', 'x-count')
 
 ### Type Hints
+
 - Use strict type hints on all function parameters
 - Return types must be `Response` or `BidiStreamResponse`
 - Use `declare(strict_types=1)` in all files

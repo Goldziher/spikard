@@ -29,13 +29,13 @@ channels:
           format: uuid
     messages:
       notificationEvent:
-        $ref: '#/components/messages/NotificationEvent'
+        $ref: "#/components/messages/NotificationEvent"
   systemEvents:
     address: /system/events
     description: System-wide events like deployments, maintenance, alerts
     messages:
       systemEvent:
-        $ref: '#/components/messages/SystemEvent'
+        $ref: "#/components/messages/SystemEvent"
   analyticsEvents:
     address: /analytics/{accountId}/events
     description: Real-time analytics and usage events
@@ -47,7 +47,7 @@ channels:
           format: uuid
     messages:
       analyticsEvent:
-        $ref: '#/components/messages/AnalyticsEvent'
+        $ref: "#/components/messages/AnalyticsEvent"
   orderUpdates:
     address: /orders/{orderId}/status
     description: Real-time order status updates
@@ -59,13 +59,13 @@ channels:
           format: uuid
     messages:
       orderStatusEvent:
-        $ref: '#/components/messages/OrderStatusEvent'
+        $ref: "#/components/messages/OrderStatusEvent"
   statusPage:
     address: /status/feed
     description: Service status and health feed
     messages:
       statusUpdate:
-        $ref: '#/components/messages/StatusUpdate'
+        $ref: "#/components/messages/StatusUpdate"
 components:
   schemas:
     User:
@@ -215,9 +215,9 @@ components:
             type: string
             const: notification
           data:
-            $ref: '#/components/schemas/Notification'
+            $ref: "#/components/schemas/Notification"
           user:
-            $ref: '#/components/schemas/User'
+            $ref: "#/components/schemas/User"
     SystemEvent:
       contentType: application/json
       payload:
@@ -233,7 +233,7 @@ components:
             type: string
             enum: [info, warning, critical]
           status:
-            $ref: '#/components/schemas/SystemStatus'
+            $ref: "#/components/schemas/SystemStatus"
           timestamp:
             type: string
             format: date-time
@@ -246,7 +246,7 @@ components:
             type: string
             const: analytics_event
           data:
-            $ref: '#/components/schemas/AnalyticsData'
+            $ref: "#/components/schemas/AnalyticsData"
     OrderStatusEvent:
       contentType: application/json
       payload:
@@ -256,7 +256,7 @@ components:
             type: string
             const: order_status
           order:
-            $ref: '#/components/schemas/Order'
+            $ref: "#/components/schemas/Order"
           previousStatus:
             type: string
           timestamp:
@@ -273,7 +273,7 @@ components:
           updates:
             type: array
             items:
-              $ref: '#/components/schemas/SystemStatus'
+              $ref: "#/components/schemas/SystemStatus"
           timestamp:
             type: string
             format: date-time

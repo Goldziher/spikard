@@ -7,7 +7,7 @@ const config: ServerConfig = {
   port: 8080,
   workers: 4,
   requestTimeout: 60,
-  maxBodySize: 5 * 1024 * 1024,  // 5MB
+  maxBodySize: 5 * 1024 * 1024, // 5MB
 };
 
 const app = new Spikard();

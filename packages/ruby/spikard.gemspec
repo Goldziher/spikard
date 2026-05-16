@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.metadata['keywords'] = %w[http web framework polyglot rust].join(',')
   spec.metadata['rubygems_mfa_required'] = 'true'
 
-  spec.files         = Dir.glob(['lib/**/*', 'ext/**/*'])
+  spec.files         = Dir.glob(%w[lib/**/* ext/**/* sig/**/* Steepfile])
   spec.require_paths = ['lib']
   spec.extensions    = ['ext/spikard_rb/extconf.rb']
 

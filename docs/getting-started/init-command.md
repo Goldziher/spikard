@@ -30,14 +30,14 @@ tool if you are integrating through MCP.
 
 ## Supported Bindings
 
-| Language | Tooling | Starter entrypoint |
-|----------|---------|--------------------|
-| Python | `uv`, `pytest`, `ruff` | `src/<package>/app.py` |
-| TypeScript | `pnpm`, `tsc`, `vitest` | `src/server.ts` |
-| Rust | `cargo` | `src/main.rs` |
-| Ruby | `bundler`, `rspec`, `rbs` | `bin/server` |
-| PHP | `composer`, `phpunit`, `phpstan` | `bin/server.php` |
-| Elixir | `mix`, `ExUnit` | `run.exs` |
+| Language   | Tooling                          | Starter entrypoint     |
+| ---------- | -------------------------------- | ---------------------- |
+| Python     | `uv`, `pytest`, `ruff`           | `src/<package>/app.py` |
+| TypeScript | `pnpm`, `tsc`, `vitest`          | `src/server.ts`        |
+| Rust       | `cargo`                          | `src/main.rs`          |
+| Ruby       | `bundler`, `rspec`, `rbs`        | `bin/server`           |
+| PHP        | `composer`, `phpunit`, `phpstan` | `bin/server.php`       |
+| Elixir     | `mix`, `ExUnit`                  | `run.exs`              |
 
 ## Example Output
 

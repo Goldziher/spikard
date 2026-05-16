@@ -1,1416 +1,1420 @@
 {
-	"$schema": "http://json-schema.org/draft-07/schema#",
-	"title": "Spikard Test Fixture Schema",
-	"description": "Unified schema for all Spikard test fixtures across parameter types, bodies, and validation scenarios",
-	"type": "object",
-	"required": ["name", "description", "handler", "request", "expected_response"],
-	"properties": {
-		"name": {
-			"type": "string",
-			"description": "Human-readable test case name",
-			"minLength": 1,
-			"examples": ["Required string query parameter - success"]
-		},
-		"description": {
-			"type": "string",
-			"description": "What this test validates and why it matters",
-			"minLength": 1,
-			"examples": ["Validates that required query parameters are properly extracted and validated"]
-		},
-		"category": {
-			"type": "string",
-			"enum": [
-				"path_params",
-				"query_params",
-				"headers",
-				"cookies",
-				"json_bodies",
-				"multipart",
-				"url_encoded",
-				"content_types",
-				"status_codes",
-				"validation_errors",
-				"edge_cases",
-				"http_methods",
-				"dependency_injection",
-				"middleware",
-				"lifecycle_hooks",
-				"compression",
-				"rate_limit",
-				"request_timeout",
-				"request_id",
-				"body_limits",
-				"static_files",
-				"graphql",
-				"protobuf",
-				"grpc"
-			],
-			"description": "Test category for organization"
-		},
-		"source": {
-			"type": "object",
-			"description": "Source framework and test reference (for test data extracted from other frameworks)",
-			"properties": {
-				"framework": {
-					"type": "string",
-					"enum": ["spikard", "litestar", "fastapi", "fastify", "nestjs", "express", "robyn"],
-					"description": "Source framework (spikard = native test)"
-				},
-				"test_file": {
-					"type": "string",
-					"description": "Path to original test file relative to framework root"
-				},
-				"test_function": {
-					"type": "string",
-					"description": "Name of the test function"
-				},
-				"adapted": {
-					"type": "boolean",
-					"description": "Whether this test was adapted from the source (true) or is a direct copy (false)",
-					"default": false
-				}
-			},
-			"additionalProperties": false
-		},
-		"handler": {
-			"type": "object",
-			"description": "Handler definition - describes the route/service and method. For HTTP handlers: requires route and method. For gRPC handlers: requires service and method.",
-			"properties": {
-				"route": {
-					"type": "string",
-					"description": "Route pattern with parameter placeholders (e.g., '/users/{user_id:int}'). Used for HTTP handlers.",
-					"minLength": 1,
-					"examples": ["/users/{user_id:int}", "/items", "/search"]
-				},
-				"method": {
-					"type": "string",
-					"description": "HTTP method (GET, POST, etc.) for HTTP handlers, or gRPC RPC method name (GetUser, CreateUser, etc.) for gRPC handlers",
-					"minLength": 1,
-					"examples": ["GET", "POST", "GetUser", "CreateUser"]
-				},
-				"parameters": {
-					"type": "object",
-					"description": "Parameter definitions organized by source",
-					"properties": {
-						"path": {
-							"type": "object",
-							"description": "Path parameter schemas",
-							"additionalProperties": {
-								"type": "object",
-								"description": "JSON Schema for this path parameter"
-							}
-						},
-						"query": {
-							"type": "object",
-							"description": "Query parameter schemas",
-							"additionalProperties": {
-								"type": "object",
-								"description": "JSON Schema for this query parameter"
-							}
-						},
-						"header": {
-							"type": "object",
-							"description": "Header parameter schemas",
-							"additionalProperties": {
-								"type": "object",
-								"description": "JSON Schema for this header"
-							}
-						},
-						"cookie": {
-							"type": "object",
-							"description": "Cookie parameter schemas",
-							"additionalProperties": {
-								"type": "object",
-								"description": "JSON Schema for this cookie"
-							}
-						}
-					},
-					"additionalProperties": false
-				},
-				"body_schema": {
-					"type": "object",
-					"description": "JSON Schema for request body (for POST/PUT/PATCH)",
-					"examples": [
-						{
-							"type": "object",
-							"properties": {
-								"name": {
-									"type": "string",
-									"minLength": 1
-								},
-								"email": {
-									"type": "string",
-									"format": "email"
-								}
-							},
-							"required": ["name", "email"]
-						}
-					]
-				},
-				"response_schema": {
-					"type": "object",
-					"description": "JSON Schema for response body (for documentation/validation)"
-				},
-				"dependencies": {
-					"type": "object",
-					"description": "Dependency injection configuration - map of dependency key to dependency definition",
-					"additionalProperties": {
-						"type": "object",
-						"description": "Dependency definition",
-						"required": ["type"],
-						"properties": {
-							"type": {
-								"type": "string",
-								"enum": ["value", "factory", "async_factory"],
-								"description": "Dependency type: value (static), factory (sync creation), async_factory (async creation)"
-							},
-							"value": {
-								"description": "Static value for type='value' dependencies (any JSON type)"
-							},
-							"value_type": {
-								"type": "string",
-								"enum": ["string", "number", "integer", "boolean", "object", "array", "null"],
-								"description": "Type of the value for type='value' dependencies"
-							},
-							"factory": {
-								"type": "string",
-								"description": "Factory function name for type='factory' or 'async_factory' dependencies"
-							},
-							"depends_on": {
-								"type": "array",
-								"description": "Array of dependency keys that this dependency depends on",
-								"items": {
-									"type": "string"
-								},
-								"default": []
-							},
-							"singleton": {
-								"type": "boolean",
-								"description": "If true, dependency is created once and shared across all requests (global cache)",
-								"default": false
-							},
-							"cacheable": {
-								"type": "boolean",
-								"description": "If true, dependency is cached within a single request (per-request cache)",
-								"default": false
-							},
-							"cleanup": {
-								"type": "boolean",
-								"description": "If true, dependency uses generator pattern for cleanup (yield in Python, cleanup callback in other languages)",
-								"default": false
-							},
-							"scope": {
-								"type": "string",
-								"enum": ["app", "route"],
-								"description": "Scope of the dependency: app-level (default) or route-level override",
-								"default": "app"
-							},
-							"python_type": {
-								"type": "string",
-								"description": "Python type name for type-based injection (e.g., 'DatabasePool', 'CacheClient')"
-							}
-						},
-						"additionalProperties": false
-					}
-				},
-				"handler_dependencies": {
-					"type": "array",
-					"description": "Array of dependency keys required by this handler (in resolution order)",
-					"items": {
-						"type": "string"
-					}
-				},
-				"route_overrides": {
-					"type": "object",
-					"description": "Route-level dependency overrides that replace app-level dependencies for this specific route",
-					"additionalProperties": {
-						"type": "object",
-						"description": "Same structure as dependencies object - overrides app-level dependency with same key"
-					}
-				},
-				"injection_strategy": {
-					"type": "string",
-					"enum": ["name", "type", "destructure", "keyword_args"],
-					"description": "Language-specific injection strategy: name (Python param names), type (Python type hints), destructure (Node/TS), keyword_args (Ruby)"
-				},
-				"expected_types": {
-					"type": "object",
-					"description": "Expected types for dependencies (used to test type mismatch errors)",
-					"additionalProperties": {
-						"type": "string"
-					}
-				},
-				"middleware": {
-					"type": "object",
-					"description": "Per-route middleware configuration (compression, rate limiting, timeouts, static files, etc.). Also carries test directives for features that require multiple requests or simulated delays.",
-					"properties": {
-						"compression": {
-							"type": "object",
-							"description": "Enable tower-http compression middleware with custom settings.",
-							"properties": {
-								"gzip": {
-									"type": "boolean",
-									"description": "Enable gzip encoding (default true)"
-								},
-								"brotli": {
-									"type": "boolean",
-									"description": "Enable brotli encoding (default true)"
-								},
-								"min_size": {
-									"type": "integer",
-									"minimum": 0,
-									"description": "Minimum response size in bytes before compression is applied (default 1024)"
-								},
-								"quality": {
-									"type": "integer",
-									"minimum": 0,
-									"maximum": 11,
-									"description": "Compression quality (0-11, default 6)"
-								}
-							},
-							"additionalProperties": false
-						},
-						"rate_limit": {
-							"type": "object",
-							"description": "Rate limiting configuration using tower-governor. Optional warmup directives instruct the generated tests to issue multiple requests before asserting the final status.",
-							"required": ["per_second", "burst"],
-							"properties": {
-								"per_second": {
-									"type": "integer",
-									"minimum": 1,
-									"description": "Allowed requests per second"
-								},
-								"burst": {
-									"type": "integer",
-									"minimum": 1,
-									"description": "Burst capacity"
-								},
-								"ip_based": {
-									"type": "boolean",
-									"description": "Apply limits per IP (default true)"
-								},
-								"warmup_requests": {
-									"type": "integer",
-									"minimum": 0,
-									"description": "How many additional requests to send before the assertion request (used to trigger 429 responses)"
-								},
-								"warmup_expect_status": {
-									"type": "integer",
-									"description": "Expected status code for warmup requests (defaults to 200)"
-								},
-								"sleep_ms_between": {
-									"type": "integer",
-									"minimum": 0,
-									"description": "Delay between warmup requests in milliseconds"
-								}
-							},
-							"additionalProperties": false
-						},
-						"request_timeout": {
-							"type": "object",
-							"description": "Request timeout configuration and simulated handler delay.",
-							"required": ["seconds"],
-							"properties": {
-								"seconds": {
-									"type": "integer",
-									"minimum": 1,
-									"description": "Timeout duration in seconds"
-								},
-								"sleep_ms": {
-									"type": "integer",
-									"minimum": 0,
-									"description": "Milliseconds that the handler should sleep to trigger the timeout"
-								}
-							},
-							"additionalProperties": false
-						},
-						"request_id": {
-							"type": "object",
-							"description": "Enable/disable automatic X-Request-ID header propagation.",
-							"properties": {
-								"enabled": {
-									"type": "boolean",
-									"description": "Set to false to disable request ID middleware"
-								}
-							},
-							"additionalProperties": false
-						},
-						"body_limit": {
-							"type": "object",
-							"description": "Maximum request body size (DefaultBodyLimit).",
-							"properties": {
-								"max_bytes": {
-									"type": "integer",
-									"minimum": 0,
-									"description": "Maximum allowed bytes (0 or null disables limit)"
-								}
-							},
-							"additionalProperties": false
-						},
-						"static_files": {
-							"type": "array",
-							"description": "Static directories to serve via tower-http ServeDir. The generator will create these files under the e2e apps.",
-							"items": {
-								"type": "object",
-								"required": ["route_prefix", "files"],
-								"properties": {
-									"route_prefix": {
-										"type": "string",
-										"description": "Path prefix (e.g., '/public')"
-									},
-									"directory_name": {
-										"type": "string",
-										"description": "Optional deterministic name for generated assets (defaults to fixture id)"
-									},
-									"index_file": {
-										"type": "boolean",
-										"description": "Append index.html for directory requests"
-									},
-									"cache_control": {
-										"type": "string",
-										"description": "Cache-Control header to apply to all static responses"
-									},
-									"files": {
-										"type": "array",
-										"minItems": 1,
-										"items": {
-											"type": "object",
-											"required": ["path", "content"],
-											"properties": {
-												"path": {
-													"type": "string",
-													"description": "Relative file path within the static directory"
-												},
-												"content": {
-													"type": "string",
-													"description": "File contents (utf-8). Use escaped sequences for HTML."
-												}
-											},
-											"additionalProperties": false
-										}
-									}
-								},
-								"additionalProperties": false
-							}
-						},
-						"jwt_auth": {
-							"type": "object",
-							"description": "JWT authentication configuration (see auth fixtures).",
-							"additionalProperties": true
-						},
-						"api_key_auth": {
-							"type": "object",
-							"description": "API key authentication configuration.",
-							"additionalProperties": true
-						},
-						"openapi": {
-							"type": "object",
-							"description": "OpenAPI configuration overrides.",
-							"additionalProperties": true
-						},
-						"lifecycle_hooks": {
-							"type": "object",
-							"description": "Lifecycle hook definitions. See lifecycle_hooks fixtures.",
-							"additionalProperties": true
-						},
-						"graphql": {
-							"type": "object",
-							"description": "GraphQL configuration for handlers that serve GraphQL endpoints.",
-							"additionalProperties": true
-						}
-					},
-					"additionalProperties": true
-				},
-				"graphql": {
-					"type": "object",
-					"description": "GraphQL schema and resolver configuration for this handler",
-					"properties": {
-						"schema": {
-							"type": "string",
-							"description": "GraphQL SDL (Schema Definition Language) schema"
-						},
-						"resolvers": {
-							"type": "object",
-							"description": "Map of Type.field to resolver configs",
-							"additionalProperties": {
-								"type": "object",
-								"description": "Resolver configuration for a specific field",
-								"properties": {
-									"type": {
-										"type": "string",
-										"enum": ["mock", "factory", "async_factory", "error"],
-										"description": "Resolver type: mock (static), factory (sync creation), async_factory (async creation), error (throws error)"
-									},
-									"return_value": {
-										"description": "Return value for mock type (any JSON type)"
-									},
-									"error_message": {
-										"type": "string",
-										"description": "Error message for error type resolvers"
-									}
-								}
-							}
-						},
-						"endpoint": {
-							"type": "string",
-							"description": "GraphQL endpoint path",
-							"default": "/graphql"
-						},
-						"complexity_limit": {
-							"type": "integer",
-							"description": "Maximum query complexity allowed",
-							"minimum": 0
-						},
-						"depth_limit": {
-							"type": "integer",
-							"description": "Maximum query depth allowed",
-							"minimum": 0
-						},
-						"batch_size": {
-							"type": "integer",
-							"description": "Maximum batch size for batch requests",
-							"minimum": 1
-						}
-					},
-					"additionalProperties": false
-				},
-				"service": {
-					"type": "string",
-					"description": "gRPC service name (fully qualified, e.g., 'example.v1.UserService'). Used for gRPC handlers.",
-					"minLength": 1,
-					"examples": ["example.v1.UserService", "payment.PaymentService"]
-				},
-				"protobuf": {
-					"type": "object",
-					"description": "Protocol Buffers (protobuf) schema and gRPC service configuration for this handler",
-					"properties": {
-						"package": {
-							"type": "string",
-							"description": "Protobuf package name (e.g., 'example.v1', 'myservice')",
-							"minLength": 1,
-							"examples": ["example.v1", "user.service", "payment"]
-						},
-						"messages": {
-							"type": "array",
-							"description": "Protobuf message definitions",
-							"items": {
-								"type": "object",
-								"required": ["name"],
-								"properties": {
-									"name": {
-										"type": "string",
-										"description": "Message type name",
-										"minLength": 1
-									},
-									"fields": {
-										"type": "array",
-										"description": "Field definitions for this message",
-										"items": {
-											"type": "object",
-											"required": ["name", "type", "number"],
-											"properties": {
-												"name": {
-													"type": "string",
-													"description": "Field name in snake_case",
-													"minLength": 1
-												},
-												"type": {
-													"type": "string",
-													"description": "Field type: scalar type (int32, int64, uint32, uint64, sint32, sint64, fixed32, fixed64, sfixed32, sfixed64, float, double, bool, string, bytes) or message type name",
-													"minLength": 1,
-													"examples": ["int32", "string", "bytes", "bool", "User", "Address"]
-												},
-												"number": {
-													"type": "integer",
-													"description": "Field number (must be unique within message, 1-536870911)",
-													"minimum": 1,
-													"maximum": 536870911
-												},
-												"label": {
-													"type": "string",
-													"enum": ["optional", "required", "repeated"],
-													"description": "Field cardinality/label (proto3 uses optional/repeated, proto2 adds required)"
-												},
-												"oneof": {
-													"type": "string",
-													"description": "Name of oneof group this field belongs to (optional)"
-												}
-											},
-											"additionalProperties": false
-										}
-									},
-									"nested_messages": {
-										"type": "array",
-										"description": "Nested message definitions",
-										"items": {
-											"type": "object",
-											"required": ["name"],
-											"properties": {
-												"name": {
-													"type": "string",
-													"minLength": 1
-												},
-												"fields": {
-													"type": "array",
-													"items": {
-														"type": "object"
-													}
-												}
-											},
-											"additionalProperties": true
-										}
-									},
-									"enums": {
-										"type": "array",
-										"description": "Enum definitions within this message",
-										"items": {
-											"type": "object",
-											"required": ["name"],
-											"properties": {
-												"name": {
-													"type": "string",
-													"minLength": 1
-												},
-												"values": {
-													"type": "array",
-													"items": {
-														"type": "object",
-														"required": ["name", "number"],
-														"properties": {
-															"name": {
-																"type": "string"
-															},
-															"number": {
-																"type": "integer"
-															}
-														}
-													}
-												}
-											},
-											"additionalProperties": false
-										}
-									}
-								},
-								"additionalProperties": false
-							}
-						},
-						"services": {
-							"type": "array",
-							"description": "gRPC service definitions",
-							"items": {
-								"type": "object",
-								"required": ["name", "methods"],
-								"properties": {
-									"name": {
-										"type": "string",
-										"description": "Service name (e.g., 'UserService', 'AuthService')",
-										"minLength": 1
-									},
-									"methods": {
-										"type": "array",
-										"description": "RPC method definitions",
-										"items": {
-											"type": "object",
-											"required": ["name", "input_type", "output_type"],
-											"properties": {
-												"name": {
-													"type": "string",
-													"description": "RPC method name (PascalCase convention)",
-													"minLength": 1,
-													"examples": ["GetUser", "ListUsers", "CreateUser", "DeleteUser"]
-												},
-												"input_type": {
-													"type": "string",
-													"description": "Input message type name",
-													"minLength": 1
-												},
-												"output_type": {
-													"type": "string",
-													"description": "Output message type name",
-													"minLength": 1
-												},
-												"client_streaming": {
-													"type": "boolean",
-													"description": "Whether this method accepts streaming client requests",
-													"default": false
-												},
-												"server_streaming": {
-													"type": "boolean",
-													"description": "Whether this method returns streaming server responses",
-													"default": false
-												}
-											},
-											"additionalProperties": false
-										},
-										"minItems": 1
-									}
-								},
-								"additionalProperties": false
-							}
-						},
-						"metadata": {
-							"type": "object",
-							"description": "gRPC metadata (headers) configuration and defaults",
-							"properties": {
-								"required_headers": {
-									"type": "array",
-									"description": "Required metadata header names (case-insensitive)",
-									"items": {
-										"type": "string"
-									},
-									"examples": [["authorization", "x-request-id"]]
-								},
-								"default_headers": {
-									"type": "object",
-									"description": "Default metadata headers for all requests",
-									"additionalProperties": {
-										"type": "string"
-									},
-									"examples": [
-										{
-											"content-type": "application/grpc",
-											"user-agent": "grpc-client/1.0"
-										}
-									]
-								},
-								"timeout_ms": {
-									"type": "integer",
-									"description": "Default request timeout in milliseconds",
-									"minimum": 0
-								},
-								"max_receive_message_length": {
-									"type": "integer",
-									"description": "Maximum allowed message size in bytes (0 = unlimited)",
-									"minimum": 0
-								},
-								"max_send_message_length": {
-									"type": "integer",
-									"description": "Maximum send message size in bytes (0 = unlimited)",
-									"minimum": 0
-								},
-								"compression": {
-									"type": "string",
-									"enum": ["gzip", "deflate", "snappy", "none"],
-									"description": "Default compression algorithm for requests/responses"
-								}
-							},
-							"additionalProperties": false
-						}
-					},
-					"required": ["package"],
-					"additionalProperties": false
-				}
-			},
-			"additionalProperties": false
-		},
-		"protobuf": {
-			"type": "object",
-			"description": "Top-level Protocol Buffers schema definition for this test fixture. Defines the proto messages and services used by this test.",
-			"properties": {
-				"package": {
-					"type": "string",
-					"description": "Protobuf package name (e.g., 'example.v1', 'myservice')",
-					"minLength": 1,
-					"examples": ["example.v1", "user.service", "payment"]
-				},
-				"messages": {
-					"type": "array",
-					"description": "Protobuf message definitions",
-					"items": {
-						"type": "object",
-						"required": ["name"],
-						"properties": {
-							"name": {
-								"type": "string",
-								"description": "Message type name",
-								"minLength": 1
-							},
-							"fields": {
-								"type": "array",
-								"description": "Field definitions for this message",
-								"items": {
-									"type": "object",
-									"required": ["name", "type", "number"],
-									"properties": {
-										"name": {
-											"type": "string",
-											"description": "Field name in snake_case",
-											"minLength": 1
-										},
-										"type": {
-											"type": "string",
-											"description": "Field type: scalar type (int32, int64, uint32, uint64, sint32, sint64, fixed32, fixed64, sfixed32, sfixed64, float, double, bool, string, bytes) or message type name",
-											"minLength": 1,
-											"examples": ["int32", "string", "bytes", "bool", "User", "Address"]
-										},
-										"number": {
-											"type": "integer",
-											"description": "Field number (must be unique within message, 1-536870911)",
-											"minimum": 1,
-											"maximum": 536870911
-										},
-										"label": {
-											"type": "string",
-											"enum": ["optional", "required", "repeated"],
-											"description": "Field cardinality/label (proto3 uses optional/repeated, proto2 adds required)"
-										},
-										"oneof": {
-											"type": "string",
-											"description": "Name of oneof group this field belongs to (optional)"
-										}
-									},
-									"additionalProperties": false
-								}
-							},
-							"nested_messages": {
-								"type": "array",
-								"description": "Nested message definitions",
-								"items": {
-									"type": "object",
-									"required": ["name"],
-									"properties": {
-										"name": {
-											"type": "string",
-											"minLength": 1
-										},
-										"fields": {
-											"type": "array",
-											"items": {
-												"type": "object"
-											}
-										}
-									},
-									"additionalProperties": true
-								}
-							},
-							"enums": {
-								"type": "array",
-								"description": "Enum definitions within this message",
-								"items": {
-									"type": "object",
-									"required": ["name"],
-									"properties": {
-										"name": {
-											"type": "string",
-											"minLength": 1
-										},
-										"values": {
-											"type": "array",
-											"items": {
-												"type": "object",
-												"required": ["name", "number"],
-												"properties": {
-													"name": {
-														"type": "string"
-													},
-													"number": {
-														"type": "integer"
-													}
-												}
-											}
-										}
-									},
-									"additionalProperties": false
-								}
-							}
-						},
-						"additionalProperties": false
-					}
-				},
-				"services": {
-					"type": "array",
-					"description": "gRPC service definitions",
-					"items": {
-						"type": "object",
-						"required": ["name", "methods"],
-						"properties": {
-							"name": {
-								"type": "string",
-								"description": "Service name (e.g., 'UserService', 'AuthService')",
-								"minLength": 1
-							},
-							"methods": {
-								"type": "array",
-								"description": "RPC method definitions",
-								"items": {
-									"type": "object",
-									"required": ["name", "input_type", "output_type"],
-									"properties": {
-										"name": {
-											"type": "string",
-											"description": "RPC method name (PascalCase convention)",
-											"minLength": 1,
-											"examples": ["GetUser", "ListUsers", "CreateUser", "DeleteUser"]
-										},
-										"input_type": {
-											"type": "string",
-											"description": "Input message type name",
-											"minLength": 1
-										},
-										"output_type": {
-											"type": "string",
-											"description": "Output message type name",
-											"minLength": 1
-										},
-										"client_streaming": {
-											"type": "boolean",
-											"description": "Whether this method accepts streaming client requests",
-											"default": false
-										},
-										"server_streaming": {
-											"type": "boolean",
-											"description": "Whether this method returns streaming server responses",
-											"default": false
-										}
-									},
-									"additionalProperties": false
-								},
-								"minItems": 1
-							}
-						},
-						"additionalProperties": false
-					}
-				}
-			},
-			"required": ["package"],
-			"additionalProperties": false
-		},
-		"streaming": {
-			"type": "object",
-			"description": "Streaming response metadata. When present, handlers should return a streaming response using these chunks.",
-			"required": ["chunks"],
-			"properties": {
-				"content_type": {
-					"type": "string",
-					"description": "Content-Type to set for the streaming response (overrides expected_response headers if provided)"
-				},
-				"chunks": {
-					"type": "array",
-					"minItems": 1,
-					"description": "Ordered list of chunks yielded by the stream",
-					"items": {
-						"type": "object",
-						"required": ["type"],
-						"properties": {
-							"type": {
-								"type": "string",
-								"enum": ["text", "bytes"],
-								"description": "Chunk payload type"
-							},
-							"value": {
-								"type": "string",
-								"description": "UTF-8 text for text chunks"
-							},
-							"base64": {
-								"type": "string",
-								"description": "Base64-encoded bytes for binary chunks"
-							}
-						},
-						"additionalProperties": false,
-						"allOf": [
-							{
-								"if": {
-									"properties": {
-										"type": {
-											"const": "text"
-										}
-									}
-								},
-								"then": {
-									"required": ["value"]
-								}
-							},
-							{
-								"if": {
-									"properties": {
-										"type": {
-											"const": "bytes"
-										}
-									}
-								},
-								"then": {
-									"required": ["base64"]
-								}
-							}
-						]
-					}
-				}
-			}
-		},
-		"background": {
-			"type": "object",
-			"description": "Background task metadata. When present, handlers enqueue fire-and-forget work and tests assert against a state endpoint.",
-			"required": ["state_path", "state_key", "value_field", "expected_state"],
-			"properties": {
-				"state_path": {
-					"type": "string",
-					"description": "HTTP path that exposes accumulated background state (must be unique per fixture)"
-				},
-				"state_key": {
-					"type": "string",
-					"description": "JSON property returned by the state endpoint (e.g., 'events')"
-				},
-				"value_field": {
-					"type": "string",
-					"description": "Top-level JSON field from the request body to append to the background state"
-				},
-				"expected_state": {
-					"type": "array",
-					"description": "Ordered list of values expected at the state endpoint after the background job completes",
-					"items": {}
-				}
-			}
-		},
-		"request": {
-			"type": "object",
-			"description": "Request details. For HTTP: includes method and path. For gRPC: includes metadata and message.",
-			"properties": {
-				"method": {
-					"type": "string",
-					"description": "HTTP method (GET, POST, etc.) for HTTP handlers, or gRPC RPC method name (GetUser, CreateUser, etc.) for gRPC handlers",
-					"minLength": 1,
-					"examples": ["GET", "POST", "GetUser", "CreateUser"]
-				},
-				"path": {
-					"type": "string",
-					"description": "Request path without query string (required for HTTP requests)",
-					"minLength": 1,
-					"examples": ["/users/123", "/items", "/search"]
-				},
-				"query_params": {
-					"type": "object",
-					"description": "Query parameters as key-value pairs. Arrays represented as JSON arrays.",
-					"additionalProperties": {
-						"oneOf": [
-							{
-								"type": "string"
-							},
-							{
-								"type": "number"
-							},
-							{
-								"type": "boolean"
-							},
-							{
-								"type": "null"
-							},
-							{
-								"type": "array",
-								"items": {
-									"oneOf": [
-										{
-											"type": "string"
-										},
-										{
-											"type": "number"
-										},
-										{
-											"type": "boolean"
-										}
-									]
-								}
-							}
-						]
-					},
-					"examples": [
-						{
-							"page": 1,
-							"limit": 10,
-							"tags": ["rust", "web"]
-						}
-					]
-				},
-				"query_string": {
-					"type": "string",
-					"description": "Raw query string for exact encoding tests (e.g., 'a=1&b=2&b=3')"
-				},
-				"headers": {
-					"type": "object",
-					"description": "HTTP headers (lowercase keys preferred)",
-					"additionalProperties": {
-						"type": "string"
-					},
-					"examples": [
-						{
-							"content-type": "application/json",
-							"x-api-key": "secret"
-						}
-					]
-				},
-				"cookies": {
-					"type": "object",
-					"description": "Cookies as key-value pairs",
-					"additionalProperties": {
-						"type": "string"
-					},
-					"examples": [
-						{
-							"session": "abc123",
-							"theme": "dark"
-						}
-					]
-				},
-				"body": {
-					"description": "Request body (any JSON type)",
-					"examples": [
-						{
-							"name": "Alice",
-							"email": "alice@example.com"
-						},
-						["item1", "item2"],
-						"plain string"
-					]
-				},
-				"body_raw": {
-					"type": "string",
-					"description": "Raw request body string (for multipart, url-encoded, or exact byte testing)"
-				},
-				"content_type": {
-					"type": "string",
-					"description": "Content-Type header (convenience field, also in headers)",
-					"examples": ["application/json", "multipart/form-data", "application/x-www-form-urlencoded"]
-				},
-				"graphql": {
-					"type": "object",
-					"description": "GraphQL request details (query, variables, operation name)",
-					"properties": {
-						"query": {
-							"type": "string",
-							"description": "GraphQL query string"
-						},
-						"variables": {
-							"type": "object",
-							"description": "GraphQL variables object"
-						},
-						"operation_name": {
-							"type": "string",
-							"description": "GraphQL operation name"
-						},
-						"extensions": {
-							"type": "object",
-							"description": "GraphQL extensions object"
-						}
-					},
-					"required": ["query"],
-					"additionalProperties": false
-				},
-				"metadata": {
-					"type": "object",
-					"description": "gRPC request metadata (headers). Case-insensitive key-value pairs. (For gRPC fixtures)",
-					"additionalProperties": {
-						"type": "string"
-					},
-					"examples": [
-						{
-							"authorization": "Bearer token123",
-							"content-type": "application/grpc"
-						}
-					]
-				},
-				"message": {
-					"type": "object",
-					"description": "Protobuf message as JSON object (matches the input message type). Will be serialized to binary protobuf format. (For gRPC fixtures)"
-				},
-				"message_base64": {
-					"type": "string",
-					"description": "Base64-encoded binary protobuf message payload (alternative to message for exact byte testing). (For gRPC fixtures)"
-				}
-			},
-			"additionalProperties": false
-		},
-		"expected_response": {
-			"type": "object",
-			"description": "Expected response. For HTTP: includes integer status_code. For gRPC: includes string status_code (gRPC status) and/or protobuf message.",
-			"required": ["status_code"],
-			"properties": {
-				"status_code": {
-					"oneOf": [
-						{
-							"type": "integer",
-							"description": "Expected HTTP status code (100-599)",
-							"minimum": 100,
-							"maximum": 599,
-							"examples": [200, 201, 400, 422, 500]
-						},
-						{
-							"type": "string",
-							"description": "Expected gRPC status code",
-							"enum": [
-								"OK",
-								"CANCELLED",
-								"UNKNOWN",
-								"INVALID_ARGUMENT",
-								"DEADLINE_EXCEEDED",
-								"NOT_FOUND",
-								"ALREADY_EXISTS",
-								"PERMISSION_DENIED",
-								"RESOURCE_EXHAUSTED",
-								"FAILED_PRECONDITION",
-								"ABORTED",
-								"OUT_OF_RANGE",
-								"UNIMPLEMENTED",
-								"INTERNAL",
-								"UNAVAILABLE",
-								"DATA_LOSS",
-								"UNAUTHENTICATED"
-							],
-							"examples": ["OK", "NOT_FOUND", "INVALID_ARGUMENT"]
-						}
-					]
-				},
-				"body": {
-					"description": "Expected response body (any JSON type)"
-				},
-				"body_partial": {
-					"type": "object",
-					"description": "Partial body match (check only these fields exist with these values)",
-					"additionalProperties": true
-				},
-				"message": {
-					"type": "object",
-					"description": "Expected protobuf response message as JSON object (for gRPC fixtures)"
-				},
-				"message_partial": {
-					"type": "object",
-					"description": "Partial protobuf message match (check only these fields exist with these values) (for gRPC fixtures)"
-				},
-				"headers": {
-					"type": "object",
-					"description": "Expected response headers (partial match). Special tokens: '<<uuid>>' asserts the header is present and matches a UUID, '<<present>>' asserts presence with any value, '<<absent>>' asserts that the header must be missing.",
-					"additionalProperties": {
-						"type": "string"
-					}
-				},
-				"validation_errors": {
-					"type": "array",
-					"description": "Expected validation errors for 422 responses (Spikard format)",
-					"items": {
-						"type": "object",
-						"required": ["loc", "msg", "type"],
-						"properties": {
-							"loc": {
-								"type": "array",
-								"description": "Error location path (e.g., ['query', 'param_name'], ['body', 'field'])",
-								"items": {
-									"type": "string"
-								},
-								"minItems": 1
-							},
-							"msg": {
-								"type": "string",
-								"description": "Error message",
-								"minLength": 1
-							},
-							"type": {
-								"type": "string",
-								"description": "Error type (e.g., 'missing', 'string_too_short', 'int_parsing')",
-								"minLength": 1
-							},
-							"input": {
-								"description": "The input value that caused the error (null if missing)"
-							},
-							"ctx": {
-								"type": "object",
-								"description": "Additional context (e.g., min_length, gt, pattern)",
-								"additionalProperties": true
-							}
-						},
-						"additionalProperties": false
-					}
-				},
-				"dependency_resolution_order": {
-					"type": "array",
-					"description": "Expected dependency resolution order for DI fixtures. Each element is a batch (array of dependency keys) that should be resolved in parallel. Batches are processed sequentially.",
-					"items": {
-						"type": "array",
-						"description": "Batch of dependency keys that can be resolved in parallel",
-						"items": {
-							"type": "string"
-						}
-					},
-					"examples": [[["config"], ["db_pool", "cache"], ["auth_service"]]]
-				},
-				"graphql": {
-					"type": "object",
-					"description": "GraphQL response details (data, errors, extensions)",
-					"properties": {
-						"data": {
-							"description": "GraphQL response data (any JSON type)"
-						},
-						"data_partial": {
-							"type": "object",
-							"description": "Partial data match (check only these fields exist with these values)"
-						},
-						"errors": {
-							"type": "array",
-							"description": "GraphQL errors array (per GraphQL spec October 2021)",
-							"items": {
-								"type": "object",
-								"required": ["message"],
-								"properties": {
-									"message": {
-										"type": "string",
-										"description": "Error message"
-									},
-									"locations": {
-										"type": "array",
-										"description": "Source locations where error occurred",
-										"items": {
-											"type": "object",
-											"required": ["line", "column"],
-											"properties": {
-												"line": { "type": "integer", "minimum": 1 },
-												"column": { "type": "integer", "minimum": 1 }
-											}
-										}
-									},
-									"path": {
-										"type": "array",
-										"description": "Path to field that caused error",
-										"items": {
-											"oneOf": [{ "type": "string" }, { "type": "integer" }]
-										}
-									},
-									"extensions": {
-										"type": "object",
-										"description": "Additional error metadata"
-									}
-								}
-							}
-						},
-						"extensions": {
-							"type": "object",
-							"description": "GraphQL extensions object"
-						}
-					},
-					"additionalProperties": false
-				},
-				"protobuf": {
-					"type": "object",
-					"description": "Protobuf/gRPC response details (status code, message, metadata, trailers)",
-					"properties": {
-						"status_code": {
-							"type": "string",
-							"description": "gRPC status code (OK, CANCELLED, UNKNOWN, INVALID_ARGUMENT, DEADLINE_EXCEEDED, NOT_FOUND, ALREADY_EXISTS, PERMISSION_DENIED, RESOURCE_EXHAUSTED, FAILED_PRECONDITION, ABORTED, OUT_OF_RANGE, UNIMPLEMENTED, INTERNAL, UNAVAILABLE, DATA_LOSS, UNAUTHENTICATED)",
-							"enum": [
-								"OK",
-								"CANCELLED",
-								"UNKNOWN",
-								"INVALID_ARGUMENT",
-								"DEADLINE_EXCEEDED",
-								"NOT_FOUND",
-								"ALREADY_EXISTS",
-								"PERMISSION_DENIED",
-								"RESOURCE_EXHAUSTED",
-								"FAILED_PRECONDITION",
-								"ABORTED",
-								"OUT_OF_RANGE",
-								"UNIMPLEMENTED",
-								"INTERNAL",
-								"UNAVAILABLE",
-								"DATA_LOSS",
-								"UNAUTHENTICATED"
-							],
-							"examples": ["OK", "NOT_FOUND", "INVALID_ARGUMENT"]
-						},
-						"message": {
-							"type": "object",
-							"description": "Expected protobuf response message as JSON object (matches the output message type)"
-						},
-						"message_partial": {
-							"type": "object",
-							"description": "Partial message match (check only these fields exist with these values)"
-						},
-						"message_base64": {
-							"type": "string",
-							"description": "Base64-encoded binary protobuf message payload (for exact byte testing)"
-						},
-						"metadata": {
-							"type": "object",
-							"description": "Expected gRPC response metadata (headers)",
-							"additionalProperties": {
-								"type": "string"
-							}
-						},
-						"trailers": {
-							"type": "object",
-							"description": "Expected gRPC response trailers (status details)",
-							"additionalProperties": {
-								"type": "string"
-							}
-						},
-						"error_message": {
-							"type": "string",
-							"description": "Expected error message for non-OK status codes"
-						},
-						"error_details": {
-							"type": "object",
-							"description": "Expected error details (custom error data attached to response)"
-						}
-					},
-					"additionalProperties": false
-				}
-			},
-			"additionalProperties": false
-		},
-		"tags": {
-			"type": "array",
-			"description": "Tags for filtering/organization",
-			"items": {
-				"type": "string"
-			},
-			"examples": [["validation", "required"], ["edge-case", "unicode"], ["performance"]]
-		},
-		"skip": {
-			"type": "boolean",
-			"description": "Whether to skip this test (for WIP or known issues)",
-			"default": false
-		},
-		"skip_reason": {
-			"type": "string",
-			"description": "Reason for skipping (if skip=true)"
-		},
-		"notes": {
-			"type": "string",
-			"description": "Additional notes about this test case"
-		}
-	},
-	"additionalProperties": false,
-	"examples": [
-		{
-			"name": "Required string query parameter - success",
-			"description": "Validates that a required string query parameter is properly extracted",
-			"category": "query_params",
-			"source": {
-				"framework": "spikard",
-				"adapted": false
-			},
-			"handler": {
-				"route": "/search",
-				"method": "GET",
-				"parameters": {
-					"query": {
-						"q": {
-							"type": "string",
-							"minLength": 1
-						}
-					}
-				}
-			},
-			"request": {
-				"method": "GET",
-				"path": "/search",
-				"query_params": {
-					"q": "rust web framework"
-				}
-			},
-			"expected_response": {
-				"status_code": 200,
-				"body": {
-					"query": "rust web framework"
-				}
-			},
-			"tags": ["validation", "required", "string"]
-		}
-	]
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Spikard Test Fixture Schema",
+  "description": "Unified schema for all Spikard test fixtures across parameter types, bodies, and validation scenarios",
+  "type": "object",
+  "required": ["name", "description", "handler", "request", "expected_response"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Human-readable test case name",
+      "minLength": 1,
+      "examples": ["Required string query parameter - success"]
+    },
+    "description": {
+      "type": "string",
+      "description": "What this test validates and why it matters",
+      "minLength": 1,
+      "examples": ["Validates that required query parameters are properly extracted and validated"]
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "path_params",
+        "query_params",
+        "headers",
+        "cookies",
+        "json_bodies",
+        "multipart",
+        "url_encoded",
+        "content_types",
+        "status_codes",
+        "validation_errors",
+        "edge_cases",
+        "http_methods",
+        "dependency_injection",
+        "middleware",
+        "lifecycle_hooks",
+        "compression",
+        "rate_limit",
+        "request_timeout",
+        "request_id",
+        "body_limits",
+        "static_files",
+        "graphql",
+        "protobuf",
+        "grpc"
+      ],
+      "description": "Test category for organization"
+    },
+    "source": {
+      "type": "object",
+      "description": "Source framework and test reference (for test data extracted from other frameworks)",
+      "properties": {
+        "framework": {
+          "type": "string",
+          "enum": ["spikard", "litestar", "fastapi", "fastify", "nestjs", "express", "robyn"],
+          "description": "Source framework (spikard = native test)"
+        },
+        "test_file": {
+          "type": "string",
+          "description": "Path to original test file relative to framework root"
+        },
+        "test_function": {
+          "type": "string",
+          "description": "Name of the test function"
+        },
+        "adapted": {
+          "type": "boolean",
+          "description": "Whether this test was adapted from the source (true) or is a direct copy (false)",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "handler": {
+      "type": "object",
+      "description": "Handler definition - describes the route/service and method. For HTTP handlers: requires route and method. For gRPC handlers: requires service and method.",
+      "properties": {
+        "route": {
+          "type": "string",
+          "description": "Route pattern with parameter placeholders (e.g., '/users/{user_id:int}'). Used for HTTP handlers.",
+          "minLength": 1,
+          "examples": ["/users/{user_id:int}", "/items", "/search"]
+        },
+        "method": {
+          "type": "string",
+          "description": "HTTP method (GET, POST, etc.) for HTTP handlers, or gRPC RPC method name (GetUser, CreateUser, etc.) for gRPC handlers",
+          "minLength": 1,
+          "examples": ["GET", "POST", "GetUser", "CreateUser"]
+        },
+        "parameters": {
+          "type": "object",
+          "description": "Parameter definitions organized by source",
+          "properties": {
+            "path": {
+              "type": "object",
+              "description": "Path parameter schemas",
+              "additionalProperties": {
+                "type": "object",
+                "description": "JSON Schema for this path parameter"
+              }
+            },
+            "query": {
+              "type": "object",
+              "description": "Query parameter schemas",
+              "additionalProperties": {
+                "type": "object",
+                "description": "JSON Schema for this query parameter"
+              }
+            },
+            "header": {
+              "type": "object",
+              "description": "Header parameter schemas",
+              "additionalProperties": {
+                "type": "object",
+                "description": "JSON Schema for this header"
+              }
+            },
+            "cookie": {
+              "type": "object",
+              "description": "Cookie parameter schemas",
+              "additionalProperties": {
+                "type": "object",
+                "description": "JSON Schema for this cookie"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "body_schema": {
+          "type": "object",
+          "description": "JSON Schema for request body (for POST/PUT/PATCH)",
+          "examples": [
+            {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email"
+                }
+              },
+              "required": ["name", "email"]
+            }
+          ]
+        },
+        "response_schema": {
+          "type": "object",
+          "description": "JSON Schema for response body (for documentation/validation)"
+        },
+        "dependencies": {
+          "type": "object",
+          "description": "Dependency injection configuration - map of dependency key to dependency definition",
+          "additionalProperties": {
+            "type": "object",
+            "description": "Dependency definition",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["value", "factory", "async_factory"],
+                "description": "Dependency type: value (static), factory (sync creation), async_factory (async creation)"
+              },
+              "value": {
+                "description": "Static value for type='value' dependencies (any JSON type)"
+              },
+              "value_type": {
+                "type": "string",
+                "enum": ["string", "number", "integer", "boolean", "object", "array", "null"],
+                "description": "Type of the value for type='value' dependencies"
+              },
+              "factory": {
+                "type": "string",
+                "description": "Factory function name for type='factory' or 'async_factory' dependencies"
+              },
+              "depends_on": {
+                "type": "array",
+                "description": "Array of dependency keys that this dependency depends on",
+                "items": {
+                  "type": "string"
+                },
+                "default": []
+              },
+              "singleton": {
+                "type": "boolean",
+                "description": "If true, dependency is created once and shared across all requests (global cache)",
+                "default": false
+              },
+              "cacheable": {
+                "type": "boolean",
+                "description": "If true, dependency is cached within a single request (per-request cache)",
+                "default": false
+              },
+              "cleanup": {
+                "type": "boolean",
+                "description": "If true, dependency uses generator pattern for cleanup (yield in Python, cleanup callback in other languages)",
+                "default": false
+              },
+              "scope": {
+                "type": "string",
+                "enum": ["app", "route"],
+                "description": "Scope of the dependency: app-level (default) or route-level override",
+                "default": "app"
+              },
+              "python_type": {
+                "type": "string",
+                "description": "Python type name for type-based injection (e.g., 'DatabasePool', 'CacheClient')"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "handler_dependencies": {
+          "type": "array",
+          "description": "Array of dependency keys required by this handler (in resolution order)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "route_overrides": {
+          "type": "object",
+          "description": "Route-level dependency overrides that replace app-level dependencies for this specific route",
+          "additionalProperties": {
+            "type": "object",
+            "description": "Same structure as dependencies object - overrides app-level dependency with same key"
+          }
+        },
+        "injection_strategy": {
+          "type": "string",
+          "enum": ["name", "type", "destructure", "keyword_args"],
+          "description": "Language-specific injection strategy: name (Python param names), type (Python type hints), destructure (Node/TS), keyword_args (Ruby)"
+        },
+        "expected_types": {
+          "type": "object",
+          "description": "Expected types for dependencies (used to test type mismatch errors)",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "middleware": {
+          "type": "object",
+          "description": "Per-route middleware configuration (compression, rate limiting, timeouts, static files, etc.). Also carries test directives for features that require multiple requests or simulated delays.",
+          "properties": {
+            "compression": {
+              "type": "object",
+              "description": "Enable tower-http compression middleware with custom settings.",
+              "properties": {
+                "gzip": {
+                  "type": "boolean",
+                  "description": "Enable gzip encoding (default true)"
+                },
+                "brotli": {
+                  "type": "boolean",
+                  "description": "Enable brotli encoding (default true)"
+                },
+                "min_size": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "description": "Minimum response size in bytes before compression is applied (default 1024)"
+                },
+                "quality": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 11,
+                  "description": "Compression quality (0-11, default 6)"
+                }
+              },
+              "additionalProperties": false
+            },
+            "rate_limit": {
+              "type": "object",
+              "description": "Rate limiting configuration using tower-governor. Optional warmup directives instruct the generated tests to issue multiple requests before asserting the final status.",
+              "required": ["per_second", "burst"],
+              "properties": {
+                "per_second": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "Allowed requests per second"
+                },
+                "burst": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "Burst capacity"
+                },
+                "ip_based": {
+                  "type": "boolean",
+                  "description": "Apply limits per IP (default true)"
+                },
+                "warmup_requests": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "description": "How many additional requests to send before the assertion request (used to trigger 429 responses)"
+                },
+                "warmup_expect_status": {
+                  "type": "integer",
+                  "description": "Expected status code for warmup requests (defaults to 200)"
+                },
+                "sleep_ms_between": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "description": "Delay between warmup requests in milliseconds"
+                }
+              },
+              "additionalProperties": false
+            },
+            "request_timeout": {
+              "type": "object",
+              "description": "Request timeout configuration and simulated handler delay.",
+              "required": ["seconds"],
+              "properties": {
+                "seconds": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "description": "Timeout duration in seconds"
+                },
+                "sleep_ms": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "description": "Milliseconds that the handler should sleep to trigger the timeout"
+                }
+              },
+              "additionalProperties": false
+            },
+            "request_id": {
+              "type": "object",
+              "description": "Enable/disable automatic X-Request-ID header propagation.",
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Set to false to disable request ID middleware"
+                }
+              },
+              "additionalProperties": false
+            },
+            "body_limit": {
+              "type": "object",
+              "description": "Maximum request body size (DefaultBodyLimit).",
+              "properties": {
+                "max_bytes": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "description": "Maximum allowed bytes (0 or null disables limit)"
+                }
+              },
+              "additionalProperties": false
+            },
+            "static_files": {
+              "type": "array",
+              "description": "Static directories to serve via tower-http ServeDir. The generator will create these files under the e2e apps.",
+              "items": {
+                "type": "object",
+                "required": ["route_prefix", "files"],
+                "properties": {
+                  "route_prefix": {
+                    "type": "string",
+                    "description": "Path prefix (e.g., '/public')"
+                  },
+                  "directory_name": {
+                    "type": "string",
+                    "description": "Optional deterministic name for generated assets (defaults to fixture id)"
+                  },
+                  "index_file": {
+                    "type": "boolean",
+                    "description": "Append index.html for directory requests"
+                  },
+                  "cache_control": {
+                    "type": "string",
+                    "description": "Cache-Control header to apply to all static responses"
+                  },
+                  "files": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "object",
+                      "required": ["path", "content"],
+                      "properties": {
+                        "path": {
+                          "type": "string",
+                          "description": "Relative file path within the static directory"
+                        },
+                        "content": {
+                          "type": "string",
+                          "description": "File contents (utf-8). Use escaped sequences for HTML."
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "jwt_auth": {
+              "type": "object",
+              "description": "JWT authentication configuration (see auth fixtures).",
+              "additionalProperties": true
+            },
+            "api_key_auth": {
+              "type": "object",
+              "description": "API key authentication configuration.",
+              "additionalProperties": true
+            },
+            "openapi": {
+              "type": "object",
+              "description": "OpenAPI configuration overrides.",
+              "additionalProperties": true
+            },
+            "lifecycle_hooks": {
+              "type": "object",
+              "description": "Lifecycle hook definitions. See lifecycle_hooks fixtures.",
+              "additionalProperties": true
+            },
+            "graphql": {
+              "type": "object",
+              "description": "GraphQL configuration for handlers that serve GraphQL endpoints.",
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": true
+        },
+        "graphql": {
+          "type": "object",
+          "description": "GraphQL schema and resolver configuration for this handler",
+          "properties": {
+            "schema": {
+              "type": "string",
+              "description": "GraphQL SDL (Schema Definition Language) schema"
+            },
+            "resolvers": {
+              "type": "object",
+              "description": "Map of Type.field to resolver configs",
+              "additionalProperties": {
+                "type": "object",
+                "description": "Resolver configuration for a specific field",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["mock", "factory", "async_factory", "error"],
+                    "description": "Resolver type: mock (static), factory (sync creation), async_factory (async creation), error (throws error)"
+                  },
+                  "return_value": {
+                    "description": "Return value for mock type (any JSON type)"
+                  },
+                  "error_message": {
+                    "type": "string",
+                    "description": "Error message for error type resolvers"
+                  }
+                }
+              }
+            },
+            "endpoint": {
+              "type": "string",
+              "description": "GraphQL endpoint path",
+              "default": "/graphql"
+            },
+            "complexity_limit": {
+              "type": "integer",
+              "description": "Maximum query complexity allowed",
+              "minimum": 0
+            },
+            "depth_limit": {
+              "type": "integer",
+              "description": "Maximum query depth allowed",
+              "minimum": 0
+            },
+            "batch_size": {
+              "type": "integer",
+              "description": "Maximum batch size for batch requests",
+              "minimum": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        "service": {
+          "type": "string",
+          "description": "gRPC service name (fully qualified, e.g., 'example.v1.UserService'). Used for gRPC handlers.",
+          "minLength": 1,
+          "examples": ["example.v1.UserService", "payment.PaymentService"]
+        },
+        "protobuf": {
+          "type": "object",
+          "description": "Protocol Buffers (protobuf) schema and gRPC service configuration for this handler",
+          "properties": {
+            "package": {
+              "type": "string",
+              "description": "Protobuf package name (e.g., 'example.v1', 'myservice')",
+              "minLength": 1,
+              "examples": ["example.v1", "user.service", "payment"]
+            },
+            "messages": {
+              "type": "array",
+              "description": "Protobuf message definitions",
+              "items": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Message type name",
+                    "minLength": 1
+                  },
+                  "fields": {
+                    "type": "array",
+                    "description": "Field definitions for this message",
+                    "items": {
+                      "type": "object",
+                      "required": ["name", "type", "number"],
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "description": "Field name in snake_case",
+                          "minLength": 1
+                        },
+                        "type": {
+                          "type": "string",
+                          "description": "Field type: scalar type (int32, int64, uint32, uint64, sint32, sint64, fixed32, fixed64, sfixed32, sfixed64, float, double, bool, string, bytes) or message type name",
+                          "minLength": 1,
+                          "examples": ["int32", "string", "bytes", "bool", "User", "Address"]
+                        },
+                        "number": {
+                          "type": "integer",
+                          "description": "Field number (must be unique within message, 1-536870911)",
+                          "minimum": 1,
+                          "maximum": 536870911
+                        },
+                        "label": {
+                          "type": "string",
+                          "enum": ["optional", "required", "repeated"],
+                          "description": "Field cardinality/label (proto3 uses optional/repeated, proto2 adds required)"
+                        },
+                        "oneof": {
+                          "type": "string",
+                          "description": "Name of oneof group this field belongs to (optional)"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "nested_messages": {
+                    "type": "array",
+                    "description": "Nested message definitions",
+                    "items": {
+                      "type": "object",
+                      "required": ["name"],
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "fields": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        }
+                      },
+                      "additionalProperties": true
+                    }
+                  },
+                  "enums": {
+                    "type": "array",
+                    "description": "Enum definitions within this message",
+                    "items": {
+                      "type": "object",
+                      "required": ["name"],
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "values": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": ["name", "number"],
+                            "properties": {
+                              "name": {
+                                "type": "string"
+                              },
+                              "number": {
+                                "type": "integer"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "services": {
+              "type": "array",
+              "description": "gRPC service definitions",
+              "items": {
+                "type": "object",
+                "required": ["name", "methods"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Service name (e.g., 'UserService', 'AuthService')",
+                    "minLength": 1
+                  },
+                  "methods": {
+                    "type": "array",
+                    "description": "RPC method definitions",
+                    "items": {
+                      "type": "object",
+                      "required": ["name", "input_type", "output_type"],
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "description": "RPC method name (PascalCase convention)",
+                          "minLength": 1,
+                          "examples": ["GetUser", "ListUsers", "CreateUser", "DeleteUser"]
+                        },
+                        "input_type": {
+                          "type": "string",
+                          "description": "Input message type name",
+                          "minLength": 1
+                        },
+                        "output_type": {
+                          "type": "string",
+                          "description": "Output message type name",
+                          "minLength": 1
+                        },
+                        "client_streaming": {
+                          "type": "boolean",
+                          "description": "Whether this method accepts streaming client requests",
+                          "default": false
+                        },
+                        "server_streaming": {
+                          "type": "boolean",
+                          "description": "Whether this method returns streaming server responses",
+                          "default": false
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "minItems": 1
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "metadata": {
+              "type": "object",
+              "description": "gRPC metadata (headers) configuration and defaults",
+              "properties": {
+                "required_headers": {
+                  "type": "array",
+                  "description": "Required metadata header names (case-insensitive)",
+                  "items": {
+                    "type": "string"
+                  },
+                  "examples": [["authorization", "x-request-id"]]
+                },
+                "default_headers": {
+                  "type": "object",
+                  "description": "Default metadata headers for all requests",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "examples": [
+                    {
+                      "content-type": "application/grpc",
+                      "user-agent": "grpc-client/1.0"
+                    }
+                  ]
+                },
+                "timeout_ms": {
+                  "type": "integer",
+                  "description": "Default request timeout in milliseconds",
+                  "minimum": 0
+                },
+                "max_receive_message_length": {
+                  "type": "integer",
+                  "description": "Maximum allowed message size in bytes (0 = unlimited)",
+                  "minimum": 0
+                },
+                "max_send_message_length": {
+                  "type": "integer",
+                  "description": "Maximum send message size in bytes (0 = unlimited)",
+                  "minimum": 0
+                },
+                "compression": {
+                  "type": "string",
+                  "enum": ["gzip", "deflate", "snappy", "none"],
+                  "description": "Default compression algorithm for requests/responses"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["package"],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "protobuf": {
+      "type": "object",
+      "description": "Top-level Protocol Buffers schema definition for this test fixture. Defines the proto messages and services used by this test.",
+      "properties": {
+        "package": {
+          "type": "string",
+          "description": "Protobuf package name (e.g., 'example.v1', 'myservice')",
+          "minLength": 1,
+          "examples": ["example.v1", "user.service", "payment"]
+        },
+        "messages": {
+          "type": "array",
+          "description": "Protobuf message definitions",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Message type name",
+                "minLength": 1
+              },
+              "fields": {
+                "type": "array",
+                "description": "Field definitions for this message",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "type", "number"],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "Field name in snake_case",
+                      "minLength": 1
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Field type: scalar type (int32, int64, uint32, uint64, sint32, sint64, fixed32, fixed64, sfixed32, sfixed64, float, double, bool, string, bytes) or message type name",
+                      "minLength": 1,
+                      "examples": ["int32", "string", "bytes", "bool", "User", "Address"]
+                    },
+                    "number": {
+                      "type": "integer",
+                      "description": "Field number (must be unique within message, 1-536870911)",
+                      "minimum": 1,
+                      "maximum": 536870911
+                    },
+                    "label": {
+                      "type": "string",
+                      "enum": ["optional", "required", "repeated"],
+                      "description": "Field cardinality/label (proto3 uses optional/repeated, proto2 adds required)"
+                    },
+                    "oneof": {
+                      "type": "string",
+                      "description": "Name of oneof group this field belongs to (optional)"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "nested_messages": {
+                "type": "array",
+                "description": "Nested message definitions",
+                "items": {
+                  "type": "object",
+                  "required": ["name"],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "fields": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              },
+              "enums": {
+                "type": "array",
+                "description": "Enum definitions within this message",
+                "items": {
+                  "type": "object",
+                  "required": ["name"],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "values": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["name", "number"],
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "number": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "services": {
+          "type": "array",
+          "description": "gRPC service definitions",
+          "items": {
+            "type": "object",
+            "required": ["name", "methods"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Service name (e.g., 'UserService', 'AuthService')",
+                "minLength": 1
+              },
+              "methods": {
+                "type": "array",
+                "description": "RPC method definitions",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "input_type", "output_type"],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "RPC method name (PascalCase convention)",
+                      "minLength": 1,
+                      "examples": ["GetUser", "ListUsers", "CreateUser", "DeleteUser"]
+                    },
+                    "input_type": {
+                      "type": "string",
+                      "description": "Input message type name",
+                      "minLength": 1
+                    },
+                    "output_type": {
+                      "type": "string",
+                      "description": "Output message type name",
+                      "minLength": 1
+                    },
+                    "client_streaming": {
+                      "type": "boolean",
+                      "description": "Whether this method accepts streaming client requests",
+                      "default": false
+                    },
+                    "server_streaming": {
+                      "type": "boolean",
+                      "description": "Whether this method returns streaming server responses",
+                      "default": false
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "minItems": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["package"],
+      "additionalProperties": false
+    },
+    "streaming": {
+      "type": "object",
+      "description": "Streaming response metadata. When present, handlers should return a streaming response using these chunks.",
+      "required": ["chunks"],
+      "properties": {
+        "content_type": {
+          "type": "string",
+          "description": "Content-Type to set for the streaming response (overrides expected_response headers if provided)"
+        },
+        "chunks": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Ordered list of chunks yielded by the stream",
+          "items": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["text", "bytes"],
+                "description": "Chunk payload type"
+              },
+              "value": {
+                "type": "string",
+                "description": "UTF-8 text for text chunks"
+              },
+              "base64": {
+                "type": "string",
+                "description": "Base64-encoded bytes for binary chunks"
+              }
+            },
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "type": {
+                      "const": "text"
+                    }
+                  }
+                },
+                "then": {
+                  "required": ["value"]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "type": {
+                      "const": "bytes"
+                    }
+                  }
+                },
+                "then": {
+                  "required": ["base64"]
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "background": {
+      "type": "object",
+      "description": "Background task metadata. When present, handlers enqueue fire-and-forget work and tests assert against a state endpoint.",
+      "required": ["state_path", "state_key", "value_field", "expected_state"],
+      "properties": {
+        "state_path": {
+          "type": "string",
+          "description": "HTTP path that exposes accumulated background state (must be unique per fixture)"
+        },
+        "state_key": {
+          "type": "string",
+          "description": "JSON property returned by the state endpoint (e.g., 'events')"
+        },
+        "value_field": {
+          "type": "string",
+          "description": "Top-level JSON field from the request body to append to the background state"
+        },
+        "expected_state": {
+          "type": "array",
+          "description": "Ordered list of values expected at the state endpoint after the background job completes",
+          "items": {}
+        }
+      }
+    },
+    "request": {
+      "type": "object",
+      "description": "Request details. For HTTP: includes method and path. For gRPC: includes metadata and message.",
+      "properties": {
+        "method": {
+          "type": "string",
+          "description": "HTTP method (GET, POST, etc.) for HTTP handlers, or gRPC RPC method name (GetUser, CreateUser, etc.) for gRPC handlers",
+          "minLength": 1,
+          "examples": ["GET", "POST", "GetUser", "CreateUser"]
+        },
+        "path": {
+          "type": "string",
+          "description": "Request path without query string (required for HTTP requests)",
+          "minLength": 1,
+          "examples": ["/users/123", "/items", "/search"]
+        },
+        "query_params": {
+          "type": "object",
+          "description": "Query parameters as key-value pairs. Arrays represented as JSON arrays.",
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "examples": [
+            {
+              "page": 1,
+              "limit": 10,
+              "tags": ["rust", "web"]
+            }
+          ]
+        },
+        "query_string": {
+          "type": "string",
+          "description": "Raw query string for exact encoding tests (e.g., 'a=1&b=2&b=3')"
+        },
+        "headers": {
+          "type": "object",
+          "description": "HTTP headers (lowercase keys preferred)",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "examples": [
+            {
+              "content-type": "application/json",
+              "x-api-key": "secret"
+            }
+          ]
+        },
+        "cookies": {
+          "type": "object",
+          "description": "Cookies as key-value pairs",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "examples": [
+            {
+              "session": "abc123",
+              "theme": "dark"
+            }
+          ]
+        },
+        "body": {
+          "description": "Request body (any JSON type)",
+          "examples": [
+            {
+              "name": "Alice",
+              "email": "alice@example.com"
+            },
+            ["item1", "item2"],
+            "plain string"
+          ]
+        },
+        "body_raw": {
+          "type": "string",
+          "description": "Raw request body string (for multipart, url-encoded, or exact byte testing)"
+        },
+        "content_type": {
+          "type": "string",
+          "description": "Content-Type header (convenience field, also in headers)",
+          "examples": [
+            "application/json",
+            "multipart/form-data",
+            "application/x-www-form-urlencoded"
+          ]
+        },
+        "graphql": {
+          "type": "object",
+          "description": "GraphQL request details (query, variables, operation name)",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "GraphQL query string"
+            },
+            "variables": {
+              "type": "object",
+              "description": "GraphQL variables object"
+            },
+            "operation_name": {
+              "type": "string",
+              "description": "GraphQL operation name"
+            },
+            "extensions": {
+              "type": "object",
+              "description": "GraphQL extensions object"
+            }
+          },
+          "required": ["query"],
+          "additionalProperties": false
+        },
+        "metadata": {
+          "type": "object",
+          "description": "gRPC request metadata (headers). Case-insensitive key-value pairs. (For gRPC fixtures)",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "examples": [
+            {
+              "authorization": "Bearer token123",
+              "content-type": "application/grpc"
+            }
+          ]
+        },
+        "message": {
+          "type": "object",
+          "description": "Protobuf message as JSON object (matches the input message type). Will be serialized to binary protobuf format. (For gRPC fixtures)"
+        },
+        "message_base64": {
+          "type": "string",
+          "description": "Base64-encoded binary protobuf message payload (alternative to message for exact byte testing). (For gRPC fixtures)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "expected_response": {
+      "type": "object",
+      "description": "Expected response. For HTTP: includes integer status_code. For gRPC: includes string status_code (gRPC status) and/or protobuf message.",
+      "required": ["status_code"],
+      "properties": {
+        "status_code": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "description": "Expected HTTP status code (100-599)",
+              "minimum": 100,
+              "maximum": 599,
+              "examples": [200, 201, 400, 422, 500]
+            },
+            {
+              "type": "string",
+              "description": "Expected gRPC status code",
+              "enum": [
+                "OK",
+                "CANCELLED",
+                "UNKNOWN",
+                "INVALID_ARGUMENT",
+                "DEADLINE_EXCEEDED",
+                "NOT_FOUND",
+                "ALREADY_EXISTS",
+                "PERMISSION_DENIED",
+                "RESOURCE_EXHAUSTED",
+                "FAILED_PRECONDITION",
+                "ABORTED",
+                "OUT_OF_RANGE",
+                "UNIMPLEMENTED",
+                "INTERNAL",
+                "UNAVAILABLE",
+                "DATA_LOSS",
+                "UNAUTHENTICATED"
+              ],
+              "examples": ["OK", "NOT_FOUND", "INVALID_ARGUMENT"]
+            }
+          ]
+        },
+        "body": {
+          "description": "Expected response body (any JSON type)"
+        },
+        "body_partial": {
+          "type": "object",
+          "description": "Partial body match (check only these fields exist with these values)",
+          "additionalProperties": true
+        },
+        "message": {
+          "type": "object",
+          "description": "Expected protobuf response message as JSON object (for gRPC fixtures)"
+        },
+        "message_partial": {
+          "type": "object",
+          "description": "Partial protobuf message match (check only these fields exist with these values) (for gRPC fixtures)"
+        },
+        "headers": {
+          "type": "object",
+          "description": "Expected response headers (partial match). Special tokens: '<<uuid>>' asserts the header is present and matches a UUID, '<<present>>' asserts presence with any value, '<<absent>>' asserts that the header must be missing.",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "validation_errors": {
+          "type": "array",
+          "description": "Expected validation errors for 422 responses (Spikard format)",
+          "items": {
+            "type": "object",
+            "required": ["loc", "msg", "type"],
+            "properties": {
+              "loc": {
+                "type": "array",
+                "description": "Error location path (e.g., ['query', 'param_name'], ['body', 'field'])",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1
+              },
+              "msg": {
+                "type": "string",
+                "description": "Error message",
+                "minLength": 1
+              },
+              "type": {
+                "type": "string",
+                "description": "Error type (e.g., 'missing', 'string_too_short', 'int_parsing')",
+                "minLength": 1
+              },
+              "input": {
+                "description": "The input value that caused the error (null if missing)"
+              },
+              "ctx": {
+                "type": "object",
+                "description": "Additional context (e.g., min_length, gt, pattern)",
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "dependency_resolution_order": {
+          "type": "array",
+          "description": "Expected dependency resolution order for DI fixtures. Each element is a batch (array of dependency keys) that should be resolved in parallel. Batches are processed sequentially.",
+          "items": {
+            "type": "array",
+            "description": "Batch of dependency keys that can be resolved in parallel",
+            "items": {
+              "type": "string"
+            }
+          },
+          "examples": [[["config"], ["db_pool", "cache"], ["auth_service"]]]
+        },
+        "graphql": {
+          "type": "object",
+          "description": "GraphQL response details (data, errors, extensions)",
+          "properties": {
+            "data": {
+              "description": "GraphQL response data (any JSON type)"
+            },
+            "data_partial": {
+              "type": "object",
+              "description": "Partial data match (check only these fields exist with these values)"
+            },
+            "errors": {
+              "type": "array",
+              "description": "GraphQL errors array (per GraphQL spec October 2021)",
+              "items": {
+                "type": "object",
+                "required": ["message"],
+                "properties": {
+                  "message": {
+                    "type": "string",
+                    "description": "Error message"
+                  },
+                  "locations": {
+                    "type": "array",
+                    "description": "Source locations where error occurred",
+                    "items": {
+                      "type": "object",
+                      "required": ["line", "column"],
+                      "properties": {
+                        "line": { "type": "integer", "minimum": 1 },
+                        "column": { "type": "integer", "minimum": 1 }
+                      }
+                    }
+                  },
+                  "path": {
+                    "type": "array",
+                    "description": "Path to field that caused error",
+                    "items": {
+                      "oneOf": [{ "type": "string" }, { "type": "integer" }]
+                    }
+                  },
+                  "extensions": {
+                    "type": "object",
+                    "description": "Additional error metadata"
+                  }
+                }
+              }
+            },
+            "extensions": {
+              "type": "object",
+              "description": "GraphQL extensions object"
+            }
+          },
+          "additionalProperties": false
+        },
+        "protobuf": {
+          "type": "object",
+          "description": "Protobuf/gRPC response details (status code, message, metadata, trailers)",
+          "properties": {
+            "status_code": {
+              "type": "string",
+              "description": "gRPC status code (OK, CANCELLED, UNKNOWN, INVALID_ARGUMENT, DEADLINE_EXCEEDED, NOT_FOUND, ALREADY_EXISTS, PERMISSION_DENIED, RESOURCE_EXHAUSTED, FAILED_PRECONDITION, ABORTED, OUT_OF_RANGE, UNIMPLEMENTED, INTERNAL, UNAVAILABLE, DATA_LOSS, UNAUTHENTICATED)",
+              "enum": [
+                "OK",
+                "CANCELLED",
+                "UNKNOWN",
+                "INVALID_ARGUMENT",
+                "DEADLINE_EXCEEDED",
+                "NOT_FOUND",
+                "ALREADY_EXISTS",
+                "PERMISSION_DENIED",
+                "RESOURCE_EXHAUSTED",
+                "FAILED_PRECONDITION",
+                "ABORTED",
+                "OUT_OF_RANGE",
+                "UNIMPLEMENTED",
+                "INTERNAL",
+                "UNAVAILABLE",
+                "DATA_LOSS",
+                "UNAUTHENTICATED"
+              ],
+              "examples": ["OK", "NOT_FOUND", "INVALID_ARGUMENT"]
+            },
+            "message": {
+              "type": "object",
+              "description": "Expected protobuf response message as JSON object (matches the output message type)"
+            },
+            "message_partial": {
+              "type": "object",
+              "description": "Partial message match (check only these fields exist with these values)"
+            },
+            "message_base64": {
+              "type": "string",
+              "description": "Base64-encoded binary protobuf message payload (for exact byte testing)"
+            },
+            "metadata": {
+              "type": "object",
+              "description": "Expected gRPC response metadata (headers)",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "trailers": {
+              "type": "object",
+              "description": "Expected gRPC response trailers (status details)",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "error_message": {
+              "type": "string",
+              "description": "Expected error message for non-OK status codes"
+            },
+            "error_details": {
+              "type": "object",
+              "description": "Expected error details (custom error data attached to response)"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "tags": {
+      "type": "array",
+      "description": "Tags for filtering/organization",
+      "items": {
+        "type": "string"
+      },
+      "examples": [["validation", "required"], ["edge-case", "unicode"], ["performance"]]
+    },
+    "skip": {
+      "type": "boolean",
+      "description": "Whether to skip this test (for WIP or known issues)",
+      "default": false
+    },
+    "skip_reason": {
+      "type": "string",
+      "description": "Reason for skipping (if skip=true)"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes about this test case"
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "name": "Required string query parameter - success",
+      "description": "Validates that a required string query parameter is properly extracted",
+      "category": "query_params",
+      "source": {
+        "framework": "spikard",
+        "adapted": false
+      },
+      "handler": {
+        "route": "/search",
+        "method": "GET",
+        "parameters": {
+          "query": {
+            "q": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "path": "/search",
+        "query_params": {
+          "q": "rust web framework"
+        }
+      },
+      "expected_response": {
+        "status_code": 200,
+        "body": {
+          "query": "rust web framework"
+        }
+      },
+      "tags": ["validation", "required", "string"]
+    }
+  ]
 }

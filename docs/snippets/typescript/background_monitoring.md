@@ -13,14 +13,14 @@ app.addRoute(
         email: emailCounts,
       },
     };
-  }
+  },
 );
 
 app.addRoute(
   { method: "GET", path: "/jobs/:jobId/status", handler_name: "job_status", is_async: true },
   async (req) => {
     const jobId = req.params.jobId;
-    const job = await uploadQueue.getJob(jobId) || await emailQueue.getJob(jobId);
+    const job = (await uploadQueue.getJob(jobId)) || (await emailQueue.getJob(jobId));
 
     if (!job) {
       return { error: "Job not found", jobId };
@@ -37,6 +37,6 @@ app.addRoute(
       finishedOn: job.finishedOn,
       failedReason: job.failedReason,
     };
-  }
+  },
 );
 ```

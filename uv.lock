@@ -1300,6 +1300,20 @@ name = "spikard"
 version = "0.14.0"
 source = { editable = "packages/python" }
 
+[package.dev-dependencies]
+dev = [
+    { name = "mypy" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "mypy", specifier = ">=1.19.0" },
+    { name = "ruff", specifier = ">=0.14.8" },
+]
+
 [[package]]
 name = "starlette"
 version = "1.0.0"

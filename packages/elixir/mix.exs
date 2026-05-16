@@ -6,17 +6,12 @@ defmodule Spikard.MixProject do
       app: :spikard,
       version: "0.14.0",
       elixir: "~> 1.14",
-      elixirc_paths: elixirc_paths(Mix.env()),
+      elixirc_paths: ["lib", Path.expand("../../crates/spikard-elixir/src", __DIR__)],
       rustler_crates: [spikard_nif: [mode: :release]],
       description: "Rust-centric multi-language HTTP framework with polyglot bindings",
       package: package(),
       deps: deps()
     ]
-  end
-
-  defp elixirc_paths(_env) do
-    nif_src = Path.expand("../../crates/spikard-elixir/src", __DIR__)
-    ["lib", nif_src]
   end
 
   defp package do
@@ -29,7 +24,7 @@ defmodule Spikard.MixProject do
 
   defp deps do
     [
-      {:rustler, "~> 0.37.0", optional: true, runtime: false},
+      {:rustler, "~> 0.37.0", runtime: false},
       {:rustler_precompiled, "~> 0.9"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.40", only: :dev, runtime: false}

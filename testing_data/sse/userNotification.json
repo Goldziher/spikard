@@ -1,63 +1,63 @@
 {
-	"channel": "/notifications",
-	"description": "Test fixture for userNotification message",
-	"examples": [
-		{
-			"body": "You have received a new direct message",
-			"priority": "high",
-			"timestamp": "2024-01-15T10:30:00Z",
-			"title": "New message from John",
-			"type": "user_notification",
-			"userId": "user_12345"
-		}
-	],
-	"name": "userNotification",
-	"operations": [
-		{
-			"action": "send",
-			"name": "streamNotifications",
-			"replies": []
-		}
-	],
-	"protocol": "sse",
-	"schema": {
-		"properties": {
-			"body": {
-				"description": "Notification body text",
-				"maxLength": 500,
-				"minLength": 1,
-				"type": "string"
-			},
-			"priority": {
-				"default": "normal",
-				"description": "Notification priority",
-				"enum": ["low", "normal", "high", "urgent"],
-				"type": "string"
-			},
-			"timestamp": {
-				"description": "ISO 8601 timestamp",
-				"format": "date-time",
-				"type": "string"
-			},
-			"title": {
-				"description": "Notification title",
-				"maxLength": 100,
-				"minLength": 1,
-				"type": "string"
-			},
-			"type": {
-				"const": "user_notification",
-				"description": "Message type identifier",
-				"type": "string"
-			},
-			"userId": {
-				"description": "Target user ID",
-				"maxLength": 50,
-				"minLength": 1,
-				"type": "string"
-			}
-		},
-		"required": ["type", "userId", "title", "body", "timestamp"],
-		"type": "object"
-	}
+  "channel": "/notifications",
+  "description": "Test fixture for userNotification message",
+  "examples": [
+    {
+      "body": "You have received a new direct message",
+      "priority": "high",
+      "timestamp": "2024-01-15T10:30:00Z",
+      "title": "New message from John",
+      "type": "user_notification",
+      "userId": "user_12345"
+    }
+  ],
+  "name": "userNotification",
+  "operations": [
+    {
+      "action": "send",
+      "name": "streamNotifications",
+      "replies": []
+    }
+  ],
+  "protocol": "sse",
+  "schema": {
+    "properties": {
+      "body": {
+        "description": "Notification body text",
+        "maxLength": 500,
+        "minLength": 1,
+        "type": "string"
+      },
+      "priority": {
+        "default": "normal",
+        "description": "Notification priority",
+        "enum": ["low", "normal", "high", "urgent"],
+        "type": "string"
+      },
+      "timestamp": {
+        "description": "ISO 8601 timestamp",
+        "format": "date-time",
+        "type": "string"
+      },
+      "title": {
+        "description": "Notification title",
+        "maxLength": 100,
+        "minLength": 1,
+        "type": "string"
+      },
+      "type": {
+        "const": "user_notification",
+        "description": "Message type identifier",
+        "type": "string"
+      },
+      "userId": {
+        "description": "Target user ID",
+        "maxLength": 50,
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "required": ["type", "userId", "title", "body", "timestamp"],
+    "type": "object"
+  }
 }

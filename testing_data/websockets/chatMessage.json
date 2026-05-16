@@ -1,59 +1,59 @@
 {
-	"channel": "/chat",
-	"description": "Test fixture for chatMessage message",
-	"examples": [
-		{
-			"text": "Hello, everyone!",
-			"timestamp": "2024-01-15T10:30:00Z",
-			"type": "message",
-			"user": "alice"
-		}
-	],
-	"name": "chatMessage",
-	"operations": [
-		{
-			"action": "send",
-			"name": "sendMessage",
-			"replies": []
-		},
-		{
-			"action": "receive",
-			"name": "receiveMessage",
-			"replies": []
-		},
-		{
-			"action": "receive",
-			"name": "publishChat",
-			"replies": ["chatAck"]
-		}
-	],
-	"protocol": "websocket",
-	"schema": {
-		"properties": {
-			"text": {
-				"description": "Message content",
-				"maxLength": 500,
-				"minLength": 1,
-				"type": "string"
-			},
-			"timestamp": {
-				"description": "ISO 8601 timestamp",
-				"format": "date-time",
-				"type": "string"
-			},
-			"type": {
-				"const": "message",
-				"description": "Message type identifier",
-				"type": "string"
-			},
-			"user": {
-				"description": "Username of the sender",
-				"maxLength": 50,
-				"minLength": 1,
-				"type": "string"
-			}
-		},
-		"required": ["type", "user", "text", "timestamp"],
-		"type": "object"
-	}
+  "channel": "/chat",
+  "description": "Test fixture for chatMessage message",
+  "examples": [
+    {
+      "text": "Hello, everyone!",
+      "timestamp": "2024-01-15T10:30:00Z",
+      "type": "message",
+      "user": "alice"
+    }
+  ],
+  "name": "chatMessage",
+  "operations": [
+    {
+      "action": "send",
+      "name": "sendMessage",
+      "replies": []
+    },
+    {
+      "action": "receive",
+      "name": "receiveMessage",
+      "replies": []
+    },
+    {
+      "action": "receive",
+      "name": "publishChat",
+      "replies": ["chatAck"]
+    }
+  ],
+  "protocol": "websocket",
+  "schema": {
+    "properties": {
+      "text": {
+        "description": "Message content",
+        "maxLength": 500,
+        "minLength": 1,
+        "type": "string"
+      },
+      "timestamp": {
+        "description": "ISO 8601 timestamp",
+        "format": "date-time",
+        "type": "string"
+      },
+      "type": {
+        "const": "message",
+        "description": "Message type identifier",
+        "type": "string"
+      },
+      "user": {
+        "description": "Username of the sender",
+        "maxLength": 50,
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "required": ["type", "user", "text", "timestamp"],
+    "type": "object"
+  }
 }

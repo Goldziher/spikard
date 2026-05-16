@@ -46,36 +46,31 @@ Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC code
 
 ## Installation
 
-
 **npm:**
+
 ```bash
 npm install @spikard/wasm
 ```
 
-
 **pnpm:**
+
 ```bash
 pnpm add @spikard/wasm
 ```
 
-
 **yarn:**
+
 ```bash
 yarn add @spikard/wasm
 ```
 
-
 ### System Requirements
-
 
 - Modern browser with WebAssembly support, or Node.js 18+, or Deno 1.0+
 
-
 ## Quick Start
 
-
 See the [spikard repository](https://github.com/Goldziher/spikard) for usage examples and guides.
-
 
 ## Features
 
@@ -85,7 +80,6 @@ See the [spikard repository](https://github.com/Goldziher/spikard) for usage exa
 - **Lifecycle hooks** — `onRequest`, `preValidation`, `preHandler`, `onResponse`, `onError`
 - **Fixture-driven testing** — shared JSON fixtures drive tests across all language bindings
 - **Polyglot** — single Rust core, thin bindings for Python, Node.js, Ruby, PHP, Elixir, Go, Java, C#, Kotlin, Dart, Gleam, WASM, Swift, Zig, and C FFI
-
 
 ## Documentation
 

@@ -2,40 +2,40 @@
 // Create handler using helper function
 const userServiceHandler = createServiceHandler({
   GetUser: createUnaryHandler<GetUserRequest, User>(
-    'GetUser',
+    "GetUser",
     async (req, metadata) => {
       // Validate
       if (req.id <= 0) {
-        throw new GrpcError(GrpcStatusCode.INVALID_ARGUMENT, 'Invalid ID');
+        throw new GrpcError(GrpcStatusCode.INVALID_ARGUMENT, "Invalid ID");
       }
 
       // Business logic
       const user = await userRepository.findById(req.id);
       if (!user) {
-        throw new GrpcError(GrpcStatusCode.NOT_FOUND, 'User not found');
+        throw new GrpcError(GrpcStatusCode.NOT_FOUND, "User not found");
       }
 
       // Return with metadata
       return {
         response: user,
-        metadata: { 'x-user-found': 'true' },
+        metadata: { "x-user-found": "true" },
       };
     },
     userservice.GetUserRequest,
-    userservice.User
+    userservice.User,
   ),
 
   CreateUser: createUnaryHandler<CreateUserRequest, User>(
-    'CreateUser',
+    "CreateUser",
     async (req, metadata) => {
       // Validate
       if (!req.name || !req.email) {
-        throw new GrpcError(GrpcStatusCode.INVALID_ARGUMENT, 'Missing fields');
+        throw new GrpcError(GrpcStatusCode.INVALID_ARGUMENT, "Missing fields");
       }
 
       // Check auth
-      if (!metadata['authorization']) {
-        throw new GrpcError(GrpcStatusCode.UNAUTHENTICATED, 'Auth required');
+      if (!metadata["authorization"]) {
+        throw new GrpcError(GrpcStatusCode.UNAUTHENTICATED, "Auth required");
       }
 
       // Business logic
@@ -43,11 +43,11 @@ const userServiceHandler = createServiceHandler({
 
       return {
         response: user,
-        metadata: { 'x-created': 'true' },
+        metadata: { "x-created": "true" },
       };
     },
     userservice.CreateUserRequest,
-    userservice.User
+    userservice.User,
   ),
 });
 ```

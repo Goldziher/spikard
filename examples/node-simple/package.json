@@ -1,22 +1,22 @@
 {
-	"name": "@examples/node-simple",
-	"version": "0.0.1",
-	"private": true,
-	"type": "module",
-	"description": "Simple Spikard Node.js example with basic routing",
-	"scripts": {
-		"dev": "tsx src/server.ts",
-		"start": "tsx src/server.ts"
-	},
-	"dependencies": {
-		"@spikard/node": "workspace:*"
-	},
-	"devDependencies": {
-		"@types/node": "^25.8.0",
-		"tsx": "^4.22.0",
-		"typescript": "^6.0.3"
-	},
-	"engines": {
-		"node": ">=18"
-	}
+  "name": "@examples/node-simple",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Simple Spikard Node.js example with basic routing",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/server.ts",
+    "start": "tsx src/server.ts"
+  },
+  "dependencies": {
+    "@spikard/node": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^25.8.0",
+    "tsx": "^4.22.0",
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
 }

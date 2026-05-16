@@ -428,13 +428,13 @@ See [spikard-php](../spikard-php/README.md) for details.
 
 Benchmarked across 34 workloads at 100 concurrency ([methodology](../../docs/benchmarks/methodology.md)):
 
-| Framework | Avg RPS | P50 (ms) | P99 (ms) |
-|-----------|--------:|----------:|----------:|
-| **spikard-rust** | 55,755 | 1.0 | 1.0 |
-| spikard-node | 24,283 | 2.22 | 2.22 |
-| spikard-php | 20,176 | 2.66 | 2.66 |
-| spikard-python | 11,902 | 4.41 | 4.41 |
-| spikard-ruby | 8,271 | 6.5 | 6.5 |
+| Framework        | Avg RPS | P50 (ms) | P99 (ms) |
+| ---------------- | ------: | -------: | -------: |
+| **spikard-rust** |  55,755 |      1.0 |      1.0 |
+| spikard-node     |  24,283 |     2.22 |     2.22 |
+| spikard-php      |  20,176 |     2.66 |     2.66 |
+| spikard-python   |  11,902 |     4.41 |     4.41 |
+| spikard-ruby     |   8,271 |      6.5 |      6.5 |
 
 Spikard is **the fastest binding, delivering native Rust performance as the reference implementation**.
 

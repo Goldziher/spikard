@@ -1,2 +1,4 @@
 rust_root: .
+rust_input: crate
 dart_output: ../lib/src/spikard_bridge_generated
+add_mod_to_lib: false

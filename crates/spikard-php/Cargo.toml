@@ -8,9 +8,6 @@ readme = false
 keywords = ["http", "web", "framework", "polyglot", "rust"]
 categories = ["text-processing"]
 
-[package.metadata.cargo-machete]
-ignored = ["anyhow", "futures", "tokio"]
-
 [lib]
 crate-type = ["cdylib"]
 
@@ -18,9 +15,7 @@ crate-type = ["cdylib"]
 extension-module = []
 
 [dependencies]
-anyhow = "1.0"
 ext-php-rs = "0.15"
-futures = "0.3"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 spikard = { path = "../spikard", features = ["di"] }
@@ -28,6 +23,3 @@ spikard-core = { path = "../spikard-core" }
 spikard-graphql = { path = "../spikard-graphql" }
 spikard-http = { path = "../spikard-http" }
 tokio = { version = "1", features = ["full"] }
-
-[lints]
-workspace = true

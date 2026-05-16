@@ -49,10 +49,7 @@ describe("Upload Queue", () => {
       return { success: true };
     });
 
-    const job = await testQueue.add(
-      { fileId: 123 },
-      { attempts: 3, backoff: 100 }
-    );
+    const job = await testQueue.add({ fileId: 123 }, { attempts: 3, backoff: 100 });
 
     const result = await job.finished();
     expect(attempts).toBe(3);
@@ -64,10 +61,7 @@ describe("Upload Queue", () => {
       throw new Error("Persistent failure");
     });
 
-    const job = await testQueue.add(
-      { fileId: 123 },
-      { attempts: 2 }
-    );
+    const job = await testQueue.add({ fileId: 123 }, { attempts: 2 });
 
     await expect(job.finished()).rejects.toThrow("Persistent failure");
     const state = await job.getState();

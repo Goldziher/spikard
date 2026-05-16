@@ -1,6 +1,7 @@
 ### Required Tools
 
 1. **protoc** (Protocol Buffers compiler):
+
    ```bash
    # macOS
    brew install protobuf
@@ -13,6 +14,7 @@
    ```
 
 2. **Spikard CLI**:
+
    ```bash
    cargo install spikard-cli
    ```
@@ -20,26 +22,26 @@
 3. **Language-specific protobuf runtime**:
 
 === "Python"
-    ```bash
+`bash
     pip install protobuf  # or: uv add protobuf
-    ```
+    `
 
 === "TypeScript"
-    ```bash
+`bash
     npm install protobufjs  # or: pnpm add protobufjs
-    ```
+    `
 
 === "Ruby"
-    ```bash
+`bash
     gem install google-protobuf
-    ```
+    `
 
 === "PHP"
-    ```bash
+`bash
     composer require google/protobuf
-    ```
+    `
 
 === "Rust"
-    ```bash
+`bash
     cargo add prost prost-types
-    ```
+    `

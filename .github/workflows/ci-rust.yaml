@@ -5,313 +5,102 @@ on:
   push:
     branches: [main]
     paths:
-      - 'crates/**/*.rs'
-      - 'Cargo.toml'
-      - 'Cargo.lock'
-      - 'rust-toolchain.toml'
-      - '.cargo/config.toml'
-      - 'tarpaulin.toml'
-      - '.github/workflows/ci-rust.yaml'
-      - '.github/actions/setup-rust/**'
+      - "crates/**"
+      - "tools/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - ".cargo/config.toml"
+      - ".task/languages/rust.yml"
+      - ".github/workflows/ci-rust.yaml"
   pull_request:
     branches: [main]
     paths:
-      - 'crates/**/*.rs'
-      - 'Cargo.toml'
-      - 'Cargo.lock'
-      - 'rust-toolchain.toml'
-      - '.cargo/config.toml'
-      - 'tarpaulin.toml'
-      - '.github/workflows/ci-rust.yaml'
-      - '.github/actions/setup-rust/**'
+      - "crates/**"
+      - "tools/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - ".cargo/config.toml"
+      - ".task/languages/rust.yml"
+      - ".github/workflows/ci-rust.yaml"
 
 concurrency:
-  group: ci-spikard-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ci-rust-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_DEV_DEBUG: 0
+  RUST_BACKTRACE: short
+  BUILD_PROFILE: ci
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 permissions:
   contents: read
 
-env:
-  RUST_BACKTRACE: short
-  CARGO_TERM_COLOR: always
-  CARGO_INCREMENTAL: 0
-  CARGO_PROFILE_DEV_DEBUG: 0
-
-defaults:
-  run:
-    shell: bash
-
 jobs:
-  test-rust-workspace:
-    name: Test Rust Workspace
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
+  rust:
+    name: Rust (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v6
 
-      - name: Setup Python
-        id: setup-python
-        uses: ./.github/actions/setup-python-env
+      - name: Free disk space
+        if: runner.os == 'Linux'
+        uses: kreuzberg-dev/actions/free-disk-space-linux@v1
         with:
-          python-version: "3.13"
-          cache-prefix: test-rust-workspace-py3.13
+          show-initial: "false"
+          show-final: "true"
+
+      - name: Setup Python
+        uses: kreuzberg-dev/actions/setup-python-env@v1
+        with:
+          python-version: "3.14"
 
       - name: Setup Rust
-        uses: ./.github/actions/setup-rust
+        uses: kreuzberg-dev/actions/setup-rust@v1
         with:
-          cache-key-prefix: test-rust-workspace-py3.13
-
-      - name: Setup Ruby for rb-sys
-        id: setup-ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.4"
-          bundler: "4.0.0"
-          bundler-cache: false
-
-      - name: Install Ruby dependencies
-        working-directory: packages/ruby
-        run: |
-          bundle config set frozen true
-          bundle install
+          cache-key-prefix: rust-${{ matrix.os }}
+          use-sccache: "true"
 
       - name: Setup Node
-        uses: ./.github/actions/setup-node-workspace
+        uses: kreuzberg-dev/actions/setup-node-workspace@v1
         with:
           node-version: "24"
 
-      - name: Install LLVM/Clang (for ext-php-rs bindgen)
-        uses: ./.github/actions/setup-llvm-clang
-
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: kreuzberg-dev/actions/setup-php@v1
         with:
           php-version: "8.4"
-          tools: composer
-          coverage: none
 
-      - name: Install PHP dependencies
-        working-directory: packages/php
-        run: composer install --no-interaction --no-progress
-
-      - name: Setup Elixir and OTP
-        uses: erlef/setup-beam@v1
+      - name: Setup Elixir
+        uses: kreuzberg-dev/actions/setup-elixir@v1
         with:
           elixir-version: "1.18"
           otp-version: "27"
 
-      - name: Run workspace tests (excluding extension-module feature)
-        env:
-          RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
-          PYO3_PYTHON: ${{ steps.setup-python.outputs.python-path }}
-          PYTHONPATH: ${{ github.workspace }}/.venv/lib/python3.13/site-packages
-        shell: bash
-        run: bash scripts/ci/rust/run-workspace-tests.sh
-
-  test-rust-cross-platform:
-    name: Test Rust
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Setup Python
-        id: setup-python
-        uses: ./.github/actions/setup-python-env
-        with:
-          python-version: "3.13"
-          cache-prefix: test-rust-py3.13
-
-      - name: Setup Rust
-        uses: ./.github/actions/setup-rust
-        with:
-          cache-key-prefix: test-rust
-
-      - name: Setup Ruby for rb-sys
-        id: setup-ruby
+      - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.4"
-          bundler: "4.0.0"
-          bundler-cache: false
+          bundler-cache: true
+          working-directory: packages/ruby
 
-      - name: Install Ruby dependencies
-        working-directory: packages/ruby
-        run: |
-          bundle config set frozen true
-          bundle install
+      - name: Install Task
+        uses: kreuzberg-dev/actions/install-task@v1
 
-      - name: Setup Node
-        uses: ./.github/actions/setup-node-workspace
-        with:
-          node-version: "24"
+      - name: Run clippy
+        run: task rust:lint:check
 
-      - name: Install LLVM/Clang (for ext-php-rs bindgen)
-        uses: ./.github/actions/setup-llvm-clang
+      - name: Run Rust tests
+        run: task rust:test:ci
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: "8.4"
-          tools: composer
-          coverage: none
-
-      - name: Install PHP dependencies
-        working-directory: packages/php
-        run: composer install --no-interaction --no-progress
-
-      - name: Setup Elixir and OTP
-        uses: erlef/setup-beam@v1
-        with:
-          elixir-version: "1.18"
-          otp-version: "27"
-
-      - name: Run workspace tests
-        env:
-          RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
-          PYO3_PYTHON: ${{ steps.setup-python.outputs.python-path }}
-          PYTHONPATH: ${{ github.workspace }}/.venv/lib/python3.13/site-packages
-        shell: bash
-        run: bash scripts/ci/rust/run-workspace-tests.sh
-
-  coverage-rust:
-    name: Rust Code Coverage (80% minimum)
-    runs-on: ubuntu-latest
-    needs: [test-rust-workspace]
-    timeout-minutes: 360
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Setup Python
-        id: setup-python
-        uses: ./.github/actions/setup-python-env
-        with:
-          python-version: "3.13"
-          cache-prefix: coverage-rust-py3.13
-
-      - name: Setup Rust
-        uses: ./.github/actions/setup-rust
-        with:
-          cache-key-prefix: coverage-rust
-
-      - name: Setup Ruby for rb-sys
-        id: setup-ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.4"
-          bundler: "4.0.0"
-          bundler-cache: false
-
-      - name: Install LLVM/Clang (for ext-php-rs bindgen)
-        uses: ./.github/actions/setup-llvm-clang
-
-      - name: Install Tarpaulin
-        run: cargo install cargo-tarpaulin --locked
-
-      - name: Generate Rust coverage report
-        env:
-          RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
-          PYO3_PYTHON: ${{ steps.setup-python.outputs.python-path }}
-          PYTHONPATH: ${{ github.workspace }}/.venv/lib/python3.13/site-packages
-        run: >
-          cargo tarpaulin
-          -p spikard -p spikard-core -p spikard-http
-          --out Lcov
-          --output-dir target/tarpaulin
-          --timeout 300
-          --fail-under 80
-          --exclude-files
-          "**/tests/**" "**/*_test.rs" "**/benches/**" "**/*_bench.rs"
-          "**/src/main.rs" "**/src/bin/**"
-          "**/examples/**" "**/tools/**" "**/packages/**"
-          "**/crates/spikard-cli/src/**" "**/crates/spikard-codegen/src/**" "**/crates/spikard-graphql/src/**"
-          "**/crates/spikard-py/src/**" "**/crates/spikard-node/src/**" "**/crates/spikard-rb/src/**" "**/crates/spikard-php/src/**" "**/crates/spikard-elixir/src/**"
-          "**/packages/ruby/vendor/**"
-
-      - name: Upload coverage to Codecov
-        if: github.actor != 'dependabot[bot]'
-        uses: codecov/codecov-action@v6
-        with:
-          files: ./target/tarpaulin/lcov.info
-          flags: rust
-          name: rust-coverage
-          fail_ci_if_error: true
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Archive coverage report
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: rust-coverage-report
-          path: target/tarpaulin/
-          retention-days: 30
-
-  coverage-rust-php-linux:
-    name: Rust PHP FFI Coverage (50% minimum, Linux only)
-    runs-on: ubuntu-latest
-    needs: [test-rust-workspace]
-    timeout-minutes: 360
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Setup Python
-        id: setup-python
-        uses: ./.github/actions/setup-python-env
-        with:
-          python-version: "3.13"
-          cache-prefix: coverage-rust-php-linux-py3.13
-
-      - name: Setup Rust
-        uses: ./.github/actions/setup-rust
-        with:
-          cache-key-prefix: coverage-rust-php-linux
-
-      - name: Setup Ruby for rb-sys
-        id: setup-ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.4"
-          bundler: "4.0.0"
-          bundler-cache: false
-
-      - name: Install LLVM/Clang (for ext-php-rs bindgen)
-        uses: ./.github/actions/setup-llvm-clang
-
-      - name: Install Tarpaulin
-        run: cargo install cargo-tarpaulin --locked
-
-      - name: Generate PHP FFI coverage report
-        env:
-          RUBY: ${{ steps.setup-ruby.outputs.ruby-prefix }}/bin/ruby
-          PYO3_PYTHON: ${{ steps.setup-python.outputs.python-path }}
-          PYTHONPATH: ${{ github.workspace }}/.venv/lib/python3.13/site-packages
-        run: |
-          cargo tarpaulin \
-            -p spikard -p spikard-core -p spikard-http \
-            --out Lcov \
-            --output-dir target/tarpaulin-php \
-            --timeout 300 \
-            --fail-under 50 \
-            --exclude-files "**/tests/**" "**/*_test.rs" "**/benches/**" "**/*_bench.rs" "**/src/main.rs" "**/src/bin/**" "**/examples/**" "**/tools/**" "**/packages/**" "**/crates/spikard-py/src/**" "**/crates/spikard-node/src/**" "**/crates/spikard-rb/src/**" "**/crates/spikard-php/src/**" "**/crates/spikard-elixir/src/**"
-      - name: Upload PHP FFI coverage to Codecov
-        if: github.actor != 'dependabot[bot]'
-        uses: codecov/codecov-action@v6
-        with:
-          files: ./target/tarpaulin-php/lcov.info
-          flags: rust-php-linux
-          name: rust-php-linux-coverage
-          fail_ci_if_error: true
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Archive PHP FFI coverage report
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: rust-php-linux-coverage-report
-          path: target/tarpaulin-php/
-          retention-days: 30
+      - name: Check no-default-features
+        run: cargo check -p spikard --no-default-features

@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Root `README.md` — project landing page with badges, language support matrix, quick-start examples, architecture sketch, and links to per-binding READMEs.
 
+### Changed
+
+- Cleaned Alef binding/e2e test commands to run real generated Node e2e tests, avoid duplicate Java/C# e2e builds, suppress local NuGet audit network warnings, and keep no-test harness backends quiet.
+
+### Fixed
+
+- Marked internal runtime/cache fields as Alef-skipped so generated bindings no longer expose non-bridgeable implementation details.
+
 ## [0.14.0] - 2026-04-22
 
 ### Added

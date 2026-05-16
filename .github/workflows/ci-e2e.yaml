@@ -1,0 +1,176 @@
+name: CI E2E
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "alef.toml"
+      - "fixtures/**"
+      - "crates/**"
+      - "packages/**"
+      - "e2e/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "Taskfile.yaml"
+      - ".task/**"
+      - ".github/workflows/ci-e2e.yaml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "alef.toml"
+      - "fixtures/**"
+      - "crates/**"
+      - "packages/**"
+      - "e2e/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "Taskfile.yaml"
+      - ".task/**"
+      - ".github/workflows/ci-e2e.yaml"
+
+concurrency:
+  group: ci-e2e-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_DEV_DEBUG: 0
+  RUST_BACKTRACE: short
+  BUILD_PROFILE: ci
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    name: ${{ matrix.language }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: rust
+            os: ubuntu-latest
+          - language: python
+            os: ubuntu-latest
+          - language: node
+            os: ubuntu-latest
+          - language: ruby
+            os: ubuntu-latest
+          - language: php
+            os: ubuntu-latest
+          - language: elixir
+            os: ubuntu-latest
+          - language: go
+            os: ubuntu-latest
+          - language: java
+            os: ubuntu-latest
+          - language: csharp
+            os: ubuntu-latest
+          - language: kotlin
+            os: ubuntu-latest
+          - language: dart
+            os: ubuntu-latest
+          - language: swift
+            os: macos-latest
+          - language: zig
+            os: ubuntu-latest
+          - language: wasm
+            os: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          cache-key-prefix: e2e-${{ matrix.language }}-${{ matrix.os }}
+          use-sccache: "true"
+
+      - name: Setup Python
+        if: matrix.language == 'python'
+        uses: kreuzberg-dev/actions/setup-python-env@v1
+        with:
+          python-version: "3.14"
+
+      - name: Setup Node
+        if: matrix.language == 'node' || matrix.language == 'wasm'
+        uses: kreuzberg-dev/actions/setup-node-workspace@v1
+        with:
+          node-version: "24"
+
+      - name: Setup Ruby
+        if: matrix.language == 'ruby'
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+          working-directory: e2e/ruby
+
+      - name: Setup PHP
+        if: matrix.language == 'php'
+        uses: kreuzberg-dev/actions/setup-php@v1
+        with:
+          php-version: "8.4"
+
+      - name: Setup Elixir
+        if: matrix.language == 'elixir'
+        uses: kreuzberg-dev/actions/setup-elixir@v1
+        with:
+          elixir-version: "1.18"
+          otp-version: "27"
+
+      - name: Setup Go
+        if: matrix.language == 'go'
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: packages/go/go.mod
+
+      - name: Setup Maven
+        if: matrix.language == 'java'
+        uses: kreuzberg-dev/actions/setup-maven@v1
+        with:
+          java-version: "21"
+
+      - name: Setup Gradle
+        if: matrix.language == 'kotlin'
+        uses: kreuzberg-dev/actions/setup-gradle@v1
+        with:
+          java-version: "21"
+
+      - name: Setup .NET
+        if: matrix.language == 'csharp'
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Setup Dart
+        if: matrix.language == 'dart'
+        uses: dart-lang/setup-dart@v1
+
+      - name: Setup Swift
+        if: matrix.language == 'swift'
+        uses: kreuzberg-dev/actions/setup-swift@v1
+
+      - name: Setup Zig
+        if: matrix.language == 'zig'
+        uses: kreuzberg-dev/actions/setup-zig@v1
+
+      - name: Setup wasm-pack
+        if: matrix.language == 'wasm'
+        uses: kreuzberg-dev/actions/setup-wasm-pack@v1
+
+      - name: Install Alef
+        uses: kreuzberg-dev/actions/install-alef@v1
+
+      - name: Install Task
+        uses: kreuzberg-dev/actions/install-task@v1
+
+      - name: Generate E2E suites
+        run: task e2e:generate
+
+      - name: Run generated E2E suites
+        run: task ${{ matrix.language }}:e2e

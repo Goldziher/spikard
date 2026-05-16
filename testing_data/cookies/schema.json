@@ -1,171 +1,171 @@
 {
-	"$schema": "http://json-schema.org/draft-07/schema#",
-	"title": "Cookie Test Fixture",
-	"description": "Schema for cookie handling test fixtures",
-	"type": "object",
-	"required": ["name", "description", "request", "expected_response"],
-	"properties": {
-		"name": {
-			"type": "string",
-			"description": "Human-readable name for this test case"
-		},
-		"description": {
-			"type": "string",
-			"description": "What this test validates"
-		},
-		"source": {
-			"type": "object",
-			"description": "Origin of this test case",
-			"properties": {
-				"framework": {
-					"type": "string",
-					"enum": ["fastapi", "starlette", "litestar", "spikard"],
-					"description": "Source framework"
-				},
-				"test_file": {
-					"type": "string",
-					"description": "Path to original test file"
-				},
-				"test_function": {
-					"type": "string",
-					"description": "Name of original test function"
-				}
-			},
-			"additionalProperties": true
-		},
-		"request": {
-			"type": "object",
-			"description": "HTTP request details",
-			"required": ["method", "path"],
-			"properties": {
-				"method": {
-					"type": "string",
-					"enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
-					"description": "HTTP method"
-				},
-				"path": {
-					"type": "string",
-					"description": "Request path"
-				},
-				"cookies": {
-					"type": "object",
-					"description": "Request cookies as key-value pairs",
-					"additionalProperties": {
-						"type": "string"
-					}
-				},
-				"headers": {
-					"type": "object",
-					"description": "Additional headers if needed"
-				},
-				"body": {
-					"description": "Request body if needed"
-				}
-			}
-		},
-		"expected_response": {
-			"type": "object",
-			"description": "Expected HTTP response",
-			"required": ["status_code"],
-			"properties": {
-				"status_code": {
-					"type": "integer",
-					"description": "Expected HTTP status code"
-				},
-				"body": {
-					"description": "Expected response body"
-				},
-				"cookies": {
-					"type": "object",
-					"description": "Expected response cookies with attributes",
-					"additionalProperties": {
-						"type": "object",
-						"properties": {
-							"value": {
-								"type": "string",
-								"description": "Cookie value"
-							},
-							"max_age": {
-								"type": "integer",
-								"description": "Max-Age attribute in seconds"
-							},
-							"expires": {
-								"type": "string",
-								"description": "Expires attribute (datetime string)"
-							},
-							"path": {
-								"type": "string",
-								"description": "Path attribute"
-							},
-							"domain": {
-								"type": "string",
-								"description": "Domain attribute"
-							},
-							"secure": {
-								"type": "boolean",
-								"description": "Secure flag"
-							},
-							"httponly": {
-								"type": "boolean",
-								"description": "HttpOnly flag"
-							},
-							"samesite": {
-								"type": "string",
-								"enum": ["strict", "lax", "none"],
-								"description": "SameSite attribute"
-							}
-						}
-					}
-				},
-				"validation_errors": {
-					"type": "array",
-					"description": "Expected validation errors (for 422 responses)",
-					"items": {
-						"type": "object",
-						"properties": {
-							"type": {
-								"type": "string"
-							},
-							"loc": {
-								"type": "array",
-								"items": {
-									"type": ["string", "integer"]
-								}
-							},
-							"msg": {
-								"type": "string"
-							}
-						}
-					}
-				}
-			}
-		},
-		"notes": {
-			"type": "string",
-			"description": "Additional notes about this test case"
-		},
-		"handler": {
-			"type": "object",
-			"description": "Handler configuration"
-		},
-		"tags": {
-			"type": "array",
-			"description": "Tags for filtering/organization",
-			"items": {
-				"type": "string"
-			}
-		},
-		"skip": {
-			"type": "boolean",
-			"description": "Whether to skip this test"
-		},
-		"skip_reason": {
-			"type": "string",
-			"description": "Reason for skipping"
-		},
-		"category": {
-			"type": "string",
-			"description": "Test category"
-		}
-	}
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Cookie Test Fixture",
+  "description": "Schema for cookie handling test fixtures",
+  "type": "object",
+  "required": ["name", "description", "request", "expected_response"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Human-readable name for this test case"
+    },
+    "description": {
+      "type": "string",
+      "description": "What this test validates"
+    },
+    "source": {
+      "type": "object",
+      "description": "Origin of this test case",
+      "properties": {
+        "framework": {
+          "type": "string",
+          "enum": ["fastapi", "starlette", "litestar", "spikard"],
+          "description": "Source framework"
+        },
+        "test_file": {
+          "type": "string",
+          "description": "Path to original test file"
+        },
+        "test_function": {
+          "type": "string",
+          "description": "Name of original test function"
+        }
+      },
+      "additionalProperties": true
+    },
+    "request": {
+      "type": "object",
+      "description": "HTTP request details",
+      "required": ["method", "path"],
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
+          "description": "HTTP method"
+        },
+        "path": {
+          "type": "string",
+          "description": "Request path"
+        },
+        "cookies": {
+          "type": "object",
+          "description": "Request cookies as key-value pairs",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "headers": {
+          "type": "object",
+          "description": "Additional headers if needed"
+        },
+        "body": {
+          "description": "Request body if needed"
+        }
+      }
+    },
+    "expected_response": {
+      "type": "object",
+      "description": "Expected HTTP response",
+      "required": ["status_code"],
+      "properties": {
+        "status_code": {
+          "type": "integer",
+          "description": "Expected HTTP status code"
+        },
+        "body": {
+          "description": "Expected response body"
+        },
+        "cookies": {
+          "type": "object",
+          "description": "Expected response cookies with attributes",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "string",
+                "description": "Cookie value"
+              },
+              "max_age": {
+                "type": "integer",
+                "description": "Max-Age attribute in seconds"
+              },
+              "expires": {
+                "type": "string",
+                "description": "Expires attribute (datetime string)"
+              },
+              "path": {
+                "type": "string",
+                "description": "Path attribute"
+              },
+              "domain": {
+                "type": "string",
+                "description": "Domain attribute"
+              },
+              "secure": {
+                "type": "boolean",
+                "description": "Secure flag"
+              },
+              "httponly": {
+                "type": "boolean",
+                "description": "HttpOnly flag"
+              },
+              "samesite": {
+                "type": "string",
+                "enum": ["strict", "lax", "none"],
+                "description": "SameSite attribute"
+              }
+            }
+          }
+        },
+        "validation_errors": {
+          "type": "array",
+          "description": "Expected validation errors (for 422 responses)",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "loc": {
+                "type": "array",
+                "items": {
+                  "type": ["string", "integer"]
+                }
+              },
+              "msg": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes about this test case"
+    },
+    "handler": {
+      "type": "object",
+      "description": "Handler configuration"
+    },
+    "tags": {
+      "type": "array",
+      "description": "Tags for filtering/organization",
+      "items": {
+        "type": "string"
+      }
+    },
+    "skip": {
+      "type": "boolean",
+      "description": "Whether to skip this test"
+    },
+    "skip_reason": {
+      "type": "string",
+      "description": "Reason for skipping"
+    },
+    "category": {
+      "type": "string",
+      "description": "Test category"
+    }
+  }
 }

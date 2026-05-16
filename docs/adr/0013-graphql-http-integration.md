@@ -118,12 +118,12 @@ Server::run_with_config(app, config).await?;
 
 GraphQL errors follow the GraphQL specification while respecting HTTP conventions:
 
-| Error Type | HTTP Status | Example |
-|-----------|------------|---------|
-| Invalid JSON | 400 Bad Request | Invalid request body |
-| GraphQL validation | 200 OK | Invalid query syntax (per GraphQL spec) |
-| Query execution | 200 OK | Field not found, type mismatch (per GraphQL spec) |
-| Internal server error | 500 Internal Server Error | Unexpected panic or resource exhaustion |
+| Error Type            | HTTP Status               | Example                                           |
+| --------------------- | ------------------------- | ------------------------------------------------- |
+| Invalid JSON          | 400 Bad Request           | Invalid request body                              |
+| GraphQL validation    | 200 OK                    | Invalid query syntax (per GraphQL spec)           |
+| Query execution       | 200 OK                    | Field not found, type mismatch (per GraphQL spec) |
+| Internal server error | 500 Internal Server Error | Unexpected panic or resource exhaustion           |
 
 The GraphQL response always includes an `errors` field when applicable, following the GraphQL over HTTP specification.
 

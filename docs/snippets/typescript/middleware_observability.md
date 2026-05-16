@@ -13,13 +13,15 @@ app.onRequest(async (request: Request): Promise<Request> => {
   request.context.requestId = requestId;
 
   // Log request with structured data
-  console.log(JSON.stringify({
-    event: "request_started",
-    request_id: requestId,
-    method: request.method,
-    path: request.path,
-    user_agent: request.headers?.["user-agent"],
-  }));
+  console.log(
+    JSON.stringify({
+      event: "request_started",
+      request_id: requestId,
+      method: request.method,
+      path: request.path,
+      user_agent: request.headers?.["user-agent"],
+    }),
+  );
 
   return request;
 });
@@ -27,12 +29,14 @@ app.onRequest(async (request: Request): Promise<Request> => {
 app.onResponse(async (response: Response): Promise<Response> => {
   const requestId = response.context?.requestId;
 
-  console.log(JSON.stringify({
-    event: "request_completed",
-    request_id: requestId,
-    status: response.status,
-    duration_ms: response.durationMs,
-  }));
+  console.log(
+    JSON.stringify({
+      event: "request_completed",
+      request_id: requestId,
+      status: response.status,
+      duration_ms: response.durationMs,
+    }),
+  );
 
   // Propagate request ID in response headers
   response.headers = response.headers || {};

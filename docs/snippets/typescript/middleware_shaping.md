@@ -13,8 +13,7 @@ app.onRequest(async (request: Request): Promise<Request> => {
   const now = Date.now();
 
   // Clean old entries
-  const timestamps = (rateLimits.get(clientIp) || [])
-    .filter(ts => now - ts < 60000);
+  const timestamps = (rateLimits.get(clientIp) || []).filter((ts) => now - ts < 60000);
 
   if (timestamps.length >= 100) {
     throw new HTTPError(429, "Rate limit exceeded");
@@ -40,9 +39,7 @@ app.onRequest(async (request: Request): Promise<Request> => {
 
   // 4. Feature flags from query params or headers
   const featureStr = request.query?.features || "";
-  request.context.features = new Set(
-    featureStr.split(",").filter(f => f)
-  );
+  request.context.features = new Set(featureStr.split(",").filter((f) => f));
 
   return request;
 });
@@ -50,7 +47,8 @@ app.onRequest(async (request: Request): Promise<Request> => {
 app.onResponse(async (response: Response): Promise<Response> => {
   // Response compression for large payloads
   const body = response.body || "";
-  if (body.length > 1024) {  // Compress if > 1KB
+  if (body.length > 1024) {
+    // Compress if > 1KB
     response.body = zlib.gzipSync(Buffer.from(body));
     response.headers = response.headers || {};
     response.headers["content-encoding"] = "gzip";

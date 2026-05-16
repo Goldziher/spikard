@@ -82,36 +82,36 @@ channels:
 
     messages:
       chatMessage:
-        $ref: '#/components/messages/chatMessage'
+        $ref: "#/components/messages/chatMessage"
       typingIndicator:
-        $ref: '#/components/messages/typingIndicator'
+        $ref: "#/components/messages/typingIndicator"
       presenceRequest:
-        $ref: '#/components/messages/presenceRequest'
+        $ref: "#/components/messages/presenceRequest"
 
       chatMessageBroadcast:
-        $ref: '#/components/messages/chatMessageBroadcast'
+        $ref: "#/components/messages/chatMessageBroadcast"
       chatAck:
-        $ref: '#/components/messages/chatAck'
+        $ref: "#/components/messages/chatAck"
       userJoined:
-        $ref: '#/components/messages/userJoined'
+        $ref: "#/components/messages/userJoined"
       userLeft:
-        $ref: '#/components/messages/userLeft'
+        $ref: "#/components/messages/userLeft"
       userTyping:
-        $ref: '#/components/messages/userTyping'
+        $ref: "#/components/messages/userTyping"
       userStoppedTyping:
-        $ref: '#/components/messages/userStoppedTyping'
+        $ref: "#/components/messages/userStoppedTyping"
       presenceUpdate:
-        $ref: '#/components/messages/presenceUpdate'
+        $ref: "#/components/messages/presenceUpdate"
       chatError:
-        $ref: '#/components/messages/chatError'
+        $ref: "#/components/messages/chatError"
       connectionClosed:
-        $ref: '#/components/messages/connectionClosed'
+        $ref: "#/components/messages/connectionClosed"
 
 operations:
   publishChatMessage:
     action: send
     channel:
-      $ref: '#/channels/chat'
+      $ref: "#/channels/chat"
     title: Publish Chat Message
     summary: Client sends a chat message
     description: |
@@ -127,30 +127,30 @@ operations:
 
       **Rate Limit:** 20 messages per minute per user
     messages:
-      - $ref: '#/components/messages/chatMessage'
+      - $ref: "#/components/messages/chatMessage"
 
   publishTypingIndicator:
     action: send
     channel:
-      $ref: '#/channels/chat'
+      $ref: "#/channels/chat"
     title: Publish Typing Indicator
     summary: Client indicates they are typing
     messages:
-      - $ref: '#/components/messages/typingIndicator'
+      - $ref: "#/components/messages/typingIndicator"
 
   requestPresence:
     action: send
     channel:
-      $ref: '#/channels/chat'
+      $ref: "#/channels/chat"
     title: Request Presence
     summary: Client requests current presence data
     messages:
-      - $ref: '#/components/messages/presenceRequest'
+      - $ref: "#/components/messages/presenceRequest"
 
   receiveChatMessage:
     action: receive
     channel:
-      $ref: '#/channels/chat'
+      $ref: "#/channels/chat"
     title: Receive Chat Message
     summary: Server broadcasts chat message to all clients
     description: |
@@ -158,12 +158,12 @@ operations:
 
       All clients in the room receive this event.
     messages:
-      - $ref: '#/components/messages/chatMessageBroadcast'
+      - $ref: "#/components/messages/chatMessageBroadcast"
 
   receiveChatAck:
     action: receive
     channel:
-      $ref: '#/channels/chat'
+      $ref: "#/channels/chat"
     title: Receive Chat ACK
     summary: Server acknowledges message delivery
     description: |
@@ -171,12 +171,12 @@ operations:
 
       Only the sending client receives this message.
     messages:
-      - $ref: '#/components/messages/chatAck'
+      - $ref: "#/components/messages/chatAck"
 
   receiveUserJoined:
     action: receive
     channel:
-      $ref: '#/channels/chat'
+      $ref: "#/channels/chat"
     title: Receive User Joined Event
     summary: Server notifies that a user joined
     description: |
@@ -184,21 +184,21 @@ operations:
 
       Includes user ID, name, and timestamp.
     messages:
-      - $ref: '#/components/messages/userJoined'
+      - $ref: "#/components/messages/userJoined"
 
   receiveUserLeft:
     action: receive
     channel:
-      $ref: '#/channels/chat'
+      $ref: "#/channels/chat"
     title: Receive User Left Event
     summary: Server notifies that a user left
     messages:
-      - $ref: '#/components/messages/userLeft'
+      - $ref: "#/components/messages/userLeft"
 
   receiveTypingIndicator:
     action: receive
     channel:
-      $ref: '#/channels/chat'
+      $ref: "#/channels/chat"
     title: Receive Typing Indicator
     summary: Server broadcasts that a user is typing
     description: |
@@ -206,21 +206,21 @@ operations:
 
       Should display typing indicator UI. Indicator expires after 5 seconds.
     messages:
-      - $ref: '#/components/messages/userTyping'
+      - $ref: "#/components/messages/userTyping"
 
   receiveStoppedTyping:
     action: receive
     channel:
-      $ref: '#/channels/chat'
+      $ref: "#/channels/chat"
     title: Receive Typing Stopped
     summary: Server notifies typing stopped
     messages:
-      - $ref: '#/components/messages/userStoppedTyping'
+      - $ref: "#/components/messages/userStoppedTyping"
 
   receivePresenceUpdate:
     action: receive
     channel:
-      $ref: '#/channels/chat'
+      $ref: "#/channels/chat"
     title: Receive Presence Update
     summary: Server sends current presence data
     description: |
@@ -228,12 +228,12 @@ operations:
 
       Lists all currently online users in the room.
     messages:
-      - $ref: '#/components/messages/presenceUpdate'
+      - $ref: "#/components/messages/presenceUpdate"
 
   receiveError:
     action: receive
     channel:
-      $ref: '#/channels/chat'
+      $ref: "#/channels/chat"
     title: Receive Error
     summary: Server sends error message
     description: |
@@ -241,12 +241,12 @@ operations:
 
       Follows RFC 9457 problem details format.
     messages:
-      - $ref: '#/components/messages/chatError'
+      - $ref: "#/components/messages/chatError"
 
   receiveConnectionClosed:
     action: receive
     channel:
-      $ref: '#/channels/chat'
+      $ref: "#/channels/chat"
     title: Connection Closed
     summary: Server closes connection
     description: |
@@ -254,7 +254,7 @@ operations:
 
       Reasons: auth failure, room closed, server maintenance.
     messages:
-      - $ref: '#/components/messages/connectionClosed'
+      - $ref: "#/components/messages/connectionClosed"
 
 components:
   messages:
@@ -758,14 +758,14 @@ components:
     uuid:
       type: string
       format: uuid
-      pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+      pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
       description: UUID v4
 
     username:
       type: string
       minLength: 1
       maxLength: 50
-      pattern: '^[a-zA-Z0-9_-]+$'
+      pattern: "^[a-zA-Z0-9_-]+$"
       description: Valid username (alphanumeric, dash, underscore)
 
     messageText:

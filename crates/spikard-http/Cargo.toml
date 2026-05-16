@@ -14,15 +14,15 @@ readme = "README.md"
 
 [package.metadata.cargo-machete]
 ignored = [
-    "anyhow",
-    "h2",
-    "http-body",
-    "jiff",
-    "prost",
-    "prost-types",
-    "tokio-stream",
-    "utoipa-redoc",
-    "utoipa-swagger-ui",
+  "anyhow",
+  "h2",
+  "http-body",
+  "jiff",
+  "prost",
+  "prost-types",
+  "tokio-stream",
+  "utoipa-redoc",
+  "utoipa-swagger-ui",
 ]
 
 [features]
@@ -37,7 +37,6 @@ wasm = []
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 axum = { workspace = true, features = ["multipart", "ws"] }
 axum-test = { version = "20", features = ["ws"] }
-tungstenite = "0.28"
 h2 = "0.4"
 jiff = "0.2"
 prost = "0.14"
@@ -49,27 +48,33 @@ tonic = { version = "0.14", features = ["transport", "codegen", "gzip"] }
 tower-http = { workspace = true }
 tower_governor = { workspace = true }
 tracing-subscriber.workspace = true
+tungstenite = "0.28"
 
 # wasm: narrow axum (no `tokio` feature → no tokio/net → no mio)
 # Explicitly list every axum feature we need on wasm; skip `tokio` which enables tokio/net.
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 axum = { version = "0.8", default-features = false, features = [
-    "form",
-    "http1",
-    "json",
-    "matched-path",
-    "multipart",
-    "original-uri",
-    "query",
-    "tower-log",
-    "tracing",
+  "form",
+  "http1",
+  "json",
+  "matched-path",
+  "multipart",
+  "original-uri",
+  "query",
+  "tower-log",
+  "tracing",
 ] }
-# getrandom requires the "js" feature on wasm32-unknown-unknown to use the Web Crypto API
-getrandom = { version = "0.2", features = ["js"] }
+# getrandom requires the "wasm_js" feature on wasm32-unknown-unknown to use the Web Crypto API
+getrandom = { version = "0.4", features = ["wasm_js"] }
 # tokio narrow subset (no net/fs/process/signal/rt-multi-thread)
 # Cannot use workspace = true here because workspace pins features = ["full"]
 # and Cargo does not allow overriding default-features via workspace inheritance.
-tokio = { version = "1", default-features = false, features = ["rt", "macros", "sync", "time"] }
+tokio = { version = "1", default-features = false, features = [
+  "rt",
+  "macros",
+  "sync",
+  "time",
+] }
 
 [dependencies]
 ahash = "0.8"

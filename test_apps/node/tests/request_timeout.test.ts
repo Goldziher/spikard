@@ -2,15 +2,15 @@
 import { describe, it, expect } from "vitest";
 
 describe("request_timeout", () => {
-	it("request_completes_before_timeout: Simulated handler sleeps briefly and should complete before the timeout middleware fires.", async () => {
-		const response = await app.request("/timeouts/fast", { method: "GET" });
-		expect(response.status).toBe(200);
-		const data = await response.json();
-		expect(data).toEqual({ duration: "fast", status: "ok" });
-	});
+  it("request_completes_before_timeout: Simulated handler sleeps briefly and should complete before the timeout middleware fires.", async () => {
+    const response = await app.request("/timeouts/fast", { method: "GET" });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual({ duration: "fast", status: "ok" });
+  });
 
-	it("request_exceeds_timeout: Simulates a handler that sleeps longer than the configured timeout to ensure a 408 response.", async () => {
-		const response = await app.request("/timeouts/slow", { method: "GET" });
-		expect(response.status).toBe(408);
-	});
+  it("request_exceeds_timeout: Simulates a handler that sleeps longer than the configured timeout to ensure a 408 response.", async () => {
+    const response = await app.request("/timeouts/slow", { method: "GET" });
+    expect(response.status).toBe(408);
+  });
 });

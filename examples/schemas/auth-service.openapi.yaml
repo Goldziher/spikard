@@ -106,7 +106,7 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '201':
+        "201":
           description: API key created successfully
           headers:
             X-RateLimit-Limit:
@@ -121,7 +121,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiKeyResponse'
+                $ref: "#/components/schemas/ApiKeyResponse"
               examples:
                 created:
                   summary: New API key
@@ -134,24 +134,24 @@ paths:
                     createdAt: "2024-01-15T10:30:00Z"
                     expiresAt: null
                     warning: "Store this key securely. You won't see it again."
-        '400':
+        "400":
           description: Bad request
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
           description: Unauthorized
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/AuthErrorResponse'
-        '429':
+                $ref: "#/components/schemas/AuthErrorResponse"
+        "429":
           description: Too many requests
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
     get:
       tags:
@@ -179,7 +179,7 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: API keys listed
           headers:
             X-Total-Count:
@@ -197,7 +197,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiKeyListResponse'
+                $ref: "#/components/schemas/ApiKeyListResponse"
               examples:
                 list:
                   summary: API keys list
@@ -216,12 +216,12 @@ paths:
                       limit: 20
                       total: 1
                       pages: 1
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/AuthErrorResponse'
+                $ref: "#/components/schemas/AuthErrorResponse"
 
   /auth/api-keys/{keyId}:
     delete:
@@ -243,26 +243,26 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '204':
+        "204":
           description: API key revoked
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/AuthErrorResponse'
-        '403':
+                $ref: "#/components/schemas/AuthErrorResponse"
+        "403":
           description: Forbidden - cannot revoke key
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
           description: API key not found
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/NotFoundResponse'
+                $ref: "#/components/schemas/NotFoundResponse"
 
   /auth/token:
     post:
@@ -294,9 +294,9 @@ paths:
           application/json:
             schema:
               oneOf:
-                - $ref: '#/components/schemas/PasswordGrantRequest'
-                - $ref: '#/components/schemas/ClientCredentialsGrantRequest'
-                - $ref: '#/components/schemas/RefreshTokenGrantRequest'
+                - $ref: "#/components/schemas/PasswordGrantRequest"
+                - $ref: "#/components/schemas/ClientCredentialsGrantRequest"
+                - $ref: "#/components/schemas/RefreshTokenGrantRequest"
             examples:
               password:
                 summary: Password grant
@@ -316,7 +316,7 @@ paths:
                   grant_type: refresh_token
                   refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
       responses:
-        '200':
+        "200":
           description: Token issued successfully
           headers:
             X-RateLimit-Limit:
@@ -331,7 +331,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TokenResponse'
+                $ref: "#/components/schemas/TokenResponse"
               examples:
                 token:
                   summary: JWT token response
@@ -340,12 +340,12 @@ paths:
                     token_type: Bearer
                     expires_in: 3600
                     refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-        '400':
+        "400":
           description: Invalid credentials or grant type
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/AuthErrorResponse'
+                $ref: "#/components/schemas/AuthErrorResponse"
               examples:
                 invalidCredentials:
                   summary: Invalid credentials
@@ -362,7 +362,7 @@ paths:
                     status: 400
                     detail: "Grant type must be one of: password, client_credentials, refresh_token"
 
-        '429':
+        "429":
           description: Too many failed attempts
           headers:
             Retry-After:
@@ -371,7 +371,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /auth/refresh:
     post:
@@ -396,24 +396,24 @@ paths:
                   type: string
                   description: Refresh token from previous token response
       responses:
-        '200':
+        "200":
           description: New access token issued
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TokenResponse'
-        '400':
+                $ref: "#/components/schemas/TokenResponse"
+        "400":
           description: Invalid or expired refresh token
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/AuthErrorResponse'
-        '401':
+                $ref: "#/components/schemas/AuthErrorResponse"
+        "401":
           description: Unauthorized
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/AuthErrorResponse'
+                $ref: "#/components/schemas/AuthErrorResponse"
 
   /auth/logout:
     post:
@@ -431,14 +431,14 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '204':
+        "204":
           description: Successfully logged out
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/AuthErrorResponse'
+                $ref: "#/components/schemas/AuthErrorResponse"
 
   /auth/verify:
     post:
@@ -463,12 +463,12 @@ paths:
                   type: string
                   description: Token to verify
       responses:
-        '200':
+        "200":
           description: Token is valid
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TokenVerificationResponse'
+                $ref: "#/components/schemas/TokenVerificationResponse"
               examples:
                 valid:
                   summary: Valid token
@@ -478,12 +478,12 @@ paths:
                     scopes: [read, write]
                     issuedAt: "2024-01-15T10:30:00Z"
                     expiresAt: "2024-01-15T11:30:00Z"
-        '400':
+        "400":
           description: Token is invalid
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
               examples:
                 invalid:
                   summary: Invalid token
@@ -554,19 +554,19 @@ paths:
             type: string
             enum: [code]
       responses:
-        '302':
+        "302":
           description: Redirect to authorization page or redirect_uri
           headers:
             Location:
               schema:
                 type: string
                 format: uri
-        '400':
+        "400":
           description: Invalid request
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /auth/oauth/token:
     post:
@@ -610,18 +610,18 @@ paths:
                   type: string
                   format: uri
       responses:
-        '200':
+        "200":
           description: Token issued
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TokenResponse'
-        '400':
+                $ref: "#/components/schemas/TokenResponse"
+        "400":
           description: Invalid request
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/AuthErrorResponse'
+                $ref: "#/components/schemas/AuthErrorResponse"
 
 components:
   schemas:
@@ -825,11 +825,11 @@ components:
 
     AuthErrorResponse:
       allOf:
-        - $ref: '#/components/schemas/ErrorResponse'
+        - $ref: "#/components/schemas/ErrorResponse"
 
     NotFoundResponse:
       allOf:
-        - $ref: '#/components/schemas/ErrorResponse'
+        - $ref: "#/components/schemas/ErrorResponse"
         - type: object
           properties:
             title:

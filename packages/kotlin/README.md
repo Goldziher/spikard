@@ -46,14 +46,14 @@ Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC code
 
 ## Installation
 
-
 **Gradle:**
+
 ```gradle
 implementation 'dev.spikard:spikard:0.14.0'
 ```
 
-
 **Maven:**
+
 ```xml
 <dependency>
     <groupId>dev.spikard</groupId>
@@ -62,18 +62,13 @@ implementation 'dev.spikard:spikard:0.14.0'
 </dependency>
 ```
 
-
 ### System Requirements
-
 
 - **Kotlin 1.9+ / JVM 17+** required
 
-
 ## Quick Start
 
-
 See the [spikard repository](https://github.com/Goldziher/spikard) for usage examples and guides.
-
 
 ## Features
 
@@ -83,7 +78,6 @@ See the [spikard repository](https://github.com/Goldziher/spikard) for usage exa
 - **Lifecycle hooks** — `onRequest`, `preValidation`, `preHandler`, `onResponse`, `onError`
 - **Fixture-driven testing** — shared JSON fixtures drive tests across all language bindings
 - **Polyglot** — single Rust core, thin bindings for Python, Node.js, Ruby, PHP, Elixir, Go, Java, C#, Kotlin, Dart, Gleam, WASM, Swift, Zig, and C FFI
-
 
 ## Documentation
 

@@ -584,11 +584,11 @@ GraphQL follows the GraphQL-over-HTTP specification for error responses. The ser
 
 ### HTTP Status Codes
 
-| Condition | HTTP Status | Example |
-|-----------|-------------|---------|
-| Invalid JSON | 400 Bad Request | Malformed request body |
-| Valid GraphQL query (even with errors) | 200 OK | Field not found, validation error |
-| Server error | 500 Internal Server Error | Unexpected panic, resource exhaustion |
+| Condition                              | HTTP Status               | Example                               |
+| -------------------------------------- | ------------------------- | ------------------------------------- |
+| Invalid JSON                           | 400 Bad Request           | Malformed request body                |
+| Valid GraphQL query (even with errors) | 200 OK                    | Field not found, validation error     |
+| Server error                           | 500 Internal Server Error | Unexpected panic, resource exhaustion |
 
 === "Rust"
 

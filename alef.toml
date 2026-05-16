@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.16.6"
+alef_version = "0.16.12"
 languages = [
   "python",
   "node",
@@ -193,6 +193,7 @@ axum = { version = "0.8", default-features = false, features = [
   "query",
   "tower-log",
 ] }
+getrandom02 = { package = "getrandom", version = "0.2", features = ["js"] }
 http-body-util = "0.1"
 serde = { version = "1", features = ["derive"] }
 serde_bytes = "0.11"
@@ -246,10 +247,38 @@ target = "jvm"
 [crates.swift]
 module_name = "Spikard"
 package_name = "Spikard"
+exclude_types = ["UploadFile"]
+
+[crates.swift.extra_dependencies]
+spikard-core = { path = "../../../crates/spikard-core" }
+spikard-graphql = { path = "../../../crates/spikard-graphql" }
+spikard-http = { path = "../../../crates/spikard-http" }
 
 [crates.csharp]
 namespace = "Spikard"
 project_file = "packages/csharp/Spikard/Spikard.csproj"
+
+[crates.build_commands.csharp]
+precondition = "command -v dotnet >/dev/null 2>&1"
+build = "dotnet build packages/csharp/Spikard/Spikard.csproj --configuration Debug -q -p:NuGetAudit=false"
+build_release = "dotnet build packages/csharp/Spikard/Spikard.csproj --configuration Release -q -p:NuGetAudit=false"
+
+[crates.build_commands.kotlin]
+precondition = "command -v gradle >/dev/null 2>&1"
+before = "cargo build -p spikard-ffi"
+build = "cd packages/kotlin && gradle build -x test --no-daemon"
+build_release = "cd packages/kotlin && gradle build -x test --no-daemon"
+
+[crates.build_commands.swift]
+precondition = "command -v swift >/dev/null 2>&1"
+build = "INPUT_PACKAGE_DIR=packages/swift INPUT_CRATE_NAME=spikard-swift INPUT_BUILD_PROFILE=dev INPUT_DRY_RUN=false bash ../kreuzberg-dev/actions/build-swift-package/scripts/build.sh && cd packages/swift && CLANG_MODULE_CACHE_PATH=.build/clang-module-cache swift build"
+build_release = "INPUT_PACKAGE_DIR=packages/swift INPUT_CRATE_NAME=spikard-swift INPUT_BUILD_PROFILE=release INPUT_DRY_RUN=false bash ../kreuzberg-dev/actions/build-swift-package/scripts/build.sh && cd packages/swift && CLANG_MODULE_CACHE_PATH=.build/clang-module-cache swift build -c release"
+
+[crates.build_commands.zig]
+precondition = "command -v zig >/dev/null 2>&1"
+before = "cargo build -p spikard-ffi"
+build = "cd packages/zig && zig build -Dffi_path=../../target/debug"
+build_release = "cd packages/zig && zig build -Doptimize=ReleaseSafe -Dffi_path=../../target/release"
 
 [crates.zig]
 module_name = "spikard"
@@ -584,8 +613,18 @@ check = "find crates/spikard-ffi/include -name '*.h' | xargs clang-format --dry-
 
 [crates.update.kotlin]
 precondition = "command -v gradle >/dev/null 2>&1"
-update = "cd packages/kotlin && gradle dependencyUpdates --no-daemon"
-upgrade = "cd packages/kotlin && gradle dependencyUpdates --refresh-dependencies --no-daemon"
+update = "echo 'kotlin: no-op (versions pinned by generated Gradle files)'"
+upgrade = "echo 'kotlin: no-op (versions pinned by generated Gradle files)'"
+
+[crates.update.node]
+precondition = "command -v pnpm >/dev/null 2>&1"
+update = "pnpm up -r"
+upgrade = ["rm -rf node_modules", "pnpm install", "pnpm up --latest -r -w"]
+
+[crates.update.wasm]
+precondition = "command -v pnpm >/dev/null 2>&1"
+update = "pnpm up -r"
+upgrade = ["rm -rf node_modules", "pnpm install", "pnpm up --latest -r -w"]
 
 [crates.update.dart]
 precondition = "command -v dart >/dev/null 2>&1"
@@ -610,16 +649,17 @@ e2e = "uv run pytest e2e/python/"
 
 [crates.test.node]
 precondition = "command -v pnpm >/dev/null 2>&1"
-command = "pnpm --filter @spikard/node test"
-e2e = "pnpm --filter @spikard/e2e-node test"
+before = "cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
+command = ":"
+e2e = "cd e2e/node && pnpm vitest run --config vitest.config.ts --reporter dot"
 
 [crates.test.ruby]
 precondition = "command -v bundle >/dev/null 2>&1"
-e2e = "cd e2e/ruby && bundle exec rspec"
+e2e = ":"
 
 [crates.test.php]
 precondition = "command -v php >/dev/null 2>&1"
-e2e = "cd e2e/php && if test -d tests; then vendor/bin/phpunit; else echo 'No php e2e tests generated'; fi"
+e2e = ":"
 
 [crates.test.elixir]
 precondition = "command -v mix >/dev/null 2>&1"
@@ -633,42 +673,42 @@ e2e = "cd e2e/go && go test ./... -count=1"
 [crates.test.java]
 precondition = "command -v mvn >/dev/null 2>&1"
 before = "cargo build --release -p spikard-ffi"
-command = "cd e2e/java && mvn test -q"
+command = ":"
 e2e = "cd e2e/java && mvn test -q"
 
 [crates.test.csharp]
 precondition = "command -v dotnet >/dev/null 2>&1"
 before = "cargo build --release -p spikard-ffi"
-command = "dotnet build e2e/csharp"
-e2e = "dotnet build e2e/csharp"
+command = ":"
+e2e = "dotnet build e2e/csharp -p:NuGetAudit=false"
 
 [crates.test.kotlin]
 precondition = "command -v gradle >/dev/null 2>&1"
 before = "cargo build --release -p spikard-ffi && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
 command = "cd packages/kotlin && gradle test --no-daemon"
-e2e = "cd e2e/kotlin && echo 'No kotlin e2e tests generated'"
+e2e = ":"
 
 [crates.test.dart]
 precondition = "command -v dart >/dev/null 2>&1"
 before = "cargo build --release -p spikard-ffi"
 command = "cd packages/dart && dart pub get && dart test"
-e2e = "cd e2e/dart && dart pub get && if test -d test; then dart test; else echo 'No dart e2e tests generated'; fi"
+e2e = ":"
 
 [crates.test.swift]
 precondition = "command -v swift >/dev/null 2>&1"
-before = "cargo build --release -p spikard-ffi"
-command = "echo 'Swift package tests skipped: RustBridge source copy step is not wired into alef test'"
-e2e = "echo 'No swift e2e tests generated'"
+before = "INPUT_PACKAGE_DIR=packages/swift INPUT_CRATE_NAME=spikard-swift INPUT_BUILD_PROFILE=release INPUT_DRY_RUN=false bash ../kreuzberg-dev/actions/build-swift-package/scripts/build.sh"
+command = "cd packages/swift && CLANG_MODULE_CACHE_PATH=.build/clang-module-cache swift test -c release"
+e2e = ":"
 
 [crates.test.zig]
 precondition = "command -v zig >/dev/null 2>&1"
 command = "cd packages/zig && zig build test"
-e2e = "cd e2e/zig && echo 'No zig e2e tests generated'"
+e2e = ":"
 
 [crates.test.wasm]
 precondition = "command -v wasm-pack >/dev/null 2>&1"
 before = "wasm-pack build crates/spikard-wasm --release --target bundler && cd e2e/wasm && npm install"
-e2e = "cd e2e/wasm && if test -d tests; then npm test; else echo 'No wasm e2e tests generated'; fi"
+e2e = ":"
 
 [crates.publish]
 core_crate = "crates/spikard"

@@ -27,19 +27,19 @@ const authenticatedUsers = new Set(["alice", "bob"]);
  * Useful for logging, metrics, request tracing
  */
 app.onRequest(async (req) => {
-	if (typeof req !== "object" || req === null || !("method" in req)) {
-		return req;
-	}
-	const request = req as Request & { _request_id?: string };
+  if (typeof req !== "object" || req === null || !("method" in req)) {
+    return req;
+  }
+  const request = req as Request & { _request_id?: string };
 
-	console.log(`[REQUEST] ${request.method} ${request.path}`);
+  console.log(`[REQUEST] ${request.method} ${request.path}`);
 
-	const requestId = request.headers?.["x-request-id"] || Math.random().toString(36).substring(7);
+  const requestId = request.headers?.["x-request-id"] || Math.random().toString(36).substring(7);
 
-	return {
-		...request,
-		_request_id: requestId,
-	};
+  return {
+    ...request,
+    _request_id: requestId,
+  };
 });
 
 /**
@@ -47,24 +47,24 @@ app.onRequest(async (req) => {
  * Can validate headers, cookies, etc.
  */
 app.preValidation(async (req) => {
-	if (typeof req !== "object" || req === null || !("method" in req)) {
-		return req;
-	}
-	const request = req as Request;
+  if (typeof req !== "object" || req === null || !("method" in req)) {
+    return req;
+  }
+  const request = req as Request;
 
-	if (request.method === "POST" || request.method === "PUT") {
-		if (!request.headers?.["content-type"]) {
-			return {
-				status: 400,
-				body: {
-					error: "Missing Content-Type header",
-					code: "missing_header",
-				},
-			};
-		}
-	}
+  if (request.method === "POST" || request.method === "PUT") {
+    if (!request.headers?.["content-type"]) {
+      return {
+        status: 400,
+        body: {
+          error: "Missing Content-Type header",
+          code: "missing_header",
+        },
+      };
+    }
+  }
 
-	return req;
+  return req;
 });
 
 /**
@@ -72,38 +72,38 @@ app.preValidation(async (req) => {
  * Useful for authentication, authorization, request transformation
  */
 app.preHandler(async (req) => {
-	if (typeof req !== "object" || req === null || !("method" in req)) {
-		return req;
-	}
-	const request = req as Request & { _user?: { username: string } };
+  if (typeof req !== "object" || req === null || !("method" in req)) {
+    return req;
+  }
+  const request = req as Request & { _user?: { username: string } };
 
-	const authHeader = request.headers?.authorization;
-	if (authHeader) {
-		const parts = authHeader.split(" ");
-		const scheme = parts[0];
-		const token = parts[1];
+  const authHeader = request.headers?.authorization;
+  if (authHeader) {
+    const parts = authHeader.split(" ");
+    const scheme = parts[0];
+    const token = parts[1];
 
-		if (scheme === "Bearer" && token) {
-			const username = token.split(":")[0] || "";
+    if (scheme === "Bearer" && token) {
+      const username = token.split(":")[0] || "";
 
-			if (!authenticatedUsers.has(username)) {
-				return {
-					status: 401,
-					body: {
-						error: "Unauthorized",
-						code: "invalid_token",
-					},
-				};
-			}
+      if (!authenticatedUsers.has(username)) {
+        return {
+          status: 401,
+          body: {
+            error: "Unauthorized",
+            code: "invalid_token",
+          },
+        };
+      }
 
-			return {
-				...request,
-				_user: { username },
-			};
-		}
-	}
+      return {
+        ...request,
+        _user: { username },
+      };
+    }
+  }
 
-	return req;
+  return req;
 });
 
 /**
@@ -111,23 +111,23 @@ app.preHandler(async (req) => {
  * Useful for response transformation, adding headers, metrics
  */
 app.onResponse(async (payload) => {
-	if (typeof payload !== "object" || payload === null || !("status" in payload)) {
-		return payload;
-	}
+  if (typeof payload !== "object" || payload === null || !("status" in payload)) {
+    return payload;
+  }
 
-	const res = payload as Record<string, unknown> & { headers?: Record<string, string> };
+  const res = payload as Record<string, unknown> & { headers?: Record<string, string> };
 
-	const status = (res.status as number | undefined) || 200;
-	console.log(`[RESPONSE] ${status}`);
+  const status = (res.status as number | undefined) || 200;
+  console.log(`[RESPONSE] ${status}`);
 
-	const headers = (res.headers as Record<string, string> | undefined) || {};
-	headers["X-Request-ID"] = "unknown";
-	headers["X-Response-Time"] = `${Math.random() * 100}ms`;
+  const headers = (res.headers as Record<string, string> | undefined) || {};
+  headers["X-Request-ID"] = "unknown";
+  headers["X-Response-Time"] = `${Math.random() * 100}ms`;
 
-	return {
-		...res,
-		headers,
-	};
+  return {
+    ...res,
+    headers,
+  };
 });
 
 /**
@@ -135,108 +135,110 @@ app.onResponse(async (payload) => {
  * Useful for error logging, custom error responses
  */
 app.onError(async (payload) => {
-	if (typeof payload !== "object" || payload === null) {
-		return payload;
-	}
+  if (typeof payload !== "object" || payload === null) {
+    return payload;
+  }
 
-	return {
-		...payload,
-		headers: {
-			...((payload as Record<string, unknown>).headers as Record<string, string> | undefined),
-		},
-	};
+  return {
+    ...payload,
+    headers: {
+      ...((payload as Record<string, unknown>).headers as Record<string, string> | undefined),
+    },
+  };
 });
 
 /**
  * Public endpoint (no authentication required)
  */
 get("/public")(async function publicEndpoint(_req: Request) {
-	return {
-		message: "This is a public endpoint",
-		timestamp: new Date().toISOString(),
-	};
+  return {
+    message: "This is a public endpoint",
+    timestamp: new Date().toISOString(),
+  };
 });
 
 /**
  * Protected endpoint (requires Bearer token)
  * Expected format: Authorization: Bearer alice:secret
  */
-get("/protected")(async function protectedEndpoint(req: Request & { _user?: { username: string } }) {
-	const user = req._user;
+get("/protected")(async function protectedEndpoint(
+  req: Request & { _user?: { username: string } },
+) {
+  const user = req._user;
 
-	if (!user) {
-		return {
-			status: 401,
-			body: {
-				error: "Unauthorized",
-				code: "no_token",
-			},
-		};
-	}
+  if (!user) {
+    return {
+      status: 401,
+      body: {
+        error: "Unauthorized",
+        code: "no_token",
+      },
+    };
+  }
 
-	return {
-		message: `Hello, ${user.username}!`,
-		user,
-		timestamp: new Date().toISOString(),
-	};
+  return {
+    message: `Hello, ${user.username}!`,
+    user,
+    timestamp: new Date().toISOString(),
+  };
 });
 
 /**
  * POST endpoint with request body transformation
  */
 post("/echo")(async function echoEndpoint(req: Request & { _user?: { username: string } }) {
-	const body = req.body;
+  const body = req.body;
 
-	if (!body || typeof body !== "object") {
-		return {
-			status: 400,
-			body: {
-				error: "Request body must be a JSON object",
-				code: "invalid_body",
-			},
-		};
-	}
+  if (!body || typeof body !== "object") {
+    return {
+      status: 400,
+      body: {
+        error: "Request body must be a JSON object",
+        code: "invalid_body",
+      },
+    };
+  }
 
-	return {
-		echo: body,
-		received_at: new Date().toISOString(),
-		user: req._user?.username || "anonymous",
-	};
+  return {
+    echo: body,
+    received_at: new Date().toISOString(),
+    user: req._user?.username || "anonymous",
+  };
 });
 
 /**
  * Admin endpoint with extra authorization
  */
 get("/admin/stats")(async function adminStats(req: Request & { _user?: { username: string } }) {
-	const user = req._user;
+  const user = req._user;
 
-	if (!user || user.username !== "alice") {
-		return {
-			status: 403,
-			body: {
-				error: "Admin access required",
-				code: "forbidden",
-			},
-		};
-	}
+  if (!user || user.username !== "alice") {
+    return {
+      status: 403,
+      body: {
+        error: "Admin access required",
+        code: "forbidden",
+      },
+    };
+  }
 
-	return {
-		admin: true,
-		stats: {
-			uptime: Math.floor(process.uptime()),
-			memory: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
-		},
-		timestamp: new Date().toISOString(),
-	};
+  return {
+    admin: true,
+    stats: {
+      uptime: Math.floor(process.uptime()),
+      memory: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+    },
+    timestamp: new Date().toISOString(),
+  };
 });
 
 /**
  * Serve demo page
  */
 get("/")(async function servePage() {
-	return {
-		status: 200,
-		body: `
+  return {
+    status: 200,
+    body: `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -346,10 +348,10 @@ get("/")(async function servePage() {
 </body>
 </html>
 	`,
-		headers: {
-			"Content-Type": "text/html; charset=utf-8",
-		},
-	};
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+    },
+  };
 });
 
 console.log("Starting Lifecycle Hooks Example on http://127.0.0.1:8000");

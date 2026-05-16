@@ -32,13 +32,13 @@ elixir 05_lifecycle_hooks.exs
 
 ## Examples
 
-| File | Description | Port |
-|------|-------------|------|
-| `01_basic_server.exs` | Hello world, health check, echo | 8000 |
-| `02_validation.exs` | Path params, query params, body validation | 8001 |
-| `03_streaming.exs` | Streaming responses, SSE producer | 8002 |
-| `04_websocket_sse.exs` | WebSocket chat, SSE notifications | 8003 |
-| `05_lifecycle_hooks.exs` | Auth hooks, logging, security headers | 8004 |
+| File                     | Description                                | Port |
+| ------------------------ | ------------------------------------------ | ---- |
+| `01_basic_server.exs`    | Hello world, health check, echo            | 8000 |
+| `02_validation.exs`      | Path params, query params, body validation | 8001 |
+| `03_streaming.exs`       | Streaming responses, SSE producer          | 8002 |
+| `04_websocket_sse.exs`   | WebSocket chat, SSE notifications          | 8003 |
+| `05_lifecycle_hooks.exs` | Auth hooks, logging, security headers      | 8004 |
 
 ## Testing
 

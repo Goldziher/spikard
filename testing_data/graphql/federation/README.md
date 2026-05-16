@@ -24,7 +24,7 @@ This directory contains 10 fixtures that test Apollo Federation v2 core features
 
 ```graphql
 query {
-  _entities(representations: [{__typename: "User", id: "1"}]) {
+  _entities(representations: [{ __typename: "User", id: "1" }]) {
     ... on User {
       id
       name
@@ -333,7 +333,7 @@ type Parcel {
 
 ## Federation Queries Reference
 
-### _entities
+### \_entities
 
 **Purpose:** Core federation query for resolving entities by their key representations
 
@@ -349,17 +349,26 @@ _entities(representations: [_Any!]!): [_Entity]!
 
 ```graphql
 {
-  _entities(representations: [
-    {__typename: "User", id: "1"},
-    {__typename: "Product", sku: "ABC", category: "electronics"}
-  ]) {
-    ... on User { id name }
-    ... on Product { sku category name }
+  _entities(
+    representations: [
+      { __typename: "User", id: "1" }
+      { __typename: "Product", sku: "ABC", category: "electronics" }
+    ]
+  ) {
+    ... on User {
+      id
+      name
+    }
+    ... on Product {
+      sku
+      category
+      name
+    }
   }
 }
 ```
 
-### _service
+### \_service
 
 **Purpose:** Subgraph introspection query for schema composition
 
@@ -369,7 +378,7 @@ _entities(representations: [_Any!]!): [_Entity]!
 _service: _Service { sdl: String! }
 ```
 
-**Used in:** 10 fixtures (all fixtures include _service in schema)
+**Used in:** 10 fixtures (all fixtures include \_service in schema)
 
 **Example:**
 
@@ -448,7 +457,7 @@ Returns a GraphQL error
 {
   "type": "error",
   "error_message": "Entity not found",
-  "error_extensions": {"code": "NOT_FOUND"}
+  "error_extensions": { "code": "NOT_FOUND" }
 }
 ```
 
@@ -482,13 +491,13 @@ def test_entity_resolution(graphql_client, federation_fixture):
 
 This fixture set provides comprehensive coverage of:
 
-- ✓ **Entity Resolution** - Core _entities query mechanism
+- ✓ **Entity Resolution** - Core \_entities query mechanism
 - ✓ **Entity Keys** - @key directive and key-based composition
 - ✓ **Compound Keys** - Multiple-field key composition
 - ✓ **Field Dependencies** - @requires directive for field computation
 - ✓ **Field Provisions** - @provides directive for optimization
 - ✓ **External Fields** - @external directive for cross-subgraph references
-- ✓ **Subgraph Introspection** - _service SDL query
+- ✓ **Subgraph Introspection** - \_service SDL query
 - ✓ **Cross-Subgraph Queries** - Multi-entity federation patterns
 - ✓ **Error Handling** - Type validation and entity not found scenarios
 
@@ -526,17 +535,17 @@ Test any Federation v2-compliant server:
 
 ## Summary
 
-| Fixture | Feature | Directives | Status Code |
-|---------|---------|-----------|------------|
-| entity_resolution_basic | Entity Resolution | @key | 200 |
-| entity_with_key | Entity Keys | @key | 200 |
-| entity_with_compound_key | Compound Keys | @key | 200 |
-| requires_directive | Field Dependencies | @key, @requires | 200 |
-| provides_directive | Field Provisions | @key, @provides | 200 |
-| external_field | External References | @key, @external, @requires | 200 |
-| subgraph_introspection | SDL Introspection | - | 200 |
-| cross_subgraph_query | Multi-Subgraph | @key | 200 |
-| federation_error_missing_entity | Missing Entity | @key | 200 |
-| federation_type_mismatch | Type Validation | - | 400 |
+| Fixture                         | Feature             | Directives                 | Status Code |
+| ------------------------------- | ------------------- | -------------------------- | ----------- |
+| entity_resolution_basic         | Entity Resolution   | @key                       | 200         |
+| entity_with_key                 | Entity Keys         | @key                       | 200         |
+| entity_with_compound_key        | Compound Keys       | @key                       | 200         |
+| requires_directive              | Field Dependencies  | @key, @requires            | 200         |
+| provides_directive              | Field Provisions    | @key, @provides            | 200         |
+| external_field                  | External References | @key, @external, @requires | 200         |
+| subgraph_introspection          | SDL Introspection   | -                          | 200         |
+| cross_subgraph_query            | Multi-Subgraph      | @key                       | 200         |
+| federation_error_missing_entity | Missing Entity      | @key                       | 200         |
+| federation_type_mismatch        | Type Validation     | -                          | 400         |
 
 **Total Coverage:** 10 fixtures, 4 directives, 2 federation queries, Apollo Federation v2 specification compliance.

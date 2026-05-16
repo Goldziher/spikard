@@ -102,7 +102,7 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '201':
+        "201":
           description: File uploaded successfully
           headers:
             Location:
@@ -134,7 +134,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FileUploadResponse'
+                $ref: "#/components/schemas/FileUploadResponse"
               examples:
                 success:
                   summary: Successfully uploaded
@@ -147,7 +147,7 @@ paths:
                     uploadedAt: "2024-01-15T10:30:00Z"
                     url: "/v1/files/550e8400-e29b-41d4-a716-446655440000"
 
-        '202':
+        "202":
           description: File accepted for async processing
           headers:
             Location:
@@ -167,7 +167,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FileProcessingResponse'
+                $ref: "#/components/schemas/FileProcessingResponse"
               examples:
                 accepted:
                   summary: Processing in progress
@@ -176,12 +176,12 @@ paths:
                     status: processing
                     statusUrl: "/v1/files/550e8400-e29b-41d4-a716-446655440000/status"
 
-        '400':
+        "400":
           description: Bad request - validation error
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/FileErrorResponse'
+                $ref: "#/components/schemas/FileErrorResponse"
               examples:
                 missingFile:
                   summary: Missing file
@@ -209,14 +209,14 @@ paths:
                         code: "INVALID_ENUM"
                         allowed: ["image/jpeg", "image/png", "image/webp", "application/pdf"]
 
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/AuthErrorResponse'
+                $ref: "#/components/schemas/AuthErrorResponse"
 
-        '413':
+        "413":
           description: Payload Too Large - file exceeds size limit
           headers:
             X-Max-Size:
@@ -226,7 +226,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/FileErrorResponse'
+                $ref: "#/components/schemas/FileErrorResponse"
               examples:
                 fileTooLarge:
                   summary: File size exceeds limit
@@ -238,7 +238,7 @@ paths:
                     instance: "/files/upload"
                     maxSize: 52428800
 
-        '429':
+        "429":
           description: Too many requests - rate limit exceeded
           headers:
             X-RateLimit-Limit:
@@ -256,7 +256,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /files:
     get:
@@ -311,7 +311,7 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: Files listed successfully
           headers:
             X-Total-Count:
@@ -329,7 +329,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FileListResponse'
+                $ref: "#/components/schemas/FileListResponse"
               examples:
                 withFiles:
                   summary: Files listed
@@ -347,12 +347,12 @@ paths:
                       total: 1
                       pages: 1
 
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/AuthErrorResponse'
+                $ref: "#/components/schemas/AuthErrorResponse"
 
   /files/{fileId}:
     parameters:
@@ -399,7 +399,7 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: File downloaded successfully
           headers:
             Content-Type:
@@ -457,7 +457,7 @@ paths:
             type: string
             format: binary
 
-        '304':
+        "304":
           description: Not Modified - use cached version
           headers:
             ETag:
@@ -467,7 +467,7 @@ paths:
               schema:
                 type: string
 
-        '206':
+        "206":
           description: Partial Content - range request
           headers:
             Content-Range:
@@ -483,26 +483,26 @@ paths:
                 type: string
                 format: binary
 
-        '400':
+        "400":
           description: Bad request
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/AuthErrorResponse'
+                $ref: "#/components/schemas/AuthErrorResponse"
 
-        '404':
+        "404":
           description: File not found
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/NotFoundResponse'
+                $ref: "#/components/schemas/NotFoundResponse"
 
     delete:
       tags:
@@ -519,7 +519,7 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '204':
+        "204":
           description: File deleted successfully
           headers:
             X-RateLimit-Limit:
@@ -532,26 +532,26 @@ paths:
               schema:
                 type: integer
 
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/AuthErrorResponse'
+                $ref: "#/components/schemas/AuthErrorResponse"
 
-        '403':
+        "403":
           description: Forbidden - insufficient permissions
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '404':
+        "404":
           description: File not found
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/NotFoundResponse'
+                $ref: "#/components/schemas/NotFoundResponse"
 
   /files/{fileId}/info:
     get:
@@ -577,7 +577,7 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: File metadata retrieved
           headers:
             Cache-Control:
@@ -586,7 +586,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FileMetadataResponse'
+                $ref: "#/components/schemas/FileMetadataResponse"
               examples:
                 metadata:
                   summary: File metadata
@@ -601,19 +601,19 @@ paths:
                     isPublic: false
                     accessLevel: private
 
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/AuthErrorResponse'
+                $ref: "#/components/schemas/AuthErrorResponse"
 
-        '404':
+        "404":
           description: File not found
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/NotFoundResponse'
+                $ref: "#/components/schemas/NotFoundResponse"
 
   /files/{fileId}/verify:
     post:
@@ -652,7 +652,7 @@ paths:
               properties:
                 hash:
                   type: string
-                  pattern: '^[a-f0-9]{64}$'
+                  pattern: "^[a-f0-9]{64}$"
                   description: SHA-256 hash in hex format
             examples:
               verify:
@@ -661,12 +661,12 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: Verification completed
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FileVerificationResponse'
+                $ref: "#/components/schemas/FileVerificationResponse"
               examples:
                 verified:
                   summary: Hashes match
@@ -683,26 +683,26 @@ paths:
                     clientHash: "incorrect"
                     serverHash: "correct"
 
-        '400':
+        "400":
           description: Bad request - invalid hash format
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/AuthErrorResponse'
+                $ref: "#/components/schemas/AuthErrorResponse"
 
-        '404':
+        "404":
           description: File not found
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/NotFoundResponse'
+                $ref: "#/components/schemas/NotFoundResponse"
 
   /storage/quota:
     get:
@@ -721,7 +721,7 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: Quota information
           headers:
             Cache-Control:
@@ -730,7 +730,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StorageQuotaResponse'
+                $ref: "#/components/schemas/StorageQuotaResponse"
               examples:
                 quota:
                   summary: Storage quota
@@ -741,12 +741,12 @@ paths:
                     usagePercent: 20.0
                     fileCount: 42
 
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/AuthErrorResponse'
+                $ref: "#/components/schemas/AuthErrorResponse"
 
 components:
   schemas:
@@ -972,7 +972,7 @@ components:
 
     FileErrorResponse:
       allOf:
-        - $ref: '#/components/schemas/ErrorResponse'
+        - $ref: "#/components/schemas/ErrorResponse"
         - type: object
           properties:
             maxSize:
@@ -986,7 +986,7 @@ components:
 
     AuthErrorResponse:
       allOf:
-        - $ref: '#/components/schemas/ErrorResponse'
+        - $ref: "#/components/schemas/ErrorResponse"
         - type: object
           properties:
             title:
@@ -996,7 +996,7 @@ components:
 
     NotFoundResponse:
       allOf:
-        - $ref: '#/components/schemas/ErrorResponse'
+        - $ref: "#/components/schemas/ErrorResponse"
         - type: object
           properties:
             title:

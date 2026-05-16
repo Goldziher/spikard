@@ -53,10 +53,18 @@ Each fixture is a JSON file conforming to `testing_data/protobuf/streaming/schem
   "name": "Server streaming - empty stream",
   "description": "Tests server streaming RPC that returns an empty stream...",
   "category": "server_streaming",
-  "protobuf": { /* See Protobuf Definition */ },
-  "handler": { /* See Handler Configuration */ },
-  "request": { /* See Request Section */ },
-  "expected_response": { /* See Expected Response */ },
+  "protobuf": {
+    /* See Protobuf Definition */
+  },
+  "handler": {
+    /* See Handler Configuration */
+  },
+  "request": {
+    /* See Request Section */
+  },
+  "expected_response": {
+    /* See Expected Response */
+  },
   "tags": ["server_streaming", "empty", "edge_cases"]
 }
 ```
@@ -185,11 +193,7 @@ Input data for the RPC call. Structure varies by streaming mode.
   "metadata": {
     "content-type": "application/grpc"
   },
-  "stream": [
-    {"value": 10},
-    {"value": 20},
-    {"value": 30}
-  ]
+  "stream": [{ "value": 10 }, { "value": 20 }, { "value": 30 }]
 }
 ```
 
@@ -225,8 +229,8 @@ Expected outcome of the RPC call.
 {
   "status_code": "OK",
   "stream": [
-    {"id": 1, "value": "item_1"},
-    {"id": 2, "value": "item_2"}
+    { "id": 1, "value": "item_1" },
+    { "id": 2, "value": "item_2" }
   ]
 }
 ```
@@ -343,10 +347,7 @@ Use this template:
   },
   "expected_response": {
     "status_code": "OK",
-    "stream": [
-      {"field": "value1"},
-      {"field": "value2"}
-    ]
+    "stream": [{ "field": "value1" }, { "field": "value2" }]
   },
   "tags": ["server_streaming", "scenario_category"]
 }
@@ -433,17 +434,17 @@ task test:grpc:php
       "content-type": "application/grpc"
     },
     "stream": [
-      {"id": 1, "text": "hello"},
-      {"id": 2, "text": "world"},
-      {"id": 3, "text": "test"}
+      { "id": 1, "text": "hello" },
+      { "id": 2, "text": "world" },
+      { "id": 3, "text": "test" }
     ]
   },
   "expected_response": {
     "status_code": "OK",
     "stream": [
-      {"id": 1, "text": "hello"},
-      {"id": 2, "text": "world"},
-      {"id": 3, "text": "test"}
+      { "id": 1, "text": "hello" },
+      { "id": 2, "text": "world" },
+      { "id": 3, "text": "test" }
     ]
   },
   "tags": ["bidirectional_streaming", "echo", "conversation"]
@@ -643,7 +644,7 @@ await client.execute_server_streaming(..., timeout=timeout)
     "metadata": {
       "authorization": "Bearer token"
     },
-    "message": {"user_id": "123"}
+    "message": { "user_id": "123" }
   }
 }
 ```
@@ -661,7 +662,9 @@ Error fixtures validate that the server properly returns gRPC error codes and me
   "name": "Server streaming - validation error",
   "description": "Tests that invalid input is rejected with INVALID_ARGUMENT status",
   "category": "error",
-  "protobuf": { /* ... */ },
+  "protobuf": {
+    /* ... */
+  },
   "handler": {
     "service": "example.v1.StreamService",
     "method": "GetStream"
@@ -687,25 +690,25 @@ Error fixtures validate that the server properly returns gRPC error codes and me
 
 Common status codes used in error fixtures:
 
-| Code | Meaning |
-|------|---------|
-| `OK` | Success (0) |
-| `CANCELLED` | Cancelled (1) |
-| `UNKNOWN` | Unknown error (2) |
-| `INVALID_ARGUMENT` | Invalid argument (3) |
-| `DEADLINE_EXCEEDED` | Deadline exceeded (4) |
-| `NOT_FOUND` | Not found (5) |
-| `ALREADY_EXISTS` | Already exists (6) |
-| `PERMISSION_DENIED` | Permission denied (7) |
-| `RESOURCE_EXHAUSTED` | Resource exhausted (8) |
+| Code                  | Meaning                 |
+| --------------------- | ----------------------- |
+| `OK`                  | Success (0)             |
+| `CANCELLED`           | Cancelled (1)           |
+| `UNKNOWN`             | Unknown error (2)       |
+| `INVALID_ARGUMENT`    | Invalid argument (3)    |
+| `DEADLINE_EXCEEDED`   | Deadline exceeded (4)   |
+| `NOT_FOUND`           | Not found (5)           |
+| `ALREADY_EXISTS`      | Already exists (6)      |
+| `PERMISSION_DENIED`   | Permission denied (7)   |
+| `RESOURCE_EXHAUSTED`  | Resource exhausted (8)  |
 | `FAILED_PRECONDITION` | Failed precondition (9) |
-| `ABORTED` | Aborted (10) |
-| `OUT_OF_RANGE` | Out of range (11) |
-| `UNIMPLEMENTED` | Unimplemented (12) |
-| `INTERNAL` | Internal error (13) |
-| `UNAVAILABLE` | Unavailable (14) |
-| `DATA_LOSS` | Data loss (15) |
-| `UNAUTHENTICATED` | Unauthenticated (16) |
+| `ABORTED`             | Aborted (10)            |
+| `OUT_OF_RANGE`        | Out of range (11)       |
+| `UNIMPLEMENTED`       | Unimplemented (12)      |
+| `INTERNAL`            | Internal error (13)     |
+| `UNAVAILABLE`         | Unavailable (14)        |
+| `DATA_LOSS`           | Data loss (15)          |
+| `UNAUTHENTICATED`     | Unauthenticated (16)    |
 
 ### Partial Stream Delivery
 
@@ -773,7 +776,7 @@ Unacceptable (must be fixed):
 ```json
 {
   "expected_response": {
-    "stream": [{"count": 5}]
+    "stream": [{ "count": 5 }]
   }
   // Python returns [{"count": 5}, {"count": 5}] - different number of messages
 }
@@ -785,12 +788,12 @@ Unacceptable (must be fixed):
 
 ### By Language
 
-| Language | Target | Measurement | Command |
-|----------|--------|-------------|---------|
-| Python | 80%+ | Line coverage | `pytest --cov=spikard_py --cov-fail-under=80` |
-| TypeScript | 80%+ | Statement coverage | `pnpm vitest --coverage --coverage.thresholds.lines=80` |
-| Ruby | 80%+ | Line coverage | Bundle with SimpleCov; check `.resultset.json` |
-| PHP | 85%+ | Line coverage | `phpunit --coverage-text` |
+| Language   | Target | Measurement        | Command                                                 |
+| ---------- | ------ | ------------------ | ------------------------------------------------------- |
+| Python     | 80%+   | Line coverage      | `pytest --cov=spikard_py --cov-fail-under=80`           |
+| TypeScript | 80%+   | Statement coverage | `pnpm vitest --coverage --coverage.thresholds.lines=80` |
+| Ruby       | 80%+   | Line coverage      | Bundle with SimpleCov; check `.resultset.json`          |
+| PHP        | 85%+   | Line coverage      | `phpunit --coverage-text`                               |
 
 ### Verification Script
 

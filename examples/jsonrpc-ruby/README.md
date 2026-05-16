@@ -150,7 +150,7 @@ end
 Method names must follow these rules:
 
 - Non-empty string
-- Alphanumeric characters, dots (.), underscores (_), and hyphens (-)
+- Alphanumeric characters, dots (.), underscores (\_), and hyphens (-)
 - Cannot start with a dot or hyphen
 - Cannot end with a dot
 - Cannot contain consecutive dots

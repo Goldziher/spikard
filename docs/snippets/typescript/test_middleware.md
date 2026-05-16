@@ -19,7 +19,7 @@ it("enforces auth middleware", async () => {
 
   // With auth
   response = await client.get("/protected/data", {
-    authorization: "Bearer token123"
+    authorization: "Bearer token123",
   });
   expect(response.statusCode).toBe(200);
 });

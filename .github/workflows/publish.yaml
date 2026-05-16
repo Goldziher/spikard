@@ -1,29 +1,23 @@
 name: Publish Release
 
 on:
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag to build (e.g., v0.5.0)"
-        required: true
-        type: string
-      dry_run:
-        description: "Prepare artifacts without publishing"
+        description: "Release tag to build (e.g., v0.14.0)"
         required: false
-        type: boolean
-        default: false
+        type: string
       ref:
         description: "Git ref (branch, tag, or commit) to build; defaults to the tag"
         required: false
         type: string
       targets:
-        description: "Comma-separated list of release targets (all, python, node, ruby, php, cli, crates, homebrew, elixir, java, kotlin, csharp, dart, gleam, swift, zig, wasm)"
+        description: "Comma-separated release targets, or all"
         required: false
         type: string
-      force_republish:
-        description: "Force re-publish even if artifacts already exist"
+        default: "all"
+      dry_run:
+        description: "Prepare artifacts without publishing"
         required: false
         type: boolean
         default: false
@@ -32,8 +26,19 @@ on:
         required: false
         type: boolean
         default: false
+      force_republish:
+        description: "Force republish targets whose registry version already exists"
+        required: false
+        type: boolean
+        default: false
+  release:
+    types: [published]
   repository_dispatch:
     types: [publish-release]
+
+permissions:
+  contents: write
+  id-token: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ (github.event_name == 'workflow_dispatch' && (github.event.inputs.ref || github.event.inputs.tag)) || github.ref || github.run_id }}
@@ -41,26 +46,25 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_DEV_DEBUG: 0
   MACOSX_DEPLOYMENT_TARGET: "14.0"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   prepare:
     name: Prepare metadata
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     outputs:
       tag: ${{ steps.meta.outputs.tag }}
       version: ${{ steps.meta.outputs.version }}
-      ref: ${{ steps.meta.outputs.ref }}
-      dry_run: ${{ steps.meta.outputs.dry_run }}
-      force_republish: ${{ steps.meta.outputs.force_republish }}
+      npm_tag: ${{ steps.meta.outputs.npm_tag }}
       checkout_ref: ${{ steps.meta.outputs.checkout_ref }}
       target_sha: ${{ steps.meta.outputs.target_sha }}
-      matrix_ref: ${{ steps.meta.outputs.matrix_ref }}
       is_tag: ${{ steps.meta.outputs.is_tag }}
-      release_targets: ${{ steps.meta.outputs.release_targets }}
-      release_any: ${{ steps.meta.outputs.release_any }}
+      is_prerelease: ${{ steps.meta.outputs.is_prerelease }}
+      dry_run: ${{ steps.meta.outputs.dry_run }}
+      force_republish: ${{ steps.meta.outputs.force_republish }}
       release_python: ${{ steps.meta.outputs.release_python }}
       release_node: ${{ steps.meta.outputs.release_node }}
       release_ruby: ${{ steps.meta.outputs.release_ruby }}
@@ -68,2531 +72,743 @@ jobs:
       release_cli: ${{ steps.meta.outputs.release_cli }}
       release_crates: ${{ steps.meta.outputs.release_crates }}
       release_homebrew: ${{ steps.meta.outputs.release_homebrew }}
-      release_elixir: ${{ steps.meta.outputs.release_elixir }}
-      release_wasm: ${{ steps.meta.outputs.release_wasm }}
+      release_go: ${{ steps.meta.outputs.release_go }}
+      release_c_ffi: ${{ steps.meta.outputs.release_c_ffi }}
       release_java: ${{ steps.meta.outputs.release_java }}
-      release_kotlin: ${{ steps.meta.outputs.release_kotlin }}
       release_csharp: ${{ steps.meta.outputs.release_csharp }}
+      release_elixir: ${{ steps.meta.outputs.release_elixir }}
       release_dart: ${{ steps.meta.outputs.release_dart }}
-      release_gleam: ${{ steps.meta.outputs.release_gleam }}
       release_swift: ${{ steps.meta.outputs.release_swift }}
       release_zig: ${{ steps.meta.outputs.release_zig }}
+      release_kotlin: ${{ steps.meta.outputs.release_kotlin }}
+      release_wasm: ${{ steps.meta.outputs.release_wasm }}
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout
+        uses: actions/checkout@v6
         with:
+          ref: ${{ (inputs.republish == true && (inputs.ref || github.event.repository.default_branch)) || inputs.ref || inputs.tag || github.ref }}
           fetch-depth: 0
 
       - name: Retag for republish
         if: ${{ inputs.republish == true || github.event.client_payload.republish == true }}
-        env:
-          TAG: ${{ inputs.tag || github.event.client_payload.tag }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if [[ -z "${TAG}" ]]; then
-            echo "::error::republish requires a tag input"
-            exit 1
-          fi
-          sha="$(git rev-parse HEAD)"
-          echo "::notice::Republish requested - deleting and re-creating tag ${TAG} on ${sha:0:8}"
-          gh api "repos/${GITHUB_REPOSITORY}/git/refs/tags/${TAG}" -X DELETE 2>/dev/null || true
-          gh api "repos/${GITHUB_REPOSITORY}/git/refs" \
-            -f "ref=refs/tags/${TAG}" \
-            -f "sha=${sha}" --silent
-          git tag -d "${TAG}" 2>/dev/null || true
-          git tag -a "${TAG}" -m "${TAG}" "${sha}"
+        uses: kreuzberg-dev/actions/retag-for-republish@v1
+        with:
+          tag: ${{ inputs.tag || github.event.client_payload.tag }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Validate tag and compute version
+      - name: Resolve release metadata
         id: meta
-        env:
-          GH_EVENT_NAME: ${{ github.event_name }}
-          RELEASE_TAG_NAME: ${{ github.event.release.tag_name }}
-          INPUT_TAG: ${{ inputs.tag }}
-          INPUT_DRY_RUN: ${{ inputs.dry_run }}
-          INPUT_REF: ${{ inputs.ref }}
-          INPUT_TARGETS: ${{ inputs.targets }}
-          INPUT_FORCE_REPUBLISH: ${{ inputs.force_republish }}
-          DISPATCH_TAG: ${{ github.event.client_payload.tag }}
-          DISPATCH_DRY_RUN: ${{ github.event.client_payload.dry_run }}
-          DISPATCH_REF: ${{ github.event.client_payload.ref }}
-          DISPATCH_TARGETS: ${{ github.event.client_payload.targets }}
-          DISPATCH_FORCE_REPUBLISH: ${{ github.event.client_payload.force_republish }}
-        run: bash scripts/publish/prepare-metadata.sh
-
-      - name: Upload release metadata
-        uses: actions/upload-artifact@v7
+        uses: kreuzberg-dev/actions/prepare-release-metadata@v1
         with:
-          name: release-metadata
-          path: release-metadata.json
-          retention-days: 14
+          available-targets: "crates,python,node,ruby,php,cli,homebrew,go,c-ffi,java,csharp,elixir,dart,swift,zig,kotlin,wasm"
 
-  check-pypi:
-    name: Check if Python package exists on PyPI
+      - name: Ensure draft GitHub Release exists
+        if: ${{ steps.meta.outputs.is_tag == 'true' && steps.meta.outputs.dry_run != 'true' }}
+        uses: kreuzberg-dev/actions/publish-github-release@v1
+        with:
+          tag: ${{ steps.meta.outputs.tag }}
+          target: ${{ steps.meta.outputs.target_sha }}
+          notes: "Release ${{ steps.meta.outputs.tag }}"
+          draft: "true"
+          prerelease: ${{ steps.meta.outputs.is_prerelease }}
+
+  validate-versions:
+    name: Validate manifest versions
     needs: prepare
-    if: ${{ needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_python == 'true' && needs.prepare.outputs.force_republish != 'true' }}
+    if: ${{ needs.prepare.outputs.is_tag == 'true' }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+          fetch-depth: 0
+
+      - name: Validate versions
+        uses: kreuzberg-dev/actions/validate-versions@v1
+        with:
+          version: ${{ needs.prepare.outputs.version }}
+
+  check-registries:
+    name: Check registries
+    needs: prepare
+    if: ${{ needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.force_republish != 'true' }}
+    runs-on: ubuntu-latest
     outputs:
-      exists: ${{ steps.check.outputs.exists }}
+      pypi_exists: ${{ steps.pypi.outputs.exists }}
+      npm_node_exists: ${{ steps.npm.outputs.exists }}
+      npm_wasm_exists: ${{ steps.npm.outputs.wasm_exists }}
+      ruby_exists: ${{ steps.rubygems.outputs.exists }}
+      php_exists: ${{ steps.packagist.outputs.exists }}
+      crates_core_exists: ${{ steps.crates.outputs.exists }}
+      hex_exists: ${{ steps.hex.outputs.exists }}
+      maven_java_exists: ${{ steps.maven.outputs.exists }}
+      maven_kotlin_exists: ${{ steps.maven.outputs.kotlin_exists }}
+      nuget_exists: ${{ steps.nuget.outputs.exists }}
+      pub_exists: ${{ steps.pub.outputs.exists }}
+      swift_exists: ${{ steps.swift.outputs.exists }}
+      zig_exists: ${{ steps.zig.outputs.exists }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
-
-      - name: Check PyPI for existing version
-        id: check
-        run: bash scripts/publish/check_pypi.sh "${{ needs.prepare.outputs.version }}"
-
-  check-npm-node:
-    name: Check if Node package exists on npm
-    needs: prepare
-    if: ${{ needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_node == 'true' && needs.prepare.outputs.force_republish != 'true' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    outputs:
-      exists: ${{ steps.check.outputs.exists }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
-
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24
-
-      - name: Check npm for existing version
-        id: check
-        run: bash scripts/publish/check_npm.sh "@spikard/node-native" "${{ needs.prepare.outputs.version }}"
-
-  check-rubygems:
-    name: Check if Ruby gem exists on RubyGems
-    needs: prepare
-    if: ${{ needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_ruby == 'true' && needs.prepare.outputs.force_republish != 'true' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    outputs:
-      exists: ${{ steps.check.outputs.exists }}
-      check_status: ${{ steps.check.outputs.check_status }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
-
-      - name: Check RubyGems for existing version
-        id: check
-        continue-on-error: true
-        shell: bash
-        run: |
-          set +e  # Explicitly disable exit-on-error
-          bash scripts/publish/check_rubygems.sh "${{ needs.prepare.outputs.version }}"
-          exit_code=$?
-          set -e  # Re-enable for safety
-
-          case "$exit_code" in
-            0)
-              echo "exists=true" >> "$GITHUB_OUTPUT"
-              echo "check_status=success" >> "$GITHUB_OUTPUT"
-              echo "Ruby gem version already exists on RubyGems"
-              exit 0
-              ;;
-            1)
-              echo "exists=false" >> "$GITHUB_OUTPUT"
-              echo "check_status=success" >> "$GITHUB_OUTPUT"
-              echo "Ruby gem version not found on RubyGems, will publish"
-              exit 0
-              ;;
-            2)
-              echo "exists=false" >> "$GITHUB_OUTPUT"
-              echo "check_status=transient_failure" >> "$GITHUB_OUTPUT"
-              echo "RubyGems check encountered transient error"
-              exit 2
-              ;;
-            *)
-              echo "exists=false" >> "$GITHUB_OUTPUT"
-              echo "check_status=unexpected_failure" >> "$GITHUB_OUTPUT"
-              echo "Error checking RubyGems: exit code $exit_code"
-              exit 2
-              ;;
-          esac
-
-      - name: Evaluate check result
-        if: always()
-        run: |
-          status="${{ steps.check.outputs.check_status }}"
-          case "$status" in
-            success)
-              echo "✓ RubyGems check completed successfully"
-              exit 0
-              ;;
-            transient_failure)
-              echo "⚠ RubyGems check failed with transient error - publishing will be skipped (retry workflow if needed)"
-              exit 0
-              ;;
-            unexpected_failure)
-              echo "✗ RubyGems check failed unexpectedly"
-              exit 1
-              ;;
-            *)
-              echo "✗ Unknown check status: \"$status\""
-              exit 1
-              ;;
-          esac
-
-  npm-already-published:
-    name: npm already published summary
-    needs: [prepare, check-npm-node]
-    if: >-
-      ${{
-        needs.prepare.outputs.is_tag == 'true' &&
-        needs.prepare.outputs.release_node == 'true' &&
-        needs.prepare.outputs.force_republish != 'true' &&
-        needs.check-npm-node.outputs.exists == 'true'
-      }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Write summary
-        run: echo "Node packages for version ${{ needs.prepare.outputs.version }} already published on npm - skipped." >> "$GITHUB_STEP_SUMMARY"
-
-  rubygems-already-published:
-    name: RubyGems already published summary
-    needs: [prepare, check-rubygems]
-    if: >-
-      ${{
-        needs.prepare.outputs.is_tag == 'true' &&
-        needs.prepare.outputs.release_ruby == 'true' &&
-        needs.prepare.outputs.force_republish != 'true' &&
-        needs.check-rubygems.outputs.exists == 'true'
-      }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
-
-      - name: Write summary
-        run: bash scripts/publish/ruby/already-published-summary.sh "${{ needs.prepare.outputs.version }}"
-
-  check-homebrew:
-    name: Check if Homebrew formula already published
-    needs: prepare
-    if: ${{ needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_homebrew == 'true' && needs.prepare.outputs.force_republish != 'true' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: read
-    outputs:
-      exists: ${{ steps.check.outputs.exists }}
-    steps:
-      - name: Check Homebrew tap for formula
-        id: check
-        timeout-minutes: 3
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ needs.prepare.outputs.version }}
-        run: |
-          # Check if Formula/spikard.rb exists and contains the current version
-          if timeout 120s gh api repos/Goldziher/homebrew-tap/contents/Formula/spikard.rb --jq '.content' 2>/dev/null | base64 -d | grep -q "version \"${VERSION}\""; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "Homebrew formula already contains version ${VERSION}" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-            echo "Homebrew formula does not contain version ${VERSION} or check failed" >> "$GITHUB_STEP_SUMMARY"
-          fi
-
-  check-hex:
-    name: Check if Elixir package exists on Hex.pm
-    needs: prepare
-    if: ${{ needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_elixir == 'true' && needs.prepare.outputs.force_republish != 'true' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    outputs:
-      exists: ${{ steps.check.outputs.exists }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
-
-      - name: Check Hex.pm for existing version
-        id: check
-        run: bash scripts/publish/check_hex.sh "${{ needs.prepare.outputs.version }}"
-
-  hex-already-published:
-    name: Hex.pm already published summary
-    needs: [prepare, check-hex]
-    if: >-
-      ${{
-        needs.prepare.outputs.is_tag == 'true' &&
-        needs.prepare.outputs.release_elixir == 'true' &&
-        needs.prepare.outputs.force_republish != 'true' &&
-        needs.check-hex.outputs.exists == 'true'
-      }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Write summary
-        run: echo "Package spikard@${{ needs.prepare.outputs.version }} already published on Hex.pm - skipped." >> "$GITHUB_STEP_SUMMARY"
-
-  check-packagist:
-    name: Check if PHP package exists on Packagist
-    needs: prepare
-    if: ${{ needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_php == 'true' && needs.prepare.outputs.force_republish != 'true' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    outputs:
-      exists: ${{ steps.check.outputs.exists }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
-
-      - name: Check Packagist for existing version
-        id: check
-        run: bash scripts/publish/check_packagist.sh "${{ needs.prepare.outputs.version }}"
-
-  packagist-already-published:
-    name: Packagist already published summary
-    needs: [prepare, check-packagist]
-    if: >-
-      ${{
-        needs.prepare.outputs.is_tag == 'true' &&
-        needs.prepare.outputs.release_php == 'true' &&
-        needs.prepare.outputs.force_republish != 'true' &&
-        needs.check-packagist.outputs.exists == 'true'
-      }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Write summary
-        run: |
-          {
-            echo "## Packagist Publish"
-            echo ""
-            echo "Version \`${{ needs.prepare.outputs.version }}\` is already indexed on Packagist for \`spikard/spikard\`."
-            echo "Skipping Packagist notification."
-          } >> "$GITHUB_STEP_SUMMARY"
-
-  python-wheels:
-    name: Build Python wheels (${{ matrix.label }})
-    needs: prepare
-    if: ${{ needs.prepare.outputs.release_python == 'true' }}
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 90
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - label: linux-x86_64
-            os: ubuntu-latest
-            artifact: python-wheels-linux-x86_64
-            rust_target: x86_64-unknown-linux-gnu
-            manylinux: "2_34"
-            python: "3.10"
-            needs_qemu: false
-            extra_args: ""
-          - label: macos-arm64
-            os: macos-14
-            artifact: python-wheels-macos
-            needs_qemu: false
-            python: "3.10"
-            rust_target: aarch64-apple-darwin
-            manylinux: ""
-            extra_args: ""
-          - label: windows-amd64
-            os: windows-latest
-            artifact: python-wheels-windows
-            needs_qemu: false
-            python: "3.10"
-            rust_target: x86_64-pc-windows-msvc
-            manylinux: ""
-            extra_args: ""
-    steps:
-      - name: Maximize build disk space
-        if: matrix.os == 'ubuntu-latest'
-        uses: easimon/maximize-build-space@v10
-        with:
-          root-reserve-mb: 2048
-          temp-reserve-mb: 512
-          swap-size-mb: 4096
-          overprovision-lvm: 'true'
-          remove-dotnet: 'true'
-          remove-android: 'true'
-          remove-haskell: 'true'
-          remove-codeql: 'true'
-          remove-docker-images: 'true'
-
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: Ensure target commit
-        if: ${{ needs.prepare.outputs.target_sha != '' }}
-        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
-
-      - name: Setup QEMU
-        if: matrix.os == 'ubuntu-latest' && matrix.needs_qemu
-        uses: docker/setup-qemu-action@v4
-        with:
-          platforms: all
-
-      - name: Install macOS Rust targets
-        if: matrix.label == 'macos-arm64'
-        shell: bash
-        run: rustup target add aarch64-apple-darwin
-
-      - name: Build Linux wheels
-        if: matrix.os == 'ubuntu-latest'
-        uses: PyO3/maturin-action@v1
-        with:
-          command: build
-          args: --release -i python${{ matrix.python }}
-          target: ${{ matrix.rust_target }}
-          manylinux: ${{ matrix.manylinux }}
-          working-directory: packages/python
-          sccache: true
-
-      - name: Build wheels (native)
-        if: matrix.os != 'ubuntu-latest'
-        uses: PyO3/maturin-action@v1
-        with:
-          command: build
-          args: --release -i python${{ matrix.python }}
-          target: ${{ matrix.rust_target }}
-          working-directory: packages/python
-          sccache: true
-
-      - name: List built wheels
-        shell: bash
-        run: |
-          echo "=== Checking for wheels directory ==="
-          if [ -d "target/wheels" ]; then
-            echo "Wheels directory exists"
-            ls -lh target/wheels
-          else
-            echo "::error::Wheels directory not found at target/wheels"
-            echo "Current directory: $(pwd)"
-            echo "Looking for wheels directories:"
-            find . -type d -name "wheels" 2>/dev/null || echo "No wheels directory found"
-            exit 1
-          fi
-
-      - name: Upload wheel artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: ${{ matrix.artifact }}
-          path: target/wheels/*.whl
-          retention-days: 14
-
-  python-sdist:
-    name: Build Python sdist
-    needs: prepare
-    if: ${{ needs.prepare.outputs.release_python == 'true' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: Ensure target commit
-        if: ${{ needs.prepare.outputs.target_sha != '' }}
-        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
-
-      - name: Setup Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
-
-      - name: Setup Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: stable
-
-      - name: Build sdist
-        run: bash scripts/publish/python/build-sdist.sh
-
-      - name: Upload sdist
-        uses: actions/upload-artifact@v7
-        with:
-          name: python-sdist
-          path: packages/python/target/wheels/*.tar.gz
-          retention-days: 14
-
-  python-wrapper:
-    name: Build Python wrapper package
-    needs: prepare
-    if: ${{ needs.prepare.outputs.release_python == 'true' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: Ensure target commit
-        if: ${{ needs.prepare.outputs.target_sha != '' }}
-        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
-
-      - name: Setup Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
-
-      - name: Build wrapper wheel
-        run: bash scripts/publish/python/build-wrapper-wheel.sh
-
-      - name: Upload wrapper wheel
-        uses: actions/upload-artifact@v7
-        with:
-          name: python-wrapper
-          path: packages/python/target/wheels/*.whl
-          retention-days: 14
-
-  node-bindings:
-    name: Build Node bindings (${{ matrix.settings.target }})
-    needs: prepare
-    if: ${{ needs.prepare.outputs.release_node == 'true' }}
-    runs-on: ${{ matrix.settings.os }}
-    timeout-minutes: 90
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        settings:
-          - os: macos-14
-            target: aarch64-apple-darwin
-            rust_target: ""
-            use_cross: false
-            use_napi_cross: false
-          - os: macos-14
-            target: x86_64-apple-darwin
-            rust_target: ""
-            use_cross: false
-            use_napi_cross: false
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            rust_target: ""
-            use_cross: false
-            use_napi_cross: false
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            rust_target: ""
-            use_cross: false
-            use_napi_cross: false
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: Ensure target commit
-        if: ${{ needs.prepare.outputs.target_sha != '' }}
-        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v5
-        with:
-          package_json_file: package.json
-
-      - name: Setup Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: stable
-          target: ${{ matrix.settings.target }}
-
-      - name: Add Rust target
-        if: ${{ matrix.settings.rust_target != '' }}
-        run: rustup target add ${{ matrix.settings.rust_target }}
-
-      - name: Install cross
-        if: ${{ matrix.settings.use_cross }}
-        run: cargo install cross --git https://github.com/cross-rs/cross --locked
-
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          check-latest: true
-
-      - name: Enable corepack
-        run: corepack enable
-
-      - name: Install Node dependencies
-        run: pnpm install -r
-
-      - name: Clean npm directory
-        if: runner.os != 'Windows'
-        run: rm -rf crates/spikard-node/npm
-
-      - name: Clean npm directory (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: Remove-Item -Recurse -Force crates/spikard-node\npm -ErrorAction SilentlyContinue
-
-      - name: Create npm package structure
-        run: pnpm --filter @spikard/node-native exec napi create-npm-dirs
-
-      - name: Build native module
-        if: runner.os != 'Windows'
-        working-directory: crates/spikard-node
-        env:
-          TARGET: ${{ matrix.settings.target }}
-          USE_CROSS: ${{ matrix.settings.use_cross }}
-          USE_NAPI_CROSS: ${{ matrix.settings.use_napi_cross }}
-        run: bash ../../scripts/publish/node/build-native-module.sh
-
-      - name: Build native module (Windows)
-        if: runner.os == 'Windows'
-        working-directory: crates/spikard-node
-        shell: pwsh
-        env:
-          TARGET: ${{ matrix.settings.target }}
-          USE_CROSS: ${{ matrix.settings.use_cross }}
-          USE_NAPI_CROSS: ${{ matrix.settings.use_napi_cross }}
-        run: ../../scripts/publish/node/build-native-module.ps1
-
-      - name: Package artifacts
-        if: runner.os != 'Windows'
-        working-directory: crates/spikard-node
-        env:
-          TARGET: ${{ matrix.settings.target }}
-        run: bash ../../scripts/publish/node/package-artifacts.sh
-
-      - name: Package artifacts (Windows)
-        if: runner.os == 'Windows'
-        working-directory: crates/spikard-node
-        shell: pwsh
-        env:
-          TARGET: ${{ matrix.settings.target }}
-        run: ../../scripts/publish/node/package-artifacts.ps1
-
-      - name: Generate and upload TypeScript definitions
-        if: matrix.settings.target == 'x86_64-unknown-linux-gnu'
-        working-directory: crates/spikard-node
-        run: bash ../../scripts/publish/node/generate-dts.sh
-
-      - name: Upload TypeScript definitions
-        if: matrix.settings.target == 'x86_64-unknown-linux-gnu'
-        uses: actions/upload-artifact@v7
-        with:
-          name: node-typescript-defs
-          path: typescript-defs
-          retention-days: 14
-
-      - name: Upload Node artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: node-bindings-${{ matrix.settings.target }}
-          path: node-bindings-${{ matrix.settings.target }}.tar.gz
-          retention-days: 14
-
-  cli-binaries:
-    name: Build CLI binaries (${{ matrix.target }})
-    needs: prepare
-    if: ${{ needs.prepare.outputs.release_cli == 'true' }}
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            use_cross: false
-          - os: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-            use_cross: false
-          - os: macos-14
-            target: aarch64-apple-darwin
-            use_cross: false
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            use_cross: false
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: Ensure target commit
-        if: ${{ needs.prepare.outputs.target_sha != '' }}
-        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
-
-      - name: Setup Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: stable
-          target: ${{ matrix.target }}
-
-      - name: Add compilation target
-        run: rustup target add ${{ matrix.target }}
-
-      - name: Install build dependencies
-        if: runner.os == 'Linux'
-        run: bash scripts/publish/cli/install-build-deps-linux.sh "${{ matrix.target }}"
-
-      - name: Configure cross linker
-        if: ${{ matrix.target == 'aarch64-unknown-linux-gnu' }}
-        run: bash scripts/publish/cli/configure-cross-linker.sh
-
-      - name: Build CLI
-        shell: bash
-        run: bash scripts/publish/cli/build-cli.sh "${{ matrix.target }}"
-
-      - name: Package CLI artifact
-        if: runner.os != 'Windows'
-        run: bash scripts/publish/cli/package-cli-unix.sh "${{ matrix.target }}"
-
-      - name: Package CLI artifact (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: scripts/publish/cli/package-cli-windows.ps1 -Target "${{ matrix.target }}"
-
-      - name: Upload CLI artifact
-        if: runner.os != 'Windows'
-        uses: actions/upload-artifact@v7
-        with:
-          name: cli-${{ matrix.target }}
-          path: spikard-cli-${{ matrix.target }}.tar.gz
-          retention-days: 14
-
-      - name: Upload CLI artifact (Windows)
-        if: runner.os == 'Windows'
-        uses: actions/upload-artifact@v7
-        with:
-          name: cli-${{ matrix.target }}
-          path: spikard-cli-${{ matrix.target }}.zip
-          retention-days: 14
-
-  homebrew-bottles:
-    name: Build Homebrew bottles (${{ matrix.bottle_tag }})
-    needs: [prepare, check-homebrew]
-    if: |
-      needs.prepare.outputs.release_homebrew == 'true' &&
-      (needs.prepare.outputs.force_republish == 'true' || needs.check-homebrew.outputs.exists != 'true')
-    runs-on: ${{ matrix.runner }}
-    timeout-minutes: 60
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - runner: macos-14
-            bottle_tag: arm64_sonoma
-          - runner: macos-15
-            bottle_tag: arm64_sequoia
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: Ensure target commit
-        if: ${{ needs.prepare.outputs.target_sha != '' }}
-        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
-
-      - name: Setup Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: stable
-
-      - name: Setup Homebrew
-        run: |
-          brew tap homebrew/core
-          brew update
-
-      - name: Extract version
-        id: version
-        env:
-          TAG: ${{ needs.prepare.outputs.tag }}
-        run: |
-          VERSION="${TAG#v}"
-          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-
-      - name: Build CLI for bottle
-        run: |
-          cargo build --release -p spikard-cli
-
-      - name: Create Homebrew bottle
-        id: bottle
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-          TAG: ${{ needs.prepare.outputs.tag }}
-        run: |
-          # Prepare bottle directory structure with cellar path
-          bottle_root="/tmp/spikard-bottle-root"
-          bottle_dir="${bottle_root}/spikard/${VERSION}"
-          mkdir -p "${bottle_dir}/bin"
-
-          # Copy the built binary
-          cp target/release/spikard "${bottle_dir}/bin/"
-
-          # Create bottle tarball from root with proper structure
-          cd "${bottle_root}"
-          bottle_filename="spikard-${VERSION}.${{ matrix.bottle_tag }}.bottle.tar.gz"
-          tar -czf "${bottle_filename}" spikard/
-
-          # Calculate SHA256
-          sha256=$(shasum -a 256 "${bottle_filename}" | cut -d' ' -f1)
-          echo "sha256=${sha256}" >> "$GITHUB_OUTPUT"
-          echo "filename=${bottle_filename}" >> "$GITHUB_OUTPUT"
-
-          # Copy to workspace for artifact upload
-          cp "${bottle_filename}" "${{ github.workspace }}/"
-          echo "Bottle created: ${bottle_filename}"
-          echo "SHA256: ${sha256}"
-
-      - name: Upload bottle artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: homebrew-bottle-${{ matrix.bottle_tag }}
-          path: spikard-${{ steps.version.outputs.version }}.${{ matrix.bottle_tag }}.bottle.tar.gz
-          retention-days: 14
-
-  ruby-gem:
-    name: Build Ruby gem (${{ matrix.label }})
-    needs: prepare
-    if: ${{ needs.prepare.outputs.release_ruby == 'true' }}
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            label: linux
-          - os: macos-14
-            label: macos-arm64
-          - os: windows-latest
-            label: windows-x64
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
-    env:
-      RB_SYS_CARGO_PROFILE: release
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: Ensure target commit
-        if: ${{ needs.prepare.outputs.target_sha != '' }}
-        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
-
-      - name: Install MSYS2 toolchain
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: ridk exec pacman -S --needed --noconfirm base-devel mingw-w64-ucrt-x86_64-toolchain
-
-      - name: Install Rust (GNU on Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: rustup toolchain install stable-gnu --profile minimal --no-self-update
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.4"
-          bundler: "4.0.0"
-          bundler-cache: false
-          working-directory: packages/ruby
-
-      - name: Install Ruby dependencies
-        working-directory: packages/ruby
-        shell: bash
-        run: |
-          bundle config set without 'test'
-          bundle install --jobs 4 --retry 3
-
-      - name: Configure bindgen sysroot (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        working-directory: packages/ruby
-        run: ../../scripts/publish/ruby/configure-bindgen-windows.ps1
-
-      - name: Vendor Rust crates
-        if: runner.os != 'Windows'
-        shell: bash
-        run: bash scripts/ci/ruby/vendor-crates.sh
-
-      - name: Vendor Rust crates (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: bash scripts/ci/ruby/vendor-crates.sh
-
-      - name: Build gem (Unix)
-        if: runner.os != 'Windows'
-        shell: bash
-        working-directory: packages/ruby
-        run: bash ../../scripts/publish/ruby/build-gem-unix.sh
-
-      - name: Build gem (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        working-directory: packages/ruby
-        run: ../../scripts/publish/ruby/build-gem-windows.ps1
-
-      - name: Upload gem artifacts
-        uses: actions/upload-artifact@v7
-        with:
-          name: rubygems-${{ matrix.label }}
-          path: packages/ruby/pkg/*.gem
-          retention-days: 14
-
-  build-php-extension:
-    name: Build PHP extension (${{ matrix.os }}, PHP ${{ matrix.php_version }})
-    needs: prepare
-    if: ${{ needs.prepare.outputs.release_php == 'true' }}
-    continue-on-error: true
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            php_version: "8.2"
-          - os: ubuntu-latest
-            php_version: "8.3"
-          - os: macos-14
-            php_version: "8.2"
-          - os: macos-14
-            php_version: "8.3"
-          - os: windows-latest
-            php_version: "8.2"
-          - os: windows-latest
-            php_version: "8.3"
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: Ensure target commit
-        if: ${{ needs.prepare.outputs.target_sha != '' }}
-        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
-
-      - name: Setup LLVM/Clang
-        uses: ./.github/actions/setup-llvm-clang
-
-      - name: Setup Rust (Nightly for Windows)
-        if: runner.os == 'Windows'
-        uses: ./.github/actions/setup-rust
-        with:
-          toolchain: nightly
-          cache-key-prefix: php-build-${{ matrix.os }}-${{ matrix.php_version }}
-
-      - name: Setup Rust (Stable for Unix)
-        if: runner.os != 'Windows'
-        uses: ./.github/actions/setup-rust
-        with:
-          cache-key-prefix: php-build-${{ matrix.os }}-${{ matrix.php_version }}
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ matrix.php_version }}
-          extensions: json
-
-      - name: Setup OpenSSL for PHP (macOS)
-        if: runner.os == 'macOS'
-        run: bash scripts/publish/php/setup-openssl-macos.sh
-
-      - name: Build PHP extension
-        shell: bash
-        run: bash scripts/publish/php/build-extension.sh
-
-      - name: Package PHP extension artifact
-        shell: bash
-        run: bash scripts/publish/php/package-extension.sh "${{ matrix.os }}" "${{ matrix.php_version }}"
-
-      - name: Upload PHP extension artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: php-extension-${{ matrix.os }}-${{ matrix.php_version }}
-          path: php-extension-*.tar.gz
-          retention-days: 14
-
-  cargo-packages:
-    name: Package Rust crates
-    needs: prepare
-    if: ${{ needs.prepare.outputs.release_crates == 'true' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: Ensure target commit
-        if: ${{ needs.prepare.outputs.target_sha != '' }}
-        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
-
-      - name: Setup Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: stable
-
-      - name: Package crates
-        env:
-          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
-        run: bash scripts/publish/crates/package-crates.sh
-
-      - name: Upload crate packages
-        uses: actions/upload-artifact@v7
-        with:
-          name: cargo-crates
-          path: crate-artifacts/*.crate
-          retention-days: 14
-
-  publish-crates:
-    name: Publish crates.io packages
-    needs: [prepare, cargo-packages]
-    if: ${{ needs.prepare.result == 'success' && needs.prepare.outputs.tag && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_crates == 'true' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
-
-      - name: Setup Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: stable
-
-      - name: Verify Cargo.toml version matches tag
-        run: bash scripts/publish/crates/verify-version.sh "${{ needs.prepare.outputs.version }}"
-
-      - name: Check crates.io for existing release
-        id: crate_check
-        run: python scripts/publish/crates/check_existing.py "${{ needs.prepare.outputs.version }}"
-
-      - name: Publish spikard-core
-        if: ${{ steps.crate_check.outputs.spikard_core_exists != 'true' && needs.prepare.outputs.dry_run != 'true' }}
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: bash scripts/publish/crates/publish-crate.sh spikard-core
-
-      - name: Wait for spikard-core indexing
-        if: ${{ steps.crate_check.outputs.spikard_core_exists != 'true' && needs.prepare.outputs.dry_run != 'true' }}
-        run: sleep 45
-
-      - name: Publish spikard-http
-        if: ${{ steps.crate_check.outputs.http_exists != 'true' && needs.prepare.outputs.dry_run != 'true' }}
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: bash scripts/publish/crates/publish-crate.sh spikard-http spikard-http
-
-      - name: Wait for spikard-http indexing
-        if: ${{ steps.crate_check.outputs.http_exists != 'true' && needs.prepare.outputs.dry_run != 'true' }}
-        run: sleep 45
-
-      - name: Publish spikard
-        if: ${{ steps.crate_check.outputs.spikard_exists != 'true' && needs.prepare.outputs.dry_run != 'true' }}
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: bash scripts/publish/crates/publish-crate.sh spikard spikard
-
-      - name: Wait for spikard indexing
-        if: ${{ steps.crate_check.outputs.spikard_exists != 'true' && needs.prepare.outputs.dry_run != 'true' }}
-        run: sleep 30
-
-      - name: Skip spikard-cli publish
-        run: bash scripts/publish/crates/skip-cli.sh
-
-      - name: Crates dry-run summary
-        if: ${{ needs.prepare.outputs.dry_run == 'true' }}
-        run: bash scripts/publish/crates/dry-run-summary.sh
-
-  publish-pypi:
-    name: Publish Python packages to PyPI
-    needs: [prepare, python-wheels, python-sdist, check-pypi]
-    if: >-
-      ${{
-        needs.prepare.result == 'success' &&
-        needs.prepare.outputs.tag &&
-        needs.prepare.outputs.is_tag == 'true' &&
-        needs.prepare.outputs.release_python == 'true' &&
-        (needs.prepare.outputs.force_republish == 'true' || needs.check-pypi.outputs.exists != 'true')
-      }}
-    runs-on: ubuntu-latest
-    environment: pypi
-    permissions:
-      id-token: write
-    steps:
-      - name: Download wheel artifacts
-        uses: actions/download-artifact@v8
-        with:
-          pattern: python-wheels-*
-          path: dist
-          merge-multiple: true
-
-      - name: Download sdist artifact
-        uses: actions/download-artifact@v8
-        with:
-          name: python-sdist
-          path: dist
-
-      - name: List artifacts
-        run: ls -R dist
-
-      - name: Publish to PyPI
-        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: dist
-          skip-existing: true
-
-      - name: Dry run summary
-        if: ${{ needs.prepare.outputs.dry_run == 'true' }}
-        run: bash scripts/publish/python/pypi-dry-run-summary.sh
-
-  publish-rubygems:
-    name: Publish Ruby gems
-    needs: [prepare, ruby-gem, check-rubygems]
-    if: >-
-      ${{
-        needs.prepare.result == 'success' &&
-        needs.prepare.outputs.tag &&
-        needs.prepare.outputs.is_tag == 'true' &&
-        needs.prepare.outputs.release_ruby == 'true' &&
-        (
-          needs.check-rubygems.result == 'success' ||
-          needs.prepare.outputs.force_republish == 'true'
-        ) &&
-        (
-          needs.prepare.outputs.force_republish == 'true' ||
-          needs.check-rubygems.outputs.exists != 'true'
-        )
-      }}
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
-
-      - name: Download Ruby gem artifacts
-        uses: actions/download-artifact@v8
-        with:
-          pattern: rubygems-*
-          path: dist
-
-      - name: Setup Ruby (match CI toolchain)
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.4"
-          bundler: "4.0.0"
-          bundler-cache: false
-
-      - name: Configure trusted publishing credentials
-        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        uses: rubygems/configure-rubygems-credentials@v2.0.0
-
-      - name: Publish gems
-        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        working-directory: dist
-        run: bash ../scripts/publish/ruby/publish-gems.sh
-
-      - name: Dry run summary
-        if: ${{ needs.prepare.outputs.dry_run == 'true' }}
-        working-directory: dist
-        run: bash ../scripts/publish/ruby/dry-run-summary.sh
-
-  publish-node:
-    name: Publish Node packages
-    needs: [prepare, node-bindings, check-npm-node]
-    if: >-
-      ${{
-        needs.prepare.result == 'success' &&
-        needs.prepare.outputs.tag &&
-        needs.prepare.outputs.is_tag == 'true' &&
-        needs.prepare.outputs.release_node == 'true' &&
-        (needs.prepare.outputs.force_republish == 'true' || needs.check-npm-node.outputs.exists != 'true')
-      }}
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v5
-        with:
-          package_json_file: package.json
-
-      - name: Download Node artifacts
-        uses: actions/download-artifact@v8
-        with:
-          pattern: node-bindings-*
-          path: node-artifacts
-          merge-multiple: true
-
-      - name: Download TypeScript definitions
-        uses: actions/download-artifact@v8
-        with:
-          name: node-typescript-defs
-          path: typescript-defs
-        continue-on-error: true
-
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          registry-url: https://registry.npmjs.org/
-
-      - name: Enable corepack
-        run: corepack enable
-
-      - name: Prepare artifact directory
-        run: bash scripts/publish/node/prepare-artifact-directory.sh
-
-      - name: Verify platform packages contain native binaries
-        run: bash scripts/publish/node/verify-platform-packages.sh
-
-      - name: Node artifacts summary
-        if: ${{ needs.prepare.outputs.dry_run == 'true' }}
-        run: bash scripts/publish/node/dry-run-summary.sh
-
-      - name: Install workspace dependencies
-        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        run: pnpm install -r
-
-      - name: Pack platform packages
-        run: bash scripts/publish/node/pack-platform-packages.sh
-
-      - name: Publish native binary packages
-        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        run: bash scripts/publish/node/publish-native-packages.sh
-
-      - name: Wait for npm indexing
-        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        run: sleep 30
-
-      - name: Publish main Node package
-        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        working-directory: crates/spikard-node
-        run: bash ../../scripts/publish/node/publish-main-package.sh
-
-      - name: Wait for main package npm indexing
-        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        run: sleep 30
-
-      - name: Build and publish @spikard/node wrapper package
-        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        run: bash scripts/publish/node/publish-wrapper-package.sh
-
-  publish-cli-release:
-    name: Upload CLI to GitHub release
-    needs: [prepare, cli-binaries]
-    if: ${{ needs.prepare.result == 'success' && needs.prepare.outputs.tag && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_cli == 'true' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
-
-      - name: Ensure GitHub release exists
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: bash scripts/publish/cli/ensure-release.sh "${{ needs.prepare.outputs.tag }}"
-
-      - name: Download CLI artifacts
-        uses: actions/download-artifact@v8
-        with:
-          pattern: cli-*
-          path: dist/cli
-          merge-multiple: true
-
-      - name: Upload CLI binaries to release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: bash scripts/publish/cli/upload-release-assets.sh "${{ needs.prepare.outputs.tag }}"
-
-  publish-php-release:
-    name: Upload PHP extension to GitHub release
-    needs: [prepare, build-php-extension]
-    if: ${{ needs.prepare.result == 'success' && needs.prepare.outputs.tag && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_php == 'true' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
-
-      - name: Ensure GitHub release exists
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: bash scripts/publish/cli/ensure-release.sh "${{ needs.prepare.outputs.tag }}"
-
-      - name: Download PHP extension artifacts
-        uses: actions/download-artifact@v8
-        with:
-          pattern: php-extension-*
-          path: dist/php
-          merge-multiple: true
-
-      - name: Upload PHP extension artifacts to release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: bash scripts/publish/php/upload-release-assets.sh "${{ needs.prepare.outputs.tag }}"
-
-  upload-homebrew-bottles:
-    name: Upload Homebrew bottles to GitHub Release
-    needs: [prepare, check-homebrew, homebrew-bottles]
-    if: |
-      always() &&
-      needs.prepare.outputs.dry_run != 'true' &&
-      needs.prepare.outputs.is_tag == 'true' &&
-      needs.prepare.outputs.release_homebrew == 'true' &&
-      (needs.prepare.outputs.force_republish == 'true' || needs.check-homebrew.outputs.exists != 'true') &&
-      needs.homebrew-bottles.result == 'success'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
-
-      - name: Ensure GitHub release exists
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: bash scripts/publish/cli/ensure-release.sh "${{ needs.prepare.outputs.tag }}"
-
-      - name: Download bottle artifacts
-        uses: actions/download-artifact@v8
-        with:
-          pattern: homebrew-bottle-*
-          path: dist/homebrew
-          merge-multiple: true
-
-      - name: Upload bottles (idempotent)
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: bash scripts/publish/homebrew/upload-homebrew-bottles.sh "${{ needs.prepare.outputs.tag }}" dist/homebrew
-
-  publish-homebrew:
-    name: Update Homebrew formula
-    needs: [prepare, check-homebrew, publish-cli-release, upload-homebrew-bottles]
-    if: |
-      always() &&
-      needs.prepare.outputs.dry_run != 'true' &&
-      needs.prepare.outputs.is_tag == 'true' &&
-      needs.prepare.outputs.release_homebrew == 'true' &&
-      (needs.prepare.outputs.force_republish == 'true' || needs.check-homebrew.outputs.exists != 'true') &&
-      needs.publish-cli-release.result == 'success' &&
-      needs.upload-homebrew-bottles.result == 'success'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
-
-      - name: Extract release info
-        id: release
-        env:
-          TAG: ${{ needs.prepare.outputs.tag }}
-          VERSION: ${{ needs.prepare.outputs.version }}
-        run: bash scripts/publish/homebrew/extract-release-info.sh "$TAG" "$VERSION"
-
-      - name: Download bottle artifacts
-        uses: actions/download-artifact@v8
-        with:
-          pattern: homebrew-bottle-*
-          path: dist/homebrew
-          merge-multiple: true
-
-      - name: Extract bottle hashes
-        id: bottles
-        env:
-          TAG: ${{ needs.prepare.outputs.tag }}
-          VERSION: ${{ needs.prepare.outputs.version }}
-        run: bash scripts/publish/homebrew/extract-bottle-hashes.sh dist/homebrew
-
-      - name: Setup Git credentials
-        env:
-          GH_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
-        run: |
-          git config --global credential.helper store
-          echo "https://x-access-token:${GH_TOKEN}@github.com" > ~/.git-credentials
-          git config --global user.name "spikard-bot"
-          git config --global user.email "bot@spikard.dev"
-
-      - name: Update Homebrew formula with bottles
-        env:
-          TAG: ${{ needs.prepare.outputs.tag }}
-          VERSION: ${{ needs.prepare.outputs.version }}
-          DRY_RUN: 'false'
-        run: bash scripts/publish/homebrew/update-formula-with-bottles.sh dist/homebrew homebrew-tap
-
-  publish-packagist:
-    name: Publish PHP extension to Packagist
-    needs: [prepare, build-php-extension, check-packagist]
-    if: >-
-      ${{
-        needs.prepare.result == 'success' &&
-        needs.prepare.outputs.tag &&
-        needs.prepare.outputs.is_tag == 'true' &&
-        needs.prepare.outputs.release_php == 'true' &&
-        (needs.prepare.outputs.force_republish == 'true' || needs.check-packagist.outputs.exists != 'true')
-      }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
-
-      - name: Verify composer.json version matches tag
-        run: bash scripts/publish/php/verify-composer-version.sh "${{ needs.prepare.outputs.version }}"
-
-      - name: Notify Packagist
-        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        env:
-          PACKAGIST_USERNAME: ${{ secrets.PACKAGIST_USERNAME }}
-          PACKAGIST_TOKEN: ${{ secrets.PACKAGIST_TOKEN }}
-        run: bash scripts/publish/packagist/notify.sh "${{ needs.prepare.outputs.tag }}"
-
-      - name: Dry run summary
-        if: ${{ needs.prepare.outputs.dry_run == 'true' }}
-        run: bash scripts/publish/packagist/dry-run-summary.sh
-
-  publish-hex:
-    name: Publish Elixir package to Hex.pm
-    needs: [prepare, check-hex]
-    if: >-
-      ${{
-        needs.prepare.result == 'success' &&
-        needs.prepare.outputs.tag &&
-        needs.prepare.outputs.is_tag == 'true' &&
-        needs.prepare.outputs.release_elixir == 'true' &&
-        (needs.prepare.outputs.force_republish == 'true' || needs.check-hex.outputs.exists != 'true')
-      }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: Ensure target commit
-        if: ${{ needs.prepare.outputs.target_sha != '' }}
-        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
-
-      - name: Setup Elixir
-        uses: erlef/setup-beam@v1
-        with:
-          elixir-version: "1.18"
-          otp-version: "27"
-
-      - name: Setup Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: stable
-
-      - name: Vendor NIF source
-        run: bash scripts/ci/elixir/vendor-nif.sh
-
-      - name: Install Hex and Rebar
-        working-directory: packages/elixir
-        run: |
-          mix local.hex --force
-          mix local.rebar --force
-
-      - name: Install dependencies
-        working-directory: packages/elixir
-        run: mix deps.get
-
-      - name: Compile
-        working-directory: packages/elixir
-        env:
-          SPIKARD_BUILD: "1"
-        run: mix compile --warnings-as-errors
-
-      - name: Verify mix.exs version matches tag
-        run: |
-          mix_version=$(grep '@version' packages/elixir/mix.exs | head -1 | sed 's/.*@version "\([^"]*\)".*/\1/')
-          if [[ "$mix_version" != "${{ needs.prepare.outputs.version }}" ]]; then
-            echo "::error::mix.exs version ($mix_version) does not match release version (${{ needs.prepare.outputs.version }})"
-            exit 1
-          fi
-
-      - name: Re-check Hex.pm before publish
-        id: recheck_hex
-        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        run: |
-          set -euo pipefail
-          code=$(curl --silent --show-error --max-time 30 --connect-timeout 10 -o /dev/null -w "%{http_code}" \
-            "https://hex.pm/api/packages/spikard/releases/${{ needs.prepare.outputs.version }}" || echo "000")
-          if [[ "$code" == "200" ]]; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "Package spikard@${{ needs.prepare.outputs.version }} already exists on Hex.pm; skipping publish." >> "$GITHUB_STEP_SUMMARY"
-          elif [[ "$code" == "404" ]]; then
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "::error::Unable to check Hex.pm before publish (HTTP $code)"
-            exit 1
-          fi
-
-      - name: Publish to Hex.pm
-        if: ${{ needs.prepare.outputs.dry_run != 'true' && steps.recheck_hex.outputs.exists != 'true' }}
-        working-directory: packages/elixir
-        env:
-          HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
-        run: |
-          set -euo pipefail
-          tmp_log="$(mktemp)"
-
-          # Keep publish idempotent if another concurrent publish wins the race.
-          if mix hex.publish --yes 2>&1 | tee "$tmp_log"; then
-            rm -f "$tmp_log"
-            exit 0
-          fi
-
-          if grep -Eiq "already exists|has already been published|already published" "$tmp_log"; then
-            echo "Hex.pm package appears to be already published; treating as success."
-            rm -f "$tmp_log"
-            exit 0
-          fi
-
-          echo "::error::Hex publish failed"
-          rm -f "$tmp_log"
-          exit 1
-
-      - name: Dry run summary
-        if: ${{ needs.prepare.outputs.dry_run == 'true' }}
-        run: |
-          {
-            echo "## Hex.pm Publish (Dry Run)"
-            echo ""
-            echo "Would publish **spikard** v${{ needs.prepare.outputs.version }} to Hex.pm"
-            echo ""
-            echo "Package: [hex.pm/packages/spikard](https://hex.pm/packages/spikard)"
-          } >> "$GITHUB_STEP_SUMMARY"
-
-  # ---------------------------------------------------------------------------
-  # Java (Maven Central)
-  # ---------------------------------------------------------------------------
-
-  check-maven:
-    name: Check if Java package exists on Maven Central
-    needs: prepare
-    if: ${{ needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_java == 'true' && needs.prepare.outputs.force_republish != 'true' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    outputs:
-      exists: ${{ steps.check.outputs.exists }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
-
-      - name: Check Maven Central for existing version
-        id: check
-        uses: kreuzberg-dev/actions/check-registry@v1.2.1
+      - id: pypi
+        if: ${{ needs.prepare.outputs.release_python == 'true' }}
+        uses: kreuzberg-dev/actions/check-registry@v1
+        with:
+          registry: pypi
+          package: spikard
+          version: ${{ needs.prepare.outputs.version }}
+
+      - id: npm
+        if: ${{ needs.prepare.outputs.release_node == 'true' || needs.prepare.outputs.release_wasm == 'true' }}
+        uses: kreuzberg-dev/actions/check-registry@v1
+        with:
+          registry: npm
+          package: "@spikard/node"
+          version: ${{ needs.prepare.outputs.version }}
+          extra-packages: |
+            wasm_exists=@spikard/wasm
+
+      - id: rubygems
+        if: ${{ needs.prepare.outputs.release_ruby == 'true' }}
+        uses: kreuzberg-dev/actions/check-registry@v1
+        with:
+          registry: rubygems
+          package: spikard
+          version: ${{ needs.prepare.outputs.version }}
+
+      - id: packagist
+        if: ${{ needs.prepare.outputs.release_php == 'true' }}
+        uses: kreuzberg-dev/actions/check-registry@v1
+        with:
+          registry: packagist
+          package: goldziher/spikard
+          version: ${{ needs.prepare.outputs.version }}
+
+      - id: crates
+        if: ${{ needs.prepare.outputs.release_crates == 'true' }}
+        uses: kreuzberg-dev/actions/check-registry@v1
+        with:
+          registry: cratesio
+          package: spikard-core
+          version: ${{ needs.prepare.outputs.version }}
+
+      - id: hex
+        if: ${{ needs.prepare.outputs.release_elixir == 'true' }}
+        uses: kreuzberg-dev/actions/check-registry@v1
+        with:
+          registry: hex
+          package: spikard
+          version: ${{ needs.prepare.outputs.version }}
+
+      - id: maven
+        if: ${{ needs.prepare.outputs.release_java == 'true' || needs.prepare.outputs.release_kotlin == 'true' }}
+        uses: kreuzberg-dev/actions/check-registry@v1
         with:
           registry: maven
           package: "dev.spikard:spikard"
           version: ${{ needs.prepare.outputs.version }}
+          extra-packages: |
+            kotlin_exists=dev.spikard:spikard-kotlin
 
-  java-natives:
-    name: Build Java native libs (${{ matrix.settings.label }})
-    needs: [prepare, check-maven]
-    if: ${{ needs.prepare.outputs.release_java == 'true' && (needs.check-maven.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
-    runs-on: ${{ matrix.settings.os }}
-    timeout-minutes: 120
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        settings:
-          - os: ubuntu-24.04-arm
-            label: linux-arm64
-            rid: linux-arm64
-          - os: ubuntu-latest
-            label: linux-x86_64
-            rid: linux-x86_64
-          - os: macos-14
-            label: macos-arm64
-            rid: macos-arm64
-          - os: windows-latest
-            label: windows-x86_64
-            rid: windows-x86_64
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: Ensure target commit
-        if: ${{ needs.prepare.outputs.target_sha != '' }}
-        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
-
-      - name: Setup Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: stable
-
-      - name: Build FFI library
-        shell: bash
-        run: cargo build --release -p spikard-ffi
-
-      - name: Collect native artifacts
-        shell: bash
-        env:
-          RID: ${{ matrix.settings.rid }}
-        run: |
-          mkdir -p "java-natives/${RID}"
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
-            cp target/release/spikard_ffi.dll "java-natives/${RID}/"
-          elif [[ "${{ runner.os }}" == "macOS" ]]; then
-            cp target/release/libspikard_ffi.dylib "java-natives/${RID}/"
-          else
-            cp target/release/libspikard_ffi.so "java-natives/${RID}/"
-          fi
-
-      - name: Upload native artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: java-natives-${{ matrix.settings.label }}
-          path: java-natives/${{ matrix.settings.rid }}
-          retention-days: 14
-
-  java-package:
-    name: Build Java package
-    needs: [prepare, check-maven, java-natives]
-    if: ${{ needs.prepare.outputs.release_java == 'true' && (needs.check-maven.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: Ensure target commit
-        if: ${{ needs.prepare.outputs.target_sha != '' }}
-        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
-
-      - name: Setup Java
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: '21'
-          cache: maven
-
-      - name: Download Java native artifacts
-        uses: actions/download-artifact@v8
-        with:
-          pattern: java-natives-*
-          path: artifacts/java-natives
-          merge-multiple: false
-
-      - name: Stage Java native resources
-        shell: bash
-        run: |
-          for dir in artifacts/java-natives/*/; do
-            rid="$(basename "${dir}")"
-            dest="packages/java/src/main/resources/natives/${rid}"
-            mkdir -p "${dest}"
-            cp "${dir}"* "${dest}/"
-          done
-
-      - name: Build Maven package
-        working-directory: packages/java
-        run: mvn package -DskipTests -q
-
-      - name: Upload JAR artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: maven-packages
-          path: packages/java/target/*.jar
-          retention-days: 14
-
-  publish-java:
-    name: Publish Java package to Maven Central
-    needs: [prepare, check-maven, java-package]
-    if: >-
-      ${{
-        needs.prepare.result == 'success' &&
-        needs.prepare.outputs.tag &&
-        needs.prepare.outputs.is_tag == 'true' &&
-        needs.prepare.outputs.release_java == 'true' &&
-        (needs.prepare.outputs.force_republish == 'true' || needs.check-maven.outputs.exists != 'true') &&
-        needs.java-package.result == 'success'
-      }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    env:
-      MAVEN_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
-      MAVEN_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
-      MAVEN_GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-      MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
-
-      - name: Download JAR artifacts
-        uses: actions/download-artifact@v8
-        with:
-          name: maven-packages
-          path: dist/java
-
-      - name: Publish to Maven Central
-        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        uses: kreuzberg-dev/actions/publish-maven@v1.2.1
-        with:
-          pom-file: packages/java/pom.xml
-          maven-profile: publish
-          extra-args: -DskipTests
-          dry-run: ${{ needs.prepare.outputs.dry_run }}
-
-      - name: Dry run summary
-        if: ${{ needs.prepare.outputs.dry_run == 'true' }}
-        run: echo "Would publish dev.spikard:spikard@${{ needs.prepare.outputs.version }} to Maven Central" >> "$GITHUB_STEP_SUMMARY"
-
-  # ---------------------------------------------------------------------------
-  # Kotlin (Maven Central via Gradle)
-  # ---------------------------------------------------------------------------
-
-  check-maven-kotlin:
-    name: Check if Kotlin package exists on Maven Central
-    needs: prepare
-    if: ${{ needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_kotlin == 'true' && needs.prepare.outputs.force_republish != 'true' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    outputs:
-      exists: ${{ steps.check.outputs.exists }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
-
-      - name: Check Maven Central for existing Kotlin version
-        id: check
-        uses: kreuzberg-dev/actions/check-registry@v1.2.1
-        with:
-          registry: maven
-          package: "dev.spikard:spikard-kotlin"
-          version: ${{ needs.prepare.outputs.version }}
-
-  publish-kotlin:
-    name: Publish Kotlin package to Maven Central
-    needs: [prepare, check-maven-kotlin]
-    if: >-
-      ${{
-        needs.prepare.result == 'success' &&
-        needs.prepare.outputs.tag &&
-        needs.prepare.outputs.is_tag == 'true' &&
-        needs.prepare.outputs.release_kotlin == 'true' &&
-        (needs.prepare.outputs.force_republish == 'true' || needs.check-maven-kotlin.outputs.exists != 'true')
-      }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    env:
-      MAVEN_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
-      MAVEN_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
-      MAVEN_GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-      MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: Ensure target commit
-        if: ${{ needs.prepare.outputs.target_sha != '' }}
-        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
-
-      - name: Setup Java
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: '21'
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6
-
-      - name: Publish Kotlin package
-        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        uses: kreuzberg-dev/actions/publish-maven-gradle@v1.2.1
-        with:
-          working-directory: packages/kotlin
-          # vanniktech plugin task; closes + releases the Sonatype Central
-          # Portal staging in one shot via automaticRelease = true.
-          gradle-task: publishAndReleaseToMavenCentral
-          dry-run: ${{ needs.prepare.outputs.dry_run }}
-
-      - name: Dry run summary
-        if: ${{ needs.prepare.outputs.dry_run == 'true' }}
-        run: echo "Would publish dev.spikard:spikard-kotlin@${{ needs.prepare.outputs.version }} to Maven Central" >> "$GITHUB_STEP_SUMMARY"
-
-  # ---------------------------------------------------------------------------
-  # C# (NuGet via OIDC trusted publishing)
-  # ---------------------------------------------------------------------------
-
-  check-nuget:
-    name: Check if C# package exists on NuGet
-    needs: prepare
-    if: ${{ needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_csharp == 'true' && needs.prepare.outputs.force_republish != 'true' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    outputs:
-      exists: ${{ steps.check.outputs.exists }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
-
-      - name: Check NuGet for existing version
-        id: check
-        uses: kreuzberg-dev/actions/check-registry@v1.2.1
+      - id: nuget
+        if: ${{ needs.prepare.outputs.release_csharp == 'true' }}
+        uses: kreuzberg-dev/actions/check-registry@v1
         with:
           registry: nuget
           package: Spikard
           version: ${{ needs.prepare.outputs.version }}
 
-  csharp-native-assets:
-    name: Build C# native assets (${{ matrix.rid }})
-    needs: [prepare, check-nuget]
-    if: ${{ needs.prepare.outputs.release_csharp == 'true' && (needs.check-nuget.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
+      - id: pub
+        if: ${{ needs.prepare.outputs.release_dart == 'true' }}
+        uses: kreuzberg-dev/actions/check-registry@v1
+        with:
+          registry: pub
+          package: spikard
+          version: ${{ needs.prepare.outputs.version }}
+
+      - id: swift
+        if: ${{ needs.prepare.outputs.release_swift == 'true' }}
+        uses: kreuzberg-dev/actions/check-registry@v1
+        with:
+          registry: swift
+          package: Spikard
+          version: ${{ needs.prepare.outputs.version }}
+          repo: ${{ github.repository }}
+
+      - id: zig
+        if: ${{ needs.prepare.outputs.release_zig == 'true' }}
+        uses: kreuzberg-dev/actions/check-registry@v1
+        with:
+          registry: zig
+          package: spikard
+          version: ${{ needs.prepare.outputs.version }}
+          repo: ${{ github.repository }}
+
+  build-python:
+    name: Build Python wheels
+    needs: prepare
+    if: ${{ needs.prepare.outputs.release_python == 'true' }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 120
-    permissions:
-      contents: read
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - rid: linux-arm64
-            os: ubuntu-24.04-arm
-            rust_target: aarch64-unknown-linux-gnu
-          - rid: linux-x64
-            os: ubuntu-latest
-            rust_target: x86_64-unknown-linux-gnu
-          - rid: osx-arm64
-            os: macos-14
-            rust_target: aarch64-apple-darwin
-          - rid: win-x64
-            os: windows-latest
-            rust_target: x86_64-pc-windows-msvc
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: Ensure target commit
-        if: ${{ needs.prepare.outputs.target_sha != '' }}
-        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
-
-      - name: Setup Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+      - uses: kreuzberg-dev/actions/setup-rust@v1
         with:
-          toolchain: stable
-          target: ${{ matrix.rust_target }}
-
-      - name: Build FFI library
-        shell: bash
-        run: cargo build --release --target ${{ matrix.rust_target }} -p spikard-ffi
-
-      - name: Assemble native assets
-        shell: bash
-        env:
-          RID: ${{ matrix.rid }}
-          RUST_TARGET: ${{ matrix.rust_target }}
-        run: |
-          dest="runtimes/${RID}/native"
-          mkdir -p "${dest}"
-          src="target/${RUST_TARGET}/release"
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
-            cp "${src}/spikard_ffi.dll" "${dest}/"
-          elif [[ "${{ runner.os }}" == "macOS" ]]; then
-            cp "${src}/libspikard_ffi.dylib" "${dest}/"
-          else
-            cp "${src}/libspikard_ffi.so" "${dest}/"
-          fi
-
-      - name: Upload native assets artifact
-        uses: actions/upload-artifact@v7
+          cache-key-prefix: publish-python-${{ matrix.os }}
+      - uses: kreuzberg-dev/actions/build-python-wheels@v1
         with:
-          name: csharp-native-assets-${{ matrix.rid }}
-          path: runtimes/
-          retention-days: 14
+          python-version: "3.14"
+          package-dir: packages/python
+          artifact-name: python-wheels-${{ matrix.os }}
 
-  csharp-package:
-    name: Build C# NuGet package
-    needs: [prepare, check-nuget, csharp-native-assets]
-    if: ${{ needs.prepare.outputs.release_csharp == 'true' && (needs.check-nuget.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
+  build-python-sdist:
+    name: Build Python sdist
+    needs: prepare
+    if: ${{ needs.prepare.outputs.release_python == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    permissions:
-      contents: read
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: Ensure target commit
-        if: ${{ needs.prepare.outputs.target_sha != '' }}
-        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: kreuzberg-dev/actions/setup-python-env@v1
         with:
-          dotnet-version: "9.0.x"
-
-      - name: Download native assets
-        uses: actions/download-artifact@v8
+          python-version: "3.14"
+      - name: Build sdist
+        run: cd packages/python && uv run maturin sdist --out ../../dist/python
+      - uses: actions/upload-artifact@v7
         with:
-          pattern: csharp-native-assets-*
-          path: packages/csharp/runtimes
-          merge-multiple: true
+          name: python-sdist
+          path: dist/python/*.tar.gz
 
-      - name: Build and pack NuGet package
-        working-directory: packages/csharp
-        run: dotnet pack -c Release -p:PackageVersion=${{ needs.prepare.outputs.version }} -o artifacts/
-
-      - name: Upload NuGet artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: csharp-nuget
-          path: packages/csharp/artifacts/*.nupkg
-          retention-days: 14
-          if-no-files-found: error
-
-  publish-csharp:
-    name: Publish C# package to NuGet
-    needs: [prepare, check-nuget, csharp-package]
-    if: >-
-      ${{
-        needs.prepare.result == 'success' &&
-        needs.prepare.outputs.tag &&
-        needs.prepare.outputs.is_tag == 'true' &&
-        needs.prepare.outputs.release_csharp == 'true' &&
-        (needs.prepare.outputs.force_republish == 'true' || needs.check-nuget.outputs.exists != 'true') &&
-        needs.csharp-package.result == 'success'
-      }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
-
-      - name: Download NuGet artifact
-        uses: actions/download-artifact@v8
-        with:
-          name: csharp-nuget
-          path: dist/csharp
-
-      - name: Publish to NuGet
-        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        uses: kreuzberg-dev/actions/publish-nuget@v1.2.1
-        with:
-          packages-dir: dist/csharp
-          dry-run: ${{ needs.prepare.outputs.dry_run }}
-
-      - name: Dry run summary
-        if: ${{ needs.prepare.outputs.dry_run == 'true' }}
-        run: echo "Would publish Spikard@${{ needs.prepare.outputs.version }} to NuGet" >> "$GITHUB_STEP_SUMMARY"
-
-  # ---------------------------------------------------------------------------
-  # Dart (pub.dev — tag-split pattern; bare-version tag triggers dart-publish.yaml)
-  # ---------------------------------------------------------------------------
-
-  check-github-release-dart:
-    name: Check if Dart bare-version tag exists
+  build-node:
+    name: Build Node package
     needs: prepare
-    if: ${{ needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_dart == 'true' && needs.prepare.outputs.force_republish != 'true' }}
+    if: ${{ needs.prepare.outputs.release_node == 'true' }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    outputs:
-      exists: ${{ steps.check.outputs.exists }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
-
-      - name: Check if bare-version tag already exists
-        id: check
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ needs.prepare.outputs.version }}
-        run: |
-          if gh api "repos/${GITHUB_REPOSITORY}/git/refs/tags/${VERSION}" --silent 2>/dev/null; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-
-  tag-dart:
-    name: Push bare-version Dart tag
-    needs: [prepare, check-github-release-dart]
-    if: >-
-      ${{
-        needs.prepare.result == 'success' &&
-        needs.prepare.outputs.tag &&
-        needs.prepare.outputs.is_tag == 'true' &&
-        needs.prepare.outputs.release_dart == 'true' &&
-        needs.prepare.outputs.dry_run != 'true' &&
-        needs.check-github-release-dart.outputs.exists != 'true'
-      }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
-          fetch-depth: 0
-
-      - name: Setup Git credentials
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Push bare-version tag to trigger dart-publish.yaml
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ needs.prepare.outputs.version }}
-          TAG: ${{ needs.prepare.outputs.tag }}
-        run: |
-          sha="$(git rev-parse HEAD)"
-          # Idempotent: only create if the tag doesn't exist
-          if gh api "repos/${GITHUB_REPOSITORY}/git/refs/tags/${VERSION}" --silent 2>/dev/null; then
-            echo "Bare-version tag ${VERSION} already exists — no-op" >> "$GITHUB_STEP_SUMMARY"
-          else
-            gh api "repos/${GITHUB_REPOSITORY}/git/refs" \
-              -f "ref=refs/tags/${VERSION}" \
-              -f "sha=${sha}" --silent
-            echo "Pushed bare-version tag ${VERSION} (triggers dart-publish.yaml)" >> "$GITHUB_STEP_SUMMARY"
-          fi
-
-  # ---------------------------------------------------------------------------
-  # Gleam (Hex.pm — reuses HEX_API_KEY)
-  # ---------------------------------------------------------------------------
-
-  check-hex-gleam:
-    name: Check if Gleam package exists on Hex.pm
-    needs: prepare
-    if: ${{ needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_gleam == 'true' && needs.prepare.outputs.force_republish != 'true' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    outputs:
-      exists: ${{ steps.check.outputs.exists }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
-
-      - name: Check Hex.pm for existing Gleam version
-        id: check
-        uses: kreuzberg-dev/actions/check-registry@v1.2.1
-        with:
-          registry: hex
-          package: spikard_gleam
-          version: ${{ needs.prepare.outputs.version }}
-
-  publish-gleam:
-    name: Publish Gleam package to Hex.pm
-    needs: [prepare, check-hex-gleam]
-    if: >-
-      ${{
-        needs.prepare.result == 'success' &&
-        needs.prepare.outputs.tag &&
-        needs.prepare.outputs.is_tag == 'true' &&
-        needs.prepare.outputs.release_gleam == 'true' &&
-        (needs.prepare.outputs.force_republish == 'true' || needs.check-hex-gleam.outputs.exists != 'true')
-      }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    permissions:
-      contents: read
-    env:
-      HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: Ensure target commit
-        if: ${{ needs.prepare.outputs.target_sha != '' }}
-        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
-
-      - name: Setup Gleam
-        uses: erlef/setup-beam@v1
+      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: kreuzberg-dev/actions/setup-node-workspace@v1
         with:
-          gleam-version: latest
-
-      - name: Build Gleam package
-        working-directory: packages/gleam
-        run: gleam build
-
-      - name: Publish to Hex.pm
-        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        uses: kreuzberg-dev/actions/publish-gleam@v1.2.1
+          node-version: "24"
+      - uses: kreuzberg-dev/actions/build-node-napi@v1
         with:
-          working-directory: packages/gleam
-          dry-run: ${{ needs.prepare.outputs.dry_run }}
-
-      - name: Dry run summary
-        if: ${{ needs.prepare.outputs.dry_run == 'true' }}
-        run: echo "Would publish spikard_gleam@${{ needs.prepare.outputs.version }} to Hex.pm" >> "$GITHUB_STEP_SUMMARY"
-
-  # ---------------------------------------------------------------------------
-  # Swift (tag-only, no registry)
-  # ---------------------------------------------------------------------------
-
-  check-github-release-swift:
-    name: Check if Swift release tag exists
-    needs: prepare
-    if: ${{ needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_swift == 'true' && needs.prepare.outputs.force_republish != 'true' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    outputs:
-      exists: ${{ steps.check.outputs.exists }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+          crate-dir: crates/spikard-node
+          build-command: pnpm exec napi build --platform --release
+          pack-tarball: "true"
+      - uses: actions/upload-artifact@v7
         with:
-          ref: ${{ needs.prepare.outputs.ref }}
-
-      - name: Check GitHub release for Swift tag presence
-        id: check
-        uses: kreuzberg-dev/actions/check-registry@v1.2.1
-        with:
-          registry: github-release
-          package: spikard-swift
-          version: ${{ needs.prepare.outputs.version }}
-
-  publish-swift:
-    name: Publish Swift package
-    needs: [prepare, check-github-release-swift]
-    if: >-
-      ${{
-        needs.prepare.result == 'success' &&
-        needs.prepare.outputs.tag &&
-        needs.prepare.outputs.is_tag == 'true' &&
-        needs.prepare.outputs.release_swift == 'true' &&
-        (needs.prepare.outputs.force_republish == 'true' || needs.check-github-release-swift.outputs.exists != 'true')
-      }}
-    runs-on: macos-14
-    timeout-minutes: 30
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: Ensure target commit
-        if: ${{ needs.prepare.outputs.target_sha != '' }}
-        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
-
-      - name: Setup Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: stable
-
-      - name: Validate Package.swift
-        working-directory: packages/swift
-        run: swift package resolve
-
-      - name: Publish Swift package
-        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        uses: kreuzberg-dev/actions/publish-swift@v1.2.1
-        with:
-          working-directory: packages/swift
-          dry-run: ${{ needs.prepare.outputs.dry_run }}
-
-      - name: Dry run summary
-        if: ${{ needs.prepare.outputs.dry_run == 'true' }}
-        run: echo "Would publish Swift package spikard@${{ needs.prepare.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"
-
-  # ---------------------------------------------------------------------------
-  # Zig (tag-only, emits tarball + SHA-256 for zig fetch snippet)
-  # ---------------------------------------------------------------------------
-
-  check-github-release-zig:
-    name: Check if Zig release tag exists
-    needs: prepare
-    if: ${{ needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_zig == 'true' && needs.prepare.outputs.force_republish != 'true' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    outputs:
-      exists: ${{ steps.check.outputs.exists }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
-
-      - name: Check GitHub release for Zig tag presence
-        id: check
-        uses: kreuzberg-dev/actions/check-registry@v1.2.1
-        with:
-          registry: github-release
-          package: spikard-zig
-          version: ${{ needs.prepare.outputs.version }}
-
-  publish-zig:
-    name: Publish Zig package
-    needs: [prepare, check-github-release-zig]
-    if: >-
-      ${{
-        needs.prepare.result == 'success' &&
-        needs.prepare.outputs.tag &&
-        needs.prepare.outputs.is_tag == 'true' &&
-        needs.prepare.outputs.release_zig == 'true' &&
-        (needs.prepare.outputs.force_republish == 'true' || needs.check-github-release-zig.outputs.exists != 'true')
-      }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: Ensure target commit
-        if: ${{ needs.prepare.outputs.target_sha != '' }}
-        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
-
-      - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@v2
-        with:
-          version: stable
-
-      - name: Validate build.zig.zon
-        working-directory: packages/zig
-        run: zig build --dry-run 2>/dev/null || zig build -Dtarget=native -Doptimize=Debug --help > /dev/null
-
-      - name: Publish Zig package
-        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        uses: kreuzberg-dev/actions/publish-zig@v1.2.1
-        with:
-          working-directory: packages/zig
-          update-release-notes: 'true'
-          dry-run: ${{ needs.prepare.outputs.dry_run }}
-
-      - name: Dry run summary
-        if: ${{ needs.prepare.outputs.dry_run == 'true' }}
-        run: echo "Would publish Zig package spikard@${{ needs.prepare.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"
-
-  # ---------------------------------------------------------------------------
-  # WASM (npm, @spikard/wasm)
-  # ---------------------------------------------------------------------------
-
-  check-npm-wasm:
-    name: Check if WASM package exists on npm
-    needs: prepare
-    if: ${{ needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_wasm == 'true' && needs.prepare.outputs.force_republish != 'true' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    outputs:
-      exists: ${{ steps.check.outputs.exists }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.ref }}
-
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24
-
-      - name: Check npm for existing WASM version
-        id: check
-        uses: kreuzberg-dev/actions/check-registry@v1.2.1
-        with:
-          registry: npm
-          package: "@spikard/wasm"
-          version: ${{ needs.prepare.outputs.version }}
+          name: node-package
+          path: "*.tgz"
 
   build-wasm:
     name: Build WASM package
     needs: prepare
     if: ${{ needs.prepare.outputs.release_wasm == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    permissions:
-      contents: read
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: Ensure target commit
-        if: ${{ needs.prepare.outputs.target_sha != '' }}
-        run: git checkout --progress --force ${{ needs.prepare.outputs.target_sha }}
-
-      - name: Setup Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: kreuzberg-dev/actions/setup-node-workspace@v1
         with:
-          toolchain: stable
-          target: wasm32-unknown-unknown
-
-      - name: Install wasm-pack
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-
-      - name: Build WASM package
-        run: wasm-pack build crates/spikard-wasm --release --target bundler
-
-      - name: Upload WASM artifact
-        uses: actions/upload-artifact@v7
+          node-version: "24"
+      - uses: kreuzberg-dev/actions/build-wasm-package@v1
         with:
-          name: wasm-pkg
-          path: crates/spikard-wasm/pkg/
-          retention-days: 14
+          crate-dir: crates/spikard-wasm
+          build-command: wasm-pack build crates/spikard-wasm --release --target bundler
+          pack-tarball: "true"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: wasm-package
+          path: crates/spikard-wasm/*.tgz
 
-  publish-wasm:
-    name: Publish WASM package to npm
-    needs: [prepare, check-npm-wasm, build-wasm]
-    if: >-
-      ${{
-        needs.prepare.result == 'success' &&
-        needs.prepare.outputs.tag &&
-        needs.prepare.outputs.is_tag == 'true' &&
-        needs.prepare.outputs.release_wasm == 'true' &&
-        (needs.prepare.outputs.force_republish == 'true' || needs.check-npm-wasm.outputs.exists != 'true') &&
-        needs.build-wasm.result == 'success'
-      }}
+  build-ruby:
+    name: Build Ruby gem
+    needs: prepare
+    if: ${{ needs.prepare.outputs.release_ruby == 'true' }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    env:
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.ref }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+          working-directory: packages/ruby
+      - uses: kreuzberg-dev/actions/build-ruby-gem@v1
+        with:
+          package-dir: packages/ruby
+      - name: Pack gem
+        run: |
+          mkdir -p dist/ruby
+          cd packages/ruby
+          gem build spikard.gemspec
+          mv ./*.gem ../../dist/ruby/
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ruby-gem
+          path: dist/ruby/*.gem
 
-      - name: Setup Node
-        uses: actions/setup-node@v6
+  build-php:
+    name: Build PHP extension
+    needs: prepare
+    if: ${{ needs.prepare.outputs.release_php == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
         with:
-          node-version: 24
-          registry-url: https://registry.npmjs.org/
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - uses: kreuzberg-dev/actions/setup-php@v1
+        with:
+          php-version: "8.4"
+      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: kreuzberg-dev/actions/build-php-extension@v1
+        with:
+          crate-name: spikard-php
+          lib-name: spikard_php
 
-      - name: Download WASM artifact
-        uses: actions/download-artifact@v8
+  build-cli:
+    name: Build CLI
+    needs: prepare
+    if: ${{ needs.prepare.outputs.release_cli == 'true' || needs.prepare.outputs.release_homebrew == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
         with:
-          name: wasm-pkg
-          path: crates/spikard-wasm/pkg
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - id: cli
+        uses: kreuzberg-dev/actions/build-rust-cli@v1
+        with:
+          package-name: spikard-cli
+          binary-name: spikard
+      - name: Package CLI
+        run: |
+          mkdir -p dist/cli
+          tar -czf "dist/cli/spikard-cli-${{ needs.prepare.outputs.version }}-linux-x86_64.tar.gz" -C "$(dirname "${{ steps.cli.outputs.binary-path }}")" spikard
+      - uses: actions/upload-artifact@v7
+        with:
+          name: cli-assets
+          path: dist/cli/*
 
-      - name: Publish to npm
-        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        uses: kreuzberg-dev/actions/publish-npm@v1.2.1
+  build-ffi-assets:
+    name: Build FFI assets
+    needs: prepare
+    if: ${{ needs.prepare.outputs.release_go == 'true' || needs.prepare.outputs.release_c_ffi == 'true' || needs.prepare.outputs.release_java == 'true' || needs.prepare.outputs.release_csharp == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
         with:
-          package-dir: crates/spikard-wasm/pkg
-          npm-tag: ${{ contains(needs.prepare.outputs.version, '-rc') && 'next' || 'latest' }}
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: kreuzberg-dev/actions/build-rust-ffi@v1
+        with:
+          crate-name: spikard-ffi
+      - uses: kreuzberg-dev/actions/build-go-ffi@v1
+        with:
+          crate-name: spikard-ffi
+          lib-name: spikard_ffi
+          header-path: crates/spikard-ffi/include/spikard.h
+          output-dir: dist/go
+          archive-name: spikard-go-ffi-${{ needs.prepare.outputs.version }}-linux-x86_64.tar.gz
+      - uses: kreuzberg-dev/actions/build-java-natives@v1
+        with:
+          crate-name: spikard-ffi
+          lib-name: spikard_ffi
+          classifier: linux-x86_64
+          output-dir: packages/java/src/main/resources/natives
+      - uses: kreuzberg-dev/actions/build-csharp-natives@v1
+        with:
+          crate-name: spikard-ffi
+          lib-name: spikard_ffi
+          rid: linux-x64
+          output-dir: packages/csharp/runtimes
+      - name: Package C FFI
+        run: |
+          mkdir -p dist/c-ffi
+          tar -czf "dist/c-ffi/spikard-c-ffi-${{ needs.prepare.outputs.version }}-linux-x86_64.tar.gz" \
+            crates/spikard-ffi/include/spikard.h target/release/libspikard_ffi.so
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ffi-assets
+          path: |
+            dist/go/*
+            dist/c-ffi/*
+            packages/java/src/main/resources/natives/**
+            packages/csharp/runtimes/**
+
+  build-elixir:
+    name: Build Elixir NIF
+    needs: prepare
+    if: ${{ needs.prepare.outputs.release_elixir == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: kreuzberg-dev/actions/setup-elixir@v1
+        with:
+          elixir-version: "1.18"
+          otp-version: "27"
+      - uses: kreuzberg-dev/actions/build-elixir-natives@v1
+        with:
+          nif-crate-name: spikard_nif
+          nif-crate-path: crates/spikard-elixir
+          package-dir: packages/elixir
+          nif-version: "2.17"
+          nif-api-version: "2.17"
+          output-dir: dist/elixir
+      - uses: actions/upload-artifact@v7
+        with:
+          name: elixir-nifs
+          path: dist/elixir/*
+
+  build-jvm-dotnet-dart-swift-zig:
+    name: Build package-only targets
+    needs: prepare
+    if: ${{ needs.prepare.outputs.release_java == 'true' || needs.prepare.outputs.release_kotlin == 'true' || needs.prepare.outputs.release_csharp == 'true' || needs.prepare.outputs.release_dart == 'true' || needs.prepare.outputs.release_swift == 'true' || needs.prepare.outputs.release_zig == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: kreuzberg-dev/actions/setup-maven@v1
+        with:
+          java-version: "21"
+      - uses: kreuzberg-dev/actions/setup-gradle@v1
+        with:
+          java-version: "21"
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+      - uses: dart-lang/setup-dart@v1
+      - uses: kreuzberg-dev/actions/setup-zig@v1
+      - name: Build package projects
+        run: |
+          cargo build --release -p spikard-ffi
+          cd packages/java && mvn -B -DskipTests package && cd ../..
+          cd packages/kotlin && gradle build --no-daemon && cd ../..
+          dotnet pack packages/csharp/Spikard --configuration Release --output dist/nuget
+          cd packages/dart && dart pub get && dart test && cd ../..
+          cd packages/zig && zig build test && cd ../..
+      - uses: actions/upload-artifact@v7
+        with:
+          name: package-targets
+          path: |
+            packages/java/target/*.jar
+            packages/kotlin/build/libs/*.jar
+            dist/nuget/*.nupkg
+
+  upload-release-assets:
+    name: Upload release assets
+    needs: [prepare, build-cli, build-ffi-assets, build-elixir]
+    if: ${{ always() && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: dist/release-assets
+          merge-multiple: true
+      - uses: kreuzberg-dev/actions/upload-release-assets@v1
+        with:
+          tag: ${{ needs.prepare.outputs.tag }}
+          assets: dist/release-assets/*
+          fail-if-empty: "false"
+          clobber: ${{ needs.prepare.outputs.force_republish }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-crates:
+    name: Publish crates.io packages
+    needs: [prepare, validate-versions, check-registries]
+    if: ${{ needs.prepare.outputs.release_crates == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.crates_core_exists != 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: kreuzberg-dev/actions/publish-crates@v1
+        with:
+          crates: "spikard-core spikard-http spikard-graphql spikard spikard-codegen spikard-cli"
+          version: ${{ needs.prepare.outputs.version }}
           dry-run: ${{ needs.prepare.outputs.dry_run }}
 
-      - name: Dry run summary
-        if: ${{ needs.prepare.outputs.dry_run == 'true' }}
-        run: echo "Would publish @spikard/wasm@${{ needs.prepare.outputs.version }} to npm" >> "$GITHUB_STEP_SUMMARY"
+  publish-pypi:
+    name: Publish PyPI
+    needs: [prepare, check-registries, build-python, build-python-sdist]
+    if: ${{ needs.prepare.outputs.release_python == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.pypi_exists != 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: dist/python
+          pattern: python-*
+          merge-multiple: true
+      - uses: kreuzberg-dev/actions/publish-pypi@v1
+        with:
+          packages-dir: dist/python
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
 
-  # ---------------------------------------------------------------------------
-  # Finalize release
-  # ---------------------------------------------------------------------------
+  publish-node:
+    name: Publish Node
+    needs: [prepare, check-registries, build-node]
+    if: ${{ needs.prepare.outputs.release_node == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.npm_node_exists != 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: node-package
+          path: dist/node
+      - uses: kreuzberg-dev/actions/setup-node-workspace@v1
+        with:
+          node-version: "24"
+      - uses: kreuzberg-dev/actions/publish-npm@v1
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        with:
+          packages-dir: dist/node
+          npm-tag: ${{ needs.prepare.outputs.npm_tag }}
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
 
-  finalize-release:
+  publish-wasm:
+    name: Publish WASM
+    needs: [prepare, check-registries, build-wasm]
+    if: ${{ needs.prepare.outputs.release_wasm == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.npm_wasm_exists != 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: wasm-package
+          path: dist/wasm
+      - uses: kreuzberg-dev/actions/setup-node-workspace@v1
+        with:
+          node-version: "24"
+      - uses: kreuzberg-dev/actions/publish-npm@v1
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        with:
+          packages-dir: dist/wasm
+          npm-tag: ${{ needs.prepare.outputs.npm_tag }}
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
+
+  publish-rubygems:
+    name: Publish RubyGems
+    needs: [prepare, check-registries, build-ruby]
+    if: ${{ needs.prepare.outputs.release_ruby == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.ruby_exists != 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: ruby-gem
+          path: dist/ruby
+      - uses: kreuzberg-dev/actions/publish-rubygems@v1
+        env:
+          GEM_HOST_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
+        with:
+          gems-dir: dist/ruby
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
+
+  publish-packagist:
+    name: Publish Packagist
+    needs: [prepare, check-registries]
+    if: ${{ needs.prepare.outputs.release_php == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.php_exists != 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: kreuzberg-dev/actions/publish-packagist@v1
+        env:
+          PACKAGIST_USERNAME: ${{ secrets.PACKAGIST_USERNAME }}
+          PACKAGIST_TOKEN: ${{ secrets.PACKAGIST_TOKEN }}
+        with:
+          packagist-username: ${{ secrets.PACKAGIST_USERNAME }}
+          package-name: goldziher/spikard
+          version: ${{ needs.prepare.outputs.version }}
+          repository-url: https://github.com/Goldziher/spikard
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
+
+  publish-hex:
+    name: Publish Hex
+    needs: [prepare, check-registries, build-elixir]
+    if: ${{ needs.prepare.outputs.release_elixir == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.hex_exists != 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - uses: kreuzberg-dev/actions/setup-elixir@v1
+        with:
+          elixir-version: "1.18"
+          otp-version: "27"
+      - uses: kreuzberg-dev/actions/publish-hex@v1
+        env:
+          HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
+        with:
+          package-dir: packages/elixir
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
+
+  publish-maven:
+    name: Publish Maven
+    needs: [prepare, check-registries, build-jvm-dotnet-dart-swift-zig]
+    if: ${{ needs.prepare.outputs.release_java == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.maven_java_exists != 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - uses: kreuzberg-dev/actions/setup-maven@v1
+        with:
+          java-version: "21"
+      - uses: kreuzberg-dev/actions/publish-maven@v1
+        env:
+          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_GPG_PRIVATE_KEY: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+        with:
+          pom-file: packages/java/pom.xml
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
+
+  publish-kotlin:
+    name: Publish Kotlin
+    needs: [prepare, check-registries, build-jvm-dotnet-dart-swift-zig]
+    if: ${{ needs.prepare.outputs.release_kotlin == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.maven_kotlin_exists != 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - uses: kreuzberg-dev/actions/publish-maven-gradle@v1
+        env:
+          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+          MAVEN_GPG_PRIVATE_KEY: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+        with:
+          working-directory: packages/kotlin
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
+
+  publish-nuget:
+    name: Publish NuGet
+    needs: [prepare, check-registries, build-jvm-dotnet-dart-swift-zig]
+    if: ${{ needs.prepare.outputs.release_csharp == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.nuget_exists != 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: package-targets
+          path: dist/packages
+      - uses: kreuzberg-dev/actions/publish-nuget@v1
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        with:
+          packages-dir: dist/packages
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
+
+  publish-pub:
+    name: Publish pub.dev
+    needs: [prepare, check-registries, build-jvm-dotnet-dart-swift-zig]
+    if: ${{ needs.prepare.outputs.release_dart == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.pub_exists != 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - uses: kreuzberg-dev/actions/publish-pub@v1
+        with:
+          package-dir: packages/dart
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
+
+  publish-swift:
+    name: Publish Swift metadata
+    needs: [prepare, check-registries, build-jvm-dotnet-dart-swift-zig]
+    if: ${{ needs.prepare.outputs.release_swift == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.swift_exists != 'true') }}
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - uses: kreuzberg-dev/actions/publish-swift@v1
+        with:
+          working-directory: packages/swift
+          tag: ${{ needs.prepare.outputs.tag }}
+          package-url: https://github.com/Goldziher/spikard
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
+
+  publish-zig:
+    name: Publish Zig metadata
+    needs: [prepare, check-registries, build-jvm-dotnet-dart-swift-zig]
+    if: ${{ needs.prepare.outputs.release_zig == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.zig_exists != 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - uses: kreuzberg-dev/actions/publish-zig@v1
+        with:
+          working-directory: packages/zig
+          tag: ${{ needs.prepare.outputs.tag }}
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
+
+  publish-homebrew:
+    name: Publish Homebrew formula
+    needs: [prepare, build-cli]
+    if: ${{ needs.prepare.outputs.release_homebrew == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: cli-assets
+          path: dist/homebrew
+      - uses: kreuzberg-dev/actions/publish-homebrew@v1
+        with:
+          bottles-dir: dist/homebrew
+          formula-name: spikard
+          tap-repo: Goldziher/homebrew-tap
+          tag: ${{ needs.prepare.outputs.tag }}
+          version: ${{ needs.prepare.outputs.version }}
+          github-repo: Goldziher/spikard
+          bot-name: spikard-bot
+          bot-email: bot@spikard.dev
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  finalize:
     name: Finalize release
     needs:
       - prepare
+      - upload-release-assets
       - publish-crates
       - publish-pypi
       - publish-node
+      - publish-wasm
       - publish-rubygems
       - publish-packagist
       - publish-hex
-      - publish-cli-release
-      - publish-homebrew
-      - publish-java
+      - publish-maven
       - publish-kotlin
-      - publish-csharp
-      - tag-dart
-      - publish-gleam
+      - publish-nuget
+      - publish-pub
       - publish-swift
       - publish-zig
-      - publish-wasm
-    if: always() && needs.prepare.outputs.is_tag == 'true'
+      - publish-homebrew
+    if: ${{ always() && needs.prepare.outputs.is_tag == 'true' }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
+      - uses: kreuzberg-dev/actions/finalize-release@v1
         with:
-          ref: ${{ needs.prepare.outputs.ref }}
-
-      - name: Aggregate release status
-        env:
-          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
-          RESULT_PUBLISH_CRATES: ${{ needs.publish-crates.result }}
-          RESULT_PUBLISH_PYPI: ${{ needs.publish-pypi.result }}
-          RESULT_PUBLISH_NODE: ${{ needs.publish-node.result }}
-          RESULT_PUBLISH_RUBYGEMS: ${{ needs.publish-rubygems.result }}
-          RESULT_PUBLISH_PACKAGIST: ${{ needs.publish-packagist.result }}
-          RESULT_PUBLISH_HEX: ${{ needs.publish-hex.result }}
-          RESULT_PUBLISH_CLI: ${{ needs.publish-cli-release.result }}
-          RESULT_PUBLISH_HOMEBREW: ${{ needs.publish-homebrew.result }}
-          RESULT_PUBLISH_JAVA: ${{ needs.publish-java.result }}
-          RESULT_PUBLISH_KOTLIN: ${{ needs.publish-kotlin.result }}
-          RESULT_PUBLISH_CSHARP: ${{ needs.publish-csharp.result }}
-          RESULT_TAG_DART: ${{ needs.tag-dart.result }}
-          RESULT_PUBLISH_GLEAM: ${{ needs.publish-gleam.result }}
-          RESULT_PUBLISH_SWIFT: ${{ needs.publish-swift.result }}
-          RESULT_PUBLISH_ZIG: ${{ needs.publish-zig.result }}
-          RESULT_PUBLISH_WASM: ${{ needs.publish-wasm.result }}
-        run: |
-          {
-            echo "## Release ${{ needs.prepare.outputs.tag }}"
-            echo ""
-            echo "| Target | Result |"
-            echo "|--------|--------|"
-            for var in RESULT_PUBLISH_CRATES RESULT_PUBLISH_PYPI RESULT_PUBLISH_NODE RESULT_PUBLISH_RUBYGEMS RESULT_PUBLISH_PACKAGIST RESULT_PUBLISH_HEX RESULT_PUBLISH_CLI RESULT_PUBLISH_HOMEBREW RESULT_PUBLISH_JAVA RESULT_PUBLISH_KOTLIN RESULT_PUBLISH_CSHARP RESULT_TAG_DART RESULT_PUBLISH_GLEAM RESULT_PUBLISH_SWIFT RESULT_PUBLISH_ZIG RESULT_PUBLISH_WASM; do
-              name="${var#RESULT_}"
-              value="${!var:-skipped}"
-              echo "| ${name} | ${value} |"
-            done
-          } >> "$GITHUB_STEP_SUMMARY"
+          tag: ${{ needs.prepare.outputs.tag }}
+          is-prerelease: ${{ needs.prepare.outputs.is_prerelease }}
+          go-module-path: github.com/Goldziher/spikard
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
+          token: ${{ secrets.GITHUB_TOKEN }}

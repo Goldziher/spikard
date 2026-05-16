@@ -11,7 +11,7 @@ npm install @spikard/node
 ## Quick Start
 
 ```typescript
-import { /* ... */ } from '@spikard/node';
+import {} from /* ... */ "@spikard/node";
 
 // TODO: add usage example
 ```

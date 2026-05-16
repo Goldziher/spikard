@@ -1,19 +1,19 @@
-name: 'Build Wheels'
-description: 'Build Python wheels using cibuildwheel'
+name: "Build Wheels"
+description: "Build Python wheels using cibuildwheel"
 
 inputs:
   python-version:
-    description: 'Python version to use'
+    description: "Python version to use"
     required: false
-    default: '3.14'
+    default: "3.14"
 
 outputs:
   artifact-name:
-    description: 'Name of the uploaded artifact'
+    description: "Name of the uploaded artifact"
     value: wheels-${{ runner.os }}
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Setup Rust
       uses: actions-rust-lang/setup-rust-toolchain@v1

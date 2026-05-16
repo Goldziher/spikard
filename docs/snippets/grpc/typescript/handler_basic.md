@@ -11,8 +11,8 @@ import {
   GrpcStatusCode,
   createServiceHandler,
   createUnaryHandler,
-} from 'spikard';
-import * as userservice from './userservice_pb';  // Generated protobufjs types
+} from "spikard";
+import * as userservice from "./userservice_pb"; // Generated protobufjs types
 
 class UserServiceHandler implements GrpcHandler {
   constructor(private userRepository: UserRepository) {}
@@ -23,14 +23,14 @@ class UserServiceHandler implements GrpcHandler {
      * Routes to appropriate method based on request.methodName.
      */
     switch (request.methodName) {
-      case 'GetUser':
+      case "GetUser":
         return this.getUser(request);
-      case 'CreateUser':
+      case "CreateUser":
         return this.createUser(request);
       default:
         throw new GrpcError(
           GrpcStatusCode.UNIMPLEMENTED,
-          `Method ${request.methodName} not implemented`
+          `Method ${request.methodName} not implemented`,
         );
     }
   }
@@ -41,19 +41,13 @@ class UserServiceHandler implements GrpcHandler {
 
     // 2. Validate input
     if (req.id <= 0) {
-      throw new GrpcError(
-        GrpcStatusCode.INVALID_ARGUMENT,
-        'User ID must be positive'
-      );
+      throw new GrpcError(GrpcStatusCode.INVALID_ARGUMENT, "User ID must be positive");
     }
 
     // 3. Business logic
     const user = await this.userRepository.findById(req.id);
     if (!user) {
-      throw new GrpcError(
-        GrpcStatusCode.NOT_FOUND,
-        `User ${req.id} not found`
-      );
+      throw new GrpcError(GrpcStatusCode.NOT_FOUND, `User ${req.id} not found`);
     }
 
     // 4. Build response
@@ -68,7 +62,7 @@ class UserServiceHandler implements GrpcHandler {
     const encoded = userservice.User.encode(responseUser).finish();
     return {
       payload: Buffer.from(encoded),
-      metadata: { 'x-user-found': 'true' },
+      metadata: { "x-user-found": "true" },
     };
   }
 
@@ -78,19 +72,13 @@ class UserServiceHandler implements GrpcHandler {
 
     // 2. Validate input
     if (!req.name || !req.email) {
-      throw new GrpcError(
-        GrpcStatusCode.INVALID_ARGUMENT,
-        'Name and email are required'
-      );
+      throw new GrpcError(GrpcStatusCode.INVALID_ARGUMENT, "Name and email are required");
     }
 
     // 3. Check authorization from metadata
-    const authToken = request.metadata['authorization'];
+    const authToken = request.metadata["authorization"];
     if (!authToken) {
-      throw new GrpcError(
-        GrpcStatusCode.UNAUTHENTICATED,
-        'Authentication required'
-      );
+      throw new GrpcError(GrpcStatusCode.UNAUTHENTICATED, "Authentication required");
     }
 
     // 4. Business logic
@@ -112,8 +100,8 @@ class UserServiceHandler implements GrpcHandler {
     return {
       payload: Buffer.from(encoded),
       metadata: {
-        'x-user-id': user.id.toString(),
-        'x-created': 'true',
+        "x-user-id": user.id.toString(),
+        "x-created": "true",
       },
     };
   }
@@ -131,11 +119,11 @@ class UserServiceHandler implements GrpcHandler {
 ## Registration
 
 ```typescript
-import { GrpcService, Spikard } from 'spikard';
+import { GrpcService, Spikard } from "spikard";
 
 const grpcService = new GrpcService();
 
-grpcService.registerUnary('userservice.UserService', 'GetUser', userServiceHandler);
+grpcService.registerUnary("userservice.UserService", "GetUser", userServiceHandler);
 
 const app = new Spikard();
 app.useGrpc(grpcService);

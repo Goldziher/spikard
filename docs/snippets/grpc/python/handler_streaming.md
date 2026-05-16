@@ -299,12 +299,14 @@ async def handle_filter_stream(
 ## Key Patterns
 
 ### Message Collection
+
 - All client messages are collected in a single `messages` list
 - Messages are provided as `bytes` objects (protobuf serialized)
 - No streaming iteration needed - full list is provided
 - Order of messages is preserved
 
 ### Processing Strategy
+
 1. **Collect**: All input messages received as list
 2. **Validate**: Check all messages before processing
 3. **Transform**: Process and generate output
@@ -312,6 +314,7 @@ async def handle_filter_stream(
 5. **Return**: List of response message bytes
 
 ### Error Handling
+
 - Raise Python exceptions with appropriate types:
   - `ValueError` maps to `INVALID_ARGUMENT` status
   - `PermissionError` maps to `PERMISSION_DENIED` status
@@ -322,6 +325,7 @@ async def handle_filter_stream(
 - Per-message errors can be included in response messages (with ERROR status)
 
 ### Metadata
+
 - Client streaming: Metadata passed in request, can be included in response
 - Bidirectional streaming: Metadata passed in request, can be included in response
 - Use metadata for non-payload information (timestamps, counts, filters)
@@ -608,17 +612,18 @@ pytest test_streaming_handlers.py -v -k "batch" --asyncio-mode=auto
 
 ## Comparison with Other Patterns
 
-| Aspect | Client Streaming | Bidirectional | Unary |
-|--------|------------------|---------------|-------|
-| Input | Multiple messages | Multiple messages | Single message |
-| Output | Single response | Multiple messages | Single response |
-| Use case | Batch operations | Stream processing | Simple requests |
-| Message order | Important | Important | N/A |
-| Atomicity | Full batch atomic | Per-message or batch | Single atomic |
+| Aspect        | Client Streaming  | Bidirectional        | Unary           |
+| ------------- | ----------------- | -------------------- | --------------- |
+| Input         | Multiple messages | Multiple messages    | Single message  |
+| Output        | Single response   | Multiple messages    | Single response |
+| Use case      | Batch operations  | Stream processing    | Simple requests |
+| Message order | Important         | Important            | N/A             |
+| Atomicity     | Full batch atomic | Per-message or batch | Single atomic   |
 
 ## Common Pitfalls
 
 ### 1. Forgetting to Deserialize Messages
+
 ```python
 # WRONG: Using raw bytes
 for msg in messages:
@@ -632,6 +637,7 @@ for msg in messages:
 ```
 
 ### 2. Not Handling All Message Errors
+
 ```python
 # WRONG: Failing entire stream on first error
 for msg in messages:
@@ -652,6 +658,7 @@ for msg in messages:
 ```
 
 ### 3. Forgetting to Serialize Response Messages
+
 ```python
 # WRONG: Returning protobuf objects instead of bytes
 response = pb.Item(name='test')
@@ -665,6 +672,7 @@ return GrpcBidiStreamResponse(
 ```
 
 ### 4. Not Using Async Functions
+
 ```python
 # WRONG: Blocking operation in async handler
 def handle_batch_create(request: GrpcClientStreamRequest) -> GrpcResponse:

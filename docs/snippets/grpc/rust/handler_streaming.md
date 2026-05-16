@@ -398,12 +398,14 @@ pub async fn handle_filter_stream(
 ## Key Patterns
 
 ### Message Collection
+
 - All client messages are collected in a single `messages: Vec<Bytes>`
 - Messages are provided as `Bytes` objects (protobuf serialized)
 - No streaming iteration needed - full Vec is provided
 - Order of messages is preserved
 
 ### Processing Strategy
+
 1. **Collect**: All input messages received as Vec
 2. **Validate**: Check all messages before processing (use `?` operator)
 3. **Transform**: Process and generate output
@@ -411,6 +413,7 @@ pub async fn handle_filter_stream(
 5. **Return**: Vec of response message Bytes wrapped in Result
 
 ### Error Handling
+
 - Return `Result<T, tonic::Status>` for all handlers
 - Use `?` operator for error propagation (NO `.unwrap()`)
 - Map domain errors to appropriate Status codes:
@@ -422,6 +425,7 @@ pub async fn handle_filter_stream(
 - Per-message errors can be included in response messages (with ERROR status)
 
 ### Metadata
+
 - Client streaming: Metadata passed in request, can be included in response
 - Bidirectional streaming: Metadata passed in request, can be included in response
 - Use metadata for non-payload information (timestamps, counts, filters)
@@ -804,17 +808,18 @@ cargo test --features tokio-test
 
 ## Comparison with Other Patterns
 
-| Aspect | Client Streaming | Bidirectional | Unary |
-|--------|------------------|---------------|-------|
-| Input | Multiple messages | Multiple messages | Single message |
-| Output | Single response | Multiple messages | Single response |
-| Use case | Batch operations | Stream processing | Simple requests |
-| Message order | Important | Important | N/A |
-| Atomicity | Full batch atomic | Per-message or batch | Single atomic |
+| Aspect        | Client Streaming  | Bidirectional        | Unary           |
+| ------------- | ----------------- | -------------------- | --------------- |
+| Input         | Multiple messages | Multiple messages    | Single message  |
+| Output        | Single response   | Multiple messages    | Single response |
+| Use case      | Batch operations  | Stream processing    | Simple requests |
+| Message order | Important         | Important            | N/A             |
+| Atomicity     | Full batch atomic | Per-message or batch | Single atomic   |
 
 ## Common Pitfalls
 
 ### 1. Using .unwrap() Instead of ? Operator
+
 ```rust
 // WRONG: Using .unwrap() causes panics
 let item = messageservice::Item::decode(msg).unwrap();
@@ -825,6 +830,7 @@ let item = messageservice::Item::decode(msg)
 ```
 
 ### 2. Not Handling All Message Errors
+
 ```rust
 // WRONG: Failing entire stream on first error
 for msg in messages {
@@ -851,6 +857,7 @@ for msg in messages {
 ```
 
 ### 3. Forgetting to Serialize Response Messages
+
 ```rust
 // WRONG: Returning protobuf objects instead of Bytes
 let response = messageservice::Item { name: "test".to_string(), value: 1 };
@@ -864,6 +871,7 @@ output_messages.push(Bytes::from(buf));
 ```
 
 ### 4. Blocking Operations in Async Context
+
 ```rust
 // WRONG: Blocking operation in async handler
 async fn handle_batch_create(request: GrpcClientStreamRequest) -> Result<GrpcResponse, Status> {

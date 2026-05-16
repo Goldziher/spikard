@@ -49,7 +49,7 @@ components:
     CreateUserRequest:
       type: object
       required:
-        - username  # This field is mandatory
+        - username # This field is mandatory
         - email
       properties:
         username:
@@ -62,13 +62,13 @@ components:
 
 ```typescript
 // TypeScript client
-const response = await fetch('/users', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+const response = await fetch("/users", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    username: 'johndoe',  // Include required field
-    email: 'john@example.com'
-  })
+    username: "johndoe", // Include required field
+    email: "john@example.com",
+  }),
 });
 ```
 
@@ -171,7 +171,7 @@ request = user_pb2.UserRequest(id="123", name="John")
 
 ```typescript
 // TypeScript
-import { UserRequest } from './gen/example/v1/user';
+import { UserRequest } from "./gen/example/v1/user";
 
 const request = UserRequest.create({ id: "123", name: "John" });
 ```
@@ -275,13 +275,13 @@ status:
 ```typescript
 // TypeScript
 enum UserStatus {
-  Active = 'active',
-  Inactive = 'inactive',
-  Pending = 'pending'
+  Active = "active",
+  Inactive = "inactive",
+  Pending = "pending",
 }
 
 const request = {
-  status: UserStatus.Active  // Type-safe
+  status: UserStatus.Active, // Type-safe
 };
 ```
 
@@ -376,7 +376,7 @@ The code generator produced invalid Ruby syntax, often due to schema edge cases 
 
 ```yaml
 # PROBLEMATIC
-class:  # 'class' is reserved in Ruby
+class: # 'class' is reserved in Ruby
   type: string
 
 # BETTER
@@ -513,7 +513,7 @@ Add proper null checks:
 ```typescript
 // INCORRECT
 function processUser(user: User) {
-  const name: string = user.name;  // user.name might be undefined
+  const name: string = user.name; // user.name might be undefined
   console.log(name.toUpperCase());
 }
 
@@ -724,15 +724,15 @@ app.config.cors.allowed_headers = ["Content-Type", "Authorization"]
 
 ```typescript
 // TypeScript
-import { App } from 'spikard';
+import { App } from "spikard";
 
 const app = new App({
   cors: {
     enabled: true,
-    allowedOrigins: ['http://localhost:3000'],
-    allowedMethods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  }
+    allowedOrigins: ["http://localhost:3000"],
+    allowedMethods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  },
 });
 ```
 
@@ -801,10 +801,10 @@ def verify_token(token: str) -> dict:
 
 ```typescript
 // TypeScript
-const response = await fetch('/api/users', {
+const response = await fetch("/api/users", {
   headers: {
-    'Authorization': `Bearer ${validToken}`
-  }
+    Authorization: `Bearer ${validToken}`,
+  },
 });
 ```
 
@@ -846,7 +846,7 @@ app.config.max_body_size = 10 * 1024 * 1024  # 10MB
 ```typescript
 // TypeScript
 const app = new App({
-  maxBodySize: 10 * 1024 * 1024  // 10MB
+  maxBodySize: 10 * 1024 * 1024, // 10MB
 });
 ```
 
@@ -984,7 +984,7 @@ async def get_user(user_id: str, db: Database = Provide()):
 
 ```typescript
 // TypeScript
-import { App, Provide } from 'spikard';
+import { App, Provide } from "spikard";
 
 class Database {
   constructor(private url: string) {}
@@ -994,11 +994,11 @@ const app = new App();
 
 // Register provider
 app.provide(Database, () => {
-  return new Database('postgresql://localhost/mydb');
+  return new Database("postgresql://localhost/mydb");
 });
 
 // Use in handler
-app.get('/users/:id', async (req, { db }: { db: Database }) => {
+app.get("/users/:id", async (req, { db }: { db: Database }) => {
   return await db.query(`SELECT * FROM users WHERE id = ${req.params.id}`);
 });
 ```
@@ -1112,7 +1112,7 @@ async def cleanup_stale_connections():
 
 ```typescript
 // TypeScript
-import { WebSocket } from 'spikard';
+import { WebSocket } from "spikard";
 
 const activeConnections = new Set<WebSocket>();
 
@@ -1124,7 +1124,7 @@ async function websocketHandler(ws: WebSocket) {
       await ws.send(`Echo: ${message}`);
     }
   } catch (error) {
-    console.error('WebSocket error:', error);
+    console.error("WebSocket error:", error);
   } finally {
     activeConnections.delete(ws);
   }
@@ -1405,12 +1405,10 @@ def bidi_stream(request_iterator):
 
 ```typescript
 // TypeScript - bidirectional streaming
-async function* bidiStream(
-  requests: AsyncIterable<Request>
-): AsyncIterable<Response> {
+async function* bidiStream(requests: AsyncIterable<Request>): AsyncIterable<Response> {
   for await (const request of requests) {
     const response = await processRequest(request);
-    yield response;  // Stream responses as they're ready
+    yield response; // Stream responses as they're ready
   }
 }
 ```
@@ -1510,8 +1508,8 @@ app.config.debug = True
 const app = new App({
   debug: true,
   logger: {
-    level: 'debug'
-  }
+    level: "debug",
+  },
 });
 ```
 

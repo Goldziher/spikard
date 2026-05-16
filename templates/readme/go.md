@@ -99,10 +99,10 @@ CGO_LDFLAGS="-L$HOME/spikard/lib -lspikard_ffi" go build
 
 ## Troubleshooting
 
-| Issue | Fix |
-|-------|-----|
+| Issue                                  | Fix                                                                                                |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | `undefined reference to 'spikard_...'` | `CGO_LDFLAGS` not pointing at the static library. Set `CGO_LDFLAGS="-L/path/to/lib -lspikard_ffi"` |
-| `cannot find -lspikard_ffi` | Static library missing. Build it: `cargo build -p spikard-ffi --release` |
+| `cannot find -lspikard_ffi`            | Static library missing. Build it: `cargo build -p spikard-ffi --release`                           |
 
 ## Documentation
 

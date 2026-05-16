@@ -6,18 +6,18 @@ app.setErrorHandler((error, req, res) => {
     return res.status(422).json({
       error: "validation_failed",
       message: "Request validation failed",
-      details: error.errors.map(err => ({
+      details: error.errors.map((err) => ({
         field: err.path.join("."),
         message: err.message,
-        type: err.code
-      }))
+        type: err.code,
+      })),
     });
   }
 
   // Handle other errors
   return res.status(500).json({
     error: "internal_error",
-    message: error.message
+    message: error.message,
   });
 });
 ```

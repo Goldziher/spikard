@@ -3,33 +3,6 @@
 import Foundation
 import RustBridge
 
-/// Represents an uploaded file from multipart/form-data requests.
-///
-/// This struct provides efficient access to file content with automatic
-/// base64 decoding and implements standard I/O traits for compatibility.
-///
-/// # Example
-///
-/// ```rust
-/// use spikard::UploadFile;
-/// use serde::Deserialize;
-///
-/// #[derive(Deserialize)]
-/// struct UploadRequest {
-///     file: UploadFile,
-///     description: String,
-/// }
-///
-/// // In a handler:
-/// // let body: UploadRequest = ctx.json()?;
-/// // let content = body.file.as_bytes();
-/// // let filename = &body.file.filename;
-/// ```
-public typealias UploadFile = RustBridge.UploadFile
-
-/// Snapshot of an Axum response used by higher-level language bindings.
-public typealias ResponseSnapshot = RustBridge.ResponseSnapshot
-
 /// CORS configuration for a route
 public typealias CorsConfig = RustBridge.CorsConfig
 
@@ -83,7 +56,6 @@ public typealias JsonRpcMethodInfo = RustBridge.JsonRpcMethodInfo
 /// Content-Type: application/problem+json
 /// ```
 ///
-/// # Example
 /// ```json
 /// {
 ///   "type": "https://spikard.dev/errors/validation-error",
@@ -94,26 +66,6 @@ public typealias JsonRpcMethodInfo = RustBridge.JsonRpcMethodInfo
 /// }
 /// ```
 public typealias ProblemDetails = RustBridge.ProblemDetails
-
-/// Configuration for GraphQL routes
-///
-/// Provides a builder pattern for configuring GraphQL route parameters
-/// for the Spikard HTTP server's routing system.
-///
-/// # Example
-///
-/// ```
-/// use spikard_graphql::routes::GraphQLRouteConfig;
-///
-/// let config = GraphQLRouteConfig::new()
-///     .path("/graphql")
-///     .method("POST")
-///     .enable_playground(true);
-///
-/// assert_eq!(config.get_path(), "/graphql");
-/// assert_eq!(config.get_method(), "POST");
-/// ```
-public typealias GraphQLRouteConfig = RustBridge.GraphQLRouteConfig
 
 /// Configuration for GraphQL schema building.
 ///
@@ -247,34 +199,29 @@ public typealias StaticFilesConfig = RustBridge.StaticFilesConfig
 /// Server configuration
 public typealias ServerConfig = RustBridge.ServerConfig
 
-/// Snapshot of a GraphQL subscription exchange over WebSocket.
-public typealias GraphQLSubscriptionSnapshot = RustBridge.GraphQLSubscriptionSnapshot
-
-/// Core test client for making HTTP requests to a Spikard application.
-///
-/// This struct wraps axum-test's TestServer and provides a language-agnostic
-/// interface for making HTTP requests, sending WebSocket connections, and
-/// handling Server-Sent Events. Language bindings wrap this to provide
-/// native API surfaces.
-public typealias TestClient = RustBridge.TestClient
-
-/// Possible errors while converting an Axum response into a snapshot.
-public typealias SnapshotError = RustBridge.SnapshotError
-
-/// A WebSocket message that can be text or binary.
-public typealias WebSocketMessage = RustBridge.WebSocketMessage
-
 /// HTTP method
-public typealias Method = RustBridge.Method
+public enum Method {
+  case get
+  case post
+  case put
+  case patch
+  case delete
+  case head
+  case options
+  case trace
+}
 
 /// Security scheme types
-public typealias SecuritySchemeInfo = RustBridge.SecuritySchemeInfo
+public enum SecuritySchemeInfo {
+  case http(scheme: String, bearerFormat: String)
+  case apiKey(location: String, name: String)
+}
 
 /// Errors that can occur during GraphQL operations
 ///
 /// These errors are compatible with async-graphql error handling and can be
 /// converted to structured HTTP responses matching the project's error fixtures.
-public enum GraphQLError: Error {
+public enum GraphQLError: Swift.Error {
   /// Error during schema execution
   ///
   /// Occurs when the GraphQL executor encounters a runtime error during query execution.
@@ -326,11 +273,11 @@ public enum GraphQLError: Error {
   /// Query complexity limit exceeded
   ///
   /// Occurs when a GraphQL query exceeds the configured complexity limit.
-  case complexityLimitExceeded(message: String)
+  case complexityLimitExceeded
   /// Query depth limit exceeded
   ///
   /// Occurs when a GraphQL query exceeds the configured depth limit.
-  case depthLimitExceeded(message: String)
+  case depthLimitExceeded
   /// Internal server error
   ///
   /// Occurs when an unexpected internal error happens.
@@ -338,7 +285,7 @@ public enum GraphQLError: Error {
 }
 
 /// Error type for schema building operations
-public enum SchemaError: Error {
+public enum SchemaError: Swift.Error {
   /// Generic schema building error
   case buildingFailed(message: String, field0: String)
   /// Configuration validation error

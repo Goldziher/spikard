@@ -3,24 +3,24 @@ description: Run benchmark for a single framework
 
 inputs:
   framework:
-    description: 'Framework name (e.g., spikard-python, fastapi, hono)'
+    description: "Framework name (e.g., spikard-python, fastapi, hono)"
     required: true
   suite:
-    description: 'Workload suite to run'
+    description: "Workload suite to run"
     required: false
-    default: 'all'
+    default: "all"
   duration:
-    description: 'Duration per workload in seconds'
+    description: "Duration per workload in seconds"
     required: false
-    default: '30'
+    default: "30"
   concurrency:
-    description: 'Concurrent connections'
+    description: "Concurrent connections"
     required: false
-    default: '100'
+    default: "100"
   warmup:
-    description: 'Warmup duration in seconds'
+    description: "Warmup duration in seconds"
     required: false
-    default: '10'
+    default: "10"
 
 runs:
   using: composite
@@ -183,7 +183,7 @@ runs:
       if: steps.detect.outputs.language == 'php' && inputs.framework == 'phalcon'
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.4'
+        php-version: "8.4"
         extensions: phalcon5, openswoole
         tools: composer
 
@@ -191,7 +191,7 @@ runs:
       if: steps.detect.outputs.language == 'php' && inputs.framework == 'trongate'
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.4'
+        php-version: "8.4"
         extensions: openswoole
         tools: composer
         coverage: none
@@ -200,7 +200,7 @@ runs:
       if: steps.detect.outputs.language == 'php' && inputs.framework == 'spikard-php'
       uses: ./.github/actions/build-php-extension
       with:
-        php-version: '8.4'
+        php-version: "8.4"
 
     - name: Enable PHP extension
       if: steps.detect.outputs.language == 'php' && inputs.framework == 'spikard-php'

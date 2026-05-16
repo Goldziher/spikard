@@ -67,7 +67,7 @@ app.addRoute(
     const { fileId } = req.json<{ fileId: number }>();
     const job = await uploadQueue.add({ fileId });
     return { status: "processing", jobId: job.id };
-  }
+  },
 );
 
 app.addRoute(
@@ -78,9 +78,9 @@ app.addRoute(
     await emailQueue.add({
       userId: savedUser.id,
       template: "welcome",
-      params: { name: user.name }
+      params: { name: user.name },
     });
     return savedUser;
-  }
+  },
 );
 ```

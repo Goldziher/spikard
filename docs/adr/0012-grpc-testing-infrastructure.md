@@ -237,15 +237,13 @@ end
     "messages": [
       {
         "name": "GetUserRequest",
-        "fields": [
-          {"name": "user_id", "type": "int32", "number": 1}
-        ]
+        "fields": [{ "name": "user_id", "type": "int32", "number": 1 }]
       },
       {
         "name": "User",
         "fields": [
-          {"name": "id", "type": "int32", "number": 1},
-          {"name": "name", "type": "string", "number": 2}
+          { "name": "id", "type": "int32", "number": 1 },
+          { "name": "name", "type": "string", "number": 2 }
         ]
       }
     ],
@@ -269,12 +267,12 @@ end
     "method": "GetUser"
   },
   "request": {
-    "metadata": {"authorization": "Bearer token"},
-    "message": {"user_id": 123}
+    "metadata": { "authorization": "Bearer token" },
+    "message": { "user_id": 123 }
   },
   "expected_response": {
     "status_code": "OK",
-    "message": {"id": 123, "name": "Alice"}
+    "message": { "id": 123, "name": "Alice" }
   }
 }
 ```

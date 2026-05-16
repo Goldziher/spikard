@@ -197,11 +197,11 @@ fn pyerr_to_grpc_status(err: PyErr) -> tonic::Status {
 
 ```typescript
 export class GrpcInvalidArgumentError extends Error {
-  status = 'INVALID_ARGUMENT';
+  status = "INVALID_ARGUMENT";
 }
 
 export class GrpcPermissionDeniedError extends Error {
-  status = 'PERMISSION_DENIED';
+  status = "PERMISSION_DENIED";
 }
 ```
 

@@ -111,23 +111,23 @@ channels:
 
     messages:
       systemAlert:
-        $ref: '#/components/messages/systemAlert'
+        $ref: "#/components/messages/systemAlert"
       userNotification:
-        $ref: '#/components/messages/userNotification'
+        $ref: "#/components/messages/userNotification"
       statusUpdate:
-        $ref: '#/components/messages/statusUpdate'
+        $ref: "#/components/messages/statusUpdate"
       heartbeat:
-        $ref: '#/components/messages/heartbeat'
+        $ref: "#/components/messages/heartbeat"
       notificationBatch:
-        $ref: '#/components/messages/notificationBatch'
+        $ref: "#/components/messages/notificationBatch"
       streamError:
-        $ref: '#/components/messages/streamError'
+        $ref: "#/components/messages/streamError"
 
 operations:
   subscribeToEvents:
     action: receive
     channel:
-      $ref: '#/channels/events'
+      $ref: "#/channels/events"
     title: Subscribe to Event Stream
     summary: Client connects to event stream
     description: |
@@ -160,7 +160,7 @@ operations:
   streamSystemAlerts:
     action: send
     channel:
-      $ref: '#/channels/events'
+      $ref: "#/channels/events"
     title: Stream System Alerts
     summary: Server sends critical system alerts
     description: |
@@ -170,12 +170,12 @@ operations:
 
       Broadcasted to all connected clients.
     messages:
-      - $ref: '#/components/messages/systemAlert'
+      - $ref: "#/components/messages/systemAlert"
 
   streamUserNotifications:
     action: send
     channel:
-      $ref: '#/channels/events'
+      $ref: "#/channels/events"
     title: Stream User Notifications
     summary: Server sends user-specific notifications
     description: |
@@ -183,12 +183,12 @@ operations:
 
       Only clients subscribed to that user receive these events.
     messages:
-      - $ref: '#/components/messages/userNotification'
+      - $ref: "#/components/messages/userNotification"
 
   streamStatusUpdates:
     action: send
     channel:
-      $ref: '#/channels/events'
+      $ref: "#/channels/events"
     title: Stream Status Updates
     summary: Server sends service status changes
     description: |
@@ -196,12 +196,12 @@ operations:
 
       Examples: Service deployed, region recovered, maintenance window starting.
     messages:
-      - $ref: '#/components/messages/statusUpdate'
+      - $ref: "#/components/messages/statusUpdate"
 
   sendHeartbeat:
     action: send
     channel:
-      $ref: '#/channels/events'
+      $ref: "#/channels/events"
     title: Send Heartbeat
     summary: Server sends keep-alive signal
     description: |
@@ -210,12 +210,12 @@ operations:
       Sent every 30 seconds regardless of event activity.
       Prevents proxies from closing idle connections.
     messages:
-      - $ref: '#/components/messages/heartbeat'
+      - $ref: "#/components/messages/heartbeat"
 
   sendCatchupBatch:
     action: send
     channel:
-      $ref: '#/channels/events'
+      $ref: "#/channels/events"
     title: Send Catch-up Batch
     summary: Server sends missed events on reconnection
     description: |
@@ -224,12 +224,12 @@ operations:
       Client provides Last-Event-ID header with last received event ID.
       Server responds with all events since that ID (up to 100 events).
     messages:
-      - $ref: '#/components/messages/notificationBatch'
+      - $ref: "#/components/messages/notificationBatch"
 
   sendStreamError:
     action: send
     channel:
-      $ref: '#/channels/events'
+      $ref: "#/channels/events"
     title: Send Stream Error
     summary: Server sends error message
     description: |
@@ -237,7 +237,7 @@ operations:
 
       Format: RFC 9457 problem details as JSON event.
     messages:
-      - $ref: '#/components/messages/streamError'
+      - $ref: "#/components/messages/streamError"
 
 components:
   messages:
@@ -661,7 +661,7 @@ components:
     uuid:
       type: string
       format: uuid
-      pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+      pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
       description: UUID v4
 
     severity:

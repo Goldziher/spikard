@@ -235,10 +235,96 @@ tasks:
     cmds:
       - alef e2e generate
 
-  e2e:test:
-    desc: "Run E2E tests for all languages (alias for test:e2e)"
+  e2e:build:
+    desc: "Build all language bindings used by e2e suites (release)"
     cmds:
-      - task: test:e2e
+      - alef build --release --lang python,node,ruby,php,ffi,go,java,csharp,elixir,wasm,dart,kotlin,swift,zig
+
+  e2e:run:
+    desc: "Run all e2e test suites across all languages"
+    cmds:
+      - alef test --e2e --lang rust,python,node,ruby,php,go,java,csharp,elixir,wasm,dart,kotlin,swift,zig
+
+  e2e:all:
+    desc: "Build all bindings and run all e2e tests"
+    cmds:
+      - task: e2e:build
+      - task: e2e:run
+
+  e2e:test:
+    desc: "Run E2E tests for all languages (alias for e2e:run)"
+    cmds:
+      - task: e2e:run
+
+  rust:e2e:
+    desc: "Run Rust e2e tests via alef"
+    cmds:
+      - alef test --e2e --lang rust
+
+  python:e2e:
+    desc: "Run Python e2e tests via alef"
+    cmds:
+      - alef test --e2e --lang python
+
+  node:e2e:
+    desc: "Run Node e2e tests via alef"
+    cmds:
+      - alef test --e2e --lang node
+
+  ruby:e2e:
+    desc: "Run Ruby e2e tests via alef"
+    cmds:
+      - alef test --e2e --lang ruby
+
+  php:e2e:
+    desc: "Run PHP e2e tests via alef"
+    cmds:
+      - alef test --e2e --lang php
+
+  elixir:e2e:
+    desc: "Run Elixir e2e tests via alef"
+    cmds:
+      - alef test --e2e --lang elixir
+
+  go:e2e:
+    desc: "Run Go e2e tests via alef"
+    cmds:
+      - alef test --e2e --lang go
+
+  java:e2e:
+    desc: "Run Java e2e tests via alef"
+    cmds:
+      - alef test --e2e --lang java
+
+  csharp:e2e:
+    desc: "Run C# e2e tests via alef"
+    cmds:
+      - alef test --e2e --lang csharp
+
+  kotlin:e2e:
+    desc: "Run Kotlin e2e tests via alef"
+    cmds:
+      - alef test --e2e --lang kotlin
+
+  dart:e2e:
+    desc: "Run Dart e2e tests via alef"
+    cmds:
+      - alef test --e2e --lang dart
+
+  swift:e2e:
+    desc: "Run Swift e2e tests via alef"
+    cmds:
+      - alef test --e2e --lang swift
+
+  zig:e2e:
+    desc: "Run Zig e2e tests via alef"
+    cmds:
+      - alef test --e2e --lang zig
+
+  wasm:e2e:
+    desc: "Run WASM e2e tests via alef"
+    cmds:
+      - alef test --e2e --lang wasm
 
   verify:tests:
     desc: "Verify generated e2e tests are up to date"
@@ -386,25 +472,6 @@ tasks:
       - dart pub get
       - dart test
     dir: packages/dart
-
-  gleam:format:
-    desc: "Format Gleam binding with gleam format"
-    cmds:
-      - gleam format
-    dir: packages/gleam
-
-  gleam:lint:
-    desc: "Lint Gleam binding with gleam format --check"
-    cmds:
-      - gleam format --check
-    dir: packages/gleam
-
-  gleam:test:
-    desc: "Run Gleam binding tests"
-    cmds:
-      - cd ../elixir && mix deps.get && mix compile
-      - cd ../gleam && gleam test
-    dir: packages/gleam
 
   swift:format:
     desc: "Format Swift binding with swift format"

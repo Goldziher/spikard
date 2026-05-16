@@ -13,25 +13,27 @@ const app = new Spikard();
  * GET endpoint returning a large dataset as a streamed JSON array
  */
 get("/stream/numbers")(async function streamNumbers(req: Request) {
-	const count = (req.query?.count as string | undefined) ? parseInt(req.query.count as string, 10) : 100;
+  const count = (req.query?.count as string | undefined)
+    ? parseInt(req.query.count as string, 10)
+    : 100;
 
-	async function* generateNumbers() {
-		for (let i = 1; i <= count; i++) {
-			yield {
-				number: i,
-				squared: i * i,
-				timestamp: new Date().toISOString(),
-			};
-			await new Promise((resolve) => setTimeout(resolve, 10));
-		}
-	}
+  async function* generateNumbers() {
+    for (let i = 1; i <= count; i++) {
+      yield {
+        number: i,
+        squared: i * i,
+        timestamp: new Date().toISOString(),
+      };
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+  }
 
-	return new StreamingResponse(generateNumbers(), {
-		statusCode: 200,
-		headers: {
-			"Content-Type": "application/x-ndjson",
-		},
-	});
+  return new StreamingResponse(generateNumbers(), {
+    statusCode: 200,
+    headers: {
+      "Content-Type": "application/x-ndjson",
+    },
+  });
 });
 
 /**
@@ -39,82 +41,84 @@ get("/stream/numbers")(async function streamNumbers(req: Request) {
  * Use in browser: new EventSource('/stream/events')
  */
 get("/stream/events")(async function streamEvents(req: Request) {
-	const durationSeconds = (req.query?.duration as string | undefined) ? parseInt(req.query.duration as string, 10) : 30;
+  const durationSeconds = (req.query?.duration as string | undefined)
+    ? parseInt(req.query.duration as string, 10)
+    : 30;
 
-	async function* generateEvents() {
-		const startTime = Date.now();
-		let eventId = 0;
+  async function* generateEvents() {
+    const startTime = Date.now();
+    let eventId = 0;
 
-		while (Date.now() - startTime < durationSeconds * 1000) {
-			eventId++;
-			const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+    while (Date.now() - startTime < durationSeconds * 1000) {
+      eventId++;
+      const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
 
-			yield {
-				event: "tick",
-				data: JSON.stringify({
-					id: eventId,
-					elapsed: elapsedSeconds,
-					message: `Event ${eventId} after ${elapsedSeconds}s`,
-					timestamp: new Date().toISOString(),
-				}),
-			};
+      yield {
+        event: "tick",
+        data: JSON.stringify({
+          id: eventId,
+          elapsed: elapsedSeconds,
+          message: `Event ${eventId} after ${elapsedSeconds}s`,
+          timestamp: new Date().toISOString(),
+        }),
+      };
 
-			await new Promise((resolve) => setTimeout(resolve, 1000));
-		}
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
 
-		yield {
-			event: "complete",
-			data: JSON.stringify({
-				message: "Stream complete",
-				totalEvents: eventId,
-			}),
-		};
-	}
+    yield {
+      event: "complete",
+      data: JSON.stringify({
+        message: "Stream complete",
+        totalEvents: eventId,
+      }),
+    };
+  }
 
-	return new StreamingResponse(generateEvents(), {
-		statusCode: 200,
-		headers: {
-			"Content-Type": "text/event-stream",
-			"Cache-Control": "no-cache",
-			Connection: "keep-alive",
-			"Access-Control-Allow-Origin": "*",
-		},
-	});
+  return new StreamingResponse(generateEvents(), {
+    statusCode: 200,
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+      "Access-Control-Allow-Origin": "*",
+    },
+  });
 });
 
 /**
  * GET endpoint for CSV streaming
  */
 get("/stream/csv")(async function streamCsv(_req: Request) {
-	async function* generateCsv() {
-		yield "id,name,email,created_at\n";
+  async function* generateCsv() {
+    yield "id,name,email,created_at\n";
 
-		for (let i = 1; i <= 1000; i++) {
-			const row = `${i},user_${i},user_${i}@example.com,${new Date().toISOString()}\n`;
-			yield row;
+    for (let i = 1; i <= 1000; i++) {
+      const row = `${i},user_${i},user_${i}@example.com,${new Date().toISOString()}\n`;
+      yield row;
 
-			if (i % 100 === 0) {
-				await new Promise((resolve) => setTimeout(resolve, 10));
-			}
-		}
-	}
+      if (i % 100 === 0) {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+    }
+  }
 
-	return new StreamingResponse(generateCsv(), {
-		statusCode: 200,
-		headers: {
-			"Content-Type": "text/csv",
-			"Content-Disposition": 'attachment; filename="users.csv"',
-		},
-	});
+  return new StreamingResponse(generateCsv(), {
+    statusCode: 200,
+    headers: {
+      "Content-Type": "text/csv",
+      "Content-Disposition": 'attachment; filename="users.csv"',
+    },
+  });
 });
 
 /**
  * Browser-friendly HTML page for SSE demonstration
  */
 get("/")(async function servePage() {
-	return {
-		status: 200,
-		body: `
+  return {
+    status: 200,
+    body: `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -183,10 +187,10 @@ get("/")(async function servePage() {
 </body>
 </html>
 	`,
-		headers: {
-			"Content-Type": "text/html; charset=utf-8",
-		},
-	};
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+    },
+  };
 });
 
 console.log("Starting Streaming Example on http://127.0.0.1:8000");

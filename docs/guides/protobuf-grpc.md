@@ -83,19 +83,19 @@ cargo install spikard-cli
 ## Part 4: Implementing Handlers
 
 === "Python"
-    --8<-- "grpc/python/handler_basic.md"
+--8<-- "grpc/python/handler_basic.md"
 
 === "TypeScript"
-    --8<-- "grpc/typescript/handler_basic.md"
+--8<-- "grpc/typescript/handler_basic.md"
 
 === "Ruby"
-    --8<-- "grpc/ruby/handler_basic.md"
+--8<-- "grpc/ruby/handler_basic.md"
 
 === "PHP"
-    --8<-- "grpc/php/handler_basic.md"
+--8<-- "grpc/php/handler_basic.md"
 
 === "Rust"
-    --8<-- "grpc/rust/handler_basic.md"
+--8<-- "grpc/rust/handler_basic.md"
 
 ## Part 5: Error Handling
 
@@ -106,36 +106,36 @@ cargo install spikard-cli
 ### Error Handling Patterns
 
 === "Python"
-    --8<-- "grpc/python/error_handling.md"
+--8<-- "grpc/python/error_handling.md"
 
 === "TypeScript"
-    --8<-- "grpc/typescript/error_handling.md"
+--8<-- "grpc/typescript/error_handling.md"
 
 === "Ruby"
-    --8<-- "grpc/ruby/error_handling.md"
+--8<-- "grpc/ruby/error_handling.md"
 
 === "PHP"
-    --8<-- "grpc/php/error_handling.md"
+--8<-- "grpc/php/error_handling.md"
 
 === "Rust"
-    --8<-- "grpc/rust/error_handling.md"
+--8<-- "grpc/rust/error_handling.md"
 
 ## Part 6: Testing
 
 === "Python"
-    --8<-- "grpc/python/test_handler.md"
+--8<-- "grpc/python/test_handler.md"
 
 === "TypeScript"
-    --8<-- "grpc/typescript/test_handler.md"
+--8<-- "grpc/typescript/test_handler.md"
 
 === "Ruby"
-    --8<-- "grpc/ruby/test_handler.md"
+--8<-- "grpc/ruby/test_handler.md"
 
 === "PHP"
-    --8<-- "grpc/php/test_handler.md"
+--8<-- "grpc/php/test_handler.md"
 
 === "Rust"
-    --8<-- "grpc/rust/test_handler.md"
+--8<-- "grpc/rust/test_handler.md"
 
 ## Part 7: Streaming
 
@@ -146,19 +146,19 @@ cargo install spikard-cli
 Complete examples of client streaming and bidirectional streaming handlers:
 
 === "Python"
-    --8<-- "grpc/python/handler_streaming.md"
+--8<-- "grpc/python/handler_streaming.md"
 
 === "TypeScript"
-    --8<-- "grpc/typescript/handler_streaming.md"
+--8<-- "grpc/typescript/handler_streaming.md"
 
 === "Ruby"
-    --8<-- "grpc/ruby/handler_streaming.md"
+--8<-- "grpc/ruby/handler_streaming.md"
 
 === "PHP"
-    --8<-- "grpc/php/handler_streaming.md"
+--8<-- "grpc/php/handler_streaming.md"
 
 === "Rust"
-    --8<-- "grpc/rust/handler_streaming.md"
+--8<-- "grpc/rust/handler_streaming.md"
 
 ## Part 8: Best Practices
 

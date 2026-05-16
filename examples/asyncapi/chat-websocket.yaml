@@ -1,7 +1,7 @@
-asyncapi: '3.0.0'
+asyncapi: "3.0.0"
 info:
   title: Chat WebSocket API
-  version: '1.0.0'
+  version: "1.0.0"
   description: |
     A simple WebSocket-based chat API for real-time messaging.
     Clients can send messages and receive messages from other participants.
@@ -22,48 +22,48 @@ channels:
     address: /chat
     messages:
       chatMessage:
-        $ref: '#/components/messages/chatMessage'
+        $ref: "#/components/messages/chatMessage"
       userJoined:
-        $ref: '#/components/messages/userJoined'
+        $ref: "#/components/messages/userJoined"
       userLeft:
-        $ref: '#/components/messages/userLeft'
+        $ref: "#/components/messages/userLeft"
 
 operations:
   sendMessage:
     action: send
     channel:
-      $ref: '#/channels/~1chat'
+      $ref: "#/channels/~1chat"
     messages:
-      - $ref: '#/components/messages/chatMessage'
+      - $ref: "#/components/messages/chatMessage"
     description: Send a chat message to all connected clients
 
   receiveMessage:
     action: receive
     channel:
-      $ref: '#/channels/~1chat'
+      $ref: "#/channels/~1chat"
     messages:
-      - $ref: '#/components/messages/chatMessage'
-      - $ref: '#/components/messages/userJoined'
-      - $ref: '#/components/messages/userLeft'
+      - $ref: "#/components/messages/chatMessage"
+      - $ref: "#/components/messages/userJoined"
+      - $ref: "#/components/messages/userLeft"
     description: Receive chat messages and user events
   publishChat:
     action: receive
     channel:
-      $ref: '#/channels/~1chat'
+      $ref: "#/channels/~1chat"
     summary: Client publishes chat messages to server
     messages:
-      - $ref: '#/components/messages/chatMessage'
+      - $ref: "#/components/messages/chatMessage"
     reply:
       messages:
-        - $ref: '#/components/messages/chatAck'
+        - $ref: "#/components/messages/chatAck"
   broadcastPresence:
     action: send
     channel:
-      $ref: '#/channels/~1chat'
+      $ref: "#/channels/~1chat"
     summary: Server broadcasts presence changes
     messages:
-      - $ref: '#/components/messages/userJoined'
-      - $ref: '#/components/messages/userLeft'
+      - $ref: "#/components/messages/userJoined"
+      - $ref: "#/components/messages/userLeft"
 
 components:
   messages:
@@ -103,7 +103,7 @@ components:
             type: message
             user: alice
             text: Hello, everyone!
-            timestamp: '2024-01-15T10:30:00Z'
+            timestamp: "2024-01-15T10:30:00Z"
 
     userJoined:
       name: userJoined
@@ -130,7 +130,7 @@ components:
         - payload:
             type: userJoined
             user: bob
-            timestamp: '2024-01-15T10:29:55Z'
+            timestamp: "2024-01-15T10:29:55Z"
 
     userLeft:
       name: userLeft
@@ -157,7 +157,7 @@ components:
         - payload:
             type: userLeft
             user: charlie
-            timestamp: '2024-01-15T10:35:00Z'
+            timestamp: "2024-01-15T10:35:00Z"
     chatAck:
       name: chatAck
       title: Chat ACK
@@ -190,14 +190,14 @@ components:
             type: chatAck
             messageId: ack-123
             status: delivered
-            timestamp: '2024-01-15T10:31:00Z'
+            timestamp: "2024-01-15T10:31:00Z"
 
   schemas:
     username:
       type: string
       minLength: 1
       maxLength: 50
-      pattern: '^[a-zA-Z0-9_-]+$'
+      pattern: "^[a-zA-Z0-9_-]+$"
       description: Valid username (alphanumeric, dash, underscore)
 
     messageText:

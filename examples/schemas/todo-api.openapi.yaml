@@ -46,12 +46,12 @@ paths:
       description: Returns server status and version information.
       operationId: getHealth
       responses:
-        '200':
+        "200":
           description: Service is healthy
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthResponse'
+                $ref: "#/components/schemas/HealthResponse"
               examples:
                 healthy:
                   summary: Healthy service
@@ -127,7 +127,7 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: Successful retrieval of todos
           headers:
             X-Total-Count:
@@ -153,7 +153,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TodoListResponse'
+                $ref: "#/components/schemas/TodoListResponse"
               examples:
                 withTodos:
                   summary: List with todos
@@ -182,12 +182,12 @@ paths:
                       limit: 20
                       total: 0
                       pages: 0
-        '400':
+        "400":
           description: Bad request - invalid parameters
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
               examples:
                 invalidPage:
                   summary: Invalid page parameter
@@ -201,13 +201,13 @@ paths:
                       - path: "/page"
                         message: "Must be a positive integer"
                         code: "INVALID_TYPE"
-        '401':
+        "401":
           description: Unauthorized - missing or invalid token
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/AuthErrorResponse'
-        '429':
+                $ref: "#/components/schemas/AuthErrorResponse"
+        "429":
           description: Too many requests
           headers:
             X-RateLimit-Limit:
@@ -226,7 +226,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
     post:
       tags:
@@ -252,7 +252,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateTodoRequest'
+              $ref: "#/components/schemas/CreateTodoRequest"
             examples:
               minimal:
                 summary: Minimal todo
@@ -269,7 +269,7 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '201':
+        "201":
           description: Todo created successfully
           headers:
             Location:
@@ -289,7 +289,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TodoResponse'
+                $ref: "#/components/schemas/TodoResponse"
               examples:
                 created:
                   summary: Created todo
@@ -303,12 +303,12 @@ paths:
                     created_at: "2024-01-15T10:30:00Z"
                     updated_at: "2024-01-15T10:30:00Z"
                     tags: ["feature", "backend"]
-        '400':
+        "400":
           description: Bad request - validation failed
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
               examples:
                 missingTitle:
                   summary: Missing required field
@@ -337,18 +337,18 @@ paths:
                       - path: "/due_date"
                         message: "Invalid ISO 8601 date format"
                         code: "INVALID_FORMAT"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/AuthErrorResponse'
-        '429':
+                $ref: "#/components/schemas/AuthErrorResponse"
+        "429":
           description: Too many requests
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /todos/{id}:
     parameters:
@@ -372,7 +372,7 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: Todo found
           headers:
             ETag:
@@ -386,13 +386,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TodoResponse'
-        '400':
+                $ref: "#/components/schemas/TodoResponse"
+        "400":
           description: Invalid todo ID format
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
               examples:
                 invalidUUID:
                   summary: Invalid UUID format
@@ -406,18 +406,18 @@ paths:
                       - path: "/id"
                         message: "Must be a valid UUID"
                         code: "INVALID_FORMAT"
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/AuthErrorResponse'
-        '404':
+                $ref: "#/components/schemas/AuthErrorResponse"
+        "404":
           description: Todo not found
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/NotFoundResponse'
+                $ref: "#/components/schemas/NotFoundResponse"
               examples:
                 notFound:
                   summary: Todo not found
@@ -445,7 +445,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateTodoRequest'
+              $ref: "#/components/schemas/UpdateTodoRequest"
             examples:
               updateTitle:
                 summary: Update title only
@@ -465,30 +465,30 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: Todo updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TodoResponse'
-        '400':
+                $ref: "#/components/schemas/TodoResponse"
+        "400":
           description: Bad request or validation failed
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
           description: Unauthorized
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/AuthErrorResponse'
-        '403':
+                $ref: "#/components/schemas/AuthErrorResponse"
+        "403":
           description: Forbidden - insufficient permissions
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
               examples:
                 forbidden:
                   summary: Access denied
@@ -498,18 +498,18 @@ paths:
                     status: 403
                     detail: "You do not have permission to update this todo"
                     instance: "/todos/550e8400-e29b-41d4-a716-446655440000"
-        '404':
+        "404":
           description: Todo not found
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/NotFoundResponse'
-        '409':
+                $ref: "#/components/schemas/NotFoundResponse"
+        "409":
           description: Conflict - todo state changed
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
               examples:
                 conflict:
                   summary: Concurrent modification
@@ -535,7 +535,7 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '204':
+        "204":
           description: Todo deleted successfully
           headers:
             X-RateLimit-Limit:
@@ -547,30 +547,30 @@ paths:
             X-RateLimit-Reset:
               schema:
                 type: integer
-        '401':
+        "401":
           description: Unauthorized
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/AuthErrorResponse'
-        '403':
+                $ref: "#/components/schemas/AuthErrorResponse"
+        "403":
           description: Forbidden
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
           description: Todo not found
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/NotFoundResponse'
-        '409':
+                $ref: "#/components/schemas/NotFoundResponse"
+        "409":
           description: Conflict
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
 components:
   schemas:
@@ -606,10 +606,10 @@ components:
         todos:
           type: array
           items:
-            $ref: '#/components/schemas/TodoResponse'
+            $ref: "#/components/schemas/TodoResponse"
           description: Array of todos
         pagination:
-          $ref: '#/components/schemas/PaginationMeta'
+          $ref: "#/components/schemas/PaginationMeta"
 
     TodoResponse:
       type: object
@@ -832,7 +832,7 @@ components:
 
     AuthErrorResponse:
       allOf:
-        - $ref: '#/components/schemas/ErrorResponse'
+        - $ref: "#/components/schemas/ErrorResponse"
         - type: object
           properties:
             title:
@@ -844,7 +844,7 @@ components:
 
     NotFoundResponse:
       allOf:
-        - $ref: '#/components/schemas/ErrorResponse'
+        - $ref: "#/components/schemas/ErrorResponse"
         - type: object
           properties:
             title:

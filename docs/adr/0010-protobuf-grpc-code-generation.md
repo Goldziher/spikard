@@ -64,22 +64,22 @@ protobuf/
 
 **Proto3 → Language Type Matrix**:
 
-| Proto3 Type | Python | TypeScript | Ruby | PHP | Rust |
-|-------------|--------|------------|------|-----|------|
-| `double` | `float` | `number` | `Float` | `float` | `f64` |
-| `float` | `float` | `number` | `Float` | `float` | `f32` |
-| `int32` | `int` | `number` | `Integer` | `int` | `i32` |
-| `int64` | `int` | `number\|bigint` | `Integer` | `int` | `i64` |
-| `uint32` | `int` | `number` | `Integer` | `int` | `u32` |
-| `uint64` | `int` | `number\|bigint` | `Integer` | `int` | `u64` |
-| `bool` | `bool` | `boolean` | `Boolean` | `bool` | `bool` |
-| `string` | `str` | `string` | `String` | `string` | `String` |
-| `bytes` | `bytes` | `Uint8Array` | `String` | `string` | `Bytes` |
-| `message` | dataclass | interface | class | class | struct |
-| `enum` | `Literal[...]` | union type | module | class | enum |
-| `repeated T` | `list[T]` | `T[]` | `Array<T>` | `array<T>` | `Vec<T>` |
-| `map<K,V>` | `dict[K,V]` | `Map<K,V>` | `Hash{K=>V}` | `array<K,V>` | `HashMap<K,V>` |
-| `optional T` | `T\|None` | `T\|undefined` | `T\|nil` | `?T` | `Option<T>` |
+| Proto3 Type  | Python         | TypeScript       | Ruby         | PHP          | Rust           |
+| ------------ | -------------- | ---------------- | ------------ | ------------ | -------------- |
+| `double`     | `float`        | `number`         | `Float`      | `float`      | `f64`          |
+| `float`      | `float`        | `number`         | `Float`      | `float`      | `f32`          |
+| `int32`      | `int`          | `number`         | `Integer`    | `int`        | `i32`          |
+| `int64`      | `int`          | `number\|bigint` | `Integer`    | `int`        | `i64`          |
+| `uint32`     | `int`          | `number`         | `Integer`    | `int`        | `u32`          |
+| `uint64`     | `int`          | `number\|bigint` | `Integer`    | `int`        | `u64`          |
+| `bool`       | `bool`         | `boolean`        | `Boolean`    | `bool`       | `bool`         |
+| `string`     | `str`          | `string`         | `String`     | `string`     | `String`       |
+| `bytes`      | `bytes`        | `Uint8Array`     | `String`     | `string`     | `Bytes`        |
+| `message`    | dataclass      | interface        | class        | class        | struct         |
+| `enum`       | `Literal[...]` | union type       | module       | class        | enum           |
+| `repeated T` | `list[T]`      | `T[]`            | `Array<T>`   | `array<T>`   | `Vec<T>`       |
+| `map<K,V>`   | `dict[K,V]`    | `Map<K,V>`       | `Hash{K=>V}` | `array<K,V>` | `HashMap<K,V>` |
+| `optional T` | `T\|None`      | `T\|undefined`   | `T\|nil`     | `?T`         | `Option<T>`    |
 
 ### Generated Code Structure
 
@@ -113,7 +113,7 @@ class User:
 
 ```typescript
 // Generated from user.proto - DO NOT EDIT
-import { Message } from 'protobufjs';
+import { Message } from "protobufjs";
 
 export interface GetUserRequest {
   userId: number;
@@ -125,8 +125,12 @@ export interface User {
   email?: string;
 }
 
-export function deserializeUser(msg: Message): User { /*...*/ }
-export function serializeUser(user: User): Message { /*...*/ }
+export function deserializeUser(msg: Message): User {
+  /*...*/
+}
+export function serializeUser(user: User): Message {
+  /*...*/
+}
 ```
 
 ### Quality Validation

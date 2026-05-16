@@ -1,47 +1,47 @@
 {
-	"name": "JWT authentication - invalid audience",
-	"description": "Tests JWT authentication failure when token audience claim does not match required audience",
-	"category": "auth",
-	"source": {
-		"framework": "spikard",
-		"inspired_by": "fastapi security",
-		"test_case": "JWT token invalid audience"
-	},
-	"handler": {
-		"route": "/protected/user",
-		"method": "GET",
-		"parameters": {
-			"headers": {
-				"Authorization": {
-					"type": "string",
-					"required": true
-				}
-			}
-		},
-		"middleware": {
-			"jwt_auth": {
-				"enabled": true,
-				"algorithm": "HS256",
-				"secret": "test-secret-key-do-not-use-in-production",
-				"audience": ["https://api.example.com"]
-			}
-		}
-	},
-	"request": {
-		"method": "GET",
-		"path": "/protected/user",
-		"headers": {
-			"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNTM0MDIzMDA3OTk5LCJpYXQiOjE3MzEyNTIwMDAsImF1ZCI6WyJodHRwczovL3dyb25nLXNlcnZpY2UuY29tIl19.YR2a9fSJjhen7ksYFI2djSBSC7Pc29FDCloBGhkj3kU"
-		}
-	},
-	"expected_response": {
-		"status_code": 401,
-		"body": {
-			"type": "https://spikard.dev/errors/unauthorized",
-			"title": "JWT validation failed",
-			"status": 401,
-			"detail": "Token audience is invalid"
-		}
-	},
-	"tags": ["auth", "jwt", "bearer", "security", "middleware", "error", "unauthorized", "audience"]
+  "name": "JWT authentication - invalid audience",
+  "description": "Tests JWT authentication failure when token audience claim does not match required audience",
+  "category": "auth",
+  "source": {
+    "framework": "spikard",
+    "inspired_by": "fastapi security",
+    "test_case": "JWT token invalid audience"
+  },
+  "handler": {
+    "route": "/protected/user",
+    "method": "GET",
+    "parameters": {
+      "headers": {
+        "Authorization": {
+          "type": "string",
+          "required": true
+        }
+      }
+    },
+    "middleware": {
+      "jwt_auth": {
+        "enabled": true,
+        "algorithm": "HS256",
+        "secret": "test-secret-key-do-not-use-in-production",
+        "audience": ["https://api.example.com"]
+      }
+    }
+  },
+  "request": {
+    "method": "GET",
+    "path": "/protected/user",
+    "headers": {
+      "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNTM0MDIzMDA3OTk5LCJpYXQiOjE3MzEyNTIwMDAsImF1ZCI6WyJodHRwczovL3dyb25nLXNlcnZpY2UuY29tIl19.YR2a9fSJjhen7ksYFI2djSBSC7Pc29FDCloBGhkj3kU"
+    }
+  },
+  "expected_response": {
+    "status_code": 401,
+    "body": {
+      "type": "https://spikard.dev/errors/unauthorized",
+      "title": "JWT validation failed",
+      "status": 401,
+      "detail": "Token audience is invalid"
+    }
+  },
+  "tags": ["auth", "jwt", "bearer", "security", "middleware", "error", "unauthorized", "audience"]
 }
