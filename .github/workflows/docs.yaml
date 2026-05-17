@@ -46,6 +46,7 @@ jobs:
         uses: kreuzberg-dev/actions/setup-python-env@v1
         with:
           python-version: "3.14"
+          install-command: "uv sync --all-extras --all-packages --group dev --group docs --no-install-project --no-install-workspace"
 
       - name: Setup Rust
         uses: kreuzberg-dev/actions/setup-rust@v1
