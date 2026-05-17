@@ -129,11 +129,16 @@ jobs:
         with:
           go-version-file: packages/go/go.mod
 
+      - name: Setup JDK 25 for Maven
+        if: matrix.language == 'java'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+
       - name: Setup Maven
         if: matrix.language == 'java'
         uses: kreuzberg-dev/actions/setup-maven@v1
-        with:
-          java-version: "25"
 
       - name: Setup Gradle
         if: matrix.language == 'kotlin'
