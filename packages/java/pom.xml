@@ -35,7 +35,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.release>25</maven.compiler.release>
+        <maven.compiler.release>21</maven.compiler.release>
         <junit.version>5.11.4</junit.version>
         <maven.version>3.9.11</maven.version>
         <maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
@@ -142,7 +142,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven-compiler-plugin.version}</version>
                 <configuration>
-                    <release>25</release>
+                    <release>21</release>
                     <compilerArgs>
                         <arg>--enable-preview</arg>
                     </compilerArgs>

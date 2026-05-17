@@ -323,7 +323,7 @@ jobs:
       - uses: kreuzberg-dev/actions/build-wasm-package@v1
         with:
           crate-dir: crates/spikard-wasm
-          build-command: wasm-pack build crates/spikard-wasm --release --target bundler
+          build-command: wasm-pack build . --release --target bundler
           pack-tarball: "true"
       - uses: actions/upload-artifact@v7.0.1
         with:
@@ -414,9 +414,11 @@ jobs:
       - uses: kreuzberg-dev/actions/build-rust-ffi@v1
         with:
           crate-name: spikard-ffi
+          target: x86_64-unknown-linux-gnu
       - uses: kreuzberg-dev/actions/build-go-ffi@v1
         with:
           crate-name: spikard-ffi
+          target: x86_64-unknown-linux-gnu
           lib-name: spikard_ffi
           header-path: crates/spikard-ffi/include/spikard.h
           output-dir: dist/go
@@ -424,12 +426,14 @@ jobs:
       - uses: kreuzberg-dev/actions/build-java-natives@v1
         with:
           crate-name: spikard-ffi
+          target: x86_64-unknown-linux-gnu
           lib-name: spikard_ffi
           classifier: linux-x86_64
           output-dir: packages/java/src/main/resources/natives
       - uses: kreuzberg-dev/actions/build-csharp-natives@v1
         with:
           crate-name: spikard-ffi
+          target: x86_64-unknown-linux-gnu
           lib-name: spikard_ffi
           rid: linux-x64
           output-dir: packages/csharp/runtimes
