@@ -2,6 +2,7 @@
 alef_version = "0.16.24"
 languages = [
   "python",
+  "rust",
   "node",
   "ruby",
   "php",
@@ -641,6 +642,11 @@ precondition = "command -v zig >/dev/null 2>&1"
 update = "cd packages/zig && zig build --fetch"
 upgrade = "cd packages/zig && zig build --fetch"
 
+[crates.test.rust]
+precondition = "command -v cargo >/dev/null 2>&1"
+command = "cargo test --manifest-path e2e/rust/Cargo.toml --workspace"
+e2e = "cargo test --manifest-path e2e/rust/Cargo.toml --workspace"
+
 [crates.test.python]
 precondition = "command -v uv >/dev/null 2>&1"
 before = "cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
@@ -663,7 +669,7 @@ e2e = ":"
 
 [crates.test.elixir]
 precondition = "command -v mix >/dev/null 2>&1"
-e2e = "cd e2e/elixir && RUSTLER_PRECOMPILED_FORCE_BUILD_ALL=1 mix test"
+e2e = "cd e2e/elixir && mix deps.get && RUSTLER_PRECOMPILED_FORCE_BUILD_ALL=1 mix test"
 
 [crates.test.go]
 precondition = "command -v go >/dev/null 2>&1"
@@ -672,7 +678,7 @@ e2e = "cd e2e/go && go test ./... -count=1"
 
 [crates.test.java]
 precondition = "command -v mvn >/dev/null 2>&1"
-before = "cargo build --release -p spikard-ffi"
+before = "cargo build --release -p spikard-ffi && mvn -f packages/java/pom.xml package -DskipTests -q"
 command = ":"
 e2e = "cd e2e/java && mvn test -q"
 
@@ -702,6 +708,7 @@ e2e = ":"
 
 [crates.test.zig]
 precondition = "command -v zig >/dev/null 2>&1"
+before = "cargo build -p spikard-ffi"
 command = "cd packages/zig && zig build test"
 e2e = ":"
 
