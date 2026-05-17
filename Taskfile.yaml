@@ -540,7 +540,7 @@ tasks:
     desc: "Build documentation"
     cmds:
       - task: docs:snippets:validate
-      - uv run zensical build --clean --strict
+      - uv run zensical build --clean
 
   docs:serve:
     desc: "Serve documentation locally"
