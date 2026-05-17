@@ -1,0 +1,14 @@
+---
+id: grpc_rust_key_patterns
+title: Key Patterns
+tags:
+  - grpc
+  - rust
+---
+
+- **Async/await**: Handlers return `Pin<Box<dyn Future>>`
+- **prost**: Uses `.decode()` and `.encode()` for protobuf
+- **Error handling**: Return `tonic::Status` directly
+- **Zero-copy**: Uses `Bytes` for efficient payload handling
+- **Type safety**: Full compile-time type checking
+- **Arc**: Shared ownership for thread-safe repository access
