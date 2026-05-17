@@ -155,6 +155,13 @@ jobs:
         if: matrix.language == 'swift'
         uses: kreuzberg-dev/actions/setup-swift@v1
 
+      - name: Build Swift package
+        if: matrix.language == 'swift'
+        uses: kreuzberg-dev/actions/build-swift-package@v1
+        with:
+          package-dir: packages/swift
+          crate-name: spikard-swift
+
       - name: Setup Zig
         if: matrix.language == 'zig'
         uses: kreuzberg-dev/actions/setup-zig@v1

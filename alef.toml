@@ -702,7 +702,6 @@ e2e = ":"
 
 [crates.test.swift]
 precondition = "command -v swift >/dev/null 2>&1"
-before = "INPUT_PACKAGE_DIR=packages/swift INPUT_CRATE_NAME=spikard-swift INPUT_BUILD_PROFILE=release INPUT_DRY_RUN=false bash ../kreuzberg-dev/actions/build-swift-package/scripts/build.sh"
 command = "cd packages/swift && CLANG_MODULE_CACHE_PATH=.build/clang-module-cache swift test -c release"
 e2e = ":"
 
