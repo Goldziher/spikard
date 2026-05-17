@@ -28,8 +28,51 @@ impl PythonGenerationState {
 
 impl OpenRpcGenerator for PythonOpenRpcGenerator {
     fn generate_handler_app(&self, spec: &OpenRpcSpec) -> Result<String> {
-        let mut code = String::new();
+        // Generate the body first so we can detect which imports are actually used.
+        let mut body = String::new();
         let mut state = PythonGenerationState::new();
+
+        body.push_str("# ============================================================================\n");
+        body.push_str("# Shared Component DTOs\n");
+        body.push_str("# ============================================================================\n\n");
+
+        generate_component_dtos(&mut body, spec, &mut state)?;
+
+        body.push_str("# ============================================================================\n");
+        body.push_str("# Data Transfer Objects (DTOs)\n");
+        body.push_str("# ============================================================================\n\n");
+
+        for method in &spec.methods {
+            generate_python_dtos(&mut body, spec, method, &mut state)?;
+        }
+
+        body.push_str("# ============================================================================\n");
+        body.push_str("# JSON-RPC Method Handlers\n");
+        body.push_str("# ============================================================================\n\n");
+
+        for method in &spec.methods {
+            generate_python_handler(&mut body, spec, method)?;
+        }
+
+        body.push_str("# ============================================================================\n");
+        body.push_str("# Method Router\n");
+        body.push_str("# ============================================================================\n\n");
+
+        // Now build the header with only the imports actually needed.
+        // Use patterns that match `date` as a complete type token (not as a prefix of `datetime`).
+        let uses_datetime = body.contains(": datetime") || body.contains("| datetime");
+        let uses_date = body.contains(": date\n")
+            || body.contains(": date\r")
+            || body.contains(": date,")
+            || body.contains(": date ")
+            || body.contains("| date\n")
+            || body.contains("| date,")
+            || body.contains("| date ")
+            || body.contains("date.fromisoformat(");
+        let uses_uuid = body.contains(": UUID") || body.contains("| UUID") || body.contains("UUID(\"");
+        let uses_literal = body.contains("Literal[");
+
+        let mut code = String::new();
 
         code.push_str("# ruff: noqa: INP001\n");
         code.push_str("\"\"\"JSON-RPC 2.0 handlers generated from OpenRPC specification.\n\n");
@@ -40,36 +83,27 @@ impl OpenRpcGenerator for PythonOpenRpcGenerator {
         code.push_str("\n\"\"\"\n\n");
         code.push_str("from __future__ import annotations\n\n");
 
-        code.push_str("from datetime import date, datetime\n");
-        code.push_str("from typing import Literal\n");
-        code.push_str("from uuid import UUID\n\n");
+        if uses_date || uses_datetime {
+            if uses_date && uses_datetime {
+                code.push_str("from datetime import date, datetime\n");
+            } else if uses_date {
+                code.push_str("from datetime import date\n");
+            } else {
+                code.push_str("from datetime import datetime\n");
+            }
+        }
+        if uses_literal {
+            code.push_str("from typing import Literal\n");
+        }
+        if uses_uuid {
+            code.push_str("from uuid import UUID\n");
+        }
+        if uses_date || uses_datetime || uses_literal || uses_uuid {
+            code.push('\n');
+        }
         code.push_str("import msgspec\n\n");
 
-        code.push_str("# ============================================================================\n");
-        code.push_str("# Shared Component DTOs\n");
-        code.push_str("# ============================================================================\n\n");
-
-        generate_component_dtos(&mut code, spec, &mut state)?;
-
-        code.push_str("# ============================================================================\n");
-        code.push_str("# Data Transfer Objects (DTOs)\n");
-        code.push_str("# ============================================================================\n\n");
-
-        for method in &spec.methods {
-            generate_python_dtos(&mut code, spec, method, &mut state)?;
-        }
-
-        code.push_str("# ============================================================================\n");
-        code.push_str("# JSON-RPC Method Handlers\n");
-        code.push_str("# ============================================================================\n\n");
-
-        for method in &spec.methods {
-            generate_python_handler(&mut code, spec, method)?;
-        }
-
-        code.push_str("# ============================================================================\n");
-        code.push_str("# Method Router\n");
-        code.push_str("# ============================================================================\n\n");
+        code.push_str(&body);
 
         code.push_str(
             "async def handle_jsonrpc_call(method_name: str, params: object, request_id: object) -> dict[str, object]:\n",

@@ -576,7 +576,7 @@ impl QualityValidator {
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
-    "moduleResolution": "Node",
+    "moduleResolution": "Bundler",
     "strict": true,
     "skipLibCheck": true,
     "noEmit": true
@@ -693,7 +693,7 @@ impl QualityValidator {
     [
       app: :generated_validation,
       version: "0.1.0",
-      elixir: "~> 1.19",
+      elixir: "~> 1.18",
       deps: []
     ]
   end

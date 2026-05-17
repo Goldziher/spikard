@@ -95,7 +95,6 @@ repos:
             "crates/spikard-graphql",
             "crates/spikard-codegen",
             "crates/spikard-cli",
-            "tools/",
           ]
         exclude: ^e2e/
       - id: cargo-deny

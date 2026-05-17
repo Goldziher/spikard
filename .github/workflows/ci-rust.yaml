@@ -79,6 +79,7 @@ jobs:
         uses: kreuzberg-dev/actions/setup-php@v1
         with:
           php-version: "8.4"
+          tools: phpstan
 
       - name: Setup Elixir
         uses: kreuzberg-dev/actions/setup-elixir@v1
