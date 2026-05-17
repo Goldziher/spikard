@@ -5,14 +5,15 @@ let package = Package(
     name: "E2eSwift",
     platforms: [
         .macOS(.v13),
+        .iOS(.v16),
     ],
     dependencies: [
-        .package(path: "../../packages/swift"),
+        .package(name: "Spikard", path: "../../packages/swift"),
     ],
     targets: [
         .testTarget(
-            name: "SpikardTests",
-            dependencies: [.product(name: "Spikard", package: "swift")]
+            name: "SpikardE2ETests",
+            dependencies: [.product(name: "Spikard", package: "Spikard")]
         ),
     ]
 )
