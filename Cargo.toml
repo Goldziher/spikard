@@ -12,13 +12,13 @@ members = [
   "crates/spikard-php",
   "crates/spikard-py",
   "crates/spikard-wasm",
+  "packages/elixir/native/spikard_nif",
   "packages/swift/rust",
 ]
 exclude = [
   "e2e/*",
   "examples/*",
   "packages/dart/rust",
-  "packages/elixir/native/spikard_nif",
   "packages/ruby/ext/spikard_rb/native",
   "test_apps/*",
 ]
