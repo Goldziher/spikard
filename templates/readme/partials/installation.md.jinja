@@ -96,24 +96,28 @@ Add to `build.zig.zon`:
 {% for pm in package_manager %}
 {% if pm == "npm" %}
 **npm:**
+
 ```bash
 npm install {{ package_name }}
 ```
 
 {% elif pm == "pnpm" %}
 **pnpm:**
+
 ```bash
 pnpm add {{ package_name }}
 ```
 
 {% elif pm == "yarn" %}
 **yarn:**
+
 ```bash
 yarn add {{ package_name }}
 ```
 
 {% elif pm == "maven" %}
 **Maven:**
+
 ```xml
 <dependency>
     <groupId>dev.spikard</groupId>
@@ -124,18 +128,21 @@ yarn add {{ package_name }}
 
 {% elif pm == "gradle" %}
 **Gradle:**
+
 ```gradle
 implementation 'dev.spikard:spikard:{{ version }}'
 ```
 
 {% elif pm == "rubygems" %}
 **gem:**
+
 ```bash
 gem install {{ package_name }}
 ```
 
 {% elif pm == "bundler" %}
 **Bundler:**
+
 ```ruby
 gem '{{ package_name }}'
 ```
