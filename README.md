@@ -70,8 +70,8 @@ Each language binding is available through its native package manager. Full inst
 
 **JavaScript/TypeScript:**
 
-- **[Node.js](packages/node/README.md)** – npm/@spikard/node, NAPI-RS native bindings
-- **[WASM](packages/typescript/README.md)** – npm/@spikard/wasm, browser/Deno/Cloudflare Workers
+- **[Node.js](crates/spikard-node/README.md)** – npm/@spikard/node, NAPI-RS native bindings
+- **[WASM](crates/spikard-wasm/README.md)** – npm/@spikard/wasm, browser/Deno/Cloudflare Workers
 
 **Compiled Languages:**
 

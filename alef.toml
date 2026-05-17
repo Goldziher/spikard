@@ -550,9 +550,9 @@ typecheck = "mypy packages/python/"
 
 [crates.lint.node]
 precondition = "command -v pnpm >/dev/null 2>&1"
-format = "pnpm dlx oxfmt packages/node packages/typescript"
-check = "pnpm dlx oxlint --fix packages/node packages/typescript"
-typecheck = "pnpm tsc --noEmit -p packages/node/tsconfig.json"
+format = "pnpm dlx oxfmt crates/spikard-node"
+check = "pnpm dlx oxlint --fix crates/spikard-node"
+typecheck = "pnpm tsc --noEmit -p crates/spikard-node/tsconfig.json"
 
 [crates.lint.ruby]
 precondition = "command -v bundle >/dev/null 2>&1"
@@ -605,8 +605,8 @@ check = "cd packages/zig && zig fmt --check src"
 
 [crates.lint.wasm]
 precondition = "command -v pnpm >/dev/null 2>&1"
-format = "pnpm dlx oxfmt packages/wasm"
-check = "pnpm dlx oxlint --fix packages/wasm"
+format = "pnpm dlx oxfmt crates/spikard-wasm"
+check = "pnpm dlx oxlint --fix crates/spikard-wasm"
 
 [crates.lint.ffi]
 precondition = "test -d crates/spikard-ffi/include"
@@ -761,7 +761,7 @@ path = "../../packages/python"
 
 [crates.e2e.packages.node]
 name = "@spikard/node"
-path = "../../packages/node"
+path = "../../crates/spikard-node"
 
 [crates.e2e.packages.ruby]
 name = "spikard"

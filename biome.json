@@ -81,7 +81,7 @@
       }
     },
     {
-      "includes": ["crates/spikard-node/index.js", "packages/node/index.js"],
+      "includes": ["crates/spikard-node/index.js"],
       "linter": {
         "rules": {
           "suspicious": {
@@ -101,7 +101,7 @@
       }
     },
     {
-      "includes": ["packages/node/src/**/*.ts"],
+      "includes": ["crates/spikard-node/src/**/*.ts"],
       "linter": {
         "rules": {
           "suspicious": {

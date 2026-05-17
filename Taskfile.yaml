@@ -585,7 +585,7 @@ tasks:
 
   test:grpc:typescript:
     desc: "Run TypeScript gRPC streaming fixture tests"
-    dir: packages/node
+    dir: crates/spikard-node
     cmds:
       - pnpm vitest run tests/grpc_fixtures.spec.ts --coverage
 
@@ -654,18 +654,18 @@ tasks:
   codegen:typescript:format:
     desc: "Format generated TypeScript code with Biome"
     cmds:
-      - cd packages/node && pnpm biome format --write "{{.FILE}}"
+      - cd crates/spikard-node && pnpm biome format --write "{{.FILE}}"
 
   codegen:typescript:lint:
     desc: "Lint generated TypeScript code with oxlint and Biome"
     cmds:
-      - cd packages/node && pnpm oxlint "{{.FILE}}"
-      - cd packages/node && pnpm biome check "{{.FILE}}"
+      - cd crates/spikard-node && pnpm oxlint "{{.FILE}}"
+      - cd crates/spikard-node && pnpm biome check "{{.FILE}}"
 
   codegen:typescript:typecheck:
     desc: "Type check generated TypeScript code with tsc"
     cmds:
-      - cd packages/node && pnpm tsc --noEmit "{{.FILE}}"
+      - cd crates/spikard-node && pnpm tsc --noEmit "{{.FILE}}"
 
   codegen:typescript:verify:
     desc: "Generate, format, and validate TypeScript code from OpenAPI schema"

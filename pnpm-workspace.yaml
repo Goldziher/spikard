@@ -1,5 +1,4 @@
 packages:
-  - "packages/node"
   - "crates/spikard-node"
   - "e2e/node"
   - "examples/*"

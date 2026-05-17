@@ -53,7 +53,7 @@ flags:
 
   node:
     paths:
-      - packages/node/src/
+      - crates/spikard-node/
     target: 80%
     threshold: 2%
 

@@ -89,7 +89,7 @@ runs:
       if: steps.detect.outputs.language == 'node' && (inputs.framework == 'spikard-node' || inputs.framework == 'spikard-bun')
       shell: bash
       run: |
-        cd $GITHUB_WORKSPACE/packages/node
+        cd $GITHUB_WORKSPACE/crates/spikard-node
         pnpm build
 
     - name: Setup Bun runtime
