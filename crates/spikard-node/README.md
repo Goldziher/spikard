@@ -48,18 +48,21 @@ Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC code
 
 
 **npm:**
+
 ```bash
 npm install @spikard/node
 ```
 
 
 **pnpm:**
+
 ```bash
 pnpm add @spikard/node
 ```
 
 
 **yarn:**
+
 ```bash
 yarn add @spikard/node
 ```

@@ -48,12 +48,14 @@ Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC code
 
 
 **gem:**
+
 ```bash
 gem install spikard
 ```
 
 
 **Bundler:**
+
 ```ruby
 gem 'spikard'
 ```

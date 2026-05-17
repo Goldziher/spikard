@@ -48,12 +48,14 @@ Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC code
 
 
 **Gradle:**
+
 ```gradle
 implementation 'dev.spikard:spikard:0.14.0'
 ```
 
 
 **Maven:**
+
 ```xml
 <dependency>
     <groupId>dev.spikard</groupId>
