@@ -8,8 +8,6 @@ readme = false
 keywords = ["http", "web", "framework", "polyglot", "rust"]
 categories = ["text-processing"]
 
-[workspace]
-
 [lib]
 name = "spikard_nif"
 path = "../../../../crates/spikard-elixir/src/lib.rs"

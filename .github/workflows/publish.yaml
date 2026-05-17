@@ -521,7 +521,7 @@ jobs:
           cd packages/kotlin && gradle build --no-daemon && cd ../..
           dotnet pack packages/csharp/Spikard --configuration Release --output dist/nuget
           cd packages/dart && dart pub get && dart test && cd ../..
-          cd packages/zig && zig build test && cd ../..
+          cd packages/zig && zig build test -Dffi_path=../../target/release && cd ../..
       - uses: actions/upload-artifact@v7.0.1
         with:
           name: package-targets
