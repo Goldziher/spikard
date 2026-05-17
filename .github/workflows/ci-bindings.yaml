@@ -84,7 +84,7 @@ jobs:
             command: ""
           - language: zig
             os: ubuntu-latest
-            command: cd packages/zig && zig build test
+            command: cd packages/zig && zig build test -Dffi_path=../../target/release
           - language: wasm
             os: ubuntu-latest
             command: wasm-pack build crates/spikard-wasm --release --target bundler
