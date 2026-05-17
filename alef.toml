@@ -1008,3 +1008,14 @@ docs_url = "https://github.com/Goldziher/spikard"
 description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Zig bindings via C FFI with comptime-safe wrapper."
 package_manager = ["zig"]
 snippets = {}
+
+[crates.readme.languages.rust]
+template = "language_package.md"
+output_path = "crates/spikard/README.md"
+name = "Spikard"
+package_name = "spikard"
+badge_url = "https://img.shields.io/crates/v/spikard?label=Rust&color=007ec6"
+docs_url = "https://github.com/Goldziher/spikard"
+description = "Rust-centric polyglot HTTP framework built on Axum and Tower-HTTP. Type-safe routing, JSON Schema validation, OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, WebSocket/SSE, lifecycle hooks, and a tower-http middleware stack."
+package_manager = ["cargo"]
+snippets = { quickstart = "quickstart_routes.md", hello_route = "hello_route.md", routing_basic = "routing_basic.md", validation_basic = "validation_basic.md", middleware_basic = "middleware_basic.md" }

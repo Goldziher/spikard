@@ -526,6 +526,11 @@ tasks:
       - alef docs
       - uv run zensical build --clean --strict
 
+  docs:lint:links:
+    desc: "Check links in docs and READMEs with lychee"
+    cmds:
+      - lychee --config .lychee.toml docs/ README.md crates/*/README.md packages/*/README.md
+
   readme:generate:
     desc: "Generate all README files from templates"
     cmds:

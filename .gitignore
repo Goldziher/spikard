@@ -258,3 +258,6 @@ vendor/bundle/
 bin/
 obj/
 *.nupkg
+
+.lycheecache
+crates/spikard-wasm/pkg/
