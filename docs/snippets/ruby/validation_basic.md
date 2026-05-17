@@ -1,3 +1,11 @@
+---
+id: ruby_validation_basic
+language: ruby
+title: Validation Basic
+tags:
+  - ruby
+---
+
 ```ruby
 require "spikard"
 

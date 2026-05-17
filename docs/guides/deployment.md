@@ -8,9 +8,9 @@ Spikard can run as a compiled Rust binary, via the CLI, or packaged into contain
 
     --8<-- "snippets/cli/run_app.md"
 
-=== "Rust binary"
+=== "Rust"
 
-    --8<-- "snippets/rust/run_binary.md"
+    --8<-- "snippets/rust/run_app.md"
 
 === "TypeScript"
 
@@ -19,6 +19,10 @@ Spikard can run as a compiled Rust binary, via the CLI, or packaged into contain
 === "Python"
 
     --8<-- "snippets/python/run_app.md"
+
+=== "Ruby"
+
+    --8<-- "snippets/ruby/run_app.md"
 
 ## Production tips
 

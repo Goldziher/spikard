@@ -1,3 +1,11 @@
+---
+id: python_test_quickstart
+language: python
+title: Test Quickstart
+tags:
+  - python
+---
+
 ```python
 import pytest
 from spikard import Spikard, get

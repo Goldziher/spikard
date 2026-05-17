@@ -1,3 +1,11 @@
+---
+id: typescript_middleware_auth
+language: typescript
+title: Middleware Auth
+tags:
+  - typescript
+---
+
 ```typescript
 import { Spikard, type Request, HTTPError } from "spikard";
 import * as jwt from "jsonwebtoken";

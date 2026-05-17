@@ -1,3 +1,11 @@
+---
+id: ruby_websocket
+language: ruby
+title: Websocket
+tags:
+  - ruby
+---
+
 ```ruby
 require "spikard"
 

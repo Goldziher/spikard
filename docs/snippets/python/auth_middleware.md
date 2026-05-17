@@ -1,3 +1,11 @@
+---
+id: python_auth_middleware
+language: python
+title: Auth Middleware
+tags:
+  - python
+---
+
 ```python
 from spikard import Spikard
 

@@ -1,3 +1,11 @@
+---
+id: python_background_error_recovery
+language: python
+title: Background Error Recovery
+tags:
+  - python
+---
+
 ```python
 from celery import Task
 from celery.exceptions import MaxRetriesExceededError

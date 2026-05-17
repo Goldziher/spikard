@@ -1,3 +1,12 @@
+---
+id: grpc_rust_quickstart
+language: rust
+title: Quickstart
+tags:
+  - grpc
+  - rust
+---
+
 ```rust
 use spikard_http::grpc::{GrpcHandler, GrpcRequestData, GrpcResponseData};
 use prost::Message;

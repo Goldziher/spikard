@@ -1,3 +1,11 @@
+---
+id: rust_middleware_shaping
+language: rust
+title: Middleware Shaping
+tags:
+  - rust
+---
+
 ```rust
 use axum::{
     body::Body,

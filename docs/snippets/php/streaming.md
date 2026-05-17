@@ -1,3 +1,11 @@
+---
+id: php_streaming
+language: php
+title: Streaming
+tags:
+  - php
+---
+
 ```php
 <?php
 

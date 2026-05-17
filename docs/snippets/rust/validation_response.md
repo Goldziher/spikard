@@ -1,3 +1,11 @@
+---
+id: rust_validation_response
+language: rust
+title: Validation Response
+tags:
+  - rust
+---
+
 ```rust
 use serde::{Deserialize, Serialize};
 use schemars::JsonSchema;

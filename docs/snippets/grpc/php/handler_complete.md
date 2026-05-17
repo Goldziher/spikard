@@ -1,3 +1,12 @@
+---
+id: grpc_php_handler_complete
+language: php
+title: Handler Complete
+tags:
+  - grpc
+  - php
+---
+
 ```php
 <?php declare(strict_types=1);
 

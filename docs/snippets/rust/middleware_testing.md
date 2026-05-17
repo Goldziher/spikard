@@ -1,3 +1,11 @@
+---
+id: rust_middleware_testing
+language: rust
+title: Middleware Testing
+tags:
+  - rust
+---
+
 ```rust
 #[cfg(test)]
 mod tests {

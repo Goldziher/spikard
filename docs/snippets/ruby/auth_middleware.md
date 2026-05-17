@@ -1,3 +1,11 @@
+---
+id: ruby_auth_middleware
+language: ruby
+title: Auth Middleware
+tags:
+  - ruby
+---
+
 ```ruby
 require "spikard"
 

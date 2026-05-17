@@ -1,3 +1,11 @@
+---
+id: typescript_validation_request_body
+language: typescript
+title: Validation Request Body
+tags:
+  - typescript
+---
+
 ```typescript
 import { z } from "zod";
 

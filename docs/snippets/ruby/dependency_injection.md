@@ -1,3 +1,11 @@
+---
+id: ruby_dependency_injection
+language: ruby
+title: Dependency Injection
+tags:
+  - ruby
+---
+
 ```ruby
 require "spikard"
 

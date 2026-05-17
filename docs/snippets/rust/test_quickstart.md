@@ -1,3 +1,11 @@
+---
+id: rust_test_quickstart
+language: rust
+title: Test Quickstart
+tags:
+  - rust
+---
+
 ```rust
 use axum::{routing::get, Router};
 use axum_test::TestServer;

@@ -1,3 +1,12 @@
+---
+id: grpc_common_prerequisites
+language: bash
+title: Prerequisites
+tags:
+  - grpc
+  - common
+---
+
 ### Required Tools
 
 1. **protoc** (Protocol Buffers compiler):

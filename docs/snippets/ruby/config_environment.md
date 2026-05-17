@@ -1,3 +1,11 @@
+---
+id: ruby_config_environment
+language: ruby
+title: Config Environment
+tags:
+  - ruby
+---
+
 ```ruby
 require "spikard"
 

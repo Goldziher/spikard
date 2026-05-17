@@ -1,3 +1,12 @@
+---
+id: grpc_php_handler_basic
+language: php
+title: Handler Basic
+tags:
+  - grpc
+  - php
+---
+
 # PHP gRPC Handler
 
 Complete PHP handler implementation for UserService with GetUser and CreateUser methods.

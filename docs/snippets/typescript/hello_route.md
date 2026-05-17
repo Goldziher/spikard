@@ -1,3 +1,11 @@
+---
+id: typescript_hello_route
+language: typescript
+title: Hello Route
+tags:
+  - typescript
+---
+
 ```typescript
 import { Spikard, type Request } from "spikard";
 import { z } from "zod";

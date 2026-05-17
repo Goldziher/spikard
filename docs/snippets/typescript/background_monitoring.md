@@ -1,3 +1,11 @@
+---
+id: typescript_background_monitoring
+language: typescript
+title: Background Monitoring
+tags:
+  - typescript
+---
+
 ```typescript
 app.addRoute(
   { method: "GET", path: "/health/jobs", handler_name: "job_health", is_async: true },

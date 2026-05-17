@@ -1,3 +1,11 @@
+---
+id: rust_streaming
+language: rust
+title: Streaming
+tags:
+  - rust
+---
+
 ```rust
 use spikard::prelude::*;
 use tokio_stream::StreamExt;

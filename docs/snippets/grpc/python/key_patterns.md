@@ -1,3 +1,11 @@
+---
+id: grpc_python_key_patterns
+title: Key Patterns
+tags:
+  - grpc
+  - python
+---
+
 - **Async/await**: All handlers are async for non-blocking I/O
 - **`ParseFromString()`**: Deserializes binary protobuf to Python object
 - **`SerializeToString()`**: Serializes Python object to binary protobuf

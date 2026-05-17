@@ -1,3 +1,11 @@
+---
+id: typescript_validation_path
+language: typescript
+title: Validation Path
+tags:
+  - typescript
+---
+
 ```typescript
 import { z } from "zod";
 

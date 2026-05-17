@@ -1,3 +1,11 @@
+---
+id: python_upload
+language: python
+title: Upload
+tags:
+  - python
+---
+
 ```python
 from spikard import Spikard, UploadFile
 import os

@@ -1,3 +1,11 @@
+---
+id: rust_middleware_observability
+language: rust
+title: Middleware Observability
+tags:
+  - rust
+---
+
 ```rust
 use axum::{
     extract::Request,

@@ -1,3 +1,11 @@
+---
+id: php_path_params
+language: php
+title: Path Params
+tags:
+  - php
+---
+
 ```php
 <?php
 

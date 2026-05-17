@@ -1,3 +1,11 @@
+---
+id: grpc_common_proto_scalar_types
+title: Proto Scalar Types
+tags:
+  - grpc
+  - common
+---
+
 | Proto3 Type | Description             | Example                |
 | ----------- | ----------------------- | ---------------------- |
 | `int32`     | 32-bit signed integer   | `42`, `-100`           |

@@ -1,3 +1,12 @@
+---
+id: grpc_typescript_handler_basic
+language: typescript
+title: Handler Basic
+tags:
+  - grpc
+  - typescript
+---
+
 # TypeScript gRPC Handler
 
 Complete TypeScript handler implementation for UserService with GetUser and CreateUser methods.

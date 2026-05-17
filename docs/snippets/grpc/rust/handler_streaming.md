@@ -1,3 +1,11 @@
+---
+id: grpc_rust_handler_streaming
+title: Handler Streaming
+tags:
+  - grpc
+  - rust
+---
+
 # Rust gRPC Streaming Handlers
 
 Complete Rust implementation examples for client streaming and bidirectional streaming gRPC handlers in Spikard.

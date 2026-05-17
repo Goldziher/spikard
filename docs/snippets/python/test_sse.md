@@ -1,3 +1,11 @@
+---
+id: python_test_sse
+language: python
+title: Test Sse
+tags:
+  - python
+---
+
 ```python
 @pytest.mark.asyncio
 async def test_sse_stream():

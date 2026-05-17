@@ -1,3 +1,11 @@
+---
+id: php_validation_path
+language: php
+title: Validation Path
+tags:
+  - php
+---
+
 ```php
 <?php
 

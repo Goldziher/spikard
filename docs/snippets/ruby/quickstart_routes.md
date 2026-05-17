@@ -1,3 +1,11 @@
+---
+id: ruby_quickstart_routes
+language: ruby
+title: Quickstart Routes
+tags:
+  - ruby
+---
+
 ```ruby
 require "spikard"
 

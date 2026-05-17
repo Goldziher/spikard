@@ -1,3 +1,11 @@
+---
+id: php_sse
+language: php
+title: Sse
+tags:
+  - php
+---
+
 ```php
 <?php
 

@@ -1,3 +1,11 @@
+---
+id: python_validation_response
+language: python
+title: Validation Response
+tags:
+  - python
+---
+
 ```python
 from msgspec import Struct
 

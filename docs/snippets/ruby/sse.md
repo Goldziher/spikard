@@ -1,3 +1,11 @@
+---
+id: ruby_sse
+language: ruby
+title: Sse
+tags:
+  - ruby
+---
+
 ```ruby
 require "spikard"
 require "json"

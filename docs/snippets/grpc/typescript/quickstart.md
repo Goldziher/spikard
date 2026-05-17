@@ -1,3 +1,12 @@
+---
+id: grpc_typescript_quickstart
+language: typescript
+title: Quickstart
+tags:
+  - grpc
+  - typescript
+---
+
 ```typescript
 // user_handler.ts
 import { GrpcRequest, GrpcResponse } from "@spikard/node";

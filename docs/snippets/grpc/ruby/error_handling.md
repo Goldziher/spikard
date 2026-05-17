@@ -1,3 +1,12 @@
+---
+id: grpc_ruby_error_handling
+language: ruby
+title: Error Handling
+tags:
+  - grpc
+  - ruby
+---
+
 ```ruby
 class UserServiceHandler < Spikard::Grpc::Handler
   def handle_request(request)

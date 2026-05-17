@@ -1,3 +1,11 @@
+---
+id: python_middleware_shaping
+language: python
+title: Middleware Shaping
+tags:
+  - python
+---
+
 ```python
 from spikard import Spikard, HTTPError
 import time

@@ -527,12 +527,14 @@ tasks:
   docs:snippets:list:
     desc: "List all discovered documentation snippets"
     cmds:
-      - cargo run --package snippet-runner -- list --snippets docs
+      - alef snippets list --snippets docs
 
   docs:snippets:validate:
     desc: "Validate documentation snippets at syntax level"
     cmds:
-      - cargo run --package snippet-runner -- validate --snippets docs --level syntax
+      - alef snippets audit --docs docs/snippets --snippets docs/snippets
+      - alef snippets gaps --docs docs --snippets docs/snippets
+      - alef snippets validate --snippets docs/snippets --level syntax
 
   docs:build:
     desc: "Build documentation"

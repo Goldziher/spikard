@@ -1,3 +1,11 @@
+---
+id: rust_background_error_recovery
+language: rust
+title: Background Error Recovery
+tags:
+  - rust
+---
+
 ```rust
 use spikard::prelude::*;
 use tokio::time::{sleep, Duration};

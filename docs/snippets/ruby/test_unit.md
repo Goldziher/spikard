@@ -1,3 +1,11 @@
+---
+id: ruby_test_unit
+language: ruby
+title: Test Unit
+tags:
+  - ruby
+---
+
 ```ruby
 it "creates user" do
   app = Spikard::App.new

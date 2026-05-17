@@ -1,3 +1,11 @@
+---
+id: rust_config_server
+language: rust
+title: Config Server
+tags:
+  - rust
+---
+
 ```rust
 use axum::response::Json;
 use schemars::JsonSchema;

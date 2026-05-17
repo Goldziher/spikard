@@ -1,3 +1,11 @@
+---
+id: rust_validation_query
+language: rust
+title: Validation Query
+tags:
+  - rust
+---
+
 ```rust
 use serde::Deserialize;
 

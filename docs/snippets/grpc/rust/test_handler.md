@@ -1,3 +1,11 @@
+---
+id: grpc_rust_test_handler
+title: Test Handler
+tags:
+  - grpc
+  - rust
+---
+
 # Rust gRPC Handler Tests
 
 Comprehensive test examples for gRPC handlers using Tokio test.

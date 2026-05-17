@@ -1,3 +1,11 @@
+---
+id: python_streaming
+language: python
+title: Streaming
+tags:
+  - python
+---
+
 ```python
 from spikard import SseEvent, sse
 

@@ -1,3 +1,11 @@
+---
+id: ruby_config_production
+language: ruby
+title: Config Production
+tags:
+  - ruby
+---
+
 ```ruby
 require "spikard"
 

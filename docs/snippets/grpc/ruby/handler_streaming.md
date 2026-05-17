@@ -1,3 +1,12 @@
+---
+id: grpc_ruby_handler_streaming
+language: ruby
+title: Handler Streaming
+tags:
+  - grpc
+  - ruby
+---
+
 # Ruby gRPC Streaming Handlers
 
 Complete Ruby implementation examples for client streaming and bidirectional streaming gRPC handlers in Spikard.

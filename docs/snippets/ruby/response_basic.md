@@ -1,3 +1,11 @@
+---
+id: ruby_response_basic
+language: ruby
+title: Response Basic
+tags:
+  - ruby
+---
+
 ```ruby
 require "spikard"
 

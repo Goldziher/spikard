@@ -1,3 +1,11 @@
+---
+id: python_config_environment
+language: python
+title: Config Environment
+tags:
+  - python
+---
+
 ```python
 import os
 from spikard import Spikard

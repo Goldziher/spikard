@@ -1,3 +1,11 @@
+---
+id: typescript_middleware_testing
+language: typescript
+title: Middleware Testing
+tags:
+  - typescript
+---
+
 ```typescript
 import { describe, it, expect } from "vitest";
 import { authGuard } from "./middleware";

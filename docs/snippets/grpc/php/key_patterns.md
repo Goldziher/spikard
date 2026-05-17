@@ -1,3 +1,11 @@
+---
+id: grpc_php_key_patterns
+title: Key Patterns
+tags:
+  - grpc
+  - php
+---
+
 - **Synchronous**: PHP handlers are synchronous
 - **`mergeFromString()`**: Deserializes binary protobuf (use merge, not parse)
 - **`serializeToString()`**: Serializes protobuf to binary

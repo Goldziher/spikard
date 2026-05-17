@@ -1,3 +1,11 @@
+---
+id: typescript_quickstart_routes
+language: typescript
+title: Quickstart Routes
+tags:
+  - typescript
+---
+
 ```typescript
 import { Spikard, type Request } from "spikard";
 import { z } from "zod";

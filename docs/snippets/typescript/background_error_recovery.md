@@ -1,3 +1,11 @@
+---
+id: typescript_background_error_recovery
+language: typescript
+title: Background Error Recovery
+tags:
+  - typescript
+---
+
 ```typescript
 import { Job } from "bull";
 

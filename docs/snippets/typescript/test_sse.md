@@ -1,3 +1,11 @@
+---
+id: typescript_test_sse
+language: typescript
+title: Test Sse
+tags:
+  - typescript
+---
+
 ```typescript
 it("streams SSE events", async () => {
   const app = new Spikard();

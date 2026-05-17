@@ -1,3 +1,12 @@
+---
+id: grpc_rust_handler_complete
+language: rust
+title: Handler Complete
+tags:
+  - grpc
+  - rust
+---
+
 ```rust
 use bytes::Bytes;
 use spikard_http::grpc::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData};

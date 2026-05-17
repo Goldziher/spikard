@@ -22,7 +22,7 @@ Add lightweight auth/guard logic across bindings. Prefer middleware/hooks for cr
 
 === "Rust"
 
-    --8<-- "snippets/rust/auth_layer.md"
+    --8<-- "snippets/rust/auth_middleware.md"
 
 ## Tips
 

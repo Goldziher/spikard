@@ -1,3 +1,11 @@
+---
+id: rust_validation_testing
+language: rust
+title: Validation Testing
+tags:
+  - rust
+---
+
 ```rust
 #[cfg(test)]
 mod tests {

@@ -3,19 +3,19 @@
 **Quick Start**: In 30 seconds, you'll have a working gRPC service handler.
 
 === "Python"
---8<-- "grpc/python/quickstart.md"
+--8<-- "snippets/grpc/python/quickstart.md"
 
 === "TypeScript"
---8<-- "grpc/typescript/quickstart.md"
+--8<-- "snippets/grpc/typescript/quickstart.md"
 
 === "Ruby"
---8<-- "grpc/ruby/quickstart.md"
+--8<-- "snippets/grpc/ruby/quickstart.md"
 
 === "PHP"
---8<-- "grpc/php/quickstart.md"
+--8<-- "snippets/grpc/php/quickstart.md"
 
 === "Rust"
---8<-- "grpc/rust/quickstart.md"
+--8<-- "snippets/grpc/rust/quickstart.md"
 
 That's it! Now let's build a complete gRPC service from scratch.
 
@@ -27,7 +27,7 @@ Spikard's gRPC support lets you write type-safe service handlers in Python, Type
 
 ### Architecture
 
---8<-- "grpc/common/architecture_diagram.md"
+--8<-- "snippets/grpc/common/architecture_diagram.md"
 
 **Key insight**: Your handler receives raw protobuf bytes and returns raw protobuf bytes. Spikard handles HTTP/2, routing, and status codes.
 
@@ -35,7 +35,7 @@ Spikard's gRPC support lets you write type-safe service handlers in Python, Type
 
 ## Prerequisites
 
---8<-- "grpc/common/prerequisites.md"
+--8<-- "snippets/grpc/common/prerequisites.md"
 
 ---
 
@@ -45,7 +45,7 @@ Spikard's gRPC support lets you write type-safe service handlers in Python, Type
 
 Create `user_service.proto`:
 
---8<-- "grpc/proto/userservice.md"
+--8<-- "snippets/grpc/proto/userservice.md"
 
 **Proto3 Key Concepts**:
 
@@ -57,58 +57,58 @@ Create `user_service.proto`:
 
 ### Step 2: Generate Code
 
---8<-- "grpc/common/codegen_commands.md"
+--8<-- "snippets/grpc/common/codegen_commands.md"
 
 ### Step 3: Implement a Handler
 
 === "Python"
---8<-- "grpc/python/handler_basic.md"
+--8<-- "snippets/grpc/python/handler_basic.md"
 
 === "TypeScript"
---8<-- "grpc/typescript/handler_basic.md"
+--8<-- "snippets/grpc/typescript/handler_basic.md"
 
 === "Ruby"
---8<-- "grpc/ruby/handler_basic.md"
+--8<-- "snippets/grpc/ruby/handler_basic.md"
 
 === "PHP"
---8<-- "grpc/php/handler_basic.md"
+--8<-- "snippets/grpc/php/handler_basic.md"
 
 === "Rust"
---8<-- "grpc/rust/handler_basic.md"
+--8<-- "snippets/grpc/rust/handler_basic.md"
 
 ### Step 4: Register the Handler
 
 === "Python"
---8<-- "grpc/python/registration.md"
+--8<-- "snippets/grpc/python/registration.md"
 
 === "TypeScript"
---8<-- "grpc/typescript/registration.md"
+--8<-- "snippets/grpc/typescript/registration.md"
 
 === "Ruby"
---8<-- "grpc/ruby/registration.md"
+--8<-- "snippets/grpc/ruby/registration.md"
 
 === "PHP"
---8<-- "grpc/php/registration.md"
+--8<-- "snippets/grpc/php/registration.md"
 
 === "Rust"
---8<-- "grpc/rust/registration.md"
+--8<-- "snippets/grpc/rust/registration.md"
 
 ### Step 5: Test the Handler
 
 === "Python"
---8<-- "grpc/python/test_handler.md"
+--8<-- "snippets/grpc/python/test_handler.md"
 
 === "TypeScript"
---8<-- "grpc/typescript/test_handler.md"
+--8<-- "snippets/grpc/typescript/test_handler.md"
 
 === "Ruby"
---8<-- "grpc/ruby/test_handler.md"
+--8<-- "snippets/grpc/ruby/test_handler.md"
 
 === "PHP"
---8<-- "grpc/php/test_handler.md"
+--8<-- "snippets/grpc/php/test_handler.md"
 
 === "Rust"
---8<-- "grpc/rust/test_handler.md"
+--8<-- "snippets/grpc/rust/test_handler.md"
 
 ---
 
@@ -117,19 +117,19 @@ Create `user_service.proto`:
 Full-featured handler implementations showing routing, validation, business logic, and metadata:
 
 === "Python"
---8<-- "grpc/python/handler_complete.md"
+--8<-- "snippets/grpc/python/handler_complete.md"
 
 === "TypeScript"
---8<-- "grpc/typescript/handler_complete_with_helpers.md"
+--8<-- "snippets/grpc/typescript/handler_complete.md"
 
 === "Ruby"
---8<-- "grpc/ruby/handler_complete.md"
+--8<-- "snippets/grpc/ruby/handler_complete.md"
 
 === "PHP"
---8<-- "grpc/php/handler_complete.md"
+--8<-- "snippets/grpc/php/handler_complete.md"
 
 === "Rust"
---8<-- "grpc/rust/handler_complete.md"
+--8<-- "snippets/grpc/rust/handler_complete.md"
 
 ---
 
@@ -138,40 +138,40 @@ Full-featured handler implementations showing routing, validation, business logi
 ### Key Patterns by Language
 
 === "Python"
---8<-- "grpc/python/key_patterns.md"
+--8<-- "snippets/grpc/python/key_patterns.md"
 
 === "TypeScript"
---8<-- "grpc/typescript/key_patterns.md"
+--8<-- "snippets/grpc/typescript/key_patterns.md"
 
 === "Ruby"
---8<-- "grpc/ruby/key_patterns.md"
+--8<-- "snippets/grpc/ruby/key_patterns.md"
 
 === "PHP"
---8<-- "grpc/php/key_patterns.md"
+--8<-- "snippets/grpc/php/key_patterns.md"
 
 === "Rust"
---8<-- "grpc/rust/key_patterns.md"
+--8<-- "snippets/grpc/rust/key_patterns.md"
 
 ### Error Handling
 
 === "Python"
---8<-- "grpc/python/error_handling.md"
+--8<-- "snippets/grpc/python/error_handling.md"
 
 === "TypeScript"
---8<-- "grpc/typescript/error_handling.md"
+--8<-- "snippets/grpc/typescript/error_handling.md"
 
 === "Ruby"
---8<-- "grpc/ruby/error_handling.md"
+--8<-- "snippets/grpc/ruby/error_handling.md"
 
 === "PHP"
---8<-- "grpc/php/error_handling.md"
+--8<-- "snippets/grpc/php/error_handling.md"
 
 === "Rust"
---8<-- "grpc/rust/error_handling.md"
+--8<-- "snippets/grpc/rust/error_handling.md"
 
 ### Status Codes Reference
 
---8<-- "grpc/common/status_codes_table.md"
+--8<-- "snippets/grpc/common/status_codes_table.md"
 
 ---
 

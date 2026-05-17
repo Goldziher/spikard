@@ -1,3 +1,11 @@
+---
+id: grpc_ruby_key_patterns
+title: Key Patterns
+tags:
+  - grpc
+  - ruby
+---
+
 - **Synchronous**: Ruby handlers are synchronous (Rust runtime handles async)
 - **`.decode()` / `.encode()`**: Ruby protobuf methods for serialization
 - **Metadata access**: `request.get_metadata(key)` returns `String | nil`

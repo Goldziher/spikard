@@ -1,3 +1,11 @@
+---
+id: php_validation_error_format
+language: php
+title: Validation Error Format
+tags:
+  - php
+---
+
 ```php
 <?php
 

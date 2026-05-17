@@ -1,3 +1,11 @@
+---
+id: typescript_sse
+language: typescript
+title: Sse
+tags:
+  - typescript
+---
+
 ```typescript
 import { Spikard, StreamingResponse } from "spikard";
 

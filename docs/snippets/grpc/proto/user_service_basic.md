@@ -1,8 +1,16 @@
+---
+id: grpc_proto_user_service_basic
+title: User Service Basic
+tags:
+  - grpc
+  - proto
+---
+
 # UserService Proto Definition
 
 Basic protobuf definition for a UserService with GetUser and CreateUser methods.
 
-```protobuf
+<pre><code class="language-protobuf">
 syntax = "proto3";
 
 package userservice;
@@ -27,7 +35,7 @@ message User {
   string email = 3;
   string created_at = 4;
 }
-```
+</code></pre>
 
 ## Usage
 

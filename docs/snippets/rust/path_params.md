@@ -1,3 +1,11 @@
+---
+id: rust_path_params
+language: rust
+title: Path Params
+tags:
+  - rust
+---
+
 ```rust
 app.route(get("/orders/:order_id"), |ctx: Context| async move {
     let order_id: i64 = ctx.path_param::<String>("order_id")?

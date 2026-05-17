@@ -1,3 +1,11 @@
+---
+id: rust_test_websocket
+language: rust
+title: Test Websocket
+tags:
+  - rust
+---
+
 ```rust
 use axum::{
     extract::ws::{Message, WebSocket, WebSocketUpgrade},

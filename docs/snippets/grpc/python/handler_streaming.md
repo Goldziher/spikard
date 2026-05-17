@@ -1,3 +1,11 @@
+---
+id: grpc_python_handler_streaming
+title: Handler Streaming
+tags:
+  - grpc
+  - python
+---
+
 # Python gRPC Streaming Handlers
 
 Complete Python implementation examples for client streaming and bidirectional streaming gRPC handlers in Spikard.

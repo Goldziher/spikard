@@ -1,3 +1,11 @@
+---
+id: php_test_integration
+language: php
+title: Test Integration
+tags:
+  - php
+---
+
 ```php
 <?php
 

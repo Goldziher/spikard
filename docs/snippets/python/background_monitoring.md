@@ -1,3 +1,11 @@
+---
+id: python_background_monitoring
+language: python
+title: Background Monitoring
+tags:
+  - python
+---
+
 ```python
 from celery.result import AsyncResult
 

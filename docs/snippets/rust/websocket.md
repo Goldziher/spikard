@@ -1,3 +1,11 @@
+---
+id: rust_websocket
+language: rust
+title: Websocket
+tags:
+  - rust
+---
+
 ```rust
 use spikard::prelude::*;
 use futures::StreamExt;

@@ -1,3 +1,11 @@
+---
+id: python_request_data
+language: python
+title: Request Data
+tags:
+  - python
+---
+
 ```python
 from spikard import Spikard
 from msgspec import Struct

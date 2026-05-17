@@ -1,4 +1,12 @@
-```protobuf
+---
+id: grpc_proto_userservice
+title: Userservice
+tags:
+  - grpc
+  - proto
+---
+
+<pre><code class="language-protobuf">
 syntax = "proto3";
 
 package userservice;
@@ -23,4 +31,4 @@ message User {
   string email = 3;
   string created_at = 4;
 }
-```
+</code></pre>

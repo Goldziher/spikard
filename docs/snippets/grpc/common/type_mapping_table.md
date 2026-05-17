@@ -1,3 +1,11 @@
+---
+id: grpc_common_type_mapping_table
+title: Type Mapping Table
+tags:
+  - grpc
+  - common
+---
+
 # Protobuf Type Mapping Across Languages
 
 Reference table showing how proto3 types map to native language types in all Spikard-supported languages.
@@ -44,14 +52,14 @@ When a field is not set, proto3 uses these default values:
 
 Use `optional` keyword to distinguish between "not set" and "default value":
 
-```protobuf
+<pre><code class="language-protobuf">
 message User {
   int32 id = 1;                // Never null (defaults to 0)
   string name = 2;             // Never null (defaults to "")
   optional string email = 3;   // Can be null/None/undefined
   optional int32 age = 4;      // Can be null (distinguishes 0 from unset)
 }
-```
+</code></pre>
 
 ### Checking Optional Fields by Language
 

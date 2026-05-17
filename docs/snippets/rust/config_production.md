@@ -1,3 +1,11 @@
+---
+id: rust_config_production
+language: rust
+title: Config Production
+tags:
+  - rust
+---
+
 ```rust
 use spikard::{
     App, CompressionConfig, OpenApiConfig, RateLimitConfig, ServerConfig,

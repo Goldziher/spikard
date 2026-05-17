@@ -1,3 +1,11 @@
+---
+id: typescript_config_environment
+language: typescript
+title: Config Environment
+tags:
+  - typescript
+---
+
 ```typescript
 import { Spikard, runServer } from "spikard";
 import type { ServerConfig } from "spikard";

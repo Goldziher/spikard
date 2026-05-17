@@ -1,3 +1,11 @@
+---
+id: typescript_validation_basic
+language: typescript
+title: Validation Basic
+tags:
+  - typescript
+---
+
 ```typescript
 import { Spikard, type Request } from "spikard";
 import { z } from "zod";

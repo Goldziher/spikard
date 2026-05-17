@@ -1,3 +1,11 @@
+---
+id: ruby_middleware_basic
+language: ruby
+title: Middleware Basic
+tags:
+  - ruby
+---
+
 ```ruby
 require "spikard"
 

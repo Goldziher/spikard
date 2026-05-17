@@ -1,3 +1,11 @@
+---
+id: typescript_test_integration
+language: typescript
+title: Test Integration
+tags:
+  - typescript
+---
+
 ```typescript
 it("completes user workflow", async () => {
   const usersDb = new Map();

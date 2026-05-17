@@ -1,3 +1,11 @@
+---
+id: python_middleware_auth
+language: python
+title: Middleware Auth
+tags:
+  - python
+---
+
 ```python
 from spikard import Spikard, HTTPError
 import jwt

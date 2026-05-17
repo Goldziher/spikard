@@ -1,3 +1,11 @@
+---
+id: typescript_config_server
+language: typescript
+title: Config Server
+tags:
+  - typescript
+---
+
 ```typescript
 import { Spikard, runServer } from "spikard";
 import type { ServerConfig, Request } from "spikard";

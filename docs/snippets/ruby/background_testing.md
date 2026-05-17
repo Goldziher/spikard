@@ -1,3 +1,11 @@
+---
+id: ruby_background_testing
+language: ruby
+title: Background Testing
+tags:
+  - ruby
+---
+
 ```ruby
 # test/jobs/process_upload_job_test.rb
 require 'test_helper'

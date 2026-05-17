@@ -1,3 +1,11 @@
+---
+id: php_middleware_shaping
+language: php
+title: Middleware Shaping
+tags:
+  - php
+---
+
 ```php
 <?php
 

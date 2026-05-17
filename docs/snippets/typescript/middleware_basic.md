@@ -1,3 +1,11 @@
+---
+id: typescript_middleware_basic
+language: typescript
+title: Middleware Basic
+tags:
+  - typescript
+---
+
 ```typescript
 import { Spikard, type Request } from "spikard";
 

@@ -1,3 +1,12 @@
+---
+id: grpc_typescript_registration
+language: typescript
+title: Registration
+tags:
+  - grpc
+  - typescript
+---
+
 ```typescript
 import { GrpcService, Spikard } from "spikard";
 

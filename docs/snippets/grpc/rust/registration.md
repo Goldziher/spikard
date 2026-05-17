@@ -1,3 +1,12 @@
+---
+id: grpc_rust_registration
+language: rust
+title: Registration
+tags:
+  - grpc
+  - rust
+---
+
 ```rust
 use spikard_http::grpc::{GrpcRegistry, RpcMode};
 use std::sync::Arc;

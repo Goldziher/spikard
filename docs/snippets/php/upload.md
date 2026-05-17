@@ -1,3 +1,11 @@
+---
+id: php_upload
+language: php
+title: Upload
+tags:
+  - php
+---
+
 ```php
 <?php
 

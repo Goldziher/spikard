@@ -1,3 +1,11 @@
+---
+id: python_validation_path
+language: python
+title: Validation Path
+tags:
+  - python
+---
+
 ```python
 from uuid import UUID
 

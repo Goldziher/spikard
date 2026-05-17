@@ -1,3 +1,11 @@
+---
+id: grpc_php_test_handler
+title: Test Handler
+tags:
+  - grpc
+  - php
+---
+
 # PHP gRPC Handler Tests
 
 Comprehensive test examples for gRPC handlers using PHPUnit.

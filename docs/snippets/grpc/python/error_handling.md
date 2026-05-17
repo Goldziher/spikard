@@ -1,3 +1,12 @@
+---
+id: grpc_python_error_handling
+language: python
+title: Error Handling
+tags:
+  - grpc
+  - python
+---
+
 ```python
 try:
     # Handler logic

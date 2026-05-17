@@ -1,3 +1,11 @@
+---
+id: grpc_ruby_test_handler
+title: Test Handler
+tags:
+  - grpc
+  - ruby
+---
+
 # Ruby gRPC Handler Tests
 
 Comprehensive test examples for gRPC handlers using RSpec.

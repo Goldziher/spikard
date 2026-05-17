@@ -1,3 +1,11 @@
+---
+id: php_test_middleware
+language: php
+title: Test Middleware
+tags:
+  - php
+---
+
 ```php
 <?php
 

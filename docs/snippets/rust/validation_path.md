@@ -1,3 +1,11 @@
+---
+id: rust_validation_path
+language: rust
+title: Validation Path
+tags:
+  - rust
+---
+
 ```rust
 use uuid::Uuid;
 

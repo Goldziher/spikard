@@ -1,3 +1,11 @@
+---
+id: grpc_typescript_handler_streaming
+title: Handler Streaming
+tags:
+  - grpc
+  - typescript
+---
+
 # TypeScript gRPC Streaming Handlers
 
 The TypeScript package does not yet expose public streaming gRPC helper types.
@@ -13,3 +21,8 @@ Current public gRPC APIs in `@spikard/node` are:
 - `createServiceHandler(...)`
 
 For the current TypeScript surface, use unary handlers and register them through `GrpcService`.
+
+```typescript
+// TypeScript gRPC streaming helpers are not exposed yet.
+// Use unary GrpcHandler implementations until streaming support is available.
+```

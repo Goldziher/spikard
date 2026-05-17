@@ -1,3 +1,12 @@
+---
+id: grpc_rust_error_handling
+language: rust
+title: Error Handling
+tags:
+  - grpc
+  - rust
+---
+
 ```rust
 // Direct tonic::Status
 return Err(Status::invalid_argument("Invalid ID"));

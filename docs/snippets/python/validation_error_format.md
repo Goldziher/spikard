@@ -1,3 +1,11 @@
+---
+id: python_validation_error_format
+language: python
+title: Validation Error Format
+tags:
+  - python
+---
+
 ```python
 from msgspec import ValidationError
 from spikard import Response

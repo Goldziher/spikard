@@ -1,3 +1,11 @@
+---
+id: ruby_validation_response
+language: ruby
+title: Validation Response
+tags:
+  - ruby
+---
+
 ```ruby
 UserSchema = Dry::Schema.JSON do
   required(:id).filled(:string)

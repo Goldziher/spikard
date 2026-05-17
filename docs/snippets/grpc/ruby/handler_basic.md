@@ -1,3 +1,12 @@
+---
+id: grpc_ruby_handler_basic
+language: ruby
+title: Handler Basic
+tags:
+  - grpc
+  - ruby
+---
+
 # Ruby gRPC Handler
 
 Complete Ruby handler implementation for UserService with GetUser and CreateUser methods.

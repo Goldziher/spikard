@@ -1,3 +1,11 @@
+---
+id: typescript_middleware_observability
+language: typescript
+title: Middleware Observability
+tags:
+  - typescript
+---
+
 ```typescript
 import { Spikard, type Request, type Response } from "spikard";
 import { v4 as uuidv4 } from "uuid";

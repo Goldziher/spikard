@@ -1,3 +1,11 @@
+---
+id: python_websocket
+language: python
+title: Websocket
+tags:
+  - python
+---
+
 ```python
 from spikard import Spikard, websocket
 

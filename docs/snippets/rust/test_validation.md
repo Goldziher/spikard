@@ -1,3 +1,11 @@
+---
+id: rust_test_validation
+language: rust
+title: Test Validation
+tags:
+  - rust
+---
+
 ```rust
 use axum::{
     http::StatusCode,

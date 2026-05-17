@@ -1,3 +1,11 @@
+---
+id: python_quickstart_routes
+language: python
+title: Quickstart Routes
+tags:
+  - python
+---
+
 ```python
 from spikard import Spikard
 from spikard.config import ServerConfig

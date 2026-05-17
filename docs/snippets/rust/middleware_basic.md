@@ -1,3 +1,11 @@
+---
+id: rust_middleware_basic
+language: rust
+title: Middleware Basic
+tags:
+  - rust
+---
+
 ```rust
 use tower_http::trace::TraceLayer;
 

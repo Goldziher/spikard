@@ -13,7 +13,6 @@ members = [
   "crates/spikard-py",
   "crates/spikard-wasm",
   "packages/swift/rust",
-  "tools/snippet-runner",
 ]
 exclude = [
   "e2e/*",

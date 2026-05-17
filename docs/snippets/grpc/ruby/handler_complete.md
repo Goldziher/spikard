@@ -1,3 +1,12 @@
+---
+id: grpc_ruby_handler_complete
+language: ruby
+title: Handler Complete
+tags:
+  - grpc
+  - ruby
+---
+
 ```ruby
 require 'spikard/grpc'
 require 'userservice_pb'  # Generated from proto

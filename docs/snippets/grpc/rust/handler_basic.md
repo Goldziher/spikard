@@ -1,3 +1,12 @@
+---
+id: grpc_rust_handler_basic
+language: rust
+title: Handler Basic
+tags:
+  - grpc
+  - rust
+---
+
 # Rust gRPC Handler
 
 Complete Rust handler implementation for UserService with GetUser and CreateUser methods.

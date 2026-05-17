@@ -1,3 +1,11 @@
+---
+id: typescript_background_task
+language: typescript
+title: Background Task
+tags:
+  - typescript
+---
+
 ```typescript
 import { Spikard } from "spikard";
 import Bull, { Queue, Job } from "bull";

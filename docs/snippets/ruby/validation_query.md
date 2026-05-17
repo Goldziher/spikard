@@ -1,3 +1,11 @@
+---
+id: ruby_validation_query
+language: ruby
+title: Validation Query
+tags:
+  - ruby
+---
+
 ```ruby
 ListUsersQuery = Dry::Schema.Params do
   optional(:page).filled(:integer, gteq?: 1)

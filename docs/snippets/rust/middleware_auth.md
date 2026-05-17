@@ -1,3 +1,11 @@
+---
+id: rust_middleware_auth
+language: rust
+title: Middleware Auth
+tags:
+  - rust
+---
+
 ```rust
 use axum::{
     extract::Request,

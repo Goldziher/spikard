@@ -1,3 +1,12 @@
+---
+id: grpc_python_handler_complete
+language: python
+title: Handler Complete
+tags:
+  - grpc
+  - python
+---
+
 ```python
 from spikard.grpc import GrpcHandler, GrpcRequest, GrpcResponse
 import userservice_pb2  # Generated from proto

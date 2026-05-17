@@ -1,3 +1,11 @@
+---
+id: ruby_middleware_observability
+language: ruby
+title: Middleware Observability
+tags:
+  - ruby
+---
+
 ```ruby
 require 'spikard'
 require 'securerandom'

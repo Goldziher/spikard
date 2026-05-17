@@ -1,3 +1,11 @@
+---
+id: python_test_integration
+language: python
+title: Test Integration
+tags:
+  - python
+---
+
 ```python
 @pytest.mark.asyncio
 async def test_user_workflow():

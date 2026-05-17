@@ -1,3 +1,11 @@
+---
+id: python_config_production
+language: python
+title: Config Production
+tags:
+  - python
+---
+
 ```python
 import os
 from spikard import Spikard

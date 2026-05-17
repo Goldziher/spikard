@@ -1,3 +1,11 @@
+---
+id: typescript_background_testing
+language: typescript
+title: Background Testing
+tags:
+  - typescript
+---
+
 ```typescript
 import { Queue, Job } from "bull";
 import { jest } from "@jest/globals";

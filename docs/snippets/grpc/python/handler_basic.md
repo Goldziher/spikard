@@ -1,3 +1,12 @@
+---
+id: grpc_python_handler_basic
+language: python
+title: Handler Basic
+tags:
+  - grpc
+  - python
+---
+
 # Python gRPC Handler
 
 Complete Python handler implementation for UserService with GetUser and CreateUser methods.

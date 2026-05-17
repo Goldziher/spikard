@@ -1,3 +1,11 @@
+---
+id: ruby_upload
+language: ruby
+title: Upload
+tags:
+  - ruby
+---
+
 ```ruby
 require "spikard"
 require "securerandom"

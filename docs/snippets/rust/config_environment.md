@@ -1,3 +1,11 @@
+---
+id: rust_config_environment
+language: rust
+title: Config Environment
+tags:
+  - rust
+---
+
 ```rust
 use spikard::{App, ServerConfig};
 use std::env;

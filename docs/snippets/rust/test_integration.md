@@ -1,3 +1,11 @@
+---
+id: rust_test_integration
+language: rust
+title: Test Integration
+tags:
+  - rust
+---
+
 ```rust
 use axum::{
     extract::Path,
