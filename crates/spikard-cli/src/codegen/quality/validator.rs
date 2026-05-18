@@ -1066,23 +1066,30 @@ class Schema
         envs: &[(&str, &std::ffi::OsStr)],
         _code: &str,
     ) -> Result<String, QualityError> {
-        let mut command = Command::new(tool);
-        command.args(args).current_dir(cwd);
-        for (key, value) in envs {
-            command.env(key, value);
-        }
-
-        let output = command.output().map_err(|e| {
-            if e.kind() == std::io::ErrorKind::NotFound {
-                QualityError::ToolNotFound(tool.to_string())
-            } else {
-                QualityError::IoError(e.to_string())
+        // mypy 2.x has a known nondeterministic INTERNAL ERROR crash. Retry up to
+        // 3 times when we detect the signature; surface all other failures
+        // immediately.
+        let max_attempts = 3;
+        let mut last_err: Option<QualityError> = None;
+        for _ in 0..max_attempts {
+            let mut command = Command::new(tool);
+            command.args(args).current_dir(cwd);
+            for (key, value) in envs {
+                command.env(key, value);
             }
-        })?;
 
-        if output.status.success() {
-            Ok(String::from_utf8_lossy(&output.stdout).to_string())
-        } else {
+            let output = command.output().map_err(|e| {
+                if e.kind() == std::io::ErrorKind::NotFound {
+                    QualityError::ToolNotFound(tool.to_string())
+                } else {
+                    QualityError::IoError(e.to_string())
+                }
+            })?;
+
+            if output.status.success() {
+                return Ok(String::from_utf8_lossy(&output.stdout).to_string());
+            }
+
             let stderr = String::from_utf8_lossy(&output.stderr);
             let stdout = String::from_utf8_lossy(&output.stdout);
             let message = if stderr.is_empty() {
@@ -1090,8 +1097,13 @@ class Schema
             } else {
                 stderr.to_string()
             };
-            Err(QualityError::ValidationFailed(message))
+            let is_mypy_internal_error = message.contains("INTERNAL ERROR");
+            last_err = Some(QualityError::ValidationFailed(message));
+            if !is_mypy_internal_error {
+                break;
+            }
         }
+        Err(last_err.expect("at least one attempt always runs"))
     }
 }
 
