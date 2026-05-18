@@ -20,10 +20,8 @@ use axum::{Router as AxumRouter, body::Body};
 use schemars::JsonSchema;
 use serde::de::DeserializeOwned;
 use serde_json::Value;
-pub use spikard_core::ProblemDetails;
 #[cfg(feature = "di")]
 use spikard_core::di;
-pub use spikard_core::router::JsonRpcMethodInfo;
 pub use spikard_graphql::{FullSchemaConfig, GraphQLRouteConfig, QueryMutationConfig, QueryOnlyConfig, SchemaConfig};
 pub use spikard_http::{
     ApiKeyConfig, BackgroundJobError, BackgroundJobMetadata, BackgroundTaskConfig, CompressionConfig, CorsConfig,
@@ -36,6 +34,7 @@ pub use spikard_http::{
     sse::SseEventProducer,
     websocket::WebSocketHandler,
 };
+pub use spikard_http::{JsonRpcMethodInfo, ProblemDetails};
 use spikard_http::{
     RequestData, SchemaRegistry, Server,
     handler_trait::Handler,
