@@ -15,7 +15,6 @@ pub mod auth;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod background;
 pub mod bindings;
-pub(crate) mod body_metadata;
 pub mod cors;
 #[cfg(feature = "di")]
 pub mod di_handler;

@@ -80,22 +80,6 @@ pub struct StreamingRequest {
     pub metadata: tonic::metadata::MetadataMap,
 }
 
-/// Response for server streaming RPC
-///
-/// Contains metadata, a stream of outgoing messages, and optional trailers.
-/// Trailers are metadata sent after the stream completes (after all messages).
-pub struct StreamingResponse {
-    /// Stream of outgoing protobuf messages
-    pub message_stream: MessageStream,
-    /// Response metadata (sent before messages)
-    pub metadata: tonic::metadata::MetadataMap,
-    /// Optional trailers (sent after stream completes)
-    ///
-    /// Trailers are useful for sending status information or metrics
-    /// after all messages have been sent.
-    pub trailers: Option<tonic::metadata::MetadataMap>,
-}
-
 /// Helper to create a single-message stream
 ///
 /// Useful for converting unary responses to streaming responses.

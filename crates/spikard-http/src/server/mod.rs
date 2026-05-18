@@ -1144,16 +1144,6 @@ impl Server {
         build_router_with_handlers_and_config(routes, config, metadata)
     }
 
-    /// Build a server router with runtime handlers, explicit metadata, and gRPC services.
-    pub(crate) fn with_handlers_metadata_and_grpc(
-        config: ServerConfig,
-        routes: Vec<(crate::Route, Arc<dyn Handler>)>,
-        metadata: Vec<crate::RouteMetadata>,
-        grpc_registry: Arc<crate::grpc::GrpcRegistry>,
-    ) -> Result<AxumRouter, String> {
-        build_router_with_handlers_and_config_and_grpc(routes, config, metadata, Some(grpc_registry))
-    }
-
     /// Run the server with the Axum router and config
     ///
     /// Coverage: Production-only, tested via integration tests

@@ -141,33 +141,6 @@ pub struct JsonRpcRequest {
 }
 
 impl JsonRpcRequest {
-    /// Creates a new JSON-RPC 2.0 request
-    ///
-    /// # Arguments
-    ///
-    /// * `method` - The method name to invoke
-    /// * `params` - Optional parameters (can be array, object, or null)
-    /// * `id` - Optional request identifier (string, number, or null)
-    ///
-    /// # Example
-    ///
-    /// ```ignore
-    /// use serde_json::json;
-    /// use spikard_http::jsonrpc::JsonRpcRequest;
-    ///
-    /// let req = JsonRpcRequest::new("subtract", Some(json!({"a": 5, "b": 3})), Some(json!(2)));
-    /// assert_eq!(req.method, "subtract");
-    /// assert!(!req.is_notification());
-    /// ```
-    pub fn new(method: impl Into<String>, params: Option<Value>, id: Option<Value>) -> Self {
-        Self {
-            jsonrpc: "2.0".to_string(),
-            method: method.into(),
-            params,
-            id,
-        }
-    }
-
     /// Checks if this request is a notification
     ///
     /// A notification is a JSON-RPC request without an "id" field.
@@ -178,14 +151,24 @@ impl JsonRpcRequest {
     /// ```ignore
     /// use spikard_http::jsonrpc::JsonRpcRequest;
     ///
-    /// let req = JsonRpcRequest::new("method", None, Some(serde_json::json!(1)));
-    /// assert!(!req.is_notification());
-    ///
-    /// let notif = JsonRpcRequest::new("notify", None, None);
+    /// let notif = JsonRpcRequest { jsonrpc: "2.0".to_string(), method: "notify".to_string(), params: None, id: None };
     /// assert!(notif.is_notification());
     /// ```
     pub fn is_notification(&self) -> bool {
         self.id.is_none()
+    }
+}
+
+#[cfg(test)]
+impl JsonRpcRequest {
+    /// Creates a new JSON-RPC 2.0 request (test helper)
+    pub fn new(method: impl Into<String>, params: Option<Value>, id: Option<Value>) -> Self {
+        Self {
+            jsonrpc: "2.0".to_string(),
+            method: method.into(),
+            params,
+            id,
+        }
     }
 }
 
@@ -463,6 +446,7 @@ pub mod error_codes {
     /// Invalid params
     ///
     /// Invalid method parameter(s).
+    #[cfg(test)]
     pub const INVALID_PARAMS: i32 = -32602;
 
     /// Internal error
@@ -474,12 +458,15 @@ pub mod error_codes {
     ///
     /// Server errors are reserved for implementation-defined server-errors.
     /// The error codes from -32099 to -32000 are reserved for server error codes.
+    #[cfg(test)]
     pub const SERVER_ERROR_BASE: i32 = -32000;
 
     /// Server error (end of reserved range)
+    #[cfg(test)]
     pub const SERVER_ERROR_END: i32 = -32099;
 
-    /// Helper function to check if a code is a reserved server error code
+    /// Check if a code falls in the reserved server error range (-32099 to -32000).
+    #[cfg(test)]
     pub fn is_server_error(code: i32) -> bool {
         (SERVER_ERROR_END..=SERVER_ERROR_BASE).contains(&code)
     }

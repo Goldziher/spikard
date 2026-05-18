@@ -6,8 +6,10 @@ use crate::validation::SchemaValidator;
 use crate::{CorsConfig, Method, RouteMetadata};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::HashMap;
 use std::sync::Arc;
+
+#[cfg(test)]
+use std::collections::HashMap;
 
 /// Core in-process route handler callback type used by router metadata APIs.
 #[allow(dead_code)]
@@ -234,44 +236,32 @@ impl Route {
     }
 }
 
-/// Router that manages routes
-#[cfg_attr(not(test), allow(dead_code))]
+#[cfg(test)]
 pub(crate) struct Router {
     routes: HashMap<String, HashMap<Method, Route>>,
 }
 
+#[cfg(test)]
 impl Router {
-    /// Create a new router
-    #[must_use]
     pub fn new() -> Self {
         Self { routes: HashMap::new() }
     }
 
-    /// Add a route to the router
     pub fn add_route(&mut self, route: Route) {
         let path_routes = self.routes.entry(route.path.clone()).or_default();
         path_routes.insert(route.method.clone(), route);
     }
 
-    /// Find a route by method and path
-    #[must_use]
     pub fn find_route(&self, method: &Method, path: &str) -> Option<&Route> {
         self.routes.get(path)?.get(method)
     }
 
-    /// Get all routes
-    #[must_use]
-    pub fn routes(&self) -> Vec<&Route> {
-        self.routes.values().flat_map(|methods| methods.values()).collect()
-    }
-
-    /// Get route count
-    #[must_use]
     pub fn route_count(&self) -> usize {
         self.routes.values().map(std::collections::HashMap::len).sum()
     }
 }
 
+#[cfg(test)]
 impl Default for Router {
     fn default() -> Self {
         Self::new()

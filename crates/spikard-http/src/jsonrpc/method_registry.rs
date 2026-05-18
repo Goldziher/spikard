@@ -105,18 +105,6 @@ impl MethodMetadata {
         self
     }
 
-    /// Set the error schema for this method
-    pub fn with_error_schema(mut self, schema: Value) -> Self {
-        self.error_schema = Some(schema);
-        self
-    }
-
-    /// Add an example to this method's examples
-    pub fn with_example(mut self, example: MethodExample) -> Self {
-        self.examples.push(example);
-        self
-    }
-
     /// Mark this method as deprecated
     pub fn mark_deprecated(mut self) -> Self {
         self.deprecated = true;
@@ -126,6 +114,15 @@ impl MethodMetadata {
     /// Add a tag to this method
     pub fn with_tag(mut self, tag: impl Into<String>) -> Self {
         self.tags.push(tag.into());
+        self
+    }
+}
+
+#[cfg(test)]
+impl MethodMetadata {
+    /// Add an example to this method's examples (test helper)
+    pub fn with_example(mut self, example: MethodExample) -> Self {
+        self.examples.push(example);
         self
     }
 }
@@ -237,120 +234,6 @@ impl JsonRpcMethodRegistry {
         Ok(methods.get(name).map(|(handler, _)| Arc::clone(handler)))
     }
 
-    /// Get metadata for a method by name
-    ///
-    /// Returns `None` if the method is not registered.
-    ///
-    /// # Arguments
-    ///
-    /// * `name` - The method name to look up
-    ///
-    /// # Returns
-    ///
-    /// `Ok(Option<MethodMetadata>)` containing the metadata if found, `Ok(None)` if not found,
-    /// or `Err(RegistryError)` if the lock cannot be acquired.
-    pub fn get_metadata(&self, name: &str) -> Result<Option<MethodMetadata>, RegistryError> {
-        let methods = self.methods.read().map_err(|_| RegistryError::lock_poisoned())?;
-        Ok(methods.get(name).map(|(_, metadata)| metadata.clone()))
-    }
-
-    /// Get both handler and metadata for a method
-    ///
-    /// Returns `None` if the method is not registered.
-    ///
-    /// # Arguments
-    ///
-    /// * `name` - The method name to look up
-    ///
-    /// # Returns
-    ///
-    /// `Ok(Option<MethodEntry>)` if found, `Ok(None)` if not found,
-    /// or `Err(RegistryError)` if the lock cannot be acquired.
-    pub fn get_with_metadata(&self, name: &str) -> Result<Option<MethodEntry>, RegistryError> {
-        let methods = self.methods.read().map_err(|_| RegistryError::lock_poisoned())?;
-        Ok(methods
-            .get(name)
-            .map(|(handler, metadata)| (Arc::clone(handler), metadata.clone())))
-    }
-
-    /// List all registered method names
-    ///
-    /// # Returns
-    ///
-    /// `Ok(Vec<String>)` containing all registered method names, sorted lexicographically,
-    /// or `Err(RegistryError)` if the lock cannot be acquired.
-    pub fn list_methods(&self) -> Result<Vec<String>, RegistryError> {
-        let methods = self.methods.read().map_err(|_| RegistryError::lock_poisoned())?;
-        let mut names: Vec<String> = methods.keys().cloned().collect();
-        names.sort();
-        Ok(names)
-    }
-
-    /// Check if a method is registered
-    ///
-    /// # Arguments
-    ///
-    /// * `name` - The method name to check
-    ///
-    /// # Returns
-    ///
-    /// `Ok(true)` if the method is registered, `Ok(false)` if not,
-    /// or `Err(RegistryError)` if the lock cannot be acquired.
-    pub fn contains(&self, name: &str) -> Result<bool, RegistryError> {
-        let methods = self.methods.read().map_err(|_| RegistryError::lock_poisoned())?;
-        Ok(methods.contains_key(name))
-    }
-
-    /// Get the number of registered methods
-    ///
-    /// # Returns
-    ///
-    /// `Ok(usize)` containing the count of registered methods,
-    /// or `Err(RegistryError)` if the lock cannot be acquired.
-    pub fn len(&self) -> Result<usize, RegistryError> {
-        let methods = self.methods.read().map_err(|_| RegistryError::lock_poisoned())?;
-        Ok(methods.len())
-    }
-
-    /// Check if the registry is empty
-    ///
-    /// # Returns
-    ///
-    /// `Ok(true)` if no methods are registered, `Ok(false)` if any methods exist,
-    /// or `Err(RegistryError)` if the lock cannot be acquired.
-    pub fn is_empty(&self) -> Result<bool, RegistryError> {
-        let methods = self.methods.read().map_err(|_| RegistryError::lock_poisoned())?;
-        Ok(methods.is_empty())
-    }
-
-    /// Remove a method from the registry
-    ///
-    /// Returns `Ok(true)` if the method was removed, `Ok(false)` if it didn't exist.
-    ///
-    /// # Arguments
-    ///
-    /// * `name` - The method name to remove
-    ///
-    /// # Returns
-    ///
-    /// `Ok(true)` if the method was removed, `Ok(false)` if not found,
-    /// or `Err(RegistryError)` if the lock cannot be acquired.
-    pub fn remove(&self, name: &str) -> Result<bool, RegistryError> {
-        let mut methods = self.methods.write().map_err(|_| RegistryError::lock_poisoned())?;
-        Ok(methods.remove(name).is_some())
-    }
-
-    /// Clear all methods from the registry
-    ///
-    /// # Returns
-    ///
-    /// `Ok(())` on success, or `Err(RegistryError)` if the lock cannot be acquired.
-    pub fn clear(&self) -> Result<(), RegistryError> {
-        let mut methods = self.methods.write().map_err(|_| RegistryError::lock_poisoned())?;
-        methods.clear();
-        Ok(())
-    }
-
     /// Get all methods with their metadata
     ///
     /// # Returns
@@ -377,6 +260,54 @@ impl Clone for JsonRpcMethodRegistry {
         Self {
             methods: Arc::clone(&self.methods),
         }
+    }
+}
+
+#[cfg(test)]
+impl JsonRpcMethodRegistry {
+    pub fn get_metadata(&self, name: &str) -> Result<Option<MethodMetadata>, RegistryError> {
+        let methods = self.methods.read().map_err(|_| RegistryError::lock_poisoned())?;
+        Ok(methods.get(name).map(|(_, metadata)| metadata.clone()))
+    }
+
+    pub fn get_with_metadata(&self, name: &str) -> Result<Option<MethodEntry>, RegistryError> {
+        let methods = self.methods.read().map_err(|_| RegistryError::lock_poisoned())?;
+        Ok(methods
+            .get(name)
+            .map(|(handler, metadata)| (Arc::clone(handler), metadata.clone())))
+    }
+
+    pub fn list_methods(&self) -> Result<Vec<String>, RegistryError> {
+        let methods = self.methods.read().map_err(|_| RegistryError::lock_poisoned())?;
+        let mut names: Vec<String> = methods.keys().cloned().collect();
+        names.sort();
+        Ok(names)
+    }
+
+    pub fn contains(&self, name: &str) -> Result<bool, RegistryError> {
+        let methods = self.methods.read().map_err(|_| RegistryError::lock_poisoned())?;
+        Ok(methods.contains_key(name))
+    }
+
+    pub fn len(&self) -> Result<usize, RegistryError> {
+        let methods = self.methods.read().map_err(|_| RegistryError::lock_poisoned())?;
+        Ok(methods.len())
+    }
+
+    pub fn is_empty(&self) -> Result<bool, RegistryError> {
+        let methods = self.methods.read().map_err(|_| RegistryError::lock_poisoned())?;
+        Ok(methods.is_empty())
+    }
+
+    pub fn remove(&self, name: &str) -> Result<bool, RegistryError> {
+        let mut methods = self.methods.write().map_err(|_| RegistryError::lock_poisoned())?;
+        Ok(methods.remove(name).is_some())
+    }
+
+    pub fn clear(&self) -> Result<(), RegistryError> {
+        let mut methods = self.methods.write().map_err(|_| RegistryError::lock_poisoned())?;
+        methods.clear();
+        Ok(())
     }
 }
 

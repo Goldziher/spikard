@@ -54,7 +54,9 @@ pub(crate) use handler::RpcMode;
 pub(crate) use service::{GenericGrpcService, parse_grpc_path};
 
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
+#[cfg(test)]
+use std::collections::HashSet;
 use std::sync::Arc;
 
 /// Configuration for gRPC support
@@ -237,39 +239,6 @@ impl GrpcRegistry {
         }
     }
 
-    /// Register a gRPC handler for a specific service method
-    ///
-    /// # Arguments
-    ///
-    /// * `service_name` - Fully qualified service name (e.g., "mypackage.MyService")
-    /// * `method_name` - Method name (e.g., "GetUser")
-    /// * `handler` - Handler implementation for this service
-    /// * `rpc_mode` - The RPC mode this handler supports (Unary, ServerStreaming, etc.)
-    pub fn register(
-        &mut self,
-        service_name: impl Into<String>,
-        method_name: impl Into<String>,
-        handler: Arc<dyn GrpcHandler>,
-        rpc_mode: RpcMode,
-    ) {
-        let handlers = Arc::make_mut(&mut self.handlers);
-        handlers.insert((service_name.into(), method_name.into()), (handler, rpc_mode));
-    }
-
-    /// Register a gRPC handler for an entire service.
-    ///
-    /// This is a service-level fallback for bindings that route methods inside a
-    /// single handler object. Method-specific registrations take precedence over
-    /// these wildcard entries during request dispatch.
-    pub fn register_service(
-        &mut self,
-        service_name: impl Into<String>,
-        handler: Arc<dyn GrpcHandler>,
-        rpc_mode: RpcMode,
-    ) {
-        self.register(service_name, WILDCARD_METHOD, handler, rpc_mode);
-    }
-
     /// Get a handler and its RPC mode by service and method name
     ///
     /// Returns both the handler and the RPC mode it was registered with. Exact
@@ -284,7 +253,44 @@ impl GrpcRegistry {
             .cloned()
     }
 
-    /// Get all registered service names
+    /// Check if a service has any registered handlers.
+    pub fn contains_service(&self, service_name: &str) -> bool {
+        self.handlers
+            .keys()
+            .any(|(registered_service, _)| registered_service == service_name)
+    }
+
+    /// Check if the registry is empty
+    pub fn is_empty(&self) -> bool {
+        self.handlers.is_empty()
+    }
+}
+
+#[cfg(test)]
+impl GrpcRegistry {
+    /// Register a gRPC handler for a specific service method (test helper)
+    pub fn register(
+        &mut self,
+        service_name: impl Into<String>,
+        method_name: impl Into<String>,
+        handler: Arc<dyn GrpcHandler>,
+        rpc_mode: RpcMode,
+    ) {
+        let handlers = Arc::make_mut(&mut self.handlers);
+        handlers.insert((service_name.into(), method_name.into()), (handler, rpc_mode));
+    }
+
+    /// Register a gRPC handler for an entire service (test helper)
+    pub fn register_service(
+        &mut self,
+        service_name: impl Into<String>,
+        handler: Arc<dyn GrpcHandler>,
+        rpc_mode: RpcMode,
+    ) {
+        self.register(service_name, WILDCARD_METHOD, handler, rpc_mode);
+    }
+
+    /// Get all registered service names (test helper)
     pub fn service_names(&self) -> Vec<String> {
         self.handlers
             .keys()
@@ -294,7 +300,7 @@ impl GrpcRegistry {
             .collect()
     }
 
-    /// Get all explicitly registered method names for a service.
+    /// Get all explicitly registered method names for a service (test helper)
     pub fn method_names(&self, service_name: &str) -> Vec<String> {
         self.handlers
             .keys()
@@ -305,27 +311,15 @@ impl GrpcRegistry {
             .collect()
     }
 
-    /// Check if a specific service method is registered.
+    /// Check if a specific service method is registered (test helper)
     pub fn contains(&self, service_name: &str, method_name: &str) -> bool {
         self.handlers
             .contains_key(&(service_name.to_owned(), method_name.to_owned()))
     }
 
-    /// Check if a service has any registered handlers.
-    pub fn contains_service(&self, service_name: &str) -> bool {
-        self.handlers
-            .keys()
-            .any(|(registered_service, _)| registered_service == service_name)
-    }
-
-    /// Get the number of registered services
+    /// Get the number of registered services (test helper)
     pub fn len(&self) -> usize {
         self.handlers.len()
-    }
-
-    /// Check if the registry is empty
-    pub fn is_empty(&self) -> bool {
-        self.handlers.is_empty()
     }
 }
 
