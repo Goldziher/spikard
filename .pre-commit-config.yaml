@@ -228,7 +228,7 @@ repos:
 
   # GitHub Actions: check refs are up to date
   - repo: https://github.com/Goldziher/gh-actions-updater
-    rev: v0.1.1
+    rev: v0.1.2
     hooks:
       - id: gh-actions-updater
 
