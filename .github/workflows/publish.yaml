@@ -510,6 +510,8 @@ jobs:
         with:
           target: ${{ matrix.target }}
       - uses: kreuzberg-dev/actions/build-elixir-natives@v1
+        env:
+          CARGO_TARGET_DIR: ${{ github.workspace }}/target
         with:
           target: ${{ matrix.target }}
           nif-crate-name: spikard_nif
