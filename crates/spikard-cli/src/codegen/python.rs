@@ -46,11 +46,20 @@ impl PythonGenerator {
     fn generate_header(&self) -> String {
         let mut header = String::new();
         header.push_str("from __future__ import annotations\n\n");
-        header.push_str("# ruff: noqa: B008, I001, INP001\n\n");
 
         let uses_path = self.uses_path_params();
         let uses_query = self.uses_query_params();
         let uses_body = self.uses_request_body();
+
+        // B008 is only triggered when the route generator emits `Query(default=...)`
+        // in argument defaults; including it unconditionally trips RUF100 on DTO-only output.
+        let noqa = if uses_query {
+            "# ruff: noqa: B008, I001, INP001\n\n"
+        } else {
+            "# ruff: noqa: I001, INP001\n\n"
+        };
+        header.push_str(noqa);
+
         let uses_literal = self.uses_literal_types();
         let uses_date = self.uses_date_types();
         let uses_datetime = self.uses_datetime_types();

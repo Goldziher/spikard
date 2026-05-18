@@ -333,7 +333,7 @@ impl RustGenerator {
 
         code.push_str("/// Query root type resolver\n");
         code.push_str("#[derive(Default, Debug)]\n");
-        code.push_str("pub struct Query;\n\n");
+        code.push_str("pub struct Query {}\n\n");
         code.push_str("#[async_graphql::Object]\n");
         code.push_str("impl Query {\n");
 
@@ -374,7 +374,7 @@ impl RustGenerator {
         if has_mutations {
             code.push_str("/// Mutation root type resolver\n");
             code.push_str("#[derive(Default, Debug)]\n");
-            code.push_str("pub struct Mutation;\n\n");
+            code.push_str("pub struct Mutation {}\n\n");
             code.push_str("#[async_graphql::Object]\n");
             code.push_str("impl Mutation {\n");
 
@@ -412,7 +412,7 @@ impl RustGenerator {
         if has_subscriptions {
             code.push_str("/// Subscription root type resolver\n");
             code.push_str("#[derive(Default, Debug)]\n");
-            code.push_str("pub struct Subscription;\n\n");
+            code.push_str("pub struct Subscription {}\n\n");
             code.push_str("#[async_graphql::Subscription]\n");
             code.push_str("impl Subscription {\n");
             for field in &schema.subscriptions {
@@ -448,7 +448,7 @@ impl RustGenerator {
 
     fn gen_schema_body(&self, schema: &GraphQLSchema) -> String {
         let mut code = String::new();
-        let query_value = "Query";
+        let query_value = "Query::default()";
         let mutation_root = if schema.mutations.is_empty() {
             "async_graphql::EmptyMutation"
         } else {
@@ -462,12 +462,12 @@ impl RustGenerator {
         let mutation_value = if schema.mutations.is_empty() {
             "async_graphql::EmptyMutation"
         } else {
-            "Mutation"
+            "Mutation::default()"
         };
         let subscription_value = if schema.subscriptions.is_empty() {
             "async_graphql::EmptySubscription"
         } else {
-            "Subscription"
+            "Subscription::default()"
         };
 
         code.push_str("/// Build the complete GraphQL schema\n");
@@ -486,8 +486,8 @@ impl RustGenerator {
         code.push_str("#[cfg(test)]\n");
         code.push_str("mod tests {\n");
         code.push_str("    use super::*;\n\n");
-        code.push_str("    #[test]\n");
-        code.push_str("    fn test_schema_builds_successfully() {\n");
+        code.push_str("    #[tokio::test]\n");
+        code.push_str("    async fn test_schema_builds_successfully() {\n");
         code.push_str("        let _schema = build_schema();\n");
         code.push_str("    }\n");
         code.push_str("}\n");
