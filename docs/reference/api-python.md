@@ -1356,23 +1356,23 @@ converted to structured HTTP responses matching the project's error fixtures.
 
 **Base class:** `GraphQlError(Exception)`
 
-| Exception | Description |
-|-----------|-------------|
-| `ExecutionError(GraphQlError)` | Error during schema execution Occurs when the GraphQL executor encounters a runtime error during query execution. |
-| `SchemaBuildError(GraphQlError)` | Error during schema building Occurs when schema construction fails due to invalid definitions or conflicts. |
-| `RequestHandlingError(GraphQlError)` | Error during request handling Occurs when the HTTP request cannot be properly handled or parsed. |
-| `SerializationError(GraphQlError)` | Serialization error Occurs during JSON serialization/deserialization of GraphQL values. |
-| `JsonError(GraphQlError)` | JSON parsing error Occurs when JSON input cannot be parsed. |
-| `ValidationError(GraphQlError)` | GraphQL validation error Occurs when a GraphQL query fails schema validation. |
-| `ParseError(GraphQlError)` | GraphQL parse error Occurs when the GraphQL query string cannot be parsed. |
-| `AuthenticationError(GraphQlError)` | Authentication error Occurs when request authentication fails. |
-| `AuthorizationError(GraphQlError)` | Authorization error Occurs when user lacks required permissions. |
-| `NotFound(GraphQlError)` | Not found error Occurs when a requested resource is not found. |
-| `RateLimitExceeded(GraphQlError)` | Rate limit error Occurs when rate limit is exceeded. |
-| `InvalidInput(GraphQlError)` | Invalid input error with validation details Occurs during input validation with detailed error information. |
-| `ComplexityLimitExceeded(GraphQlError)` | Query complexity limit exceeded Occurs when a GraphQL query exceeds the configured complexity limit. |
-| `DepthLimitExceeded(GraphQlError)` | Query depth limit exceeded Occurs when a GraphQL query exceeds the configured depth limit. |
-| `InternalError(GraphQlError)` | Internal server error Occurs when an unexpected internal error happens. |
+| Exception                               | Description                                                                                                       |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `ExecutionError(GraphQlError)`          | Error during schema execution Occurs when the GraphQL executor encounters a runtime error during query execution. |
+| `SchemaBuildError(GraphQlError)`        | Error during schema building Occurs when schema construction fails due to invalid definitions or conflicts.       |
+| `RequestHandlingError(GraphQlError)`    | Error during request handling Occurs when the HTTP request cannot be properly handled or parsed.                  |
+| `SerializationError(GraphQlError)`      | Serialization error Occurs during JSON serialization/deserialization of GraphQL values.                           |
+| `JsonError(GraphQlError)`               | JSON parsing error Occurs when JSON input cannot be parsed.                                                       |
+| `ValidationError(GraphQlError)`         | GraphQL validation error Occurs when a GraphQL query fails schema validation.                                     |
+| `ParseError(GraphQlError)`              | GraphQL parse error Occurs when the GraphQL query string cannot be parsed.                                        |
+| `AuthenticationError(GraphQlError)`     | Authentication error Occurs when request authentication fails.                                                    |
+| `AuthorizationError(GraphQlError)`      | Authorization error Occurs when user lacks required permissions.                                                  |
+| `NotFound(GraphQlError)`                | Not found error Occurs when a requested resource is not found.                                                    |
+| `RateLimitExceeded(GraphQlError)`       | Rate limit error Occurs when rate limit is exceeded.                                                              |
+| `InvalidInput(GraphQlError)`            | Invalid input error with validation details Occurs during input validation with detailed error information.       |
+| `ComplexityLimitExceeded(GraphQlError)` | Query complexity limit exceeded Occurs when a GraphQL query exceeds the configured complexity limit.              |
+| `DepthLimitExceeded(GraphQlError)`      | Query depth limit exceeded Occurs when a GraphQL query exceeds the configured depth limit.                        |
+| `InternalError(GraphQlError)`           | Internal server error Occurs when an unexpected internal error happens.                                           |
 
 ---
 
@@ -1382,11 +1382,11 @@ Error type for schema building operations
 
 **Base class:** `SchemaError(Exception)`
 
-| Exception | Description |
-|-----------|-------------|
-| `BuildingFailed(SchemaError)` | Generic schema building error |
-| `ValidationError(SchemaError)` | Configuration validation error |
-| `ComplexityLimitExceeded(SchemaError)` | Complexity limit exceeded |
-| `DepthLimitExceeded(SchemaError)` | Depth limit exceeded |
+| Exception                              | Description                    |
+| -------------------------------------- | ------------------------------ |
+| `BuildingFailed(SchemaError)`          | Generic schema building error  |
+| `ValidationError(SchemaError)`         | Configuration validation error |
+| `ComplexityLimitExceeded(SchemaError)` | Complexity limit exceeded      |
+| `DepthLimitExceeded(SchemaError)`      | Depth limit exceeded           |
 
 ---
