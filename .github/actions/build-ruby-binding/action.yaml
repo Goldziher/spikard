@@ -5,7 +5,7 @@ runs:
   using: composite
   steps:
     - name: Setup Ruby
-      uses: ruby/setup-ruby@v1.307.0
+      uses: ruby/setup-ruby@v1.308.0
       with:
         ruby-version: "3.4"
         bundler: "4.0.0"

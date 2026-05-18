@@ -158,7 +158,7 @@ tasks:
   update:
     desc: "Update dependencies within declared compatibility ranges"
     cmds:
-      - npx --yes actions-up@latest --yes --style preserve
+      - gh-actions-updater --update .
       - task: rust:update
       - uv sync --all-packages --all-extras --upgrade
       - alef update
@@ -167,7 +167,7 @@ tasks:
   upgrade:
     desc: "Upgrade dependencies aggressively, including breaking changes where supported"
     cmds:
-      - npx --yes actions-up@latest --yes --style preserve
+      - gh-actions-updater --update .
       - rustup update stable
       - cargo upgrade --incompatible
       - cargo update

@@ -340,7 +340,7 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
-      - uses: ruby/setup-ruby@v1.307.0
+      - uses: ruby/setup-ruby@v1.308.0
         with:
           ruby-version: "3.4"
           bundler-cache: true
@@ -502,7 +502,7 @@ jobs:
       - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: erlef/setup-beam@v1.24.0
+      - uses: erlef/setup-beam@v1.24
         with:
           elixir-version: "1.18"
           otp-version: "27"
@@ -532,7 +532,7 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4.8.0
         with:
           distribution: temurin
           java-version: "25"
@@ -701,7 +701,7 @@ jobs:
       - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: erlef/setup-beam@v1.24.0
+      - uses: erlef/setup-beam@v1.24
         with:
           elixir-version: "1.18"
           otp-version: "27"
@@ -721,7 +721,7 @@ jobs:
       - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4.8.0
         with:
           distribution: temurin
           java-version: "25"

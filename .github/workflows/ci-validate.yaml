@@ -87,7 +87,7 @@ jobs:
         run: task --list
 
       - name: Run actionlint
-        uses: reviewdog/action-actionlint@v1.72.0
+        uses: reviewdog/action-actionlint@v1.72
         with:
           reporter: github-check
           fail_level: error

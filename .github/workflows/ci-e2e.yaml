@@ -104,7 +104,7 @@ jobs:
 
       - name: Setup Ruby
         if: matrix.language == 'ruby'
-        uses: ruby/setup-ruby@v1.307.0
+        uses: ruby/setup-ruby@v1.308.0
         with:
           ruby-version: "3.4"
           bundler-cache: true
@@ -131,7 +131,7 @@ jobs:
 
       - name: Setup JDK 25 for Maven
         if: matrix.language == 'java'
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v4.8.0
         with:
           distribution: temurin
           java-version: "25"
