@@ -12,7 +12,7 @@ use std::pin::Pin;
 use std::sync::Arc;
 
 /// Wrapper that runs request/parameter validation before calling the user handler.
-pub struct ValidatingHandler {
+pub(crate) struct ValidatingHandler {
     inner: Arc<dyn Handler>,
     request_validator: Option<Arc<SchemaValidator>>,
     parameter_validator: Option<ParameterValidator>,

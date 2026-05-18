@@ -108,7 +108,7 @@ pub struct StreamingResponse {
 ///
 /// let stream = single_message_stream(Bytes::from("response"));
 /// ```
-pub(crate) fn single_message_stream(message: Bytes) -> MessageStream {
+pub fn single_message_stream(message: Bytes) -> MessageStream {
     Box::pin(futures_util::stream::once(async move { Ok(message) }))
 }
 
@@ -119,7 +119,7 @@ pub(crate) fn single_message_stream(message: Bytes) -> MessageStream {
 /// internal counter. If the counter exceeds `n` **after** adding the item, the
 /// current item is still yielded (matching the "after" semantics), and the next
 /// `poll_next` returns `Err(Status::resource_exhausted(...))` followed by `None`.
-pub(crate) fn limit_message_stream(inner: MessageStream, limit: Option<usize>) -> MessageStream {
+pub fn limit_message_stream(inner: MessageStream, limit: Option<usize>) -> MessageStream {
     match limit {
         None => inner,
         Some(max_bytes) => Box::pin(LimitedMessageStream {

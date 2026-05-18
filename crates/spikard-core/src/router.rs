@@ -10,7 +10,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 /// Core in-process route handler callback type used by router metadata APIs.
-pub type RouteHandler = Arc<dyn Fn() -> String + Send + Sync>;
+#[allow(dead_code)]
+pub(crate) type RouteHandler = Arc<dyn Fn() -> String + Send + Sync>;
 
 /// JSON-RPC method metadata for routes that support JSON-RPC
 ///
@@ -234,7 +235,8 @@ impl Route {
 }
 
 /// Router that manages routes
-pub struct Router {
+#[cfg_attr(not(test), allow(dead_code))]
+pub(crate) struct Router {
     routes: HashMap<String, HashMap<Method, Route>>,
 }
 

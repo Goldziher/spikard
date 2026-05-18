@@ -31,7 +31,7 @@ pub struct AsyncApiConfig {
 
 /// State shared across AsyncAPI HTTP handlers
 #[derive(Clone)]
-pub struct AsyncApiState {
+pub(crate) struct AsyncApiState {
     /// Optionally pre-registered spec for GET /asyncapi.json
     pub registered_spec: Option<Arc<Value>>,
 }
@@ -407,7 +407,7 @@ pub struct ValidateRequest {
 /// `POST /asyncapi/parse`
 ///
 /// Accepts a raw AsyncAPI 3.0 spec JSON body, returns structured parse result.
-pub async fn handle_asyncapi_parse(axum::extract::Json(body): axum::extract::Json<Value>) -> Response {
+pub(crate) async fn handle_asyncapi_parse(axum::extract::Json(body): axum::extract::Json<Value>) -> Response {
     match parse_asyncapi_value(&body) {
         Ok(result) => (StatusCode::OK, axum::Json(result)).into_response(),
         Err(error) => problem_response(StatusCode::BAD_REQUEST, &error),
@@ -417,7 +417,9 @@ pub async fn handle_asyncapi_parse(axum::extract::Json(body): axum::extract::Jso
 /// `POST /asyncapi/validate`
 ///
 /// Validates a message payload against the declared channel schema.
-pub async fn handle_asyncapi_validate(axum::extract::Json(body): axum::extract::Json<ValidateRequest>) -> Response {
+pub(crate) async fn handle_asyncapi_validate(
+    axum::extract::Json(body): axum::extract::Json<ValidateRequest>,
+) -> Response {
     match validate_message(&body.spec, &body.channel, &body.message, &body.payload) {
         Ok((valid, errors)) => (StatusCode::OK, axum::Json(ValidationResponse { valid, errors })).into_response(),
         Err(error) => problem_response(StatusCode::BAD_REQUEST, &error),
@@ -428,7 +430,7 @@ pub async fn handle_asyncapi_validate(axum::extract::Json(body): axum::extract::
 ///
 /// Returns the spec registered via [`AsyncApiConfig::spec`].
 /// Returns 404 ProblemDetails if no spec is registered.
-pub async fn handle_asyncapi_json(State(state): State<AsyncApiState>) -> Response {
+pub(crate) async fn handle_asyncapi_json(State(state): State<AsyncApiState>) -> Response {
     match &state.registered_spec {
         Some(spec) => (StatusCode::OK, axum::Json((**spec).clone())).into_response(),
         None => problem_response(

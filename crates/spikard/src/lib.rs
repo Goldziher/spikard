@@ -23,6 +23,8 @@ use serde_json::Value;
 #[cfg(feature = "di")]
 use spikard_core::di;
 pub use spikard_graphql::{FullSchemaConfig, GraphQLRouteConfig, QueryMutationConfig, QueryOnlyConfig, SchemaConfig};
+#[cfg(not(target_arch = "wasm32"))]
+use spikard_http::server::Server;
 pub use spikard_http::{
     ApiKeyConfig, BackgroundJobError, BackgroundJobMetadata, BackgroundTaskConfig, CompressionConfig, CorsConfig,
     GrpcConfig, JsonRpcConfig, JwtConfig, LifecycleHook, LifecycleHooks, LifecycleHooksBuilder, Method, OpenApiConfig,
@@ -36,7 +38,7 @@ pub use spikard_http::{
 };
 pub use spikard_http::{JsonRpcMethodInfo, ProblemDetails};
 use spikard_http::{
-    RequestData, SchemaRegistry, Server,
+    RequestData, SchemaRegistry,
     handler_trait::Handler,
     sse::{SseState, sse_handler},
     websocket::{WebSocketState, websocket_handler},

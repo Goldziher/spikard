@@ -97,7 +97,7 @@ pub fn is_json_like_str(content_type: &str) -> bool {
 
 /// Classify Content-Type header values after validation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ContentTypeKind {
+pub(crate) enum ContentTypeKind {
     Json,
     Multipart,
     FormUrlencoded,

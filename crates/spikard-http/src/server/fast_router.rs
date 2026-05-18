@@ -19,7 +19,7 @@ use crate::handler_trait::StaticResponse;
 /// Inserted as the outermost middleware layer so that matching requests
 /// never reach the Axum router at all.
 #[derive(Clone)]
-pub struct FastRouter {
+pub(crate) struct FastRouter {
     routes: AHashMap<Method, AHashMap<String, StaticResponse>>,
 }
 

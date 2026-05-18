@@ -37,7 +37,7 @@ fn empty_path_params() -> Arc<HashMap<String, String>> {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct WithoutBodyExtractionOptions {
+pub(crate) struct WithoutBodyExtractionOptions {
     pub include_raw_query_params: bool,
     pub include_query_params_json: bool,
     pub include_headers: bool,

@@ -23,6 +23,6 @@ pub use lifecycle::{HookResult, LifecycleHook, LifecycleHooks, LifecycleHooksBui
 pub use parameters::ParameterValidator;
 pub use problem::ProblemDetails;
 pub use request_data::RequestData;
-pub use router::{JsonRpcMethodInfo, Route, RouteHandler, Router};
+pub use router::{JsonRpcMethodInfo, Route};
 pub use schema_registry::SchemaRegistry;
 pub use validation::{SchemaValidator, ValidationError, ValidationErrorDetail};

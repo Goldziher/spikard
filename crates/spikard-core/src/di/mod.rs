@@ -186,6 +186,6 @@ mod value;
 pub use container::DependencyContainer;
 pub use dependency::Dependency;
 pub use error::DependencyError;
-pub use factory::{FactoryDependency, FactoryDependencyBuilder, FactoryFn};
+pub use factory::{FactoryDependency, FactoryDependencyBuilder};
 pub use resolved::ResolvedDependencies;
 pub use value::ValueDependency;

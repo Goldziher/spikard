@@ -815,7 +815,7 @@ pub fn build_router_with_handlers_and_config(
 }
 
 /// Build router with handlers, config, and an optional gRPC service registry.
-pub fn build_router_with_handlers_and_config_and_grpc(
+pub(crate) fn build_router_with_handlers_and_config_and_grpc(
     routes: Vec<RouteHandlerPair>,
     config: ServerConfig,
     route_metadata: Vec<crate::RouteMetadata>,
@@ -1145,7 +1145,7 @@ impl Server {
     }
 
     /// Build a server router with runtime handlers, explicit metadata, and gRPC services.
-    pub fn with_handlers_metadata_and_grpc(
+    pub(crate) fn with_handlers_metadata_and_grpc(
         config: ServerConfig,
         routes: Vec<(crate::Route, Arc<dyn Handler>)>,
         metadata: Vec<crate::RouteMetadata>,

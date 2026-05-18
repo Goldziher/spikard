@@ -49,7 +49,7 @@ fn grpc_status_to_http(code: tonic::Code) -> StatusCode {
 /// # Returns
 ///
 /// A future that resolves to a gRPC response or error
-pub async fn route_grpc_request(
+pub(crate) async fn route_grpc_request(
     registry: Arc<GrpcRegistry>,
     config: &GrpcConfig,
     request: Request<Body>,

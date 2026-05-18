@@ -42,7 +42,7 @@ impl Default for BackgroundJobMetadata {
     }
 }
 
-pub type BackgroundJobFuture = BoxFuture<'static, Result<(), BackgroundJobError>>;
+pub(crate) type BackgroundJobFuture = BoxFuture<'static, Result<(), BackgroundJobError>>;
 
 struct BackgroundJob {
     pub future: BackgroundJobFuture,

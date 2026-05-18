@@ -19,9 +19,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 /// # Examples
 ///
 /// ```ignore
-/// use spikard_core::di::DependencyGraph;
-///
-/// let mut graph = DependencyGraph::new();
+/// let mut graph = spikard_core::di::DependencyGraph::new();
 ///
 /// // Add dependencies
 /// graph.add_dependency("config", vec![]).unwrap();

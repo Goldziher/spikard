@@ -26,7 +26,7 @@ thread_local! {
 
 /// Route information for middleware validation
 #[derive(Debug, Clone)]
-pub struct RouteInfo {
+pub(crate) struct RouteInfo {
     /// Whether this route expects a JSON request body
     pub expects_json_body: bool,
 }
@@ -36,11 +36,11 @@ pub struct RouteInfo {
 /// This avoids double-reading the body stream: middleware can read once for
 /// content-length / syntax checks, and request extraction can reuse the bytes.
 #[derive(Debug, Clone)]
-pub struct PreReadBody(pub bytes::Bytes);
+pub(crate) struct PreReadBody(pub bytes::Bytes);
 
 /// Request extension carrying a pre-parsed JSON body.
 #[derive(Debug, Clone)]
-pub struct PreParsedJson(pub serde_json::Value);
+pub(crate) struct PreParsedJson(pub serde_json::Value);
 
 /// Middleware to validate Content-Type headers and related requirements
 ///

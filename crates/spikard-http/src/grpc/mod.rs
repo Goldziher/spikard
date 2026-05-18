@@ -47,10 +47,11 @@ pub(crate) mod handler;
 pub(crate) mod service;
 pub(crate) mod streaming;
 
-// Re-export main types
-pub use handler::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData, RpcMode};
+// Re-export types used from integration tests and binding crates
+pub use handler::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData};
+// Internal implementation details only
+pub(crate) use handler::RpcMode;
 pub(crate) use service::{GenericGrpcService, parse_grpc_path};
-pub use streaming::{MessageStream, StreamingRequest, StreamingResponse};
 
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -224,7 +225,7 @@ type GrpcHandlerEntry = (Arc<dyn GrpcHandler>, RpcMode);
 const WILDCARD_METHOD: &str = "*";
 
 #[derive(Clone)]
-pub struct GrpcRegistry {
+pub(crate) struct GrpcRegistry {
     handlers: Arc<HashMap<(String, String), GrpcHandlerEntry>>,
 }
 

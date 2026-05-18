@@ -11,13 +11,10 @@ pub(crate) mod router;
 
 use serde::{Deserialize, Serialize};
 
-pub use http_handler::{JsonRpcState, handle_jsonrpc};
-pub use method_registry::{JsonRpcMethodRegistry, MethodExample, MethodMetadata};
-pub use openrpc::generate_openrpc_spec;
-pub use protocol::{
-    JsonRpcErrorResponse, JsonRpcRequest, JsonRpcResponse, JsonRpcResponseType, error_codes, validate_method_name,
-};
-pub use router::{JsonRpcRequestOrBatch, JsonRpcRouter};
+pub(crate) use http_handler::{JsonRpcState, handle_jsonrpc};
+pub(crate) use method_registry::{JsonRpcMethodRegistry, MethodMetadata};
+pub(crate) use openrpc::generate_openrpc_spec;
+pub(crate) use router::JsonRpcRouter;
 
 /// JSON-RPC server configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]

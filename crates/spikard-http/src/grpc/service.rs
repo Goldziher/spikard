@@ -413,7 +413,7 @@ fn grpc_code_number(code: tonic::Code) -> &'static str {
 /// assert_eq!(service, "mypackage.UserService");
 /// assert_eq!(method, "GetUser");
 /// ```
-pub(crate) fn parse_grpc_path(path: &str) -> Result<(String, String), Status> {
+pub fn parse_grpc_path(path: &str) -> Result<(String, String), Status> {
     // gRPC paths are in the format: /<package>.<service>/<method>
     let path = path.trim_start_matches('/');
     let parts: Vec<&str> = path.split('/').collect();
@@ -441,7 +441,7 @@ pub(crate) fn parse_grpc_path(path: &str) -> Result<(String, String), Status> {
 ///
 /// * `source` - Source metadata to copy from
 /// * `dest` - Destination metadata to copy into
-pub(crate) fn copy_metadata(source: &tonic::metadata::MetadataMap, dest: &mut tonic::metadata::MetadataMap) {
+pub fn copy_metadata(source: &tonic::metadata::MetadataMap, dest: &mut tonic::metadata::MetadataMap) {
     for key_value in source.iter() {
         match key_value {
             tonic::metadata::KeyAndValueRef::Ascii(key, value) => {
