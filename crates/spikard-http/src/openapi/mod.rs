@@ -90,22 +90,29 @@ fn default_openapi_json_path() -> String {
 /// Contact information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ContactInfo {
+    /// Name of the contact person or organisation.
     pub name: Option<String>,
+    /// Contact email address.
     pub email: Option<String>,
+    /// URL pointing to the contact information page.
     pub url: Option<String>,
 }
 
 /// License information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LicenseInfo {
+    /// SPDX license identifier or display name (e.g. `"MIT"`).
     pub name: String,
+    /// URL to the full license text.
     pub url: Option<String>,
 }
 
 /// Server information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServerInfo {
+    /// Base URL of the server (e.g. `"https://api.example.com/v1"`).
     pub url: String,
+    /// Optional human-readable description of the server environment.
     pub description: Option<String>,
 }
 

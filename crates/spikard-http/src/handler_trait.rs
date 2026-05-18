@@ -22,9 +22,13 @@ use std::pin::Pin;
 /// endpoints or any route whose output never changes at runtime.
 #[derive(Clone, Debug)]
 pub struct StaticResponse {
+    /// HTTP status code to return (e.g. 200, 404).
     pub status: u16,
+    /// Additional HTTP headers to include in the response.
     pub headers: Vec<(HeaderName, HeaderValue)>,
+    /// Pre-encoded response body bytes.
     pub body: Bytes,
+    /// Value of the `Content-Type` header sent with the response.
     pub content_type: HeaderValue,
 }
 
@@ -74,16 +78,25 @@ impl StaticResponse {
 /// The body field is lazily parsed only when needed for validation.
 #[derive(Debug, Clone)]
 pub struct RequestData {
+    /// Path parameters extracted from the route pattern (e.g. `{id}` → `"id": "42"`).
     pub path_params: std::sync::Arc<HashMap<String, String>>,
+    /// Query parameters parsed into a JSON value for schema validation.
     pub query_params: std::sync::Arc<Value>,
     /// Validated parameters produced by ParameterValidator (query/path/header/cookie combined).
     pub validated_params: Option<std::sync::Arc<Value>>,
+    /// Raw query parameters preserving multi-value keys (e.g. `?tag=a&tag=b`).
     pub raw_query_params: std::sync::Arc<HashMap<String, Vec<String>>>,
+    /// Request body parsed as JSON; use `raw_body` to avoid double-parsing.
     pub body: std::sync::Arc<Value>,
+    /// Unparsed request body bytes; preferred over `body` in language bindings.
     pub raw_body: Option<bytes::Bytes>,
+    /// Request headers as lowercase name → value pairs.
     pub headers: std::sync::Arc<HashMap<String, String>>,
+    /// Parsed cookies as name → value pairs.
     pub cookies: std::sync::Arc<HashMap<String, String>>,
+    /// HTTP method of the request (e.g. `"GET"`, `"POST"`).
     pub method: String,
+    /// Request path, including any path prefix (e.g. `"/api/users/42"`).
     pub path: String,
     /// Resolved dependencies for this request (populated by DependencyInjectingHandler)
     #[cfg(feature = "di")]

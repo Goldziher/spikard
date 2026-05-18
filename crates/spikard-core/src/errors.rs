@@ -10,8 +10,11 @@ use std::panic::{UnwindSafe, catch_unwind};
 /// Canonical error payload: { error, code, details }.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StructuredError {
+    /// Human-readable error message describing what went wrong.
     pub error: String,
+    /// Machine-readable error code identifying the error category.
     pub code: String,
+    /// Additional structured context for the error (empty object when absent).
     #[serde(default)]
     pub details: Value,
 }
