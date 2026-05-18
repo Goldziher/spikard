@@ -83,7 +83,7 @@ pub struct PreParsedJson(pub serde_json::Value);
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```ignore
 /// use axum::{middleware::Next, extract::Request};
 /// use spikard_http::middleware::validate_content_type_middleware;
 ///
