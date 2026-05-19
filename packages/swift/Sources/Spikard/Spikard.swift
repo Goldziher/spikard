@@ -29,7 +29,47 @@ import RustBridge
 public typealias UploadFile = RustBridge.UploadFile
 
 /// CORS configuration for a route
-public typealias CorsConfig = RustBridge.CorsConfig
+public struct CorsConfig: Codable, Sendable, Hashable {
+    public let allowedOrigins: [String]
+    public let allowedMethods: [String]
+    public let allowedHeaders: [String]
+    public let exposeHeaders: [String]?
+    public let maxAge: UInt32?
+    public let allowCredentials: Bool?
+    public init(allowedOrigins: [String], allowedMethods: [String], allowedHeaders: [String], exposeHeaders: [String]? = nil, maxAge: UInt32? = nil, allowCredentials: Bool? = nil) {
+        self.allowedOrigins = allowedOrigins
+        self.allowedMethods = allowedMethods
+        self.allowedHeaders = allowedHeaders
+        self.exposeHeaders = exposeHeaders
+        self.maxAge = maxAge
+        self.allowCredentials = allowCredentials
+    }
+    private enum CodingKeys: String, CodingKey {
+        case allowedOrigins = "allowed_origins"
+        case allowedMethods = "allowed_methods"
+        case allowedHeaders = "allowed_headers"
+        case exposeHeaders = "expose_headers"
+        case maxAge = "max_age"
+        case allowCredentials = "allow_credentials"
+    }
+}
+
+// MARK: - Internal FFI conversions for CorsConfig
+internal extension CorsConfig {
+    init(_ rb: RustBridge.CorsConfig) throws {
+        self.allowedOrigins = rb.allowed_origins().map { $0.toString() }
+        self.allowedMethods = rb.allowed_methods().map { $0.toString() }
+        self.allowedHeaders = rb.allowed_headers().map { $0.toString() }
+        self.exposeHeaders = rb.expose_headers()?.map { $0.toString() }
+        self.maxAge = rb.max_age()
+        self.allowCredentials = rb.allow_credentials()
+    }
+    func intoRust() throws -> RustBridge.CorsConfig {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.corsConfigFromJson(json)
+    }
+}
 
 /// Compression configuration shared across runtimes
 public struct CompressionConfig: Codable, Sendable, Hashable {
@@ -293,7 +333,33 @@ public typealias AsyncApiConfig = RustBridge.AsyncApiConfig
 public typealias ParsedChannel = RustBridge.ParsedChannel
 
 /// A single operation extracted from an AsyncAPI spec
-public typealias ParsedOperation = RustBridge.ParsedOperation
+public struct ParsedOperation: Codable, Sendable, Hashable {
+    /// Operation name
+    public let name: String
+    /// Operation action: "send" or "receive"
+    public let action: String
+    /// Channel reference (resolved to the channel name)
+    public let channel: String
+    public init(name: String, action: String, channel: String) {
+        self.name = name
+        self.action = action
+        self.channel = channel
+    }
+}
+
+// MARK: - Internal FFI conversions for ParsedOperation
+internal extension ParsedOperation {
+    init(_ rb: RustBridge.ParsedOperation) throws {
+        self.name = rb.name().toString()
+        self.action = rb.action().toString()
+        self.channel = rb.channel().toString()
+    }
+    func intoRust() throws -> RustBridge.ParsedOperation {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.parsedOperationFromJson(json)
+    }
+}
 
 /// A resolved message (name + JSON Schema)
 public typealias ParsedMessage = RustBridge.ParsedMessage
@@ -533,13 +599,83 @@ internal extension JsonRpcConfig {
 public typealias OpenApiConfig = RustBridge.OpenApiConfig
 
 /// Contact information
-public typealias ContactInfo = RustBridge.ContactInfo
+public struct ContactInfo: Codable, Sendable, Hashable {
+    /// Name of the contact person or organisation.
+    public let name: String?
+    /// Contact email address.
+    public let email: String?
+    /// URL pointing to the contact information page.
+    public let url: String?
+    public init(name: String? = nil, email: String? = nil, url: String? = nil) {
+        self.name = name
+        self.email = email
+        self.url = url
+    }
+}
+
+// MARK: - Internal FFI conversions for ContactInfo
+internal extension ContactInfo {
+    init(_ rb: RustBridge.ContactInfo) throws {
+        self.name = rb.name()?.toString()
+        self.email = rb.email()?.toString()
+        self.url = rb.url()?.toString()
+    }
+    func intoRust() throws -> RustBridge.ContactInfo {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.contactInfoFromJson(json)
+    }
+}
 
 /// License information
-public typealias LicenseInfo = RustBridge.LicenseInfo
+public struct LicenseInfo: Codable, Sendable, Hashable {
+    /// SPDX license identifier or display name (e.g. `"MIT"`).
+    public let name: String
+    /// URL to the full license text.
+    public let url: String?
+    public init(name: String, url: String? = nil) {
+        self.name = name
+        self.url = url
+    }
+}
+
+// MARK: - Internal FFI conversions for LicenseInfo
+internal extension LicenseInfo {
+    init(_ rb: RustBridge.LicenseInfo) throws {
+        self.name = rb.name().toString()
+        self.url = rb.url()?.toString()
+    }
+    func intoRust() throws -> RustBridge.LicenseInfo {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.licenseInfoFromJson(json)
+    }
+}
 
 /// Server information
-public typealias ServerInfo = RustBridge.ServerInfo
+public struct ServerInfo: Codable, Sendable, Hashable {
+    /// Base URL of the server (e.g. `"https://api.example.com/v1"`).
+    public let url: String
+    /// Optional human-readable description of the server environment.
+    public let description: String?
+    public init(url: String, description: String? = nil) {
+        self.url = url
+        self.description = description
+    }
+}
+
+// MARK: - Internal FFI conversions for ServerInfo
+internal extension ServerInfo {
+    init(_ rb: RustBridge.ServerInfo) throws {
+        self.url = rb.url().toString()
+        self.description = rb.description()?.toString()
+    }
+    func intoRust() throws -> RustBridge.ServerInfo {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.serverInfoFromJson(json)
+    }
+}
 
 /// HTTP Response with custom status code, headers, and content
 public typealias Response = RustBridge.Response
@@ -571,13 +707,109 @@ public typealias SseEvent = RustBridge.SseEvent
 public typealias TestingSseEvent = RustBridge.TestingSseEvent
 
 /// JWT authentication configuration
-public typealias JwtConfig = RustBridge.JwtConfig
+public struct JwtConfig: Codable, Sendable, Hashable {
+    /// Secret key for JWT verification
+    public let secret: String
+    /// Required algorithm (HS256, HS384, HS512, RS256, etc.)
+    public let algorithm: String
+    /// Required audience claim
+    public let audience: [String]?
+    /// Required issuer claim
+    public let issuer: String?
+    /// Leeway for expiration checks (seconds)
+    public let leeway: UInt64
+    public init(secret: String, algorithm: String, audience: [String]? = nil, issuer: String? = nil, leeway: UInt64) {
+        self.secret = secret
+        self.algorithm = algorithm
+        self.audience = audience
+        self.issuer = issuer
+        self.leeway = leeway
+    }
+}
+
+// MARK: - Internal FFI conversions for JwtConfig
+internal extension JwtConfig {
+    init(_ rb: RustBridge.JwtConfig) throws {
+        self.secret = rb.secret().toString()
+        self.algorithm = rb.algorithm().toString()
+        self.audience = rb.audience()?.map { $0.toString() }
+        self.issuer = rb.issuer()?.toString()
+        self.leeway = rb.leeway()
+    }
+    func intoRust() throws -> RustBridge.JwtConfig {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.jwtConfigFromJson(json)
+    }
+}
 
 /// API Key authentication configuration
-public typealias ApiKeyConfig = RustBridge.ApiKeyConfig
+public struct ApiKeyConfig: Codable, Sendable, Hashable {
+    /// Valid API keys
+    public let keys: [String]
+    /// Header name to check (e.g., "X-API-Key")
+    public let headerName: String
+    public init(keys: [String], headerName: String) {
+        self.keys = keys
+        self.headerName = headerName
+    }
+    private enum CodingKeys: String, CodingKey {
+        case keys = "keys"
+        case headerName = "header_name"
+    }
+}
+
+// MARK: - Internal FFI conversions for ApiKeyConfig
+internal extension ApiKeyConfig {
+    init(_ rb: RustBridge.ApiKeyConfig) throws {
+        self.keys = rb.keys().map { $0.toString() }
+        self.headerName = rb.header_name().toString()
+    }
+    func intoRust() throws -> RustBridge.ApiKeyConfig {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.apiKeyConfigFromJson(json)
+    }
+}
 
 /// Static file serving configuration
-public typealias StaticFilesConfig = RustBridge.StaticFilesConfig
+public struct StaticFilesConfig: Codable, Sendable, Hashable {
+    /// Directory path to serve
+    public let directory: String
+    /// URL path prefix (e.g., "/static")
+    public let routePrefix: String
+    /// Fallback to index.html for directories
+    public let indexFile: Bool
+    /// Cache-Control header value
+    public let cacheControl: String?
+    public init(directory: String, routePrefix: String, indexFile: Bool, cacheControl: String? = nil) {
+        self.directory = directory
+        self.routePrefix = routePrefix
+        self.indexFile = indexFile
+        self.cacheControl = cacheControl
+    }
+    private enum CodingKeys: String, CodingKey {
+        case directory = "directory"
+        case routePrefix = "route_prefix"
+        case indexFile = "index_file"
+        case cacheControl = "cache_control"
+    }
+}
+
+// MARK: - Internal FFI conversions for StaticFilesConfig
+internal extension StaticFilesConfig {
+    init(_ rb: RustBridge.StaticFilesConfig) throws {
+        self.directory = rb.directory().toString()
+        self.routePrefix = rb.route_prefix().toString()
+        self.indexFile = rb.index_file()
+        self.cacheControl = rb.cache_control()?.toString()
+    }
+    func intoRust() throws -> RustBridge.StaticFilesConfig {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.staticFilesConfigFromJson(json)
+    }
+}
 
 /// Server configuration
 public typealias ServerConfig = RustBridge.ServerConfig
