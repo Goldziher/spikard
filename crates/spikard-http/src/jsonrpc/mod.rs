@@ -11,9 +11,12 @@ pub(crate) mod router;
 
 use serde::{Deserialize, Serialize};
 
+#[cfg(not(target_arch = "wasm32"))]
 pub(crate) use http_handler::{JsonRpcState, handle_jsonrpc};
 pub(crate) use method_registry::{JsonRpcMethodRegistry, MethodMetadata};
+#[cfg(not(target_arch = "wasm32"))]
 pub(crate) use openrpc::generate_openrpc_spec;
+#[cfg(not(target_arch = "wasm32"))]
 pub(crate) use router::JsonRpcRouter;
 
 /// JSON-RPC server configuration
