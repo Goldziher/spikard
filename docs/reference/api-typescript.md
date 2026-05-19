@@ -158,11 +158,11 @@ static default(): CompressionConfig
 
 Contact information
 
-| Field   | Type             | Default | Description |
-| ------- | ---------------- | ------- | ----------- |
-| `name`  | `string \| null` | `null`  | The name    |
-| `email` | `string \| null` | `null`  | Email       |
-| `url`   | `string \| null` | `null`  | Url         |
+| Field   | Type             | Default | Description                                   |
+| ------- | ---------------- | ------- | --------------------------------------------- |
+| `name`  | `string \| null` | `null`  | Name of the contact person or organisation.   |
+| `email` | `string \| null` | `null`  | Contact email address.                        |
+| `url`   | `string \| null` | `null`  | URL pointing to the contact information page. |
 
 ---
 
@@ -489,10 +489,10 @@ JWT authentication configuration
 
 License information
 
-| Field  | Type             | Default | Description |
-| ------ | ---------------- | ------- | ----------- |
-| `name` | `string`         | —       | The name    |
-| `url`  | `string \| null` | `null`  | Url         |
+| Field  | Type             | Default | Description                                             |
+| ------ | ---------------- | ------- | ------------------------------------------------------- |
+| `name` | `string`         | —       | SPDX license identifier or display name (e.g. `"MIT"`). |
+| `url`  | `string \| null` | `null`  | URL to the full license text.                           |
 
 ---
 
@@ -842,16 +842,6 @@ Return response body as UTF-8 string.
 text(): string
 ```
 
-###### json()
-
-Parse response body as JSON.
-
-**Signature:**
-
-```typescript
-json(): unknown
-```
-
 ###### header()
 
 Lookup header by case-insensitive name.
@@ -860,26 +850,6 @@ Lookup header by case-insensitive name.
 
 ```typescript
 header(name: string): string | null
-```
-
-###### graphqlData()
-
-Extract GraphQL data from response
-
-**Signature:**
-
-```typescript
-graphqlData(): unknown
-```
-
-###### graphqlErrors()
-
-Extract GraphQL errors from response
-
-**Signature:**
-
-```typescript
-graphqlErrors(): Array<unknown>
 ```
 
 ---
@@ -953,10 +923,10 @@ static default(): ServerConfig
 
 Server information
 
-| Field         | Type             | Default | Description                |
-| ------------- | ---------------- | ------- | -------------------------- |
-| `url`         | `string`         | —       | Url                        |
-| `description` | `string \| null` | `null`  | Human-readable description |
+| Field         | Type             | Default | Description                                                     |
+| ------------- | ---------------- | ------- | --------------------------------------------------------------- |
+| `url`         | `string`         | —       | Base URL of the server (e.g. `"<https://api.example.com/v1"`>). |
+| `description` | `string \| null` | `null`  | Optional human-readable description of the server environment.  |
 
 ---
 
@@ -1066,7 +1036,7 @@ Make a request with a raw body payload.
 **Signature:**
 
 ```typescript
-requestRaw(method: Method, path: string, body: Buffer, queryParams: Array<string>, headers: Array<string>): ResponseSnapshot
+requestRaw(method: string, path: string, body: Buffer, queryParams: Array<string>, headers: Array<string>): ResponseSnapshot
 ```
 
 ###### put()
@@ -1191,6 +1161,16 @@ graphqlSubscription(query: string, variables: unknown, operationName: string): G
 
 ---
 
+##### TestingSseEvent
+
+A single Server-Sent Event.
+
+| Field  | Type     | Default | Description                  |
+| ------ | -------- | ------- | ---------------------------- |
+| `data` | `string` | —       | The data field of the event. |
+
+---
+
 ##### UploadFile
 
 Represents an uploaded file from multipart/form-data requests.
@@ -1281,37 +1261,6 @@ Possible errors while converting an Axum response into a snapshot.
 | --------------- | ---------------------------------------------------------------------- |
 | `InvalidHeader` | Response header could not be decoded to UTF-8. — Fields: `0`: `string` |
 | `Decompression` | Body decompression failed. — Fields: `0`: `string`                     |
-
----
-
-##### WebSocketMessage
-
-A WebSocket message that can be text or binary.
-
-| Value    | Description                                                                                                                                                                                                                       |
-| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Text`   | A text message. — Fields: `0`: `string`                                                                                                                                                                                           |
-| `Binary` | A binary message. — Fields: `0`: `Buffer`                                                                                                                                                                                         |
-| `Close`  | A close message with a numeric close code (RFC 6455) and optional reason text. Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received, 1006 Abnormal Closure. — Fields: `code`: `number`, `reason`: `string` |
-| `Ping`   | A ping message. — Fields: `0`: `Buffer`                                                                                                                                                                                           |
-| `Pong`   | A pong message. — Fields: `0`: `Buffer`                                                                                                                                                                                           |
-
----
-
-##### Method
-
-HTTP method
-
-| Value     | Description |
-| --------- | ----------- |
-| `Get`     | Get         |
-| `Post`    | Post        |
-| `Put`     | Put         |
-| `Patch`   | Patch       |
-| `Delete`  | Delete      |
-| `Head`    | Head        |
-| `Options` | Options     |
-| `Trace`   | Trace       |
 
 ---
 

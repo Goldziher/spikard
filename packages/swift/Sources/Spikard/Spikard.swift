@@ -4,6 +4,30 @@
 import Foundation
 import RustBridge
 
+/// Represents an uploaded file from multipart/form-data requests.
+///
+/// This struct provides efficient access to file content with automatic
+/// base64 decoding and implements standard I/O traits for compatibility.
+///
+/// # Example
+///
+/// ```rust
+/// use spikard::UploadFile;
+/// use serde::Deserialize;
+///
+/// #[derive(Deserialize)]
+/// struct UploadRequest {
+///     file: UploadFile,
+///     description: String,
+/// }
+///
+/// // In a handler:
+/// // let body: UploadRequest = ctx.json()?;
+/// // let content = body.file.as_bytes();
+/// // let filename = &body.file.filename;
+/// ```
+public typealias UploadFile = RustBridge.UploadFile
+
 /// CORS configuration for a route
 public typealias CorsConfig = RustBridge.CorsConfig
 
@@ -543,6 +567,9 @@ public typealias Response = RustBridge.Response
 /// ```
 public typealias SseEvent = RustBridge.SseEvent
 
+/// A single Server-Sent Event.
+public typealias TestingSseEvent = RustBridge.TestingSseEvent
+
 /// JWT authentication configuration
 public typealias JwtConfig = RustBridge.JwtConfig
 
@@ -554,18 +581,6 @@ public typealias StaticFilesConfig = RustBridge.StaticFilesConfig
 
 /// Server configuration
 public typealias ServerConfig = RustBridge.ServerConfig
-
-/// HTTP method
-public enum Method {
-    case get
-    case post
-    case put
-    case patch
-    case delete
-    case head
-    case options
-    case trace
-}
 
 /// Security scheme types
 public enum SecuritySchemeInfo {
@@ -650,4 +665,43 @@ public enum SchemaError: Swift.Error {
     case complexityLimitExceeded(message: String, limit: UInt, actual: UInt)
     /// Depth limit exceeded
     case depthLimitExceeded(message: String, limit: UInt, actual: UInt)
+}
+
+// MARK: - Free-function Forwarders
+// Re-export every public free function on the source Rust crate as a
+// top-level `public func` on the host module so consumers do not need to
+// `import RustBridge` directly. Forwarders take Swift-native parameter
+// types and convert to the swift-bridge runtime types internally.
+
+/// Create a simple schema configuration with only Query type.
+///
+/// This is a convenience function for schemas that only have queries.
+///
+/// # Returns
+///
+/// A `QueryOnlyConfig` with default settings
+public func schemaQueryOnly() -> QueryOnlyConfig {
+    return RustBridge.schemaQueryOnly()
+}
+
+/// Create a schema configuration with Query and Mutation types.
+///
+/// This is a convenience function for schemas with queries and mutations but no subscriptions.
+///
+/// # Returns
+///
+/// A `QueryMutationConfig` with default settings
+public func schemaQueryMutation() -> QueryMutationConfig {
+    return RustBridge.schemaQueryMutation()
+}
+
+/// Create a schema configuration with all three root types.
+///
+/// This is a convenience function for fully-featured schemas.
+///
+/// # Returns
+///
+/// A `FullSchemaConfig` with default settings
+public func schemaFull() -> FullSchemaConfig {
+    return RustBridge.schemaFull()
 }

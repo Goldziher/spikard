@@ -158,11 +158,11 @@ public CompressionConfig CreateDefault()
 
 Contact information
 
-| Field   | Type      | Default | Description |
-| ------- | --------- | ------- | ----------- |
-| `Name`  | `string?` | `null`  | The name    |
-| `Email` | `string?` | `null`  | Email       |
-| `Url`   | `string?` | `null`  | Url         |
+| Field   | Type      | Default | Description                                   |
+| ------- | --------- | ------- | --------------------------------------------- |
+| `Name`  | `string?` | `null`  | Name of the contact person or organisation.   |
+| `Email` | `string?` | `null`  | Contact email address.                        |
+| `Url`   | `string?` | `null`  | URL pointing to the contact information page. |
 
 ---
 
@@ -364,20 +364,6 @@ public GraphQlRouteConfig CreateDefault()
 
 ---
 
-#### GraphQlSubscriptionSnapshot
-
-Snapshot of a GraphQL subscription exchange over WebSocket.
-
-| Field              | Type           | Default | Description                                                       |
-| ------------------ | -------------- | ------- | ----------------------------------------------------------------- |
-| `OperationId`      | `string`       | —       | Operation id used for the subscription request.                   |
-| `Acknowledged`     | `bool`         | —       | Whether the server acknowledged the GraphQL WebSocket connection. |
-| `Event`            | `object?`      | `null`  | First `next.payload` received for this subscription, if any.      |
-| `Errors`           | `List<object>` | —       | GraphQL protocol errors emitted by the server.                    |
-| `CompleteReceived` | `bool`         | —       | Whether a `complete` frame was observed for this operation.       |
-
----
-
 #### GrpcConfig
 
 Configuration for gRPC support
@@ -489,10 +475,10 @@ JWT authentication configuration
 
 License information
 
-| Field  | Type      | Default | Description |
-| ------ | --------- | ------- | ----------- |
-| `Name` | `string`  | —       | The name    |
-| `Url`  | `string?` | `null`  | Url         |
+| Field  | Type      | Default | Description                                             |
+| ------ | --------- | ------- | ------------------------------------------------------- |
+| `Name` | `string`  | —       | SPDX license identifier or display name (e.g. `"MIT"`). |
+| `Url`  | `string?` | `null`  | URL to the full license text.                           |
 
 ---
 
@@ -820,70 +806,6 @@ public Response CreateDefault()
 
 ---
 
-##### ResponseSnapshot
-
-Snapshot of an Axum response used by higher-level language bindings.
-
-| Field     | Type                         | Default | Description                                                |
-| --------- | ---------------------------- | ------- | ---------------------------------------------------------- |
-| `Status`  | `ushort`                     | —       | HTTP status code.                                          |
-| `Headers` | `Dictionary<string, string>` | —       | Response headers (lowercase keys for predictable lookups). |
-| `Body`    | `byte[]`                     | —       | Response body bytes (decoded for supported encodings).     |
-
-###### Methods
-
-###### Text()
-
-Return response body as UTF-8 string.
-
-**Signature:**
-
-```csharp
-public string Text()
-```
-
-###### Json()
-
-Parse response body as JSON.
-
-**Signature:**
-
-```csharp
-public object Json()
-```
-
-###### Header()
-
-Lookup header by case-insensitive name.
-
-**Signature:**
-
-```csharp
-public string? Header(string name)
-```
-
-###### GraphqlData()
-
-Extract GraphQL data from response
-
-**Signature:**
-
-```csharp
-public object GraphqlData()
-```
-
-###### GraphqlErrors()
-
-Extract GraphQL errors from response
-
-**Signature:**
-
-```csharp
-public List<object> GraphqlErrors()
-```
-
----
-
 ##### SchemaConfig
 
 Configuration for GraphQL schema building.
@@ -953,10 +875,10 @@ public ServerConfig CreateDefault()
 
 Server information
 
-| Field         | Type      | Default | Description                |
-| ------------- | --------- | ------- | -------------------------- |
-| `Url`         | `string`  | —       | Url                        |
-| `Description` | `string?` | `null`  | Human-readable description |
+| Field         | Type      | Default | Description                                                     |
+| ------------- | --------- | ------- | --------------------------------------------------------------- |
+| `Url`         | `string`  | —       | Base URL of the server (e.g. `"<https://api.example.com/v1"`>). |
+| `Description` | `string?` | `null`  | Optional human-readable description of the server environment.  |
 
 ---
 
@@ -1028,166 +950,13 @@ Static file serving configuration
 
 ---
 
-##### TestClient
+##### TestingSseEvent
 
-Core test client for making HTTP requests to a Spikard application.
+A single Server-Sent Event.
 
-This struct wraps axum-test's TestServer and provides a language-agnostic
-interface for making HTTP requests, sending WebSocket connections, and
-handling Server-Sent Events. Language bindings wrap this to provide
-native API surfaces.
-
-###### Methods
-
-###### Get()
-
-Make a GET request
-
-**Signature:**
-
-```csharp
-public async Task<ResponseSnapshot> GetAsync(string path, List<string> queryParams, List<string> headers)
-```
-
-###### Post()
-
-Make a POST request
-
-**Signature:**
-
-```csharp
-public async Task<ResponseSnapshot> PostAsync(string path, object json, List<string> formData, string multipart, List<string> queryParams, List<string> headers)
-```
-
-###### RequestRaw()
-
-Make a request with a raw body payload.
-
-**Signature:**
-
-```csharp
-public async Task<ResponseSnapshot> RequestRawAsync(Method method, string path, byte[] body, List<string> queryParams, List<string> headers)
-```
-
-###### Put()
-
-Make a PUT request
-
-**Signature:**
-
-```csharp
-public async Task<ResponseSnapshot> PutAsync(string path, object json, List<string> queryParams, List<string> headers)
-```
-
-###### Patch()
-
-Make a PATCH request
-
-**Signature:**
-
-```csharp
-public async Task<ResponseSnapshot> PatchAsync(string path, object json, List<string> queryParams, List<string> headers)
-```
-
-###### Delete()
-
-Make a DELETE request
-
-**Signature:**
-
-```csharp
-public async Task<ResponseSnapshot> DeleteAsync(string path, List<string> queryParams, List<string> headers)
-```
-
-###### Options()
-
-Make an OPTIONS request
-
-**Signature:**
-
-```csharp
-public async Task<ResponseSnapshot> OptionsAsync(string path, List<string> queryParams, List<string> headers)
-```
-
-###### Head()
-
-Make a HEAD request
-
-**Signature:**
-
-```csharp
-public async Task<ResponseSnapshot> HeadAsync(string path, List<string> queryParams, List<string> headers)
-```
-
-###### Trace()
-
-Make a TRACE request
-
-**Signature:**
-
-```csharp
-public async Task<ResponseSnapshot> TraceAsync(string path, List<string> queryParams, List<string> headers)
-```
-
-###### GraphqlAt()
-
-Send a GraphQL query/mutation to a custom endpoint
-
-**Signature:**
-
-```csharp
-public async Task<ResponseSnapshot> GraphqlAtAsync(string endpoint, string query, object variables, string operationName)
-```
-
-###### Graphql()
-
-Send a GraphQL query/mutation
-
-**Signature:**
-
-```csharp
-public async Task<ResponseSnapshot> GraphqlAsync(string query, object variables, string operationName)
-```
-
-###### GraphqlWithStatus()
-
-Send a GraphQL query and return HTTP status code separately
-
-This method allows tests to distinguish between:
-
-- HTTP-level errors (400/422 for invalid requests)
-- GraphQL-level errors (200 with errors in response body)
-
-**Signature:**
-
-```csharp
-public async Task<string> GraphqlWithStatusAsync(string query, object variables, string operationName)
-```
-
-###### GraphqlSubscriptionAt()
-
-Send a GraphQL subscription (WebSocket) to a custom endpoint.
-
-Uses the `graphql-transport-ws` protocol and captures the first `next` payload.
-After the first payload is received, this client sends `complete` to unsubscribe.
-
-**Signature:**
-
-```csharp
-public async Task<GraphQlSubscriptionSnapshot> GraphqlSubscriptionAtAsync(string endpoint, string query, object variables, string operationName)
-```
-
-###### GraphqlSubscription()
-
-Send a GraphQL subscription (WebSocket).
-
-Uses `/graphql` as the default subscription endpoint.
-
-**Signature:**
-
-```csharp
-public async Task<GraphQlSubscriptionSnapshot> GraphqlSubscriptionAsync(string query, object variables, string operationName)
-```
+| Field  | Type     | Default | Description                  |
+| ------ | -------- | ------- | ---------------------------- |
+| `Data` | `string` | —       | The data field of the event. |
 
 ---
 
@@ -1272,48 +1041,6 @@ Response body for `POST /asyncapi/validate`
 ---
 
 #### Enums
-
-##### SnapshotError
-
-Possible errors while converting an Axum response into a snapshot.
-
-| Value           | Description                                                            |
-| --------------- | ---------------------------------------------------------------------- |
-| `InvalidHeader` | Response header could not be decoded to UTF-8. — Fields: `0`: `string` |
-| `Decompression` | Body decompression failed. — Fields: `0`: `string`                     |
-
----
-
-##### WebSocketMessage
-
-A WebSocket message that can be text or binary.
-
-| Value    | Description                                                                                                                                                                                                                       |
-| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Text`   | A text message. — Fields: `0`: `string`                                                                                                                                                                                           |
-| `Binary` | A binary message. — Fields: `0`: `byte[]`                                                                                                                                                                                         |
-| `Close`  | A close message with a numeric close code (RFC 6455) and optional reason text. Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received, 1006 Abnormal Closure. — Fields: `Code`: `ushort`, `Reason`: `string` |
-| `Ping`   | A ping message. — Fields: `0`: `byte[]`                                                                                                                                                                                           |
-| `Pong`   | A pong message. — Fields: `0`: `byte[]`                                                                                                                                                                                           |
-
----
-
-##### Method
-
-HTTP method
-
-| Value     | Description |
-| --------- | ----------- |
-| `Get`     | Get         |
-| `Post`    | Post        |
-| `Put`     | Put         |
-| `Patch`   | Patch       |
-| `Delete`  | Delete      |
-| `Head`    | Head        |
-| `Options` | Options     |
-| `Trace`   | Trace       |
-
----
 
 ##### SecuritySchemeInfo
 

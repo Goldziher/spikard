@@ -481,11 +481,11 @@ Request body for `POST /asyncapi/validate`
 
 Contact information
 
-| Field   | Type             | Default | Description |
-| ------- | ---------------- | ------- | ----------- |
-| `name`  | `Option<String>` | `None`  | The name    |
-| `email` | `Option<String>` | `None`  | Email       |
-| `url`   | `Option<String>` | `None`  | Url         |
+| Field   | Type             | Default | Description                                   |
+| ------- | ---------------- | ------- | --------------------------------------------- |
+| `name`  | `Option<String>` | `None`  | Name of the contact person or organisation.   |
+| `email` | `Option<String>` | `None`  | Contact email address.                        |
+| `url`   | `Option<String>` | `None`  | URL pointing to the contact information page. |
 
 ---
 
@@ -493,10 +493,10 @@ Contact information
 
 License information
 
-| Field  | Type             | Default | Description |
-| ------ | ---------------- | ------- | ----------- |
-| `name` | `String`         | —       | The name    |
-| `url`  | `Option<String>` | `None`  | Url         |
+| Field  | Type             | Default | Description                                             |
+| ------ | ---------------- | ------- | ------------------------------------------------------- |
+| `name` | `String`         | —       | SPDX license identifier or display name (e.g. `"MIT"`). |
+| `url`  | `Option<String>` | `None`  | URL to the full license text.                           |
 
 ---
 
@@ -504,10 +504,10 @@ License information
 
 Server information
 
-| Field         | Type             | Default | Description                |
-| ------------- | ---------------- | ------- | -------------------------- |
-| `url`         | `String`         | —       | Url                        |
-| `description` | `Option<String>` | `None`  | Human-readable description |
+| Field         | Type             | Default | Description                                                     |
+| ------------- | ---------------- | ------- | --------------------------------------------------------------- |
+| `url`         | `String`         | —       | Base URL of the server (e.g. `"<https://api.example.com/v1"`>). |
+| `description` | `Option<String>` | `None`  | Optional human-readable description of the server environment.  |
 
 ---
 
@@ -538,7 +538,17 @@ retry: 3000
 
 ---
 
-### GraphQLSubscriptionSnapshot
+### TestingSseEvent
+
+A single Server-Sent Event.
+
+| Field  | Type     | Default | Description                  |
+| ------ | -------- | ------- | ---------------------------- |
+| `data` | `String` | —       | The data field of the event. |
+
+---
+
+#### GraphQLSubscriptionSnapshot
 
 Snapshot of a GraphQL subscription exchange over WebSocket.
 
@@ -552,7 +562,7 @@ Snapshot of a GraphQL subscription exchange over WebSocket.
 
 ---
 
-#### TestClient
+##### TestClient
 
 Core test client for making HTTP requests to a Spikard application.
 
@@ -566,23 +576,6 @@ _Opaque type — fields are not directly accessible._
 ---
 
 #### Enums
-
-##### Method
-
-HTTP method
-
-| Variant   | Description |
-| --------- | ----------- |
-| `Get`     | Get         |
-| `Post`    | Post        |
-| `Put`     | Put         |
-| `Patch`   | Patch       |
-| `Delete`  | Delete      |
-| `Head`    | Head        |
-| `Options` | Options     |
-| `Trace`   | Trace       |
-
----
 
 ##### SecuritySchemeInfo
 
@@ -603,19 +596,5 @@ Possible errors while converting an Axum response into a snapshot.
 | --------------- | ----------------------------------------------------------------------- |
 | `InvalidHeader` | Response header could not be decoded to UTF-8. — Fields: `_0`: `String` |
 | `Decompression` | Body decompression failed. — Fields: `_0`: `String`                     |
-
----
-
-##### WebSocketMessage
-
-A WebSocket message that can be text or binary.
-
-| Variant  | Description                                                                                                                                                                                                                    |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Text`   | A text message. — Fields: `_0`: `String`                                                                                                                                                                                       |
-| `Binary` | A binary message. — Fields: `_0`: `Vec<u8>`                                                                                                                                                                                    |
-| `Close`  | A close message with a numeric close code (RFC 6455) and optional reason text. Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received, 1006 Abnormal Closure. — Fields: `code`: `u16`, `reason`: `String` |
-| `Ping`   | A ping message. — Fields: `_0`: `Vec<u8>`                                                                                                                                                                                      |
-| `Pong`   | A pong message. — Fields: `_0`: `Vec<u8>`                                                                                                                                                                                      |
 
 ---

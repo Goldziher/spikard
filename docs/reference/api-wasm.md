@@ -90,47 +90,6 @@ AsyncAPI HTTP endpoint configuration
 
 ---
 
-#### BackgroundJobMetadata
-
-| Field       | Type             | Default | Description |
-| ----------- | ---------------- | ------- | ----------- |
-| `name`      | `string`         | —       | The name    |
-| `requestId` | `string \| null` | `null`  | Request id  |
-
-##### Methods
-
-###### default()
-
-**Signature:**
-
-```typescript
-static default(): BackgroundJobMetadata
-```
-
----
-
-#### BackgroundTaskConfig
-
-Configuration for in-process background task execution.
-
-| Field                | Type     | Default | Description              |
-| -------------------- | -------- | ------- | ------------------------ |
-| `maxQueueSize`       | `number` | `1024`  | Maximum queue size       |
-| `maxConcurrentTasks` | `number` | `128`   | Maximum concurrent tasks |
-| `drainTimeoutSecs`   | `number` | `30`    | Drain timeout secs       |
-
-##### Methods
-
-###### default()
-
-**Signature:**
-
-```typescript
-static default(): BackgroundTaskConfig
-```
-
----
-
 #### CompressionConfig
 
 Compression configuration shared across runtimes
@@ -158,11 +117,11 @@ static default(): CompressionConfig
 
 Contact information
 
-| Field   | Type             | Default | Description |
-| ------- | ---------------- | ------- | ----------- |
-| `name`  | `string \| null` | `null`  | The name    |
-| `email` | `string \| null` | `null`  | Email       |
-| `url`   | `string \| null` | `null`  | Url         |
+| Field   | Type             | Default | Description                                   |
+| ------- | ---------------- | ------- | --------------------------------------------- |
+| `name`  | `string \| null` | `null`  | Name of the contact person or organisation.   |
+| `email` | `string \| null` | `null`  | Contact email address.                        |
+| `url`   | `string \| null` | `null`  | URL pointing to the contact information page. |
 
 ---
 
@@ -265,172 +224,7 @@ static default(): FullSchemaConfig
 
 ---
 
-#### GraphQlRouteConfig
-
-Configuration for GraphQL routes
-
-Provides a builder pattern for configuring GraphQL route parameters
-for the Spikard HTTP server's routing system.
-
-##### Methods
-
-###### path()
-
-Set the HTTP path for the GraphQL endpoint
-
-**Signature:**
-
-```typescript
-path(path: string): GraphQlRouteConfig
-```
-
-###### method()
-
-Set the HTTP method for the GraphQL endpoint
-
-**Signature:**
-
-```typescript
-method(method: string): GraphQlRouteConfig
-```
-
-###### enablePlayground()
-
-Enable or disable the GraphQL Playground UI
-
-**Signature:**
-
-```typescript
-enablePlayground(enable: boolean): GraphQlRouteConfig
-```
-
-###### description()
-
-Set a custom description for documentation
-
-**Signature:**
-
-```typescript
-description(description: string): GraphQlRouteConfig
-```
-
-###### getPath()
-
-Get the configured path
-
-**Signature:**
-
-```typescript
-getPath(): string
-```
-
-###### getMethod()
-
-Get the configured method
-
-**Signature:**
-
-```typescript
-getMethod(): string
-```
-
-###### isPlaygroundEnabled()
-
-Check if playground is enabled
-
-**Signature:**
-
-```typescript
-isPlaygroundEnabled(): boolean
-```
-
-###### getDescription()
-
-Get the description if set
-
-**Signature:**
-
-```typescript
-getDescription(): string | null
-```
-
-###### default()
-
-**Signature:**
-
-```typescript
-static default(): GraphQlRouteConfig
-```
-
----
-
-#### GraphQlSubscriptionSnapshot
-
-Snapshot of a GraphQL subscription exchange over WebSocket.
-
-| Field              | Type              | Default | Description                                                       |
-| ------------------ | ----------------- | ------- | ----------------------------------------------------------------- |
-| `operationId`      | `string`          | —       | Operation id used for the subscription request.                   |
-| `acknowledged`     | `boolean`         | —       | Whether the server acknowledged the GraphQL WebSocket connection. |
-| `event`            | `unknown \| null` | `null`  | First `next.payload` received for this subscription, if any.      |
-| `errors`           | `Array<unknown>`  | —       | GraphQL protocol errors emitted by the server.                    |
-| `completeReceived` | `boolean`         | —       | Whether a `complete` frame was observed for this operation.       |
-
----
-
-#### GrpcConfig
-
-Configuration for gRPC support
-
-Controls how the server handles gRPC requests, including compression,
-timeouts, and protocol settings.
-
-## Stream Limits
-
-This configuration enforces message-level size limits but delegates
-concurrent stream limiting to the HTTP/2 transport layer:
-
-- **Message Size Limits**: The `max_message_size` field is enforced per
-  individual message (request or response) in both unary and streaming RPCs.
-  When a single message exceeds this limit, the request is rejected with
-  `PAYLOAD_TOO_LARGE` (HTTP 413).
-
-- **Concurrent Stream Limits**: The `max_concurrent_streams` is an advisory
-  configuration passed to the HTTP/2 layer for connection-level stream
-  negotiation. The HTTP/2 transport automatically enforces this limit and
-  returns GOAWAY frames when exceeded. Applications should not rely on
-  custom enforcement of this limit.
-
-- **Stream Response Size Limits**: The `max_stream_response_bytes` field caps the
-  total encoded bytes emitted across a server-streaming or bidi-streaming response.
-  When the cumulative size exceeds the limit, the stream is terminated with
-  `tonic.Status.resource_exhausted`. Defaults to `null` (unbounded).
-
-| Field                    | Type             | Default | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| ------------------------ | ---------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `enabled`                | `boolean`        | `true`  | Enable gRPC support                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `maxMessageSize`         | `number`         | —       | Maximum message size in bytes (for both sending and receiving) This limit applies to individual messages in both unary and streaming RPCs. When a single message exceeds this size, the request is rejected with HTTP 413 (Payload Too Large). Default: 4MB (4194304 bytes) **Note:** This limit does NOT apply to the total response size in streaming RPCs. For multi-message streams, the total response can exceed this limit as long as each individual message stays within the limit.                                                                                                                                                                                                                                                               |
-| `enableCompression`      | `boolean`        | `true`  | Enable gzip compression for gRPC messages                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `requestTimeout`         | `number \| null` | `null`  | Timeout for gRPC requests in seconds (None = no timeout)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `maxConcurrentStreams`   | `number`         | —       | Maximum number of concurrent streams per connection (HTTP/2 advisory) This value is communicated to HTTP/2 clients as the server's flow control limit. The HTTP/2 transport layer enforces this limit automatically via SETTINGS frames and GOAWAY responses. Applications should NOT implement custom enforcement. Default: 100 streams per connection # Stream Limiting Strategy - **Per Connection**: This limit applies per HTTP/2 connection, not globally - **Transport Enforcement**: HTTP/2 handles all stream limiting; applications need not implement custom checks - **Streaming Requests**: In server streaming or bidi streaming, each logical RPC consumes one stream slot. Message ordering within a stream follows HTTP/2 frame ordering. |
-| `enableKeepalive`        | `boolean`        | `true`  | Enable HTTP/2 keepalive                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `keepaliveInterval`      | `number`         | —       | HTTP/2 keepalive interval in seconds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `keepaliveTimeout`       | `number`         | —       | HTTP/2 keepalive timeout in seconds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `maxStreamResponseBytes` | `number \| null` | `null`  | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `null` (unbounded total response size).                                                                                                                                                                                                                                                            |
-
-### Methods
-
-#### default()
-
-**Signature:**
-
-```typescript
-static default(): GrpcConfig
-```
-
----
-
-##### JsonRpcConfig
+#### JsonRpcConfig
 
 JSON-RPC server configuration
 
@@ -441,7 +235,7 @@ JSON-RPC server configuration
 | `enableBatch`  | `boolean` | —       | Enable batch request processing (default: true)            |
 | `maxBatchSize` | `number`  | —       | Maximum number of requests in a batch (default: 100)       |
 
-###### Methods
+##### Methods
 
 ###### default()
 
@@ -453,7 +247,7 @@ static default(): JsonRpcConfig
 
 ---
 
-##### JsonRpcMethodInfo
+#### JsonRpcMethodInfo
 
 JSON-RPC method metadata for routes that support JSON-RPC
 
@@ -471,7 +265,7 @@ enabling discovery and documentation of RPC-compatible endpoints.
 
 ---
 
-##### JwtConfig
+#### JwtConfig
 
 JWT authentication configuration
 
@@ -485,18 +279,18 @@ JWT authentication configuration
 
 ---
 
-##### LicenseInfo
+#### LicenseInfo
 
 License information
 
-| Field  | Type             | Default | Description |
-| ------ | ---------------- | ------- | ----------- |
-| `name` | `string`         | —       | The name    |
-| `url`  | `string \| null` | `null`  | Url         |
+| Field  | Type             | Default | Description                                             |
+| ------ | ---------------- | ------- | ------------------------------------------------------- |
+| `name` | `string`         | —       | SPDX license identifier or display name (e.g. `"MIT"`). |
+| `url`  | `string \| null` | `null`  | URL to the full license text.                           |
 
 ---
 
-##### OpenApiConfig
+#### OpenApiConfig
 
 OpenAPI configuration
 
@@ -514,7 +308,7 @@ OpenAPI configuration
 | `servers`         | `Array<ServerInfo>`                  | `[]`      | Server definitions                                               |
 | `securitySchemes` | `Record<string, SecuritySchemeInfo>` | `{}`      | Security schemes (auto-detected from middleware if not provided) |
 
-###### Methods
+##### Methods
 
 ###### default()
 
@@ -526,7 +320,7 @@ static default(): OpenApiConfig
 
 ---
 
-##### ParseRequest
+#### ParseRequest
 
 Request body for `POST /asyncapi/parse`
 
@@ -536,7 +330,7 @@ Request body for `POST /asyncapi/parse`
 
 ---
 
-##### ParseResult
+#### ParseResult
 
 Full parse result returned by `POST /asyncapi/parse`
 
@@ -551,7 +345,7 @@ Full parse result returned by `POST /asyncapi/parse`
 
 ---
 
-##### ParsedChannel
+#### ParsedChannel
 
 A single channel extracted from an AsyncAPI spec
 
@@ -564,7 +358,7 @@ A single channel extracted from an AsyncAPI spec
 
 ---
 
-##### ParsedMessage
+#### ParsedMessage
 
 A resolved message (name + JSON Schema)
 
@@ -575,7 +369,7 @@ A resolved message (name + JSON Schema)
 
 ---
 
-##### ParsedOperation
+#### ParsedOperation
 
 A single operation extracted from an AsyncAPI spec
 
@@ -587,7 +381,7 @@ A single operation extracted from an AsyncAPI spec
 
 ---
 
-##### ProblemDetails
+#### ProblemDetails
 
 RFC 9457 Problem Details for HTTP APIs
 
@@ -712,50 +506,6 @@ toJsonPretty(): string
 
 ---
 
-##### QueryMutationConfig
-
-Configuration for schemas with Query and Mutation types
-
-| Field                  | Type             | Default | Description                                 |
-| ---------------------- | ---------------- | ------- | ------------------------------------------- |
-| `introspectionEnabled` | `boolean`        | `true`  | Enable introspection queries                |
-| `complexityLimit`      | `number \| null` | `null`  | Maximum query complexity (None = unlimited) |
-| `depthLimit`           | `number \| null` | `null`  | Maximum query depth (None = unlimited)      |
-
-###### Methods
-
-###### default()
-
-**Signature:**
-
-```typescript
-static default(): QueryMutationConfig
-```
-
----
-
-##### QueryOnlyConfig
-
-Configuration for schemas with only Query type
-
-| Field                  | Type             | Default | Description                                 |
-| ---------------------- | ---------------- | ------- | ------------------------------------------- |
-| `introspectionEnabled` | `boolean`        | `true`  | Enable introspection queries                |
-| `complexityLimit`      | `number \| null` | `null`  | Maximum query complexity (None = unlimited) |
-| `depthLimit`           | `number \| null` | `null`  | Maximum query depth (None = unlimited)      |
-
-###### Methods
-
-###### default()
-
-**Signature:**
-
-```typescript
-static default(): QueryOnlyConfig
-```
-
----
-
 ##### RateLimitConfig
 
 Rate limiting configuration shared across runtimes
@@ -816,70 +566,6 @@ setCookie(key: string, value: string, secure: boolean, httpOnly: boolean, maxAge
 
 ```typescript
 static default(): Response
-```
-
----
-
-##### ResponseSnapshot
-
-Snapshot of an Axum response used by higher-level language bindings.
-
-| Field     | Type                     | Default | Description                                                |
-| --------- | ------------------------ | ------- | ---------------------------------------------------------- |
-| `status`  | `number`                 | —       | HTTP status code.                                          |
-| `headers` | `Record<string, string>` | —       | Response headers (lowercase keys for predictable lookups). |
-| `body`    | `Buffer`                 | —       | Response body bytes (decoded for supported encodings).     |
-
-###### Methods
-
-###### text()
-
-Return response body as UTF-8 string.
-
-**Signature:**
-
-```typescript
-text(): string
-```
-
-###### json()
-
-Parse response body as JSON.
-
-**Signature:**
-
-```typescript
-json(): unknown
-```
-
-###### header()
-
-Lookup header by case-insensitive name.
-
-**Signature:**
-
-```typescript
-header(name: string): string | null
-```
-
-###### graphqlData()
-
-Extract GraphQL data from response
-
-**Signature:**
-
-```typescript
-graphqlData(): unknown
-```
-
-###### graphqlErrors()
-
-Extract GraphQL errors from response
-
-**Signature:**
-
-```typescript
-graphqlErrors(): Array<unknown>
 ```
 
 ---
@@ -953,78 +639,10 @@ static default(): ServerConfig
 
 Server information
 
-| Field         | Type             | Default | Description                |
-| ------------- | ---------------- | ------- | -------------------------- |
-| `url`         | `string`         | —       | Url                        |
-| `description` | `string \| null` | `null`  | Human-readable description |
-
----
-
-##### SseEvent
-
-An individual SSE event
-
-Represents a single Server-Sent Event to be sent to a connected client.
-Events can have an optional type, ID, and retry timeout for advanced scenarios.
-
-## SSE Format
-
-Events are serialized to the following text format:
-
-```text
-event: event_type
-data: {"json":"value"}
-id: event-123
-retry: 3000
-```
-
-| Field       | Type             | Default | Description                                       |
-| ----------- | ---------------- | ------- | ------------------------------------------------- |
-| `eventType` | `string \| null` | `null`  | Event type (optional)                             |
-| `data`      | `unknown`        | —       | Event data (JSON value)                           |
-| `id`        | `string \| null` | `null`  | Event ID (optional, for client-side reconnection) |
-| `retry`     | `number \| null` | `null`  | Retry timeout in milliseconds (optional)          |
-
-### Methods
-
-#### withId()
-
-Set the event ID for client-side reconnection support
-
-Sets an ID that clients can use to resume from this point if they disconnect.
-The client sends this ID back in the `Last-Event-ID` header when reconnecting.
-
-**Signature:**
-
-```typescript
-withId(id: string): SseEvent
-```
-
-##### withRetry()
-
-Set the retry timeout for client reconnection
-
-Sets the time in milliseconds clients should wait before attempting to reconnect
-if the connection is lost. The client browser will automatically handle reconnection.
-
-**Signature:**
-
-```typescript
-withRetry(retryMs: number): SseEvent
-```
-
----
-
-##### StaticFilesConfig
-
-Static file serving configuration
-
-| Field          | Type             | Default | Description                            |
-| -------------- | ---------------- | ------- | -------------------------------------- |
-| `directory`    | `string`         | —       | Directory path to serve                |
-| `routePrefix`  | `string`         | —       | URL path prefix (e.g., "/static")      |
-| `indexFile`    | `boolean`        | —       | Fallback to index.html for directories |
-| `cacheControl` | `string \| null` | `null`  | Cache-Control header value             |
+| Field         | Type             | Default | Description                                                     |
+| ------------- | ---------------- | ------- | --------------------------------------------------------------- |
+| `url`         | `string`         | —       | Base URL of the server (e.g. `"<https://api.example.com/v1"`>). |
+| `description` | `string \| null` | `null`  | Optional human-readable description of the server environment.  |
 
 ---
 
@@ -1066,7 +684,7 @@ Make a request with a raw body payload.
 **Signature:**
 
 ```typescript
-requestRaw(method: Method, path: string, body: Buffer, queryParams: Array<string>, headers: Array<string>): ResponseSnapshot
+requestRaw(method: string, path: string, body: Buffer, queryParams: Array<string>, headers: Array<string>): ResponseSnapshot
 ```
 
 ###### put()
@@ -1191,59 +809,13 @@ graphqlSubscription(query: string, variables: unknown, operationName: string): G
 
 ---
 
-##### UploadFile
+##### TestingSseEvent
 
-Represents an uploaded file from multipart/form-data requests.
+A single Server-Sent Event.
 
-This struct provides efficient access to file content with automatic
-base64 decoding and implements standard I/O traits for compatibility.
-
-| Field             | Type             | Default | Description                              |
-| ----------------- | ---------------- | ------- | ---------------------------------------- |
-| `filename`        | `string`         | —       | Original filename from the client        |
-| `contentType`     | `string \| null` | `null`  | MIME type of the uploaded file           |
-| `size`            | `number \| null` | `null`  | Size of the file in bytes                |
-| `content`         | `Buffer`         | —       | File content (may be base64 encoded)     |
-| `contentEncoding` | `string \| null` | `null`  | Content encoding type                    |
-| `cursor`          | `string`         | —       | Internal cursor for Read/Seek operations |
-
-###### Methods
-
-###### asBytes()
-
-Get the raw file content as bytes.
-
-This provides zero-copy access to the underlying buffer.
-
-**Signature:**
-
-```typescript
-asBytes(): Buffer
-```
-
-###### readToString()
-
-Read the file content as a UTF-8 string.
-
-**Errors:**
-
-Returns an error if the content is not valid UTF-8.
-
-**Signature:**
-
-```typescript
-readToString(): string
-```
-
-###### contentTypeOrDefault()
-
-Get the content type, defaulting to "application/octet-stream".
-
-**Signature:**
-
-```typescript
-contentTypeOrDefault(): string
-```
+| Field  | Type     | Default | Description                  |
+| ------ | -------- | ------- | ---------------------------- |
+| `data` | `string` | —       | The data field of the event. |
 
 ---
 
@@ -1272,48 +844,6 @@ Response body for `POST /asyncapi/validate`
 ---
 
 #### Enums
-
-##### SnapshotError
-
-Possible errors while converting an Axum response into a snapshot.
-
-| Value           | Description                                                            |
-| --------------- | ---------------------------------------------------------------------- |
-| `InvalidHeader` | Response header could not be decoded to UTF-8. — Fields: `0`: `string` |
-| `Decompression` | Body decompression failed. — Fields: `0`: `string`                     |
-
----
-
-##### WebSocketMessage
-
-A WebSocket message that can be text or binary.
-
-| Value    | Description                                                                                                                                                                                                                       |
-| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Text`   | A text message. — Fields: `0`: `string`                                                                                                                                                                                           |
-| `Binary` | A binary message. — Fields: `0`: `Buffer`                                                                                                                                                                                         |
-| `Close`  | A close message with a numeric close code (RFC 6455) and optional reason text. Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received, 1006 Abnormal Closure. — Fields: `code`: `number`, `reason`: `string` |
-| `Ping`   | A ping message. — Fields: `0`: `Buffer`                                                                                                                                                                                           |
-| `Pong`   | A pong message. — Fields: `0`: `Buffer`                                                                                                                                                                                           |
-
----
-
-##### Method
-
-HTTP method
-
-| Value     | Description |
-| --------- | ----------- |
-| `Get`     | Get         |
-| `Post`    | Post        |
-| `Put`     | Put         |
-| `Patch`   | Patch       |
-| `Delete`  | Delete      |
-| `Head`    | Head        |
-| `Options` | Options     |
-| `Trace`   | Trace       |
-
----
 
 ##### SecuritySchemeInfo
 

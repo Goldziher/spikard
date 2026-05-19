@@ -396,20 +396,27 @@ pub const OpenApiConfig = struct {
 
 /// Contact information
 pub const ContactInfo = struct {
+    /// Name of the contact person or organisation.
     name: ?[]const u8,
+    /// Contact email address.
     email: ?[]const u8,
+    /// URL pointing to the contact information page.
     url: ?[]const u8,
 };
 
 /// License information
 pub const LicenseInfo = struct {
+    /// SPDX license identifier or display name (e.g. `"MIT"`).
     name: []const u8,
+    /// URL to the full license text.
     url: ?[]const u8,
 };
 
 /// Server information
 pub const ServerInfo = struct {
+    /// Base URL of the server (e.g. `"https://api.example.com/v1"`).
     url: []const u8,
+    /// Optional human-readable description of the server environment.
     description: ?[]const u8,
 };
 
@@ -522,18 +529,6 @@ pub const ServerConfig = struct {
     background_tasks: BackgroundTaskConfig,
     /// Enable per-request HTTP tracing (tower-http `TraceLayer`)
     enable_http_trace: bool,
-};
-
-/// HTTP method
-pub const Method = enum {
-    get,
-    post,
-    put,
-    patch,
-    delete,
-    head,
-    options,
-    trace,
 };
 
 /// Security scheme types
@@ -709,5 +704,15 @@ pub const ValidateRequest = struct {
     /// Release the underlying FFI handle. Safe to call once per instance.
     pub fn free(self: *ValidateRequest) void {
         c.spikard_validate_request_free(@as(*c.SPIKARDValidateRequest, @ptrCast(self._handle)));
+    }
+};
+
+/// A single Server-Sent Event.
+pub const TestingSseEvent = struct {
+    _handle: *anyopaque,
+
+    /// Release the underlying FFI handle. Safe to call once per instance.
+    pub fn free(self: *TestingSseEvent) void {
+        c.spikard_testing_sse_event_free(@as(*c.SPIKARDTestingSseEvent, @ptrCast(self._handle)));
     }
 };

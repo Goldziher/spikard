@@ -1,26 +1,26 @@
 [workspace]
 resolver = "2"
 members = [
-  "crates/spikard",
-  "crates/spikard-cli",
-  "crates/spikard-codegen",
-  "crates/spikard-core",
-  "crates/spikard-ffi",
-  "crates/spikard-graphql",
-  "crates/spikard-http",
-  "crates/spikard-node",
-  "crates/spikard-php",
-  "crates/spikard-py",
-  "crates/spikard-wasm",
-  "packages/swift/rust",
+    "crates/spikard",
+    "crates/spikard-cli",
+    "crates/spikard-codegen",
+    "crates/spikard-core",
+    "crates/spikard-ffi",
+    "crates/spikard-graphql",
+    "crates/spikard-http",
+    "crates/spikard-node",
+    "crates/spikard-php",
+    "crates/spikard-py",
+    "crates/spikard-wasm",
+    "packages/swift/rust",
 ]
 exclude = [
-  "e2e/*",
-  "examples/*",
-  "packages/dart/rust",
-  "packages/elixir/native/spikard_nif",
-  "packages/ruby/ext/spikard_rb/native",
-  "test_apps/*",
+    "e2e/*",
+    "examples/*",
+    "packages/dart/rust",
+    "packages/elixir/native/spikard_nif",
+    "packages/ruby/ext/spikard_rb/native",
+    "test_apps/*",
 ]
 
 [workspace.package]
@@ -63,15 +63,15 @@ tokio = { version = "1", features = ["full"] }
 tonic = { version = "0.14", features = ["transport", "codegen", "gzip"] }
 tower = "0.5"
 tower-http = { version = "0.6.10", features = [
-  "trace",
-  "request-id",
-  "compression-gzip",
-  "compression-br",
-  "timeout",
-  "limit",
-  "fs",
-  "set-header",
-  "sensitive-headers",
+    "trace",
+    "request-id",
+    "compression-gzip",
+    "compression-br",
+    "timeout",
+    "limit",
+    "fs",
+    "set-header",
+    "sensitive-headers",
 ] }
 
 # Middleware and auth

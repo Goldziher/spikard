@@ -158,11 +158,11 @@ pub fn default() CompressionConfig
 
 Contact information
 
-| Field   | Type            | Default | Description |
-| ------- | --------------- | ------- | ----------- |
-| `name`  | `[:0]const u8?` | `null`  | The name    |
-| `email` | `[:0]const u8?` | `null`  | Email       |
-| `url`   | `[:0]const u8?` | `null`  | Url         |
+| Field   | Type            | Default | Description                                   |
+| ------- | --------------- | ------- | --------------------------------------------- |
+| `name`  | `[:0]const u8?` | `null`  | Name of the contact person or organisation.   |
+| `email` | `[:0]const u8?` | `null`  | Contact email address.                        |
+| `url`   | `[:0]const u8?` | `null`  | URL pointing to the contact information page. |
 
 ---
 
@@ -489,10 +489,10 @@ JWT authentication configuration
 
 License information
 
-| Field  | Type            | Default | Description |
-| ------ | --------------- | ------- | ----------- |
-| `name` | `[:0]const u8`  | —       | The name    |
-| `url`  | `[:0]const u8?` | `null`  | Url         |
+| Field  | Type            | Default | Description                                             |
+| ------ | --------------- | ------- | ------------------------------------------------------- |
+| `name` | `[:0]const u8`  | —       | SPDX license identifier or display name (e.g. `"MIT"`). |
+| `url`  | `[:0]const u8?` | `null`  | URL to the full license text.                           |
 
 ---
 
@@ -842,16 +842,6 @@ Return response body as UTF-8 string.
 pub fn text(self: *const ResponseSnapshot) FromUtf8Error![:0]const u8
 ```
 
-###### json()
-
-Parse response body as JSON.
-
-**Signature:**
-
-```zig
-pub fn json(self: *const ResponseSnapshot) Error![:0]const u8
-```
-
 ###### header()
 
 Lookup header by case-insensitive name.
@@ -860,26 +850,6 @@ Lookup header by case-insensitive name.
 
 ```zig
 pub fn header(self: *const ResponseSnapshot, name: [:0]const u8) ?[:0]const u8
-```
-
-###### graphqlData()
-
-Extract GraphQL data from response
-
-**Signature:**
-
-```zig
-pub fn graphqlData(self: *const ResponseSnapshot) SnapshotError![:0]const u8
-```
-
-###### graphqlErrors()
-
-Extract GraphQL errors from response
-
-**Signature:**
-
-```zig
-pub fn graphqlErrors(self: *const ResponseSnapshot) SnapshotError![]const [:0]const u8
 ```
 
 ---
@@ -953,10 +923,10 @@ pub fn default() ServerConfig
 
 Server information
 
-| Field         | Type            | Default | Description                |
-| ------------- | --------------- | ------- | -------------------------- |
-| `url`         | `[:0]const u8`  | —       | Url                        |
-| `description` | `[:0]const u8?` | `null`  | Human-readable description |
+| Field         | Type            | Default | Description                                                     |
+| ------------- | --------------- | ------- | --------------------------------------------------------------- |
+| `url`         | `[:0]const u8`  | —       | Base URL of the server (e.g. `"<https://api.example.com/v1"`>). |
+| `description` | `[:0]const u8?` | `null`  | Optional human-readable description of the server environment.  |
 
 ---
 
@@ -1066,7 +1036,7 @@ Make a request with a raw body payload.
 **Signature:**
 
 ```zig
-pub fn requestRaw(self: *const TestClient, method: Method, path: [:0]const u8, body: []const u8, query_params: ?[]const [:0]const u8, headers: ?[]const [:0]const u8) SnapshotError!ResponseSnapshot
+pub fn requestRaw(self: *const TestClient, method: [:0]const u8, path: [:0]const u8, body: []const u8, query_params: ?[]const [:0]const u8, headers: ?[]const [:0]const u8) SnapshotError!ResponseSnapshot
 ```
 
 ###### put()
@@ -1191,6 +1161,16 @@ pub fn graphqlSubscription(self: *const TestClient, query: [:0]const u8, variabl
 
 ---
 
+##### TestingSseEvent
+
+A single Server-Sent Event.
+
+| Field  | Type           | Default | Description                  |
+| ------ | -------------- | ------- | ---------------------------- |
+| `data` | `[:0]const u8` | —       | The data field of the event. |
+
+---
+
 ##### UploadFile
 
 Represents an uploaded file from multipart/form-data requests.
@@ -1281,37 +1261,6 @@ Possible errors while converting an Axum response into a snapshot.
 | --------------- | ---------------------------------------------------------------------------- |
 | `InvalidHeader` | Response header could not be decoded to UTF-8. — Fields: `0`: `[:0]const u8` |
 | `Decompression` | Body decompression failed. — Fields: `0`: `[:0]const u8`                     |
-
----
-
-##### WebSocketMessage
-
-A WebSocket message that can be text or binary.
-
-| Value    | Description                                                                                                                                                                                                                          |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Text`   | A text message. — Fields: `0`: `[:0]const u8`                                                                                                                                                                                        |
-| `Binary` | A binary message. — Fields: `0`: `[]const u8`                                                                                                                                                                                        |
-| `Close`  | A close message with a numeric close code (RFC 6455) and optional reason text. Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received, 1006 Abnormal Closure. — Fields: `code`: `u16`, `reason`: `[:0]const u8` |
-| `Ping`   | A ping message. — Fields: `0`: `[]const u8`                                                                                                                                                                                          |
-| `Pong`   | A pong message. — Fields: `0`: `[]const u8`                                                                                                                                                                                          |
-
----
-
-##### Method
-
-HTTP method
-
-| Value     | Description |
-| --------- | ----------- |
-| `Get`     | Get         |
-| `Post`    | Post        |
-| `Put`     | Put         |
-| `Patch`   | Patch       |
-| `Delete`  | Delete      |
-| `Head`    | Head        |
-| `Options` | Options     |
-| `Trace`   | Trace       |
 
 ---
 

@@ -161,11 +161,11 @@ def default()
 
 Contact information
 
-| Field   | Type                | Default | Description |
-| ------- | ------------------- | ------- | ----------- |
-| `name`  | `String.t() \| nil` | `nil`   | The name    |
-| `email` | `String.t() \| nil` | `nil`   | Email       |
-| `url`   | `String.t() \| nil` | `nil`   | Url         |
+| Field   | Type                | Default | Description                                   |
+| ------- | ------------------- | ------- | --------------------------------------------- |
+| `name`  | `String.t() \| nil` | `nil`   | Name of the contact person or organisation.   |
+| `email` | `String.t() \| nil` | `nil`   | Contact email address.                        |
+| `url`   | `String.t() \| nil` | `nil`   | URL pointing to the contact information page. |
 
 ---
 
@@ -492,10 +492,10 @@ JWT authentication configuration
 
 License information
 
-| Field  | Type                | Default | Description |
-| ------ | ------------------- | ------- | ----------- |
-| `name` | `String.t()`        | —       | The name    |
-| `url`  | `String.t() \| nil` | `nil`   | Url         |
+| Field  | Type                | Default | Description                                             |
+| ------ | ------------------- | ------- | ------------------------------------------------------- |
+| `name` | `String.t()`        | —       | SPDX license identifier or display name (e.g. `"MIT"`). |
+| `url`  | `String.t() \| nil` | `nil`   | URL to the full license text.                           |
 
 ---
 
@@ -845,16 +845,6 @@ Return response body as UTF-8 string.
 def text()
 ```
 
-###### json()
-
-Parse response body as JSON.
-
-**Signature:**
-
-```elixir
-def json()
-```
-
 ###### header()
 
 Lookup header by case-insensitive name.
@@ -863,26 +853,6 @@ Lookup header by case-insensitive name.
 
 ```elixir
 def header(name)
-```
-
-###### graphql_data()
-
-Extract GraphQL data from response
-
-**Signature:**
-
-```elixir
-def graphql_data()
-```
-
-###### graphql_errors()
-
-Extract GraphQL errors from response
-
-**Signature:**
-
-```elixir
-def graphql_errors()
 ```
 
 ---
@@ -956,10 +926,10 @@ def default()
 
 Server information
 
-| Field         | Type                | Default | Description                |
-| ------------- | ------------------- | ------- | -------------------------- |
-| `url`         | `String.t()`        | —       | Url                        |
-| `description` | `String.t() \| nil` | `nil`   | Human-readable description |
+| Field         | Type                | Default | Description                                                     |
+| ------------- | ------------------- | ------- | --------------------------------------------------------------- |
+| `url`         | `String.t()`        | —       | Base URL of the server (e.g. `"<https://api.example.com/v1"`>). |
+| `description` | `String.t() \| nil` | `nil`   | Optional human-readable description of the server environment.  |
 
 ---
 
@@ -1031,222 +1001,13 @@ Static file serving configuration
 
 ---
 
-##### TestClient
+##### TestingSseEvent
 
-Core test client for making HTTP requests to a Spikard application.
+A single Server-Sent Event.
 
-This struct wraps axum-test's TestServer and provides a language-agnostic
-interface for making HTTP requests, sending WebSocket connections, and
-handling Server-Sent Events. Language bindings wrap this to provide
-native API surfaces.
-
-###### Functions
-
-###### get()
-
-Make a GET request
-
-**Signature:**
-
-```elixir
-def get(path, query_params, headers)
-```
-
-###### post()
-
-Make a POST request
-
-**Signature:**
-
-```elixir
-def post(path, json, form_data, multipart, query_params, headers)
-```
-
-###### request_raw()
-
-Make a request with a raw body payload.
-
-**Signature:**
-
-```elixir
-def request_raw(method, path, body, query_params, headers)
-```
-
-###### put()
-
-Make a PUT request
-
-**Signature:**
-
-```elixir
-def put(path, json, query_params, headers)
-```
-
-###### patch()
-
-Make a PATCH request
-
-**Signature:**
-
-```elixir
-def patch(path, json, query_params, headers)
-```
-
-###### delete()
-
-Make a DELETE request
-
-**Signature:**
-
-```elixir
-def delete(path, query_params, headers)
-```
-
-###### options()
-
-Make an OPTIONS request
-
-**Signature:**
-
-```elixir
-def options(path, query_params, headers)
-```
-
-###### head()
-
-Make a HEAD request
-
-**Signature:**
-
-```elixir
-def head(path, query_params, headers)
-```
-
-###### trace()
-
-Make a TRACE request
-
-**Signature:**
-
-```elixir
-def trace(path, query_params, headers)
-```
-
-###### graphql_at()
-
-Send a GraphQL query/mutation to a custom endpoint
-
-**Signature:**
-
-```elixir
-def graphql_at(endpoint, query, variables, operation_name)
-```
-
-###### graphql()
-
-Send a GraphQL query/mutation
-
-**Signature:**
-
-```elixir
-def graphql(query, variables, operation_name)
-```
-
-###### graphql_with_status()
-
-Send a GraphQL query and return HTTP status code separately
-
-This method allows tests to distinguish between:
-
-- HTTP-level errors (400/422 for invalid requests)
-- GraphQL-level errors (200 with errors in response body)
-
-**Signature:**
-
-```elixir
-def graphql_with_status(query, variables, operation_name)
-```
-
-###### graphql_subscription_at()
-
-Send a GraphQL subscription (WebSocket) to a custom endpoint.
-
-Uses the `graphql-transport-ws` protocol and captures the first `next` payload.
-After the first payload is received, this client sends `complete` to unsubscribe.
-
-**Signature:**
-
-```elixir
-def graphql_subscription_at(endpoint, query, variables, operation_name)
-```
-
-###### graphql_subscription()
-
-Send a GraphQL subscription (WebSocket).
-
-Uses `/graphql` as the default subscription endpoint.
-
-**Signature:**
-
-```elixir
-def graphql_subscription(query, variables, operation_name)
-```
-
----
-
-##### UploadFile
-
-Represents an uploaded file from multipart/form-data requests.
-
-This struct provides efficient access to file content with automatic
-base64 decoding and implements standard I/O traits for compatibility.
-
-| Field              | Type                | Default | Description                              |
-| ------------------ | ------------------- | ------- | ---------------------------------------- |
-| `filename`         | `String.t()`        | —       | Original filename from the client        |
-| `content_type`     | `String.t() \| nil` | `nil`   | MIME type of the uploaded file           |
-| `size`             | `integer() \| nil`  | `nil`   | Size of the file in bytes                |
-| `content`          | `binary()`          | —       | File content (may be base64 encoded)     |
-| `content_encoding` | `String.t() \| nil` | `nil`   | Content encoding type                    |
-| `cursor`           | `String.t()`        | —       | Internal cursor for Read/Seek operations |
-
-###### Functions
-
-###### as_bytes()
-
-Get the raw file content as bytes.
-
-This provides zero-copy access to the underlying buffer.
-
-**Signature:**
-
-```elixir
-def as_bytes()
-```
-
-###### read_to_string()
-
-Read the file content as a UTF-8 string.
-
-**Errors:**
-
-Returns an error if the content is not valid UTF-8.
-
-**Signature:**
-
-```elixir
-def read_to_string()
-```
-
-###### content_type_or_default()
-
-Get the content type, defaulting to "application/octet-stream".
-
-**Signature:**
-
-```elixir
-def content_type_or_default()
-```
+| Field  | Type         | Default | Description                  |
+| ------ | ------------ | ------- | ---------------------------- |
+| `data` | `String.t()` | —       | The data field of the event. |
 
 ---
 
@@ -1284,37 +1045,6 @@ Possible errors while converting an Axum response into a snapshot.
 | ---------------- | -------------------------------------------------------------------------- |
 | `invalid_header` | Response header could not be decoded to UTF-8. — Fields: `0`: `String.t()` |
 | `decompression`  | Body decompression failed. — Fields: `0`: `String.t()`                     |
-
----
-
-##### WebSocketMessage
-
-A WebSocket message that can be text or binary.
-
-| Value    | Description                                                                                                                                                                                                                              |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `text`   | A text message. — Fields: `0`: `String.t()`                                                                                                                                                                                              |
-| `binary` | A binary message. — Fields: `0`: `binary()`                                                                                                                                                                                              |
-| `close`  | A close message with a numeric close code (RFC 6455) and optional reason text. Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received, 1006 Abnormal Closure. — Fields: `code`: `integer()`, `reason`: `String.t()` |
-| `ping`   | A ping message. — Fields: `0`: `binary()`                                                                                                                                                                                                |
-| `pong`   | A pong message. — Fields: `0`: `binary()`                                                                                                                                                                                                |
-
----
-
-##### Method
-
-HTTP method
-
-| Value     | Description |
-| --------- | ----------- |
-| `get`     | Get         |
-| `post`    | Post        |
-| `put`     | Put         |
-| `patch`   | Patch       |
-| `delete`  | Delete      |
-| `head`    | Head        |
-| `options` | Options     |
-| `trace`   | Trace       |
 
 ---
 

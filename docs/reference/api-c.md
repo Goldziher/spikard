@@ -158,11 +158,11 @@ SpikardCompressionConfig spikard_default();
 
 Contact information
 
-| Field   | Type           | Default | Description |
-| ------- | -------------- | ------- | ----------- |
-| `name`  | `const char**` | `NULL`  | The name    |
-| `email` | `const char**` | `NULL`  | Email       |
-| `url`   | `const char**` | `NULL`  | Url         |
+| Field   | Type           | Default | Description                                   |
+| ------- | -------------- | ------- | --------------------------------------------- |
+| `name`  | `const char**` | `NULL`  | Name of the contact person or organisation.   |
+| `email` | `const char**` | `NULL`  | Contact email address.                        |
+| `url`   | `const char**` | `NULL`  | URL pointing to the contact information page. |
 
 ---
 
@@ -364,20 +364,6 @@ SpikardGraphQlRouteConfig spikard_default();
 
 ---
 
-#### SpikardGraphQlSubscriptionSnapshot
-
-Snapshot of a GraphQL subscription exchange over WebSocket.
-
-| Field               | Type          | Default | Description                                                       |
-| ------------------- | ------------- | ------- | ----------------------------------------------------------------- |
-| `operation_id`      | `const char*` | —       | Operation id used for the subscription request.                   |
-| `acknowledged`      | `bool`        | —       | Whether the server acknowledged the GraphQL WebSocket connection. |
-| `event`             | `void**`      | `NULL`  | First `next.payload` received for this subscription, if any.      |
-| `errors`            | `void**`      | —       | GraphQL protocol errors emitted by the server.                    |
-| `complete_received` | `bool`        | —       | Whether a `complete` frame was observed for this operation.       |
-
----
-
 #### SpikardGrpcConfig
 
 Configuration for gRPC support
@@ -489,10 +475,10 @@ JWT authentication configuration
 
 License information
 
-| Field  | Type           | Default | Description |
-| ------ | -------------- | ------- | ----------- |
-| `name` | `const char*`  | —       | The name    |
-| `url`  | `const char**` | `NULL`  | Url         |
+| Field  | Type           | Default | Description                                             |
+| ------ | -------------- | ------- | ------------------------------------------------------- |
+| `name` | `const char*`  | —       | SPDX license identifier or display name (e.g. `"MIT"`). |
+| `url`  | `const char**` | `NULL`  | URL to the full license text.                           |
 
 ---
 
@@ -820,70 +806,6 @@ SpikardResponse spikard_default();
 
 ---
 
-##### SpikardResponseSnapshot
-
-Snapshot of an Axum response used by higher-level language bindings.
-
-| Field     | Type             | Default | Description                                                |
-| --------- | ---------------- | ------- | ---------------------------------------------------------- |
-| `status`  | `uint16_t`       | —       | HTTP status code.                                          |
-| `headers` | `void*`          | —       | Response headers (lowercase keys for predictable lookups). |
-| `body`    | `const uint8_t*` | —       | Response body bytes (decoded for supported encodings).     |
-
-###### Methods
-
-###### spikard_text()
-
-Return response body as UTF-8 string.
-
-**Signature:**
-
-```c
-const char* spikard_text();
-```
-
-###### spikard_json()
-
-Parse response body as JSON.
-
-**Signature:**
-
-```c
-void* spikard_json();
-```
-
-###### spikard_header()
-
-Lookup header by case-insensitive name.
-
-**Signature:**
-
-```c
-const char** spikard_header(const char* name);
-```
-
-###### spikard_graphql_data()
-
-Extract GraphQL data from response
-
-**Signature:**
-
-```c
-void* spikard_graphql_data();
-```
-
-###### spikard_graphql_errors()
-
-Extract GraphQL errors from response
-
-**Signature:**
-
-```c
-void** spikard_graphql_errors();
-```
-
----
-
 ##### SpikardSchemaConfig
 
 Configuration for GraphQL schema building.
@@ -953,10 +875,10 @@ SpikardServerConfig spikard_default();
 
 Server information
 
-| Field         | Type           | Default | Description                |
-| ------------- | -------------- | ------- | -------------------------- |
-| `url`         | `const char*`  | —       | Url                        |
-| `description` | `const char**` | `NULL`  | Human-readable description |
+| Field         | Type           | Default | Description                                                     |
+| ------------- | -------------- | ------- | --------------------------------------------------------------- |
+| `url`         | `const char*`  | —       | Base URL of the server (e.g. `"<https://api.example.com/v1"`>). |
+| `description` | `const char**` | `NULL`  | Optional human-readable description of the server environment.  |
 
 ---
 
@@ -1028,166 +950,13 @@ Static file serving configuration
 
 ---
 
-##### SpikardTestClient
+##### SpikardTestingSseEvent
 
-Core test client for making HTTP requests to a Spikard application.
+A single Server-Sent Event.
 
-This struct wraps axum-test's TestServer and provides a language-agnostic
-interface for making HTTP requests, sending WebSocket connections, and
-handling Server-Sent Events. Language bindings wrap this to provide
-native API surfaces.
-
-###### Methods
-
-###### spikard_get()
-
-Make a GET request
-
-**Signature:**
-
-```c
-SpikardResponseSnapshot spikard_get(const char* path, const char** query_params, const char** headers);
-```
-
-###### spikard_post()
-
-Make a POST request
-
-**Signature:**
-
-```c
-SpikardResponseSnapshot spikard_post(const char* path, void* json, const char** form_data, const char* multipart, const char** query_params, const char** headers);
-```
-
-###### spikard_request_raw()
-
-Make a request with a raw body payload.
-
-**Signature:**
-
-```c
-SpikardResponseSnapshot spikard_request_raw(SpikardMethod method, const char* path, const uint8_t* body, const char** query_params, const char** headers);
-```
-
-###### spikard_put()
-
-Make a PUT request
-
-**Signature:**
-
-```c
-SpikardResponseSnapshot spikard_put(const char* path, void* json, const char** query_params, const char** headers);
-```
-
-###### spikard_patch()
-
-Make a PATCH request
-
-**Signature:**
-
-```c
-SpikardResponseSnapshot spikard_patch(const char* path, void* json, const char** query_params, const char** headers);
-```
-
-###### spikard_delete()
-
-Make a DELETE request
-
-**Signature:**
-
-```c
-SpikardResponseSnapshot spikard_delete(const char* path, const char** query_params, const char** headers);
-```
-
-###### spikard_options()
-
-Make an OPTIONS request
-
-**Signature:**
-
-```c
-SpikardResponseSnapshot spikard_options(const char* path, const char** query_params, const char** headers);
-```
-
-###### spikard_head()
-
-Make a HEAD request
-
-**Signature:**
-
-```c
-SpikardResponseSnapshot spikard_head(const char* path, const char** query_params, const char** headers);
-```
-
-###### spikard_trace()
-
-Make a TRACE request
-
-**Signature:**
-
-```c
-SpikardResponseSnapshot spikard_trace(const char* path, const char** query_params, const char** headers);
-```
-
-###### spikard_graphql_at()
-
-Send a GraphQL query/mutation to a custom endpoint
-
-**Signature:**
-
-```c
-SpikardResponseSnapshot spikard_graphql_at(const char* endpoint, const char* query, void* variables, const char* operation_name);
-```
-
-###### spikard_graphql()
-
-Send a GraphQL query/mutation
-
-**Signature:**
-
-```c
-SpikardResponseSnapshot spikard_graphql(const char* query, void* variables, const char* operation_name);
-```
-
-###### spikard_graphql_with_status()
-
-Send a GraphQL query and return HTTP status code separately
-
-This method allows tests to distinguish between:
-
-- HTTP-level errors (400/422 for invalid requests)
-- GraphQL-level errors (200 with errors in response body)
-
-**Signature:**
-
-```c
-const char* spikard_graphql_with_status(const char* query, void* variables, const char* operation_name);
-```
-
-###### spikard_graphql_subscription_at()
-
-Send a GraphQL subscription (WebSocket) to a custom endpoint.
-
-Uses the `graphql-transport-ws` protocol and captures the first `next` payload.
-After the first payload is received, this client sends `complete` to unsubscribe.
-
-**Signature:**
-
-```c
-SpikardGraphQlSubscriptionSnapshot spikard_graphql_subscription_at(const char* endpoint, const char* query, void* variables, const char* operation_name);
-```
-
-###### spikard_graphql_subscription()
-
-Send a GraphQL subscription (WebSocket).
-
-Uses `/graphql` as the default subscription endpoint.
-
-**Signature:**
-
-```c
-SpikardGraphQlSubscriptionSnapshot spikard_graphql_subscription(const char* query, void* variables, const char* operation_name);
-```
+| Field  | Type          | Default | Description                  |
+| ------ | ------------- | ------- | ---------------------------- |
+| `data` | `const char*` | —       | The data field of the event. |
 
 ---
 
@@ -1272,48 +1041,6 @@ Response body for `POST /asyncapi/validate`
 ---
 
 #### Enums
-
-##### SpikardSnapshotError
-
-Possible errors while converting an Axum response into a snapshot.
-
-| Value                    | Description                                                                 |
-| ------------------------ | --------------------------------------------------------------------------- |
-| `SPIKARD_INVALID_HEADER` | Response header could not be decoded to UTF-8. — Fields: `0`: `const char*` |
-| `SPIKARD_DECOMPRESSION`  | Body decompression failed. — Fields: `0`: `const char*`                     |
-
----
-
-##### SpikardWebSocketMessage
-
-A WebSocket message that can be text or binary.
-
-| Value            | Description                                                                                                                                                                                                                              |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `SPIKARD_TEXT`   | A text message. — Fields: `0`: `const char*`                                                                                                                                                                                             |
-| `SPIKARD_BINARY` | A binary message. — Fields: `0`: `const uint8_t*`                                                                                                                                                                                        |
-| `SPIKARD_CLOSE`  | A close message with a numeric close code (RFC 6455) and optional reason text. Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received, 1006 Abnormal Closure. — Fields: `code`: `uint16_t`, `reason`: `const char*` |
-| `SPIKARD_PING`   | A ping message. — Fields: `0`: `const uint8_t*`                                                                                                                                                                                          |
-| `SPIKARD_PONG`   | A pong message. — Fields: `0`: `const uint8_t*`                                                                                                                                                                                          |
-
----
-
-##### SpikardMethod
-
-HTTP method
-
-| Value             | Description |
-| ----------------- | ----------- |
-| `SPIKARD_GET`     | Get         |
-| `SPIKARD_POST`    | Post        |
-| `SPIKARD_PUT`     | Put         |
-| `SPIKARD_PATCH`   | Patch       |
-| `SPIKARD_DELETE`  | Delete      |
-| `SPIKARD_HEAD`    | Head        |
-| `SPIKARD_OPTIONS` | Options     |
-| `SPIKARD_TRACE`   | Trace       |
-
----
 
 ##### SpikardSecuritySchemeInfo
 

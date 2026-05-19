@@ -158,11 +158,11 @@ public static func default() -> CompressionConfig
 
 Contact information
 
-| Field   | Type      | Default | Description |
-| ------- | --------- | ------- | ----------- |
-| `name`  | `String?` | `null`  | The name    |
-| `email` | `String?` | `null`  | Email       |
-| `url`   | `String?` | `null`  | Url         |
+| Field   | Type      | Default | Description                                   |
+| ------- | --------- | ------- | --------------------------------------------- |
+| `name`  | `String?` | `null`  | Name of the contact person or organisation.   |
+| `email` | `String?` | `null`  | Contact email address.                        |
+| `url`   | `String?` | `null`  | URL pointing to the contact information page. |
 
 ---
 
@@ -489,10 +489,10 @@ JWT authentication configuration
 
 License information
 
-| Field  | Type      | Default | Description |
-| ------ | --------- | ------- | ----------- |
-| `name` | `String`  | —       | The name    |
-| `url`  | `String?` | `null`  | Url         |
+| Field  | Type      | Default | Description                                             |
+| ------ | --------- | ------- | ------------------------------------------------------- |
+| `name` | `String`  | —       | SPDX license identifier or display name (e.g. `"MIT"`). |
+| `url`  | `String?` | `null`  | URL to the full license text.                           |
 
 ---
 
@@ -842,16 +842,6 @@ Return response body as UTF-8 string.
 public func text() throws -> String
 ```
 
-###### json()
-
-Parse response body as JSON.
-
-**Signature:**
-
-```swift
-public func json() throws -> String
-```
-
 ###### header()
 
 Lookup header by case-insensitive name.
@@ -860,26 +850,6 @@ Lookup header by case-insensitive name.
 
 ```swift
 public func header(name: String) -> String?
-```
-
-###### graphqlData()
-
-Extract GraphQL data from response
-
-**Signature:**
-
-```swift
-public func graphqlData() throws -> String
-```
-
-###### graphqlErrors()
-
-Extract GraphQL errors from response
-
-**Signature:**
-
-```swift
-public func graphqlErrors() throws -> [String]
 ```
 
 ---
@@ -953,10 +923,10 @@ public static func default() -> ServerConfig
 
 Server information
 
-| Field         | Type      | Default | Description                |
-| ------------- | --------- | ------- | -------------------------- |
-| `url`         | `String`  | —       | Url                        |
-| `description` | `String?` | `null`  | Human-readable description |
+| Field         | Type      | Default | Description                                                     |
+| ------------- | --------- | ------- | --------------------------------------------------------------- |
+| `url`         | `String`  | —       | Base URL of the server (e.g. `"<https://api.example.com/v1"`>). |
+| `description` | `String?` | `null`  | Optional human-readable description of the server environment.  |
 
 ---
 
@@ -1066,7 +1036,7 @@ Make a request with a raw body payload.
 **Signature:**
 
 ```swift
-public func requestRaw(method: Method, path: String, body: Data, queryParams: [String]? = nil, headers: [String]? = nil) throws -> ResponseSnapshot
+public func requestRaw(method: String, path: String, body: Data, queryParams: [String]? = nil, headers: [String]? = nil) throws -> ResponseSnapshot
 ```
 
 ###### put()
@@ -1191,6 +1161,16 @@ public func graphqlSubscription(query: String, variables: String? = nil, operati
 
 ---
 
+##### TestingSseEvent
+
+A single Server-Sent Event.
+
+| Field  | Type     | Default | Description                  |
+| ------ | -------- | ------- | ---------------------------- |
+| `data` | `String` | —       | The data field of the event. |
+
+---
+
 ##### UploadFile
 
 Represents an uploaded file from multipart/form-data requests.
@@ -1281,37 +1261,6 @@ Possible errors while converting an Axum response into a snapshot.
 | --------------- | ---------------------------------------------------------------------- |
 | `InvalidHeader` | Response header could not be decoded to UTF-8. — Fields: `0`: `String` |
 | `Decompression` | Body decompression failed. — Fields: `0`: `String`                     |
-
----
-
-##### WebSocketMessage
-
-A WebSocket message that can be text or binary.
-
-| Value    | Description                                                                                                                                                                                                                       |
-| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Text`   | A text message. — Fields: `0`: `String`                                                                                                                                                                                           |
-| `Binary` | A binary message. — Fields: `0`: `Data`                                                                                                                                                                                           |
-| `Close`  | A close message with a numeric close code (RFC 6455) and optional reason text. Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received, 1006 Abnormal Closure. — Fields: `code`: `UInt16`, `reason`: `String` |
-| `Ping`   | A ping message. — Fields: `0`: `Data`                                                                                                                                                                                             |
-| `Pong`   | A pong message. — Fields: `0`: `Data`                                                                                                                                                                                             |
-
----
-
-##### Method
-
-HTTP method
-
-| Value     | Description |
-| --------- | ----------- |
-| `Get`     | Get         |
-| `Post`    | Post        |
-| `Put`     | Put         |
-| `Patch`   | Patch       |
-| `Delete`  | Delete      |
-| `Head`    | Head        |
-| `Options` | Options     |
-| `Trace`   | Trace       |
 
 ---
 

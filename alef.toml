@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.16.43"
+alef_version = "0.16.72"
 languages = [
   "python",
   "node",
@@ -140,11 +140,25 @@ build_release = "cargo build --manifest-path packages/ruby/ext/spikard_rb/native
 extension_name = "spikard_php"
 feature_gate = "extension-module"
 features = ["di"]
+# Alef cannot map Option<serde_json::Value> parameters to PHP types — ext-php-rs
+# has no FromZval impl for serde_json::Value. TestClient.graphql* methods accept
+# Option<Value> variables maps. Exclude the entire class for PHP until alef
+# serializes Value params to JSON-string at the PHP boundary; consumers can
+# build/run TestClient via the public API in other bindings.
+exclude_types = ["TestClient"]
 
 [crates.elixir]
 app_name = "spikard"
 features = ["di"]
-exclude_types = ["UploadFile"]
+# Alef bug (track upstream):
+# - UploadFile: alef emits a local elixir-side UploadFile struct AND From impls
+#   that pass the local type to spikard::UploadFile::from, producing a type
+#   mismatch. The binding works without it (no Elixir consumer can usefully
+#   construct an UploadFile across the BEAM boundary).
+# - TestClient: graphql_* methods take Option<serde_json::Value> for variables;
+#   alef maps these to Option<String> in the elixir layer, causing a parameter
+#   type mismatch. Same shape as the PHP issue.
+exclude_types = ["UploadFile", "TestClient"]
 
 [crates.elixir.extra_dependencies]
 spikard-core = { path = "../../../../crates/spikard-core" }
@@ -247,7 +261,6 @@ target = "jvm"
 [crates.swift]
 module_name = "Spikard"
 package_name = "Spikard"
-exclude_types = ["UploadFile"]
 
 [crates.swift.extra_dependencies]
 spikard-core = { path = "../../../crates/spikard-core" }
@@ -342,6 +355,14 @@ methods = [
   "TestServer.from_app",
   "TestServer.call",
   "TestServer.connect_websocket",
+  # Alef Value-return-type misclassification bug (track upstream): methods returning
+  # Result<serde_json::Value, _> are inferred as Result<String, _>, producing a
+  # mismatched-types error at the binding boundary. Remove once alef maps Value
+  # returns to the per-language JSON type (dict/object/Hash/etc.).
+  "ResponseSnapshot.json",
+  "ResponseSnapshot.graphql_data",
+  "ResponseSnapshot.graphql_errors",
+  "TestingSseEvent.as_json",
 ]
 types = [
   # Not part of public API — closures, Arc<dyn Handler>, internal protocol types
@@ -355,7 +376,9 @@ types = [
   "JsonRpcRequestOrBatch",
   "JsonRpcResponseType",
   "ValidatedParams",
-  # Internal implementation types
+  # Internal implementation types — pub(crate) in source, but alef extracts
+  # them via re-exports/use paths; keep listed until alef respects the original
+  # visibility on disambiguated names.
   "BackgroundJobFuture",
   "BackgroundRuntime",
   "BackgroundShutdownError",
@@ -384,7 +407,6 @@ types = [
   "PreReadBody",
   "RegistryError",
   "ResolvedDependencies",
-  "ResponseBodySize",
   "RouteInfo",
   "RpcMode",
   "SchemaBuilder",
@@ -396,9 +418,8 @@ types = [
   "RawResponse",
   "StaticAsset",
   "StructuredError",
-  # AsyncApiState is an axum server state type with Option<Arc<Value>> fields;
-  # alef generates invalid code (str.clone()) for this field mapping. It is an
-  # internal server-side type, not part of the user-facing binding API.
+  # AsyncApiState is pub(crate); alef extracts it via re-export. Keep until
+  # visibility filter is reliable on disambiguated names.
   "AsyncApiState",
   # Internal protocol types
   "JsonRpcState",
@@ -413,7 +434,6 @@ types = [
   "GrpcHandler",
   "GrpcRegistry",
   "StreamingRequest",
-  "StreamingResponse",
   # Internal server types
   "Server",
   "ServerConfigBuilder",
@@ -446,9 +466,24 @@ types = [
   # conflicts with the binding's SseEvent type (mapped from spikard_http::SseEvent,
   # data: Value). Excluded until alef can map the two SseEvent variants independently.
   "SseStream",
-  # TestSseEvent is the re-exported rename of spikard_http::testing::SseEvent in the
-  # spikard::testing module. Not exposed separately; SseStream carries it.
-  "TestSseEvent",
+  # Alef re-export deduplication bug (track upstream): a type reachable via both
+  # a `pub use` re-export and its original module path gets extracted twice and
+  # disambiguated with a numeric suffix or module prefix, escaping the user's
+  # exclude entry for the original name. Remove these once alef merges re-exports
+  # to their definition site.
+  "LifecycleHooks2",
+  "LifecycleHooksBuilder2",
+  "RequestData2",
+  "WebSocketMessage2",
+  "Method2",
+  "HandlerResponse2",
+  "ErrorMapperErrorCondition",
+  "TestingWebSocketMessage",
+  # Alef visibility/disambiguation bug (track upstream): pub(crate) GrpcRegistry
+  # gets emitted as GrpcGrpcRegistry (parent-module-prefixed) despite the original
+  # being excluded AND non-pub. Remove once alef respects pub(crate) on
+  # disambiguated names.
+  "GrpcGrpcRegistry",
 ]
 functions = [
   "request_hook",

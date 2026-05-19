@@ -158,11 +158,11 @@ public static CompressionConfig defaultOptions()
 
 Contact information
 
-| Field   | Type               | Default | Description |
-| ------- | ------------------ | ------- | ----------- |
-| `name`  | `Optional<String>` | `null`  | The name    |
-| `email` | `Optional<String>` | `null`  | Email       |
-| `url`   | `Optional<String>` | `null`  | Url         |
+| Field   | Type               | Default | Description                                   |
+| ------- | ------------------ | ------- | --------------------------------------------- |
+| `name`  | `Optional<String>` | `null`  | Name of the contact person or organisation.   |
+| `email` | `Optional<String>` | `null`  | Contact email address.                        |
+| `url`   | `Optional<String>` | `null`  | URL pointing to the contact information page. |
 
 ---
 
@@ -364,20 +364,6 @@ public static GraphQlRouteConfig defaultOptions()
 
 ---
 
-#### GraphQlSubscriptionSnapshot
-
-Snapshot of a GraphQL subscription exchange over WebSocket.
-
-| Field              | Type               | Default | Description                                                       |
-| ------------------ | ------------------ | ------- | ----------------------------------------------------------------- |
-| `operationId`      | `String`           | —       | Operation id used for the subscription request.                   |
-| `acknowledged`     | `boolean`          | —       | Whether the server acknowledged the GraphQL WebSocket connection. |
-| `event`            | `Optional<Object>` | `null`  | First `next.payload` received for this subscription, if any.      |
-| `errors`           | `List<Object>`     | —       | GraphQL protocol errors emitted by the server.                    |
-| `completeReceived` | `boolean`          | —       | Whether a `complete` frame was observed for this operation.       |
-
----
-
 #### GrpcConfig
 
 Configuration for gRPC support
@@ -489,10 +475,10 @@ JWT authentication configuration
 
 License information
 
-| Field  | Type               | Default | Description |
-| ------ | ------------------ | ------- | ----------- |
-| `name` | `String`           | —       | The name    |
-| `url`  | `Optional<String>` | `null`  | Url         |
+| Field  | Type               | Default | Description                                             |
+| ------ | ------------------ | ------- | ------------------------------------------------------- |
+| `name` | `String`           | —       | SPDX license identifier or display name (e.g. `"MIT"`). |
+| `url`  | `Optional<String>` | `null`  | URL to the full license text.                           |
 
 ---
 
@@ -820,70 +806,6 @@ public static Response defaultOptions()
 
 ---
 
-##### ResponseSnapshot
-
-Snapshot of an Axum response used by higher-level language bindings.
-
-| Field     | Type                  | Default | Description                                                |
-| --------- | --------------------- | ------- | ---------------------------------------------------------- |
-| `status`  | `short`               | —       | HTTP status code.                                          |
-| `headers` | `Map<String, String>` | —       | Response headers (lowercase keys for predictable lookups). |
-| `body`    | `byte[]`              | —       | Response body bytes (decoded for supported encodings).     |
-
-###### Methods
-
-###### text()
-
-Return response body as UTF-8 string.
-
-**Signature:**
-
-```java
-public String text() throws FromUtf8Error
-```
-
-###### json()
-
-Parse response body as JSON.
-
-**Signature:**
-
-```java
-public Object json() throws Error
-```
-
-###### header()
-
-Lookup header by case-insensitive name.
-
-**Signature:**
-
-```java
-public Optional<String> header(String name)
-```
-
-###### graphqlData()
-
-Extract GraphQL data from response
-
-**Signature:**
-
-```java
-public Object graphqlData() throws SnapshotError
-```
-
-###### graphqlErrors()
-
-Extract GraphQL errors from response
-
-**Signature:**
-
-```java
-public List<Object> graphqlErrors() throws SnapshotError
-```
-
----
-
 ##### SchemaConfig
 
 Configuration for GraphQL schema building.
@@ -953,10 +875,10 @@ public static ServerConfig defaultOptions()
 
 Server information
 
-| Field         | Type               | Default | Description                |
-| ------------- | ------------------ | ------- | -------------------------- |
-| `url`         | `String`           | —       | Url                        |
-| `description` | `Optional<String>` | `null`  | Human-readable description |
+| Field         | Type               | Default | Description                                                     |
+| ------------- | ------------------ | ------- | --------------------------------------------------------------- |
+| `url`         | `String`           | —       | Base URL of the server (e.g. `"<https://api.example.com/v1"`>). |
+| `description` | `Optional<String>` | `null`  | Optional human-readable description of the server environment.  |
 
 ---
 
@@ -1028,166 +950,13 @@ Static file serving configuration
 
 ---
 
-##### TestClient
+##### TestingSseEvent
 
-Core test client for making HTTP requests to a Spikard application.
+A single Server-Sent Event.
 
-This struct wraps axum-test's TestServer and provides a language-agnostic
-interface for making HTTP requests, sending WebSocket connections, and
-handling Server-Sent Events. Language bindings wrap this to provide
-native API surfaces.
-
-###### Methods
-
-###### get()
-
-Make a GET request
-
-**Signature:**
-
-```java
-public ResponseSnapshot get(String path, List<String> queryParams, List<String> headers) throws SnapshotError
-```
-
-###### post()
-
-Make a POST request
-
-**Signature:**
-
-```java
-public ResponseSnapshot post(String path, Object json, List<String> formData, String multipart, List<String> queryParams, List<String> headers) throws SnapshotError
-```
-
-###### requestRaw()
-
-Make a request with a raw body payload.
-
-**Signature:**
-
-```java
-public ResponseSnapshot requestRaw(Method method, String path, byte[] body, List<String> queryParams, List<String> headers) throws SnapshotError
-```
-
-###### put()
-
-Make a PUT request
-
-**Signature:**
-
-```java
-public ResponseSnapshot put(String path, Object json, List<String> queryParams, List<String> headers) throws SnapshotError
-```
-
-###### patch()
-
-Make a PATCH request
-
-**Signature:**
-
-```java
-public ResponseSnapshot patch(String path, Object json, List<String> queryParams, List<String> headers) throws SnapshotError
-```
-
-###### delete()
-
-Make a DELETE request
-
-**Signature:**
-
-```java
-public ResponseSnapshot delete(String path, List<String> queryParams, List<String> headers) throws SnapshotError
-```
-
-###### options()
-
-Make an OPTIONS request
-
-**Signature:**
-
-```java
-public ResponseSnapshot options(String path, List<String> queryParams, List<String> headers) throws SnapshotError
-```
-
-###### head()
-
-Make a HEAD request
-
-**Signature:**
-
-```java
-public ResponseSnapshot head(String path, List<String> queryParams, List<String> headers) throws SnapshotError
-```
-
-###### trace()
-
-Make a TRACE request
-
-**Signature:**
-
-```java
-public ResponseSnapshot trace(String path, List<String> queryParams, List<String> headers) throws SnapshotError
-```
-
-###### graphqlAt()
-
-Send a GraphQL query/mutation to a custom endpoint
-
-**Signature:**
-
-```java
-public ResponseSnapshot graphqlAt(String endpoint, String query, Object variables, String operationName) throws SnapshotError
-```
-
-###### graphql()
-
-Send a GraphQL query/mutation
-
-**Signature:**
-
-```java
-public ResponseSnapshot graphql(String query, Object variables, String operationName) throws SnapshotError
-```
-
-###### graphqlWithStatus()
-
-Send a GraphQL query and return HTTP status code separately
-
-This method allows tests to distinguish between:
-
-- HTTP-level errors (400/422 for invalid requests)
-- GraphQL-level errors (200 with errors in response body)
-
-**Signature:**
-
-```java
-public String graphqlWithStatus(String query, Object variables, String operationName) throws SnapshotError
-```
-
-###### graphqlSubscriptionAt()
-
-Send a GraphQL subscription (WebSocket) to a custom endpoint.
-
-Uses the `graphql-transport-ws` protocol and captures the first `next` payload.
-After the first payload is received, this client sends `complete` to unsubscribe.
-
-**Signature:**
-
-```java
-public GraphQlSubscriptionSnapshot graphqlSubscriptionAt(String endpoint, String query, Object variables, String operationName) throws SnapshotError
-```
-
-###### graphqlSubscription()
-
-Send a GraphQL subscription (WebSocket).
-
-Uses `/graphql` as the default subscription endpoint.
-
-**Signature:**
-
-```java
-public GraphQlSubscriptionSnapshot graphqlSubscription(String query, Object variables, String operationName) throws SnapshotError
-```
+| Field  | Type     | Default | Description                  |
+| ------ | -------- | ------- | ---------------------------- |
+| `data` | `String` | —       | The data field of the event. |
 
 ---
 
@@ -1272,48 +1041,6 @@ Response body for `POST /asyncapi/validate`
 ---
 
 #### Enums
-
-##### SnapshotError
-
-Possible errors while converting an Axum response into a snapshot.
-
-| Value            | Description                                                            |
-| ---------------- | ---------------------------------------------------------------------- |
-| `INVALID_HEADER` | Response header could not be decoded to UTF-8. — Fields: `0`: `String` |
-| `DECOMPRESSION`  | Body decompression failed. — Fields: `0`: `String`                     |
-
----
-
-##### WebSocketMessage
-
-A WebSocket message that can be text or binary.
-
-| Value    | Description                                                                                                                                                                                                                      |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `TEXT`   | A text message. — Fields: `0`: `String`                                                                                                                                                                                          |
-| `BINARY` | A binary message. — Fields: `0`: `byte[]`                                                                                                                                                                                        |
-| `CLOSE`  | A close message with a numeric close code (RFC 6455) and optional reason text. Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received, 1006 Abnormal Closure. — Fields: `code`: `short`, `reason`: `String` |
-| `PING`   | A ping message. — Fields: `0`: `byte[]`                                                                                                                                                                                          |
-| `PONG`   | A pong message. — Fields: `0`: `byte[]`                                                                                                                                                                                          |
-
----
-
-##### Method
-
-HTTP method
-
-| Value     | Description |
-| --------- | ----------- |
-| `GET`     | Get         |
-| `POST`    | Post        |
-| `PUT`     | Put         |
-| `PATCH`   | Patch       |
-| `DELETE`  | Delete      |
-| `HEAD`    | Head        |
-| `OPTIONS` | Options     |
-| `TRACE`   | Trace       |
-
----
 
 ##### SecuritySchemeInfo
 

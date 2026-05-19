@@ -16,8 +16,32 @@
     clippy::inherent_to_string
 )]
 
+/// Process-wide tokio runtime shared across every swift-bridge async wrapper.
+///
+/// alef-emitted; see shims.rs for the rationale (orphaned reqwest connection
+/// pools when each call creates and drops its own current-thread runtime).
+fn __alef_tokio_runtime() -> &'static ::tokio::runtime::Runtime {
+    use std::sync::OnceLock;
+    static RT: OnceLock<::tokio::runtime::Runtime> = OnceLock::new();
+    RT.get_or_init(|| {
+        ::tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .expect("build process-wide alef tokio runtime")
+    })
+}
+
 #[swift_bridge::bridge]
 mod ffi {
+    extern "Rust" {
+        type UploadFile;
+        fn filename(&self) -> String;
+        fn content_type(&self) -> Option<String>;
+        fn size(&self) -> Option<usize>;
+        fn content(&self) -> Vec<u8>;
+        fn content_encoding(&self) -> Option<String>;
+    }
+
     extern "Rust" {
         type CorsConfig;
         #[swift_bridge(init)]
@@ -326,6 +350,11 @@ mod ffi {
     }
 
     extern "Rust" {
+        type TestingSseEvent;
+        fn data(&self) -> String;
+    }
+
+    extern "Rust" {
         type JwtConfig;
         fn secret(&self) -> String;
         fn algorithm(&self) -> String;
@@ -394,11 +423,6 @@ mod ffi {
     }
 
     extern "Rust" {
-        type Method;
-        fn to_string(&self) -> String;
-    }
-
-    extern "Rust" {
         type SecuritySchemeInfo;
         fn to_string(&self) -> String;
     }
@@ -414,6 +438,8 @@ mod ffi {
 
     extern "Rust" {
 
+        #[swift_bridge(swift_name = "uploadFileFromJson")]
+        fn upload_file_from_json(json: String) -> Result<UploadFile, String>;
         #[swift_bridge(swift_name = "jsonRpcMethodInfoFromJson")]
         fn json_rpc_method_info_from_json(json: String) -> Result<JsonRpcMethodInfo, String>;
         #[swift_bridge(swift_name = "problemDetailsFromJson")]
@@ -440,6 +466,29 @@ mod ffi {
         fn api_key_config_from_json(json: String) -> Result<ApiKeyConfig, String>;
         #[swift_bridge(swift_name = "staticFilesConfigFromJson")]
         fn static_files_config_from_json(json: String) -> Result<StaticFilesConfig, String>;
+    }
+}
+
+pub struct UploadFile(pub spikard::UploadFile);
+impl UploadFile {
+    pub fn filename(&self) -> String {
+        self.0.filename.clone()
+    }
+    pub fn content_type(&self) -> Option<String> {
+        self.0.content_type.clone()
+    }
+    pub fn size(&self) -> Option<usize> {
+        self.0.size.as_ref().and_then(|v| {
+            ::serde_json::to_value(v)
+                .ok()
+                .and_then(|j| ::serde_json::from_value(j).ok())
+        })
+    }
+    pub fn content(&self) -> Vec<u8> {
+        self.0.content.to_vec()
+    }
+    pub fn content_encoding(&self) -> Option<String> {
+        self.0.content_encoding.clone()
     }
 }
 
@@ -1296,6 +1345,13 @@ impl SseEvent {
     }
 }
 
+pub struct TestingSseEvent(pub spikard_http::testing::SseEvent);
+impl TestingSseEvent {
+    pub fn data(&self) -> String {
+        format!("{:?}", &self.0.data)
+    }
+}
+
 pub struct JwtConfig(pub spikard_http::JwtConfig);
 impl JwtConfig {
     pub fn secret(&self) -> String {
@@ -1508,47 +1564,6 @@ impl ServerConfig {
     }
 }
 
-pub enum Method {
-    Get,
-    Post,
-    Put,
-    Patch,
-    Delete,
-    Head,
-    Options,
-    Trace,
-}
-
-impl From<spikard_core::Method> for Method {
-    fn from(val: spikard_core::Method) -> Self {
-        match val {
-            spikard_core::Method::Get => Self::Get,
-            spikard_core::Method::Post => Self::Post,
-            spikard_core::Method::Put => Self::Put,
-            spikard_core::Method::Patch => Self::Patch,
-            spikard_core::Method::Delete => Self::Delete,
-            spikard_core::Method::Head => Self::Head,
-            spikard_core::Method::Options => Self::Options,
-            spikard_core::Method::Trace => Self::Trace,
-        }
-    }
-}
-
-impl Method {
-    pub fn to_string(&self) -> String {
-        match self {
-            Self::Get => "Get".to_string(),
-            Self::Post => "Post".to_string(),
-            Self::Put => "Put".to_string(),
-            Self::Patch => "Patch".to_string(),
-            Self::Delete => "Delete".to_string(),
-            Self::Head => "Head".to_string(),
-            Self::Options => "Options".to_string(),
-            Self::Trace => "Trace".to_string(),
-        }
-    }
-}
-
 pub enum SecuritySchemeInfo {
     /// Data variants not directly bridgeable — represented as Unknown.
     Unknown,
@@ -1580,6 +1595,12 @@ pub fn schema_query_mutation() -> QueryMutationConfig {
 
 pub fn schema_full() -> FullSchemaConfig {
     FullSchemaConfig(spikard_graphql::schema_full())
+}
+
+pub fn upload_file_from_json(json: String) -> Result<UploadFile, String> {
+    serde_json::from_str::<spikard::UploadFile>(&json)
+        .map(UploadFile)
+        .map_err(|e| e.to_string())
 }
 
 pub fn json_rpc_method_info_from_json(json: String) -> Result<JsonRpcMethodInfo, String> {

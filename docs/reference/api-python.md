@@ -161,11 +161,11 @@ def default() -> CompressionConfig
 
 Contact information
 
-| Field   | Type          | Default | Description |
-| ------- | ------------- | ------- | ----------- |
-| `name`  | `str \| None` | `None`  | The name    |
-| `email` | `str \| None` | `None`  | Email       |
-| `url`   | `str \| None` | `None`  | Url         |
+| Field   | Type          | Default | Description                                   |
+| ------- | ------------- | ------- | --------------------------------------------- |
+| `name`  | `str \| None` | `None`  | Name of the contact person or organisation.   |
+| `email` | `str \| None` | `None`  | Contact email address.                        |
+| `url`   | `str \| None` | `None`  | URL pointing to the contact information page. |
 
 ---
 
@@ -497,10 +497,10 @@ JWT authentication configuration
 
 License information
 
-| Field  | Type          | Default | Description |
-| ------ | ------------- | ------- | ----------- |
-| `name` | `str`         | —       | The name    |
-| `url`  | `str \| None` | `None`  | Url         |
+| Field  | Type          | Default | Description                                             |
+| ------ | ------------- | ------- | ------------------------------------------------------- |
+| `name` | `str`         | —       | SPDX license identifier or display name (e.g. `"MIT"`). |
+| `url`  | `str \| None` | `None`  | URL to the full license text.                           |
 
 ---
 
@@ -859,16 +859,6 @@ Return response body as UTF-8 string.
 def text(self) -> str
 ```
 
-###### json()
-
-Parse response body as JSON.
-
-**Signature:**
-
-```python
-def json(self) -> dict[str, Any]
-```
-
 ###### header()
 
 Lookup header by case-insensitive name.
@@ -877,26 +867,6 @@ Lookup header by case-insensitive name.
 
 ```python
 def header(self, name: str) -> str | None
-```
-
-###### graphql_data()
-
-Extract GraphQL data from response
-
-**Signature:**
-
-```python
-def graphql_data(self) -> dict[str, Any]
-```
-
-###### graphql_errors()
-
-Extract GraphQL errors from response
-
-**Signature:**
-
-```python
-def graphql_errors(self) -> list[dict[str, Any]]
 ```
 
 ---
@@ -972,10 +942,10 @@ def default() -> ServerConfig
 
 Server information
 
-| Field         | Type          | Default | Description                |
-| ------------- | ------------- | ------- | -------------------------- |
-| `url`         | `str`         | —       | Url                        |
-| `description` | `str \| None` | `None`  | Human-readable description |
+| Field         | Type          | Default | Description                                                     |
+| ------------- | ------------- | ------- | --------------------------------------------------------------- |
+| `url`         | `str`         | —       | Base URL of the server (e.g. `"<https://api.example.com/v1"`>). |
+| `description` | `str \| None` | `None`  | Optional human-readable description of the server environment.  |
 
 ---
 
@@ -1085,7 +1055,7 @@ Make a request with a raw body payload.
 **Signature:**
 
 ```python
-def request_raw(self, method: Method, path: str, body: bytes, query_params: list[str], headers: list[str]) -> ResponseSnapshot
+def request_raw(self, method: str, path: str, body: bytes, query_params: list[str], headers: list[str]) -> ResponseSnapshot
 ```
 
 ###### put()
@@ -1210,6 +1180,16 @@ def graphql_subscription(self, query: str, variables: dict[str, Any], operation_
 
 ---
 
+##### TestingSseEvent
+
+A single Server-Sent Event.
+
+| Field  | Type  | Default | Description                  |
+| ------ | ----- | ------- | ---------------------------- |
+| `data` | `str` | —       | The data field of the event. |
+
+---
+
 ##### UploadFile
 
 Represents an uploaded file from multipart/form-data requests.
@@ -1303,37 +1283,6 @@ Possible errors while converting an Axum response into a snapshot.
 
 ---
 
-##### WebSocketMessage
-
-A WebSocket message that can be text or binary.
-
-| Value    | Description                                                                                                                                                                                                                 |
-| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `TEXT`   | A text message. — Fields: `0`: `str`                                                                                                                                                                                        |
-| `BINARY` | A binary message. — Fields: `0`: `bytes`                                                                                                                                                                                    |
-| `CLOSE`  | A close message with a numeric close code (RFC 6455) and optional reason text. Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received, 1006 Abnormal Closure. — Fields: `code`: `int`, `reason`: `str` |
-| `PING`   | A ping message. — Fields: `0`: `bytes`                                                                                                                                                                                      |
-| `PONG`   | A pong message. — Fields: `0`: `bytes`                                                                                                                                                                                      |
-
----
-
-##### Method
-
-HTTP method
-
-| Value     | Description |
-| --------- | ----------- |
-| `GET`     | Get         |
-| `POST`    | Post        |
-| `PUT`     | Put         |
-| `PATCH`   | Patch       |
-| `DELETE`  | Delete      |
-| `HEAD`    | Head        |
-| `OPTIONS` | Options     |
-| `TRACE`   | Trace       |
-
----
-
 ##### SecuritySchemeInfo
 
 Security scheme types
@@ -1356,23 +1305,23 @@ converted to structured HTTP responses matching the project's error fixtures.
 
 **Base class:** `GraphQlError(Exception)`
 
-| Exception                               | Description                                                                                                       |
-| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `ExecutionError(GraphQlError)`          | Error during schema execution Occurs when the GraphQL executor encounters a runtime error during query execution. |
-| `SchemaBuildError(GraphQlError)`        | Error during schema building Occurs when schema construction fails due to invalid definitions or conflicts.       |
-| `RequestHandlingError(GraphQlError)`    | Error during request handling Occurs when the HTTP request cannot be properly handled or parsed.                  |
-| `SerializationError(GraphQlError)`      | Serialization error Occurs during JSON serialization/deserialization of GraphQL values.                           |
-| `JsonError(GraphQlError)`               | JSON parsing error Occurs when JSON input cannot be parsed.                                                       |
-| `ValidationError(GraphQlError)`         | GraphQL validation error Occurs when a GraphQL query fails schema validation.                                     |
-| `ParseError(GraphQlError)`              | GraphQL parse error Occurs when the GraphQL query string cannot be parsed.                                        |
-| `AuthenticationError(GraphQlError)`     | Authentication error Occurs when request authentication fails.                                                    |
-| `AuthorizationError(GraphQlError)`      | Authorization error Occurs when user lacks required permissions.                                                  |
-| `NotFound(GraphQlError)`                | Not found error Occurs when a requested resource is not found.                                                    |
-| `RateLimitExceeded(GraphQlError)`       | Rate limit error Occurs when rate limit is exceeded.                                                              |
-| `InvalidInput(GraphQlError)`            | Invalid input error with validation details Occurs during input validation with detailed error information.       |
-| `ComplexityLimitExceeded(GraphQlError)` | Query complexity limit exceeded Occurs when a GraphQL query exceeds the configured complexity limit.              |
-| `DepthLimitExceeded(GraphQlError)`      | Query depth limit exceeded Occurs when a GraphQL query exceeds the configured depth limit.                        |
-| `InternalError(GraphQlError)`           | Internal server error Occurs when an unexpected internal error happens.                                           |
+| Exception | Description |
+|-----------|-------------|
+| `ExecutionError(GraphQlError)` | Error during schema execution Occurs when the GraphQL executor encounters a runtime error during query execution. |
+| `SchemaBuildError(GraphQlError)` | Error during schema building Occurs when schema construction fails due to invalid definitions or conflicts. |
+| `RequestHandlingError(GraphQlError)` | Error during request handling Occurs when the HTTP request cannot be properly handled or parsed. |
+| `SerializationError(GraphQlError)` | Serialization error Occurs during JSON serialization/deserialization of GraphQL values. |
+| `JsonError(GraphQlError)` | JSON parsing error Occurs when JSON input cannot be parsed. |
+| `ValidationError(GraphQlError)` | GraphQL validation error Occurs when a GraphQL query fails schema validation. |
+| `ParseError(GraphQlError)` | GraphQL parse error Occurs when the GraphQL query string cannot be parsed. |
+| `AuthenticationError(GraphQlError)` | Authentication error Occurs when request authentication fails. |
+| `AuthorizationError(GraphQlError)` | Authorization error Occurs when user lacks required permissions. |
+| `NotFound(GraphQlError)` | Not found error Occurs when a requested resource is not found. |
+| `RateLimitExceeded(GraphQlError)` | Rate limit error Occurs when rate limit is exceeded. |
+| `InvalidInput(GraphQlError)` | Invalid input error with validation details Occurs during input validation with detailed error information. |
+| `ComplexityLimitExceeded(GraphQlError)` | Query complexity limit exceeded Occurs when a GraphQL query exceeds the configured complexity limit. |
+| `DepthLimitExceeded(GraphQlError)` | Query depth limit exceeded Occurs when a GraphQL query exceeds the configured depth limit. |
+| `InternalError(GraphQlError)` | Internal server error Occurs when an unexpected internal error happens. |
 
 ---
 
@@ -1382,11 +1331,11 @@ Error type for schema building operations
 
 **Base class:** `SchemaError(Exception)`
 
-| Exception                              | Description                    |
-| -------------------------------------- | ------------------------------ |
-| `BuildingFailed(SchemaError)`          | Generic schema building error  |
-| `ValidationError(SchemaError)`         | Configuration validation error |
-| `ComplexityLimitExceeded(SchemaError)` | Complexity limit exceeded      |
-| `DepthLimitExceeded(SchemaError)`      | Depth limit exceeded           |
+| Exception | Description |
+|-----------|-------------|
+| `BuildingFailed(SchemaError)` | Generic schema building error |
+| `ValidationError(SchemaError)` | Configuration validation error |
+| `ComplexityLimitExceeded(SchemaError)` | Complexity limit exceeded |
+| `DepthLimitExceeded(SchemaError)` | Depth limit exceeded |
 
 ---

@@ -32,12 +32,12 @@ typealias LicenseInfo = dev.spikard.LicenseInfo
 typealias ServerInfo = dev.spikard.ServerInfo
 typealias Response = dev.spikard.Response
 typealias SseEvent = dev.spikard.SseEvent
+typealias TestingSseEvent = dev.spikard.TestingSseEvent
 typealias JwtConfig = dev.spikard.JwtConfig
 typealias ApiKeyConfig = dev.spikard.ApiKeyConfig
 typealias StaticFilesConfig = dev.spikard.StaticFilesConfig
 typealias ServerConfig = dev.spikard.ServerConfig
 
-typealias Method = dev.spikard.Method
 typealias SecuritySchemeInfo = dev.spikard.SecuritySchemeInfo
 
 typealias GraphQLErrorException = dev.spikard.GraphQLErrorException

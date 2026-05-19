@@ -137,10 +137,6 @@ typedef struct SPIKARDJwtConfig SPIKARDJwtConfig;
  */
 typedef struct SPIKARDLicenseInfo SPIKARDLicenseInfo;
 /**
- * HTTP method
- */
-typedef struct SPIKARDMethod SPIKARDMethod;
-/**
  * OpenAPI configuration
  */
 typedef struct SPIKARDOpenApiConfig SPIKARDOpenApiConfig;
@@ -269,6 +265,10 @@ typedef struct SPIKARDStaticFilesConfig SPIKARDStaticFilesConfig;
  */
 typedef struct SPIKARDTestClient SPIKARDTestClient;
 /**
+ * A single Server-Sent Event.
+ */
+typedef struct SPIKARDTestingSseEvent SPIKARDTestingSseEvent;
+/**
  * Represents an uploaded file from multipart/form-data requests.
  *
  * This struct provides efficient access to file content with automatic
@@ -298,10 +298,6 @@ typedef struct SPIKARDValidateRequest SPIKARDValidateRequest;
  * Response body for `POST /asyncapi/validate`
  */
 typedef struct SPIKARDValidationResponse SPIKARDValidationResponse;
-/**
- * A WebSocket message that can be text or binary.
- */
-typedef struct SPIKARDWebSocketMessage SPIKARDWebSocketMessage;
 
 
 /**
@@ -2032,6 +2028,20 @@ SPIKARDSseEvent *spikard_sse_event_with_retry(SPIKARDSseEvent *this_,
                                               uint64_t retry_ms);
 
 /**
+ * Free a `TestingSseEvent` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void spikard_testing_sse_event_free(SPIKARDSseEvent *ptr);
+
+/**
+ * Get the `data` field from a `TestingSseEvent`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_testing_sse_event_data(const SPIKARDSseEvent *ptr);
+
+/**
  * Create a `JwtConfig` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
@@ -2353,36 +2363,6 @@ int32_t spikard_snapshot_error_from_i32(int32_t value);
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
 int32_t spikard_snapshot_error_from_str(const char *name);
-
-/**
- * Convert an integer to a `WebSocketMessage` variant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
- */
-int32_t spikard_web_socket_message_from_i32(int32_t value);
-
-/**
- * Convert a `WebSocketMessage` variant name (C string) to its integer value. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
- */
-int32_t spikard_web_socket_message_from_str(const char *name);
-
-/**
- * Convert an integer to a `Method` variant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
- */
-int32_t spikard_method_from_i32(int32_t value);
-
-/**
- * Convert a `Method` variant name (C string) to its integer value. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
- */
-int32_t spikard_method_from_str(const char *name);
 
 /**
  * Convert an integer to a `SecuritySchemeInfo` variant. Returns -1 on invalid input.

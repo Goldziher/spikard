@@ -158,11 +158,11 @@ pub fn default() -> CompressionConfig
 
 Contact information
 
-| Field   | Type             | Default | Description |
-| ------- | ---------------- | ------- | ----------- |
-| `name`  | `Option<String>` | `None`  | The name    |
-| `email` | `Option<String>` | `None`  | Email       |
-| `url`   | `Option<String>` | `None`  | Url         |
+| Field   | Type             | Default | Description                                   |
+| ------- | ---------------- | ------- | --------------------------------------------- |
+| `name`  | `Option<String>` | `None`  | Name of the contact person or organisation.   |
+| `email` | `Option<String>` | `None`  | Contact email address.                        |
+| `url`   | `Option<String>` | `None`  | URL pointing to the contact information page. |
 
 ---
 
@@ -489,10 +489,10 @@ JWT authentication configuration
 
 License information
 
-| Field  | Type             | Default | Description |
-| ------ | ---------------- | ------- | ----------- |
-| `name` | `String`         | —       | The name    |
-| `url`  | `Option<String>` | `None`  | Url         |
+| Field  | Type             | Default | Description                                             |
+| ------ | ---------------- | ------- | ------------------------------------------------------- |
+| `name` | `String`         | —       | SPDX license identifier or display name (e.g. `"MIT"`). |
+| `url`  | `Option<String>` | `None`  | URL to the full license text.                           |
 
 ---
 
@@ -842,16 +842,6 @@ Return response body as UTF-8 string.
 pub fn text(&self) -> String
 ```
 
-###### json()
-
-Parse response body as JSON.
-
-**Signature:**
-
-```rust
-pub fn json(&self) -> serde_json::Value
-```
-
 ###### header()
 
 Lookup header by case-insensitive name.
@@ -860,26 +850,6 @@ Lookup header by case-insensitive name.
 
 ```rust
 pub fn header(&self, name: &str) -> Option<String>
-```
-
-###### graphql_data()
-
-Extract GraphQL data from response
-
-**Signature:**
-
-```rust
-pub fn graphql_data(&self) -> serde_json::Value
-```
-
-###### graphql_errors()
-
-Extract GraphQL errors from response
-
-**Signature:**
-
-```rust
-pub fn graphql_errors(&self) -> Vec<serde_json::Value>
 ```
 
 ---
@@ -953,10 +923,10 @@ pub fn default() -> ServerConfig
 
 Server information
 
-| Field         | Type             | Default | Description                |
-| ------------- | ---------------- | ------- | -------------------------- |
-| `url`         | `String`         | —       | Url                        |
-| `description` | `Option<String>` | `None`  | Human-readable description |
+| Field         | Type             | Default | Description                                                     |
+| ------------- | ---------------- | ------- | --------------------------------------------------------------- |
+| `url`         | `String`         | —       | Base URL of the server (e.g. `"<https://api.example.com/v1"`>). |
+| `description` | `Option<String>` | `None`  | Optional human-readable description of the server environment.  |
 
 ---
 
@@ -1066,7 +1036,7 @@ Make a request with a raw body payload.
 **Signature:**
 
 ```rust
-pub fn request_raw(&self, method: Method, path: &str, body: &[u8], query_params: Option<Vec<String>>, headers: Option<Vec<String>>) -> ResponseSnapshot
+pub fn request_raw(&self, method: &str, path: &str, body: &[u8], query_params: Option<Vec<String>>, headers: Option<Vec<String>>) -> ResponseSnapshot
 ```
 
 ###### put()
@@ -1191,6 +1161,16 @@ pub fn graphql_subscription(&self, query: &str, variables: Option<serde_json::Va
 
 ---
 
+##### TestingSseEvent
+
+A single Server-Sent Event.
+
+| Field  | Type     | Default | Description                  |
+| ------ | -------- | ------- | ---------------------------- |
+| `data` | `String` | —       | The data field of the event. |
+
+---
+
 ##### UploadFile
 
 Represents an uploaded file from multipart/form-data requests.
@@ -1281,37 +1261,6 @@ Possible errors while converting an Axum response into a snapshot.
 | --------------- | ---------------------------------------------------------------------- |
 | `InvalidHeader` | Response header could not be decoded to UTF-8. — Fields: `0`: `String` |
 | `Decompression` | Body decompression failed. — Fields: `0`: `String`                     |
-
----
-
-##### WebSocketMessage
-
-A WebSocket message that can be text or binary.
-
-| Value    | Description                                                                                                                                                                                                                    |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Text`   | A text message. — Fields: `0`: `String`                                                                                                                                                                                        |
-| `Binary` | A binary message. — Fields: `0`: `Vec<u8>`                                                                                                                                                                                     |
-| `Close`  | A close message with a numeric close code (RFC 6455) and optional reason text. Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received, 1006 Abnormal Closure. — Fields: `code`: `u16`, `reason`: `String` |
-| `Ping`   | A ping message. — Fields: `0`: `Vec<u8>`                                                                                                                                                                                       |
-| `Pong`   | A pong message. — Fields: `0`: `Vec<u8>`                                                                                                                                                                                       |
-
----
-
-##### Method
-
-HTTP method
-
-| Value     | Description |
-| --------- | ----------- |
-| `Get`     | Get         |
-| `Post`    | Post        |
-| `Put`     | Put         |
-| `Patch`   | Patch       |
-| `Delete`  | Delete      |
-| `Head`    | Head        |
-| `Options` | Options     |
-| `Trace`   | Trace       |
 
 ---
 

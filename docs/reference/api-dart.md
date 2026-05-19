@@ -158,11 +158,11 @@ static CompressionConfig default()
 
 Contact information
 
-| Field   | Type      | Default | Description |
-| ------- | --------- | ------- | ----------- |
-| `name`  | `String?` | `null`  | The name    |
-| `email` | `String?` | `null`  | Email       |
-| `url`   | `String?` | `null`  | Url         |
+| Field   | Type      | Default | Description                                   |
+| ------- | --------- | ------- | --------------------------------------------- |
+| `name`  | `String?` | `null`  | Name of the contact person or organisation.   |
+| `email` | `String?` | `null`  | Contact email address.                        |
+| `url`   | `String?` | `null`  | URL pointing to the contact information page. |
 
 ---
 
@@ -489,10 +489,10 @@ JWT authentication configuration
 
 License information
 
-| Field  | Type      | Default | Description |
-| ------ | --------- | ------- | ----------- |
-| `name` | `String`  | —       | The name    |
-| `url`  | `String?` | `null`  | Url         |
+| Field  | Type      | Default | Description                                             |
+| ------ | --------- | ------- | ------------------------------------------------------- |
+| `name` | `String`  | —       | SPDX license identifier or display name (e.g. `"MIT"`). |
+| `url`  | `String?` | `null`  | URL to the full license text.                           |
 
 ---
 
@@ -842,16 +842,6 @@ Return response body as UTF-8 string.
 String text()
 ```
 
-###### json()
-
-Parse response body as JSON.
-
-**Signature:**
-
-```dart
-String json()
-```
-
 ###### header()
 
 Lookup header by case-insensitive name.
@@ -860,26 +850,6 @@ Lookup header by case-insensitive name.
 
 ```dart
 String? header(String name)
-```
-
-###### graphqlData()
-
-Extract GraphQL data from response
-
-**Signature:**
-
-```dart
-String graphqlData()
-```
-
-###### graphqlErrors()
-
-Extract GraphQL errors from response
-
-**Signature:**
-
-```dart
-List<String> graphqlErrors()
 ```
 
 ---
@@ -953,10 +923,10 @@ static ServerConfig default()
 
 Server information
 
-| Field         | Type      | Default | Description                |
-| ------------- | --------- | ------- | -------------------------- |
-| `url`         | `String`  | —       | Url                        |
-| `description` | `String?` | `null`  | Human-readable description |
+| Field         | Type      | Default | Description                                                     |
+| ------------- | --------- | ------- | --------------------------------------------------------------- |
+| `url`         | `String`  | —       | Base URL of the server (e.g. `"<https://api.example.com/v1"`>). |
+| `description` | `String?` | `null`  | Optional human-readable description of the server environment.  |
 
 ---
 
@@ -1066,7 +1036,7 @@ Make a request with a raw body payload.
 **Signature:**
 
 ```dart
-ResponseSnapshot requestRaw(Method method, String path, Uint8List body, [List<String>? queryParams, List<String>? headers])
+ResponseSnapshot requestRaw(String method, String path, Uint8List body, [List<String>? queryParams, List<String>? headers])
 ```
 
 ###### put()
@@ -1191,6 +1161,16 @@ GraphQlSubscriptionSnapshot graphqlSubscription(String query, [String? variables
 
 ---
 
+##### TestingSseEvent
+
+A single Server-Sent Event.
+
+| Field  | Type     | Default | Description                  |
+| ------ | -------- | ------- | ---------------------------- |
+| `data` | `String` | —       | The data field of the event. |
+
+---
+
 ##### UploadFile
 
 Represents an uploaded file from multipart/form-data requests.
@@ -1281,37 +1261,6 @@ Possible errors while converting an Axum response into a snapshot.
 | --------------- | ---------------------------------------------------------------------- |
 | `InvalidHeader` | Response header could not be decoded to UTF-8. — Fields: `0`: `String` |
 | `Decompression` | Body decompression failed. — Fields: `0`: `String`                     |
-
----
-
-##### WebSocketMessage
-
-A WebSocket message that can be text or binary.
-
-| Value    | Description                                                                                                                                                                                                                    |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Text`   | A text message. — Fields: `0`: `String`                                                                                                                                                                                        |
-| `Binary` | A binary message. — Fields: `0`: `Uint8List`                                                                                                                                                                                   |
-| `Close`  | A close message with a numeric close code (RFC 6455) and optional reason text. Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received, 1006 Abnormal Closure. — Fields: `code`: `int`, `reason`: `String` |
-| `Ping`   | A ping message. — Fields: `0`: `Uint8List`                                                                                                                                                                                     |
-| `Pong`   | A pong message. — Fields: `0`: `Uint8List`                                                                                                                                                                                     |
-
----
-
-##### Method
-
-HTTP method
-
-| Value     | Description |
-| --------- | ----------- |
-| `Get`     | Get         |
-| `Post`    | Post        |
-| `Put`     | Put         |
-| `Patch`   | Patch       |
-| `Delete`  | Delete      |
-| `Head`    | Head        |
-| `Options` | Options     |
-| `Trace`   | Trace       |
 
 ---
 

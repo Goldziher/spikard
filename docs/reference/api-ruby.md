@@ -158,11 +158,11 @@ def self.default()
 
 Contact information
 
-| Field   | Type      | Default | Description |
-| ------- | --------- | ------- | ----------- |
-| `name`  | `String?` | `nil`   | The name    |
-| `email` | `String?` | `nil`   | Email       |
-| `url`   | `String?` | `nil`   | Url         |
+| Field   | Type      | Default | Description                                   |
+| ------- | --------- | ------- | --------------------------------------------- |
+| `name`  | `String?` | `nil`   | Name of the contact person or organisation.   |
+| `email` | `String?` | `nil`   | Contact email address.                        |
+| `url`   | `String?` | `nil`   | URL pointing to the contact information page. |
 
 ---
 
@@ -489,10 +489,10 @@ JWT authentication configuration
 
 License information
 
-| Field  | Type      | Default | Description |
-| ------ | --------- | ------- | ----------- |
-| `name` | `String`  | —       | The name    |
-| `url`  | `String?` | `nil`   | Url         |
+| Field  | Type      | Default | Description                                             |
+| ------ | --------- | ------- | ------------------------------------------------------- |
+| `name` | `String`  | —       | SPDX license identifier or display name (e.g. `"MIT"`). |
+| `url`  | `String?` | `nil`   | URL to the full license text.                           |
 
 ---
 
@@ -842,16 +842,6 @@ Return response body as UTF-8 string.
 def text()
 ```
 
-###### json()
-
-Parse response body as JSON.
-
-**Signature:**
-
-```ruby
-def json()
-```
-
 ###### header()
 
 Lookup header by case-insensitive name.
@@ -860,26 +850,6 @@ Lookup header by case-insensitive name.
 
 ```ruby
 def header(name)
-```
-
-###### graphql_data()
-
-Extract GraphQL data from response
-
-**Signature:**
-
-```ruby
-def graphql_data()
-```
-
-###### graphql_errors()
-
-Extract GraphQL errors from response
-
-**Signature:**
-
-```ruby
-def graphql_errors()
 ```
 
 ---
@@ -953,10 +923,10 @@ def self.default()
 
 Server information
 
-| Field         | Type      | Default | Description                |
-| ------------- | --------- | ------- | -------------------------- |
-| `url`         | `String`  | —       | Url                        |
-| `description` | `String?` | `nil`   | Human-readable description |
+| Field         | Type      | Default | Description                                                     |
+| ------------- | --------- | ------- | --------------------------------------------------------------- |
+| `url`         | `String`  | —       | Base URL of the server (e.g. `"<https://api.example.com/v1"`>). |
+| `description` | `String?` | `nil`   | Optional human-readable description of the server environment.  |
 
 ---
 
@@ -1191,6 +1161,16 @@ def graphql_subscription(query, variables, operation_name)
 
 ---
 
+##### TestingSseEvent
+
+A single Server-Sent Event.
+
+| Field  | Type     | Default | Description                  |
+| ------ | -------- | ------- | ---------------------------- |
+| `data` | `String` | —       | The data field of the event. |
+
+---
+
 ##### UploadFile
 
 Represents an uploaded file from multipart/form-data requests.
@@ -1281,37 +1261,6 @@ Possible errors while converting an Axum response into a snapshot.
 | ---------------- | ---------------------------------------------------------------------- |
 | `invalid_header` | Response header could not be decoded to UTF-8. — Fields: `0`: `String` |
 | `decompression`  | Body decompression failed. — Fields: `0`: `String`                     |
-
----
-
-##### WebSocketMessage
-
-A WebSocket message that can be text or binary.
-
-| Value    | Description                                                                                                                                                                                                                        |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `text`   | A text message. — Fields: `0`: `String`                                                                                                                                                                                            |
-| `binary` | A binary message. — Fields: `0`: `String`                                                                                                                                                                                          |
-| `close`  | A close message with a numeric close code (RFC 6455) and optional reason text. Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received, 1006 Abnormal Closure. — Fields: `code`: `Integer`, `reason`: `String` |
-| `ping`   | A ping message. — Fields: `0`: `String`                                                                                                                                                                                            |
-| `pong`   | A pong message. — Fields: `0`: `String`                                                                                                                                                                                            |
-
----
-
-##### Method
-
-HTTP method
-
-| Value     | Description |
-| --------- | ----------- |
-| `get`     | Get         |
-| `post`    | Post        |
-| `put`     | Put         |
-| `patch`   | Patch       |
-| `delete`  | Delete      |
-| `head`    | Head        |
-| `options` | Options     |
-| `trace`   | Trace       |
 
 ---
 

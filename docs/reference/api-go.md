@@ -158,11 +158,11 @@ func (o *CompressionConfig) Default() CompressionConfig
 
 Contact information
 
-| Field   | Type      | Default | Description |
-| ------- | --------- | ------- | ----------- |
-| `Name`  | `*string` | `nil`   | The name    |
-| `Email` | `*string` | `nil`   | Email       |
-| `Url`   | `*string` | `nil`   | Url         |
+| Field   | Type      | Default | Description                                   |
+| ------- | --------- | ------- | --------------------------------------------- |
+| `Name`  | `*string` | `nil`   | Name of the contact person or organisation.   |
+| `Email` | `*string` | `nil`   | Contact email address.                        |
+| `Url`   | `*string` | `nil`   | URL pointing to the contact information page. |
 
 ---
 
@@ -364,20 +364,6 @@ func (o *GraphQlRouteConfig) Default() GraphQlRouteConfig
 
 ---
 
-#### GraphQlSubscriptionSnapshot
-
-Snapshot of a GraphQL subscription exchange over WebSocket.
-
-| Field              | Type            | Default | Description                                                       |
-| ------------------ | --------------- | ------- | ----------------------------------------------------------------- |
-| `OperationId`      | `string`        | —       | Operation id used for the subscription request.                   |
-| `Acknowledged`     | `bool`          | —       | Whether the server acknowledged the GraphQL WebSocket connection. |
-| `Event`            | `*interface{}`  | `nil`   | First `next.payload` received for this subscription, if any.      |
-| `Errors`           | `[]interface{}` | —       | GraphQL protocol errors emitted by the server.                    |
-| `CompleteReceived` | `bool`          | —       | Whether a `complete` frame was observed for this operation.       |
-
----
-
 #### GrpcConfig
 
 Configuration for gRPC support
@@ -489,10 +475,10 @@ JWT authentication configuration
 
 License information
 
-| Field  | Type      | Default | Description |
-| ------ | --------- | ------- | ----------- |
-| `Name` | `string`  | —       | The name    |
-| `Url`  | `*string` | `nil`   | Url         |
+| Field  | Type      | Default | Description                                             |
+| ------ | --------- | ------- | ------------------------------------------------------- |
+| `Name` | `string`  | —       | SPDX license identifier or display name (e.g. `"MIT"`). |
+| `Url`  | `*string` | `nil`   | URL to the full license text.                           |
 
 ---
 
@@ -820,70 +806,6 @@ func (o *Response) Default() Response
 
 ---
 
-##### ResponseSnapshot
-
-Snapshot of an Axum response used by higher-level language bindings.
-
-| Field     | Type                | Default | Description                                                |
-| --------- | ------------------- | ------- | ---------------------------------------------------------- |
-| `Status`  | `uint16`            | —       | HTTP status code.                                          |
-| `Headers` | `map[string]string` | —       | Response headers (lowercase keys for predictable lookups). |
-| `Body`    | `[]byte`            | —       | Response body bytes (decoded for supported encodings).     |
-
-###### Methods
-
-###### Text()
-
-Return response body as UTF-8 string.
-
-**Signature:**
-
-```go
-func (o *ResponseSnapshot) Text() (string, error)
-```
-
-###### Json()
-
-Parse response body as JSON.
-
-**Signature:**
-
-```go
-func (o *ResponseSnapshot) Json() (interface{}, error)
-```
-
-###### Header()
-
-Lookup header by case-insensitive name.
-
-**Signature:**
-
-```go
-func (o *ResponseSnapshot) Header(name string) *string
-```
-
-###### GraphqlData()
-
-Extract GraphQL data from response
-
-**Signature:**
-
-```go
-func (o *ResponseSnapshot) GraphqlData() (interface{}, error)
-```
-
-###### GraphqlErrors()
-
-Extract GraphQL errors from response
-
-**Signature:**
-
-```go
-func (o *ResponseSnapshot) GraphqlErrors() ([]interface{}, error)
-```
-
----
-
 ##### SchemaConfig
 
 Configuration for GraphQL schema building.
@@ -953,10 +875,10 @@ func (o *ServerConfig) Default() ServerConfig
 
 Server information
 
-| Field         | Type      | Default | Description                |
-| ------------- | --------- | ------- | -------------------------- |
-| `Url`         | `string`  | —       | Url                        |
-| `Description` | `*string` | `nil`   | Human-readable description |
+| Field         | Type      | Default | Description                                                     |
+| ------------- | --------- | ------- | --------------------------------------------------------------- |
+| `Url`         | `string`  | —       | Base URL of the server (e.g. `"<https://api.example.com/v1"`>). |
+| `Description` | `*string` | `nil`   | Optional human-readable description of the server environment.  |
 
 ---
 
@@ -1028,166 +950,13 @@ Static file serving configuration
 
 ---
 
-##### TestClient
+##### TestingSseEvent
 
-Core test client for making HTTP requests to a Spikard application.
+A single Server-Sent Event.
 
-This struct wraps axum-test's TestServer and provides a language-agnostic
-interface for making HTTP requests, sending WebSocket connections, and
-handling Server-Sent Events. Language bindings wrap this to provide
-native API surfaces.
-
-###### Methods
-
-###### Get()
-
-Make a GET request
-
-**Signature:**
-
-```go
-func (o *TestClient) Get(path string, queryParams []string, headers []string) (ResponseSnapshot, error)
-```
-
-###### Post()
-
-Make a POST request
-
-**Signature:**
-
-```go
-func (o *TestClient) Post(path string, json interface{}, formData []string, multipart string, queryParams []string, headers []string) (ResponseSnapshot, error)
-```
-
-###### RequestRaw()
-
-Make a request with a raw body payload.
-
-**Signature:**
-
-```go
-func (o *TestClient) RequestRaw(method Method, path string, body []byte, queryParams []string, headers []string) (ResponseSnapshot, error)
-```
-
-###### Put()
-
-Make a PUT request
-
-**Signature:**
-
-```go
-func (o *TestClient) Put(path string, json interface{}, queryParams []string, headers []string) (ResponseSnapshot, error)
-```
-
-###### Patch()
-
-Make a PATCH request
-
-**Signature:**
-
-```go
-func (o *TestClient) Patch(path string, json interface{}, queryParams []string, headers []string) (ResponseSnapshot, error)
-```
-
-###### Delete()
-
-Make a DELETE request
-
-**Signature:**
-
-```go
-func (o *TestClient) Delete(path string, queryParams []string, headers []string) (ResponseSnapshot, error)
-```
-
-###### Options()
-
-Make an OPTIONS request
-
-**Signature:**
-
-```go
-func (o *TestClient) Options(path string, queryParams []string, headers []string) (ResponseSnapshot, error)
-```
-
-###### Head()
-
-Make a HEAD request
-
-**Signature:**
-
-```go
-func (o *TestClient) Head(path string, queryParams []string, headers []string) (ResponseSnapshot, error)
-```
-
-###### Trace()
-
-Make a TRACE request
-
-**Signature:**
-
-```go
-func (o *TestClient) Trace(path string, queryParams []string, headers []string) (ResponseSnapshot, error)
-```
-
-###### GraphqlAt()
-
-Send a GraphQL query/mutation to a custom endpoint
-
-**Signature:**
-
-```go
-func (o *TestClient) GraphqlAt(endpoint string, query string, variables interface{}, operationName string) (ResponseSnapshot, error)
-```
-
-###### Graphql()
-
-Send a GraphQL query/mutation
-
-**Signature:**
-
-```go
-func (o *TestClient) Graphql(query string, variables interface{}, operationName string) (ResponseSnapshot, error)
-```
-
-###### GraphqlWithStatus()
-
-Send a GraphQL query and return HTTP status code separately
-
-This method allows tests to distinguish between:
-
-- HTTP-level errors (400/422 for invalid requests)
-- GraphQL-level errors (200 with errors in response body)
-
-**Signature:**
-
-```go
-func (o *TestClient) GraphqlWithStatus(query string, variables interface{}, operationName string) (string, error)
-```
-
-###### GraphqlSubscriptionAt()
-
-Send a GraphQL subscription (WebSocket) to a custom endpoint.
-
-Uses the `graphql-transport-ws` protocol and captures the first `next` payload.
-After the first payload is received, this client sends `complete` to unsubscribe.
-
-**Signature:**
-
-```go
-func (o *TestClient) GraphqlSubscriptionAt(endpoint string, query string, variables interface{}, operationName string) (GraphQlSubscriptionSnapshot, error)
-```
-
-###### GraphqlSubscription()
-
-Send a GraphQL subscription (WebSocket).
-
-Uses `/graphql` as the default subscription endpoint.
-
-**Signature:**
-
-```go
-func (o *TestClient) GraphqlSubscription(query string, variables interface{}, operationName string) (GraphQlSubscriptionSnapshot, error)
-```
+| Field  | Type     | Default | Description                  |
+| ------ | -------- | ------- | ---------------------------- |
+| `Data` | `string` | —       | The data field of the event. |
 
 ---
 
@@ -1272,48 +1041,6 @@ Response body for `POST /asyncapi/validate`
 ---
 
 #### Enums
-
-##### SnapshotError
-
-Possible errors while converting an Axum response into a snapshot.
-
-| Value           | Description                                                            |
-| --------------- | ---------------------------------------------------------------------- |
-| `InvalidHeader` | Response header could not be decoded to UTF-8. — Fields: `0`: `string` |
-| `Decompression` | Body decompression failed. — Fields: `0`: `string`                     |
-
----
-
-##### WebSocketMessage
-
-A WebSocket message that can be text or binary.
-
-| Value    | Description                                                                                                                                                                                                                       |
-| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Text`   | A text message. — Fields: `0`: `string`                                                                                                                                                                                           |
-| `Binary` | A binary message. — Fields: `0`: `[]byte`                                                                                                                                                                                         |
-| `Close`  | A close message with a numeric close code (RFC 6455) and optional reason text. Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received, 1006 Abnormal Closure. — Fields: `Code`: `uint16`, `Reason`: `string` |
-| `Ping`   | A ping message. — Fields: `0`: `[]byte`                                                                                                                                                                                           |
-| `Pong`   | A pong message. — Fields: `0`: `[]byte`                                                                                                                                                                                           |
-
----
-
-##### Method
-
-HTTP method
-
-| Value     | Description |
-| --------- | ----------- |
-| `Get`     | Get         |
-| `Post`    | Post        |
-| `Put`     | Put         |
-| `Patch`   | Patch       |
-| `Delete`  | Delete      |
-| `Head`    | Head        |
-| `Options` | Options     |
-| `Trace`   | Trace       |
-
----
 
 ##### SecuritySchemeInfo
 

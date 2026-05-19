@@ -489,22 +489,29 @@ pub struct OpenApiConfig {
 /// Contact information
 #[frb(mirror(ContactInfo))]
 pub struct ContactInfo {
+    /// Name of the contact person or organisation.
     pub name: Option<String>,
+    /// Contact email address.
     pub email: Option<String>,
+    /// URL pointing to the contact information page.
     pub url: Option<String>,
 }
 
 /// License information
 #[frb(mirror(LicenseInfo))]
 pub struct LicenseInfo {
+    /// SPDX license identifier or display name (e.g. `"MIT"`).
     pub name: String,
+    /// URL to the full license text.
     pub url: Option<String>,
 }
 
 /// Server information
 #[frb(mirror(ServerInfo))]
 pub struct ServerInfo {
+    /// Base URL of the server (e.g. `"https://api.example.com/v1"`).
     pub url: String,
+    /// Optional human-readable description of the server environment.
     pub description: Option<String>,
 }
 
@@ -550,6 +557,13 @@ pub struct SseEvent {
     pub id: Option<String>,
     /// Retry timeout in milliseconds (optional)
     pub retry: Option<i64>,
+}
+
+/// A single Server-Sent Event.
+#[frb(mirror(TestingSseEvent))]
+pub struct TestingSseEvent {
+    /// The data field of the event.
+    pub data: String,
 }
 
 /// JWT authentication configuration
@@ -798,42 +812,6 @@ pub enum SnapshotError {
     InvalidHeader { field0: String },
     /// Body decompression failed.
     Decompression { field0: String },
-}
-
-/// A WebSocket message that can be text or binary.
-#[frb(mirror(WebSocketMessage))]
-pub enum WebSocketMessage {
-    /// A text message.
-    Text { field0: String },
-    /// A binary message.
-    Binary { field0: Vec<u8> },
-    /// A close message with a numeric close code (RFC 6455) and optional reason text.
-    ///
-    /// Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received,
-    /// 1006 Abnormal Closure.
-    Close {
-        /// RFC 6455 close code.
-        code: i64,
-        /// Optional human-readable reason string.
-        reason: String,
-    },
-    /// A ping message.
-    Ping { field0: Vec<u8> },
-    /// A pong message.
-    Pong { field0: Vec<u8> },
-}
-
-/// HTTP method
-#[frb(mirror(Method))]
-pub enum Method {
-    Get,
-    Post,
-    Put,
-    Patch,
-    Delete,
-    Head,
-    Options,
-    Trace,
 }
 
 /// Security scheme types
@@ -1168,6 +1146,12 @@ impl From<spikard_http::SseEvent> for SseEvent {
     }
 }
 
+impl From<spikard_http::testing::SseEvent> for TestingSseEvent {
+    fn from(v: spikard_http::testing::SseEvent) -> Self {
+        TestingSseEvent { data: v.data.into() }
+    }
+}
+
 impl From<spikard_http::JwtConfig> for JwtConfig {
     fn from(v: spikard_http::JwtConfig) -> Self {
         JwtConfig {
@@ -1247,36 +1231,6 @@ impl From<spikard::SnapshotError> for SnapshotError {
         match v {
             spikard::SnapshotError::InvalidHeader(f0) => SnapshotError::InvalidHeader { field0: f0 },
             spikard::SnapshotError::Decompression(f0) => SnapshotError::Decompression { field0: f0 },
-        }
-    }
-}
-
-impl From<spikard::WebSocketMessage> for WebSocketMessage {
-    fn from(v: spikard::WebSocketMessage) -> Self {
-        match v {
-            spikard::WebSocketMessage::Text(f0) => WebSocketMessage::Text { field0: f0 },
-            spikard::WebSocketMessage::Binary(f0) => WebSocketMessage::Binary { field0: f0 },
-            spikard::WebSocketMessage::Close { code, reason } => WebSocketMessage::Close {
-                code: code as _,
-                reason: reason.unwrap_or_default(),
-            },
-            spikard::WebSocketMessage::Ping(f0) => WebSocketMessage::Ping { field0: f0 },
-            spikard::WebSocketMessage::Pong(f0) => WebSocketMessage::Pong { field0: f0 },
-        }
-    }
-}
-
-impl From<spikard_core::Method> for Method {
-    fn from(v: spikard_core::Method) -> Self {
-        match v {
-            spikard_core::Method::Get => Method::Get,
-            spikard_core::Method::Post => Method::Post,
-            spikard_core::Method::Put => Method::Put,
-            spikard_core::Method::Patch => Method::Patch,
-            spikard_core::Method::Delete => Method::Delete,
-            spikard_core::Method::Head => Method::Head,
-            spikard_core::Method::Options => Method::Options,
-            spikard_core::Method::Trace => Method::Trace,
         }
     }
 }

@@ -158,11 +158,11 @@ public static function default(): CompressionConfig
 
 Contact information
 
-| Field   | Type      | Default | Description |
-| ------- | --------- | ------- | ----------- |
-| `name`  | `?string` | `null`  | The name    |
-| `email` | `?string` | `null`  | Email       |
-| `url`   | `?string` | `null`  | Url         |
+| Field   | Type      | Default | Description                                   |
+| ------- | --------- | ------- | --------------------------------------------- |
+| `name`  | `?string` | `null`  | Name of the contact person or organisation.   |
+| `email` | `?string` | `null`  | Contact email address.                        |
+| `url`   | `?string` | `null`  | URL pointing to the contact information page. |
 
 ---
 
@@ -489,10 +489,10 @@ JWT authentication configuration
 
 License information
 
-| Field  | Type      | Default | Description |
-| ------ | --------- | ------- | ----------- |
-| `name` | `string`  | —       | The name    |
-| `url`  | `?string` | `null`  | Url         |
+| Field  | Type      | Default | Description                                             |
+| ------ | --------- | ------- | ------------------------------------------------------- |
+| `name` | `string`  | —       | SPDX license identifier or display name (e.g. `"MIT"`). |
+| `url`  | `?string` | `null`  | URL to the full license text.                           |
 
 ---
 
@@ -842,16 +842,6 @@ Return response body as UTF-8 string.
 public function text(): string
 ```
 
-###### json()
-
-Parse response body as JSON.
-
-**Signature:**
-
-```php
-public function json(): mixed
-```
-
 ###### header()
 
 Lookup header by case-insensitive name.
@@ -860,26 +850,6 @@ Lookup header by case-insensitive name.
 
 ```php
 public function header(string $name): ?string
-```
-
-###### graphqlData()
-
-Extract GraphQL data from response
-
-**Signature:**
-
-```php
-public function graphqlData(): mixed
-```
-
-###### graphqlErrors()
-
-Extract GraphQL errors from response
-
-**Signature:**
-
-```php
-public function graphqlErrors(): array<mixed>
 ```
 
 ---
@@ -953,10 +923,10 @@ public static function default(): ServerConfig
 
 Server information
 
-| Field         | Type      | Default | Description                |
-| ------------- | --------- | ------- | -------------------------- |
-| `url`         | `string`  | —       | Url                        |
-| `description` | `?string` | `null`  | Human-readable description |
+| Field         | Type      | Default | Description                                                     |
+| ------------- | --------- | ------- | --------------------------------------------------------------- |
+| `url`         | `string`  | —       | Base URL of the server (e.g. `"<https://api.example.com/v1"`>). |
+| `description` | `?string` | `null`  | Optional human-readable description of the server environment.  |
 
 ---
 
@@ -1028,166 +998,13 @@ Static file serving configuration
 
 ---
 
-##### TestClient
+##### TestingSseEvent
 
-Core test client for making HTTP requests to a Spikard application.
+A single Server-Sent Event.
 
-This struct wraps axum-test's TestServer and provides a language-agnostic
-interface for making HTTP requests, sending WebSocket connections, and
-handling Server-Sent Events. Language bindings wrap this to provide
-native API surfaces.
-
-###### Methods
-
-###### get()
-
-Make a GET request
-
-**Signature:**
-
-```php
-public function get(string $path, array<string> $queryParams, array<string> $headers): ResponseSnapshot
-```
-
-###### post()
-
-Make a POST request
-
-**Signature:**
-
-```php
-public function post(string $path, mixed $json, array<string> $formData, string $multipart, array<string> $queryParams, array<string> $headers): ResponseSnapshot
-```
-
-###### requestRaw()
-
-Make a request with a raw body payload.
-
-**Signature:**
-
-```php
-public function requestRaw(Method $method, string $path, string $body, array<string> $queryParams, array<string> $headers): ResponseSnapshot
-```
-
-###### put()
-
-Make a PUT request
-
-**Signature:**
-
-```php
-public function put(string $path, mixed $json, array<string> $queryParams, array<string> $headers): ResponseSnapshot
-```
-
-###### patch()
-
-Make a PATCH request
-
-**Signature:**
-
-```php
-public function patch(string $path, mixed $json, array<string> $queryParams, array<string> $headers): ResponseSnapshot
-```
-
-###### delete()
-
-Make a DELETE request
-
-**Signature:**
-
-```php
-public function delete(string $path, array<string> $queryParams, array<string> $headers): ResponseSnapshot
-```
-
-###### options()
-
-Make an OPTIONS request
-
-**Signature:**
-
-```php
-public function options(string $path, array<string> $queryParams, array<string> $headers): ResponseSnapshot
-```
-
-###### head()
-
-Make a HEAD request
-
-**Signature:**
-
-```php
-public function head(string $path, array<string> $queryParams, array<string> $headers): ResponseSnapshot
-```
-
-###### trace()
-
-Make a TRACE request
-
-**Signature:**
-
-```php
-public function trace(string $path, array<string> $queryParams, array<string> $headers): ResponseSnapshot
-```
-
-###### graphqlAt()
-
-Send a GraphQL query/mutation to a custom endpoint
-
-**Signature:**
-
-```php
-public function graphqlAt(string $endpoint, string $query, mixed $variables, string $operationName): ResponseSnapshot
-```
-
-###### graphql()
-
-Send a GraphQL query/mutation
-
-**Signature:**
-
-```php
-public function graphql(string $query, mixed $variables, string $operationName): ResponseSnapshot
-```
-
-###### graphqlWithStatus()
-
-Send a GraphQL query and return HTTP status code separately
-
-This method allows tests to distinguish between:
-
-- HTTP-level errors (400/422 for invalid requests)
-- GraphQL-level errors (200 with errors in response body)
-
-**Signature:**
-
-```php
-public function graphqlWithStatus(string $query, mixed $variables, string $operationName): string
-```
-
-###### graphqlSubscriptionAt()
-
-Send a GraphQL subscription (WebSocket) to a custom endpoint.
-
-Uses the `graphql-transport-ws` protocol and captures the first `next` payload.
-After the first payload is received, this client sends `complete` to unsubscribe.
-
-**Signature:**
-
-```php
-public function graphqlSubscriptionAt(string $endpoint, string $query, mixed $variables, string $operationName): GraphQlSubscriptionSnapshot
-```
-
-###### graphqlSubscription()
-
-Send a GraphQL subscription (WebSocket).
-
-Uses `/graphql` as the default subscription endpoint.
-
-**Signature:**
-
-```php
-public function graphqlSubscription(string $query, mixed $variables, string $operationName): GraphQlSubscriptionSnapshot
-```
+| Field  | Type     | Default | Description                  |
+| ------ | -------- | ------- | ---------------------------- |
+| `data` | `string` | —       | The data field of the event. |
 
 ---
 
@@ -1281,37 +1098,6 @@ Possible errors while converting an Axum response into a snapshot.
 | --------------- | ---------------------------------------------------------------------- |
 | `InvalidHeader` | Response header could not be decoded to UTF-8. — Fields: `0`: `string` |
 | `Decompression` | Body decompression failed. — Fields: `0`: `string`                     |
-
----
-
-##### WebSocketMessage
-
-A WebSocket message that can be text or binary.
-
-| Value    | Description                                                                                                                                                                                                                    |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Text`   | A text message. — Fields: `0`: `string`                                                                                                                                                                                        |
-| `Binary` | A binary message. — Fields: `0`: `string`                                                                                                                                                                                      |
-| `Close`  | A close message with a numeric close code (RFC 6455) and optional reason text. Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received, 1006 Abnormal Closure. — Fields: `code`: `int`, `reason`: `string` |
-| `Ping`   | A ping message. — Fields: `0`: `string`                                                                                                                                                                                        |
-| `Pong`   | A pong message. — Fields: `0`: `string`                                                                                                                                                                                        |
-
----
-
-##### Method
-
-HTTP method
-
-| Value     | Description |
-| --------- | ----------- |
-| `Get`     | Get         |
-| `Post`    | Post        |
-| `Put`     | Put         |
-| `Patch`   | Patch       |
-| `Delete`  | Delete      |
-| `Head`    | Head        |
-| `Options` | Options     |
-| `Trace`   | Trace       |
 
 ---
 
