@@ -1,5 +1,4 @@
 import XCTest
-
 @testable import Spikard
 
 final class SpikardTests: XCTestCase {

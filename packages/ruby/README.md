@@ -46,11 +46,13 @@ Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC code
 
 ## Installation
 
+
 **gem:**
 
 ```bash
 gem install spikard
 ```
+
 
 **Bundler:**
 
@@ -58,11 +60,15 @@ gem install spikard
 gem 'spikard'
 ```
 
+
 ### System Requirements
+
 
 - **Ruby 3.2+** required
 
+
 ## Quick Start
+
 
 ```ruby
 require "spikard"
@@ -81,6 +87,7 @@ end
 app.run(config: { port: 8000 })
 ```
 
+
 ## Features
 
 - **HTTP routing** — type-safe route definitions with path, query, and body parameter validation
@@ -89,6 +96,7 @@ app.run(config: { port: 8000 })
 - **Lifecycle hooks** — `onRequest`, `preValidation`, `preHandler`, `onResponse`, `onError`
 - **Fixture-driven testing** — shared JSON fixtures drive tests across all language bindings
 - **Polyglot** — single Rust core, thin bindings for Python, Node.js, Ruby, PHP, Elixir, Go, Java, C#, Kotlin, Dart, Gleam, WASM, Swift, Zig, and C FFI
+
 
 ## Routing
 
@@ -100,6 +108,7 @@ app = Spikard::App.new
 app.get("/health") { |_params, _query, _body| { status: "ok" } }
 app.post("/users") { |_params, _query, body| body }
 ```
+
 
 ## Validation
 
@@ -118,6 +127,7 @@ app.post("/payments") do |_params, _query, body|
 end
 ```
 
+
 ## Middleware
 
 ```ruby
@@ -130,6 +140,7 @@ app.on_request do |request|
   request
 end
 ```
+
 
 ## Documentation
 

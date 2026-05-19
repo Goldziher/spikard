@@ -34,7 +34,7 @@ inline fn _first_error(comptime E: type) E {
 ///
 /// These errors are compatible with async-graphql error handling and can be
 /// converted to structured HTTP responses matching the project's error fixtures.
-pub const GraphQLError = error{
+pub const GraphQLError = error {
     ExecutionError,
     SchemaBuildError,
     RequestHandlingError,
@@ -54,7 +54,7 @@ pub const GraphQLError = error{
 };
 
 /// Error type for schema building operations
-pub const SchemaError = error{
+pub const SchemaError = error {
     BuildingFailed,
     ValidationError,
     ComplexityLimitExceeded,
@@ -559,7 +559,8 @@ pub fn schema_query_only() error{OutOfMemory}![]u8 {
         const slice = std.mem.sliceTo(_json_ptr, 0);
         const owned = try std.heap.c_allocator.dupe(u8, slice);
         break :blk owned;
-    };
+    }
+;
 }
 
 /// Create a schema configuration with Query and Mutation types.
@@ -578,7 +579,8 @@ pub fn schema_query_mutation() error{OutOfMemory}![]u8 {
         const slice = std.mem.sliceTo(_json_ptr, 0);
         const owned = try std.heap.c_allocator.dupe(u8, slice);
         break :blk owned;
-    };
+    }
+;
 }
 
 /// Create a schema configuration with all three root types.
@@ -597,7 +599,8 @@ pub fn schema_full() error{OutOfMemory}![]u8 {
         const slice = std.mem.sliceTo(_json_ptr, 0);
         const owned = try std.heap.c_allocator.dupe(u8, slice);
         break :blk owned;
-    };
+    }
+;
 }
 
 /// Configuration for GraphQL routes
