@@ -629,9 +629,10 @@ jobs:
         with:
           name: node-package
           path: dist/node
-      - uses: kreuzberg-dev/actions/setup-node-workspace@v1
+      - uses: actions/setup-node@v6
         with:
           node-version: "24"
+          registry-url: "https://registry.npmjs.org"
       - uses: kreuzberg-dev/actions/publish-npm@v1
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -650,9 +651,10 @@ jobs:
         with:
           name: wasm-package
           path: dist/wasm
-      - uses: kreuzberg-dev/actions/setup-node-workspace@v1
+      - uses: actions/setup-node@v6
         with:
           node-version: "24"
+          registry-url: "https://registry.npmjs.org"
       - uses: kreuzberg-dev/actions/publish-npm@v1
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -772,7 +774,7 @@ jobs:
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         with:
-          packages-dir: dist/packages
+          packages-dir: dist/packages/dist/nuget
           dry-run: ${{ needs.prepare.outputs.dry_run }}
 
   publish-pub:
@@ -818,6 +820,7 @@ jobs:
         with:
           working-directory: packages/zig
           tag: ${{ needs.prepare.outputs.tag }}
+          zig-version: "0.16.0"
           dry-run: ${{ needs.prepare.outputs.dry_run }}
 
   publish-homebrew:
