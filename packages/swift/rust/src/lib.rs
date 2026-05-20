@@ -36,9 +36,11 @@ mod ffi {
     extern "Rust" {
         type UploadFile;
         fn filename(&self) -> String;
+        #[swift_bridge(swift_name = "contentType")]
         fn content_type(&self) -> Option<String>;
         fn size(&self) -> Option<usize>;
         fn content(&self) -> Vec<u8>;
+        #[swift_bridge(swift_name = "contentEncoding")]
         fn content_encoding(&self) -> Option<String>;
     }
 
@@ -53,11 +55,17 @@ mod ffi {
             max_age: Option<u32>,
             allow_credentials: Option<bool>,
         ) -> CorsConfig;
+        #[swift_bridge(swift_name = "allowedOrigins")]
         fn allowed_origins(&self) -> Vec<String>;
+        #[swift_bridge(swift_name = "allowedMethods")]
         fn allowed_methods(&self) -> Vec<String>;
+        #[swift_bridge(swift_name = "allowedHeaders")]
         fn allowed_headers(&self) -> Vec<String>;
+        #[swift_bridge(swift_name = "exposeHeaders")]
         fn expose_headers(&self) -> Option<Vec<String>>;
+        #[swift_bridge(swift_name = "maxAge")]
         fn max_age(&self) -> Option<u32>;
+        #[swift_bridge(swift_name = "allowCredentials")]
         fn allow_credentials(&self) -> Option<bool>;
     }
 
@@ -67,6 +75,7 @@ mod ffi {
         fn new(gzip: bool, brotli: bool, min_size: usize, quality: u32) -> CompressionConfig;
         fn gzip(&self) -> bool;
         fn brotli(&self) -> bool;
+        #[swift_bridge(swift_name = "minSize")]
         fn min_size(&self) -> usize;
         fn quality(&self) -> u32;
     }
@@ -75,16 +84,21 @@ mod ffi {
         type RateLimitConfig;
         #[swift_bridge(init)]
         fn new(per_second: u64, burst: u32, ip_based: bool) -> RateLimitConfig;
+        #[swift_bridge(swift_name = "perSecond")]
         fn per_second(&self) -> u64;
         fn burst(&self) -> u32;
+        #[swift_bridge(swift_name = "ipBased")]
         fn ip_based(&self) -> bool;
     }
 
     extern "Rust" {
         type JsonRpcMethodInfo;
+        #[swift_bridge(swift_name = "methodName")]
         fn method_name(&self) -> String;
         fn description(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "paramsSchema")]
         fn params_schema(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "resultSchema")]
         fn result_schema(&self) -> Option<String>;
         fn deprecated(&self) -> bool;
         fn tags(&self) -> Vec<String>;
@@ -92,6 +106,7 @@ mod ffi {
 
     extern "Rust" {
         type ProblemDetails;
+        #[swift_bridge(swift_name = "typeUri")]
         fn type_uri(&self) -> String;
         fn title(&self) -> String;
         fn status(&self) -> u16;
@@ -131,8 +146,11 @@ mod ffi {
             complexity_limit: Option<usize>,
             depth_limit: Option<usize>,
         ) -> SchemaConfig;
+        #[swift_bridge(swift_name = "introspectionEnabled")]
         fn introspection_enabled(&self) -> bool;
+        #[swift_bridge(swift_name = "complexityLimit")]
         fn complexity_limit(&self) -> Option<usize>;
+        #[swift_bridge(swift_name = "depthLimit")]
         fn depth_limit(&self) -> Option<usize>;
     }
 
@@ -144,8 +162,11 @@ mod ffi {
             complexity_limit: Option<usize>,
             depth_limit: Option<usize>,
         ) -> QueryOnlyConfig;
+        #[swift_bridge(swift_name = "introspectionEnabled")]
         fn introspection_enabled(&self) -> bool;
+        #[swift_bridge(swift_name = "complexityLimit")]
         fn complexity_limit(&self) -> Option<usize>;
+        #[swift_bridge(swift_name = "depthLimit")]
         fn depth_limit(&self) -> Option<usize>;
     }
 
@@ -157,8 +178,11 @@ mod ffi {
             complexity_limit: Option<usize>,
             depth_limit: Option<usize>,
         ) -> QueryMutationConfig;
+        #[swift_bridge(swift_name = "introspectionEnabled")]
         fn introspection_enabled(&self) -> bool;
+        #[swift_bridge(swift_name = "complexityLimit")]
         fn complexity_limit(&self) -> Option<usize>;
+        #[swift_bridge(swift_name = "depthLimit")]
         fn depth_limit(&self) -> Option<usize>;
     }
 
@@ -170,8 +194,11 @@ mod ffi {
             complexity_limit: Option<usize>,
             depth_limit: Option<usize>,
         ) -> FullSchemaConfig;
+        #[swift_bridge(swift_name = "introspectionEnabled")]
         fn introspection_enabled(&self) -> bool;
+        #[swift_bridge(swift_name = "complexityLimit")]
         fn complexity_limit(&self) -> Option<usize>;
+        #[swift_bridge(swift_name = "depthLimit")]
         fn depth_limit(&self) -> Option<usize>;
     }
 
@@ -206,8 +233,10 @@ mod ffi {
 
     extern "Rust" {
         type ParseResult;
+        #[swift_bridge(swift_name = "specVersion")]
         fn spec_version(&self) -> String;
         fn title(&self) -> String;
+        #[swift_bridge(swift_name = "apiVersion")]
         fn api_version(&self) -> String;
         fn channels(&self) -> Vec<ParsedChannel>;
         fn operations(&self) -> Vec<ParsedOperation>;
@@ -236,8 +265,11 @@ mod ffi {
         type BackgroundTaskConfig;
         #[swift_bridge(init)]
         fn new(max_queue_size: usize, max_concurrent_tasks: usize, drain_timeout_secs: u64) -> BackgroundTaskConfig;
+        #[swift_bridge(swift_name = "maxQueueSize")]
         fn max_queue_size(&self) -> usize;
+        #[swift_bridge(swift_name = "maxConcurrentTasks")]
         fn max_concurrent_tasks(&self) -> usize;
+        #[swift_bridge(swift_name = "drainTimeoutSecs")]
         fn drain_timeout_secs(&self) -> u64;
     }
 
@@ -246,6 +278,7 @@ mod ffi {
         #[swift_bridge(init)]
         fn new(name: String, request_id: Option<String>) -> BackgroundJobMetadata;
         fn name(&self) -> String;
+        #[swift_bridge(swift_name = "requestId")]
         fn request_id(&self) -> Option<String>;
     }
 
@@ -264,13 +297,21 @@ mod ffi {
             max_stream_response_bytes: Option<usize>,
         ) -> GrpcConfig;
         fn enabled(&self) -> bool;
+        #[swift_bridge(swift_name = "maxMessageSize")]
         fn max_message_size(&self) -> usize;
+        #[swift_bridge(swift_name = "enableCompression")]
         fn enable_compression(&self) -> bool;
+        #[swift_bridge(swift_name = "requestTimeout")]
         fn request_timeout(&self) -> Option<u64>;
+        #[swift_bridge(swift_name = "maxConcurrentStreams")]
         fn max_concurrent_streams(&self) -> u32;
+        #[swift_bridge(swift_name = "enableKeepalive")]
         fn enable_keepalive(&self) -> bool;
+        #[swift_bridge(swift_name = "keepaliveInterval")]
         fn keepalive_interval(&self) -> u64;
+        #[swift_bridge(swift_name = "keepaliveTimeout")]
         fn keepalive_timeout(&self) -> u64;
+        #[swift_bridge(swift_name = "maxStreamResponseBytes")]
         fn max_stream_response_bytes(&self) -> Option<usize>;
     }
 
@@ -279,8 +320,11 @@ mod ffi {
         #[swift_bridge(init)]
         fn new(enabled: bool, endpoint_path: String, enable_batch: bool, max_batch_size: usize) -> JsonRpcConfig;
         fn enabled(&self) -> bool;
+        #[swift_bridge(swift_name = "endpointPath")]
         fn endpoint_path(&self) -> String;
+        #[swift_bridge(swift_name = "enableBatch")]
         fn enable_batch(&self) -> bool;
+        #[swift_bridge(swift_name = "maxBatchSize")]
         fn max_batch_size(&self) -> usize;
     }
 
@@ -304,12 +348,16 @@ mod ffi {
         fn title(&self) -> String;
         fn version(&self) -> String;
         fn description(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "swaggerUiPath")]
         fn swagger_ui_path(&self) -> String;
+        #[swift_bridge(swift_name = "redocPath")]
         fn redoc_path(&self) -> String;
+        #[swift_bridge(swift_name = "openapiJsonPath")]
         fn openapi_json_path(&self) -> String;
         fn contact(&self) -> Option<ContactInfo>;
         fn license(&self) -> Option<LicenseInfo>;
         fn servers(&self) -> Vec<ServerInfo>;
+        #[swift_bridge(swift_name = "securitySchemes")]
         fn security_schemes(&self) -> String;
     }
 
@@ -337,12 +385,14 @@ mod ffi {
         #[swift_bridge(init)]
         fn new(content: Option<String>, status_code: u16, headers: String) -> Response;
         fn content(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "statusCode")]
         fn status_code(&self) -> u16;
         fn headers(&self) -> String;
     }
 
     extern "Rust" {
         type SseEvent;
+        #[swift_bridge(swift_name = "eventType")]
         fn event_type(&self) -> Option<String>;
         fn data(&self) -> String;
         fn id(&self) -> Option<String>;
@@ -366,14 +416,18 @@ mod ffi {
     extern "Rust" {
         type ApiKeyConfig;
         fn keys(&self) -> Vec<String>;
+        #[swift_bridge(swift_name = "headerName")]
         fn header_name(&self) -> String;
     }
 
     extern "Rust" {
         type StaticFilesConfig;
         fn directory(&self) -> String;
+        #[swift_bridge(swift_name = "routePrefix")]
         fn route_prefix(&self) -> String;
+        #[swift_bridge(swift_name = "indexFile")]
         fn index_file(&self) -> bool;
+        #[swift_bridge(swift_name = "cacheControl")]
         fn cache_control(&self) -> Option<String>;
     }
 
@@ -404,21 +458,32 @@ mod ffi {
         fn host(&self) -> String;
         fn port(&self) -> u16;
         fn workers(&self) -> usize;
+        #[swift_bridge(swift_name = "enableRequestId")]
         fn enable_request_id(&self) -> bool;
+        #[swift_bridge(swift_name = "maxBodySize")]
         fn max_body_size(&self) -> Option<usize>;
+        #[swift_bridge(swift_name = "requestTimeout")]
         fn request_timeout(&self) -> Option<u64>;
         fn compression(&self) -> Option<CompressionConfig>;
+        #[swift_bridge(swift_name = "rateLimit")]
         fn rate_limit(&self) -> Option<RateLimitConfig>;
+        #[swift_bridge(swift_name = "jwtAuth")]
         fn jwt_auth(&self) -> Option<JwtConfig>;
+        #[swift_bridge(swift_name = "apiKeyAuth")]
         fn api_key_auth(&self) -> Option<ApiKeyConfig>;
+        #[swift_bridge(swift_name = "staticFiles")]
         fn static_files(&self) -> Vec<StaticFilesConfig>;
+        #[swift_bridge(swift_name = "gracefulShutdown")]
         fn graceful_shutdown(&self) -> bool;
+        #[swift_bridge(swift_name = "shutdownTimeout")]
         fn shutdown_timeout(&self) -> u64;
         fn asyncapi(&self) -> Option<AsyncApiConfig>;
         fn openapi(&self) -> Option<OpenApiConfig>;
         fn jsonrpc(&self) -> Option<JsonRpcConfig>;
         fn grpc(&self) -> Option<GrpcConfig>;
+        #[swift_bridge(swift_name = "backgroundTasks")]
         fn background_tasks(&self) -> BackgroundTaskConfig;
+        #[swift_bridge(swift_name = "enableHttpTrace")]
         fn enable_http_trace(&self) -> bool;
     }
 
@@ -445,10 +510,26 @@ mod ffi {
 
         #[swift_bridge(swift_name = "uploadFileFromJson")]
         fn upload_file_from_json(json: String) -> Result<UploadFile, String>;
+        #[swift_bridge(swift_name = "corsConfigFromJson")]
+        fn cors_config_from_json(json: String) -> Result<CorsConfig, String>;
+        #[swift_bridge(swift_name = "compressionConfigFromJson")]
+        fn compression_config_from_json(json: String) -> Result<CompressionConfig, String>;
+        #[swift_bridge(swift_name = "rateLimitConfigFromJson")]
+        fn rate_limit_config_from_json(json: String) -> Result<RateLimitConfig, String>;
         #[swift_bridge(swift_name = "jsonRpcMethodInfoFromJson")]
         fn json_rpc_method_info_from_json(json: String) -> Result<JsonRpcMethodInfo, String>;
         #[swift_bridge(swift_name = "problemDetailsFromJson")]
         fn problem_details_from_json(json: String) -> Result<ProblemDetails, String>;
+        #[swift_bridge(swift_name = "schemaConfigFromJson")]
+        fn schema_config_from_json(json: String) -> Result<SchemaConfig, String>;
+        #[swift_bridge(swift_name = "queryOnlyConfigFromJson")]
+        fn query_only_config_from_json(json: String) -> Result<QueryOnlyConfig, String>;
+        #[swift_bridge(swift_name = "queryMutationConfigFromJson")]
+        fn query_mutation_config_from_json(json: String) -> Result<QueryMutationConfig, String>;
+        #[swift_bridge(swift_name = "fullSchemaConfigFromJson")]
+        fn full_schema_config_from_json(json: String) -> Result<FullSchemaConfig, String>;
+        #[swift_bridge(swift_name = "asyncApiConfigFromJson")]
+        fn async_api_config_from_json(json: String) -> Result<AsyncApiConfig, String>;
         #[swift_bridge(swift_name = "parsedChannelFromJson")]
         fn parsed_channel_from_json(json: String) -> Result<ParsedChannel, String>;
         #[swift_bridge(swift_name = "parsedOperationFromJson")]
@@ -457,12 +538,24 @@ mod ffi {
         fn parsed_message_from_json(json: String) -> Result<ParsedMessage, String>;
         #[swift_bridge(swift_name = "parseResultFromJson")]
         fn parse_result_from_json(json: String) -> Result<ParseResult, String>;
+        #[swift_bridge(swift_name = "backgroundTaskConfigFromJson")]
+        fn background_task_config_from_json(json: String) -> Result<BackgroundTaskConfig, String>;
+        #[swift_bridge(swift_name = "backgroundJobMetadataFromJson")]
+        fn background_job_metadata_from_json(json: String) -> Result<BackgroundJobMetadata, String>;
+        #[swift_bridge(swift_name = "grpcConfigFromJson")]
+        fn grpc_config_from_json(json: String) -> Result<GrpcConfig, String>;
+        #[swift_bridge(swift_name = "jsonRpcConfigFromJson")]
+        fn json_rpc_config_from_json(json: String) -> Result<JsonRpcConfig, String>;
+        #[swift_bridge(swift_name = "openApiConfigFromJson")]
+        fn open_api_config_from_json(json: String) -> Result<OpenApiConfig, String>;
         #[swift_bridge(swift_name = "contactInfoFromJson")]
         fn contact_info_from_json(json: String) -> Result<ContactInfo, String>;
         #[swift_bridge(swift_name = "licenseInfoFromJson")]
         fn license_info_from_json(json: String) -> Result<LicenseInfo, String>;
         #[swift_bridge(swift_name = "serverInfoFromJson")]
         fn server_info_from_json(json: String) -> Result<ServerInfo, String>;
+        #[swift_bridge(swift_name = "responseFromJson")]
+        fn response_from_json(json: String) -> Result<Response, String>;
         #[swift_bridge(swift_name = "sseEventFromJson")]
         fn sse_event_from_json(json: String) -> Result<SseEvent, String>;
         #[swift_bridge(swift_name = "jwtConfigFromJson")]
@@ -471,6 +564,15 @@ mod ffi {
         fn api_key_config_from_json(json: String) -> Result<ApiKeyConfig, String>;
         #[swift_bridge(swift_name = "staticFilesConfigFromJson")]
         fn static_files_config_from_json(json: String) -> Result<StaticFilesConfig, String>;
+        #[swift_bridge(swift_name = "serverConfigFromJson")]
+        fn server_config_from_json(json: String) -> Result<ServerConfig, String>;
+    }
+    extern "Rust" {
+
+        #[swift_bridge(swift_name = "methodFromJson")]
+        fn method_from_json(json: String) -> Result<Method, String>;
+        #[swift_bridge(swift_name = "securitySchemeInfoFromJson")]
+        fn security_scheme_info_from_json(json: String) -> Result<SecuritySchemeInfo, String>;
     }
 }
 
@@ -1648,81 +1750,153 @@ pub fn upload_file_from_json(json: String) -> Result<UploadFile, String> {
         .map(UploadFile)
         .map_err(|e| e.to_string())
 }
-
+pub fn cors_config_from_json(json: String) -> Result<CorsConfig, String> {
+    serde_json::from_str::<spikard_core::CorsConfig>(&json)
+        .map(CorsConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn compression_config_from_json(json: String) -> Result<CompressionConfig, String> {
+    serde_json::from_str::<spikard_core::CompressionConfig>(&json)
+        .map(CompressionConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn rate_limit_config_from_json(json: String) -> Result<RateLimitConfig, String> {
+    serde_json::from_str::<spikard_core::RateLimitConfig>(&json)
+        .map(RateLimitConfig)
+        .map_err(|e| e.to_string())
+}
 pub fn json_rpc_method_info_from_json(json: String) -> Result<JsonRpcMethodInfo, String> {
     serde_json::from_str::<spikard_core::JsonRpcMethodInfo>(&json)
         .map(JsonRpcMethodInfo)
         .map_err(|e| e.to_string())
 }
-
 pub fn problem_details_from_json(json: String) -> Result<ProblemDetails, String> {
     serde_json::from_str::<spikard_core::ProblemDetails>(&json)
         .map(ProblemDetails)
         .map_err(|e| e.to_string())
 }
-
+pub fn schema_config_from_json(json: String) -> Result<SchemaConfig, String> {
+    serde_json::from_str::<spikard_graphql::SchemaConfig>(&json)
+        .map(SchemaConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn query_only_config_from_json(json: String) -> Result<QueryOnlyConfig, String> {
+    serde_json::from_str::<spikard_graphql::QueryOnlyConfig>(&json)
+        .map(QueryOnlyConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn query_mutation_config_from_json(json: String) -> Result<QueryMutationConfig, String> {
+    serde_json::from_str::<spikard_graphql::QueryMutationConfig>(&json)
+        .map(QueryMutationConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn full_schema_config_from_json(json: String) -> Result<FullSchemaConfig, String> {
+    serde_json::from_str::<spikard_graphql::FullSchemaConfig>(&json)
+        .map(FullSchemaConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn async_api_config_from_json(json: String) -> Result<AsyncApiConfig, String> {
+    serde_json::from_str::<spikard_http::AsyncApiConfig>(&json)
+        .map(AsyncApiConfig)
+        .map_err(|e| e.to_string())
+}
 pub fn parsed_channel_from_json(json: String) -> Result<ParsedChannel, String> {
     serde_json::from_str::<spikard_http::ParsedChannel>(&json)
         .map(ParsedChannel)
         .map_err(|e| e.to_string())
 }
-
 pub fn parsed_operation_from_json(json: String) -> Result<ParsedOperation, String> {
     serde_json::from_str::<spikard_http::ParsedOperation>(&json)
         .map(ParsedOperation)
         .map_err(|e| e.to_string())
 }
-
 pub fn parsed_message_from_json(json: String) -> Result<ParsedMessage, String> {
     serde_json::from_str::<spikard_http::ParsedMessage>(&json)
         .map(ParsedMessage)
         .map_err(|e| e.to_string())
 }
-
 pub fn parse_result_from_json(json: String) -> Result<ParseResult, String> {
     serde_json::from_str::<spikard_http::ParseResult>(&json)
         .map(ParseResult)
         .map_err(|e| e.to_string())
 }
-
+pub fn background_task_config_from_json(json: String) -> Result<BackgroundTaskConfig, String> {
+    serde_json::from_str::<spikard_http::BackgroundTaskConfig>(&json)
+        .map(BackgroundTaskConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn background_job_metadata_from_json(json: String) -> Result<BackgroundJobMetadata, String> {
+    serde_json::from_str::<spikard_http::BackgroundJobMetadata>(&json)
+        .map(BackgroundJobMetadata)
+        .map_err(|e| e.to_string())
+}
+pub fn grpc_config_from_json(json: String) -> Result<GrpcConfig, String> {
+    serde_json::from_str::<spikard_http::GrpcConfig>(&json)
+        .map(GrpcConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn json_rpc_config_from_json(json: String) -> Result<JsonRpcConfig, String> {
+    serde_json::from_str::<spikard_http::JsonRpcConfig>(&json)
+        .map(JsonRpcConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn open_api_config_from_json(json: String) -> Result<OpenApiConfig, String> {
+    serde_json::from_str::<spikard_http::OpenApiConfig>(&json)
+        .map(OpenApiConfig)
+        .map_err(|e| e.to_string())
+}
 pub fn contact_info_from_json(json: String) -> Result<ContactInfo, String> {
     serde_json::from_str::<spikard_http::ContactInfo>(&json)
         .map(ContactInfo)
         .map_err(|e| e.to_string())
 }
-
 pub fn license_info_from_json(json: String) -> Result<LicenseInfo, String> {
     serde_json::from_str::<spikard_http::LicenseInfo>(&json)
         .map(LicenseInfo)
         .map_err(|e| e.to_string())
 }
-
 pub fn server_info_from_json(json: String) -> Result<ServerInfo, String> {
     serde_json::from_str::<spikard_http::ServerInfo>(&json)
         .map(ServerInfo)
         .map_err(|e| e.to_string())
 }
-
+pub fn response_from_json(json: String) -> Result<Response, String> {
+    serde_json::from_str::<spikard_http::Response>(&json)
+        .map(Response)
+        .map_err(|e| e.to_string())
+}
 pub fn sse_event_from_json(json: String) -> Result<SseEvent, String> {
     serde_json::from_str::<spikard_http::SseEvent>(&json)
         .map(SseEvent)
         .map_err(|e| e.to_string())
 }
-
 pub fn jwt_config_from_json(json: String) -> Result<JwtConfig, String> {
     serde_json::from_str::<spikard_http::JwtConfig>(&json)
         .map(JwtConfig)
         .map_err(|e| e.to_string())
 }
-
 pub fn api_key_config_from_json(json: String) -> Result<ApiKeyConfig, String> {
     serde_json::from_str::<spikard_http::ApiKeyConfig>(&json)
         .map(ApiKeyConfig)
         .map_err(|e| e.to_string())
 }
-
 pub fn static_files_config_from_json(json: String) -> Result<StaticFilesConfig, String> {
     serde_json::from_str::<spikard_http::StaticFilesConfig>(&json)
         .map(StaticFilesConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn server_config_from_json(json: String) -> Result<ServerConfig, String> {
+    serde_json::from_str::<spikard_http::ServerConfig>(&json)
+        .map(ServerConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn method_from_json(json: String) -> Result<Method, String> {
+    serde_json::from_str::<spikard_core::Method>(&json)
+        .map(Method::from)
+        .map_err(|e| e.to_string())
+}
+pub fn security_scheme_info_from_json(json: String) -> Result<SecuritySchemeInfo, String> {
+    serde_json::from_str::<spikard_http::SecuritySchemeInfo>(&json)
+        .map(SecuritySchemeInfo::from)
         .map_err(|e| e.to_string())
 }

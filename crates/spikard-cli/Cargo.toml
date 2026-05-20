@@ -52,7 +52,7 @@ prost-types = "0.14" # Protocol Buffers well-known types
 protox = "0.9" # Protocol Buffers compilation
 
 rmcp = { version = "1.7.0", features = ["client", "transport-io"], optional = true }
-scythe-core = { path = "../../../scythe/crates/scythe-core", features = ["serde"] }
+scythe-core = { version = "0.7", features = ["serde"] }
 serde.workspace = true
 serde-saphyr = "0.0.26"
 serde_json.workspace = true

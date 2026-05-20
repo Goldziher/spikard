@@ -52,6 +52,7 @@ Rust-centric polyglot HTTP framework with type-safe routing, OpenAPI/AsyncAPI/Gr
 - **Polyglot bindings** – 15 languages: Python, TypeScript/Node, Ruby, PHP, Elixir, Go, Java, C#, Kotlin, Dart, Gleam, Swift, Zig, WASM, C FFI. All generated from Rust API surface via alef.
 - **Fixture-driven testing** – Shared JSON fixtures drive tests across all language bindings for behavioral consistency.
 - **Schema codegen** – Parse OpenAPI 3.0, AsyncAPI 3.0, GraphQL SDL, and JSON-RPC 2.0 specs. Generate type-safe handlers and validators per binding.
+- **SQL → HTTP codegen** – Annotate SQL queries with `@http GET /path`, `@http_auth bearer:jwt`, etc. and emit route metadata, an OpenAPI 3.1 spec, and a per-language sidecar. Powered by scythe's analyzed-query IR; see [SQL Codegen guide](docs/guides/sql-codegen.md).
 - **Tower middleware** – Compression (gzip/brotli), rate limiting, timeouts, request IDs, authentication (JWT/API key), static file serving.
 - **Lifecycle hooks** – `onRequest`, `preValidation`, `preHandler`, `onResponse`, `onError`. Execute in order with zero overhead when unregistered.
 - **WebSocket, SSE, background tasks** – Real-time bidirectional and server-sent event streams. Fire-and-forget background job support.

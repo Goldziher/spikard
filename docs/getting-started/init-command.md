@@ -186,4 +186,3 @@ cargo test
 
 - [CLI Usage](../cli/usage.md)
 - [Code Generation Guide](../guides/code-generation.md)
-- [Init Command Reference](../reference/init-advanced.md)

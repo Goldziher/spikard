@@ -7,9 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-05-20
+
 ### Added
 
+- **SQL → HTTP handler codegen** (`spikard generate sql`). Consumes SQL files annotated with `@http GET /path`, `@http_auth bearer:jwt`, `@http_param email body`, etc. and emits route metadata, an OpenAPI 3.1 spec, and a per-language sidecar describing how to call into scythe-generated query functions. Built on `scythe-core` 0.7's generic custom-annotation IR; HTTP vocabulary lives entirely in spikard so scythe stays library-agnostic. See [`docs/guides/sql-codegen.md`](docs/guides/sql-codegen.md).
+- `spikard-graphql::GraphQLError::is_transient` and `::error_type` exposed as public `#[must_use] const fn` so language bindings can surface retryability and error-type identifiers alongside the human-readable message.
 - Root `README.md` — project landing page with badges, language support matrix, quick-start examples, architecture sketch, and links to per-binding READMEs.
+
+### Changed
+
+- `scythe-core` dependency switched from path to crates.io version `0.7` so the workspace builds against published artifacts.
+- `tower-http` bumped to 0.6.11 via `cargo upgrade --incompatible`.
 
 ### Changed
 

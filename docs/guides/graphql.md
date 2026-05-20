@@ -568,19 +568,21 @@ GraphQL follows the GraphQL-over-HTTP specification for error responses. The ser
 
 ### Error Response Structure
 
+```json
+{
+  "data": {
+    "user": null
+  },
+  "errors": [
     {
-      "data": {
-        "user": null
-      },
-      "errors": [
-        {
-          "message": "Field 'missing' not found on type 'User'",
-          "extensions": {
-            "code": "INTERNAL_ERROR"
-          }
-        }
-      ]
+      "message": "Field 'missing' not found on type 'User'",
+      "extensions": {
+        "code": "INTERNAL_ERROR"
+      }
     }
+  ]
+}
+```
 
 ### HTTP Status Codes
 

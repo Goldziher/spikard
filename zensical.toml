@@ -41,6 +41,7 @@ nav = [
     { "Dependency Injection" = "guides/dependency-injection.md" },
     { "Deployment" = "guides/deployment.md" },
     { "Code Generation" = "guides/code-generation.md" },
+    { "SQL Codegen" = "guides/sql-codegen.md" },
     { "Testing" = "guides/testing.md" },
     { "GraphQL" = "guides/graphql.md" },
     { "gRPC Getting Started" = "guides/grpc-getting-started.md" },

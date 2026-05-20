@@ -2460,4 +2460,24 @@ SPIKARDFullSchemaConfig *spikard_schema_full(void);
  */
 uint16_t spikard_graph_q_l_error_status_code(const SPIKARDGraphQLError *err);
 
+/**
+ * Return whether the error pointed to by `err` is transient.
+ * Returns `false` if `err` is null.
+ */
+bool spikard_graph_q_l_error_is_transient(const SPIKARDGraphQLError *err);
+
+/**
+ * Return the machine-readable error category string for the error pointed
+ * to by `err` as a heap-allocated, NUL-terminated C string.
+ * The caller must free the returned pointer with `spikard_graph_q_l_error_error_type_free`.
+ * Returns a null pointer if `err` is null.
+ */
+char *spikard_graph_q_l_error_error_type(const SPIKARDGraphQLError *err);
+
+/**
+ * Free a string previously returned by `spikard_graph_q_l_error_error_type`.
+ * Passing a null pointer is a no-op.
+ */
+void spikard_graph_q_l_error_error_type_free(char *ptr);
+
 #endif  /* SPIKARD_H */

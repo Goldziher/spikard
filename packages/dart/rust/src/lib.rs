@@ -1001,6 +1001,26 @@ impl GraphQLError {
         let real: spikard_graphql::error::GraphQLError = self.into();
         real.status_code() as i64
     }
+    /// Whether the error condition is transient and may succeed on retry.
+    ///
+    /// Returns true for upstream/infrastructure failures (rate limit, internal
+    /// error) and false for client-input errors (validation, parse, auth).
+    /// Bindings forward this signal to retry/back-off logic.
+    #[frb]
+    pub fn is_transient(&self) -> bool {
+        let real: spikard_graphql::error::GraphQLError = self.into();
+        real.is_transient()
+    }
+    /// Stable machine-readable error type identifier (`SCREAMING_SNAKE_CASE`).
+    ///
+    /// Public alias for the same codes returned by [`Self::error_code`], kept
+    /// available to bindings that surface the identifier alongside the
+    /// human-readable message.
+    #[frb]
+    pub fn error_type(&self) -> String {
+        let real: spikard_graphql::error::GraphQLError = self.into();
+        real.error_type().to_string()
+    }
 }
 
 /// Error type for schema building operations
