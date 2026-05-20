@@ -814,6 +814,18 @@ internal extension StaticFilesConfig {
 /// Server configuration
 public typealias ServerConfig = RustBridge.ServerConfig
 
+/// HTTP method
+public enum Method: String, Codable, Sendable, Hashable {
+    case get = "Get"
+    case post = "Post"
+    case put = "Put"
+    case patch = "Patch"
+    case delete = "Delete"
+    case head = "Head"
+    case options = "Options"
+    case trace = "Trace"
+}
+
 /// Security scheme types
 public enum SecuritySchemeInfo {
     case http(scheme: String, bearerFormat: String?)
@@ -885,6 +897,28 @@ public enum GraphQLError: Swift.Error {
     ///
     /// Occurs when an unexpected internal error happens.
     case internalError(message: String, field0: String)
+}
+
+extension GraphQLError {
+    public var statusCode: UInt16 {
+        switch self {
+        case .executionError(field0: _): return 0
+        case .schemaBuildError(field0: _): return 0
+        case .requestHandlingError(field0: _): return 0
+        case .serializationError(field0: _): return 0
+        case .jsonError(field0: _): return 0
+        case .validationError(field0: _): return 0
+        case .parseError(field0: _): return 0
+        case .authenticationError(field0: _): return 0
+        case .authorizationError(field0: _): return 0
+        case .notFound(field0: _): return 0
+        case .rateLimitExceeded(field0: _): return 0
+        case .invalidInput(message: _, details: _): return 0
+        case .complexityLimitExceeded: return 0
+        case .depthLimitExceeded: return 0
+        case .internalError(field0: _): return 0
+        }
+    }
 }
 
 /// Error type for schema building operations

@@ -137,6 +137,10 @@ typedef struct SPIKARDJwtConfig SPIKARDJwtConfig;
  */
 typedef struct SPIKARDLicenseInfo SPIKARDLicenseInfo;
 /**
+ * HTTP method
+ */
+typedef struct SPIKARDMethod SPIKARDMethod;
+/**
  * OpenAPI configuration
  */
 typedef struct SPIKARDOpenApiConfig SPIKARDOpenApiConfig;
@@ -298,6 +302,10 @@ typedef struct SPIKARDValidateRequest SPIKARDValidateRequest;
  * Response body for `POST /asyncapi/validate`
  */
 typedef struct SPIKARDValidationResponse SPIKARDValidationResponse;
+/**
+ * A WebSocket message that can be text or binary.
+ */
+typedef struct SPIKARDWebSocketMessage SPIKARDWebSocketMessage;
 
 
 /**
@@ -2365,6 +2373,36 @@ int32_t spikard_snapshot_error_from_i32(int32_t value);
 int32_t spikard_snapshot_error_from_str(const char *name);
 
 /**
+ * Convert an integer to a `WebSocketMessage` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t spikard_web_socket_message_from_i32(int32_t value);
+
+/**
+ * Convert a `WebSocketMessage` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t spikard_web_socket_message_from_str(const char *name);
+
+/**
+ * Convert an integer to a `Method` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t spikard_method_from_i32(int32_t value);
+
+/**
+ * Convert a `Method` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t spikard_method_from_str(const char *name);
+
+/**
  * Convert an integer to a `SecuritySchemeInfo` variant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure all pointer arguments are valid or null.
@@ -2408,5 +2446,11 @@ SPIKARDQueryMutationConfig *spikard_schema_query_mutation(void);
  * freed with the appropriate free function.
  */
 SPIKARDFullSchemaConfig *spikard_schema_full(void);
+
+/**
+ * Return the HTTP status code for the error pointed to by `err`.
+ * Returns `0` if `err` is null.
+ */
+uint16_t spikard_graph_q_l_error_status_code(const SPIKARDGraphQLError *err);
 
 #endif  /* SPIKARD_H */

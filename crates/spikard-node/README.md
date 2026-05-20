@@ -46,13 +46,11 @@ Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC code
 
 ## Installation
 
-
 **npm:**
 
 ```bash
 npm install @spikard/node
 ```
-
 
 **pnpm:**
 
@@ -60,23 +58,18 @@ npm install @spikard/node
 pnpm add @spikard/node
 ```
 
-
 **yarn:**
 
 ```bash
 yarn add @spikard/node
 ```
 
-
 ### System Requirements
-
 
 - **Node.js 18+** required (NAPI-RS native bindings)
 - Pre-built binaries for Linux (x86_64), macOS (arm64, x86_64), Windows (x86_64)
 
-
 ## Quick Start
-
 
 ```typescript
 import { Spikard, type Request } from "spikard";
@@ -112,7 +105,6 @@ if (require.main === module) {
 }
 ```
 
-
 ## Features
 
 - **HTTP routing** — type-safe route definitions with path, query, and body parameter validation
@@ -121,7 +113,6 @@ if (require.main === module) {
 - **Lifecycle hooks** — `onRequest`, `preValidation`, `preHandler`, `onResponse`, `onError`
 - **Fixture-driven testing** — shared JSON fixtures drive tests across all language bindings
 - **Polyglot** — single Rust core, thin bindings for Python, Node.js, Ruby, PHP, Elixir, Go, Java, C#, Kotlin, Dart, Gleam, WASM, Swift, Zig, and C FFI
-
 
 ## Routing
 
@@ -155,7 +146,6 @@ app.addRoute(
 );
 ```
 
-
 ## Validation
 
 ```typescript
@@ -187,7 +177,6 @@ app.addRoute(
 );
 ```
 
-
 ## Middleware
 
 ```typescript
@@ -200,7 +189,6 @@ app.onRequest(async (request: Request): Promise<Request> => {
   return request;
 });
 ```
-
 
 ## Documentation
 

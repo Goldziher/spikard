@@ -2,7 +2,6 @@
 
 package dev.spikard.kt
 
-
 import dev.spikard.Spikard as Bridge
 
 typealias UploadFile = dev.spikard.UploadFile
@@ -39,13 +38,13 @@ typealias ApiKeyConfig = dev.spikard.ApiKeyConfig
 typealias StaticFilesConfig = dev.spikard.StaticFilesConfig
 typealias ServerConfig = dev.spikard.ServerConfig
 
+typealias Method = dev.spikard.Method
 typealias SecuritySchemeInfo = dev.spikard.SecuritySchemeInfo
 
 typealias GraphQLErrorException = dev.spikard.GraphQLErrorException
 typealias SchemaErrorException = dev.spikard.SchemaErrorException
 
 object Spikard {
-
     /**
      * Create a simple schema configuration with only Query type.
      *
@@ -55,10 +54,7 @@ object Spikard {
      *
      * A `QueryOnlyConfig` with default settings
      */
-    fun schemaQueryOnly(): QueryOnlyConfig {
-
-        return Bridge.schemaQueryOnly()
-    }
+    fun schemaQueryOnly(): QueryOnlyConfig = Bridge.schemaQueryOnly()
 
     /**
      * Create a schema configuration with Query and Mutation types.
@@ -69,10 +65,7 @@ object Spikard {
      *
      * A `QueryMutationConfig` with default settings
      */
-    fun schemaQueryMutation(): QueryMutationConfig {
-
-        return Bridge.schemaQueryMutation()
-    }
+    fun schemaQueryMutation(): QueryMutationConfig = Bridge.schemaQueryMutation()
 
     /**
      * Create a schema configuration with all three root types.
@@ -83,9 +76,5 @@ object Spikard {
      *
      * A `FullSchemaConfig` with default settings
      */
-    fun schemaFull(): FullSchemaConfig {
-
-        return Bridge.schemaFull()
-    }
-
+    fun schemaFull(): FullSchemaConfig = Bridge.schemaFull()
 }

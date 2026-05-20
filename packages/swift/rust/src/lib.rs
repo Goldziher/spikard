@@ -423,6 +423,11 @@ mod ffi {
     }
 
     extern "Rust" {
+        type Method;
+        fn to_string(&self) -> String;
+    }
+
+    extern "Rust" {
         type SecuritySchemeInfo;
         fn to_string(&self) -> String;
     }
@@ -1561,6 +1566,47 @@ impl ServerConfig {
             .ok()
             .and_then(|j| ::serde_json::from_value(j).ok())
             .unwrap_or_default()
+    }
+}
+
+pub enum Method {
+    Get,
+    Post,
+    Put,
+    Patch,
+    Delete,
+    Head,
+    Options,
+    Trace,
+}
+
+impl From<spikard_core::Method> for Method {
+    fn from(val: spikard_core::Method) -> Self {
+        match val {
+            spikard_core::Method::Get => Self::Get,
+            spikard_core::Method::Post => Self::Post,
+            spikard_core::Method::Put => Self::Put,
+            spikard_core::Method::Patch => Self::Patch,
+            spikard_core::Method::Delete => Self::Delete,
+            spikard_core::Method::Head => Self::Head,
+            spikard_core::Method::Options => Self::Options,
+            spikard_core::Method::Trace => Self::Trace,
+        }
+    }
+}
+
+impl Method {
+    pub fn to_string(&self) -> String {
+        match self {
+            Self::Get => "Get".to_string(),
+            Self::Post => "Post".to_string(),
+            Self::Put => "Put".to_string(),
+            Self::Patch => "Patch".to_string(),
+            Self::Delete => "Delete".to_string(),
+            Self::Head => "Head".to_string(),
+            Self::Options => "Options".to_string(),
+            Self::Trace => "Trace".to_string(),
+        }
     }
 }
 

@@ -28,9 +28,18 @@
     "extension-name": "spikard_php",
     "support-zts": true,
     "support-nts": true,
-    "download-url-method": ["pre-packaged-binary", "composer-default"]
+    "download-url-method": [
+      "pre-packaged-binary",
+      "composer-default"
+    ]
   },
-  "keywords": ["http", "web", "framework", "polyglot", "rust"],
+  "keywords": [
+    "http",
+    "web",
+    "framework",
+    "polyglot",
+    "rust"
+  ],
   "extra": {
     "pie": {
       "binary": {

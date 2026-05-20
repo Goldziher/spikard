@@ -814,11 +814,206 @@ pub enum SnapshotError {
     Decompression { field0: String },
 }
 
+/// A WebSocket message that can be text or binary.
+#[frb(mirror(WebSocketMessage))]
+pub enum WebSocketMessage {
+    /// A text message.
+    Text { field0: String },
+    /// A binary message.
+    Binary { field0: Vec<u8> },
+    /// A close message with a numeric close code (RFC 6455) and optional reason text.
+    ///
+    /// Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received,
+    /// 1006 Abnormal Closure.
+    Close {
+        /// RFC 6455 close code.
+        code: i64,
+        /// Optional human-readable reason string.
+        reason: String,
+    },
+    /// A ping message.
+    Ping { field0: Vec<u8> },
+    /// A pong message.
+    Pong { field0: Vec<u8> },
+}
+
+/// HTTP method
+#[frb(mirror(Method))]
+pub enum Method {
+    Get,
+    Post,
+    Put,
+    Patch,
+    Delete,
+    Head,
+    Options,
+    Trace,
+}
+
 /// Security scheme types
 #[frb(mirror(SecuritySchemeInfo))]
 pub enum SecuritySchemeInfo {
     Http { scheme: String, bearer_format: String },
     ApiKey { location: String, name: String },
+}
+
+/// Errors that can occur during GraphQL operations
+///
+/// These errors are compatible with async-graphql error handling and can be
+/// converted to structured HTTP responses matching the project's error fixtures.
+#[frb(mirror(GraphQLError))]
+pub enum GraphQLError {
+    /// Error during schema execution
+    ///
+    /// Occurs when the GraphQL executor encounters a runtime error during query execution.
+    ExecutionError { field0: String },
+    /// Error during schema building
+    ///
+    /// Occurs when schema construction fails due to invalid definitions or conflicts.
+    SchemaBuildError { field0: String },
+    /// Error during request handling
+    ///
+    /// Occurs when the HTTP request cannot be properly handled or parsed.
+    RequestHandlingError { field0: String },
+    /// Serialization error
+    ///
+    /// Occurs during JSON serialization/deserialization of GraphQL values.
+    SerializationError { field0: String },
+    /// JSON parsing error
+    ///
+    /// Occurs when JSON input cannot be parsed.
+    JsonError { field0: String },
+    /// GraphQL validation error
+    ///
+    /// Occurs when a GraphQL query fails schema validation.
+    ValidationError { field0: String },
+    /// GraphQL parse error
+    ///
+    /// Occurs when the GraphQL query string cannot be parsed.
+    ParseError { field0: String },
+    /// Authentication error
+    ///
+    /// Occurs when request authentication fails.
+    AuthenticationError { field0: String },
+    /// Authorization error
+    ///
+    /// Occurs when user lacks required permissions.
+    AuthorizationError { field0: String },
+    /// Not found error
+    ///
+    /// Occurs when a requested resource is not found.
+    NotFound { field0: String },
+    /// Rate limit error
+    ///
+    /// Occurs when rate limit is exceeded.
+    RateLimitExceeded { field0: String },
+    /// Invalid input error with validation details
+    ///
+    /// Occurs during input validation with detailed error information.
+    InvalidInput { message: String, details: String },
+    /// Query complexity limit exceeded
+    ///
+    /// Occurs when a GraphQL query exceeds the configured complexity limit.
+    ComplexityLimitExceeded,
+    /// Query depth limit exceeded
+    ///
+    /// Occurs when a GraphQL query exceeds the configured depth limit.
+    DepthLimitExceeded,
+    /// Internal server error
+    ///
+    /// Occurs when an unexpected internal error happens.
+    InternalError { field0: String },
+}
+
+#[allow(unreachable_patterns)]
+impl From<&GraphQLError> for spikard_graphql::error::GraphQLError {
+    fn from(m: &GraphQLError) -> Self {
+        match m {
+            GraphQLError::ExecutionError { field0: f_field0 } => Self::ExecutionError {
+                field0: f_field0.clone(),
+            },
+            GraphQLError::SchemaBuildError { field0: f_field0 } => Self::SchemaBuildError {
+                field0: f_field0.clone(),
+            },
+            GraphQLError::RequestHandlingError { field0: f_field0 } => Self::RequestHandlingError {
+                field0: f_field0.clone(),
+            },
+            GraphQLError::SerializationError { field0: f_field0 } => Self::SerializationError {
+                field0: f_field0.clone(),
+            },
+            GraphQLError::JsonError { field0: f_field0 } => Self::JsonError {
+                field0: f_field0.clone(),
+            },
+            GraphQLError::ValidationError { field0: f_field0 } => Self::ValidationError {
+                field0: f_field0.clone(),
+            },
+            GraphQLError::ParseError { field0: f_field0 } => Self::ParseError {
+                field0: f_field0.clone(),
+            },
+            GraphQLError::AuthenticationError { field0: f_field0 } => Self::AuthenticationError {
+                field0: f_field0.clone(),
+            },
+            GraphQLError::AuthorizationError { field0: f_field0 } => Self::AuthorizationError {
+                field0: f_field0.clone(),
+            },
+            GraphQLError::NotFound { field0: f_field0 } => Self::NotFound {
+                field0: f_field0.clone(),
+            },
+            GraphQLError::RateLimitExceeded { field0: f_field0 } => Self::RateLimitExceeded {
+                field0: f_field0.clone(),
+            },
+            GraphQLError::ComplexityLimitExceeded => Self::ComplexityLimitExceeded,
+            GraphQLError::DepthLimitExceeded => Self::DepthLimitExceeded,
+            GraphQLError::InternalError { field0: f_field0 } => Self::InternalError {
+                field0: f_field0.clone(),
+            },
+            _ => unreachable!("mirror variant has sanitized fields and cannot be converted to the core error type"),
+        }
+    }
+}
+
+impl GraphQLError {
+    /// Convert error to HTTP status code
+    ///
+    /// Maps GraphQL error types to appropriate HTTP status codes:
+    /// - 400: Bad Request for parse/request-handling errors
+    /// - 401: Unauthorized for authentication errors
+    /// - 403: Forbidden for authorization errors
+    /// - 404: Not Found for resource not found
+    /// - 422: Unprocessable Entity for validation failures
+    /// - 429: Too Many Requests for rate limit errors
+    /// - 500: Internal Server Error for schema/serialization/internal errors
+    /// - 200: OK for GraphQL execution errors returned in GraphQL response body
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use spikard_graphql::error::GraphQLError;
+    ///
+    /// let error = GraphQLError::AuthenticationError("Invalid token".to_string());
+    /// assert_eq!(error.status_code(), 401);
+    ///
+    /// let error = GraphQLError::ExecutionError("Query failed".to_string());
+    /// assert_eq!(error.status_code(), 200); // GraphQL spec: errors return 200 with errors in body
+    /// ```
+    #[frb]
+    pub fn status_code(&self) -> i64 {
+        let real: spikard_graphql::error::GraphQLError = self.into();
+        real.status_code() as i64
+    }
+}
+
+/// Error type for schema building operations
+#[frb(mirror(SchemaError))]
+pub enum SchemaError {
+    /// Generic schema building error
+    BuildingFailed { field0: String },
+    /// Configuration validation error
+    ValidationError { field0: String },
+    /// Complexity limit exceeded
+    ComplexityLimitExceeded { limit: i64, actual: i64 },
+    /// Depth limit exceeded
+    DepthLimitExceeded { limit: i64, actual: i64 },
 }
 
 // From<SourceT> conversions for bridge return types.
@@ -1231,6 +1426,36 @@ impl From<spikard::SnapshotError> for SnapshotError {
         match v {
             spikard::SnapshotError::InvalidHeader(f0) => SnapshotError::InvalidHeader { field0: f0 },
             spikard::SnapshotError::Decompression(f0) => SnapshotError::Decompression { field0: f0 },
+        }
+    }
+}
+
+impl From<spikard::WebSocketMessage> for WebSocketMessage {
+    fn from(v: spikard::WebSocketMessage) -> Self {
+        match v {
+            spikard::WebSocketMessage::Text(f0) => WebSocketMessage::Text { field0: f0 },
+            spikard::WebSocketMessage::Binary(f0) => WebSocketMessage::Binary { field0: f0 },
+            spikard::WebSocketMessage::Close { code, reason } => WebSocketMessage::Close {
+                code: code as _,
+                reason: reason.unwrap_or_default(),
+            },
+            spikard::WebSocketMessage::Ping(f0) => WebSocketMessage::Ping { field0: f0 },
+            spikard::WebSocketMessage::Pong(f0) => WebSocketMessage::Pong { field0: f0 },
+        }
+    }
+}
+
+impl From<spikard_core::Method> for Method {
+    fn from(v: spikard_core::Method) -> Self {
+        match v {
+            spikard_core::Method::Get => Method::Get,
+            spikard_core::Method::Post => Method::Post,
+            spikard_core::Method::Put => Method::Put,
+            spikard_core::Method::Patch => Method::Patch,
+            spikard_core::Method::Delete => Method::Delete,
+            spikard_core::Method::Head => Method::Head,
+            spikard_core::Method::Options => Method::Options,
+            spikard_core::Method::Trace => Method::Trace,
         }
     }
 }

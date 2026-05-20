@@ -72,11 +72,10 @@ pub fn schema_full() -> FullSchemaConfig
 
 API Key authentication configuration
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `keys` | `Vec<String>` | — | Valid API keys |
-| `header_name` | `String` | — | Header name to check (e.g., "X-API-Key") |
-
+| Field         | Type          | Default | Description                              |
+| ------------- | ------------- | ------- | ---------------------------------------- |
+| `keys`        | `Vec<String>` | —       | Valid API keys                           |
+| `header_name` | `String`      | —       | Header name to check (e.g., "X-API-Key") |
 
 ---
 
@@ -84,20 +83,19 @@ API Key authentication configuration
 
 AsyncAPI HTTP endpoint configuration
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `enabled` | `bool` | — | Enable AsyncAPI endpoints (default: false) |
-| `spec` | `Option<serde_json::Value>` | `Default::default()` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
-
+| Field     | Type                        | Default              | Description                                                   |
+| --------- | --------------------------- | -------------------- | ------------------------------------------------------------- |
+| `enabled` | `bool`                      | —                    | Enable AsyncAPI endpoints (default: false)                    |
+| `spec`    | `Option<serde_json::Value>` | `Default::default()` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 
 #### BackgroundJobMetadata
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `name` | `String` | — | The name |
-| `request_id` | `Option<String>` | `None` | Request id |
+| Field        | Type             | Default | Description |
+| ------------ | ---------------- | ------- | ----------- |
+| `name`       | `String`         | —       | The name    |
+| `request_id` | `Option<String>` | `None`  | Request id  |
 
 ##### Methods
 
@@ -109,18 +107,17 @@ AsyncAPI HTTP endpoint configuration
 pub fn default() -> BackgroundJobMetadata
 ```
 
-
 ---
 
 #### BackgroundTaskConfig
 
 Configuration for in-process background task execution.
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `max_queue_size` | `usize` | `1024` | Maximum queue size |
-| `max_concurrent_tasks` | `usize` | `128` | Maximum concurrent tasks |
-| `drain_timeout_secs` | `u64` | `30` | Drain timeout secs |
+| Field                  | Type    | Default | Description              |
+| ---------------------- | ------- | ------- | ------------------------ |
+| `max_queue_size`       | `usize` | `1024`  | Maximum queue size       |
+| `max_concurrent_tasks` | `usize` | `128`   | Maximum concurrent tasks |
+| `drain_timeout_secs`   | `u64`   | `30`    | Drain timeout secs       |
 
 ##### Methods
 
@@ -132,19 +129,18 @@ Configuration for in-process background task execution.
 pub fn default() -> BackgroundTaskConfig
 ```
 
-
 ---
 
 #### CompressionConfig
 
 Compression configuration shared across runtimes
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `gzip` | `bool` | `true` | Enable gzip compression |
-| `brotli` | `bool` | `true` | Enable brotli compression |
-| `min_size` | `usize` | — | Minimum response size to compress (bytes) |
-| `quality` | `u32` | — | Compression quality (0-11 for brotli, 0-9 for gzip) |
+| Field      | Type    | Default | Description                                         |
+| ---------- | ------- | ------- | --------------------------------------------------- |
+| `gzip`     | `bool`  | `true`  | Enable gzip compression                             |
+| `brotli`   | `bool`  | `true`  | Enable brotli compression                           |
+| `min_size` | `usize` | —       | Minimum response size to compress (bytes)           |
+| `quality`  | `u32`   | —       | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
 ##### Methods
 
@@ -156,19 +152,17 @@ Compression configuration shared across runtimes
 pub fn default() -> CompressionConfig
 ```
 
-
 ---
 
 #### ContactInfo
 
 Contact information
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `name` | `Option<String>` | `None` | Name of the contact person or organisation. |
-| `email` | `Option<String>` | `None` | Contact email address. |
-| `url` | `Option<String>` | `None` | URL pointing to the contact information page. |
-
+| Field   | Type             | Default | Description                                   |
+| ------- | ---------------- | ------- | --------------------------------------------- |
+| `name`  | `Option<String>` | `None`  | Name of the contact person or organisation.   |
+| `email` | `Option<String>` | `None`  | Contact email address.                        |
+| `url`   | `Option<String>` | `None`  | URL pointing to the contact information page. |
 
 ---
 
@@ -176,16 +170,16 @@ Contact information
 
 CORS configuration for a route
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `allowed_origins` | `Vec<String>` | `vec![]` | Allowed origins |
-| `allowed_methods` | `Vec<String>` | `vec![]` | Allowed methods |
-| `allowed_headers` | `Vec<String>` | `vec![]` | Allowed headers |
-| `expose_headers` | `Option<Vec<String>>` | `None` | Expose headers |
-| `max_age` | `Option<u32>` | `None` | Maximum age |
-| `allow_credentials` | `Option<bool>` | `None` | Allow credentials |
-| `methods_joined_cache` | `String` | — | Methods joined cache |
-| `headers_joined_cache` | `String` | — | Headers joined cache |
+| Field                  | Type                  | Default  | Description          |
+| ---------------------- | --------------------- | -------- | -------------------- |
+| `allowed_origins`      | `Vec<String>`         | `vec![]` | Allowed origins      |
+| `allowed_methods`      | `Vec<String>`         | `vec![]` | Allowed methods      |
+| `allowed_headers`      | `Vec<String>`         | `vec![]` | Allowed headers      |
+| `expose_headers`       | `Option<Vec<String>>` | `None`   | Expose headers       |
+| `max_age`              | `Option<u32>`         | `None`   | Maximum age          |
+| `allow_credentials`    | `Option<bool>`        | `None`   | Allow credentials    |
+| `methods_joined_cache` | `String`              | —        | Methods joined cache |
+| `headers_joined_cache` | `String`              | —        | Headers joined cache |
 
 ##### Methods
 
@@ -247,18 +241,17 @@ pub fn are_headers_allowed(&self, requested: Vec<String>) -> bool
 pub fn default() -> CorsConfig
 ```
 
-
 ---
 
 #### FullSchemaConfig
 
 Configuration for fully-featured schemas with Query, Mutation, and Subscription types
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `introspection_enabled` | `bool` | `true` | Enable introspection queries |
-| `complexity_limit` | `Option<usize>` | `None` | Maximum query complexity (None = unlimited) |
-| `depth_limit` | `Option<usize>` | `None` | Maximum query depth (None = unlimited) |
+| Field                   | Type            | Default | Description                                 |
+| ----------------------- | --------------- | ------- | ------------------------------------------- |
+| `introspection_enabled` | `bool`          | `true`  | Enable introspection queries                |
+| `complexity_limit`      | `Option<usize>` | `None`  | Maximum query complexity (None = unlimited) |
+| `depth_limit`           | `Option<usize>` | `None`  | Maximum query depth (None = unlimited)      |
 
 ##### Methods
 
@@ -269,7 +262,6 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 ```rust
 pub fn default() -> FullSchemaConfig
 ```
-
 
 ---
 
@@ -370,21 +362,19 @@ pub fn get_description(&self) -> Option<String>
 pub fn default() -> GraphQlRouteConfig
 ```
 
-
 ---
 
 #### GraphQlSubscriptionSnapshot
 
 Snapshot of a GraphQL subscription exchange over WebSocket.
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `operation_id` | `String` | — | Operation id used for the subscription request. |
-| `acknowledged` | `bool` | — | Whether the server acknowledged the GraphQL WebSocket connection. |
-| `event` | `Option<serde_json::Value>` | `None` | First `next.payload` received for this subscription, if any. |
-| `errors` | `Vec<serde_json::Value>` | — | GraphQL protocol errors emitted by the server. |
-| `complete_received` | `bool` | — | Whether a `complete` frame was observed for this operation. |
-
+| Field               | Type                        | Default | Description                                                       |
+| ------------------- | --------------------------- | ------- | ----------------------------------------------------------------- |
+| `operation_id`      | `String`                    | —       | Operation id used for the subscription request.                   |
+| `acknowledged`      | `bool`                      | —       | Whether the server acknowledged the GraphQL WebSocket connection. |
+| `event`             | `Option<serde_json::Value>` | `None`  | First `next.payload` received for this subscription, if any.      |
+| `errors`            | `Vec<serde_json::Value>`    | —       | GraphQL protocol errors emitted by the server.                    |
+| `complete_received` | `bool`                      | —       | Whether a `complete` frame was observed for this operation.       |
 
 ---
 
@@ -395,7 +385,7 @@ Configuration for gRPC support
 Controls how the server handles gRPC requests, including compression,
 timeouts, and protocol settings.
 
-# Stream Limits
+## Stream Limits
 
 This configuration enforces message-level size limits but delegates
 concurrent stream limiting to the HTTP/2 transport layer:
@@ -416,21 +406,21 @@ concurrent stream limiting to the HTTP/2 transport layer:
   When the cumulative size exceeds the limit, the stream is terminated with
   `tonic.Status.resource_exhausted`. Defaults to `None` (unbounded).
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `enabled` | `bool` | `true` | Enable gRPC support |
-| `max_message_size` | `usize` | — | Maximum message size in bytes (for both sending and receiving) This limit applies to individual messages in both unary and streaming RPCs. When a single message exceeds this size, the request is rejected with HTTP 413 (Payload Too Large). Default: 4MB (4194304 bytes) **Note:** This limit does NOT apply to the total response size in streaming RPCs. For multi-message streams, the total response can exceed this limit as long as each individual message stays within the limit. |
-| `enable_compression` | `bool` | `true` | Enable gzip compression for gRPC messages |
-| `request_timeout` | `Option<u64>` | `None` | Timeout for gRPC requests in seconds (None = no timeout) |
-| `max_concurrent_streams` | `u32` | — | Maximum number of concurrent streams per connection (HTTP/2 advisory) This value is communicated to HTTP/2 clients as the server's flow control limit. The HTTP/2 transport layer enforces this limit automatically via SETTINGS frames and GOAWAY responses. Applications should NOT implement custom enforcement. Default: 100 streams per connection # Stream Limiting Strategy - **Per Connection**: This limit applies per HTTP/2 connection, not globally - **Transport Enforcement**: HTTP/2 handles all stream limiting; applications need not implement custom checks - **Streaming Requests**: In server streaming or bidi streaming, each logical RPC consumes one stream slot. Message ordering within a stream follows HTTP/2 frame ordering. |
-| `enable_keepalive` | `bool` | `true` | Enable HTTP/2 keepalive |
-| `keepalive_interval` | `u64` | — | HTTP/2 keepalive interval in seconds |
-| `keepalive_timeout` | `u64` | — | HTTP/2 keepalive timeout in seconds |
-| `max_stream_response_bytes` | `Option<usize>` | `None` | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `None` (unbounded total response size). |
+| Field                       | Type            | Default | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| --------------------------- | --------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `enabled`                   | `bool`          | `true`  | Enable gRPC support                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `max_message_size`          | `usize`         | —       | Maximum message size in bytes (for both sending and receiving) This limit applies to individual messages in both unary and streaming RPCs. When a single message exceeds this size, the request is rejected with HTTP 413 (Payload Too Large). Default: 4MB (4194304 bytes) **Note:** This limit does NOT apply to the total response size in streaming RPCs. For multi-message streams, the total response can exceed this limit as long as each individual message stays within the limit.                                                                                                                                                                                                                                                               |
+| `enable_compression`        | `bool`          | `true`  | Enable gzip compression for gRPC messages                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `request_timeout`           | `Option<u64>`   | `None`  | Timeout for gRPC requests in seconds (None = no timeout)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `max_concurrent_streams`    | `u32`           | —       | Maximum number of concurrent streams per connection (HTTP/2 advisory) This value is communicated to HTTP/2 clients as the server's flow control limit. The HTTP/2 transport layer enforces this limit automatically via SETTINGS frames and GOAWAY responses. Applications should NOT implement custom enforcement. Default: 100 streams per connection # Stream Limiting Strategy - **Per Connection**: This limit applies per HTTP/2 connection, not globally - **Transport Enforcement**: HTTP/2 handles all stream limiting; applications need not implement custom checks - **Streaming Requests**: In server streaming or bidi streaming, each logical RPC consumes one stream slot. Message ordering within a stream follows HTTP/2 frame ordering. |
+| `enable_keepalive`          | `bool`          | `true`  | Enable HTTP/2 keepalive                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `keepalive_interval`        | `u64`           | —       | HTTP/2 keepalive interval in seconds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `keepalive_timeout`         | `u64`           | —       | HTTP/2 keepalive timeout in seconds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `max_stream_response_bytes` | `Option<usize>` | `None`  | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `None` (unbounded total response size).                                                                                                                                                                                                                                                            |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -438,21 +428,20 @@ concurrent stream limiting to the HTTP/2 transport layer:
 pub fn default() -> GrpcConfig
 ```
 
-
 ---
 
-#### JsonRpcConfig
+##### JsonRpcConfig
 
 JSON-RPC server configuration
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `enabled` | `bool` | `true` | Enable JSON-RPC endpoint |
-| `endpoint_path` | `String` | — | HTTP endpoint path for JSON-RPC requests (default: "/rpc") |
-| `enable_batch` | `bool` | — | Enable batch request processing (default: true) |
-| `max_batch_size` | `usize` | — | Maximum number of requests in a batch (default: 100) |
+| Field            | Type     | Default | Description                                                |
+| ---------------- | -------- | ------- | ---------------------------------------------------------- |
+| `enabled`        | `bool`   | `true`  | Enable JSON-RPC endpoint                                   |
+| `endpoint_path`  | `String` | —       | HTTP endpoint path for JSON-RPC requests (default: "/rpc") |
+| `enable_batch`   | `bool`   | —       | Enable batch request processing (default: true)            |
+| `max_batch_size` | `usize`  | —       | Maximum number of requests in a batch (default: 100)       |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -462,74 +451,70 @@ JSON-RPC server configuration
 pub fn default() -> JsonRpcConfig
 ```
 
-
 ---
 
-#### JsonRpcMethodInfo
+##### JsonRpcMethodInfo
 
 JSON-RPC method metadata for routes that support JSON-RPC
 
 This struct captures the metadata needed to expose HTTP routes as JSON-RPC methods,
 enabling discovery and documentation of RPC-compatible endpoints.
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `method_name` | `String` | — | The JSON-RPC method name (e.g., "user.create") |
-| `description` | `Option<String>` | `None` | Optional description of what the method does |
-| `params_schema` | `Option<serde_json::Value>` | `None` | Optional JSON Schema for method parameters |
-| `result_schema` | `Option<serde_json::Value>` | `None` | Optional JSON Schema for the result |
-| `deprecated` | `bool` | — | Whether this method is deprecated |
-| `tags` | `Vec<String>` | — | Tags for categorizing and grouping methods |
-
+| Field           | Type                        | Default | Description                                    |
+| --------------- | --------------------------- | ------- | ---------------------------------------------- |
+| `method_name`   | `String`                    | —       | The JSON-RPC method name (e.g., "user.create") |
+| `description`   | `Option<String>`            | `None`  | Optional description of what the method does   |
+| `params_schema` | `Option<serde_json::Value>` | `None`  | Optional JSON Schema for method parameters     |
+| `result_schema` | `Option<serde_json::Value>` | `None`  | Optional JSON Schema for the result            |
+| `deprecated`    | `bool`                      | —       | Whether this method is deprecated              |
+| `tags`          | `Vec<String>`               | —       | Tags for categorizing and grouping methods     |
 
 ---
 
-#### JwtConfig
+##### JwtConfig
 
 JWT authentication configuration
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `secret` | `String` | — | Secret key for JWT verification |
-| `algorithm` | `String` | — | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
-| `audience` | `Option<Vec<String>>` | `None` | Required audience claim |
-| `issuer` | `Option<String>` | `None` | Required issuer claim |
-| `leeway` | `u64` | — | Leeway for expiration checks (seconds) |
-
+| Field       | Type                  | Default | Description                                           |
+| ----------- | --------------------- | ------- | ----------------------------------------------------- |
+| `secret`    | `String`              | —       | Secret key for JWT verification                       |
+| `algorithm` | `String`              | —       | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
+| `audience`  | `Option<Vec<String>>` | `None`  | Required audience claim                               |
+| `issuer`    | `Option<String>`      | `None`  | Required issuer claim                                 |
+| `leeway`    | `u64`                 | —       | Leeway for expiration checks (seconds)                |
 
 ---
 
-#### LicenseInfo
+##### LicenseInfo
 
 License information
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `name` | `String` | — | SPDX license identifier or display name (e.g. `"MIT"`). |
-| `url` | `Option<String>` | `None` | URL to the full license text. |
-
+| Field  | Type             | Default | Description                                             |
+| ------ | ---------------- | ------- | ------------------------------------------------------- |
+| `name` | `String`         | —       | SPDX license identifier or display name (e.g. `"MIT"`). |
+| `url`  | `Option<String>` | `None`  | URL to the full license text.                           |
 
 ---
 
-#### OpenApiConfig
+##### OpenApiConfig
 
 OpenAPI configuration
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `enabled` | `bool` | `false` | Enable OpenAPI generation (default: false for zero overhead) |
-| `title` | `String` | `"API"` | API title |
-| `version` | `String` | `"1.0.0"` | API version |
-| `description` | `Option<String>` | `None` | API description (supports markdown) |
-| `swagger_ui_path` | `String` | — | Path to serve Swagger UI (default: "/docs") |
-| `redoc_path` | `String` | — | Path to serve Redoc (default: "/redoc") |
-| `openapi_json_path` | `String` | — | Path to serve OpenAPI JSON spec (default: "/openapi.json") |
-| `contact` | `Option<ContactInfo>` | `None` | Contact information |
-| `license` | `Option<LicenseInfo>` | `None` | License information |
-| `servers` | `Vec<ServerInfo>` | `vec![]` | Server definitions |
-| `security_schemes` | `HashMap<String, SecuritySchemeInfo>` | `HashMap::new()` | Security schemes (auto-detected from middleware if not provided) |
+| Field               | Type                                  | Default          | Description                                                      |
+| ------------------- | ------------------------------------- | ---------------- | ---------------------------------------------------------------- |
+| `enabled`           | `bool`                                | `false`          | Enable OpenAPI generation (default: false for zero overhead)     |
+| `title`             | `String`                              | `"API"`          | API title                                                        |
+| `version`           | `String`                              | `"1.0.0"`        | API version                                                      |
+| `description`       | `Option<String>`                      | `None`           | API description (supports markdown)                              |
+| `swagger_ui_path`   | `String`                              | —                | Path to serve Swagger UI (default: "/docs")                      |
+| `redoc_path`        | `String`                              | —                | Path to serve Redoc (default: "/redoc")                          |
+| `openapi_json_path` | `String`                              | —                | Path to serve OpenAPI JSON spec (default: "/openapi.json")       |
+| `contact`           | `Option<ContactInfo>`                 | `None`           | Contact information                                              |
+| `license`           | `Option<LicenseInfo>`                 | `None`           | License information                                              |
+| `servers`           | `Vec<ServerInfo>`                     | `vec![]`         | Server definitions                                               |
+| `security_schemes`  | `HashMap<String, SecuritySchemeInfo>` | `HashMap::new()` | Security schemes (auto-detected from middleware if not provided) |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -539,76 +524,70 @@ OpenAPI configuration
 pub fn default() -> OpenApiConfig
 ```
 
-
 ---
 
-#### ParseRequest
+##### ParseRequest
 
 Request body for `POST /asyncapi/parse`
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `spec` | `serde_json::Value` | — | Spec |
-
+| Field  | Type                | Default | Description |
+| ------ | ------------------- | ------- | ----------- |
+| `spec` | `serde_json::Value` | —       | Spec        |
 
 ---
 
-#### ParseResult
+##### ParseResult
 
 Full parse result returned by `POST /asyncapi/parse`
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `spec_version` | `String` | — | Spec version |
-| `title` | `String` | — | Title |
-| `api_version` | `String` | — | Api version |
-| `channels` | `Vec<ParsedChannel>` | — | Channels |
-| `operations` | `Vec<ParsedOperation>` | — | Operations |
-| `messages` | `Vec<ParsedMessage>` | — | Messages |
-
+| Field          | Type                   | Default | Description  |
+| -------------- | ---------------------- | ------- | ------------ |
+| `spec_version` | `String`               | —       | Spec version |
+| `title`        | `String`               | —       | Title        |
+| `api_version`  | `String`               | —       | Api version  |
+| `channels`     | `Vec<ParsedChannel>`   | —       | Channels     |
+| `operations`   | `Vec<ParsedOperation>` | —       | Operations   |
+| `messages`     | `Vec<ParsedMessage>`   | —       | Messages     |
 
 ---
 
-#### ParsedChannel
+##### ParsedChannel
 
 A single channel extracted from an AsyncAPI spec
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `name` | `String` | — | Channel key from the spec (e.g. "chat/messages") |
-| `address` | `String` | — | Channel address / path |
-| `messages` | `Vec<String>` | — | Message names declared on this channel |
-| `bindings` | `Option<serde_json::Value>` | `None` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
-
+| Field      | Type                        | Default | Description                                                           |
+| ---------- | --------------------------- | ------- | --------------------------------------------------------------------- |
+| `name`     | `String`                    | —       | Channel key from the spec (e.g. "chat/messages")                      |
+| `address`  | `String`                    | —       | Channel address / path                                                |
+| `messages` | `Vec<String>`               | —       | Message names declared on this channel                                |
+| `bindings` | `Option<serde_json::Value>` | `None`  | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
 
-#### ParsedMessage
+##### ParsedMessage
 
 A resolved message (name + JSON Schema)
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `name` | `String` | — | Message name |
-| `schema` | `Option<serde_json::Value>` | `None` | Resolved JSON Schema for the message payload, if available |
-
+| Field    | Type                        | Default | Description                                                |
+| -------- | --------------------------- | ------- | ---------------------------------------------------------- |
+| `name`   | `String`                    | —       | Message name                                               |
+| `schema` | `Option<serde_json::Value>` | `None`  | Resolved JSON Schema for the message payload, if available |
 
 ---
 
-#### ParsedOperation
+##### ParsedOperation
 
 A single operation extracted from an AsyncAPI spec
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `name` | `String` | — | Operation name |
-| `action` | `String` | — | Operation action: "send" or "receive" |
-| `channel` | `String` | — | Channel reference (resolved to the channel name) |
-
+| Field     | Type     | Default | Description                                      |
+| --------- | -------- | ------- | ------------------------------------------------ |
+| `name`    | `String` | —       | Operation name                                   |
+| `action`  | `String` | —       | Operation action: "send" or "receive"            |
+| `channel` | `String` | —       | Channel reference (resolved to the channel name) |
 
 ---
 
-#### ProblemDetails
+##### ProblemDetails
 
 RFC 9457 Problem Details for HTTP APIs
 
@@ -616,8 +595,10 @@ A machine-readable format for specifying errors in HTTP API responses.
 Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
 if not specified.
 
-# Content-Type
+## Content-Type
+
 Responses using this struct should set:
+
 ```text
 Content-Type: application/problem+json
 ```
@@ -632,18 +613,18 @@ Content-Type: application/problem+json
 }
 ```
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `type_uri` | `String` | — | A URI reference that identifies the problem type. Defaults to "about:blank" when absent. Should be a stable, human-readable identifier for the problem type. |
-| `title` | `String` | — | A short, human-readable summary of the problem type. Should not change from occurrence to occurrence of the problem. |
-| `status` | `u16` | — | The HTTP status code generated by the origin server. This is advisory; the actual HTTP status code takes precedence. |
-| `detail` | `Option<String>` | `None` | A human-readable explanation specific to this occurrence of the problem. |
-| `instance` | `Option<String>` | `None` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
-| `extensions` | `HashMap<String, serde_json::Value>` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
+| Field        | Type                                 | Default | Description                                                                                                                                                  |
+| ------------ | ------------------------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `type_uri`   | `String`                             | —       | A URI reference that identifies the problem type. Defaults to "about:blank" when absent. Should be a stable, human-readable identifier for the problem type. |
+| `title`      | `String`                             | —       | A short, human-readable summary of the problem type. Should not change from occurrence to occurrence of the problem.                                         |
+| `status`     | `u16`                                | —       | The HTTP status code generated by the origin server. This is advisory; the actual HTTP status code takes precedence.                                         |
+| `detail`     | `Option<String>`                     | `None`  | A human-readable explanation specific to this occurrence of the problem.                                                                                     |
+| `instance`   | `Option<String>`                     | `None`  | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced.                         |
+| `extensions` | `HashMap<String, serde_json::Value>` | —       | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array.                                            |
 
-##### Methods
+### Methods
 
-###### with_detail()
+#### with_detail()
 
 Set the detail field
 
@@ -653,7 +634,7 @@ Set the detail field
 pub fn with_detail(&self, detail: &str) -> ProblemDetails
 ```
 
-###### with_instance()
+##### with_instance()
 
 Set the instance field
 
@@ -729,20 +710,19 @@ Returns an error if the serialization fails.
 pub fn to_json_pretty(&self) -> String
 ```
 
-
 ---
 
-#### QueryMutationConfig
+##### QueryMutationConfig
 
 Configuration for schemas with Query and Mutation types
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `introspection_enabled` | `bool` | `true` | Enable introspection queries |
-| `complexity_limit` | `Option<usize>` | `None` | Maximum query complexity (None = unlimited) |
-| `depth_limit` | `Option<usize>` | `None` | Maximum query depth (None = unlimited) |
+| Field                   | Type            | Default | Description                                 |
+| ----------------------- | --------------- | ------- | ------------------------------------------- |
+| `introspection_enabled` | `bool`          | `true`  | Enable introspection queries                |
+| `complexity_limit`      | `Option<usize>` | `None`  | Maximum query complexity (None = unlimited) |
+| `depth_limit`           | `Option<usize>` | `None`  | Maximum query depth (None = unlimited)      |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -752,20 +732,19 @@ Configuration for schemas with Query and Mutation types
 pub fn default() -> QueryMutationConfig
 ```
 
-
 ---
 
-#### QueryOnlyConfig
+##### QueryOnlyConfig
 
 Configuration for schemas with only Query type
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `introspection_enabled` | `bool` | `true` | Enable introspection queries |
-| `complexity_limit` | `Option<usize>` | `None` | Maximum query complexity (None = unlimited) |
-| `depth_limit` | `Option<usize>` | `None` | Maximum query depth (None = unlimited) |
+| Field                   | Type            | Default | Description                                 |
+| ----------------------- | --------------- | ------- | ------------------------------------------- |
+| `introspection_enabled` | `bool`          | `true`  | Enable introspection queries                |
+| `complexity_limit`      | `Option<usize>` | `None`  | Maximum query complexity (None = unlimited) |
+| `depth_limit`           | `Option<usize>` | `None`  | Maximum query depth (None = unlimited)      |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -775,20 +754,19 @@ Configuration for schemas with only Query type
 pub fn default() -> QueryOnlyConfig
 ```
 
-
 ---
 
-#### RateLimitConfig
+##### RateLimitConfig
 
 Rate limiting configuration shared across runtimes
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `per_second` | `u64` | `100` | Requests per second |
-| `burst` | `u32` | `200` | Burst allowance |
-| `ip_based` | `bool` | `true` | Use IP-based rate limiting |
+| Field        | Type   | Default | Description                |
+| ------------ | ------ | ------- | -------------------------- |
+| `per_second` | `u64`  | `100`   | Requests per second        |
+| `burst`      | `u32`  | `200`   | Burst allowance            |
+| `ip_based`   | `bool` | `true`  | Use IP-based rate limiting |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -798,20 +776,19 @@ Rate limiting configuration shared across runtimes
 pub fn default() -> RateLimitConfig
 ```
 
-
 ---
 
-#### Response
+##### Response
 
 HTTP Response with custom status code, headers, and content
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `content` | `Option<serde_json::Value>` | `Default::default()` | Response body content |
-| `status_code` | `u16` | — | HTTP status code (defaults to 200) |
-| `headers` | `HashMap<String, String>` | `HashMap::new()` | Response headers |
+| Field         | Type                        | Default              | Description                        |
+| ------------- | --------------------------- | -------------------- | ---------------------------------- |
+| `content`     | `Option<serde_json::Value>` | `Default::default()` | Response body content              |
+| `status_code` | `u16`                       | —                    | HTTP status code (defaults to 200) |
+| `headers`     | `HashMap<String, String>`   | `HashMap::new()`     | Response headers                   |
 
-##### Methods
+###### Methods
 
 ###### set_header()
 
@@ -841,20 +818,19 @@ pub fn set_cookie(&self, key: &str, value: &str, secure: bool, http_only: bool, 
 pub fn default() -> Response
 ```
 
-
 ---
 
-#### ResponseSnapshot
+##### ResponseSnapshot
 
 Snapshot of an Axum response used by higher-level language bindings.
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `status` | `u16` | — | HTTP status code. |
-| `headers` | `HashMap<String, String>` | — | Response headers (lowercase keys for predictable lookups). |
-| `body` | `Vec<u8>` | — | Response body bytes (decoded for supported encodings). |
+| Field     | Type                      | Default | Description                                                |
+| --------- | ------------------------- | ------- | ---------------------------------------------------------- |
+| `status`  | `u16`                     | —       | HTTP status code.                                          |
+| `headers` | `HashMap<String, String>` | —       | Response headers (lowercase keys for predictable lookups). |
+| `body`    | `Vec<u8>`                 | —       | Response body bytes (decoded for supported encodings).     |
 
-##### Methods
+###### Methods
 
 ###### text()
 
@@ -876,23 +852,22 @@ Lookup header by case-insensitive name.
 pub fn header(&self, name: &str) -> Option<String>
 ```
 
-
 ---
 
-#### SchemaConfig
+##### SchemaConfig
 
 Configuration for GraphQL schema building.
 
 Encapsulates all schema-level configuration options including
 introspection control, complexity limits, and depth limits.
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `introspection_enabled` | `bool` | `true` | Enable introspection queries |
-| `complexity_limit` | `Option<usize>` | `None` | Maximum query complexity (None = unlimited) |
-| `depth_limit` | `Option<usize>` | `None` | Maximum query depth (None = unlimited) |
+| Field                   | Type            | Default | Description                                 |
+| ----------------------- | --------------- | ------- | ------------------------------------------- |
+| `introspection_enabled` | `bool`          | `true`  | Enable introspection queries                |
+| `complexity_limit`      | `Option<usize>` | `None`  | Maximum query complexity (None = unlimited) |
+| `depth_limit`           | `Option<usize>` | `None`  | Maximum query depth (None = unlimited)      |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -902,38 +877,37 @@ introspection control, complexity limits, and depth limits.
 pub fn default() -> SchemaConfig
 ```
 
-
 ---
 
-#### ServerConfig
+##### ServerConfig
 
 Server configuration
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `host` | `String` | `"127.0.0.1"` | Host to bind to |
-| `port` | `u16` | `8000` | Port to bind to |
-| `workers` | `usize` | `1` | Number of Tokio runtime worker threads used by binding-managed server runtimes |
-| `enable_request_id` | `bool` | `false` | Enable request ID generation and propagation |
-| `max_body_size` | `Option<usize>` | `Default::default()` | Maximum request body size in bytes (None = unlimited, not recommended) |
-| `request_timeout` | `Option<u64>` | `None` | Request timeout in seconds (None = no timeout) |
-| `compression` | `Option<CompressionConfig>` | `None` | Enable compression middleware |
-| `rate_limit` | `Option<RateLimitConfig>` | `None` | Enable rate limiting |
-| `jwt_auth` | `Option<JwtConfig>` | `None` | JWT authentication configuration |
-| `api_key_auth` | `Option<ApiKeyConfig>` | `None` | API Key authentication configuration |
-| `static_files` | `Vec<StaticFilesConfig>` | `vec![]` | Static file serving configuration |
-| `graceful_shutdown` | `bool` | `true` | Enable graceful shutdown on SIGTERM/SIGINT |
-| `shutdown_timeout` | `u64` | `30` | Graceful shutdown timeout (seconds) |
-| `asyncapi` | `Option<AsyncApiConfig>` | `None` | AsyncAPI HTTP endpoint configuration |
-| `openapi` | `Option<OpenApiConfig>` | `None` | OpenAPI documentation configuration |
-| `jsonrpc` | `Option<JsonRpcConfig>` | `None` | JSON-RPC configuration |
-| `grpc` | `Option<GrpcConfig>` | `None` | gRPC configuration |
-| `lifecycle_hooks` | `Option<String>` | `None` | Lifecycle hooks for request/response processing |
-| `background_tasks` | `BackgroundTaskConfig` | — | Background task executor configuration |
-| `enable_http_trace` | `bool` | `false` | Enable per-request HTTP tracing (tower-http `TraceLayer`) |
-| `di_container` | `Option<String>` | `None` | Dependency injection container (requires 'di' feature) |
+| Field               | Type                        | Default              | Description                                                                    |
+| ------------------- | --------------------------- | -------------------- | ------------------------------------------------------------------------------ |
+| `host`              | `String`                    | `"127.0.0.1"`        | Host to bind to                                                                |
+| `port`              | `u16`                       | `8000`               | Port to bind to                                                                |
+| `workers`           | `usize`                     | `1`                  | Number of Tokio runtime worker threads used by binding-managed server runtimes |
+| `enable_request_id` | `bool`                      | `false`              | Enable request ID generation and propagation                                   |
+| `max_body_size`     | `Option<usize>`             | `Default::default()` | Maximum request body size in bytes (None = unlimited, not recommended)         |
+| `request_timeout`   | `Option<u64>`               | `None`               | Request timeout in seconds (None = no timeout)                                 |
+| `compression`       | `Option<CompressionConfig>` | `None`               | Enable compression middleware                                                  |
+| `rate_limit`        | `Option<RateLimitConfig>`   | `None`               | Enable rate limiting                                                           |
+| `jwt_auth`          | `Option<JwtConfig>`         | `None`               | JWT authentication configuration                                               |
+| `api_key_auth`      | `Option<ApiKeyConfig>`      | `None`               | API Key authentication configuration                                           |
+| `static_files`      | `Vec<StaticFilesConfig>`    | `vec![]`             | Static file serving configuration                                              |
+| `graceful_shutdown` | `bool`                      | `true`               | Enable graceful shutdown on SIGTERM/SIGINT                                     |
+| `shutdown_timeout`  | `u64`                       | `30`                 | Graceful shutdown timeout (seconds)                                            |
+| `asyncapi`          | `Option<AsyncApiConfig>`    | `None`               | AsyncAPI HTTP endpoint configuration                                           |
+| `openapi`           | `Option<OpenApiConfig>`     | `None`               | OpenAPI documentation configuration                                            |
+| `jsonrpc`           | `Option<JsonRpcConfig>`     | `None`               | JSON-RPC configuration                                                         |
+| `grpc`              | `Option<GrpcConfig>`        | `None`               | gRPC configuration                                                             |
+| `lifecycle_hooks`   | `Option<String>`            | `None`               | Lifecycle hooks for request/response processing                                |
+| `background_tasks`  | `BackgroundTaskConfig`      | —                    | Background task executor configuration                                         |
+| `enable_http_trace` | `bool`                      | `false`              | Enable per-request HTTP tracing (tower-http `TraceLayer`)                      |
+| `di_container`      | `Option<String>`            | `None`               | Dependency injection container (requires 'di' feature)                         |
 
-##### Methods
+###### Methods
 
 ###### default()
 
@@ -943,31 +917,30 @@ Server configuration
 pub fn default() -> ServerConfig
 ```
 
-
 ---
 
-#### ServerInfo
+##### ServerInfo
 
 Server information
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `url` | `String` | — | Base URL of the server (e.g. `"<https://api.example.com/v1"`>). |
-| `description` | `Option<String>` | `None` | Optional human-readable description of the server environment. |
-
+| Field         | Type             | Default | Description                                                     |
+| ------------- | ---------------- | ------- | --------------------------------------------------------------- |
+| `url`         | `String`         | —       | Base URL of the server (e.g. `"<https://api.example.com/v1"`>). |
+| `description` | `Option<String>` | `None`  | Optional human-readable description of the server environment.  |
 
 ---
 
-#### SseEvent
+##### SseEvent
 
 An individual SSE event
 
 Represents a single Server-Sent Event to be sent to a connected client.
 Events can have an optional type, ID, and retry timeout for advanced scenarios.
 
-# SSE Format
+## SSE Format
 
 Events are serialized to the following text format:
+
 ```text
 event: event_type
 data: {"json":"value"}
@@ -975,16 +948,16 @@ id: event-123
 retry: 3000
 ```
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `event_type` | `Option<String>` | `None` | Event type (optional) |
-| `data` | `serde_json::Value` | — | Event data (JSON value) |
-| `id` | `Option<String>` | `None` | Event ID (optional, for client-side reconnection) |
-| `retry` | `Option<u64>` | `None` | Retry timeout in milliseconds (optional) |
+| Field        | Type                | Default | Description                                       |
+| ------------ | ------------------- | ------- | ------------------------------------------------- |
+| `event_type` | `Option<String>`    | `None`  | Event type (optional)                             |
+| `data`       | `serde_json::Value` | —       | Event data (JSON value)                           |
+| `id`         | `Option<String>`    | `None`  | Event ID (optional, for client-side reconnection) |
+| `retry`      | `Option<u64>`       | `None`  | Retry timeout in milliseconds (optional)          |
 
-##### Methods
+### Methods
 
-###### with_id()
+#### with_id()
 
 Set the event ID for client-side reconnection support
 
@@ -997,7 +970,7 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 pub fn with_id(&self, id: &str) -> SseEvent
 ```
 
-###### with_retry()
+##### with_retry()
 
 Set the retry timeout for client reconnection
 
@@ -1010,24 +983,22 @@ if the connection is lost. The client browser will automatically handle reconnec
 pub fn with_retry(&self, retry_ms: u64) -> SseEvent
 ```
 
-
 ---
 
-#### StaticFilesConfig
+##### StaticFilesConfig
 
 Static file serving configuration
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `directory` | `String` | — | Directory path to serve |
-| `route_prefix` | `String` | — | URL path prefix (e.g., "/static") |
-| `index_file` | `bool` | — | Fallback to index.html for directories |
-| `cache_control` | `Option<String>` | `None` | Cache-Control header value |
-
+| Field           | Type             | Default | Description                            |
+| --------------- | ---------------- | ------- | -------------------------------------- |
+| `directory`     | `String`         | —       | Directory path to serve                |
+| `route_prefix`  | `String`         | —       | URL path prefix (e.g., "/static")      |
+| `index_file`    | `bool`           | —       | Fallback to index.html for directories |
+| `cache_control` | `Option<String>` | `None`  | Cache-Control header value             |
 
 ---
 
-#### TestClient
+##### TestClient
 
 Core test client for making HTTP requests to a Spikard application.
 
@@ -1036,7 +1007,7 @@ interface for making HTTP requests, sending WebSocket connections, and
 handling Server-Sent Events. Language bindings wrap this to provide
 native API surfaces.
 
-##### Methods
+###### Methods
 
 ###### get()
 
@@ -1065,7 +1036,7 @@ Make a request with a raw body payload.
 **Signature:**
 
 ```rust
-pub fn request_raw(&self, method: &str, path: &str, body: &[u8], query_params: Option<Vec<String>>, headers: Option<Vec<String>>) -> ResponseSnapshot
+pub fn request_raw(&self, method: Method, path: &str, body: &[u8], query_params: Option<Vec<String>>, headers: Option<Vec<String>>) -> ResponseSnapshot
 ```
 
 ###### put()
@@ -1153,6 +1124,7 @@ pub fn graphql(&self, query: &str, variables: Option<serde_json::Value>, operati
 Send a GraphQL query and return HTTP status code separately
 
 This method allows tests to distinguish between:
+
 - HTTP-level errors (400/422 for invalid requests)
 - GraphQL-level errors (200 with errors in response body)
 
@@ -1187,37 +1159,35 @@ Uses `/graphql` as the default subscription endpoint.
 pub fn graphql_subscription(&self, query: &str, variables: Option<serde_json::Value>, operation_name: Option<String>) -> GraphQlSubscriptionSnapshot
 ```
 
-
 ---
 
-#### TestingSseEvent
+##### TestingSseEvent
 
 A single Server-Sent Event.
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `data` | `String` | — | The data field of the event. |
-
+| Field  | Type     | Default | Description                  |
+| ------ | -------- | ------- | ---------------------------- |
+| `data` | `String` | —       | The data field of the event. |
 
 ---
 
-#### UploadFile
+##### UploadFile
 
 Represents an uploaded file from multipart/form-data requests.
 
 This struct provides efficient access to file content with automatic
 base64 decoding and implements standard I/O traits for compatibility.
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `filename` | `String` | — | Original filename from the client |
-| `content_type` | `Option<String>` | `None` | MIME type of the uploaded file |
-| `size` | `Option<usize>` | `None` | Size of the file in bytes |
-| `content` | `Vec<u8>` | — | File content (may be base64 encoded) |
-| `content_encoding` | `Option<String>` | `None` | Content encoding type |
-| `cursor` | `String` | — | Internal cursor for Read/Seek operations |
+| Field              | Type             | Default | Description                              |
+| ------------------ | ---------------- | ------- | ---------------------------------------- |
+| `filename`         | `String`         | —       | Original filename from the client        |
+| `content_type`     | `Option<String>` | `None`  | MIME type of the uploaded file           |
+| `size`             | `Option<usize>`  | `None`  | Size of the file in bytes                |
+| `content`          | `Vec<u8>`        | —       | File content (may be base64 encoded)     |
+| `content_encoding` | `Option<String>` | `None`  | Content encoding type                    |
+| `cursor`           | `String`         | —       | Internal cursor for Read/Seek operations |
 
-##### Methods
+###### Methods
 
 ###### as_bytes()
 
@@ -1255,101 +1225,125 @@ Get the content type, defaulting to "application/octet-stream".
 pub fn content_type_or_default(&self) -> String
 ```
 
-
 ---
 
-#### ValidateRequest
+##### ValidateRequest
 
 Request body for `POST /asyncapi/validate`
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `spec` | `serde_json::Value` | — | Spec |
-| `channel` | `String` | — | Channel |
-| `message` | `String` | — | Message |
-| `payload` | `serde_json::Value` | — | Payload |
-
+| Field     | Type                | Default | Description |
+| --------- | ------------------- | ------- | ----------- |
+| `spec`    | `serde_json::Value` | —       | Spec        |
+| `channel` | `String`            | —       | Channel     |
+| `message` | `String`            | —       | Message     |
+| `payload` | `serde_json::Value` | —       | Payload     |
 
 ---
 
-#### ValidationResponse
+##### ValidationResponse
 
 Response body for `POST /asyncapi/validate`
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `valid` | `bool` | — | Valid |
-| `errors` | `Vec<String>` | — | Errors |
-
+| Field    | Type          | Default | Description |
+| -------- | ------------- | ------- | ----------- |
+| `valid`  | `bool`        | —       | Valid       |
+| `errors` | `Vec<String>` | —       | Errors      |
 
 ---
 
-### Enums
+#### Enums
 
-#### SnapshotError
+##### SnapshotError
 
 Possible errors while converting an Axum response into a snapshot.
 
-| Value | Description |
-|-------|-------------|
+| Value           | Description                                                            |
+| --------------- | ---------------------------------------------------------------------- |
 | `InvalidHeader` | Response header could not be decoded to UTF-8. — Fields: `0`: `String` |
-| `Decompression` | Body decompression failed. — Fields: `0`: `String` |
-
+| `Decompression` | Body decompression failed. — Fields: `0`: `String`                     |
 
 ---
 
-#### SecuritySchemeInfo
+##### WebSocketMessage
+
+A WebSocket message that can be text or binary.
+
+| Value    | Description                                                                                                                                                                                                                    |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Text`   | A text message. — Fields: `0`: `String`                                                                                                                                                                                        |
+| `Binary` | A binary message. — Fields: `0`: `Vec<u8>`                                                                                                                                                                                     |
+| `Close`  | A close message with a numeric close code (RFC 6455) and optional reason text. Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received, 1006 Abnormal Closure. — Fields: `code`: `u16`, `reason`: `String` |
+| `Ping`   | A ping message. — Fields: `0`: `Vec<u8>`                                                                                                                                                                                       |
+| `Pong`   | A pong message. — Fields: `0`: `Vec<u8>`                                                                                                                                                                                       |
+
+---
+
+##### Method
+
+HTTP method
+
+| Value     | Description |
+| --------- | ----------- |
+| `Get`     | Get         |
+| `Post`    | Post        |
+| `Put`     | Put         |
+| `Patch`   | Patch       |
+| `Delete`  | Delete      |
+| `Head`    | Head        |
+| `Options` | Options     |
+| `Trace`   | Trace       |
+
+---
+
+##### SecuritySchemeInfo
 
 Security scheme types
 
-| Value | Description |
-|-------|-------------|
-| `Http` | Http — Fields: `scheme`: `String`, `bearer_format`: `String` |
-| `ApiKey` | Api key — Fields: `location`: `String`, `name`: `String` |
-
+| Value    | Description                                                  |
+| -------- | ------------------------------------------------------------ |
+| `Http`   | Http — Fields: `scheme`: `String`, `bearer_format`: `String` |
+| `ApiKey` | Api key — Fields: `location`: `String`, `name`: `String`     |
 
 ---
 
-### Errors
+#### Errors
 
-#### GraphQlError
+##### GraphQlError
 
 Errors that can occur during GraphQL operations
 
 These errors are compatible with async-graphql error handling and can be
 converted to structured HTTP responses matching the project's error fixtures.
 
-| Variant | Description |
-|---------|-------------|
-| `ExecutionError` | Error during schema execution Occurs when the GraphQL executor encounters a runtime error during query execution. |
-| `SchemaBuildError` | Error during schema building Occurs when schema construction fails due to invalid definitions or conflicts. |
-| `RequestHandlingError` | Error during request handling Occurs when the HTTP request cannot be properly handled or parsed. |
-| `SerializationError` | Serialization error Occurs during JSON serialization/deserialization of GraphQL values. |
-| `JsonError` | JSON parsing error Occurs when JSON input cannot be parsed. |
-| `ValidationError` | GraphQL validation error Occurs when a GraphQL query fails schema validation. |
-| `ParseError` | GraphQL parse error Occurs when the GraphQL query string cannot be parsed. |
-| `AuthenticationError` | Authentication error Occurs when request authentication fails. |
-| `AuthorizationError` | Authorization error Occurs when user lacks required permissions. |
-| `NotFound` | Not found error Occurs when a requested resource is not found. |
-| `RateLimitExceeded` | Rate limit error Occurs when rate limit is exceeded. |
-| `InvalidInput` | Invalid input error with validation details Occurs during input validation with detailed error information. |
-| `ComplexityLimitExceeded` | Query complexity limit exceeded Occurs when a GraphQL query exceeds the configured complexity limit. |
-| `DepthLimitExceeded` | Query depth limit exceeded Occurs when a GraphQL query exceeds the configured depth limit. |
-| `InternalError` | Internal server error Occurs when an unexpected internal error happens. |
-
+| Variant                   | Description                                                                                                       |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `ExecutionError`          | Error during schema execution Occurs when the GraphQL executor encounters a runtime error during query execution. |
+| `SchemaBuildError`        | Error during schema building Occurs when schema construction fails due to invalid definitions or conflicts.       |
+| `RequestHandlingError`    | Error during request handling Occurs when the HTTP request cannot be properly handled or parsed.                  |
+| `SerializationError`      | Serialization error Occurs during JSON serialization/deserialization of GraphQL values.                           |
+| `JsonError`               | JSON parsing error Occurs when JSON input cannot be parsed.                                                       |
+| `ValidationError`         | GraphQL validation error Occurs when a GraphQL query fails schema validation.                                     |
+| `ParseError`              | GraphQL parse error Occurs when the GraphQL query string cannot be parsed.                                        |
+| `AuthenticationError`     | Authentication error Occurs when request authentication fails.                                                    |
+| `AuthorizationError`      | Authorization error Occurs when user lacks required permissions.                                                  |
+| `NotFound`                | Not found error Occurs when a requested resource is not found.                                                    |
+| `RateLimitExceeded`       | Rate limit error Occurs when rate limit is exceeded.                                                              |
+| `InvalidInput`            | Invalid input error with validation details Occurs during input validation with detailed error information.       |
+| `ComplexityLimitExceeded` | Query complexity limit exceeded Occurs when a GraphQL query exceeds the configured complexity limit.              |
+| `DepthLimitExceeded`      | Query depth limit exceeded Occurs when a GraphQL query exceeds the configured depth limit.                        |
+| `InternalError`           | Internal server error Occurs when an unexpected internal error happens.                                           |
 
 ---
 
-#### SchemaError
+##### SchemaError
 
 Error type for schema building operations
 
-| Variant | Description |
-|---------|-------------|
-| `BuildingFailed` | Generic schema building error |
-| `ValidationError` | Configuration validation error |
-| `ComplexityLimitExceeded` | Complexity limit exceeded |
-| `DepthLimitExceeded` | Depth limit exceeded |
-
+| Variant                   | Description                    |
+| ------------------------- | ------------------------------ |
+| `BuildingFailed`          | Generic schema building error  |
+| `ValidationError`         | Configuration validation error |
+| `ComplexityLimitExceeded` | Complexity limit exceeded      |
+| `DepthLimitExceeded`      | Depth limit exceeded           |
 
 ---
