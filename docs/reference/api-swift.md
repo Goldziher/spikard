@@ -97,9 +97,9 @@ AsyncAPI HTTP endpoint configuration
 | `name`      | `String`  | —       | The name    |
 | `requestId` | `String?` | `null`  | Request id  |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -119,9 +119,9 @@ Configuration for in-process background task execution.
 | `maxConcurrentTasks` | `UInt64` | `128`   | Maximum concurrent tasks |
 | `drainTimeoutSecs`   | `UInt64` | `30`    | Drain timeout secs       |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -142,9 +142,9 @@ Compression configuration shared across runtimes
 | `minSize` | `UInt64` | —       | Minimum response size to compress (bytes)           |
 | `quality` | `UInt32` | —       | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -181,9 +181,9 @@ CORS configuration for a route
 | `methodsJoinedCache` | `String`    | —       | Methods joined cache |
 | `headersJoinedCache` | `String`    | —       | Headers joined cache |
 
-##### Methods
+### Methods
 
-###### allowedMethodsJoined()
+#### allowedMethodsJoined()
 
 Get the cached joined methods string for preflight responses
 
@@ -193,7 +193,7 @@ Get the cached joined methods string for preflight responses
 public func allowedMethodsJoined() -> String
 ```
 
-###### allowedHeadersJoined()
+#### allowedHeadersJoined()
 
 Get the cached joined headers string for preflight responses
 
@@ -203,7 +203,7 @@ Get the cached joined headers string for preflight responses
 public func allowedHeadersJoined() -> String
 ```
 
-###### isOriginAllowed()
+#### isOriginAllowed()
 
 Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -213,7 +213,7 @@ Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 public func isOriginAllowed(origin: String) -> Bool
 ```
 
-###### isMethodAllowed()
+#### isMethodAllowed()
 
 Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -223,7 +223,7 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 public func isMethodAllowed(method: String) -> Bool
 ```
 
-###### areHeadersAllowed()
+#### areHeadersAllowed()
 
 Check if all requested headers are allowed (O(n) where n = num requested headers)
 
@@ -233,7 +233,7 @@ Check if all requested headers are allowed (O(n) where n = num requested headers
 public func areHeadersAllowed(requested: [String]) -> Bool
 ```
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -253,9 +253,9 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 | `complexityLimit`      | `UInt64?` | `null`  | Maximum query complexity (None = unlimited) |
 | `depthLimit`           | `UInt64?` | `null`  | Maximum query depth (None = unlimited)      |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -272,9 +272,9 @@ Configuration for GraphQL routes
 Provides a builder pattern for configuring GraphQL route parameters
 for the Spikard HTTP server's routing system.
 
-##### Methods
+### Methods
 
-###### path()
+#### path()
 
 Set the HTTP path for the GraphQL endpoint
 
@@ -284,7 +284,7 @@ Set the HTTP path for the GraphQL endpoint
 public func path(path: String) -> GraphQlRouteConfig
 ```
 
-###### method()
+#### method()
 
 Set the HTTP method for the GraphQL endpoint
 
@@ -294,7 +294,7 @@ Set the HTTP method for the GraphQL endpoint
 public func method(method: String) -> GraphQlRouteConfig
 ```
 
-###### enablePlayground()
+#### enablePlayground()
 
 Enable or disable the GraphQL Playground UI
 
@@ -304,7 +304,7 @@ Enable or disable the GraphQL Playground UI
 public func enablePlayground(enable: Bool) -> GraphQlRouteConfig
 ```
 
-###### description()
+#### description()
 
 Set a custom description for documentation
 
@@ -314,7 +314,7 @@ Set a custom description for documentation
 public func description(description: String) -> GraphQlRouteConfig
 ```
 
-###### getPath()
+#### getPath()
 
 Get the configured path
 
@@ -324,7 +324,7 @@ Get the configured path
 public func getPath() -> String
 ```
 
-###### getMethod()
+#### getMethod()
 
 Get the configured method
 
@@ -334,7 +334,7 @@ Get the configured method
 public func getMethod() -> String
 ```
 
-###### isPlaygroundEnabled()
+#### isPlaygroundEnabled()
 
 Check if playground is enabled
 
@@ -344,7 +344,7 @@ Check if playground is enabled
 public func isPlaygroundEnabled() -> Bool
 ```
 
-###### getDescription()
+#### getDescription()
 
 Get the description if set
 
@@ -354,7 +354,7 @@ Get the description if set
 public func getDescription() -> String?
 ```
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -385,7 +385,7 @@ Configuration for gRPC support
 Controls how the server handles gRPC requests, including compression,
 timeouts, and protocol settings.
 
-## Stream Limits
+### Stream Limits
 
 This configuration enforces message-level size limits but delegates
 concurrent stream limiting to the HTTP/2 transport layer:
@@ -430,7 +430,7 @@ public static func default() -> GrpcConfig
 
 ---
 
-##### JsonRpcConfig
+#### JsonRpcConfig
 
 JSON-RPC server configuration
 
@@ -441,9 +441,9 @@ JSON-RPC server configuration
 | `enableBatch`  | `Bool`   | —       | Enable batch request processing (default: true)            |
 | `maxBatchSize` | `UInt64` | —       | Maximum number of requests in a batch (default: 100)       |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -453,7 +453,7 @@ public static func default() -> JsonRpcConfig
 
 ---
 
-##### JsonRpcMethodInfo
+#### JsonRpcMethodInfo
 
 JSON-RPC method metadata for routes that support JSON-RPC
 
@@ -471,7 +471,7 @@ enabling discovery and documentation of RPC-compatible endpoints.
 
 ---
 
-##### JwtConfig
+#### JwtConfig
 
 JWT authentication configuration
 
@@ -485,7 +485,7 @@ JWT authentication configuration
 
 ---
 
-##### LicenseInfo
+#### LicenseInfo
 
 License information
 
@@ -496,7 +496,7 @@ License information
 
 ---
 
-##### OpenApiConfig
+#### OpenApiConfig
 
 OpenAPI configuration
 
@@ -514,9 +514,9 @@ OpenAPI configuration
 | `servers`         | `[ServerInfo]`                 | `[]`      | Server definitions                                               |
 | `securitySchemes` | `[String: SecuritySchemeInfo]` | `{}`      | Security schemes (auto-detected from middleware if not provided) |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -526,7 +526,7 @@ public static func default() -> OpenApiConfig
 
 ---
 
-##### ParseRequest
+#### ParseRequest
 
 Request body for `POST /asyncapi/parse`
 
@@ -536,7 +536,7 @@ Request body for `POST /asyncapi/parse`
 
 ---
 
-##### ParseResult
+#### ParseResult
 
 Full parse result returned by `POST /asyncapi/parse`
 
@@ -551,7 +551,7 @@ Full parse result returned by `POST /asyncapi/parse`
 
 ---
 
-##### ParsedChannel
+#### ParsedChannel
 
 A single channel extracted from an AsyncAPI spec
 
@@ -564,7 +564,7 @@ A single channel extracted from an AsyncAPI spec
 
 ---
 
-##### ParsedMessage
+#### ParsedMessage
 
 A resolved message (name + JSON Schema)
 
@@ -575,7 +575,7 @@ A resolved message (name + JSON Schema)
 
 ---
 
-##### ParsedOperation
+#### ParsedOperation
 
 A single operation extracted from an AsyncAPI spec
 
@@ -587,7 +587,7 @@ A single operation extracted from an AsyncAPI spec
 
 ---
 
-##### ProblemDetails
+#### ProblemDetails
 
 RFC 9457 Problem Details for HTTP APIs
 
@@ -595,7 +595,7 @@ A machine-readable format for specifying errors in HTTP API responses.
 Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
 if not specified.
 
-## Content-Type
+### Content-Type
 
 Responses using this struct should set:
 
@@ -634,7 +634,7 @@ Set the detail field
 public func withDetail(detail: String) -> ProblemDetails
 ```
 
-##### withInstance()
+#### withInstance()
 
 Set the instance field
 
@@ -644,7 +644,7 @@ Set the instance field
 public func withInstance(instance: String) -> ProblemDetails
 ```
 
-###### notFound()
+#### notFound()
 
 Create a not found error
 
@@ -654,7 +654,7 @@ Create a not found error
 public static func notFound(detail: String) -> ProblemDetails
 ```
 
-###### methodNotAllowed()
+#### methodNotAllowed()
 
 Create a method not allowed error
 
@@ -664,7 +664,7 @@ Create a method not allowed error
 public static func methodNotAllowed(detail: String) -> ProblemDetails
 ```
 
-###### internalServerError()
+#### internalServerError()
 
 Create an internal server error
 
@@ -674,7 +674,7 @@ Create an internal server error
 public static func internalServerError(detail: String) -> ProblemDetails
 ```
 
-###### badRequest()
+#### badRequest()
 
 Create a bad request error
 
@@ -684,7 +684,7 @@ Create a bad request error
 public static func badRequest(detail: String) -> ProblemDetails
 ```
 
-###### toJson()
+#### toJson()
 
 Serialize to JSON string
 
@@ -697,7 +697,7 @@ Returns an error if the serialization fails.
 public func toJson() throws -> String
 ```
 
-###### toJsonPretty()
+#### toJsonPretty()
 
 Serialize to pretty JSON string
 
@@ -712,7 +712,7 @@ public func toJsonPretty() throws -> String
 
 ---
 
-##### QueryMutationConfig
+#### QueryMutationConfig
 
 Configuration for schemas with Query and Mutation types
 
@@ -722,9 +722,9 @@ Configuration for schemas with Query and Mutation types
 | `complexityLimit`      | `UInt64?` | `null`  | Maximum query complexity (None = unlimited) |
 | `depthLimit`           | `UInt64?` | `null`  | Maximum query depth (None = unlimited)      |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -734,7 +734,7 @@ public static func default() -> QueryMutationConfig
 
 ---
 
-##### QueryOnlyConfig
+#### QueryOnlyConfig
 
 Configuration for schemas with only Query type
 
@@ -744,9 +744,9 @@ Configuration for schemas with only Query type
 | `complexityLimit`      | `UInt64?` | `null`  | Maximum query complexity (None = unlimited) |
 | `depthLimit`           | `UInt64?` | `null`  | Maximum query depth (None = unlimited)      |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -756,7 +756,7 @@ public static func default() -> QueryOnlyConfig
 
 ---
 
-##### RateLimitConfig
+#### RateLimitConfig
 
 Rate limiting configuration shared across runtimes
 
@@ -766,9 +766,9 @@ Rate limiting configuration shared across runtimes
 | `burst`     | `UInt32` | `200`   | Burst allowance            |
 | `ipBased`   | `Bool`   | `true`  | Use IP-based rate limiting |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -778,7 +778,7 @@ public static func default() -> RateLimitConfig
 
 ---
 
-##### Response
+#### Response
 
 HTTP Response with custom status code, headers, and content
 
@@ -788,9 +788,9 @@ HTTP Response with custom status code, headers, and content
 | `statusCode` | `UInt16`           | —       | HTTP status code (defaults to 200) |
 | `headers`    | `[String: String]` | `{}`    | Response headers                   |
 
-###### Methods
+### Methods
 
-###### setHeader()
+#### setHeader()
 
 Set a header
 
@@ -800,7 +800,7 @@ Set a header
 public func setHeader(key: String, value: String)
 ```
 
-###### setCookie()
+#### setCookie()
 
 Set a cookie in the response
 
@@ -810,7 +810,7 @@ Set a cookie in the response
 public func setCookie(key: String, value: String, secure: Bool, httpOnly: Bool, maxAge: Int64? = nil, domain: String? = nil, path: String? = nil, sameSite: String? = nil)
 ```
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -820,7 +820,7 @@ public static func default() -> Response
 
 ---
 
-##### ResponseSnapshot
+#### ResponseSnapshot
 
 Snapshot of an Axum response used by higher-level language bindings.
 
@@ -830,9 +830,9 @@ Snapshot of an Axum response used by higher-level language bindings.
 | `headers` | `[String: String]` | —       | Response headers (lowercase keys for predictable lookups). |
 | `body`    | `Data`             | —       | Response body bytes (decoded for supported encodings).     |
 
-###### Methods
+### Methods
 
-###### text()
+#### text()
 
 Return response body as UTF-8 string.
 
@@ -842,7 +842,7 @@ Return response body as UTF-8 string.
 public func text() throws -> String
 ```
 
-###### header()
+#### header()
 
 Lookup header by case-insensitive name.
 
@@ -854,7 +854,7 @@ public func header(name: String) -> String?
 
 ---
 
-##### SchemaConfig
+#### SchemaConfig
 
 Configuration for GraphQL schema building.
 
@@ -867,9 +867,9 @@ introspection control, complexity limits, and depth limits.
 | `complexityLimit`      | `UInt64?` | `null`  | Maximum query complexity (None = unlimited) |
 | `depthLimit`           | `UInt64?` | `null`  | Maximum query depth (None = unlimited)      |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -879,7 +879,7 @@ public static func default() -> SchemaConfig
 
 ---
 
-##### ServerConfig
+#### ServerConfig
 
 Server configuration
 
@@ -907,9 +907,9 @@ Server configuration
 | `enableHttpTrace`  | `Bool`                 | `false`       | Enable per-request HTTP tracing (tower-http `TraceLayer`)                      |
 | `diContainer`      | `String?`              | `null`        | Dependency injection container (requires 'di' feature)                         |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -919,7 +919,7 @@ public static func default() -> ServerConfig
 
 ---
 
-##### ServerInfo
+#### ServerInfo
 
 Server information
 
@@ -930,14 +930,14 @@ Server information
 
 ---
 
-##### SseEvent
+#### SseEvent
 
 An individual SSE event
 
 Represents a single Server-Sent Event to be sent to a connected client.
 Events can have an optional type, ID, and retry timeout for advanced scenarios.
 
-## SSE Format
+### SSE Format
 
 Events are serialized to the following text format:
 
@@ -970,7 +970,7 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 public func withId(id: String) -> SseEvent
 ```
 
-##### withRetry()
+#### withRetry()
 
 Set the retry timeout for client reconnection
 
@@ -985,7 +985,7 @@ public func withRetry(retryMs: UInt64) -> SseEvent
 
 ---
 
-##### StaticFilesConfig
+#### StaticFilesConfig
 
 Static file serving configuration
 
@@ -998,7 +998,7 @@ Static file serving configuration
 
 ---
 
-##### TestClient
+#### TestClient
 
 Core test client for making HTTP requests to a Spikard application.
 
@@ -1007,9 +1007,9 @@ interface for making HTTP requests, sending WebSocket connections, and
 handling Server-Sent Events. Language bindings wrap this to provide
 native API surfaces.
 
-###### Methods
+### Methods
 
-###### get()
+#### get()
 
 Make a GET request
 
@@ -1019,7 +1019,7 @@ Make a GET request
 public func get(path: String, queryParams: [String]? = nil, headers: [String]? = nil) throws -> ResponseSnapshot
 ```
 
-###### post()
+#### post()
 
 Make a POST request
 
@@ -1029,7 +1029,7 @@ Make a POST request
 public func post(path: String, json: String? = nil, formData: [String]? = nil, multipart: String, queryParams: [String]? = nil, headers: [String]? = nil) throws -> ResponseSnapshot
 ```
 
-###### requestRaw()
+#### requestRaw()
 
 Make a request with a raw body payload.
 
@@ -1039,7 +1039,7 @@ Make a request with a raw body payload.
 public func requestRaw(method: Method, path: String, body: Data, queryParams: [String]? = nil, headers: [String]? = nil) throws -> ResponseSnapshot
 ```
 
-###### put()
+#### put()
 
 Make a PUT request
 
@@ -1049,7 +1049,7 @@ Make a PUT request
 public func put(path: String, json: String? = nil, queryParams: [String]? = nil, headers: [String]? = nil) throws -> ResponseSnapshot
 ```
 
-###### patch()
+#### patch()
 
 Make a PATCH request
 
@@ -1059,7 +1059,7 @@ Make a PATCH request
 public func patch(path: String, json: String? = nil, queryParams: [String]? = nil, headers: [String]? = nil) throws -> ResponseSnapshot
 ```
 
-###### delete()
+#### delete()
 
 Make a DELETE request
 
@@ -1069,7 +1069,7 @@ Make a DELETE request
 public func delete(path: String, queryParams: [String]? = nil, headers: [String]? = nil) throws -> ResponseSnapshot
 ```
 
-###### options()
+#### options()
 
 Make an OPTIONS request
 
@@ -1079,7 +1079,7 @@ Make an OPTIONS request
 public func options(path: String, queryParams: [String]? = nil, headers: [String]? = nil) throws -> ResponseSnapshot
 ```
 
-###### head()
+#### head()
 
 Make a HEAD request
 
@@ -1089,7 +1089,7 @@ Make a HEAD request
 public func head(path: String, queryParams: [String]? = nil, headers: [String]? = nil) throws -> ResponseSnapshot
 ```
 
-###### trace()
+#### trace()
 
 Make a TRACE request
 
@@ -1099,7 +1099,7 @@ Make a TRACE request
 public func trace(path: String, queryParams: [String]? = nil, headers: [String]? = nil) throws -> ResponseSnapshot
 ```
 
-###### graphqlAt()
+#### graphqlAt()
 
 Send a GraphQL query/mutation to a custom endpoint
 
@@ -1109,7 +1109,7 @@ Send a GraphQL query/mutation to a custom endpoint
 public func graphqlAt(endpoint: String, query: String, variables: String? = nil, operationName: String? = nil) throws -> ResponseSnapshot
 ```
 
-###### graphql()
+#### graphql()
 
 Send a GraphQL query/mutation
 
@@ -1119,7 +1119,7 @@ Send a GraphQL query/mutation
 public func graphql(query: String, variables: String? = nil, operationName: String? = nil) throws -> ResponseSnapshot
 ```
 
-###### graphqlWithStatus()
+#### graphqlWithStatus()
 
 Send a GraphQL query and return HTTP status code separately
 
@@ -1134,7 +1134,7 @@ This method allows tests to distinguish between:
 public func graphqlWithStatus(query: String, variables: String? = nil, operationName: String? = nil) throws -> String
 ```
 
-###### graphqlSubscriptionAt()
+#### graphqlSubscriptionAt()
 
 Send a GraphQL subscription (WebSocket) to a custom endpoint.
 
@@ -1147,7 +1147,7 @@ After the first payload is received, this client sends `complete` to unsubscribe
 public func graphqlSubscriptionAt(endpoint: String, query: String, variables: String? = nil, operationName: String? = nil) throws -> GraphQlSubscriptionSnapshot
 ```
 
-###### graphqlSubscription()
+#### graphqlSubscription()
 
 Send a GraphQL subscription (WebSocket).
 
@@ -1161,7 +1161,7 @@ public func graphqlSubscription(query: String, variables: String? = nil, operati
 
 ---
 
-##### TestingSseEvent
+#### TestingSseEvent
 
 A single Server-Sent Event.
 
@@ -1171,7 +1171,7 @@ A single Server-Sent Event.
 
 ---
 
-##### UploadFile
+#### UploadFile
 
 Represents an uploaded file from multipart/form-data requests.
 
@@ -1187,9 +1187,9 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `contentEncoding` | `String?` | `null`  | Content encoding type                    |
 | `cursor`          | `String`  | —       | Internal cursor for Read/Seek operations |
 
-###### Methods
+### Methods
 
-###### asBytes()
+#### asBytes()
 
 Get the raw file content as bytes.
 
@@ -1201,7 +1201,7 @@ This provides zero-copy access to the underlying buffer.
 public func asBytes() -> Data
 ```
 
-###### readToString()
+#### readToString()
 
 Read the file content as a UTF-8 string.
 
@@ -1215,7 +1215,7 @@ Returns an error if the content is not valid UTF-8.
 public func readToString() throws -> String
 ```
 
-###### contentTypeOrDefault()
+#### contentTypeOrDefault()
 
 Get the content type, defaulting to "application/octet-stream".
 
@@ -1227,7 +1227,7 @@ public func contentTypeOrDefault() -> String
 
 ---
 
-##### ValidateRequest
+#### ValidateRequest
 
 Request body for `POST /asyncapi/validate`
 
@@ -1240,7 +1240,7 @@ Request body for `POST /asyncapi/validate`
 
 ---
 
-##### ValidationResponse
+#### ValidationResponse
 
 Response body for `POST /asyncapi/validate`
 
@@ -1251,9 +1251,9 @@ Response body for `POST /asyncapi/validate`
 
 ---
 
-#### Enums
+### Enums
 
-##### SnapshotError
+#### SnapshotError
 
 Possible errors while converting an Axum response into a snapshot.
 
@@ -1264,7 +1264,7 @@ Possible errors while converting an Axum response into a snapshot.
 
 ---
 
-##### WebSocketMessage
+#### WebSocketMessage
 
 A WebSocket message that can be text or binary.
 
@@ -1278,7 +1278,7 @@ A WebSocket message that can be text or binary.
 
 ---
 
-##### Method
+#### Method
 
 HTTP method
 
@@ -1295,7 +1295,7 @@ HTTP method
 
 ---
 
-##### SecuritySchemeInfo
+#### SecuritySchemeInfo
 
 Security scheme types
 
@@ -1306,9 +1306,9 @@ Security scheme types
 
 ---
 
-#### Errors
+### Errors
 
-##### GraphQlError
+#### GraphQlError
 
 Errors that can occur during GraphQL operations
 
@@ -1335,7 +1335,7 @@ converted to structured HTTP responses matching the project's error fixtures.
 
 ---
 
-##### SchemaError
+#### SchemaError
 
 Error type for schema building operations
 

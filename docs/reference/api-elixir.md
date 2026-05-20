@@ -100,9 +100,9 @@ AsyncAPI HTTP endpoint configuration
 | `name`       | `String.t()`        | —       | The name    |
 | `request_id` | `String.t() \| nil` | `nil`   | Request id  |
 
-##### Functions
+### Functions
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -122,9 +122,9 @@ Configuration for in-process background task execution.
 | `max_concurrent_tasks` | `integer()` | `128`   | Maximum concurrent tasks |
 | `drain_timeout_secs`   | `integer()` | `30`    | Drain timeout secs       |
 
-##### Functions
+### Functions
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -145,9 +145,9 @@ Compression configuration shared across runtimes
 | `min_size` | `integer()` | —       | Minimum response size to compress (bytes)           |
 | `quality`  | `integer()` | —       | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
-##### Functions
+### Functions
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -184,9 +184,9 @@ CORS configuration for a route
 | `methods_joined_cache` | `String.t()`              | —       | Methods joined cache |
 | `headers_joined_cache` | `String.t()`              | —       | Headers joined cache |
 
-##### Functions
+### Functions
 
-###### allowed_methods_joined()
+#### allowed_methods_joined()
 
 Get the cached joined methods string for preflight responses
 
@@ -196,7 +196,7 @@ Get the cached joined methods string for preflight responses
 def allowed_methods_joined()
 ```
 
-###### allowed_headers_joined()
+#### allowed_headers_joined()
 
 Get the cached joined headers string for preflight responses
 
@@ -206,7 +206,7 @@ Get the cached joined headers string for preflight responses
 def allowed_headers_joined()
 ```
 
-###### is_origin_allowed()
+#### is_origin_allowed()
 
 Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -216,7 +216,7 @@ Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 def is_origin_allowed(origin)
 ```
 
-###### is_method_allowed()
+#### is_method_allowed()
 
 Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -226,7 +226,7 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 def is_method_allowed(method)
 ```
 
-###### are_headers_allowed()
+#### are_headers_allowed()
 
 Check if all requested headers are allowed (O(n) where n = num requested headers)
 
@@ -236,7 +236,7 @@ Check if all requested headers are allowed (O(n) where n = num requested headers
 def are_headers_allowed(requested)
 ```
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -256,9 +256,9 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 | `complexity_limit`      | `integer() \| nil` | `nil`   | Maximum query complexity (None = unlimited) |
 | `depth_limit`           | `integer() \| nil` | `nil`   | Maximum query depth (None = unlimited)      |
 
-##### Functions
+### Functions
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -275,9 +275,9 @@ Configuration for GraphQL routes
 Provides a builder pattern for configuring GraphQL route parameters
 for the Spikard HTTP server's routing system.
 
-##### Functions
+### Functions
 
-###### path()
+#### path()
 
 Set the HTTP path for the GraphQL endpoint
 
@@ -287,7 +287,7 @@ Set the HTTP path for the GraphQL endpoint
 def path(path)
 ```
 
-###### method()
+#### method()
 
 Set the HTTP method for the GraphQL endpoint
 
@@ -297,7 +297,7 @@ Set the HTTP method for the GraphQL endpoint
 def method(method)
 ```
 
-###### enable_playground()
+#### enable_playground()
 
 Enable or disable the GraphQL Playground UI
 
@@ -307,7 +307,7 @@ Enable or disable the GraphQL Playground UI
 def enable_playground(enable)
 ```
 
-###### description()
+#### description()
 
 Set a custom description for documentation
 
@@ -317,7 +317,7 @@ Set a custom description for documentation
 def description(description)
 ```
 
-###### get_path()
+#### get_path()
 
 Get the configured path
 
@@ -327,7 +327,7 @@ Get the configured path
 def get_path()
 ```
 
-###### get_method()
+#### get_method()
 
 Get the configured method
 
@@ -337,7 +337,7 @@ Get the configured method
 def get_method()
 ```
 
-###### is_playground_enabled()
+#### is_playground_enabled()
 
 Check if playground is enabled
 
@@ -347,7 +347,7 @@ Check if playground is enabled
 def is_playground_enabled()
 ```
 
-###### get_description()
+#### get_description()
 
 Get the description if set
 
@@ -357,7 +357,7 @@ Get the description if set
 def get_description()
 ```
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -388,7 +388,7 @@ Configuration for gRPC support
 Controls how the server handles gRPC requests, including compression,
 timeouts, and protocol settings.
 
-## Stream Limits
+### Stream Limits
 
 This configuration enforces message-level size limits but delegates
 concurrent stream limiting to the HTTP/2 transport layer:
@@ -433,7 +433,7 @@ def default()
 
 ---
 
-##### JsonRpcConfig
+#### JsonRpcConfig
 
 JSON-RPC server configuration
 
@@ -444,9 +444,9 @@ JSON-RPC server configuration
 | `enable_batch`   | `boolean()`  | —       | Enable batch request processing (default: true)            |
 | `max_batch_size` | `integer()`  | —       | Maximum number of requests in a batch (default: 100)       |
 
-###### Functions
+### Functions
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -456,7 +456,7 @@ def default()
 
 ---
 
-##### JsonRpcMethodInfo
+#### JsonRpcMethodInfo
 
 JSON-RPC method metadata for routes that support JSON-RPC
 
@@ -474,7 +474,7 @@ enabling discovery and documentation of RPC-compatible endpoints.
 
 ---
 
-##### JwtConfig
+#### JwtConfig
 
 JWT authentication configuration
 
@@ -488,7 +488,7 @@ JWT authentication configuration
 
 ---
 
-##### LicenseInfo
+#### LicenseInfo
 
 License information
 
@@ -499,7 +499,7 @@ License information
 
 ---
 
-##### OpenApiConfig
+#### OpenApiConfig
 
 OpenAPI configuration
 
@@ -517,9 +517,9 @@ OpenAPI configuration
 | `servers`           | `list(ServerInfo)`   | `[]`      | Server definitions                                               |
 | `security_schemes`  | `map()`              | `%{}`     | Security schemes (auto-detected from middleware if not provided) |
 
-###### Functions
+### Functions
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -529,7 +529,7 @@ def default()
 
 ---
 
-##### ParseRequest
+#### ParseRequest
 
 Request body for `POST /asyncapi/parse`
 
@@ -539,7 +539,7 @@ Request body for `POST /asyncapi/parse`
 
 ---
 
-##### ParseResult
+#### ParseResult
 
 Full parse result returned by `POST /asyncapi/parse`
 
@@ -554,7 +554,7 @@ Full parse result returned by `POST /asyncapi/parse`
 
 ---
 
-##### ParsedChannel
+#### ParsedChannel
 
 A single channel extracted from an AsyncAPI spec
 
@@ -567,7 +567,7 @@ A single channel extracted from an AsyncAPI spec
 
 ---
 
-##### ParsedMessage
+#### ParsedMessage
 
 A resolved message (name + JSON Schema)
 
@@ -578,7 +578,7 @@ A resolved message (name + JSON Schema)
 
 ---
 
-##### ParsedOperation
+#### ParsedOperation
 
 A single operation extracted from an AsyncAPI spec
 
@@ -590,7 +590,7 @@ A single operation extracted from an AsyncAPI spec
 
 ---
 
-##### ProblemDetails
+#### ProblemDetails
 
 RFC 9457 Problem Details for HTTP APIs
 
@@ -598,7 +598,7 @@ A machine-readable format for specifying errors in HTTP API responses.
 Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
 if not specified.
 
-## Content-Type
+### Content-Type
 
 Responses using this struct should set:
 
@@ -637,7 +637,7 @@ Set the detail field
 def with_detail(detail)
 ```
 
-##### with_instance()
+#### with_instance()
 
 Set the instance field
 
@@ -647,7 +647,7 @@ Set the instance field
 def with_instance(instance)
 ```
 
-###### not_found()
+#### not_found()
 
 Create a not found error
 
@@ -657,7 +657,7 @@ Create a not found error
 def not_found(detail)
 ```
 
-###### method_not_allowed()
+#### method_not_allowed()
 
 Create a method not allowed error
 
@@ -667,7 +667,7 @@ Create a method not allowed error
 def method_not_allowed(detail)
 ```
 
-###### internal_server_error()
+#### internal_server_error()
 
 Create an internal server error
 
@@ -677,7 +677,7 @@ Create an internal server error
 def internal_server_error(detail)
 ```
 
-###### bad_request()
+#### bad_request()
 
 Create a bad request error
 
@@ -687,7 +687,7 @@ Create a bad request error
 def bad_request(detail)
 ```
 
-###### to_json()
+#### to_json()
 
 Serialize to JSON string
 
@@ -700,7 +700,7 @@ Returns an error if the serialization fails.
 def to_json()
 ```
 
-###### to_json_pretty()
+#### to_json_pretty()
 
 Serialize to pretty JSON string
 
@@ -715,7 +715,7 @@ def to_json_pretty()
 
 ---
 
-##### QueryMutationConfig
+#### QueryMutationConfig
 
 Configuration for schemas with Query and Mutation types
 
@@ -725,9 +725,9 @@ Configuration for schemas with Query and Mutation types
 | `complexity_limit`      | `integer() \| nil` | `nil`   | Maximum query complexity (None = unlimited) |
 | `depth_limit`           | `integer() \| nil` | `nil`   | Maximum query depth (None = unlimited)      |
 
-###### Functions
+### Functions
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -737,7 +737,7 @@ def default()
 
 ---
 
-##### QueryOnlyConfig
+#### QueryOnlyConfig
 
 Configuration for schemas with only Query type
 
@@ -747,9 +747,9 @@ Configuration for schemas with only Query type
 | `complexity_limit`      | `integer() \| nil` | `nil`   | Maximum query complexity (None = unlimited) |
 | `depth_limit`           | `integer() \| nil` | `nil`   | Maximum query depth (None = unlimited)      |
 
-###### Functions
+### Functions
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -759,7 +759,7 @@ def default()
 
 ---
 
-##### RateLimitConfig
+#### RateLimitConfig
 
 Rate limiting configuration shared across runtimes
 
@@ -769,9 +769,9 @@ Rate limiting configuration shared across runtimes
 | `burst`      | `integer()` | `200`   | Burst allowance            |
 | `ip_based`   | `boolean()` | `true`  | Use IP-based rate limiting |
 
-###### Functions
+### Functions
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -781,7 +781,7 @@ def default()
 
 ---
 
-##### Response
+#### Response
 
 HTTP Response with custom status code, headers, and content
 
@@ -791,9 +791,9 @@ HTTP Response with custom status code, headers, and content
 | `status_code` | `integer()`     | —       | HTTP status code (defaults to 200) |
 | `headers`     | `map()`         | `%{}`   | Response headers                   |
 
-###### Functions
+### Functions
 
-###### set_header()
+#### set_header()
 
 Set a header
 
@@ -803,7 +803,7 @@ Set a header
 def set_header(key, value)
 ```
 
-###### set_cookie()
+#### set_cookie()
 
 Set a cookie in the response
 
@@ -813,7 +813,7 @@ Set a cookie in the response
 def set_cookie(key, value, secure, http_only, max_age, domain, path, same_site)
 ```
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -823,7 +823,7 @@ def default()
 
 ---
 
-##### ResponseSnapshot
+#### ResponseSnapshot
 
 Snapshot of an Axum response used by higher-level language bindings.
 
@@ -833,9 +833,9 @@ Snapshot of an Axum response used by higher-level language bindings.
 | `headers` | `map()`     | —       | Response headers (lowercase keys for predictable lookups). |
 | `body`    | `binary()`  | —       | Response body bytes (decoded for supported encodings).     |
 
-###### Functions
+### Functions
 
-###### text()
+#### text()
 
 Return response body as UTF-8 string.
 
@@ -845,7 +845,7 @@ Return response body as UTF-8 string.
 def text()
 ```
 
-###### header()
+#### header()
 
 Lookup header by case-insensitive name.
 
@@ -857,7 +857,7 @@ def header(name)
 
 ---
 
-##### SchemaConfig
+#### SchemaConfig
 
 Configuration for GraphQL schema building.
 
@@ -870,9 +870,9 @@ introspection control, complexity limits, and depth limits.
 | `complexity_limit`      | `integer() \| nil` | `nil`   | Maximum query complexity (None = unlimited) |
 | `depth_limit`           | `integer() \| nil` | `nil`   | Maximum query depth (None = unlimited)      |
 
-###### Functions
+### Functions
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -882,7 +882,7 @@ def default()
 
 ---
 
-##### ServerConfig
+#### ServerConfig
 
 Server configuration
 
@@ -910,9 +910,9 @@ Server configuration
 | `enable_http_trace` | `boolean()`                | `false`       | Enable per-request HTTP tracing (tower-http `TraceLayer`)                      |
 | `di_container`      | `String.t() \| nil`        | `nil`         | Dependency injection container (requires 'di' feature)                         |
 
-###### Functions
+### Functions
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -922,7 +922,7 @@ def default()
 
 ---
 
-##### ServerInfo
+#### ServerInfo
 
 Server information
 
@@ -933,14 +933,14 @@ Server information
 
 ---
 
-##### SseEvent
+#### SseEvent
 
 An individual SSE event
 
 Represents a single Server-Sent Event to be sent to a connected client.
 Events can have an optional type, ID, and retry timeout for advanced scenarios.
 
-## SSE Format
+### SSE Format
 
 Events are serialized to the following text format:
 
@@ -973,7 +973,7 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 def with_id(id)
 ```
 
-##### with_retry()
+#### with_retry()
 
 Set the retry timeout for client reconnection
 
@@ -988,7 +988,7 @@ def with_retry(retry_ms)
 
 ---
 
-##### StaticFilesConfig
+#### StaticFilesConfig
 
 Static file serving configuration
 
@@ -1001,7 +1001,7 @@ Static file serving configuration
 
 ---
 
-##### TestingSseEvent
+#### TestingSseEvent
 
 A single Server-Sent Event.
 
@@ -1011,7 +1011,7 @@ A single Server-Sent Event.
 
 ---
 
-##### ValidateRequest
+#### ValidateRequest
 
 Request body for `POST /asyncapi/validate`
 
@@ -1024,7 +1024,7 @@ Request body for `POST /asyncapi/validate`
 
 ---
 
-##### ValidationResponse
+#### ValidationResponse
 
 Response body for `POST /asyncapi/validate`
 
@@ -1035,9 +1035,9 @@ Response body for `POST /asyncapi/validate`
 
 ---
 
-#### Enums
+### Enums
 
-##### SnapshotError
+#### SnapshotError
 
 Possible errors while converting an Axum response into a snapshot.
 
@@ -1048,7 +1048,7 @@ Possible errors while converting an Axum response into a snapshot.
 
 ---
 
-##### WebSocketMessage
+#### WebSocketMessage
 
 A WebSocket message that can be text or binary.
 
@@ -1062,7 +1062,7 @@ A WebSocket message that can be text or binary.
 
 ---
 
-##### Method
+#### Method
 
 HTTP method
 
@@ -1079,7 +1079,7 @@ HTTP method
 
 ---
 
-##### SecuritySchemeInfo
+#### SecuritySchemeInfo
 
 Security scheme types
 
@@ -1090,9 +1090,9 @@ Security scheme types
 
 ---
 
-#### Errors
+### Errors
 
-##### GraphQlError
+#### GraphQlError
 
 Errors that can occur during GraphQL operations
 
@@ -1119,7 +1119,7 @@ converted to structured HTTP responses matching the project's error fixtures.
 
 ---
 
-##### SchemaError
+#### SchemaError
 
 Error type for schema building operations
 

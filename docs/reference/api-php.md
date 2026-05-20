@@ -97,9 +97,9 @@ AsyncAPI HTTP endpoint configuration
 | `name`      | `string`  | —       | The name    |
 | `requestId` | `?string` | `null`  | Request id  |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -119,9 +119,9 @@ Configuration for in-process background task execution.
 | `maxConcurrentTasks` | `int` | `128`   | Maximum concurrent tasks |
 | `drainTimeoutSecs`   | `int` | `30`    | Drain timeout secs       |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -142,9 +142,9 @@ Compression configuration shared across runtimes
 | `minSize` | `int`  | —       | Minimum response size to compress (bytes)           |
 | `quality` | `int`  | —       | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -181,9 +181,9 @@ CORS configuration for a route
 | `methodsJoinedCache` | `string`         | —       | Methods joined cache |
 | `headersJoinedCache` | `string`         | —       | Headers joined cache |
 
-##### Methods
+### Methods
 
-###### allowedMethodsJoined()
+#### allowedMethodsJoined()
 
 Get the cached joined methods string for preflight responses
 
@@ -193,7 +193,7 @@ Get the cached joined methods string for preflight responses
 public function allowedMethodsJoined(): string
 ```
 
-###### allowedHeadersJoined()
+#### allowedHeadersJoined()
 
 Get the cached joined headers string for preflight responses
 
@@ -203,7 +203,7 @@ Get the cached joined headers string for preflight responses
 public function allowedHeadersJoined(): string
 ```
 
-###### isOriginAllowed()
+#### isOriginAllowed()
 
 Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -213,7 +213,7 @@ Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 public function isOriginAllowed(string $origin): bool
 ```
 
-###### isMethodAllowed()
+#### isMethodAllowed()
 
 Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -223,7 +223,7 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 public function isMethodAllowed(string $method): bool
 ```
 
-###### areHeadersAllowed()
+#### areHeadersAllowed()
 
 Check if all requested headers are allowed (O(n) where n = num requested headers)
 
@@ -233,7 +233,7 @@ Check if all requested headers are allowed (O(n) where n = num requested headers
 public function areHeadersAllowed(array<string> $requested): bool
 ```
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -253,9 +253,9 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 | `complexityLimit`      | `?int` | `null`  | Maximum query complexity (None = unlimited) |
 | `depthLimit`           | `?int` | `null`  | Maximum query depth (None = unlimited)      |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -272,9 +272,9 @@ Configuration for GraphQL routes
 Provides a builder pattern for configuring GraphQL route parameters
 for the Spikard HTTP server's routing system.
 
-##### Methods
+### Methods
 
-###### path()
+#### path()
 
 Set the HTTP path for the GraphQL endpoint
 
@@ -284,7 +284,7 @@ Set the HTTP path for the GraphQL endpoint
 public function path(string $path): GraphQlRouteConfig
 ```
 
-###### method()
+#### method()
 
 Set the HTTP method for the GraphQL endpoint
 
@@ -294,7 +294,7 @@ Set the HTTP method for the GraphQL endpoint
 public function method(string $method): GraphQlRouteConfig
 ```
 
-###### enablePlayground()
+#### enablePlayground()
 
 Enable or disable the GraphQL Playground UI
 
@@ -304,7 +304,7 @@ Enable or disable the GraphQL Playground UI
 public function enablePlayground(bool $enable): GraphQlRouteConfig
 ```
 
-###### description()
+#### description()
 
 Set a custom description for documentation
 
@@ -314,7 +314,7 @@ Set a custom description for documentation
 public function description(string $description): GraphQlRouteConfig
 ```
 
-###### getPath()
+#### getPath()
 
 Get the configured path
 
@@ -324,7 +324,7 @@ Get the configured path
 public function getPath(): string
 ```
 
-###### getMethod()
+#### getMethod()
 
 Get the configured method
 
@@ -334,7 +334,7 @@ Get the configured method
 public function getMethod(): string
 ```
 
-###### isPlaygroundEnabled()
+#### isPlaygroundEnabled()
 
 Check if playground is enabled
 
@@ -344,7 +344,7 @@ Check if playground is enabled
 public function isPlaygroundEnabled(): bool
 ```
 
-###### getDescription()
+#### getDescription()
 
 Get the description if set
 
@@ -354,7 +354,7 @@ Get the description if set
 public function getDescription(): ?string
 ```
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -385,7 +385,7 @@ Configuration for gRPC support
 Controls how the server handles gRPC requests, including compression,
 timeouts, and protocol settings.
 
-## Stream Limits
+### Stream Limits
 
 This configuration enforces message-level size limits but delegates
 concurrent stream limiting to the HTTP/2 transport layer:
@@ -430,7 +430,7 @@ public static function default(): GrpcConfig
 
 ---
 
-##### JsonRpcConfig
+#### JsonRpcConfig
 
 JSON-RPC server configuration
 
@@ -441,9 +441,9 @@ JSON-RPC server configuration
 | `enableBatch`  | `bool`   | —       | Enable batch request processing (default: true)            |
 | `maxBatchSize` | `int`    | —       | Maximum number of requests in a batch (default: 100)       |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -453,7 +453,7 @@ public static function default(): JsonRpcConfig
 
 ---
 
-##### JsonRpcMethodInfo
+#### JsonRpcMethodInfo
 
 JSON-RPC method metadata for routes that support JSON-RPC
 
@@ -471,7 +471,7 @@ enabling discovery and documentation of RPC-compatible endpoints.
 
 ---
 
-##### JwtConfig
+#### JwtConfig
 
 JWT authentication configuration
 
@@ -485,7 +485,7 @@ JWT authentication configuration
 
 ---
 
-##### LicenseInfo
+#### LicenseInfo
 
 License information
 
@@ -496,7 +496,7 @@ License information
 
 ---
 
-##### OpenApiConfig
+#### OpenApiConfig
 
 OpenAPI configuration
 
@@ -514,9 +514,9 @@ OpenAPI configuration
 | `servers`         | `array<ServerInfo>`                 | `[]`      | Server definitions                                               |
 | `securitySchemes` | `array<string, SecuritySchemeInfo>` | `{}`      | Security schemes (auto-detected from middleware if not provided) |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -526,7 +526,7 @@ public static function default(): OpenApiConfig
 
 ---
 
-##### ParseRequest
+#### ParseRequest
 
 Request body for `POST /asyncapi/parse`
 
@@ -536,7 +536,7 @@ Request body for `POST /asyncapi/parse`
 
 ---
 
-##### ParseResult
+#### ParseResult
 
 Full parse result returned by `POST /asyncapi/parse`
 
@@ -551,7 +551,7 @@ Full parse result returned by `POST /asyncapi/parse`
 
 ---
 
-##### ParsedChannel
+#### ParsedChannel
 
 A single channel extracted from an AsyncAPI spec
 
@@ -564,7 +564,7 @@ A single channel extracted from an AsyncAPI spec
 
 ---
 
-##### ParsedMessage
+#### ParsedMessage
 
 A resolved message (name + JSON Schema)
 
@@ -575,7 +575,7 @@ A resolved message (name + JSON Schema)
 
 ---
 
-##### ParsedOperation
+#### ParsedOperation
 
 A single operation extracted from an AsyncAPI spec
 
@@ -587,7 +587,7 @@ A single operation extracted from an AsyncAPI spec
 
 ---
 
-##### ProblemDetails
+#### ProblemDetails
 
 RFC 9457 Problem Details for HTTP APIs
 
@@ -595,7 +595,7 @@ A machine-readable format for specifying errors in HTTP API responses.
 Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
 if not specified.
 
-## Content-Type
+### Content-Type
 
 Responses using this struct should set:
 
@@ -634,7 +634,7 @@ Set the detail field
 public function withDetail(string $detail): ProblemDetails
 ```
 
-##### withInstance()
+#### withInstance()
 
 Set the instance field
 
@@ -644,7 +644,7 @@ Set the instance field
 public function withInstance(string $instance): ProblemDetails
 ```
 
-###### notFound()
+#### notFound()
 
 Create a not found error
 
@@ -654,7 +654,7 @@ Create a not found error
 public static function notFound(string $detail): ProblemDetails
 ```
 
-###### methodNotAllowed()
+#### methodNotAllowed()
 
 Create a method not allowed error
 
@@ -664,7 +664,7 @@ Create a method not allowed error
 public static function methodNotAllowed(string $detail): ProblemDetails
 ```
 
-###### internalServerError()
+#### internalServerError()
 
 Create an internal server error
 
@@ -674,7 +674,7 @@ Create an internal server error
 public static function internalServerError(string $detail): ProblemDetails
 ```
 
-###### badRequest()
+#### badRequest()
 
 Create a bad request error
 
@@ -684,7 +684,7 @@ Create a bad request error
 public static function badRequest(string $detail): ProblemDetails
 ```
 
-###### toJson()
+#### toJson()
 
 Serialize to JSON string
 
@@ -697,7 +697,7 @@ Returns an error if the serialization fails.
 public function toJson(): string
 ```
 
-###### toJsonPretty()
+#### toJsonPretty()
 
 Serialize to pretty JSON string
 
@@ -712,7 +712,7 @@ public function toJsonPretty(): string
 
 ---
 
-##### QueryMutationConfig
+#### QueryMutationConfig
 
 Configuration for schemas with Query and Mutation types
 
@@ -722,9 +722,9 @@ Configuration for schemas with Query and Mutation types
 | `complexityLimit`      | `?int` | `null`  | Maximum query complexity (None = unlimited) |
 | `depthLimit`           | `?int` | `null`  | Maximum query depth (None = unlimited)      |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -734,7 +734,7 @@ public static function default(): QueryMutationConfig
 
 ---
 
-##### QueryOnlyConfig
+#### QueryOnlyConfig
 
 Configuration for schemas with only Query type
 
@@ -744,9 +744,9 @@ Configuration for schemas with only Query type
 | `complexityLimit`      | `?int` | `null`  | Maximum query complexity (None = unlimited) |
 | `depthLimit`           | `?int` | `null`  | Maximum query depth (None = unlimited)      |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -756,7 +756,7 @@ public static function default(): QueryOnlyConfig
 
 ---
 
-##### RateLimitConfig
+#### RateLimitConfig
 
 Rate limiting configuration shared across runtimes
 
@@ -766,9 +766,9 @@ Rate limiting configuration shared across runtimes
 | `burst`     | `int`  | `200`   | Burst allowance            |
 | `ipBased`   | `bool` | `true`  | Use IP-based rate limiting |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -778,7 +778,7 @@ public static function default(): RateLimitConfig
 
 ---
 
-##### Response
+#### Response
 
 HTTP Response with custom status code, headers, and content
 
@@ -788,9 +788,9 @@ HTTP Response with custom status code, headers, and content
 | `statusCode` | `int`                   | —       | HTTP status code (defaults to 200) |
 | `headers`    | `array<string, string>` | `{}`    | Response headers                   |
 
-###### Methods
+### Methods
 
-###### setHeader()
+#### setHeader()
 
 Set a header
 
@@ -800,7 +800,7 @@ Set a header
 public function setHeader(string $key, string $value): void
 ```
 
-###### setCookie()
+#### setCookie()
 
 Set a cookie in the response
 
@@ -810,7 +810,7 @@ Set a cookie in the response
 public function setCookie(string $key, string $value, bool $secure, bool $httpOnly, int $maxAge, string $domain, string $path, string $sameSite): void
 ```
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -820,7 +820,7 @@ public static function default(): Response
 
 ---
 
-##### ResponseSnapshot
+#### ResponseSnapshot
 
 Snapshot of an Axum response used by higher-level language bindings.
 
@@ -830,9 +830,9 @@ Snapshot of an Axum response used by higher-level language bindings.
 | `headers` | `array<string, string>` | —       | Response headers (lowercase keys for predictable lookups). |
 | `body`    | `string`                | —       | Response body bytes (decoded for supported encodings).     |
 
-###### Methods
+### Methods
 
-###### text()
+#### text()
 
 Return response body as UTF-8 string.
 
@@ -842,7 +842,7 @@ Return response body as UTF-8 string.
 public function text(): string
 ```
 
-###### header()
+#### header()
 
 Lookup header by case-insensitive name.
 
@@ -854,7 +854,7 @@ public function header(string $name): ?string
 
 ---
 
-##### SchemaConfig
+#### SchemaConfig
 
 Configuration for GraphQL schema building.
 
@@ -867,9 +867,9 @@ introspection control, complexity limits, and depth limits.
 | `complexityLimit`      | `?int` | `null`  | Maximum query complexity (None = unlimited) |
 | `depthLimit`           | `?int` | `null`  | Maximum query depth (None = unlimited)      |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -879,7 +879,7 @@ public static function default(): SchemaConfig
 
 ---
 
-##### ServerConfig
+#### ServerConfig
 
 Server configuration
 
@@ -907,9 +907,9 @@ Server configuration
 | `enableHttpTrace`  | `bool`                     | `false`       | Enable per-request HTTP tracing (tower-http `TraceLayer`)                      |
 | `diContainer`      | `?string`                  | `null`        | Dependency injection container (requires 'di' feature)                         |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -919,7 +919,7 @@ public static function default(): ServerConfig
 
 ---
 
-##### ServerInfo
+#### ServerInfo
 
 Server information
 
@@ -930,14 +930,14 @@ Server information
 
 ---
 
-##### SseEvent
+#### SseEvent
 
 An individual SSE event
 
 Represents a single Server-Sent Event to be sent to a connected client.
 Events can have an optional type, ID, and retry timeout for advanced scenarios.
 
-## SSE Format
+### SSE Format
 
 Events are serialized to the following text format:
 
@@ -970,7 +970,7 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 public function withId(string $id): SseEvent
 ```
 
-##### withRetry()
+#### withRetry()
 
 Set the retry timeout for client reconnection
 
@@ -985,7 +985,7 @@ public function withRetry(int $retryMs): SseEvent
 
 ---
 
-##### StaticFilesConfig
+#### StaticFilesConfig
 
 Static file serving configuration
 
@@ -998,7 +998,7 @@ Static file serving configuration
 
 ---
 
-##### TestingSseEvent
+#### TestingSseEvent
 
 A single Server-Sent Event.
 
@@ -1008,7 +1008,7 @@ A single Server-Sent Event.
 
 ---
 
-##### UploadFile
+#### UploadFile
 
 Represents an uploaded file from multipart/form-data requests.
 
@@ -1024,9 +1024,9 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `contentEncoding` | `?string` | `null`  | Content encoding type                    |
 | `cursor`          | `string`  | —       | Internal cursor for Read/Seek operations |
 
-###### Methods
+### Methods
 
-###### asBytes()
+#### asBytes()
 
 Get the raw file content as bytes.
 
@@ -1038,7 +1038,7 @@ This provides zero-copy access to the underlying buffer.
 public function asBytes(): string
 ```
 
-###### readToString()
+#### readToString()
 
 Read the file content as a UTF-8 string.
 
@@ -1052,7 +1052,7 @@ Returns an error if the content is not valid UTF-8.
 public function readToString(): string
 ```
 
-###### contentTypeOrDefault()
+#### contentTypeOrDefault()
 
 Get the content type, defaulting to "application/octet-stream".
 
@@ -1064,7 +1064,7 @@ public function contentTypeOrDefault(): string
 
 ---
 
-##### ValidateRequest
+#### ValidateRequest
 
 Request body for `POST /asyncapi/validate`
 
@@ -1077,7 +1077,7 @@ Request body for `POST /asyncapi/validate`
 
 ---
 
-##### ValidationResponse
+#### ValidationResponse
 
 Response body for `POST /asyncapi/validate`
 
@@ -1088,9 +1088,9 @@ Response body for `POST /asyncapi/validate`
 
 ---
 
-#### Enums
+### Enums
 
-##### SnapshotError
+#### SnapshotError
 
 Possible errors while converting an Axum response into a snapshot.
 
@@ -1101,7 +1101,7 @@ Possible errors while converting an Axum response into a snapshot.
 
 ---
 
-##### WebSocketMessage
+#### WebSocketMessage
 
 A WebSocket message that can be text or binary.
 
@@ -1115,7 +1115,7 @@ A WebSocket message that can be text or binary.
 
 ---
 
-##### Method
+#### Method
 
 HTTP method
 
@@ -1132,7 +1132,7 @@ HTTP method
 
 ---
 
-##### SecuritySchemeInfo
+#### SecuritySchemeInfo
 
 Security scheme types
 
@@ -1143,9 +1143,9 @@ Security scheme types
 
 ---
 
-#### Errors
+### Errors
 
-##### GraphQlError
+#### GraphQlError
 
 Errors that can occur during GraphQL operations
 
@@ -1172,7 +1172,7 @@ converted to structured HTTP responses matching the project's error fixtures.
 
 ---
 
-##### SchemaError
+#### SchemaError
 
 Error type for schema building operations
 

@@ -97,9 +97,9 @@ AsyncAPI HTTP endpoint configuration
 | `name`       | `const char*`  | —       | The name    |
 | `request_id` | `const char**` | `NULL`  | Request id  |
 
-##### Methods
+### Methods
 
-###### spikard_default()
+#### spikard_default()
 
 **Signature:**
 
@@ -119,9 +119,9 @@ Configuration for in-process background task execution.
 | `max_concurrent_tasks` | `uintptr_t` | `128`   | Maximum concurrent tasks |
 | `drain_timeout_secs`   | `uint64_t`  | `30`    | Drain timeout secs       |
 
-##### Methods
+### Methods
 
-###### spikard_default()
+#### spikard_default()
 
 **Signature:**
 
@@ -142,9 +142,9 @@ Compression configuration shared across runtimes
 | `min_size` | `uintptr_t` | —       | Minimum response size to compress (bytes)           |
 | `quality`  | `uint32_t`  | —       | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
-##### Methods
+### Methods
 
-###### spikard_default()
+#### spikard_default()
 
 **Signature:**
 
@@ -181,9 +181,9 @@ CORS configuration for a route
 | `methods_joined_cache` | `const char*`   | —       | Methods joined cache |
 | `headers_joined_cache` | `const char*`   | —       | Headers joined cache |
 
-##### Methods
+### Methods
 
-###### spikard_allowed_methods_joined()
+#### spikard_allowed_methods_joined()
 
 Get the cached joined methods string for preflight responses
 
@@ -193,7 +193,7 @@ Get the cached joined methods string for preflight responses
 const char* spikard_allowed_methods_joined();
 ```
 
-###### spikard_allowed_headers_joined()
+#### spikard_allowed_headers_joined()
 
 Get the cached joined headers string for preflight responses
 
@@ -203,7 +203,7 @@ Get the cached joined headers string for preflight responses
 const char* spikard_allowed_headers_joined();
 ```
 
-###### spikard_is_origin_allowed()
+#### spikard_is_origin_allowed()
 
 Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -213,7 +213,7 @@ Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 bool spikard_is_origin_allowed(const char* origin);
 ```
 
-###### spikard_is_method_allowed()
+#### spikard_is_method_allowed()
 
 Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -223,7 +223,7 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 bool spikard_is_method_allowed(const char* method);
 ```
 
-###### spikard_are_headers_allowed()
+#### spikard_are_headers_allowed()
 
 Check if all requested headers are allowed (O(n) where n = num requested headers)
 
@@ -233,7 +233,7 @@ Check if all requested headers are allowed (O(n) where n = num requested headers
 bool spikard_are_headers_allowed(const char** requested);
 ```
 
-###### spikard_default()
+#### spikard_default()
 
 **Signature:**
 
@@ -253,9 +253,9 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 | `complexity_limit`      | `uintptr_t*` | `NULL`  | Maximum query complexity (None = unlimited) |
 | `depth_limit`           | `uintptr_t*` | `NULL`  | Maximum query depth (None = unlimited)      |
 
-##### Methods
+### Methods
 
-###### spikard_default()
+#### spikard_default()
 
 **Signature:**
 
@@ -272,9 +272,9 @@ Configuration for GraphQL routes
 Provides a builder pattern for configuring GraphQL route parameters
 for the Spikard HTTP server's routing system.
 
-##### Methods
+### Methods
 
-###### spikard_path()
+#### spikard_path()
 
 Set the HTTP path for the GraphQL endpoint
 
@@ -284,7 +284,7 @@ Set the HTTP path for the GraphQL endpoint
 SpikardGraphQlRouteConfig spikard_path(const char* path);
 ```
 
-###### spikard_method()
+#### spikard_method()
 
 Set the HTTP method for the GraphQL endpoint
 
@@ -294,7 +294,7 @@ Set the HTTP method for the GraphQL endpoint
 SpikardGraphQlRouteConfig spikard_method(const char* method);
 ```
 
-###### spikard_enable_playground()
+#### spikard_enable_playground()
 
 Enable or disable the GraphQL Playground UI
 
@@ -304,7 +304,7 @@ Enable or disable the GraphQL Playground UI
 SpikardGraphQlRouteConfig spikard_enable_playground(bool enable);
 ```
 
-###### spikard_description()
+#### spikard_description()
 
 Set a custom description for documentation
 
@@ -314,7 +314,7 @@ Set a custom description for documentation
 SpikardGraphQlRouteConfig spikard_description(const char* description);
 ```
 
-###### spikard_get_path()
+#### spikard_get_path()
 
 Get the configured path
 
@@ -324,7 +324,7 @@ Get the configured path
 const char* spikard_get_path();
 ```
 
-###### spikard_get_method()
+#### spikard_get_method()
 
 Get the configured method
 
@@ -334,7 +334,7 @@ Get the configured method
 const char* spikard_get_method();
 ```
 
-###### spikard_is_playground_enabled()
+#### spikard_is_playground_enabled()
 
 Check if playground is enabled
 
@@ -344,7 +344,7 @@ Check if playground is enabled
 bool spikard_is_playground_enabled();
 ```
 
-###### spikard_get_description()
+#### spikard_get_description()
 
 Get the description if set
 
@@ -354,7 +354,7 @@ Get the description if set
 const char** spikard_get_description();
 ```
 
-###### spikard_default()
+#### spikard_default()
 
 **Signature:**
 
@@ -371,7 +371,7 @@ Configuration for gRPC support
 Controls how the server handles gRPC requests, including compression,
 timeouts, and protocol settings.
 
-## Stream Limits
+### Stream Limits
 
 This configuration enforces message-level size limits but delegates
 concurrent stream limiting to the HTTP/2 transport layer:
@@ -416,7 +416,7 @@ SpikardGrpcConfig spikard_default();
 
 ---
 
-##### SpikardJsonRpcConfig
+#### SpikardJsonRpcConfig
 
 JSON-RPC server configuration
 
@@ -427,9 +427,9 @@ JSON-RPC server configuration
 | `enable_batch`   | `bool`        | —       | Enable batch request processing (default: true)            |
 | `max_batch_size` | `uintptr_t`   | —       | Maximum number of requests in a batch (default: 100)       |
 
-###### Methods
+### Methods
 
-###### spikard_default()
+#### spikard_default()
 
 **Signature:**
 
@@ -439,7 +439,7 @@ SpikardJsonRpcConfig spikard_default();
 
 ---
 
-##### SpikardJsonRpcMethodInfo
+#### SpikardJsonRpcMethodInfo
 
 JSON-RPC method metadata for routes that support JSON-RPC
 
@@ -457,7 +457,7 @@ enabling discovery and documentation of RPC-compatible endpoints.
 
 ---
 
-##### SpikardJwtConfig
+#### SpikardJwtConfig
 
 JWT authentication configuration
 
@@ -471,7 +471,7 @@ JWT authentication configuration
 
 ---
 
-##### SpikardLicenseInfo
+#### SpikardLicenseInfo
 
 License information
 
@@ -482,7 +482,7 @@ License information
 
 ---
 
-##### SpikardOpenApiConfig
+#### SpikardOpenApiConfig
 
 OpenAPI configuration
 
@@ -500,9 +500,9 @@ OpenAPI configuration
 | `servers`           | `SpikardServerInfo*`  | `NULL`    | Server definitions                                               |
 | `security_schemes`  | `void*`               | `NULL`    | Security schemes (auto-detected from middleware if not provided) |
 
-###### Methods
+### Methods
 
-###### spikard_default()
+#### spikard_default()
 
 **Signature:**
 
@@ -512,7 +512,7 @@ SpikardOpenApiConfig spikard_default();
 
 ---
 
-##### SpikardParseRequest
+#### SpikardParseRequest
 
 Request body for `POST /asyncapi/parse`
 
@@ -522,7 +522,7 @@ Request body for `POST /asyncapi/parse`
 
 ---
 
-##### SpikardParseResult
+#### SpikardParseResult
 
 Full parse result returned by `POST /asyncapi/parse`
 
@@ -537,7 +537,7 @@ Full parse result returned by `POST /asyncapi/parse`
 
 ---
 
-##### SpikardParsedChannel
+#### SpikardParsedChannel
 
 A single channel extracted from an AsyncAPI spec
 
@@ -550,7 +550,7 @@ A single channel extracted from an AsyncAPI spec
 
 ---
 
-##### SpikardParsedMessage
+#### SpikardParsedMessage
 
 A resolved message (name + JSON Schema)
 
@@ -561,7 +561,7 @@ A resolved message (name + JSON Schema)
 
 ---
 
-##### SpikardParsedOperation
+#### SpikardParsedOperation
 
 A single operation extracted from an AsyncAPI spec
 
@@ -573,7 +573,7 @@ A single operation extracted from an AsyncAPI spec
 
 ---
 
-##### SpikardProblemDetails
+#### SpikardProblemDetails
 
 RFC 9457 Problem Details for HTTP APIs
 
@@ -581,7 +581,7 @@ A machine-readable format for specifying errors in HTTP API responses.
 Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
 if not specified.
 
-## Content-Type
+### Content-Type
 
 Responses using this struct should set:
 
@@ -620,7 +620,7 @@ Set the detail field
 SpikardProblemDetails spikard_with_detail(const char* detail);
 ```
 
-##### spikard_with_instance()
+#### spikard_with_instance()
 
 Set the instance field
 
@@ -630,7 +630,7 @@ Set the instance field
 SpikardProblemDetails spikard_with_instance(const char* instance);
 ```
 
-###### spikard_not_found()
+#### spikard_not_found()
 
 Create a not found error
 
@@ -640,7 +640,7 @@ Create a not found error
 SpikardProblemDetails spikard_not_found(const char* detail);
 ```
 
-###### spikard_method_not_allowed()
+#### spikard_method_not_allowed()
 
 Create a method not allowed error
 
@@ -650,7 +650,7 @@ Create a method not allowed error
 SpikardProblemDetails spikard_method_not_allowed(const char* detail);
 ```
 
-###### spikard_internal_server_error()
+#### spikard_internal_server_error()
 
 Create an internal server error
 
@@ -660,7 +660,7 @@ Create an internal server error
 SpikardProblemDetails spikard_internal_server_error(const char* detail);
 ```
 
-###### spikard_bad_request()
+#### spikard_bad_request()
 
 Create a bad request error
 
@@ -670,7 +670,7 @@ Create a bad request error
 SpikardProblemDetails spikard_bad_request(const char* detail);
 ```
 
-###### spikard_to_json()
+#### spikard_to_json()
 
 Serialize to JSON string
 
@@ -683,7 +683,7 @@ Returns an error if the serialization fails.
 const char* spikard_to_json();
 ```
 
-###### spikard_to_json_pretty()
+#### spikard_to_json_pretty()
 
 Serialize to pretty JSON string
 
@@ -698,7 +698,7 @@ const char* spikard_to_json_pretty();
 
 ---
 
-##### SpikardQueryMutationConfig
+#### SpikardQueryMutationConfig
 
 Configuration for schemas with Query and Mutation types
 
@@ -708,9 +708,9 @@ Configuration for schemas with Query and Mutation types
 | `complexity_limit`      | `uintptr_t*` | `NULL`  | Maximum query complexity (None = unlimited) |
 | `depth_limit`           | `uintptr_t*` | `NULL`  | Maximum query depth (None = unlimited)      |
 
-###### Methods
+### Methods
 
-###### spikard_default()
+#### spikard_default()
 
 **Signature:**
 
@@ -720,7 +720,7 @@ SpikardQueryMutationConfig spikard_default();
 
 ---
 
-##### SpikardQueryOnlyConfig
+#### SpikardQueryOnlyConfig
 
 Configuration for schemas with only Query type
 
@@ -730,9 +730,9 @@ Configuration for schemas with only Query type
 | `complexity_limit`      | `uintptr_t*` | `NULL`  | Maximum query complexity (None = unlimited) |
 | `depth_limit`           | `uintptr_t*` | `NULL`  | Maximum query depth (None = unlimited)      |
 
-###### Methods
+### Methods
 
-###### spikard_default()
+#### spikard_default()
 
 **Signature:**
 
@@ -742,7 +742,7 @@ SpikardQueryOnlyConfig spikard_default();
 
 ---
 
-##### SpikardRateLimitConfig
+#### SpikardRateLimitConfig
 
 Rate limiting configuration shared across runtimes
 
@@ -752,9 +752,9 @@ Rate limiting configuration shared across runtimes
 | `burst`      | `uint32_t` | `200`   | Burst allowance            |
 | `ip_based`   | `bool`     | `true`  | Use IP-based rate limiting |
 
-###### Methods
+### Methods
 
-###### spikard_default()
+#### spikard_default()
 
 **Signature:**
 
@@ -764,7 +764,7 @@ SpikardRateLimitConfig spikard_default();
 
 ---
 
-##### SpikardResponse
+#### SpikardResponse
 
 HTTP Response with custom status code, headers, and content
 
@@ -774,9 +774,9 @@ HTTP Response with custom status code, headers, and content
 | `status_code` | `uint16_t` | —       | HTTP status code (defaults to 200) |
 | `headers`     | `void*`    | `NULL`  | Response headers                   |
 
-###### Methods
+### Methods
 
-###### spikard_set_header()
+#### spikard_set_header()
 
 Set a header
 
@@ -786,7 +786,7 @@ Set a header
 void spikard_set_header(const char* key, const char* value);
 ```
 
-###### spikard_set_cookie()
+#### spikard_set_cookie()
 
 Set a cookie in the response
 
@@ -796,7 +796,7 @@ Set a cookie in the response
 void spikard_set_cookie(const char* key, const char* value, bool secure, bool http_only, int64_t max_age, const char* domain, const char* path, const char* same_site);
 ```
 
-###### spikard_default()
+#### spikard_default()
 
 **Signature:**
 
@@ -806,7 +806,7 @@ SpikardResponse spikard_default();
 
 ---
 
-##### SpikardSchemaConfig
+#### SpikardSchemaConfig
 
 Configuration for GraphQL schema building.
 
@@ -819,9 +819,9 @@ introspection control, complexity limits, and depth limits.
 | `complexity_limit`      | `uintptr_t*` | `NULL`  | Maximum query complexity (None = unlimited) |
 | `depth_limit`           | `uintptr_t*` | `NULL`  | Maximum query depth (None = unlimited)      |
 
-###### Methods
+### Methods
 
-###### spikard_default()
+#### spikard_default()
 
 **Signature:**
 
@@ -831,7 +831,7 @@ SpikardSchemaConfig spikard_default();
 
 ---
 
-##### SpikardServerConfig
+#### SpikardServerConfig
 
 Server configuration
 
@@ -859,9 +859,9 @@ Server configuration
 | `enable_http_trace` | `bool`                        | `false`       | Enable per-request HTTP tracing (tower-http `TraceLayer`)                      |
 | `di_container`      | `const char**`                | `NULL`        | Dependency injection container (requires 'di' feature)                         |
 
-###### Methods
+### Methods
 
-###### spikard_default()
+#### spikard_default()
 
 **Signature:**
 
@@ -871,7 +871,7 @@ SpikardServerConfig spikard_default();
 
 ---
 
-##### SpikardServerInfo
+#### SpikardServerInfo
 
 Server information
 
@@ -882,14 +882,14 @@ Server information
 
 ---
 
-##### SpikardSseEvent
+#### SpikardSseEvent
 
 An individual SSE event
 
 Represents a single Server-Sent Event to be sent to a connected client.
 Events can have an optional type, ID, and retry timeout for advanced scenarios.
 
-## SSE Format
+### SSE Format
 
 Events are serialized to the following text format:
 
@@ -922,7 +922,7 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 SpikardSseEvent spikard_with_id(const char* id);
 ```
 
-##### spikard_with_retry()
+#### spikard_with_retry()
 
 Set the retry timeout for client reconnection
 
@@ -937,7 +937,7 @@ SpikardSseEvent spikard_with_retry(uint64_t retry_ms);
 
 ---
 
-##### SpikardStaticFilesConfig
+#### SpikardStaticFilesConfig
 
 Static file serving configuration
 
@@ -950,7 +950,7 @@ Static file serving configuration
 
 ---
 
-##### SpikardTestingSseEvent
+#### SpikardTestingSseEvent
 
 A single Server-Sent Event.
 
@@ -960,7 +960,7 @@ A single Server-Sent Event.
 
 ---
 
-##### SpikardUploadFile
+#### SpikardUploadFile
 
 Represents an uploaded file from multipart/form-data requests.
 
@@ -976,9 +976,9 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `content_encoding` | `const char**`   | `NULL`  | Content encoding type                    |
 | `cursor`           | `const char*`    | —       | Internal cursor for Read/Seek operations |
 
-###### Methods
+### Methods
 
-###### spikard_as_bytes()
+#### spikard_as_bytes()
 
 Get the raw file content as bytes.
 
@@ -990,7 +990,7 @@ This provides zero-copy access to the underlying buffer.
 const uint8_t* spikard_as_bytes();
 ```
 
-###### spikard_read_to_string()
+#### spikard_read_to_string()
 
 Read the file content as a UTF-8 string.
 
@@ -1004,7 +1004,7 @@ Returns an error if the content is not valid UTF-8.
 const char* spikard_read_to_string();
 ```
 
-###### spikard_content_type_or_default()
+#### spikard_content_type_or_default()
 
 Get the content type, defaulting to "application/octet-stream".
 
@@ -1016,7 +1016,7 @@ const char* spikard_content_type_or_default();
 
 ---
 
-##### SpikardValidateRequest
+#### SpikardValidateRequest
 
 Request body for `POST /asyncapi/validate`
 
@@ -1029,7 +1029,7 @@ Request body for `POST /asyncapi/validate`
 
 ---
 
-##### SpikardValidationResponse
+#### SpikardValidationResponse
 
 Response body for `POST /asyncapi/validate`
 
@@ -1040,9 +1040,9 @@ Response body for `POST /asyncapi/validate`
 
 ---
 
-#### Enums
+### Enums
 
-##### SpikardMethod
+#### SpikardMethod
 
 HTTP method
 
@@ -1059,7 +1059,7 @@ HTTP method
 
 ---
 
-##### SpikardSecuritySchemeInfo
+#### SpikardSecuritySchemeInfo
 
 Security scheme types
 
@@ -1070,9 +1070,9 @@ Security scheme types
 
 ---
 
-#### Errors
+### Errors
 
-##### SpikardGraphQlError
+#### SpikardGraphQlError
 
 Errors that can occur during GraphQL operations
 
@@ -1099,7 +1099,7 @@ converted to structured HTTP responses matching the project's error fixtures.
 
 ---
 
-##### SpikardSchemaError
+#### SpikardSchemaError
 
 Error type for schema building operations
 

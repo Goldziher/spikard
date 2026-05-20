@@ -40,6 +40,13 @@ typedef struct SPIKARDCorsConfig SPIKARDCorsConfig;
  */
 typedef struct SPIKARDFullSchemaConfig SPIKARDFullSchemaConfig;
 /**
+ * Errors that can occur during GraphQL operations
+ *
+ * These errors are compatible with async-graphql error handling and can be
+ * converted to structured HTTP responses matching the project's error fixtures.
+ */
+typedef struct SPIKARDGraphQLError SPIKARDGraphQLError;
+/**
  * Configuration for GraphQL routes
  *
  * Provides a builder pattern for configuring GraphQL route parameters

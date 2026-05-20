@@ -97,9 +97,9 @@ AsyncAPI HTTP endpoint configuration
 | `Name`      | `string`  | —       | The name    |
 | `RequestId` | `string?` | `null`  | Request id  |
 
-##### Methods
+### Methods
 
-###### CreateDefault()
+#### CreateDefault()
 
 **Signature:**
 
@@ -119,9 +119,9 @@ Configuration for in-process background task execution.
 | `MaxConcurrentTasks` | `nuint` | `128`   | Maximum concurrent tasks |
 | `DrainTimeoutSecs`   | `ulong` | `30`    | Drain timeout secs       |
 
-##### Methods
+### Methods
 
-###### CreateDefault()
+#### CreateDefault()
 
 **Signature:**
 
@@ -142,9 +142,9 @@ Compression configuration shared across runtimes
 | `MinSize` | `nuint` | —       | Minimum response size to compress (bytes)           |
 | `Quality` | `uint`  | —       | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
-##### Methods
+### Methods
 
-###### CreateDefault()
+#### CreateDefault()
 
 **Signature:**
 
@@ -181,9 +181,9 @@ CORS configuration for a route
 | `MethodsJoinedCache` | `string`        | —                    | Methods joined cache |
 | `HeadersJoinedCache` | `string`        | —                    | Headers joined cache |
 
-##### Methods
+### Methods
 
-###### AllowedMethodsJoined()
+#### AllowedMethodsJoined()
 
 Get the cached joined methods string for preflight responses
 
@@ -193,7 +193,7 @@ Get the cached joined methods string for preflight responses
 public string AllowedMethodsJoined()
 ```
 
-###### AllowedHeadersJoined()
+#### AllowedHeadersJoined()
 
 Get the cached joined headers string for preflight responses
 
@@ -203,7 +203,7 @@ Get the cached joined headers string for preflight responses
 public string AllowedHeadersJoined()
 ```
 
-###### IsOriginAllowed()
+#### IsOriginAllowed()
 
 Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -213,7 +213,7 @@ Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 public bool IsOriginAllowed(string origin)
 ```
 
-###### IsMethodAllowed()
+#### IsMethodAllowed()
 
 Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -223,7 +223,7 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 public bool IsMethodAllowed(string method)
 ```
 
-###### AreHeadersAllowed()
+#### AreHeadersAllowed()
 
 Check if all requested headers are allowed (O(n) where n = num requested headers)
 
@@ -233,7 +233,7 @@ Check if all requested headers are allowed (O(n) where n = num requested headers
 public bool AreHeadersAllowed(List<string> requested)
 ```
 
-###### CreateDefault()
+#### CreateDefault()
 
 **Signature:**
 
@@ -253,9 +253,9 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 | `ComplexityLimit`      | `nuint?` | `null`  | Maximum query complexity (None = unlimited) |
 | `DepthLimit`           | `nuint?` | `null`  | Maximum query depth (None = unlimited)      |
 
-##### Methods
+### Methods
 
-###### CreateDefault()
+#### CreateDefault()
 
 **Signature:**
 
@@ -272,9 +272,9 @@ Configuration for GraphQL routes
 Provides a builder pattern for configuring GraphQL route parameters
 for the Spikard HTTP server's routing system.
 
-##### Methods
+### Methods
 
-###### Path()
+#### Path()
 
 Set the HTTP path for the GraphQL endpoint
 
@@ -284,7 +284,7 @@ Set the HTTP path for the GraphQL endpoint
 public GraphQlRouteConfig Path(string path)
 ```
 
-###### Method()
+#### Method()
 
 Set the HTTP method for the GraphQL endpoint
 
@@ -294,7 +294,7 @@ Set the HTTP method for the GraphQL endpoint
 public GraphQlRouteConfig Method(string method)
 ```
 
-###### EnablePlayground()
+#### EnablePlayground()
 
 Enable or disable the GraphQL Playground UI
 
@@ -304,7 +304,7 @@ Enable or disable the GraphQL Playground UI
 public GraphQlRouteConfig EnablePlayground(bool enable)
 ```
 
-###### Description()
+#### Description()
 
 Set a custom description for documentation
 
@@ -314,7 +314,7 @@ Set a custom description for documentation
 public GraphQlRouteConfig Description(string description)
 ```
 
-###### GetPath()
+#### GetPath()
 
 Get the configured path
 
@@ -324,7 +324,7 @@ Get the configured path
 public string GetPath()
 ```
 
-###### GetMethod()
+#### GetMethod()
 
 Get the configured method
 
@@ -334,7 +334,7 @@ Get the configured method
 public string GetMethod()
 ```
 
-###### IsPlaygroundEnabled()
+#### IsPlaygroundEnabled()
 
 Check if playground is enabled
 
@@ -344,7 +344,7 @@ Check if playground is enabled
 public bool IsPlaygroundEnabled()
 ```
 
-###### GetDescription()
+#### GetDescription()
 
 Get the description if set
 
@@ -354,7 +354,7 @@ Get the description if set
 public string? GetDescription()
 ```
 
-###### CreateDefault()
+#### CreateDefault()
 
 **Signature:**
 
@@ -371,7 +371,7 @@ Configuration for gRPC support
 Controls how the server handles gRPC requests, including compression,
 timeouts, and protocol settings.
 
-## Stream Limits
+### Stream Limits
 
 This configuration enforces message-level size limits but delegates
 concurrent stream limiting to the HTTP/2 transport layer:
@@ -416,7 +416,7 @@ public GrpcConfig CreateDefault()
 
 ---
 
-##### JsonRpcConfig
+#### JsonRpcConfig
 
 JSON-RPC server configuration
 
@@ -427,9 +427,9 @@ JSON-RPC server configuration
 | `EnableBatch`  | `bool`   | —       | Enable batch request processing (default: true)            |
 | `MaxBatchSize` | `nuint`  | —       | Maximum number of requests in a batch (default: 100)       |
 
-###### Methods
+### Methods
 
-###### CreateDefault()
+#### CreateDefault()
 
 **Signature:**
 
@@ -439,7 +439,7 @@ public JsonRpcConfig CreateDefault()
 
 ---
 
-##### JsonRpcMethodInfo
+#### JsonRpcMethodInfo
 
 JSON-RPC method metadata for routes that support JSON-RPC
 
@@ -457,7 +457,7 @@ enabling discovery and documentation of RPC-compatible endpoints.
 
 ---
 
-##### JwtConfig
+#### JwtConfig
 
 JWT authentication configuration
 
@@ -471,7 +471,7 @@ JWT authentication configuration
 
 ---
 
-##### LicenseInfo
+#### LicenseInfo
 
 License information
 
@@ -482,7 +482,7 @@ License information
 
 ---
 
-##### OpenApiConfig
+#### OpenApiConfig
 
 OpenAPI configuration
 
@@ -500,9 +500,9 @@ OpenAPI configuration
 | `Servers`         | `List<ServerInfo>`                       | `new List<ServerInfo>()`                       | Server definitions                                               |
 | `SecuritySchemes` | `Dictionary<string, SecuritySchemeInfo>` | `new Dictionary<string, SecuritySchemeInfo>()` | Security schemes (auto-detected from middleware if not provided) |
 
-###### Methods
+### Methods
 
-###### CreateDefault()
+#### CreateDefault()
 
 **Signature:**
 
@@ -512,7 +512,7 @@ public OpenApiConfig CreateDefault()
 
 ---
 
-##### ParseRequest
+#### ParseRequest
 
 Request body for `POST /asyncapi/parse`
 
@@ -522,7 +522,7 @@ Request body for `POST /asyncapi/parse`
 
 ---
 
-##### ParseResult
+#### ParseResult
 
 Full parse result returned by `POST /asyncapi/parse`
 
@@ -537,7 +537,7 @@ Full parse result returned by `POST /asyncapi/parse`
 
 ---
 
-##### ParsedChannel
+#### ParsedChannel
 
 A single channel extracted from an AsyncAPI spec
 
@@ -550,7 +550,7 @@ A single channel extracted from an AsyncAPI spec
 
 ---
 
-##### ParsedMessage
+#### ParsedMessage
 
 A resolved message (name + JSON Schema)
 
@@ -561,7 +561,7 @@ A resolved message (name + JSON Schema)
 
 ---
 
-##### ParsedOperation
+#### ParsedOperation
 
 A single operation extracted from an AsyncAPI spec
 
@@ -573,7 +573,7 @@ A single operation extracted from an AsyncAPI spec
 
 ---
 
-##### ProblemDetails
+#### ProblemDetails
 
 RFC 9457 Problem Details for HTTP APIs
 
@@ -581,7 +581,7 @@ A machine-readable format for specifying errors in HTTP API responses.
 Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
 if not specified.
 
-## Content-Type
+### Content-Type
 
 Responses using this struct should set:
 
@@ -620,7 +620,7 @@ Set the detail field
 public ProblemDetails WithDetail(string detail)
 ```
 
-##### WithInstance()
+#### WithInstance()
 
 Set the instance field
 
@@ -630,7 +630,7 @@ Set the instance field
 public ProblemDetails WithInstance(string instance)
 ```
 
-###### NotFound()
+#### NotFound()
 
 Create a not found error
 
@@ -640,7 +640,7 @@ Create a not found error
 public ProblemDetails NotFound(string detail)
 ```
 
-###### MethodNotAllowed()
+#### MethodNotAllowed()
 
 Create a method not allowed error
 
@@ -650,7 +650,7 @@ Create a method not allowed error
 public ProblemDetails MethodNotAllowed(string detail)
 ```
 
-###### InternalServerError()
+#### InternalServerError()
 
 Create an internal server error
 
@@ -660,7 +660,7 @@ Create an internal server error
 public ProblemDetails InternalServerError(string detail)
 ```
 
-###### BadRequest()
+#### BadRequest()
 
 Create a bad request error
 
@@ -670,7 +670,7 @@ Create a bad request error
 public ProblemDetails BadRequest(string detail)
 ```
 
-###### ToJson()
+#### ToJson()
 
 Serialize to JSON string
 
@@ -683,7 +683,7 @@ Returns an error if the serialization fails.
 public string ToJson()
 ```
 
-###### ToJsonPretty()
+#### ToJsonPretty()
 
 Serialize to pretty JSON string
 
@@ -698,7 +698,7 @@ public string ToJsonPretty()
 
 ---
 
-##### QueryMutationConfig
+#### QueryMutationConfig
 
 Configuration for schemas with Query and Mutation types
 
@@ -708,9 +708,9 @@ Configuration for schemas with Query and Mutation types
 | `ComplexityLimit`      | `nuint?` | `null`  | Maximum query complexity (None = unlimited) |
 | `DepthLimit`           | `nuint?` | `null`  | Maximum query depth (None = unlimited)      |
 
-###### Methods
+### Methods
 
-###### CreateDefault()
+#### CreateDefault()
 
 **Signature:**
 
@@ -720,7 +720,7 @@ public QueryMutationConfig CreateDefault()
 
 ---
 
-##### QueryOnlyConfig
+#### QueryOnlyConfig
 
 Configuration for schemas with only Query type
 
@@ -730,9 +730,9 @@ Configuration for schemas with only Query type
 | `ComplexityLimit`      | `nuint?` | `null`  | Maximum query complexity (None = unlimited) |
 | `DepthLimit`           | `nuint?` | `null`  | Maximum query depth (None = unlimited)      |
 
-###### Methods
+### Methods
 
-###### CreateDefault()
+#### CreateDefault()
 
 **Signature:**
 
@@ -742,7 +742,7 @@ public QueryOnlyConfig CreateDefault()
 
 ---
 
-##### RateLimitConfig
+#### RateLimitConfig
 
 Rate limiting configuration shared across runtimes
 
@@ -752,9 +752,9 @@ Rate limiting configuration shared across runtimes
 | `Burst`     | `uint`  | `200`   | Burst allowance            |
 | `IpBased`   | `bool`  | `true`  | Use IP-based rate limiting |
 
-###### Methods
+### Methods
 
-###### CreateDefault()
+#### CreateDefault()
 
 **Signature:**
 
@@ -764,7 +764,7 @@ public RateLimitConfig CreateDefault()
 
 ---
 
-##### Response
+#### Response
 
 HTTP Response with custom status code, headers, and content
 
@@ -774,9 +774,9 @@ HTTP Response with custom status code, headers, and content
 | `StatusCode` | `ushort`                     | —                                  | HTTP status code (defaults to 200) |
 | `Headers`    | `Dictionary<string, string>` | `new Dictionary<string, string>()` | Response headers                   |
 
-###### Methods
+### Methods
 
-###### SetHeader()
+#### SetHeader()
 
 Set a header
 
@@ -786,7 +786,7 @@ Set a header
 public void SetHeader(string key, string value)
 ```
 
-###### SetCookie()
+#### SetCookie()
 
 Set a cookie in the response
 
@@ -796,7 +796,7 @@ Set a cookie in the response
 public void SetCookie(string key, string value, bool secure, bool httpOnly, long maxAge, string domain, string path, string sameSite)
 ```
 
-###### CreateDefault()
+#### CreateDefault()
 
 **Signature:**
 
@@ -806,7 +806,7 @@ public Response CreateDefault()
 
 ---
 
-##### SchemaConfig
+#### SchemaConfig
 
 Configuration for GraphQL schema building.
 
@@ -819,9 +819,9 @@ introspection control, complexity limits, and depth limits.
 | `ComplexityLimit`      | `nuint?` | `null`  | Maximum query complexity (None = unlimited) |
 | `DepthLimit`           | `nuint?` | `null`  | Maximum query depth (None = unlimited)      |
 
-###### Methods
+### Methods
 
-###### CreateDefault()
+#### CreateDefault()
 
 **Signature:**
 
@@ -831,7 +831,7 @@ public SchemaConfig CreateDefault()
 
 ---
 
-##### ServerConfig
+#### ServerConfig
 
 Server configuration
 
@@ -859,9 +859,9 @@ Server configuration
 | `EnableHttpTrace`  | `bool`                    | `false`                         | Enable per-request HTTP tracing (tower-http `TraceLayer`)                      |
 | `DiContainer`      | `string?`                 | `null`                          | Dependency injection container (requires 'di' feature)                         |
 
-###### Methods
+### Methods
 
-###### CreateDefault()
+#### CreateDefault()
 
 **Signature:**
 
@@ -871,7 +871,7 @@ public ServerConfig CreateDefault()
 
 ---
 
-##### ServerInfo
+#### ServerInfo
 
 Server information
 
@@ -882,14 +882,14 @@ Server information
 
 ---
 
-##### SseEvent
+#### SseEvent
 
 An individual SSE event
 
 Represents a single Server-Sent Event to be sent to a connected client.
 Events can have an optional type, ID, and retry timeout for advanced scenarios.
 
-## SSE Format
+### SSE Format
 
 Events are serialized to the following text format:
 
@@ -922,7 +922,7 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 public SseEvent WithId(string id)
 ```
 
-##### WithRetry()
+#### WithRetry()
 
 Set the retry timeout for client reconnection
 
@@ -937,7 +937,7 @@ public SseEvent WithRetry(ulong retryMs)
 
 ---
 
-##### StaticFilesConfig
+#### StaticFilesConfig
 
 Static file serving configuration
 
@@ -950,7 +950,7 @@ Static file serving configuration
 
 ---
 
-##### TestingSseEvent
+#### TestingSseEvent
 
 A single Server-Sent Event.
 
@@ -960,7 +960,7 @@ A single Server-Sent Event.
 
 ---
 
-##### UploadFile
+#### UploadFile
 
 Represents an uploaded file from multipart/form-data requests.
 
@@ -976,9 +976,9 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `ContentEncoding` | `string?` | `null`  | Content encoding type                    |
 | `Cursor`          | `string`  | —       | Internal cursor for Read/Seek operations |
 
-###### Methods
+### Methods
 
-###### AsBytes()
+#### AsBytes()
 
 Get the raw file content as bytes.
 
@@ -990,7 +990,7 @@ This provides zero-copy access to the underlying buffer.
 public byte[] AsBytes()
 ```
 
-###### ReadToString()
+#### ReadToString()
 
 Read the file content as a UTF-8 string.
 
@@ -1004,7 +1004,7 @@ Returns an error if the content is not valid UTF-8.
 public string ReadToString()
 ```
 
-###### ContentTypeOrDefault()
+#### ContentTypeOrDefault()
 
 Get the content type, defaulting to "application/octet-stream".
 
@@ -1016,7 +1016,7 @@ public string ContentTypeOrDefault()
 
 ---
 
-##### ValidateRequest
+#### ValidateRequest
 
 Request body for `POST /asyncapi/validate`
 
@@ -1029,7 +1029,7 @@ Request body for `POST /asyncapi/validate`
 
 ---
 
-##### ValidationResponse
+#### ValidationResponse
 
 Response body for `POST /asyncapi/validate`
 
@@ -1040,9 +1040,9 @@ Response body for `POST /asyncapi/validate`
 
 ---
 
-#### Enums
+### Enums
 
-##### Method
+#### Method
 
 HTTP method
 
@@ -1059,7 +1059,7 @@ HTTP method
 
 ---
 
-##### SecuritySchemeInfo
+#### SecuritySchemeInfo
 
 Security scheme types
 
@@ -1070,9 +1070,9 @@ Security scheme types
 
 ---
 
-#### Errors
+### Errors
 
-##### GraphQlError
+#### GraphQlError
 
 Errors that can occur during GraphQL operations
 
@@ -1099,7 +1099,7 @@ converted to structured HTTP responses matching the project's error fixtures.
 
 ---
 
-##### SchemaError
+#### SchemaError
 
 Error type for schema building operations
 

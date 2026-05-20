@@ -101,9 +101,9 @@ Compression configuration shared across runtimes
 | `minSize` | `number`  | —       | Minimum response size to compress (bytes)           |
 | `quality` | `number`  | —       | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -140,9 +140,9 @@ CORS configuration for a route
 | `methodsJoinedCache` | `string`                | —       | Methods joined cache |
 | `headersJoinedCache` | `string`                | —       | Headers joined cache |
 
-##### Methods
+### Methods
 
-###### allowedMethodsJoined()
+#### allowedMethodsJoined()
 
 Get the cached joined methods string for preflight responses
 
@@ -152,7 +152,7 @@ Get the cached joined methods string for preflight responses
 allowedMethodsJoined(): string
 ```
 
-###### allowedHeadersJoined()
+#### allowedHeadersJoined()
 
 Get the cached joined headers string for preflight responses
 
@@ -162,7 +162,7 @@ Get the cached joined headers string for preflight responses
 allowedHeadersJoined(): string
 ```
 
-###### isOriginAllowed()
+#### isOriginAllowed()
 
 Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -172,7 +172,7 @@ Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 isOriginAllowed(origin: string): boolean
 ```
 
-###### isMethodAllowed()
+#### isMethodAllowed()
 
 Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -182,7 +182,7 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 isMethodAllowed(method: string): boolean
 ```
 
-###### areHeadersAllowed()
+#### areHeadersAllowed()
 
 Check if all requested headers are allowed (O(n) where n = num requested headers)
 
@@ -192,7 +192,7 @@ Check if all requested headers are allowed (O(n) where n = num requested headers
 areHeadersAllowed(requested: Array<string>): boolean
 ```
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -212,9 +212,9 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 | `complexityLimit`      | `number \| null` | `null`  | Maximum query complexity (None = unlimited) |
 | `depthLimit`           | `number \| null` | `null`  | Maximum query depth (None = unlimited)      |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -235,9 +235,9 @@ JSON-RPC server configuration
 | `enableBatch`  | `boolean` | —       | Enable batch request processing (default: true)            |
 | `maxBatchSize` | `number`  | —       | Maximum number of requests in a batch (default: 100)       |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -308,9 +308,9 @@ OpenAPI configuration
 | `servers`         | `Array<ServerInfo>`                  | `[]`      | Server definitions                                               |
 | `securitySchemes` | `Record<string, SecuritySchemeInfo>` | `{}`      | Security schemes (auto-detected from middleware if not provided) |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -389,7 +389,7 @@ A machine-readable format for specifying errors in HTTP API responses.
 Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
 if not specified.
 
-## Content-Type
+### Content-Type
 
 Responses using this struct should set:
 
@@ -428,7 +428,7 @@ Set the detail field
 withDetail(detail: string): ProblemDetails
 ```
 
-##### withInstance()
+#### withInstance()
 
 Set the instance field
 
@@ -438,7 +438,7 @@ Set the instance field
 withInstance(instance: string): ProblemDetails
 ```
 
-###### notFound()
+#### notFound()
 
 Create a not found error
 
@@ -448,7 +448,7 @@ Create a not found error
 static notFound(detail: string): ProblemDetails
 ```
 
-###### methodNotAllowed()
+#### methodNotAllowed()
 
 Create a method not allowed error
 
@@ -458,7 +458,7 @@ Create a method not allowed error
 static methodNotAllowed(detail: string): ProblemDetails
 ```
 
-###### internalServerError()
+#### internalServerError()
 
 Create an internal server error
 
@@ -468,7 +468,7 @@ Create an internal server error
 static internalServerError(detail: string): ProblemDetails
 ```
 
-###### badRequest()
+#### badRequest()
 
 Create a bad request error
 
@@ -478,7 +478,7 @@ Create a bad request error
 static badRequest(detail: string): ProblemDetails
 ```
 
-###### toJson()
+#### toJson()
 
 Serialize to JSON string
 
@@ -491,7 +491,7 @@ Returns an error if the serialization fails.
 toJson(): string
 ```
 
-###### toJsonPretty()
+#### toJsonPretty()
 
 Serialize to pretty JSON string
 
@@ -506,7 +506,7 @@ toJsonPretty(): string
 
 ---
 
-##### RateLimitConfig
+#### RateLimitConfig
 
 Rate limiting configuration shared across runtimes
 
@@ -516,9 +516,9 @@ Rate limiting configuration shared across runtimes
 | `burst`     | `number`  | `200`   | Burst allowance            |
 | `ipBased`   | `boolean` | `true`  | Use IP-based rate limiting |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -528,7 +528,7 @@ static default(): RateLimitConfig
 
 ---
 
-##### Response
+#### Response
 
 HTTP Response with custom status code, headers, and content
 
@@ -538,9 +538,9 @@ HTTP Response with custom status code, headers, and content
 | `statusCode` | `number`                 | —       | HTTP status code (defaults to 200) |
 | `headers`    | `Record<string, string>` | `{}`    | Response headers                   |
 
-###### Methods
+### Methods
 
-###### setHeader()
+#### setHeader()
 
 Set a header
 
@@ -550,7 +550,7 @@ Set a header
 setHeader(key: string, value: string): void
 ```
 
-###### setCookie()
+#### setCookie()
 
 Set a cookie in the response
 
@@ -560,7 +560,7 @@ Set a cookie in the response
 setCookie(key: string, value: string, secure: boolean, httpOnly: boolean, maxAge: number, domain: string, path: string, sameSite: string): void
 ```
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -570,7 +570,7 @@ static default(): Response
 
 ---
 
-##### SchemaConfig
+#### SchemaConfig
 
 Configuration for GraphQL schema building.
 
@@ -583,9 +583,9 @@ introspection control, complexity limits, and depth limits.
 | `complexityLimit`      | `number \| null` | `null`  | Maximum query complexity (None = unlimited) |
 | `depthLimit`           | `number \| null` | `null`  | Maximum query depth (None = unlimited)      |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -595,7 +595,7 @@ static default(): SchemaConfig
 
 ---
 
-##### ServerConfig
+#### ServerConfig
 
 Server configuration
 
@@ -623,9 +623,9 @@ Server configuration
 | `enableHttpTrace`  | `boolean`                   | `false`       | Enable per-request HTTP tracing (tower-http `TraceLayer`)                      |
 | `diContainer`      | `string \| null`            | `null`        | Dependency injection container (requires 'di' feature)                         |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -635,7 +635,7 @@ static default(): ServerConfig
 
 ---
 
-##### ServerInfo
+#### ServerInfo
 
 Server information
 
@@ -646,7 +646,7 @@ Server information
 
 ---
 
-##### TestClient
+#### TestClient
 
 Core test client for making HTTP requests to a Spikard application.
 
@@ -655,9 +655,9 @@ interface for making HTTP requests, sending WebSocket connections, and
 handling Server-Sent Events. Language bindings wrap this to provide
 native API surfaces.
 
-###### Methods
+### Methods
 
-###### get()
+#### get()
 
 Make a GET request
 
@@ -667,7 +667,7 @@ Make a GET request
 get(path: string, queryParams: Array<string>, headers: Array<string>): ResponseSnapshot
 ```
 
-###### post()
+#### post()
 
 Make a POST request
 
@@ -677,7 +677,7 @@ Make a POST request
 post(path: string, json: unknown, formData: Array<string>, multipart: string, queryParams: Array<string>, headers: Array<string>): ResponseSnapshot
 ```
 
-###### requestRaw()
+#### requestRaw()
 
 Make a request with a raw body payload.
 
@@ -687,7 +687,7 @@ Make a request with a raw body payload.
 requestRaw(method: Method, path: string, body: Buffer, queryParams: Array<string>, headers: Array<string>): ResponseSnapshot
 ```
 
-###### put()
+#### put()
 
 Make a PUT request
 
@@ -697,7 +697,7 @@ Make a PUT request
 put(path: string, json: unknown, queryParams: Array<string>, headers: Array<string>): ResponseSnapshot
 ```
 
-###### patch()
+#### patch()
 
 Make a PATCH request
 
@@ -707,7 +707,7 @@ Make a PATCH request
 patch(path: string, json: unknown, queryParams: Array<string>, headers: Array<string>): ResponseSnapshot
 ```
 
-###### delete()
+#### delete()
 
 Make a DELETE request
 
@@ -717,7 +717,7 @@ Make a DELETE request
 delete(path: string, queryParams: Array<string>, headers: Array<string>): ResponseSnapshot
 ```
 
-###### options()
+#### options()
 
 Make an OPTIONS request
 
@@ -727,7 +727,7 @@ Make an OPTIONS request
 options(path: string, queryParams: Array<string>, headers: Array<string>): ResponseSnapshot
 ```
 
-###### head()
+#### head()
 
 Make a HEAD request
 
@@ -737,7 +737,7 @@ Make a HEAD request
 head(path: string, queryParams: Array<string>, headers: Array<string>): ResponseSnapshot
 ```
 
-###### trace()
+#### trace()
 
 Make a TRACE request
 
@@ -747,7 +747,7 @@ Make a TRACE request
 trace(path: string, queryParams: Array<string>, headers: Array<string>): ResponseSnapshot
 ```
 
-###### graphqlAt()
+#### graphqlAt()
 
 Send a GraphQL query/mutation to a custom endpoint
 
@@ -757,7 +757,7 @@ Send a GraphQL query/mutation to a custom endpoint
 graphqlAt(endpoint: string, query: string, variables: unknown, operationName: string): ResponseSnapshot
 ```
 
-###### graphql()
+#### graphql()
 
 Send a GraphQL query/mutation
 
@@ -767,7 +767,7 @@ Send a GraphQL query/mutation
 graphql(query: string, variables: unknown, operationName: string): ResponseSnapshot
 ```
 
-###### graphqlWithStatus()
+#### graphqlWithStatus()
 
 Send a GraphQL query and return HTTP status code separately
 
@@ -782,7 +782,7 @@ This method allows tests to distinguish between:
 graphqlWithStatus(query: string, variables: unknown, operationName: string): string
 ```
 
-###### graphqlSubscriptionAt()
+#### graphqlSubscriptionAt()
 
 Send a GraphQL subscription (WebSocket) to a custom endpoint.
 
@@ -795,7 +795,7 @@ After the first payload is received, this client sends `complete` to unsubscribe
 graphqlSubscriptionAt(endpoint: string, query: string, variables: unknown, operationName: string): GraphQlSubscriptionSnapshot
 ```
 
-###### graphqlSubscription()
+#### graphqlSubscription()
 
 Send a GraphQL subscription (WebSocket).
 
@@ -809,7 +809,7 @@ graphqlSubscription(query: string, variables: unknown, operationName: string): G
 
 ---
 
-##### TestingSseEvent
+#### TestingSseEvent
 
 A single Server-Sent Event.
 
@@ -819,7 +819,7 @@ A single Server-Sent Event.
 
 ---
 
-##### ValidateRequest
+#### ValidateRequest
 
 Request body for `POST /asyncapi/validate`
 
@@ -832,7 +832,7 @@ Request body for `POST /asyncapi/validate`
 
 ---
 
-##### ValidationResponse
+#### ValidationResponse
 
 Response body for `POST /asyncapi/validate`
 
@@ -843,9 +843,9 @@ Response body for `POST /asyncapi/validate`
 
 ---
 
-#### Enums
+### Enums
 
-##### Method
+#### Method
 
 HTTP method
 
@@ -862,7 +862,7 @@ HTTP method
 
 ---
 
-##### SecuritySchemeInfo
+#### SecuritySchemeInfo
 
 Security scheme types
 
@@ -873,9 +873,9 @@ Security scheme types
 
 ---
 
-#### Errors
+### Errors
 
-##### GraphQlError
+#### GraphQlError
 
 Errors that can occur during GraphQL operations
 
@@ -904,7 +904,7 @@ Errors are thrown as plain `Error` objects with descriptive messages.
 
 ---
 
-##### SchemaError
+#### SchemaError
 
 Error type for schema building operations
 

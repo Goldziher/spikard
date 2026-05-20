@@ -97,9 +97,9 @@ AsyncAPI HTTP endpoint configuration
 | `name`      | `String`  | —       | The name    |
 | `requestId` | `String?` | `null`  | Request id  |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -119,9 +119,9 @@ Configuration for in-process background task execution.
 | `maxConcurrentTasks` | `int` | `128`   | Maximum concurrent tasks |
 | `drainTimeoutSecs`   | `int` | `30`    | Drain timeout secs       |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -142,9 +142,9 @@ Compression configuration shared across runtimes
 | `minSize` | `int`  | —       | Minimum response size to compress (bytes)           |
 | `quality` | `int`  | —       | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -181,9 +181,9 @@ CORS configuration for a route
 | `methodsJoinedCache` | `String`        | —       | Methods joined cache |
 | `headersJoinedCache` | `String`        | —       | Headers joined cache |
 
-##### Methods
+### Methods
 
-###### allowedMethodsJoined()
+#### allowedMethodsJoined()
 
 Get the cached joined methods string for preflight responses
 
@@ -193,7 +193,7 @@ Get the cached joined methods string for preflight responses
 String allowedMethodsJoined()
 ```
 
-###### allowedHeadersJoined()
+#### allowedHeadersJoined()
 
 Get the cached joined headers string for preflight responses
 
@@ -203,7 +203,7 @@ Get the cached joined headers string for preflight responses
 String allowedHeadersJoined()
 ```
 
-###### isOriginAllowed()
+#### isOriginAllowed()
 
 Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -213,7 +213,7 @@ Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 bool isOriginAllowed(String origin)
 ```
 
-###### isMethodAllowed()
+#### isMethodAllowed()
 
 Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -223,7 +223,7 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 bool isMethodAllowed(String method)
 ```
 
-###### areHeadersAllowed()
+#### areHeadersAllowed()
 
 Check if all requested headers are allowed (O(n) where n = num requested headers)
 
@@ -233,7 +233,7 @@ Check if all requested headers are allowed (O(n) where n = num requested headers
 bool areHeadersAllowed(List<String> requested)
 ```
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -253,9 +253,9 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 | `complexityLimit`      | `int?` | `null`  | Maximum query complexity (None = unlimited) |
 | `depthLimit`           | `int?` | `null`  | Maximum query depth (None = unlimited)      |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -272,9 +272,9 @@ Configuration for GraphQL routes
 Provides a builder pattern for configuring GraphQL route parameters
 for the Spikard HTTP server's routing system.
 
-##### Methods
+### Methods
 
-###### path()
+#### path()
 
 Set the HTTP path for the GraphQL endpoint
 
@@ -284,7 +284,7 @@ Set the HTTP path for the GraphQL endpoint
 GraphQlRouteConfig path(String path)
 ```
 
-###### method()
+#### method()
 
 Set the HTTP method for the GraphQL endpoint
 
@@ -294,7 +294,7 @@ Set the HTTP method for the GraphQL endpoint
 GraphQlRouteConfig method(String method)
 ```
 
-###### enablePlayground()
+#### enablePlayground()
 
 Enable or disable the GraphQL Playground UI
 
@@ -304,7 +304,7 @@ Enable or disable the GraphQL Playground UI
 GraphQlRouteConfig enablePlayground(bool enable)
 ```
 
-###### description()
+#### description()
 
 Set a custom description for documentation
 
@@ -314,7 +314,7 @@ Set a custom description for documentation
 GraphQlRouteConfig description(String description)
 ```
 
-###### getPath()
+#### getPath()
 
 Get the configured path
 
@@ -324,7 +324,7 @@ Get the configured path
 String getPath()
 ```
 
-###### getMethod()
+#### getMethod()
 
 Get the configured method
 
@@ -334,7 +334,7 @@ Get the configured method
 String getMethod()
 ```
 
-###### isPlaygroundEnabled()
+#### isPlaygroundEnabled()
 
 Check if playground is enabled
 
@@ -344,7 +344,7 @@ Check if playground is enabled
 bool isPlaygroundEnabled()
 ```
 
-###### getDescription()
+#### getDescription()
 
 Get the description if set
 
@@ -354,7 +354,7 @@ Get the description if set
 String? getDescription()
 ```
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -385,7 +385,7 @@ Configuration for gRPC support
 Controls how the server handles gRPC requests, including compression,
 timeouts, and protocol settings.
 
-## Stream Limits
+### Stream Limits
 
 This configuration enforces message-level size limits but delegates
 concurrent stream limiting to the HTTP/2 transport layer:
@@ -430,7 +430,7 @@ static GrpcConfig default()
 
 ---
 
-##### JsonRpcConfig
+#### JsonRpcConfig
 
 JSON-RPC server configuration
 
@@ -441,9 +441,9 @@ JSON-RPC server configuration
 | `enableBatch`  | `bool`   | —       | Enable batch request processing (default: true)            |
 | `maxBatchSize` | `int`    | —       | Maximum number of requests in a batch (default: 100)       |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -453,7 +453,7 @@ static JsonRpcConfig default()
 
 ---
 
-##### JsonRpcMethodInfo
+#### JsonRpcMethodInfo
 
 JSON-RPC method metadata for routes that support JSON-RPC
 
@@ -471,7 +471,7 @@ enabling discovery and documentation of RPC-compatible endpoints.
 
 ---
 
-##### JwtConfig
+#### JwtConfig
 
 JWT authentication configuration
 
@@ -485,7 +485,7 @@ JWT authentication configuration
 
 ---
 
-##### LicenseInfo
+#### LicenseInfo
 
 License information
 
@@ -496,7 +496,7 @@ License information
 
 ---
 
-##### OpenApiConfig
+#### OpenApiConfig
 
 OpenAPI configuration
 
@@ -514,9 +514,9 @@ OpenAPI configuration
 | `servers`         | `List<ServerInfo>`                | `[]`      | Server definitions                                               |
 | `securitySchemes` | `Map<String, SecuritySchemeInfo>` | `{}`      | Security schemes (auto-detected from middleware if not provided) |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -526,7 +526,7 @@ static OpenApiConfig default()
 
 ---
 
-##### ParseRequest
+#### ParseRequest
 
 Request body for `POST /asyncapi/parse`
 
@@ -536,7 +536,7 @@ Request body for `POST /asyncapi/parse`
 
 ---
 
-##### ParseResult
+#### ParseResult
 
 Full parse result returned by `POST /asyncapi/parse`
 
@@ -551,7 +551,7 @@ Full parse result returned by `POST /asyncapi/parse`
 
 ---
 
-##### ParsedChannel
+#### ParsedChannel
 
 A single channel extracted from an AsyncAPI spec
 
@@ -564,7 +564,7 @@ A single channel extracted from an AsyncAPI spec
 
 ---
 
-##### ParsedMessage
+#### ParsedMessage
 
 A resolved message (name + JSON Schema)
 
@@ -575,7 +575,7 @@ A resolved message (name + JSON Schema)
 
 ---
 
-##### ParsedOperation
+#### ParsedOperation
 
 A single operation extracted from an AsyncAPI spec
 
@@ -587,7 +587,7 @@ A single operation extracted from an AsyncAPI spec
 
 ---
 
-##### ProblemDetails
+#### ProblemDetails
 
 RFC 9457 Problem Details for HTTP APIs
 
@@ -595,7 +595,7 @@ A machine-readable format for specifying errors in HTTP API responses.
 Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
 if not specified.
 
-## Content-Type
+### Content-Type
 
 Responses using this struct should set:
 
@@ -634,7 +634,7 @@ Set the detail field
 ProblemDetails withDetail(String detail)
 ```
 
-##### withInstance()
+#### withInstance()
 
 Set the instance field
 
@@ -644,7 +644,7 @@ Set the instance field
 ProblemDetails withInstance(String instance)
 ```
 
-###### notFound()
+#### notFound()
 
 Create a not found error
 
@@ -654,7 +654,7 @@ Create a not found error
 static ProblemDetails notFound(String detail)
 ```
 
-###### methodNotAllowed()
+#### methodNotAllowed()
 
 Create a method not allowed error
 
@@ -664,7 +664,7 @@ Create a method not allowed error
 static ProblemDetails methodNotAllowed(String detail)
 ```
 
-###### internalServerError()
+#### internalServerError()
 
 Create an internal server error
 
@@ -674,7 +674,7 @@ Create an internal server error
 static ProblemDetails internalServerError(String detail)
 ```
 
-###### badRequest()
+#### badRequest()
 
 Create a bad request error
 
@@ -684,7 +684,7 @@ Create a bad request error
 static ProblemDetails badRequest(String detail)
 ```
 
-###### toJson()
+#### toJson()
 
 Serialize to JSON string
 
@@ -697,7 +697,7 @@ Returns an error if the serialization fails.
 String toJson()
 ```
 
-###### toJsonPretty()
+#### toJsonPretty()
 
 Serialize to pretty JSON string
 
@@ -712,7 +712,7 @@ String toJsonPretty()
 
 ---
 
-##### QueryMutationConfig
+#### QueryMutationConfig
 
 Configuration for schemas with Query and Mutation types
 
@@ -722,9 +722,9 @@ Configuration for schemas with Query and Mutation types
 | `complexityLimit`      | `int?` | `null`  | Maximum query complexity (None = unlimited) |
 | `depthLimit`           | `int?` | `null`  | Maximum query depth (None = unlimited)      |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -734,7 +734,7 @@ static QueryMutationConfig default()
 
 ---
 
-##### QueryOnlyConfig
+#### QueryOnlyConfig
 
 Configuration for schemas with only Query type
 
@@ -744,9 +744,9 @@ Configuration for schemas with only Query type
 | `complexityLimit`      | `int?` | `null`  | Maximum query complexity (None = unlimited) |
 | `depthLimit`           | `int?` | `null`  | Maximum query depth (None = unlimited)      |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -756,7 +756,7 @@ static QueryOnlyConfig default()
 
 ---
 
-##### RateLimitConfig
+#### RateLimitConfig
 
 Rate limiting configuration shared across runtimes
 
@@ -766,9 +766,9 @@ Rate limiting configuration shared across runtimes
 | `burst`     | `int`  | `200`   | Burst allowance            |
 | `ipBased`   | `bool` | `true`  | Use IP-based rate limiting |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -778,7 +778,7 @@ static RateLimitConfig default()
 
 ---
 
-##### Response
+#### Response
 
 HTTP Response with custom status code, headers, and content
 
@@ -788,9 +788,9 @@ HTTP Response with custom status code, headers, and content
 | `statusCode` | `int`                 | —       | HTTP status code (defaults to 200) |
 | `headers`    | `Map<String, String>` | `{}`    | Response headers                   |
 
-###### Methods
+### Methods
 
-###### setHeader()
+#### setHeader()
 
 Set a header
 
@@ -800,7 +800,7 @@ Set a header
 void setHeader(String key, String value)
 ```
 
-###### setCookie()
+#### setCookie()
 
 Set a cookie in the response
 
@@ -810,7 +810,7 @@ Set a cookie in the response
 void setCookie(String key, String value, bool secure, bool httpOnly, [int? maxAge, String? domain, String? path, String? sameSite])
 ```
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -820,7 +820,7 @@ static Response default()
 
 ---
 
-##### ResponseSnapshot
+#### ResponseSnapshot
 
 Snapshot of an Axum response used by higher-level language bindings.
 
@@ -830,9 +830,9 @@ Snapshot of an Axum response used by higher-level language bindings.
 | `headers` | `Map<String, String>` | —       | Response headers (lowercase keys for predictable lookups). |
 | `body`    | `Uint8List`           | —       | Response body bytes (decoded for supported encodings).     |
 
-###### Methods
+### Methods
 
-###### text()
+#### text()
 
 Return response body as UTF-8 string.
 
@@ -842,7 +842,7 @@ Return response body as UTF-8 string.
 String text()
 ```
 
-###### header()
+#### header()
 
 Lookup header by case-insensitive name.
 
@@ -854,7 +854,7 @@ String? header(String name)
 
 ---
 
-##### SchemaConfig
+#### SchemaConfig
 
 Configuration for GraphQL schema building.
 
@@ -867,9 +867,9 @@ introspection control, complexity limits, and depth limits.
 | `complexityLimit`      | `int?` | `null`  | Maximum query complexity (None = unlimited) |
 | `depthLimit`           | `int?` | `null`  | Maximum query depth (None = unlimited)      |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -879,7 +879,7 @@ static SchemaConfig default()
 
 ---
 
-##### ServerConfig
+#### ServerConfig
 
 Server configuration
 
@@ -907,9 +907,9 @@ Server configuration
 | `enableHttpTrace`  | `bool`                    | `false`       | Enable per-request HTTP tracing (tower-http `TraceLayer`)                      |
 | `diContainer`      | `String?`                 | `null`        | Dependency injection container (requires 'di' feature)                         |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -919,7 +919,7 @@ static ServerConfig default()
 
 ---
 
-##### ServerInfo
+#### ServerInfo
 
 Server information
 
@@ -930,14 +930,14 @@ Server information
 
 ---
 
-##### SseEvent
+#### SseEvent
 
 An individual SSE event
 
 Represents a single Server-Sent Event to be sent to a connected client.
 Events can have an optional type, ID, and retry timeout for advanced scenarios.
 
-## SSE Format
+### SSE Format
 
 Events are serialized to the following text format:
 
@@ -970,7 +970,7 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 SseEvent withId(String id)
 ```
 
-##### withRetry()
+#### withRetry()
 
 Set the retry timeout for client reconnection
 
@@ -985,7 +985,7 @@ SseEvent withRetry(int retryMs)
 
 ---
 
-##### StaticFilesConfig
+#### StaticFilesConfig
 
 Static file serving configuration
 
@@ -998,7 +998,7 @@ Static file serving configuration
 
 ---
 
-##### TestClient
+#### TestClient
 
 Core test client for making HTTP requests to a Spikard application.
 
@@ -1007,9 +1007,9 @@ interface for making HTTP requests, sending WebSocket connections, and
 handling Server-Sent Events. Language bindings wrap this to provide
 native API surfaces.
 
-###### Methods
+### Methods
 
-###### get()
+#### get()
 
 Make a GET request
 
@@ -1019,7 +1019,7 @@ Make a GET request
 ResponseSnapshot get(String path, [List<String>? queryParams, List<String>? headers])
 ```
 
-###### post()
+#### post()
 
 Make a POST request
 
@@ -1029,7 +1029,7 @@ Make a POST request
 ResponseSnapshot post(String path, String multipart, [String? json, List<String>? formData, List<String>? queryParams, List<String>? headers])
 ```
 
-###### requestRaw()
+#### requestRaw()
 
 Make a request with a raw body payload.
 
@@ -1039,7 +1039,7 @@ Make a request with a raw body payload.
 ResponseSnapshot requestRaw(Method method, String path, Uint8List body, [List<String>? queryParams, List<String>? headers])
 ```
 
-###### put()
+#### put()
 
 Make a PUT request
 
@@ -1049,7 +1049,7 @@ Make a PUT request
 ResponseSnapshot put(String path, [String? json, List<String>? queryParams, List<String>? headers])
 ```
 
-###### patch()
+#### patch()
 
 Make a PATCH request
 
@@ -1059,7 +1059,7 @@ Make a PATCH request
 ResponseSnapshot patch(String path, [String? json, List<String>? queryParams, List<String>? headers])
 ```
 
-###### delete()
+#### delete()
 
 Make a DELETE request
 
@@ -1069,7 +1069,7 @@ Make a DELETE request
 ResponseSnapshot delete(String path, [List<String>? queryParams, List<String>? headers])
 ```
 
-###### options()
+#### options()
 
 Make an OPTIONS request
 
@@ -1079,7 +1079,7 @@ Make an OPTIONS request
 ResponseSnapshot options(String path, [List<String>? queryParams, List<String>? headers])
 ```
 
-###### head()
+#### head()
 
 Make a HEAD request
 
@@ -1089,7 +1089,7 @@ Make a HEAD request
 ResponseSnapshot head(String path, [List<String>? queryParams, List<String>? headers])
 ```
 
-###### trace()
+#### trace()
 
 Make a TRACE request
 
@@ -1099,7 +1099,7 @@ Make a TRACE request
 ResponseSnapshot trace(String path, [List<String>? queryParams, List<String>? headers])
 ```
 
-###### graphqlAt()
+#### graphqlAt()
 
 Send a GraphQL query/mutation to a custom endpoint
 
@@ -1109,7 +1109,7 @@ Send a GraphQL query/mutation to a custom endpoint
 ResponseSnapshot graphqlAt(String endpoint, String query, [String? variables, String? operationName])
 ```
 
-###### graphql()
+#### graphql()
 
 Send a GraphQL query/mutation
 
@@ -1119,7 +1119,7 @@ Send a GraphQL query/mutation
 ResponseSnapshot graphql(String query, [String? variables, String? operationName])
 ```
 
-###### graphqlWithStatus()
+#### graphqlWithStatus()
 
 Send a GraphQL query and return HTTP status code separately
 
@@ -1134,7 +1134,7 @@ This method allows tests to distinguish between:
 String graphqlWithStatus(String query, [String? variables, String? operationName])
 ```
 
-###### graphqlSubscriptionAt()
+#### graphqlSubscriptionAt()
 
 Send a GraphQL subscription (WebSocket) to a custom endpoint.
 
@@ -1147,7 +1147,7 @@ After the first payload is received, this client sends `complete` to unsubscribe
 GraphQlSubscriptionSnapshot graphqlSubscriptionAt(String endpoint, String query, [String? variables, String? operationName])
 ```
 
-###### graphqlSubscription()
+#### graphqlSubscription()
 
 Send a GraphQL subscription (WebSocket).
 
@@ -1161,7 +1161,7 @@ GraphQlSubscriptionSnapshot graphqlSubscription(String query, [String? variables
 
 ---
 
-##### TestingSseEvent
+#### TestingSseEvent
 
 A single Server-Sent Event.
 
@@ -1171,7 +1171,7 @@ A single Server-Sent Event.
 
 ---
 
-##### UploadFile
+#### UploadFile
 
 Represents an uploaded file from multipart/form-data requests.
 
@@ -1187,9 +1187,9 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `contentEncoding` | `String?`   | `null`  | Content encoding type                    |
 | `cursor`          | `String`    | —       | Internal cursor for Read/Seek operations |
 
-###### Methods
+### Methods
 
-###### asBytes()
+#### asBytes()
 
 Get the raw file content as bytes.
 
@@ -1201,7 +1201,7 @@ This provides zero-copy access to the underlying buffer.
 Uint8List asBytes()
 ```
 
-###### readToString()
+#### readToString()
 
 Read the file content as a UTF-8 string.
 
@@ -1215,7 +1215,7 @@ Returns an error if the content is not valid UTF-8.
 String readToString()
 ```
 
-###### contentTypeOrDefault()
+#### contentTypeOrDefault()
 
 Get the content type, defaulting to "application/octet-stream".
 
@@ -1227,7 +1227,7 @@ String contentTypeOrDefault()
 
 ---
 
-##### ValidateRequest
+#### ValidateRequest
 
 Request body for `POST /asyncapi/validate`
 
@@ -1240,7 +1240,7 @@ Request body for `POST /asyncapi/validate`
 
 ---
 
-##### ValidationResponse
+#### ValidationResponse
 
 Response body for `POST /asyncapi/validate`
 
@@ -1251,9 +1251,9 @@ Response body for `POST /asyncapi/validate`
 
 ---
 
-#### Enums
+### Enums
 
-##### SnapshotError
+#### SnapshotError
 
 Possible errors while converting an Axum response into a snapshot.
 
@@ -1264,7 +1264,7 @@ Possible errors while converting an Axum response into a snapshot.
 
 ---
 
-##### WebSocketMessage
+#### WebSocketMessage
 
 A WebSocket message that can be text or binary.
 
@@ -1278,7 +1278,7 @@ A WebSocket message that can be text or binary.
 
 ---
 
-##### Method
+#### Method
 
 HTTP method
 
@@ -1295,7 +1295,7 @@ HTTP method
 
 ---
 
-##### SecuritySchemeInfo
+#### SecuritySchemeInfo
 
 Security scheme types
 
@@ -1306,9 +1306,9 @@ Security scheme types
 
 ---
 
-#### Errors
+### Errors
 
-##### GraphQlError
+#### GraphQlError
 
 Errors that can occur during GraphQL operations
 
@@ -1335,7 +1335,7 @@ converted to structured HTTP responses matching the project's error fixtures.
 
 ---
 
-##### SchemaError
+#### SchemaError
 
 Error type for schema building operations
 

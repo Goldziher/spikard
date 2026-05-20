@@ -97,9 +97,9 @@ AsyncAPI HTTP endpoint configuration
 | `name`      | `String`  | —       | The name    |
 | `requestId` | `String?` | `null`  | Request id  |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -120,9 +120,9 @@ Configuration for in-process background task execution.
 | `maxConcurrentTasks` | `Long` | `128`   | Maximum concurrent tasks |
 | `drainTimeoutSecs`   | `Long` | `30`    | Drain timeout secs       |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -144,9 +144,9 @@ Compression configuration shared across runtimes
 | `minSize` | `Long`    | —       | Minimum response size to compress (bytes)           |
 | `quality` | `Int`     | —       | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -184,9 +184,9 @@ CORS configuration for a route
 | `methodsJoinedCache` | `String`        | —       | Methods joined cache |
 | `headersJoinedCache` | `String`        | —       | Headers joined cache |
 
-##### Methods
+### Methods
 
-###### allowedMethodsJoined()
+#### allowedMethodsJoined()
 
 Get the cached joined methods string for preflight responses
 
@@ -196,7 +196,7 @@ Get the cached joined methods string for preflight responses
 fun allowedMethodsJoined(): String
 ```
 
-###### allowedHeadersJoined()
+#### allowedHeadersJoined()
 
 Get the cached joined headers string for preflight responses
 
@@ -206,7 +206,7 @@ Get the cached joined headers string for preflight responses
 fun allowedHeadersJoined(): String
 ```
 
-###### isOriginAllowed()
+#### isOriginAllowed()
 
 Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -216,7 +216,7 @@ Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 fun isOriginAllowed(origin: String): Boolean
 ```
 
-###### isMethodAllowed()
+#### isMethodAllowed()
 
 Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -226,7 +226,7 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 fun isMethodAllowed(method: String): Boolean
 ```
 
-###### areHeadersAllowed()
+#### areHeadersAllowed()
 
 Check if all requested headers are allowed (O(n) where n = num requested headers)
 
@@ -236,7 +236,7 @@ Check if all requested headers are allowed (O(n) where n = num requested headers
 fun areHeadersAllowed(requested: List<String>): Boolean
 ```
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -257,9 +257,9 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 | `complexityLimit`      | `Long?`   | `null`  | Maximum query complexity (None = unlimited) |
 | `depthLimit`           | `Long?`   | `null`  | Maximum query depth (None = unlimited)      |
 
-##### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -277,9 +277,9 @@ Configuration for GraphQL routes
 Provides a builder pattern for configuring GraphQL route parameters
 for the Spikard HTTP server's routing system.
 
-##### Methods
+### Methods
 
-###### path()
+#### path()
 
 Set the HTTP path for the GraphQL endpoint
 
@@ -289,7 +289,7 @@ Set the HTTP path for the GraphQL endpoint
 fun path(path: String): GraphQlRouteConfig
 ```
 
-###### method()
+#### method()
 
 Set the HTTP method for the GraphQL endpoint
 
@@ -299,7 +299,7 @@ Set the HTTP method for the GraphQL endpoint
 fun method(method: String): GraphQlRouteConfig
 ```
 
-###### enablePlayground()
+#### enablePlayground()
 
 Enable or disable the GraphQL Playground UI
 
@@ -309,7 +309,7 @@ Enable or disable the GraphQL Playground UI
 fun enablePlayground(enable: Boolean): GraphQlRouteConfig
 ```
 
-###### description()
+#### description()
 
 Set a custom description for documentation
 
@@ -319,7 +319,7 @@ Set a custom description for documentation
 fun description(description: String): GraphQlRouteConfig
 ```
 
-###### getPath()
+#### getPath()
 
 Get the configured path
 
@@ -329,7 +329,7 @@ Get the configured path
 fun getPath(): String
 ```
 
-###### getMethod()
+#### getMethod()
 
 Get the configured method
 
@@ -339,7 +339,7 @@ Get the configured method
 fun getMethod(): String
 ```
 
-###### isPlaygroundEnabled()
+#### isPlaygroundEnabled()
 
 Check if playground is enabled
 
@@ -349,7 +349,7 @@ Check if playground is enabled
 fun isPlaygroundEnabled(): Boolean
 ```
 
-###### getDescription()
+#### getDescription()
 
 Get the description if set
 
@@ -359,7 +359,7 @@ Get the description if set
 fun getDescription(): String?
 ```
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -377,7 +377,7 @@ Configuration for gRPC support
 Controls how the server handles gRPC requests, including compression,
 timeouts, and protocol settings.
 
-## Stream Limits
+### Stream Limits
 
 This configuration enforces message-level size limits but delegates
 concurrent stream limiting to the HTTP/2 transport layer:
@@ -423,7 +423,7 @@ fun default(): GrpcConfig
 
 ---
 
-##### JsonRpcConfig
+#### JsonRpcConfig
 
 JSON-RPC server configuration
 
@@ -434,9 +434,9 @@ JSON-RPC server configuration
 | `enableBatch`  | `Boolean` | —       | Enable batch request processing (default: true)            |
 | `maxBatchSize` | `Long`    | —       | Maximum number of requests in a batch (default: 100)       |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -447,7 +447,7 @@ fun default(): JsonRpcConfig
 
 ---
 
-##### JsonRpcMethodInfo
+#### JsonRpcMethodInfo
 
 JSON-RPC method metadata for routes that support JSON-RPC
 
@@ -465,7 +465,7 @@ enabling discovery and documentation of RPC-compatible endpoints.
 
 ---
 
-##### JwtConfig
+#### JwtConfig
 
 JWT authentication configuration
 
@@ -479,7 +479,7 @@ JWT authentication configuration
 
 ---
 
-##### LicenseInfo
+#### LicenseInfo
 
 License information
 
@@ -490,7 +490,7 @@ License information
 
 ---
 
-##### OpenApiConfig
+#### OpenApiConfig
 
 OpenAPI configuration
 
@@ -508,9 +508,9 @@ OpenAPI configuration
 | `servers`         | `List<ServerInfo>`                | `[]`      | Server definitions                                               |
 | `securitySchemes` | `Map<String, SecuritySchemeInfo>` | `{}`      | Security schemes (auto-detected from middleware if not provided) |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -521,7 +521,7 @@ fun default(): OpenApiConfig
 
 ---
 
-##### ParseRequest
+#### ParseRequest
 
 Request body for `POST /asyncapi/parse`
 
@@ -531,7 +531,7 @@ Request body for `POST /asyncapi/parse`
 
 ---
 
-##### ParseResult
+#### ParseResult
 
 Full parse result returned by `POST /asyncapi/parse`
 
@@ -546,7 +546,7 @@ Full parse result returned by `POST /asyncapi/parse`
 
 ---
 
-##### ParsedChannel
+#### ParsedChannel
 
 A single channel extracted from an AsyncAPI spec
 
@@ -559,7 +559,7 @@ A single channel extracted from an AsyncAPI spec
 
 ---
 
-##### ParsedMessage
+#### ParsedMessage
 
 A resolved message (name + JSON Schema)
 
@@ -570,7 +570,7 @@ A resolved message (name + JSON Schema)
 
 ---
 
-##### ParsedOperation
+#### ParsedOperation
 
 A single operation extracted from an AsyncAPI spec
 
@@ -582,7 +582,7 @@ A single operation extracted from an AsyncAPI spec
 
 ---
 
-##### ProblemDetails
+#### ProblemDetails
 
 RFC 9457 Problem Details for HTTP APIs
 
@@ -590,7 +590,7 @@ A machine-readable format for specifying errors in HTTP API responses.
 Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
 if not specified.
 
-## Content-Type
+### Content-Type
 
 Responses using this struct should set:
 
@@ -629,7 +629,7 @@ Set the detail field
 fun withDetail(detail: String): ProblemDetails
 ```
 
-##### withInstance()
+#### withInstance()
 
 Set the instance field
 
@@ -639,7 +639,7 @@ Set the instance field
 fun withInstance(instance: String): ProblemDetails
 ```
 
-###### notFound()
+#### notFound()
 
 Create a not found error
 
@@ -650,7 +650,7 @@ Create a not found error
 fun notFound(detail: String): ProblemDetails
 ```
 
-###### methodNotAllowed()
+#### methodNotAllowed()
 
 Create a method not allowed error
 
@@ -661,7 +661,7 @@ Create a method not allowed error
 fun methodNotAllowed(detail: String): ProblemDetails
 ```
 
-###### internalServerError()
+#### internalServerError()
 
 Create an internal server error
 
@@ -672,7 +672,7 @@ Create an internal server error
 fun internalServerError(detail: String): ProblemDetails
 ```
 
-###### badRequest()
+#### badRequest()
 
 Create a bad request error
 
@@ -683,7 +683,7 @@ Create a bad request error
 fun badRequest(detail: String): ProblemDetails
 ```
 
-###### toJson()
+#### toJson()
 
 Serialize to JSON string
 
@@ -697,7 +697,7 @@ Returns an error if the serialization fails.
 fun toJson(): String
 ```
 
-###### toJsonPretty()
+#### toJsonPretty()
 
 Serialize to pretty JSON string
 
@@ -713,7 +713,7 @@ fun toJsonPretty(): String
 
 ---
 
-##### QueryMutationConfig
+#### QueryMutationConfig
 
 Configuration for schemas with Query and Mutation types
 
@@ -723,9 +723,9 @@ Configuration for schemas with Query and Mutation types
 | `complexityLimit`      | `Long?`   | `null`  | Maximum query complexity (None = unlimited) |
 | `depthLimit`           | `Long?`   | `null`  | Maximum query depth (None = unlimited)      |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -736,7 +736,7 @@ fun default(): QueryMutationConfig
 
 ---
 
-##### QueryOnlyConfig
+#### QueryOnlyConfig
 
 Configuration for schemas with only Query type
 
@@ -746,9 +746,9 @@ Configuration for schemas with only Query type
 | `complexityLimit`      | `Long?`   | `null`  | Maximum query complexity (None = unlimited) |
 | `depthLimit`           | `Long?`   | `null`  | Maximum query depth (None = unlimited)      |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -759,7 +759,7 @@ fun default(): QueryOnlyConfig
 
 ---
 
-##### RateLimitConfig
+#### RateLimitConfig
 
 Rate limiting configuration shared across runtimes
 
@@ -769,9 +769,9 @@ Rate limiting configuration shared across runtimes
 | `burst`     | `Int`     | `200`   | Burst allowance            |
 | `ipBased`   | `Boolean` | `true`  | Use IP-based rate limiting |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -782,7 +782,7 @@ fun default(): RateLimitConfig
 
 ---
 
-##### Response
+#### Response
 
 HTTP Response with custom status code, headers, and content
 
@@ -792,9 +792,9 @@ HTTP Response with custom status code, headers, and content
 | `statusCode` | `Short`               | —       | HTTP status code (defaults to 200) |
 | `headers`    | `Map<String, String>` | `{}`    | Response headers                   |
 
-###### Methods
+### Methods
 
-###### setHeader()
+#### setHeader()
 
 Set a header
 
@@ -804,7 +804,7 @@ Set a header
 fun setHeader(key: String, value: String)
 ```
 
-###### setCookie()
+#### setCookie()
 
 Set a cookie in the response
 
@@ -814,7 +814,7 @@ Set a cookie in the response
 fun setCookie(key: String, value: String, secure: Boolean, httpOnly: Boolean, maxAge: Long? = null, domain: String? = null, path: String? = null, sameSite: String? = null)
 ```
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -825,7 +825,7 @@ fun default(): Response
 
 ---
 
-##### SchemaConfig
+#### SchemaConfig
 
 Configuration for GraphQL schema building.
 
@@ -838,9 +838,9 @@ introspection control, complexity limits, and depth limits.
 | `complexityLimit`      | `Long?`   | `null`  | Maximum query complexity (None = unlimited) |
 | `depthLimit`           | `Long?`   | `null`  | Maximum query depth (None = unlimited)      |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -851,7 +851,7 @@ fun default(): SchemaConfig
 
 ---
 
-##### ServerConfig
+#### ServerConfig
 
 Server configuration
 
@@ -879,9 +879,9 @@ Server configuration
 | `enableHttpTrace`  | `Boolean`                 | `false`       | Enable per-request HTTP tracing (tower-http `TraceLayer`)                      |
 | `diContainer`      | `String?`                 | `null`        | Dependency injection container (requires 'di' feature)                         |
 
-###### Methods
+### Methods
 
-###### default()
+#### default()
 
 **Signature:**
 
@@ -892,7 +892,7 @@ fun default(): ServerConfig
 
 ---
 
-##### ServerInfo
+#### ServerInfo
 
 Server information
 
@@ -903,14 +903,14 @@ Server information
 
 ---
 
-##### SseEvent
+#### SseEvent
 
 An individual SSE event
 
 Represents a single Server-Sent Event to be sent to a connected client.
 Events can have an optional type, ID, and retry timeout for advanced scenarios.
 
-## SSE Format
+### SSE Format
 
 Events are serialized to the following text format:
 
@@ -943,7 +943,7 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 fun withId(id: String): SseEvent
 ```
 
-##### withRetry()
+#### withRetry()
 
 Set the retry timeout for client reconnection
 
@@ -958,7 +958,7 @@ fun withRetry(retryMs: Long): SseEvent
 
 ---
 
-##### StaticFilesConfig
+#### StaticFilesConfig
 
 Static file serving configuration
 
@@ -971,7 +971,7 @@ Static file serving configuration
 
 ---
 
-##### TestingSseEvent
+#### TestingSseEvent
 
 A single Server-Sent Event.
 
@@ -981,7 +981,7 @@ A single Server-Sent Event.
 
 ---
 
-##### UploadFile
+#### UploadFile
 
 Represents an uploaded file from multipart/form-data requests.
 
@@ -997,9 +997,9 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `contentEncoding` | `String?`   | `null`  | Content encoding type                    |
 | `cursor`          | `String`    | —       | Internal cursor for Read/Seek operations |
 
-###### Methods
+### Methods
 
-###### asBytes()
+#### asBytes()
 
 Get the raw file content as bytes.
 
@@ -1011,7 +1011,7 @@ This provides zero-copy access to the underlying buffer.
 fun asBytes(): ByteArray
 ```
 
-###### readToString()
+#### readToString()
 
 Read the file content as a UTF-8 string.
 
@@ -1026,7 +1026,7 @@ Returns an error if the content is not valid UTF-8.
 fun readToString(): String
 ```
 
-###### contentTypeOrDefault()
+#### contentTypeOrDefault()
 
 Get the content type, defaulting to "application/octet-stream".
 
@@ -1038,7 +1038,7 @@ fun contentTypeOrDefault(): String
 
 ---
 
-##### ValidateRequest
+#### ValidateRequest
 
 Request body for `POST /asyncapi/validate`
 
@@ -1051,7 +1051,7 @@ Request body for `POST /asyncapi/validate`
 
 ---
 
-##### ValidationResponse
+#### ValidationResponse
 
 Response body for `POST /asyncapi/validate`
 
@@ -1062,9 +1062,9 @@ Response body for `POST /asyncapi/validate`
 
 ---
 
-#### Enums
+### Enums
 
-##### Method
+#### Method
 
 HTTP method
 
@@ -1081,7 +1081,7 @@ HTTP method
 
 ---
 
-##### SecuritySchemeInfo
+#### SecuritySchemeInfo
 
 Security scheme types
 
@@ -1092,9 +1092,9 @@ Security scheme types
 
 ---
 
-#### Errors
+### Errors
 
-##### GraphQlError
+#### GraphQlError
 
 Errors that can occur during GraphQL operations
 
@@ -1121,7 +1121,7 @@ converted to structured HTTP responses matching the project's error fixtures.
 
 ---
 
-##### SchemaError
+#### SchemaError
 
 Error type for schema building operations
 
