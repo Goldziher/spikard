@@ -41,6 +41,7 @@
     <img src="https://img.shields.io/badge/docs-GitHub-007ec6" alt="Documentation">
   </a>
 </div>
+
 Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Ruby bindings via Magnus with idiomatic Ruby API.
 
 ## Installation

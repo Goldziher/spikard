@@ -41,6 +41,7 @@
     <img src="https://img.shields.io/badge/docs-GitHub-007ec6" alt="Documentation">
   </a>
 </div>
+
 Go bindings for the spikard polyglot HTTP framework. Backed by the Rust core via CGO static linking.
 
 > **Version 0.15.0**
