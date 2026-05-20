@@ -321,6 +321,7 @@ jobs:
         with:
           node-version: "24"
       - uses: kreuzberg-dev/actions/build-wasm-package@v1
+        id: build-wasm
         with:
           crate-dir: crates/spikard-wasm
           build-command: wasm-pack build . --release --target bundler
@@ -328,7 +329,7 @@ jobs:
       - uses: actions/upload-artifact@v7.0.1
         with:
           name: wasm-package
-          path: crates/spikard-wasm/*.tgz
+          path: ${{ steps.build-wasm.outputs.tarball }}
 
   build-ruby:
     name: Build Ruby gem

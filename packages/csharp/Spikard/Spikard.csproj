@@ -10,6 +10,7 @@
     <Authors>Na&apos;aman Hirschfeld &lt;nhirschfeld@gmail.com&gt;</Authors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <ItemGroup>
