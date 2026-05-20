@@ -1,0 +1,151 @@
+{
+  "by_language": {
+    "python": {
+      "CreateUser": {
+        "scythe_fn": "create_user",
+        "scythe_module": "queries",
+        "params": [
+          {
+            "name": "email",
+            "lang_type": "str",
+            "source": "body"
+          },
+          {
+            "name": "name",
+            "lang_type": "str | None",
+            "source": "body"
+          }
+        ],
+        "return_lang_type": "rows",
+        "is_async": true,
+        "command": "ExecRows"
+      },
+      "GetUser": {
+        "scythe_fn": "get_user",
+        "scythe_module": "queries",
+        "params": [
+          {
+            "name": "id",
+            "lang_type": "int",
+            "source": "path"
+          }
+        ],
+        "return_lang_type": "int, str, str | None, bool, datetime",
+        "is_async": true,
+        "command": "One"
+      },
+      "ListUsersByStatus": {
+        "scythe_fn": "list_users_by_status",
+        "scythe_module": "queries",
+        "params": [
+          {
+            "name": "active",
+            "lang_type": "bool",
+            "source": "query"
+          }
+        ],
+        "return_lang_type": "int, str, str | None, bool, datetime",
+        "is_async": true,
+        "command": "Many"
+      }
+    },
+    "rust": {
+      "CreateUser": {
+        "scythe_fn": "create_user",
+        "scythe_module": "crate::queries",
+        "params": [
+          {
+            "name": "email",
+            "lang_type": "String",
+            "source": "body"
+          },
+          {
+            "name": "name",
+            "lang_type": "Option<String>",
+            "source": "body"
+          }
+        ],
+        "return_lang_type": "rows",
+        "is_async": true,
+        "command": "ExecRows"
+      },
+      "GetUser": {
+        "scythe_fn": "get_user",
+        "scythe_module": "crate::queries",
+        "params": [
+          {
+            "name": "id",
+            "lang_type": "i64",
+            "source": "path"
+          }
+        ],
+        "return_lang_type": "i64, String, Option<String>, bool, chrono::DateTime<chrono::Utc>",
+        "is_async": true,
+        "command": "One"
+      },
+      "ListUsersByStatus": {
+        "scythe_fn": "list_users_by_status",
+        "scythe_module": "crate::queries",
+        "params": [
+          {
+            "name": "active",
+            "lang_type": "bool",
+            "source": "query"
+          }
+        ],
+        "return_lang_type": "i64, String, Option<String>, bool, chrono::DateTime<chrono::Utc>",
+        "is_async": true,
+        "command": "Many"
+      }
+    },
+    "typescript": {
+      "CreateUser": {
+        "scythe_fn": "createUser",
+        "scythe_module": "./queries",
+        "params": [
+          {
+            "name": "email",
+            "lang_type": "string",
+            "source": "body"
+          },
+          {
+            "name": "name",
+            "lang_type": "string | null",
+            "source": "body"
+          }
+        ],
+        "return_lang_type": "rows",
+        "is_async": true,
+        "command": "ExecRows"
+      },
+      "GetUser": {
+        "scythe_fn": "getUser",
+        "scythe_module": "./queries",
+        "params": [
+          {
+            "name": "id",
+            "lang_type": "bigint",
+            "source": "path"
+          }
+        ],
+        "return_lang_type": "bigint, string, string | null, boolean, string",
+        "is_async": true,
+        "command": "One"
+      },
+      "ListUsersByStatus": {
+        "scythe_fn": "listUsersByStatus",
+        "scythe_module": "./queries",
+        "params": [
+          {
+            "name": "active",
+            "lang_type": "boolean",
+            "source": "query"
+          }
+        ],
+        "return_lang_type": "bigint, string, string | null, boolean, string",
+        "is_async": true,
+        "command": "Many"
+      }
+    }
+  }
+}

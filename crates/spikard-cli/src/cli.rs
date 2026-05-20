@@ -8,6 +8,8 @@ use crate::codegen::{
 use crate::init::{InitRequest, InitResponse};
 use anyhow::{Context, Result, bail};
 use clap::{Args, Parser, Subcommand, ValueEnum};
+use scythe_core::dialect::SqlDialect;
+use spikard_codegen::sql::DecimalMode;
 use std::ffi::OsString;
 use std::path::PathBuf;
 
@@ -118,6 +120,98 @@ enum GenerateCommand {
     Protobuf(ProtobufArgs),
     /// Generate PHP DTO classes (Request/Response) for Spikard integration
     PhpDto(PhpDtoArgs),
+    /// Generate routes + OpenAPI + sidecar from annotated SQL queries (via scythe)
+    Sql(SqlArgs),
+}
+
+#[derive(Args, Debug)]
+struct SqlArgs {
+    /// Directory (or single file) holding `.sql` query files annotated with
+    /// `-- @http <METHOD> <PATH>` etc.
+    queries: PathBuf,
+
+    /// Path(s) to schema DDL — accepts files or directories. Repeat for multiple.
+    #[arg(long = "schema", required = true)]
+    schema: Vec<PathBuf>,
+
+    /// SQL dialect (postgresql, mysql, sqlite, mssql, oracle, redshift, snowflake)
+    #[arg(long, default_value = "postgresql")]
+    dialect: SqlDialectArg,
+
+    /// Output directory (created if missing).
+    #[arg(long, short = 'o', default_value = "generated")]
+    output: PathBuf,
+
+    /// Target languages for sidecar entries. Repeat for multiple.
+    #[arg(long = "lang", num_args = 1..)]
+    lang: Vec<GenerateLanguage>,
+
+    /// How to render the `decimal` neutral type. `string-pattern` (default)
+    /// is lossless; `number` is lossy but ergonomic.
+    #[arg(long, default_value = "string-pattern")]
+    decimal_mode: DecimalModeArg,
+
+    /// Fail on unrecognised neutral types instead of falling back to any-JSON.
+    #[arg(long, default_value_t = false)]
+    strict: bool,
+
+    /// Skip emitting the OpenAPI 3.1 spec alongside routes + sidecar.
+    #[arg(long = "no-openapi", default_value_t = false)]
+    no_openapi: bool,
+
+    /// API title for the OpenAPI spec.
+    #[arg(long, default_value = "Generated API")]
+    api_title: String,
+
+    /// API version for the OpenAPI spec.
+    #[arg(long, default_value = "0.1.0")]
+    api_version: String,
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum SqlDialectArg {
+    #[value(name = "postgresql", alias = "postgres", alias = "redshift", alias = "cockroachdb")]
+    PostgreSQL,
+    #[value(name = "mysql", alias = "mariadb")]
+    MySQL,
+    #[value(name = "sqlite")]
+    SQLite,
+    #[value(name = "mssql", alias = "sqlserver")]
+    MsSql,
+    #[value(name = "oracle")]
+    Oracle,
+    #[value(name = "snowflake")]
+    Snowflake,
+}
+
+impl From<SqlDialectArg> for SqlDialect {
+    fn from(d: SqlDialectArg) -> Self {
+        match d {
+            SqlDialectArg::PostgreSQL => SqlDialect::PostgreSQL,
+            SqlDialectArg::MySQL => SqlDialect::MySQL,
+            SqlDialectArg::SQLite => SqlDialect::SQLite,
+            SqlDialectArg::MsSql => SqlDialect::MsSql,
+            SqlDialectArg::Oracle => SqlDialect::Oracle,
+            SqlDialectArg::Snowflake => SqlDialect::Snowflake,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum DecimalModeArg {
+    #[value(name = "string-pattern")]
+    StringPattern,
+    #[value(name = "number")]
+    Number,
+}
+
+impl From<DecimalModeArg> for DecimalMode {
+    fn from(m: DecimalModeArg) -> Self {
+        match m {
+            DecimalModeArg::StringPattern => DecimalMode::StringPattern,
+            DecimalModeArg::Number => DecimalMode::Number,
+        }
+    }
 }
 
 #[derive(Args, Debug)]
@@ -428,6 +522,33 @@ fn run(cli: Cli) -> Result<()> {
                 println!("  Output directory: {}", args.output.display());
                 let assets = app::generate_php_dto(&args.output)?;
                 print_codegen_outcome(CodegenOutcome::Files(assets));
+            }
+            GenerateCommand::Sql(args) => {
+                if args.lang.is_empty() {
+                    bail!("At least one --lang is required for `generate sql` (e.g. --lang python --lang typescript)");
+                }
+                println!("Generating handlers from annotated SQL...");
+                println!("  Queries: {}", args.queries.display());
+                println!("  Output:  {}", args.output.display());
+                let languages: Vec<TargetLanguage> = args.lang.iter().map(|l| (*l).into()).collect();
+                let request = CodegenRequest {
+                    schema_path: args.queries.clone(),
+                    schema_kind: SchemaKind::Sql,
+                    target: CodegenTargetKind::SqlHandlers {
+                        schema_paths: args.schema.clone(),
+                        output: args.output,
+                        dialect: args.dialect.into(),
+                        languages,
+                        decimal_mode: args.decimal_mode.into(),
+                        strict: args.strict,
+                        emit_openapi: !args.no_openapi,
+                        api_title: args.api_title,
+                        api_version: args.api_version,
+                    },
+                    dto: None,
+                };
+                let outcome = app::execute_codegen(request).context("Failed to generate handlers from SQL")?;
+                print_codegen_outcome(outcome);
             }
             GenerateCommand::Openapi(args) => {
                 let mut dto_config = DtoConfig::default();

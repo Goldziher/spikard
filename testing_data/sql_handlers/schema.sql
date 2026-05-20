@@ -1,0 +1,7 @@
+CREATE TABLE users (
+    id BIGSERIAL PRIMARY KEY,
+    email TEXT NOT NULL,
+    name TEXT,
+    active BOOLEAN NOT NULL DEFAULT true,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

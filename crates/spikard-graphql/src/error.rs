@@ -260,10 +260,34 @@ impl GraphQLError {
         })
     }
 
+    /// Whether the error condition is transient and may succeed on retry.
+    ///
+    /// Returns true for upstream/infrastructure failures (rate limit, internal
+    /// error) and false for client-input errors (validation, parse, auth).
+    /// Bindings forward this signal to retry/back-off logic.
+    #[must_use]
+    pub const fn is_transient(&self) -> bool {
+        matches!(
+            self,
+            Self::RateLimitExceeded(_) | Self::InternalError(_) | Self::ExecutionError(_)
+        )
+    }
+
+    /// Stable machine-readable error type identifier (`SCREAMING_SNAKE_CASE`).
+    ///
+    /// Public alias for the same codes returned by [`Self::error_code`], kept
+    /// available to bindings that surface the identifier alongside the
+    /// human-readable message.
+    #[must_use]
+    pub const fn error_type(&self) -> &'static str {
+        self.error_code()
+    }
+
     /// Get the error code suitable for machine parsing
     ///
     /// Returns a screaming `SNAKE_CASE` error code that identifies the error type.
-    const fn error_code(&self) -> &'static str {
+    #[must_use]
+    pub const fn error_code(&self) -> &'static str {
         match self {
             Self::ParseError(_) => "GRAPHQL_PARSE_ERROR",
             Self::JsonError(_) => "JSON_ERROR",

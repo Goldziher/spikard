@@ -20,11 +20,14 @@ use super::openrpc::{
     generate_typescript_handler_app as generate_openrpc_typescript_handler, parse_openrpc_schema,
 };
 use super::quality::QualityValidator;
+use super::sql::{SqlCodegenConfig, generate_from_sql_dir};
 use super::{DtoConfig, TargetLanguage, detect_primary_protocol, generate_fixtures};
 use crate::codegen::generate_from_openapi;
 use anyhow::{Context, Result, bail};
 use asyncapiv3::spec::AsyncApiV3Spec;
 use heck::ToKebabCase;
+use scythe_core::dialect::SqlDialect;
+use spikard_codegen::sql::DecimalMode;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -36,6 +39,8 @@ pub enum SchemaKind {
     OpenRpc,
     GraphQL,
     Protobuf,
+    /// Annotated SQL queries (consumed via scythe + the `spikard_codegen::sql` module)
+    Sql,
 }
 
 /// Type of artifact to generate for a schema
@@ -68,6 +73,18 @@ pub enum CodegenTargetKind {
         output: PathBuf,
         target: String,
         include_paths: Vec<PathBuf>,
+    },
+    /// Generate routes + OpenAPI + sidecar from annotated SQL queries
+    SqlHandlers {
+        schema_paths: Vec<PathBuf>,
+        output: PathBuf,
+        dialect: SqlDialect,
+        languages: Vec<TargetLanguage>,
+        decimal_mode: DecimalMode,
+        strict: bool,
+        emit_openapi: bool,
+        api_title: String,
+        api_version: String,
     },
 }
 
@@ -211,6 +228,35 @@ impl CodegenEngine {
                     format!("{} Protobuf code", language_name(*language)),
                     &code,
                 )?]))
+            }
+            (
+                SchemaKind::Sql,
+                CodegenTargetKind::SqlHandlers {
+                    schema_paths,
+                    output,
+                    dialect,
+                    languages,
+                    decimal_mode,
+                    strict,
+                    emit_openapi,
+                    api_title,
+                    api_version,
+                },
+            ) => {
+                let config = SqlCodegenConfig {
+                    schema_paths: schema_paths.clone(),
+                    queries_dir: request.schema_path.clone(),
+                    output_dir: output.clone(),
+                    dialect: *dialect,
+                    languages: languages.clone(),
+                    decimal_mode: *decimal_mode,
+                    strict: *strict,
+                    emit_openapi: *emit_openapi,
+                    api_title: api_title.clone(),
+                    api_version: api_version.clone(),
+                };
+                let output = generate_from_sql_dir(config).context("Failed to generate handlers from annotated SQL")?;
+                Ok(CodegenOutcome::Files(output.assets))
             }
             _ => bail!(
                 "Unsupported schema/target combination: {:?} -> {:?}",
@@ -564,6 +610,21 @@ impl std::fmt::Debug for CodegenTargetKind {
                 .field("target", target)
                 .field("include_paths", include_paths)
                 .finish(),
+            Self::SqlHandlers {
+                schema_paths,
+                output,
+                dialect,
+                languages,
+                emit_openapi,
+                ..
+            } => f
+                .debug_struct("SqlHandlers")
+                .field("schema_paths", schema_paths)
+                .field("output", output)
+                .field("dialect", dialect)
+                .field("languages", languages)
+                .field("emit_openapi", emit_openapi)
+                .finish_non_exhaustive(),
         }
     }
 }

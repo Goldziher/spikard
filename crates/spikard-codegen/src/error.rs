@@ -23,4 +23,10 @@ pub enum CodegenError {
 
     #[error("Invalid schema: {0}")]
     InvalidSchema(String),
+
+    #[error("Invalid SQL annotation at line {line}: {message}")]
+    InvalidSqlAnnotation { line: usize, message: String },
+
+    #[error("Unsupported SQL command for HTTP: {command} cannot be mapped to an HTTP route")]
+    UnsupportedSqlCommand { command: String },
 }

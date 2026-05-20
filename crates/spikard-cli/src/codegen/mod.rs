@@ -17,6 +17,7 @@ pub mod quality;
 mod ruby;
 mod rust;
 mod schema_index;
+pub mod sql;
 pub mod ts_schema;
 mod typescript;
 

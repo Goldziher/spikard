@@ -5,5 +5,6 @@
 
 pub mod error;
 pub mod openapi;
+pub mod sql;
 
 pub use error::{CodegenError, Result};
