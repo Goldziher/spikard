@@ -834,7 +834,7 @@ extension Method {
 }
 
 /// Security scheme types
-public enum SecuritySchemeInfo {
+public enum SecuritySchemeInfo: Codable, Sendable, Hashable {
     case http(scheme: String, bearerFormat: String?)
     case apiKey(location: String, name: String)
 }
@@ -1147,8 +1147,9 @@ public func securitySchemeInfoFromJson(_ json: String) throws -> SecuritySchemeI
 /// # Returns
 ///
 /// A `QueryOnlyConfig` with default settings
-public func schemaQueryOnly() -> QueryOnlyConfig {
-    return RustBridge.schemaQueryOnly()
+public func schemaQueryOnly() throws -> QueryOnlyConfig {
+    let _rb = RustBridge.schemaQueryOnly()
+    return try QueryOnlyConfig(_rb)
 }
 
 /// Create a schema configuration with Query and Mutation types.
@@ -1158,8 +1159,9 @@ public func schemaQueryOnly() -> QueryOnlyConfig {
 /// # Returns
 ///
 /// A `QueryMutationConfig` with default settings
-public func schemaQueryMutation() -> QueryMutationConfig {
-    return RustBridge.schemaQueryMutation()
+public func schemaQueryMutation() throws -> QueryMutationConfig {
+    let _rb = RustBridge.schemaQueryMutation()
+    return try QueryMutationConfig(_rb)
 }
 
 /// Create a schema configuration with all three root types.
@@ -1169,6 +1171,7 @@ public func schemaQueryMutation() -> QueryMutationConfig {
 /// # Returns
 ///
 /// A `FullSchemaConfig` with default settings
-public func schemaFull() -> FullSchemaConfig {
-    return RustBridge.schemaFull()
+public func schemaFull() throws -> FullSchemaConfig {
+    let _rb = RustBridge.schemaFull()
+    return try FullSchemaConfig(_rb)
 }

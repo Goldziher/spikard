@@ -41,7 +41,6 @@
     <img src="https://img.shields.io/badge/docs-GitHub-007ec6" alt="Documentation">
   </a>
 </div>
-
 C/C++ FFI bindings for the spikard HTTP framework. Stable ABI shared library for native integration, cross-language bridging (Go, Zig, Kotlin JNI), and embedding the Rust HTTP core into any C-compatible host.
 
 ## Installation

@@ -37,11 +37,35 @@ public func schemaFull() -> FullSchemaConfig {
 public func uploadFileFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> UploadFile {
     try { let val = __swift_bridge__$upload_file_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return UploadFile(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
+public func corsConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> CorsConfig {
+    try { let val = __swift_bridge__$cors_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return CorsConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func compressionConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> CompressionConfig {
+    try { let val = __swift_bridge__$compression_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return CompressionConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func rateLimitConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RateLimitConfig {
+    try { let val = __swift_bridge__$rate_limit_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RateLimitConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
 public func jsonRpcMethodInfoFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> JsonRpcMethodInfo {
     try { let val = __swift_bridge__$json_rpc_method_info_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return JsonRpcMethodInfo(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
 public func problemDetailsFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ProblemDetails {
     try { let val = __swift_bridge__$problem_details_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ProblemDetails(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func schemaConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> SchemaConfig {
+    try { let val = __swift_bridge__$schema_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return SchemaConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func queryOnlyConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> QueryOnlyConfig {
+    try { let val = __swift_bridge__$query_only_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return QueryOnlyConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func queryMutationConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> QueryMutationConfig {
+    try { let val = __swift_bridge__$query_mutation_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return QueryMutationConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func fullSchemaConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> FullSchemaConfig {
+    try { let val = __swift_bridge__$full_schema_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return FullSchemaConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func asyncApiConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> AsyncApiConfig {
+    try { let val = __swift_bridge__$async_api_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return AsyncApiConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
 public func parsedChannelFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ParsedChannel {
     try { let val = __swift_bridge__$parsed_channel_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ParsedChannel(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
@@ -55,6 +79,21 @@ public func parsedMessageFromJson<GenericIntoRustString: IntoRustString>(_ json:
 public func parseResultFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ParseResult {
     try { let val = __swift_bridge__$parse_result_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ParseResult(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
+public func backgroundTaskConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> BackgroundTaskConfig {
+    try { let val = __swift_bridge__$background_task_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return BackgroundTaskConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func backgroundJobMetadataFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> BackgroundJobMetadata {
+    try { let val = __swift_bridge__$background_job_metadata_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return BackgroundJobMetadata(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func grpcConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> GrpcConfig {
+    try { let val = __swift_bridge__$grpc_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return GrpcConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func jsonRpcConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> JsonRpcConfig {
+    try { let val = __swift_bridge__$json_rpc_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return JsonRpcConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func openApiConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> OpenApiConfig {
+    try { let val = __swift_bridge__$open_api_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return OpenApiConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
 public func contactInfoFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ContactInfo {
     try { let val = __swift_bridge__$contact_info_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ContactInfo(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
@@ -63,6 +102,9 @@ public func licenseInfoFromJson<GenericIntoRustString: IntoRustString>(_ json: G
 }
 public func serverInfoFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ServerInfo {
     try { let val = __swift_bridge__$server_info_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ServerInfo(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func responseFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> Response {
+    try { let val = __swift_bridge__$response_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return Response(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
 public func sseEventFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> SseEvent {
     try { let val = __swift_bridge__$sse_event_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return SseEvent(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
@@ -75,6 +117,15 @@ public func apiKeyConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: 
 }
 public func staticFilesConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> StaticFilesConfig {
     try { let val = __swift_bridge__$static_files_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return StaticFilesConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func serverConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ServerConfig {
+    try { let val = __swift_bridge__$server_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ServerConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func methodFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> Method {
+    try { let val = __swift_bridge__$method_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return Method(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func securitySchemeInfoFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> SecuritySchemeInfo {
+    try { let val = __swift_bridge__$security_scheme_info_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return SecuritySchemeInfo(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
 
 public class UploadFile: UploadFileRefMut {
@@ -107,7 +158,7 @@ extension UploadFileRef {
         RustString(ptr: __swift_bridge__$UploadFile$filename(ptr))
     }
 
-    public func content_type() -> Optional<RustString> {
+    public func contentType() -> Optional<RustString> {
         { let val = __swift_bridge__$UploadFile$content_type(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 
@@ -119,7 +170,7 @@ extension UploadFileRef {
         RustVec(ptr: __swift_bridge__$UploadFile$content(ptr))
     }
 
-    public func content_encoding() -> Optional<RustString> {
+    public func contentEncoding() -> Optional<RustString> {
         { let val = __swift_bridge__$UploadFile$content_encoding(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 }
@@ -204,27 +255,27 @@ public class CorsConfigRef {
     }
 }
 extension CorsConfigRef {
-    public func allowed_origins() -> RustVec<RustString> {
+    public func allowedOrigins() -> RustVec<RustString> {
         RustVec(ptr: __swift_bridge__$CorsConfig$allowed_origins(ptr))
     }
 
-    public func allowed_methods() -> RustVec<RustString> {
+    public func allowedMethods() -> RustVec<RustString> {
         RustVec(ptr: __swift_bridge__$CorsConfig$allowed_methods(ptr))
     }
 
-    public func allowed_headers() -> RustVec<RustString> {
+    public func allowedHeaders() -> RustVec<RustString> {
         RustVec(ptr: __swift_bridge__$CorsConfig$allowed_headers(ptr))
     }
 
-    public func expose_headers() -> Optional<RustVec<RustString>> {
+    public func exposeHeaders() -> Optional<RustVec<RustString>> {
         { let val = __swift_bridge__$CorsConfig$expose_headers(ptr); if val != nil { return RustVec(ptr: val!) } else { return nil } }()
     }
 
-    public func max_age() -> Optional<UInt32> {
+    public func maxAge() -> Optional<UInt32> {
         __swift_bridge__$CorsConfig$max_age(ptr).intoSwiftRepr()
     }
 
-    public func allow_credentials() -> Optional<Bool> {
+    public func allowCredentials() -> Optional<Bool> {
         __swift_bridge__$CorsConfig$allow_credentials(ptr).intoSwiftRepr()
     }
 }
@@ -317,7 +368,7 @@ extension CompressionConfigRef {
         __swift_bridge__$CompressionConfig$brotli(ptr)
     }
 
-    public func min_size() -> UInt {
+    public func minSize() -> UInt {
         __swift_bridge__$CompressionConfig$min_size(ptr)
     }
 
@@ -406,7 +457,7 @@ public class RateLimitConfigRef {
     }
 }
 extension RateLimitConfigRef {
-    public func per_second() -> UInt64 {
+    public func perSecond() -> UInt64 {
         __swift_bridge__$RateLimitConfig$per_second(ptr)
     }
 
@@ -414,7 +465,7 @@ extension RateLimitConfigRef {
         __swift_bridge__$RateLimitConfig$burst(ptr)
     }
 
-    public func ip_based() -> Bool {
+    public func ipBased() -> Bool {
         __swift_bridge__$RateLimitConfig$ip_based(ptr)
     }
 }
@@ -494,7 +545,7 @@ public class JsonRpcMethodInfoRef {
     }
 }
 extension JsonRpcMethodInfoRef {
-    public func method_name() -> RustString {
+    public func methodName() -> RustString {
         RustString(ptr: __swift_bridge__$JsonRpcMethodInfo$method_name(ptr))
     }
 
@@ -502,11 +553,11 @@ extension JsonRpcMethodInfoRef {
         { let val = __swift_bridge__$JsonRpcMethodInfo$description(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 
-    public func params_schema() -> Optional<RustString> {
+    public func paramsSchema() -> Optional<RustString> {
         { let val = __swift_bridge__$JsonRpcMethodInfo$params_schema(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 
-    public func result_schema() -> Optional<RustString> {
+    public func resultSchema() -> Optional<RustString> {
         { let val = __swift_bridge__$JsonRpcMethodInfo$result_schema(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 
@@ -594,7 +645,7 @@ public class ProblemDetailsRef {
     }
 }
 extension ProblemDetailsRef {
-    public func type_uri() -> RustString {
+    public func typeUri() -> RustString {
         RustString(ptr: __swift_bridge__$ProblemDetails$type_uri(ptr))
     }
 
@@ -774,15 +825,15 @@ public class SchemaConfigRef {
     }
 }
 extension SchemaConfigRef {
-    public func introspection_enabled() -> Bool {
+    public func introspectionEnabled() -> Bool {
         __swift_bridge__$SchemaConfig$introspection_enabled(ptr)
     }
 
-    public func complexity_limit() -> Optional<UInt> {
+    public func complexityLimit() -> Optional<UInt> {
         __swift_bridge__$SchemaConfig$complexity_limit(ptr).intoSwiftRepr()
     }
 
-    public func depth_limit() -> Optional<UInt> {
+    public func depthLimit() -> Optional<UInt> {
         __swift_bridge__$SchemaConfig$depth_limit(ptr).intoSwiftRepr()
     }
 }
@@ -867,15 +918,15 @@ public class QueryOnlyConfigRef {
     }
 }
 extension QueryOnlyConfigRef {
-    public func introspection_enabled() -> Bool {
+    public func introspectionEnabled() -> Bool {
         __swift_bridge__$QueryOnlyConfig$introspection_enabled(ptr)
     }
 
-    public func complexity_limit() -> Optional<UInt> {
+    public func complexityLimit() -> Optional<UInt> {
         __swift_bridge__$QueryOnlyConfig$complexity_limit(ptr).intoSwiftRepr()
     }
 
-    public func depth_limit() -> Optional<UInt> {
+    public func depthLimit() -> Optional<UInt> {
         __swift_bridge__$QueryOnlyConfig$depth_limit(ptr).intoSwiftRepr()
     }
 }
@@ -960,15 +1011,15 @@ public class QueryMutationConfigRef {
     }
 }
 extension QueryMutationConfigRef {
-    public func introspection_enabled() -> Bool {
+    public func introspectionEnabled() -> Bool {
         __swift_bridge__$QueryMutationConfig$introspection_enabled(ptr)
     }
 
-    public func complexity_limit() -> Optional<UInt> {
+    public func complexityLimit() -> Optional<UInt> {
         __swift_bridge__$QueryMutationConfig$complexity_limit(ptr).intoSwiftRepr()
     }
 
-    public func depth_limit() -> Optional<UInt> {
+    public func depthLimit() -> Optional<UInt> {
         __swift_bridge__$QueryMutationConfig$depth_limit(ptr).intoSwiftRepr()
     }
 }
@@ -1053,15 +1104,15 @@ public class FullSchemaConfigRef {
     }
 }
 extension FullSchemaConfigRef {
-    public func introspection_enabled() -> Bool {
+    public func introspectionEnabled() -> Bool {
         __swift_bridge__$FullSchemaConfig$introspection_enabled(ptr)
     }
 
-    public func complexity_limit() -> Optional<UInt> {
+    public func complexityLimit() -> Optional<UInt> {
         __swift_bridge__$FullSchemaConfig$complexity_limit(ptr).intoSwiftRepr()
     }
 
-    public func depth_limit() -> Optional<UInt> {
+    public func depthLimit() -> Optional<UInt> {
         __swift_bridge__$FullSchemaConfig$depth_limit(ptr).intoSwiftRepr()
     }
 }
@@ -1494,7 +1545,7 @@ public class ParseResultRef {
     }
 }
 extension ParseResultRef {
-    public func spec_version() -> RustString {
+    public func specVersion() -> RustString {
         RustString(ptr: __swift_bridge__$ParseResult$spec_version(ptr))
     }
 
@@ -1502,7 +1553,7 @@ extension ParseResultRef {
         RustString(ptr: __swift_bridge__$ParseResult$title(ptr))
     }
 
-    public func api_version() -> RustString {
+    public func apiVersion() -> RustString {
         RustString(ptr: __swift_bridge__$ParseResult$api_version(ptr))
     }
 
@@ -1851,15 +1902,15 @@ public class BackgroundTaskConfigRef {
     }
 }
 extension BackgroundTaskConfigRef {
-    public func max_queue_size() -> UInt {
+    public func maxQueueSize() -> UInt {
         __swift_bridge__$BackgroundTaskConfig$max_queue_size(ptr)
     }
 
-    public func max_concurrent_tasks() -> UInt {
+    public func maxConcurrentTasks() -> UInt {
         __swift_bridge__$BackgroundTaskConfig$max_concurrent_tasks(ptr)
     }
 
-    public func drain_timeout_secs() -> UInt64 {
+    public func drainTimeoutSecs() -> UInt64 {
         __swift_bridge__$BackgroundTaskConfig$drain_timeout_secs(ptr)
     }
 }
@@ -1948,7 +1999,7 @@ extension BackgroundJobMetadataRef {
         RustString(ptr: __swift_bridge__$BackgroundJobMetadata$name(ptr))
     }
 
-    public func request_id() -> Optional<RustString> {
+    public func requestId() -> Optional<RustString> {
         { let val = __swift_bridge__$BackgroundJobMetadata$request_id(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 }
@@ -2037,35 +2088,35 @@ extension GrpcConfigRef {
         __swift_bridge__$GrpcConfig$enabled(ptr)
     }
 
-    public func max_message_size() -> UInt {
+    public func maxMessageSize() -> UInt {
         __swift_bridge__$GrpcConfig$max_message_size(ptr)
     }
 
-    public func enable_compression() -> Bool {
+    public func enableCompression() -> Bool {
         __swift_bridge__$GrpcConfig$enable_compression(ptr)
     }
 
-    public func request_timeout() -> Optional<UInt64> {
+    public func requestTimeout() -> Optional<UInt64> {
         __swift_bridge__$GrpcConfig$request_timeout(ptr).intoSwiftRepr()
     }
 
-    public func max_concurrent_streams() -> UInt32 {
+    public func maxConcurrentStreams() -> UInt32 {
         __swift_bridge__$GrpcConfig$max_concurrent_streams(ptr)
     }
 
-    public func enable_keepalive() -> Bool {
+    public func enableKeepalive() -> Bool {
         __swift_bridge__$GrpcConfig$enable_keepalive(ptr)
     }
 
-    public func keepalive_interval() -> UInt64 {
+    public func keepaliveInterval() -> UInt64 {
         __swift_bridge__$GrpcConfig$keepalive_interval(ptr)
     }
 
-    public func keepalive_timeout() -> UInt64 {
+    public func keepaliveTimeout() -> UInt64 {
         __swift_bridge__$GrpcConfig$keepalive_timeout(ptr)
     }
 
-    public func max_stream_response_bytes() -> Optional<UInt> {
+    public func maxStreamResponseBytes() -> Optional<UInt> {
         __swift_bridge__$GrpcConfig$max_stream_response_bytes(ptr).intoSwiftRepr()
     }
 }
@@ -2154,15 +2205,15 @@ extension JsonRpcConfigRef {
         __swift_bridge__$JsonRpcConfig$enabled(ptr)
     }
 
-    public func endpoint_path() -> RustString {
+    public func endpointPath() -> RustString {
         RustString(ptr: __swift_bridge__$JsonRpcConfig$endpoint_path(ptr))
     }
 
-    public func enable_batch() -> Bool {
+    public func enableBatch() -> Bool {
         __swift_bridge__$JsonRpcConfig$enable_batch(ptr)
     }
 
-    public func max_batch_size() -> UInt {
+    public func maxBatchSize() -> UInt {
         __swift_bridge__$JsonRpcConfig$max_batch_size(ptr)
     }
 }
@@ -2263,15 +2314,15 @@ extension OpenApiConfigRef {
         { let val = __swift_bridge__$OpenApiConfig$description(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 
-    public func swagger_ui_path() -> RustString {
+    public func swaggerUiPath() -> RustString {
         RustString(ptr: __swift_bridge__$OpenApiConfig$swagger_ui_path(ptr))
     }
 
-    public func redoc_path() -> RustString {
+    public func redocPath() -> RustString {
         RustString(ptr: __swift_bridge__$OpenApiConfig$redoc_path(ptr))
     }
 
-    public func openapi_json_path() -> RustString {
+    public func openapiJsonPath() -> RustString {
         RustString(ptr: __swift_bridge__$OpenApiConfig$openapi_json_path(ptr))
     }
 
@@ -2287,7 +2338,7 @@ extension OpenApiConfigRef {
         RustVec(ptr: __swift_bridge__$OpenApiConfig$servers(ptr))
     }
 
-    public func security_schemes() -> RustString {
+    public func securitySchemes() -> RustString {
         RustString(ptr: __swift_bridge__$OpenApiConfig$security_schemes(ptr))
     }
 }
@@ -2632,7 +2683,7 @@ extension ResponseRef {
         { let val = __swift_bridge__$Response$content(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 
-    public func status_code() -> UInt16 {
+    public func statusCode() -> UInt16 {
         __swift_bridge__$Response$status_code(ptr)
     }
 
@@ -2716,7 +2767,7 @@ public class SseEventRef {
     }
 }
 extension SseEventRef {
-    public func event_type() -> Optional<RustString> {
+    public func eventType() -> Optional<RustString> {
         { let val = __swift_bridge__$SseEvent$event_type(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 
@@ -2988,7 +3039,7 @@ extension ApiKeyConfigRef {
         RustVec(ptr: __swift_bridge__$ApiKeyConfig$keys(ptr))
     }
 
-    public func header_name() -> RustString {
+    public func headerName() -> RustString {
         RustString(ptr: __swift_bridge__$ApiKeyConfig$header_name(ptr))
     }
 }
@@ -3072,15 +3123,15 @@ extension StaticFilesConfigRef {
         RustString(ptr: __swift_bridge__$StaticFilesConfig$directory(ptr))
     }
 
-    public func route_prefix() -> RustString {
+    public func routePrefix() -> RustString {
         RustString(ptr: __swift_bridge__$StaticFilesConfig$route_prefix(ptr))
     }
 
-    public func index_file() -> Bool {
+    public func indexFile() -> Bool {
         __swift_bridge__$StaticFilesConfig$index_file(ptr)
     }
 
-    public func cache_control() -> Optional<RustString> {
+    public func cacheControl() -> Optional<RustString> {
         { let val = __swift_bridge__$StaticFilesConfig$cache_control(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 }
@@ -3177,15 +3228,15 @@ extension ServerConfigRef {
         __swift_bridge__$ServerConfig$workers(ptr)
     }
 
-    public func enable_request_id() -> Bool {
+    public func enableRequestId() -> Bool {
         __swift_bridge__$ServerConfig$enable_request_id(ptr)
     }
 
-    public func max_body_size() -> Optional<UInt> {
+    public func maxBodySize() -> Optional<UInt> {
         __swift_bridge__$ServerConfig$max_body_size(ptr).intoSwiftRepr()
     }
 
-    public func request_timeout() -> Optional<UInt64> {
+    public func requestTimeout() -> Optional<UInt64> {
         __swift_bridge__$ServerConfig$request_timeout(ptr).intoSwiftRepr()
     }
 
@@ -3193,27 +3244,27 @@ extension ServerConfigRef {
         { let val = __swift_bridge__$ServerConfig$compression(ptr); if val != nil { return CompressionConfig(ptr: val!) } else { return nil } }()
     }
 
-    public func rate_limit() -> Optional<RateLimitConfig> {
+    public func rateLimit() -> Optional<RateLimitConfig> {
         { let val = __swift_bridge__$ServerConfig$rate_limit(ptr); if val != nil { return RateLimitConfig(ptr: val!) } else { return nil } }()
     }
 
-    public func jwt_auth() -> Optional<JwtConfig> {
+    public func jwtAuth() -> Optional<JwtConfig> {
         { let val = __swift_bridge__$ServerConfig$jwt_auth(ptr); if val != nil { return JwtConfig(ptr: val!) } else { return nil } }()
     }
 
-    public func api_key_auth() -> Optional<ApiKeyConfig> {
+    public func apiKeyAuth() -> Optional<ApiKeyConfig> {
         { let val = __swift_bridge__$ServerConfig$api_key_auth(ptr); if val != nil { return ApiKeyConfig(ptr: val!) } else { return nil } }()
     }
 
-    public func static_files() -> RustVec<StaticFilesConfig> {
+    public func staticFiles() -> RustVec<StaticFilesConfig> {
         RustVec(ptr: __swift_bridge__$ServerConfig$static_files(ptr))
     }
 
-    public func graceful_shutdown() -> Bool {
+    public func gracefulShutdown() -> Bool {
         __swift_bridge__$ServerConfig$graceful_shutdown(ptr)
     }
 
-    public func shutdown_timeout() -> UInt64 {
+    public func shutdownTimeout() -> UInt64 {
         __swift_bridge__$ServerConfig$shutdown_timeout(ptr)
     }
 
@@ -3233,11 +3284,11 @@ extension ServerConfigRef {
         { let val = __swift_bridge__$ServerConfig$grpc(ptr); if val != nil { return GrpcConfig(ptr: val!) } else { return nil } }()
     }
 
-    public func background_tasks() -> BackgroundTaskConfig {
+    public func backgroundTasks() -> BackgroundTaskConfig {
         BackgroundTaskConfig(ptr: __swift_bridge__$ServerConfig$background_tasks(ptr))
     }
 
-    public func enable_http_trace() -> Bool {
+    public func enableHttpTrace() -> Bool {
         __swift_bridge__$ServerConfig$enable_http_trace(ptr)
     }
 }

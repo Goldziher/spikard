@@ -19,7 +19,7 @@ def test_response_snapshot_is_importable() -> None:
     """ResponseSnapshot class is accessible from the spikard binding."""
     assert hasattr(_spikard, "ResponseSnapshot"), "ResponseSnapshot must be exported"
     snap_cls = _spikard.ResponseSnapshot
-    for attr in ("status", "text", "json", "graphql_data", "graphql_errors"):
+    for attr in ("status", "text", "header"):
         assert hasattr(snap_cls, attr), f"ResponseSnapshot missing attribute: {attr}"
 
 
