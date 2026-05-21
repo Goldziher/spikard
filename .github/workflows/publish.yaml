@@ -784,20 +784,6 @@ jobs:
           nuget-user: nhirschfeld
           dry-run: ${{ needs.prepare.outputs.dry_run }}
 
-  publish-pub:
-    name: Publish pub.dev
-    needs: [prepare, check-registries, build-jvm-dotnet-dart-swift-zig]
-    if: ${{ !cancelled() && needs.prepare.outputs.release_dart == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.pub_exists != 'true') }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6.0.2
-        with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: kreuzberg-dev/actions/publish-pub@v1
-        with:
-          package-dir: packages/dart
-          dry-run: ${{ needs.prepare.outputs.dry_run }}
-
   publish-swift:
     name: Publish Swift metadata
     needs: [prepare, check-registries, build-jvm-dotnet-dart-swift-zig]
@@ -971,7 +957,6 @@ jobs:
       - publish-maven
       - publish-kotlin
       - publish-nuget
-      - publish-pub
       - publish-swift
       - publish-zig
       - publish-homebrew

@@ -1,0 +1,29 @@
+name: Publish pub.dev
+
+# pub.dev OIDC trusted publishing rejects tokens from `release` events.
+# This workflow fires on tag push instead, which produces an accepted token.
+#
+# One-time setup: on pub.dev → package → Admin → Automated publishing,
+# set the workflow path to `.github/workflows/publish-pubdev.yaml`.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  publish-pub:
+    name: Publish pub.dev
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: kreuzberg-dev/actions/publish-pub@v1
+        with:
+          package-dir: packages/dart
