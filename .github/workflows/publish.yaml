@@ -823,16 +823,119 @@ jobs:
           zig-version: "0.16.0"
           dry-run: ${{ needs.prepare.outputs.dry_run }}
 
-  publish-homebrew:
-    name: Publish Homebrew formula
-    needs: [prepare, build-cli]
-    if: ${{ needs.prepare.outputs.release_homebrew == 'true' && needs.prepare.outputs.dry_run != 'true' }}
+  check-homebrew:
+    name: Check Homebrew tap for formula
+    needs: [prepare]
+    if: ${{ needs.prepare.outputs.release_homebrew == 'true' }}
     runs-on: ubuntu-latest
+    outputs:
+      exists: ${{ steps.check.outputs.exists }}
     steps:
+      - uses: kreuzberg-dev/actions/check-registry@v1
+        id: check
+        with:
+          registry: homebrew
+          package: spikard
+          version: ${{ needs.prepare.outputs.version }}
+          tap-repo: Goldziher/homebrew-tap
+
+  homebrew-bottles:
+    name: Build Homebrew bottle (${{ matrix.bottle_tag }})
+    needs: [prepare, check-homebrew]
+    if: |
+      needs.prepare.outputs.release_homebrew == 'true' &&
+      needs.check-homebrew.outputs.exists != 'true'
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-latest
+            bottle_tag: arm64_sequoia
+          - runner: macos-15-intel
+            bottle_tag: sequoia
+          - runner: ubuntu-latest
+            bottle_tag: x86_64_linux
+          - runner: ubuntu-24.04-arm
+            bottle_tag: arm64_linux
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          cache-key-prefix: publish-homebrew-${{ matrix.bottle_tag }}
+      - name: Build CLI
+        run: cargo build --release -p spikard-cli
+      - name: Create Homebrew bottle
+        id: bottle
+        uses: kreuzberg-dev/actions/build-homebrew-bottle@v1
+        with:
+          binary-path: target/release/spikard
+          formula-name: spikard
+          version: ${{ needs.prepare.outputs.version }}
+          bottle-tag: ${{ matrix.bottle_tag }}
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: homebrew-bottle-${{ matrix.bottle_tag }}
+          path: ${{ steps.bottle.outputs.filename }}
+          retention-days: 14
+
+  upload-homebrew-bottles:
+    name: Upload Homebrew bottles
+    needs: [prepare, check-homebrew, homebrew-bottles]
+    if: |
+      always() &&
+      needs.prepare.outputs.release_homebrew == 'true' &&
+      (needs.check-homebrew.outputs.exists != 'true' || needs.prepare.outputs.dry_run == 'true') &&
+      needs.homebrew-bottles.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6.0.2
       - uses: actions/download-artifact@v8.0.1
         with:
-          name: cli-assets
+          pattern: homebrew-bottle-*
           path: dist/homebrew
+          merge-multiple: true
+      - uses: kreuzberg-dev/actions/publish-github-release@v1
+        with:
+          tag: ${{ needs.prepare.outputs.tag }}
+          artifacts: "dist/homebrew/*.tar.gz"
+          draft: "false"
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
+
+  publish-homebrew:
+    name: Publish Homebrew formula
+    needs: [prepare, validate-versions, check-homebrew, publish-crates, upload-homebrew-bottles]
+    if: |
+      always() &&
+      needs.prepare.outputs.release_homebrew == 'true' &&
+      needs.prepare.outputs.dry_run != 'true' &&
+      needs.check-homebrew.outputs.exists != 'true' &&
+      needs.publish-crates.result == 'success' &&
+      needs.upload-homebrew-bottles.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - uses: actions/download-artifact@v8.0.1
+        with:
+          pattern: homebrew-bottle-*
+          path: dist/homebrew
+          merge-multiple: true
+      - name: Setup Git credentials
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
+        run: |
+          git config --global credential.helper store
+          echo "https://x-access-token:${GH_TOKEN}@github.com" > ~/.git-credentials
+          git config --global user.name "spikard-bot"
+          git config --global user.email "bot@spikard.dev"
       - uses: kreuzberg-dev/actions/publish-homebrew@v1
         with:
           bottles-dir: dist/homebrew
@@ -844,7 +947,7 @@ jobs:
           bot-name: spikard-bot
           bot-email: bot@spikard.dev
           dry-run: ${{ needs.prepare.outputs.dry_run }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.HOMEBREW_TOKEN }}
 
   finalize:
     name: Finalize release

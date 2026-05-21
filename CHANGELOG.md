@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `publish.yaml`: Build and upload Homebrew bottles before invoking `publish-homebrew`. The previous job pointed `bottles-dir` at the `cli-assets` artifact (source tarball only) and the publish step aborted with `No bottle artifacts found matching spikard-*.bottle.tar.gz`. Replaced with the canonical 3-job pattern: `check-homebrew` → `homebrew-bottles` (matrix across `macos-latest`/`macos-15-intel`/`ubuntu-latest`/`ubuntu-24.04-arm`) → `upload-homebrew-bottles` → `publish-homebrew`. Bottles now cover macOS arm64, macOS x86_64, Linux x86_64, and Linux arm64. Publish step now uses `HOMEBREW_TOKEN` to push across-repo to `Goldziher/homebrew-tap`.
+
 ## [0.15.0] - 2026-05-20
 
 ### Added
