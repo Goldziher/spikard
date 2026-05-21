@@ -775,6 +775,7 @@ jobs:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         with:
           packages-dir: dist/packages/dist/nuget
+          nuget-user: nhirschfeld
           dry-run: ${{ needs.prepare.outputs.dry_run }}
 
   publish-pub:
