@@ -758,6 +758,12 @@ jobs:
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         with:
           working-directory: packages/kotlin
+          # alef-generated build.gradle.kts uses the bare `maven-publish` Gradle
+          # plugin (task: `publish`). The action's default target task is
+          # `publishAndReleaseToMavenCentral` which comes from vanniktech's
+          # wrapper plugin — not present here. Releasing from the Central Portal
+          # staging repo still requires a manual click for now.
+          gradle-task: publish
           dry-run: ${{ needs.prepare.outputs.dry_run }}
 
   publish-nuget:
