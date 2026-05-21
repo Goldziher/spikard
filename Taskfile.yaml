@@ -156,32 +156,21 @@ tasks:
 
   # === Update / Upgrade ===
   update:
-    desc: "Update dependencies within declared compatibility ranges"
+    desc: "Update all dependencies within major versions (minor patches only)"
     cmds:
-      - gh-actions-updater --update .
       - task: rust:update
-      - uv sync --all-packages --all-extras --upgrade
       - alef update
       - prek autoupdate
 
   upgrade:
-    desc: "Upgrade dependencies aggressively, including breaking changes where supported"
+    desc: "Upgrade all dependencies to latest including breaking changes"
     cmds:
-      - gh-actions-updater --update .
       - rustup update stable
-      - cargo upgrade --incompatible
-      - cargo update
-      - uv sync --all-packages --all-extras --upgrade
-      - cmd: cargo upgrade --incompatible --manifest-path packages/ruby/ext/spikard_rb/native/Cargo.toml
-        ignore_error: true
-      - cmd: cargo update --manifest-path packages/ruby/ext/spikard_rb/native/Cargo.toml
-        ignore_error: true
-      - cmd: cargo upgrade --incompatible --manifest-path packages/swift/rust/Cargo.toml
-        ignore_error: true
-      - cmd: cargo update --manifest-path packages/swift/rust/Cargo.toml
-        ignore_error: true
+      - task: rust:upgrade
       - alef update --latest
       - prek autoupdate
+      - cmd: gh-actions-updater --update .
+        ignore_error: true
 
   # === Coverage ===
   cov:rust:
