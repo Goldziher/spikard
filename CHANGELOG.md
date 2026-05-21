@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.5] - 2026-05-21
+
+### Changed
+
+- Split pub.dev publish into a dedicated `publish-pubdev.yaml` workflow triggered by `push: tags: v*`. pub.dev OIDC trusted publishing rejects tokens from `release` events; the new workflow produces an accepted token.
+
 ## [0.15.4] - 2026-05-21
 
 ### Fixed

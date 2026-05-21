@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    spikard (0.15.4)
+    spikard (0.15.5)
       rb_sys (~> 0.9)
       sorbet-runtime (~> 0.5)
 
@@ -203,7 +203,7 @@ CHECKSUMS
   ruby-progressbar (1.13.0) sha256=80fc9c47a9b640d6834e0dc7b3c94c9df37f08cb072b7761e4a71e22cff29b33
   securerandom (0.4.1) sha256=cc5193d414a4341b6e225f0cb4446aceca8e50d5e1888743fac16987638ea0b1
   sorbet-runtime (0.6.13238) sha256=6d2207adc051a4853479d0d06da63238fdf6e960abbcb61522de71b5ff94108f
-  spikard (0.15.4)
+  spikard (0.15.5)
   steep (1.10.0) sha256=1b295b55f9aaff1b8d3ee42453ee55bc2a1078fda0268f288edb2dc014f4d7d1
   strscan (3.1.8) sha256=aae2db611a225559f21ffbb71765c9a4e60fd262534a9ea84f4f11c7f32f679e
   terminal-table (4.0.0) sha256=f504793203f8251b2ea7c7068333053f0beeea26093ec9962e62ea79f94301d2

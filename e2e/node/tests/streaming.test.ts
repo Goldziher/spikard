@@ -31,7 +31,7 @@ describe("streaming", () => {
     expect(response.status).toBe(200);
     const text = await response.text();
     expect(text).toBe(
-      '{\"index\":0,\"payload\":\"alpha\"}\\n{\"index\":1,\"payload\":\"beta\"}\\n{\"index\":2,\"payload\":\"gamma\"}\\n',
+      '{"index":0,"payload":"alpha"}\\n{"index":1,"payload":"beta"}\\n{"index":2,"payload":"gamma"}\\n',
     );
     expect(response.headers.get("content-type")).toBe("application/x-ndjson");
   });
