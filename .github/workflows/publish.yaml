@@ -590,7 +590,7 @@ jobs:
   publish-crates:
     name: Publish crates.io packages
     needs: [prepare, validate-versions, check-registries]
-    if: ${{ needs.prepare.outputs.release_crates == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.crates_core_exists != 'true') }}
+    if: ${{ !cancelled() && needs.prepare.outputs.release_crates == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.crates_core_exists != 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
@@ -606,7 +606,7 @@ jobs:
   publish-pypi:
     name: Publish PyPI
     needs: [prepare, check-registries, build-python, build-python-sdist]
-    if: ${{ needs.prepare.outputs.release_python == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.pypi_exists != 'true') }}
+    if: ${{ !cancelled() && needs.prepare.outputs.release_python == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.pypi_exists != 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v8.0.1
@@ -622,7 +622,7 @@ jobs:
   publish-node:
     name: Publish Node
     needs: [prepare, check-registries, build-node]
-    if: ${{ needs.prepare.outputs.release_node == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.npm_node_exists != 'true') }}
+    if: ${{ !cancelled() && needs.prepare.outputs.release_node == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.npm_node_exists != 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v8.0.1
@@ -644,7 +644,7 @@ jobs:
   publish-wasm:
     name: Publish WASM
     needs: [prepare, check-registries, build-wasm]
-    if: ${{ needs.prepare.outputs.release_wasm == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.npm_wasm_exists != 'true') }}
+    if: ${{ !cancelled() && needs.prepare.outputs.release_wasm == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.npm_wasm_exists != 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v8.0.1
@@ -666,7 +666,7 @@ jobs:
   publish-rubygems:
     name: Publish RubyGems
     needs: [prepare, check-registries, build-ruby]
-    if: ${{ needs.prepare.outputs.release_ruby == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.ruby_exists != 'true') }}
+    if: ${{ !cancelled() && needs.prepare.outputs.release_ruby == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.ruby_exists != 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v8.0.1
@@ -683,7 +683,7 @@ jobs:
   publish-packagist:
     name: Publish Packagist
     needs: [prepare, check-registries]
-    if: ${{ needs.prepare.outputs.release_php == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.php_exists != 'true') }}
+    if: ${{ !cancelled() && needs.prepare.outputs.release_php == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.php_exists != 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: kreuzberg-dev/actions/publish-packagist@v1
@@ -700,7 +700,7 @@ jobs:
   publish-hex:
     name: Publish Hex
     needs: [prepare, check-registries, build-elixir]
-    if: ${{ needs.prepare.outputs.release_elixir == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.hex_exists != 'true') }}
+    if: ${{ !cancelled() && needs.prepare.outputs.release_elixir == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.hex_exists != 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
@@ -720,7 +720,7 @@ jobs:
   publish-maven:
     name: Publish Maven
     needs: [prepare, check-registries, build-jvm-dotnet-dart-swift-zig]
-    if: ${{ needs.prepare.outputs.release_java == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.maven_java_exists != 'true') }}
+    if: ${{ !cancelled() && needs.prepare.outputs.release_java == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.maven_java_exists != 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
@@ -744,7 +744,7 @@ jobs:
   publish-kotlin:
     name: Publish Kotlin
     needs: [prepare, check-registries, build-jvm-dotnet-dart-swift-zig]
-    if: ${{ needs.prepare.outputs.release_kotlin == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.maven_kotlin_exists != 'true') }}
+    if: ${{ !cancelled() && needs.prepare.outputs.release_kotlin == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.maven_kotlin_exists != 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
@@ -763,7 +763,7 @@ jobs:
   publish-nuget:
     name: Publish NuGet
     needs: [prepare, check-registries, build-jvm-dotnet-dart-swift-zig]
-    if: ${{ needs.prepare.outputs.release_csharp == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.nuget_exists != 'true') }}
+    if: ${{ !cancelled() && needs.prepare.outputs.release_csharp == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.nuget_exists != 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v8.0.1
@@ -781,7 +781,7 @@ jobs:
   publish-pub:
     name: Publish pub.dev
     needs: [prepare, check-registries, build-jvm-dotnet-dart-swift-zig]
-    if: ${{ needs.prepare.outputs.release_dart == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.pub_exists != 'true') }}
+    if: ${{ !cancelled() && needs.prepare.outputs.release_dart == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.pub_exists != 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
@@ -795,7 +795,7 @@ jobs:
   publish-swift:
     name: Publish Swift metadata
     needs: [prepare, check-registries, build-jvm-dotnet-dart-swift-zig]
-    if: ${{ needs.prepare.outputs.release_swift == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.swift_exists != 'true') }}
+    if: ${{ !cancelled() && needs.prepare.outputs.release_swift == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.swift_exists != 'true') }}
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v6.0.2
@@ -811,7 +811,7 @@ jobs:
   publish-zig:
     name: Publish Zig metadata
     needs: [prepare, check-registries, build-jvm-dotnet-dart-swift-zig]
-    if: ${{ needs.prepare.outputs.release_zig == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.zig_exists != 'true') }}
+    if: ${{ !cancelled() && needs.prepare.outputs.release_zig == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.zig_exists != 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
