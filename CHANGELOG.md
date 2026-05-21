@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.3] - 2026-05-21
+
+### Fixed
+
+- Regenerated all polyglot bindings against [alef v0.17.17](https://github.com/kreuzberg-dev/alef/releases/tag/v0.17.17). The Elixir `mix.exs` `files:` list is now correctly emitted as `~w(.formatter.exs mix.exs README* native ../../crates/spikard-elixir/src/*.ex)` — no `lib/` (the directory never exists for spikard; the NIF source lives in `crates/spikard-elixir/src/`) and no `checksum-*.exs` (no `rustler_precompiled` upload step is scaffolded). v0.15.2 claimed this fix but the alef v0.17.15 ship that release pinned to was incomplete; v0.17.17 is the first release where regen actually produces the correct list, unblocking `mix hex.publish`.
+- Picks up the alef v0.17.17 de-hardcoding sweep: codegen no longer carries literal consumer-repo names (`spikard`, `kreuzberg`, `liter-llm`, `html-to-markdown`, `tree-sitter-language-pack`, `kreuzcrawl`) in production source paths. spikard regen is unaffected in surface behavior; the change just makes alef a fully generic generator.
+- Swift Rust bridge: `serde_json::from_str(&s).unwrap_or(Value::String(s))` replaced with `unwrap_or_else(|_| Value::String(s))` across four config builders. The eagerly-evaluated form would move `s` before the fallback could read it; the lazy form keeps the original raw string available when JSON parsing fails (e.g. for plain identifiers like `tts-1`).
+
+### Changed
+
+- `Taskfile.yaml`: `task upgrade` guards the optional `gh-actions-updater` call with `command -v` so missing binaries print a single skip line instead of an "executable file not found" error.
+- `.pre-commit-config.yaml`: `ai-rulez` v4.1.6 → v4.2.1, `kreuzberg-dev/pre-commit-hooks` v1.1.12 → v1.1.17, `kreuzberg-dev/alef` v0.17.15 → v0.17.17.
+
 ## [0.15.2] - 2026-05-21
 
 ### Added

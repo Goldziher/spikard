@@ -52,6 +52,15 @@ public struct CorsConfig: Codable, Sendable, Hashable {
         case maxAge = "max_age"
         case allowCredentials = "allow_credentials"
     }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.allowedOrigins = try container.decodeIfPresent([String].self, forKey: .allowedOrigins) ?? []
+        self.allowedMethods = try container.decodeIfPresent([String].self, forKey: .allowedMethods) ?? []
+        self.allowedHeaders = try container.decodeIfPresent([String].self, forKey: .allowedHeaders) ?? []
+        self.exposeHeaders = try container.decodeIfPresent([String].self, forKey: .exposeHeaders) ?? nil
+        self.maxAge = try container.decodeIfPresent(UInt32.self, forKey: .maxAge) ?? nil
+        self.allowCredentials = try container.decodeIfPresent(Bool.self, forKey: .allowCredentials) ?? nil
+    }
 }
 
 // MARK: - Internal FFI conversions for CorsConfig
@@ -93,6 +102,13 @@ public struct CompressionConfig: Codable, Sendable, Hashable {
         case minSize = "min_size"
         case quality = "quality"
     }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.gzip = try container.decodeIfPresent(Bool.self, forKey: .gzip) ?? true
+        self.brotli = try container.decodeIfPresent(Bool.self, forKey: .brotli) ?? true
+        self.minSize = try container.decodeIfPresent(UInt.self, forKey: .minSize) ?? 0
+        self.quality = try container.decodeIfPresent(UInt32.self, forKey: .quality) ?? 0
+    }
 }
 
 // MARK: - Internal FFI conversions for CompressionConfig
@@ -125,6 +141,12 @@ public struct RateLimitConfig: Codable, Sendable, Hashable {
         case perSecond = "per_second"
         case burst = "burst"
         case ipBased = "ip_based"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.perSecond = try container.decodeIfPresent(UInt64.self, forKey: .perSecond) ?? 100
+        self.burst = try container.decodeIfPresent(UInt32.self, forKey: .burst) ?? 200
+        self.ipBased = try container.decodeIfPresent(Bool.self, forKey: .ipBased) ?? true
     }
 }
 
@@ -216,6 +238,12 @@ public struct SchemaConfig: Codable, Sendable, Hashable {
         case complexityLimit = "complexity_limit"
         case depthLimit = "depth_limit"
     }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.introspectionEnabled = try container.decodeIfPresent(Bool.self, forKey: .introspectionEnabled) ?? true
+        self.complexityLimit = try container.decodeIfPresent(UInt.self, forKey: .complexityLimit) ?? nil
+        self.depthLimit = try container.decodeIfPresent(UInt.self, forKey: .depthLimit) ?? nil
+    }
 }
 
 // MARK: - Internal FFI conversions for SchemaConfig
@@ -247,6 +275,12 @@ public struct QueryOnlyConfig: Codable, Sendable, Hashable {
         case introspectionEnabled = "introspection_enabled"
         case complexityLimit = "complexity_limit"
         case depthLimit = "depth_limit"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.introspectionEnabled = try container.decodeIfPresent(Bool.self, forKey: .introspectionEnabled) ?? true
+        self.complexityLimit = try container.decodeIfPresent(UInt.self, forKey: .complexityLimit) ?? nil
+        self.depthLimit = try container.decodeIfPresent(UInt.self, forKey: .depthLimit) ?? nil
     }
 }
 
@@ -280,6 +314,12 @@ public struct QueryMutationConfig: Codable, Sendable, Hashable {
         case complexityLimit = "complexity_limit"
         case depthLimit = "depth_limit"
     }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.introspectionEnabled = try container.decodeIfPresent(Bool.self, forKey: .introspectionEnabled) ?? true
+        self.complexityLimit = try container.decodeIfPresent(UInt.self, forKey: .complexityLimit) ?? nil
+        self.depthLimit = try container.decodeIfPresent(UInt.self, forKey: .depthLimit) ?? nil
+    }
 }
 
 // MARK: - Internal FFI conversions for QueryMutationConfig
@@ -311,6 +351,12 @@ public struct FullSchemaConfig: Codable, Sendable, Hashable {
         case introspectionEnabled = "introspection_enabled"
         case complexityLimit = "complexity_limit"
         case depthLimit = "depth_limit"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.introspectionEnabled = try container.decodeIfPresent(Bool.self, forKey: .introspectionEnabled) ?? true
+        self.complexityLimit = try container.decodeIfPresent(UInt.self, forKey: .complexityLimit) ?? nil
+        self.depthLimit = try container.decodeIfPresent(UInt.self, forKey: .depthLimit) ?? nil
     }
 }
 
@@ -391,6 +437,12 @@ public struct BackgroundTaskConfig: Codable, Sendable, Hashable {
         case maxConcurrentTasks = "max_concurrent_tasks"
         case drainTimeoutSecs = "drain_timeout_secs"
     }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.maxQueueSize = try container.decodeIfPresent(UInt.self, forKey: .maxQueueSize) ?? 1024
+        self.maxConcurrentTasks = try container.decodeIfPresent(UInt.self, forKey: .maxConcurrentTasks) ?? 128
+        self.drainTimeoutSecs = try container.decodeIfPresent(UInt64.self, forKey: .drainTimeoutSecs) ?? 30
+    }
 }
 
 // MARK: - Internal FFI conversions for BackgroundTaskConfig
@@ -415,6 +467,11 @@ public struct BackgroundJobMetadata: Codable, Sendable, Hashable {
     private enum CodingKeys: String, CodingKey {
         case name = "name"
         case requestId = "request_id"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.name = try container.decodeIfPresent(String.self, forKey: .name) ?? ""
+        self.requestId = try container.decodeIfPresent(String.self, forKey: .requestId) ?? nil
     }
 }
 
@@ -538,6 +595,18 @@ public struct GrpcConfig: Codable, Sendable, Hashable {
         case keepaliveTimeout = "keepalive_timeout"
         case maxStreamResponseBytes = "max_stream_response_bytes"
     }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.enabled = try container.decodeIfPresent(Bool.self, forKey: .enabled) ?? true
+        self.maxMessageSize = try container.decodeIfPresent(UInt.self, forKey: .maxMessageSize) ?? 0
+        self.enableCompression = try container.decodeIfPresent(Bool.self, forKey: .enableCompression) ?? true
+        self.requestTimeout = try container.decodeIfPresent(UInt64.self, forKey: .requestTimeout) ?? nil
+        self.maxConcurrentStreams = try container.decodeIfPresent(UInt32.self, forKey: .maxConcurrentStreams) ?? 0
+        self.enableKeepalive = try container.decodeIfPresent(Bool.self, forKey: .enableKeepalive) ?? true
+        self.keepaliveInterval = try container.decodeIfPresent(UInt64.self, forKey: .keepaliveInterval) ?? 0
+        self.keepaliveTimeout = try container.decodeIfPresent(UInt64.self, forKey: .keepaliveTimeout) ?? 0
+        self.maxStreamResponseBytes = try container.decodeIfPresent(UInt.self, forKey: .maxStreamResponseBytes) ?? nil
+    }
 }
 
 // MARK: - Internal FFI conversions for GrpcConfig
@@ -579,6 +648,13 @@ public struct JsonRpcConfig: Codable, Sendable, Hashable {
         case endpointPath = "endpoint_path"
         case enableBatch = "enable_batch"
         case maxBatchSize = "max_batch_size"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.enabled = try container.decodeIfPresent(Bool.self, forKey: .enabled) ?? true
+        self.endpointPath = try container.decodeIfPresent(String.self, forKey: .endpointPath) ?? ""
+        self.enableBatch = try container.decodeIfPresent(Bool.self, forKey: .enableBatch) ?? false
+        self.maxBatchSize = try container.decodeIfPresent(UInt.self, forKey: .maxBatchSize) ?? 0
     }
 }
 

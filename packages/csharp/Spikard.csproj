@@ -3,7 +3,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>Spikard</RootNamespace>
     <PackageId>Spikard</PackageId>
-    <Version>0.15.2</Version>
+    <Version>0.15.3</Version>
     <Description>Rust-centric multi-language HTTP framework with polyglot bindings</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <RepositoryUrl>https://github.com/Goldziher/spikard</RepositoryUrl>

@@ -1,13 +1,13 @@
 [package]
 name = "spikard-ffi"
-version.workspace = true
+version = "0.15.3"
 edition = "2021"
-license.workspace = true
+license = "MIT"
 description = "Rust-centric multi-language HTTP framework with polyglot bindings"
 readme = false
 keywords = ["http", "web", "framework", "polyglot", "rust"]
 categories = ["text-processing"]
-repository.workspace = true
+repository = "https://github.com/Goldziher/spikard"
 
 # `serde_json` and `tokio` are emitted unconditionally above so the manifest
 # is stable across regens (and so the C FFI codegen can pull them in when an
@@ -28,10 +28,10 @@ default = []
 
 [dependencies]
 serde_json = "1"
-spikard = { workspace = true, features = ["di"] }
-spikard-core = { workspace = true }
-spikard-graphql = { workspace = true }
-spikard-http = { workspace = true }
+spikard = { path = "../spikard", features = ["di"] }
+spikard-core = { path = "../spikard-core" }
+spikard-graphql = { path = "../spikard-graphql" }
+spikard-http = { path = "../spikard-http" }
 tokio = { version = "1", features = ["full"] }
 
 [build-dependencies]

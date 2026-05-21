@@ -138,7 +138,7 @@ Configuration for gRPC support
 Controls how the server handles gRPC requests, including compression,
 timeouts, and protocol settings.
 
-## Stream Limits
+# Stream Limits
 
 This configuration enforces message-level size limits but delegates
 concurrent stream limiting to the HTTP/2 transport layer:
@@ -186,7 +186,7 @@ JSON-RPC server configuration
 
 ---
 
-#### OpenApiConfig
+### OpenApiConfig
 
 OpenAPI configuration
 
@@ -206,7 +206,7 @@ OpenAPI configuration
 
 ---
 
-#### Response
+### Response
 
 HTTP Response with custom status code, headers, and content
 
@@ -218,7 +218,7 @@ HTTP Response with custom status code, headers, and content
 
 ---
 
-#### JwtConfig
+### JwtConfig
 
 JWT authentication configuration
 
@@ -232,7 +232,7 @@ JWT authentication configuration
 
 ---
 
-#### ApiKeyConfig
+### ApiKeyConfig
 
 API Key authentication configuration
 
@@ -243,7 +243,7 @@ API Key authentication configuration
 
 ---
 
-#### StaticFilesConfig
+### StaticFilesConfig
 
 Static file serving configuration
 
@@ -256,7 +256,7 @@ Static file serving configuration
 
 ---
 
-#### ServerConfig
+### ServerConfig
 
 Server configuration
 
@@ -286,9 +286,9 @@ Server configuration
 
 ---
 
-#### Enums
+### Enums
 
-##### SecuritySchemeInfo
+#### SecuritySchemeInfo
 
 Security scheme types
 

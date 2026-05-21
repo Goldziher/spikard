@@ -976,7 +976,8 @@ impl AsyncApiConfig {
             // treat the raw input as a JSON string scalar so plain `String` /
             // string-like enum fields don't end up empty for inputs that aren't
             // valid JSON tokens (e.g. `tts-1`).
-            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            let __v =
+                ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or_else(|_| ::serde_json::Value::String(s));
             if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.spec = Some(t);
             }
@@ -1142,7 +1143,8 @@ impl BackgroundJobMetadata {
             // treat the raw input as a JSON string scalar so plain `String` /
             // string-like enum fields don't end up empty for inputs that aren't
             // valid JSON tokens (e.g. `tts-1`).
-            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            let __v =
+                ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or_else(|_| ::serde_json::Value::String(s));
             if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.request_id = Some(t);
             }
@@ -1327,7 +1329,8 @@ impl OpenApiConfig {
             // treat the raw input as a JSON string scalar so plain `String` /
             // string-like enum fields don't end up empty for inputs that aren't
             // valid JSON tokens (e.g. `tts-1`).
-            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            let __v =
+                ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or_else(|_| ::serde_json::Value::String(s));
             if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.description = Some(t);
             }
@@ -1459,7 +1462,8 @@ impl Response {
             // treat the raw input as a JSON string scalar so plain `String` /
             // string-like enum fields don't end up empty for inputs that aren't
             // valid JSON tokens (e.g. `tts-1`).
-            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            let __v =
+                ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or_else(|_| ::serde_json::Value::String(s));
             if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.content = Some(t);
             }

@@ -44,7 +44,7 @@
 
 Go bindings for the spikard polyglot HTTP framework. Backed by the Rust core via CGO static linking.
 
-> **Version 0.15.2**
+> **Version 0.15.3**
 > Report issues at [github.com/Goldziher/spikard](https://github.com/Goldziher/spikard/issues).
 
 ## Install
@@ -75,7 +75,7 @@ Download from [GitHub Releases](https://github.com/Goldziher/spikard/releases):
 
 ```bash
 # Example: Linux x86_64
-curl -LO https://github.com/Goldziher/spikard/releases/download/v0.15.2/go-ffi-linux-x86_64.tar.gz
+curl -LO https://github.com/Goldziher/spikard/releases/download/v0.15.3/go-ffi-linux-x86_64.tar.gz
 tar -xzf go-ffi-linux-x86_64.tar.gz
 
 CGO_LDFLAGS="-L/path/to/lib -lspikard_ffi" go build

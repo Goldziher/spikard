@@ -2,7 +2,7 @@
 title: "Kotlin API Reference"
 ---
 
-## Kotlin API Reference <span class="version-badge">v0.15.2</span>
+## Kotlin API Reference <span class="version-badge">v0.15.3</span>
 
 ### Functions
 
