@@ -1,8 +1,12 @@
 {
   "name": "@spikard/node",
-  "version": "0.15.0",
+  "version": "0.15.1",
   "description": "Rust-centric multi-language HTTP framework with polyglot bindings",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Goldziher/spikard.git"
+  },
   "files": [
     "index.js",
     "index.d.ts",

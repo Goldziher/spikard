@@ -916,59 +916,59 @@ public enum GraphQLError: Swift.Error {
 extension GraphQLError {
     public var statusCode: UInt16 {
         switch self {
-        case .executionError(field0: _): return 0
-        case .schemaBuildError(field0: _): return 0
-        case .requestHandlingError(field0: _): return 0
-        case .serializationError(field0: _): return 0
-        case .jsonError(field0: _): return 0
-        case .validationError(field0: _): return 0
-        case .parseError(field0: _): return 0
-        case .authenticationError(field0: _): return 0
-        case .authorizationError(field0: _): return 0
-        case .notFound(field0: _): return 0
-        case .rateLimitExceeded(field0: _): return 0
+        case .executionError(message: _, field0: _): return 0
+        case .schemaBuildError(message: _, field0: _): return 0
+        case .requestHandlingError(message: _, field0: _): return 0
+        case .serializationError(message: _, field0: _): return 0
+        case .jsonError(message: _, field0: _): return 0
+        case .validationError(message: _, field0: _): return 0
+        case .parseError(message: _, field0: _): return 0
+        case .authenticationError(message: _, field0: _): return 0
+        case .authorizationError(message: _, field0: _): return 0
+        case .notFound(message: _, field0: _): return 0
+        case .rateLimitExceeded(message: _, field0: _): return 0
         case .invalidInput(message: _, details: _): return 0
         case .complexityLimitExceeded: return 0
         case .depthLimitExceeded: return 0
-        case .internalError(field0: _): return 0
+        case .internalError(message: _, field0: _): return 0
         }
     }
     public var isTransient: Bool {
         switch self {
-        case .executionError(field0: _): return false
-        case .schemaBuildError(field0: _): return false
-        case .requestHandlingError(field0: _): return false
-        case .serializationError(field0: _): return false
-        case .jsonError(field0: _): return false
-        case .validationError(field0: _): return false
-        case .parseError(field0: _): return false
-        case .authenticationError(field0: _): return false
-        case .authorizationError(field0: _): return false
-        case .notFound(field0: _): return false
-        case .rateLimitExceeded(field0: _): return false
+        case .executionError(message: _, field0: _): return false
+        case .schemaBuildError(message: _, field0: _): return false
+        case .requestHandlingError(message: _, field0: _): return false
+        case .serializationError(message: _, field0: _): return false
+        case .jsonError(message: _, field0: _): return false
+        case .validationError(message: _, field0: _): return false
+        case .parseError(message: _, field0: _): return false
+        case .authenticationError(message: _, field0: _): return false
+        case .authorizationError(message: _, field0: _): return false
+        case .notFound(message: _, field0: _): return false
+        case .rateLimitExceeded(message: _, field0: _): return false
         case .invalidInput(message: _, details: _): return false
         case .complexityLimitExceeded: return false
         case .depthLimitExceeded: return false
-        case .internalError(field0: _): return false
+        case .internalError(message: _, field0: _): return false
         }
     }
     public var errorType: String {
         switch self {
-        case .executionError(field0: _): return ""
-        case .schemaBuildError(field0: _): return ""
-        case .requestHandlingError(field0: _): return ""
-        case .serializationError(field0: _): return ""
-        case .jsonError(field0: _): return ""
-        case .validationError(field0: _): return ""
-        case .parseError(field0: _): return ""
-        case .authenticationError(field0: _): return ""
-        case .authorizationError(field0: _): return ""
-        case .notFound(field0: _): return ""
-        case .rateLimitExceeded(field0: _): return ""
+        case .executionError(message: _, field0: _): return ""
+        case .schemaBuildError(message: _, field0: _): return ""
+        case .requestHandlingError(message: _, field0: _): return ""
+        case .serializationError(message: _, field0: _): return ""
+        case .jsonError(message: _, field0: _): return ""
+        case .validationError(message: _, field0: _): return ""
+        case .parseError(message: _, field0: _): return ""
+        case .authenticationError(message: _, field0: _): return ""
+        case .authorizationError(message: _, field0: _): return ""
+        case .notFound(message: _, field0: _): return ""
+        case .rateLimitExceeded(message: _, field0: _): return ""
         case .invalidInput(message: _, details: _): return ""
         case .complexityLimitExceeded: return ""
         case .depthLimitExceeded: return ""
-        case .internalError(field0: _): return ""
+        case .internalError(message: _, field0: _): return ""
         }
     }
 }

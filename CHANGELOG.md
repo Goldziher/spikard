@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.1] - 2026-05-21
+
 ### Fixed
 
 - `publish.yaml`: Build and upload Homebrew bottles before invoking `publish-homebrew`. The previous job pointed `bottles-dir` at the `cli-assets` artifact (source tarball only) and the publish step aborted with `No bottle artifacts found matching spikard-*.bottle.tar.gz`. Replaced with the canonical 3-job pattern: `check-homebrew` → `homebrew-bottles` (matrix across `macos-latest`/`macos-15-intel`/`ubuntu-latest`/`ubuntu-24.04-arm`) → `upload-homebrew-bottles` → `publish-homebrew`. Bottles now cover macOS arm64, macOS x86_64, Linux x86_64, and Linux arm64. Publish step now uses `HOMEBREW_TOKEN` to push across-repo to `Goldziher/homebrew-tap`.
+- `publish.yaml`: Use the existing `CENTRAL_USERNAME` / `CENTRAL_PASSWORD` / `GPG_PRIVATE_KEY` / `GPG_PASSPHRASE` repo secrets for the Maven Central publish job (the workflow previously referenced `MAVEN_*` secret names that don't exist in this repo).
+- Regenerated all polyglot bindings against [alef v0.17.14](https://github.com/kreuzberg-dev/alef/releases/tag/v0.17.14). Picks up the napi `package.json` `repository` field fix (unblocks npm provenance for `@spikard/node`) and the C# error-enum dedupe fix (prevents corrupt regen for overlapping variant names like `ValidationError` / `DepthLimitExceeded` / `ComplexityLimitExceeded` spread across the `GraphQLError` and `SchemaError` enums).
+- Shared `kreuzberg-dev/actions@v1` upgrades: `publish-hex` now runs `mix deps.get` before `mix hex.publish`; `publish-pypi` switched from `pypa/gh-action-pypi-publish` (which failed with `ghcr.io: denied` when invoked from a composite) to `uv publish --trusted-publishing automatic`; `publish-npm` strips empty `NODE_AUTH_TOKEN` + `.npmrc` `_authToken=` lines so npm CLI v11 OIDC fallback engages; `publish-rubygems` invokes `rubygems/configure-rubygems-credentials` when `GEM_HOST_API_KEY` is empty.
 
 ## [0.15.0] - 2026-05-20
 

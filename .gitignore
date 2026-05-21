@@ -187,3 +187,4 @@ todo.md
 /*_TODO.md
 [Tt][Oo][Dd][Oo]*
 !testing_data/schemas/todo-api.openapi.yaml
+vendor/bundle/
