@@ -606,7 +606,7 @@ mod tests {
     #[test]
     fn test_generate_openapi_impl_matches_service() -> Result<()> {
         let server = SpikardMcp::new();
-        let schema = repo_root().join("examples/schemas/todo-api.openapi.yaml");
+        let schema = repo_root().join("testing_data/schemas/todo-api.openapi.yaml");
 
         let tool_result = server.generate_openapi_impl(GenerateOpenapiParams {
             schema: schema.display().to_string(),
@@ -640,7 +640,7 @@ mod tests {
     #[test]
     fn test_generate_jsonrpc_impl_matches_service() -> Result<()> {
         let server = SpikardMcp::new();
-        let schema = repo_root().join("examples/schemas/user-api.openrpc.json");
+        let schema = repo_root().join("testing_data/schemas/user-api.openrpc.json");
         let tmp = TempDir::new()?;
         let tool_output = tmp.path().join("tool_handlers.py");
         let app_output = tmp.path().join("app_handlers.py");
@@ -720,7 +720,7 @@ mod tests {
     #[test]
     fn test_generate_protobuf_impl_matches_service() -> Result<()> {
         let server = SpikardMcp::new();
-        let schema = repo_root().join("examples/schemas/user-service.proto");
+        let schema = repo_root().join("testing_data/schemas/user-service.proto");
         let tmp = TempDir::new()?;
         let tool_output = tmp.path().join("tool_generated.ts");
         let app_output = tmp.path().join("app_generated.ts");
@@ -778,7 +778,7 @@ mod tests {
     #[test]
     fn test_generate_asyncapi_bundle_impl_matches_service_asset_count() -> Result<()> {
         let server = SpikardMcp::new();
-        let schema = repo_root().join("examples/schemas/chat-service.asyncapi.yaml");
+        let schema = repo_root().join("testing_data/schemas/chat-service.asyncapi.yaml");
         let tool_tmp = TempDir::new()?;
         let app_tmp = TempDir::new()?;
 
@@ -810,7 +810,7 @@ mod tests {
     #[test]
     fn test_generate_asyncapi_handlers_impl_matches_service() -> Result<()> {
         let server = SpikardMcp::new();
-        let schema = repo_root().join("examples/schemas/chat-service.asyncapi.yaml");
+        let schema = repo_root().join("testing_data/schemas/chat-service.asyncapi.yaml");
         let tmp = TempDir::new()?;
         let tool_output = tmp.path().join("tool_handlers.py");
         let app_output = tmp.path().join("app_handlers.py");
@@ -856,7 +856,7 @@ mod tests {
     #[test]
     fn test_generate_asyncapi_fixtures_impl_matches_service() -> Result<()> {
         let server = SpikardMcp::new();
-        let schema = repo_root().join("examples/schemas/chat-service.asyncapi.yaml");
+        let schema = repo_root().join("testing_data/schemas/chat-service.asyncapi.yaml");
         let tool_tmp = TempDir::new()?;
         let app_tmp = TempDir::new()?;
 
@@ -888,7 +888,7 @@ mod tests {
     #[test]
     fn test_generate_asyncapi_test_app_impl_matches_service() -> Result<()> {
         let server = SpikardMcp::new();
-        let schema = repo_root().join("examples/schemas/chat-service.asyncapi.yaml");
+        let schema = repo_root().join("testing_data/schemas/chat-service.asyncapi.yaml");
         let tmp = TempDir::new()?;
         let tool_output = tmp.path().join("tool_app.ex");
         let app_output = tmp.path().join("app_app.ex");
@@ -937,7 +937,7 @@ mod tests {
     #[test]
     fn test_validate_asyncapi_impl_matches_service() -> Result<()> {
         let server = SpikardMcp::new();
-        let schema = repo_root().join("examples/schemas/chat-service.asyncapi.yaml");
+        let schema = repo_root().join("testing_data/schemas/chat-service.asyncapi.yaml");
 
         let tool_result = server.validate_asyncapi_impl(ValidateAsyncapiParams {
             schema: schema.display().to_string(),
@@ -979,7 +979,7 @@ mod tests {
     #[test]
     fn test_generate_openapi_impl_defaults_to_python() -> Result<()> {
         let server = SpikardMcp::new();
-        let schema = repo_root().join("examples/schemas/todo-api.openapi.yaml");
+        let schema = repo_root().join("testing_data/schemas/todo-api.openapi.yaml");
 
         let tool_result = server.generate_openapi_impl(GenerateOpenapiParams {
             schema: schema.display().to_string(),

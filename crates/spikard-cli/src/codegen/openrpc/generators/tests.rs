@@ -343,7 +343,7 @@ fn test_python_generator_user_service_fixture_validates_with_quality_gates() {
 
 #[test]
 fn test_python_generator_user_api_example_validates_with_quality_gates() {
-    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/user-api.openrpc.json");
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testing_data/schemas/user-api.openrpc.json");
     let spec = parse_openrpc_schema(&fixture).expect("example OpenRPC schema should parse");
     let generator = PythonOpenRpcGenerator;
     let output = generator
@@ -457,7 +457,7 @@ fn test_rust_generator_keeps_free_form_objects_as_value() {
 
 #[test]
 fn test_rust_generator_emits_named_inline_param_models_for_openrpc_example() {
-    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/user-api.openrpc.json");
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testing_data/schemas/user-api.openrpc.json");
     let spec = parse_openrpc_schema(&fixture).expect("user-api OpenRPC example should parse");
     let generator = RustOpenRpcGenerator;
     let output = generator
@@ -594,7 +594,7 @@ fn test_typescript_generator_compiles() {
 
 #[test]
 fn test_typescript_generator_user_api_example_validates_with_quality_gates() {
-    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/user-api.openrpc.json");
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testing_data/schemas/user-api.openrpc.json");
     let spec = parse_openrpc_schema(&fixture).expect("example OpenRPC schema should parse");
     let generator = TypeScriptOpenRpcGenerator;
     let output = generator
@@ -612,7 +612,7 @@ fn test_typescript_generator_user_api_example_validates_with_quality_gates() {
 
 #[test]
 fn test_typescript_generator_preserves_shaped_objects_and_optionality() {
-    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/user-api.openrpc.json");
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testing_data/schemas/user-api.openrpc.json");
     let spec = parse_openrpc_schema(&fixture).expect("example OpenRPC schema should parse");
     let generator = TypeScriptOpenRpcGenerator;
     let output = generator
@@ -969,7 +969,7 @@ fn test_ruby_generator_validates_with_quality_gates() {
 
 #[test]
 fn test_ruby_generator_user_api_example_validates_with_quality_gates() {
-    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/user-api.openrpc.json");
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testing_data/schemas/user-api.openrpc.json");
     let spec = parse_openrpc_schema(&fixture).expect("example OpenRPC schema should parse");
     let generator = RubyOpenRpcGenerator;
     let output = generator

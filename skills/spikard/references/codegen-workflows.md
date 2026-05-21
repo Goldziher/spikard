@@ -7,8 +7,8 @@ Use Spikard as a schema-to-code generator first.
 Use for REST handler scaffolding.
 
 ```bash
-spikard generate openapi examples/schemas/todo-api.openapi.yaml --lang python
-spikard generate openapi examples/schemas/todo-api.openapi.yaml --lang typescript --dto zod --output app.ts
+spikard generate openapi testing_data/schemas/todo-api.openapi.yaml --lang python
+spikard generate openapi testing_data/schemas/todo-api.openapi.yaml --lang typescript --dto zod --output app.ts
 ```
 
 ## AsyncAPI
@@ -16,9 +16,9 @@ spikard generate openapi examples/schemas/todo-api.openapi.yaml --lang typescrip
 Use for SSE or WebSocket handler scaffolding, fixtures, and test apps.
 
 ```bash
-spikard generate asyncapi examples/schemas/chat-service.asyncapi.yaml --lang ruby --output app.rb
-spikard testing asyncapi fixtures examples/schemas/chat-service.asyncapi.yaml --output testing_data
-spikard testing asyncapi test-app examples/schemas/chat-service.asyncapi.yaml --lang python --output app.py
+spikard generate asyncapi testing_data/schemas/chat-service.asyncapi.yaml --lang ruby --output app.rb
+spikard testing asyncapi fixtures testing_data/schemas/chat-service.asyncapi.yaml --output testing_data
+spikard testing asyncapi test-app testing_data/schemas/chat-service.asyncapi.yaml --lang python --output app.py
 ```
 
 ## OpenRPC / JSON-RPC
@@ -26,7 +26,7 @@ spikard testing asyncapi test-app examples/schemas/chat-service.asyncapi.yaml --
 Use for JSON-RPC 2.0 handler generation.
 
 ```bash
-spikard generate jsonrpc examples/schemas/calculator.openrpc.yaml --lang python --output handlers.py
+spikard generate jsonrpc testing_data/schemas/calculator.openrpc.yaml --lang python --output handlers.py
 ```
 
 ## GraphQL
@@ -34,7 +34,7 @@ spikard generate jsonrpc examples/schemas/calculator.openrpc.yaml --lang python 
 Use for types, resolvers, or schema output.
 
 ```bash
-spikard generate graphql examples/schemas/blog.graphql --lang rust --target all --output generated.rs
+spikard generate graphql testing_data/schemas/blog.graphql --lang rust --target all --output generated.rs
 ```
 
 ## Protobuf
@@ -42,8 +42,8 @@ spikard generate graphql examples/schemas/blog.graphql --lang rust --target all 
 Use for messages and gRPC services.
 
 ```bash
-spikard generate protobuf examples/schemas/greeter.proto --lang php --output src/Proto.php
-spikard generate protobuf examples/schemas/greeter.proto --lang python --include examples/schemas/includes --output generated.py
+spikard generate protobuf testing_data/schemas/greeter.proto --lang php --output src/Proto.php
+spikard generate protobuf testing_data/schemas/greeter.proto --lang python --include testing_data/schemas/includes --output generated.py
 ```
 
 ## PHP DTO Helpers

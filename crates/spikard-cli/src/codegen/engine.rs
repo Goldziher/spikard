@@ -746,8 +746,8 @@ mod tests {
     #[test]
     fn generates_openrpc_handlers_to_file() {
         let dir = tempdir().unwrap();
-        let schema_path =
-            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/user-api.openrpc.json");
+        let schema_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../testing_data/schemas/user-api.openrpc.json");
 
         let output_path = dir.path().join("handlers.ts");
         let outcome = CodegenEngine::execute(CodegenRequest {
@@ -869,8 +869,8 @@ service UserService {
     #[test]
     fn validates_generated_rust_openrpc_before_writing() {
         let dir = tempdir().unwrap();
-        let schema_path =
-            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/user-api.openrpc.json");
+        let schema_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../testing_data/schemas/user-api.openrpc.json");
         let output_path = dir.path().join("openrpc.rs");
 
         let outcome = CodegenEngine::execute_validated(CodegenRequest {
@@ -900,7 +900,7 @@ service UserService {
     fn validates_generated_rust_asyncapi_before_writing() {
         let dir = tempdir().unwrap();
         let schema_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../examples/schemas/chat-service.asyncapi.yaml");
+            .join("../../testing_data/schemas/chat-service.asyncapi.yaml");
         let output_path = dir.path().join("asyncapi.rs");
 
         let outcome = CodegenEngine::execute_validated(CodegenRequest {
@@ -929,8 +929,8 @@ service UserService {
     #[test]
     fn validates_generated_rust_openapi_before_writing() {
         let dir = tempdir().unwrap();
-        let schema_path =
-            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/todo-api.openapi.yaml");
+        let schema_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../testing_data/schemas/todo-api.openapi.yaml");
         let output_path = dir.path().join("openapi.rs");
 
         let outcome = CodegenEngine::execute_validated(CodegenRequest {

@@ -139,4 +139,3 @@ task test:e2e:python
 ## Related Documentation
 
 - Design & implementation: `docs/adr/0005-lifecycle-hooks.md`
-- Rust Example: `examples/rust-lifecycle-hooks/`

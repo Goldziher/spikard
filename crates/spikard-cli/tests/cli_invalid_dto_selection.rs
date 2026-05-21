@@ -17,7 +17,7 @@ fn cli_rejects_invalid_python_dto_choice() {
         .args([
             "generate",
             "openapi",
-            "examples/schemas/todo-api.openapi.yaml",
+            "testing_data/schemas/todo-api.openapi.yaml",
             "--lang",
             "python",
             "--dto",
@@ -39,7 +39,7 @@ fn cli_rejects_invalid_typescript_dto_choice() {
         .args([
             "generate",
             "openapi",
-            "examples/schemas/todo-api.openapi.yaml",
+            "testing_data/schemas/todo-api.openapi.yaml",
             "--lang",
             "typescript",
             "--dto",

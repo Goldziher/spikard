@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 #[test]
 fn cli_can_generate_jsonrpc_in_process() {
-    let schema = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/user-api.openrpc.json");
+    let schema = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../testing_data/schemas/user-api.openrpc.json");
     let dir = tempfile::tempdir().expect("tempdir");
     let output_path = dir.path().join("jsonrpc.py");
 

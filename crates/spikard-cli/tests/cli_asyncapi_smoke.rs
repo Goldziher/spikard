@@ -23,7 +23,7 @@ fn cli_can_generate_asyncapi_fixtures_from_examples() {
     let dir = tempfile::tempdir().expect("tempdir");
     let output_dir = dir.path().join("testing_data");
 
-    let schema = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/chat-service.asyncapi.yaml");
+    let schema = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testing_data/schemas/chat-service.asyncapi.yaml");
     assert!(schema.exists(), "missing example schema at {}", schema.display());
 
     let output = Command::new(exe)

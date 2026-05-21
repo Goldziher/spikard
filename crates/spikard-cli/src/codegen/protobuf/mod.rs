@@ -391,7 +391,7 @@ service UserService {
 
     #[test]
     fn test_parse_and_generate_rust_example_validates() {
-        let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/user-service.proto");
+        let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testing_data/schemas/user-service.proto");
         let schema = parse_proto_schema(&fixture).expect("example proto schema should parse");
         let code = generate_rust_protobuf(&schema, &ProtobufTarget::All).expect("Failed to generate Rust code");
         let report = QualityValidator::new(TargetLanguage::Rust)

@@ -355,15 +355,15 @@ These schemas are designed for code generation using tools like:
 
 ```bash
 # OpenAPI code generation (client/server)
-openapi-generator-cli generate -i examples/schemas/todo-api.openapi.yaml -g python-flask -o generated/python/
-openapi-generator-cli generate -i examples/schemas/file-service.openapi.yaml -g nodejs-express -o generated/node/
+openapi-generator-cli generate -i testing_data/schemas/todo-api.openapi.yaml -g python-flask -o generated/python/
+openapi-generator-cli generate -i testing_data/schemas/file-service.openapi.yaml -g nodejs-express -o generated/node/
 
 # AsyncAPI code generation (handler templates)
-asyncapi generate fromTemplate examples/schemas/chat-service.asyncapi.yaml @asyncapi/python-pydantic-schema -o generated/schemas/chat/
+asyncapi generate fromTemplate testing_data/schemas/chat-service.asyncapi.yaml @asyncapi/python-pydantic-schema -o generated/schemas/chat/
 
 # Spikard-specific code generation
-spikard-codegen --spec examples/schemas/todo-api.openapi.yaml --lang python --output examples/python/todo-api/
-spikard-codegen --spec examples/schemas/chat-service.asyncapi.yaml --lang python --output examples/python/chat-service/
+spikard-codegen --spec testing_data/schemas/todo-api.openapi.yaml --lang python --output generated/todo-api/
+spikard-codegen --spec testing_data/schemas/chat-service.asyncapi.yaml --lang python --output generated/chat-service/
 ```
 
 ---

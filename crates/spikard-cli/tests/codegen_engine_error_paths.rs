@@ -35,7 +35,7 @@ fn codegen_engine_generates_php_asyncapi_test_apps() {
     let out_file = output_dir.path().join("chat-service-asyncapi.php");
 
     let request = CodegenRequest {
-        schema_path: workspace_root().join("examples/schemas/chat-service.asyncapi.yaml"),
+        schema_path: workspace_root().join("testing_data/schemas/chat-service.asyncapi.yaml"),
         schema_kind: SchemaKind::AsyncApi,
         target: CodegenTargetKind::AsyncTestApp {
             language: TargetLanguage::Php,
@@ -62,7 +62,7 @@ fn codegen_engine_generates_rust_asyncapi_test_apps() {
     let out_file = output_dir.path().join("chat-service-asyncapi.rs");
 
     let request = CodegenRequest {
-        schema_path: workspace_root().join("examples/schemas/chat-service.asyncapi.yaml"),
+        schema_path: workspace_root().join("testing_data/schemas/chat-service.asyncapi.yaml"),
         schema_kind: SchemaKind::AsyncApi,
         target: CodegenTargetKind::AsyncTestApp {
             language: TargetLanguage::Rust,
@@ -89,7 +89,7 @@ fn codegen_engine_generates_elixir_asyncapi_test_apps() {
     let out_file = output_dir.path().join("chat-service-asyncapi.ex");
 
     let request = CodegenRequest {
-        schema_path: workspace_root().join("examples/schemas/chat-service.asyncapi.yaml"),
+        schema_path: workspace_root().join("testing_data/schemas/chat-service.asyncapi.yaml"),
         schema_kind: SchemaKind::AsyncApi,
         target: CodegenTargetKind::AsyncTestApp {
             language: TargetLanguage::Elixir,
@@ -115,7 +115,7 @@ fn codegen_engine_asyncapi_all_writes_fixtures_and_apps() {
     let out_dir = tempdir().unwrap();
 
     let request = CodegenRequest {
-        schema_path: workspace_root().join("examples/schemas/chat-service.asyncapi.yaml"),
+        schema_path: workspace_root().join("testing_data/schemas/chat-service.asyncapi.yaml"),
         schema_kind: SchemaKind::AsyncApi,
         target: CodegenTargetKind::AsyncAll {
             output: out_dir.path().to_path_buf(),

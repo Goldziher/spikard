@@ -133,8 +133,7 @@ The integration is validated through:
 
 1. **Unit tests** in routes.rs for GraphQLRouteConfig
 2. **Handler tests** existing in handler.rs (unchanged)
-3. **Integration examples** in examples/graphql/
-4. **Fixture-based tests** in testing_data/graphql/ (following project convention)
+3. **Fixture-based tests** in testing_data/graphql/ (following project convention)
 
 ## Alternative Approaches Considered
 

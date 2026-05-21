@@ -58,8 +58,7 @@ Full async/await support — handlers are async functions, integrated with async
 
 ## Documentation
 
-- **[Repository]({{ repository }})** — source code, examples, and contributing guide
-- **[Examples]({{ repository }}/tree/main/examples/python)** — Python-specific examples
+- **[Repository]({{ repository }})** — source code and contributing guide
 - **[Issues]({{ repository }}/issues)** — bug reports and feature requests
 
 ## Contributing

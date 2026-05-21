@@ -161,14 +161,14 @@ fn cli_init_command_creates_expected_project_structures_for_each_binding() -> Re
 
 #[test]
 fn cli_validate_asyncapi_command_runs() -> Result<()> {
-    let schema = repo_root().join("examples/schemas/chat-service.asyncapi.yaml");
+    let schema = repo_root().join("testing_data/schemas/chat-service.asyncapi.yaml");
     spikard_cli::cli::run_from(["spikard", "validate-asyncapi", schema.to_string_lossy().as_ref()])?;
     Ok(())
 }
 
 #[test]
 fn cli_testing_asyncapi_fixtures_generates_output() -> Result<()> {
-    let schema = repo_root().join("examples/schemas/chat-service.asyncapi.yaml");
+    let schema = repo_root().join("testing_data/schemas/chat-service.asyncapi.yaml");
     let tmp = TempDir::new()?;
     spikard_cli::cli::run_from([
         "spikard",
@@ -202,7 +202,7 @@ fn cli_testing_asyncapi_fixtures_generates_output() -> Result<()> {
 
 #[test]
 fn cli_generate_asyncapi_handlers_writes_file() -> Result<()> {
-    let schema = repo_root().join("examples/schemas/chat-service.asyncapi.yaml");
+    let schema = repo_root().join("testing_data/schemas/chat-service.asyncapi.yaml");
     let tmp = TempDir::new()?;
     let output = tmp.path().join("handlers.py");
 
@@ -224,7 +224,7 @@ fn cli_generate_asyncapi_handlers_writes_file() -> Result<()> {
 
 #[test]
 fn cli_generate_openapi_writes_file() -> Result<()> {
-    let schema = repo_root().join("examples/schemas/todo-api.openapi.yaml");
+    let schema = repo_root().join("testing_data/schemas/todo-api.openapi.yaml");
     let tmp = TempDir::new()?;
     let output = tmp.path().join("handlers.py");
 
@@ -246,7 +246,7 @@ fn cli_generate_openapi_writes_file() -> Result<()> {
 
 #[test]
 fn cli_generate_openapi_multi_language_outputs_non_empty_files() -> Result<()> {
-    let schema = repo_root().join("examples/schemas/todo-api.openapi.yaml");
+    let schema = repo_root().join("testing_data/schemas/todo-api.openapi.yaml");
     let tmp = TempDir::new()?;
 
     let cases = [
@@ -277,7 +277,7 @@ fn cli_generate_openapi_multi_language_outputs_non_empty_files() -> Result<()> {
 
 #[test]
 fn cli_generate_jsonrpc_writes_file() -> Result<()> {
-    let schema = repo_root().join("examples/schemas/user-api.openrpc.json");
+    let schema = repo_root().join("testing_data/schemas/user-api.openrpc.json");
     let tmp = TempDir::new()?;
     let output = tmp.path().join("handlers.py");
 

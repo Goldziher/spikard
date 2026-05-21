@@ -12,7 +12,7 @@ use std::path::PathBuf;
 
 fn root_schema(path: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../examples/schemas")
+        .join("../../testing_data/schemas")
         .join(path)
 }
 

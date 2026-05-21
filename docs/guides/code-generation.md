@@ -1608,13 +1608,13 @@ Error: Permission denied: ./generated/handlers.py
 
    ```bash
    # Test with known-good schema
-   spikard generate openapi examples/schemas/todo-api.openapi.yaml --lang python
+   spikard generate openapi testing_data/schemas/todo-api.openapi.yaml --lang python
    ```
 
 ### Getting Help
 
 - **Documentation**: <https://github.com/Goldziher/spikard/docs>
-- **Examples**: See `examples/schemas/` directory
+- **Examples**: See `testing_data/schemas/` directory
 - **Issues**: <https://github.com/Goldziher/spikard/issues>
 - **ADRs**: `docs/adr/0004-code-generation.md`, `docs/adr/0010-protobuf-grpc-code-generation.md`
 

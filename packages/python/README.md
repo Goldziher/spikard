@@ -194,8 +194,7 @@ python app.py
 
 ## Documentation
 
-- **[Repository](https://github.com/Goldziher/spikard)** — source code, examples, and contributing guide
-- **[Examples](https://github.com/Goldziher/spikard/tree/main/examples/python)** — Python-specific examples
+- **[Repository](https://github.com/Goldziher/spikard)** — source code and contributing guide
 - **[Issues](https://github.com/Goldziher/spikard/issues)** — bug reports and feature requests
 
 ## Contributing

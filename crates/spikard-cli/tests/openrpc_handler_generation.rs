@@ -16,7 +16,7 @@ fn workspace_root() -> PathBuf {
 #[test]
 fn openrpc_generators_produce_handlers_for_example_spec() {
     let spec = parse_openrpc_schema(Path::new(
-        &workspace_root().join("examples/schemas/user-api.openrpc.json"),
+        &workspace_root().join("testing_data/schemas/user-api.openrpc.json"),
     ))
     .expect("parse OpenRPC example spec");
 

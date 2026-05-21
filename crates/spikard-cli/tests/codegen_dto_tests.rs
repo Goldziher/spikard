@@ -618,7 +618,8 @@ fn typescript_route_parameters_preserve_schema_types() -> Result<()> {
 
 #[test]
 fn typescript_openapi_auth_service_example_validates() -> Result<()> {
-    let schema_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/auth-service.openapi.yaml");
+    let schema_path =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testing_data/schemas/auth-service.openapi.yaml");
 
     let dto = DtoConfig {
         node: NodeDtoStyle::Zod,
@@ -644,7 +645,8 @@ fn typescript_openapi_auth_service_example_validates() -> Result<()> {
 
 #[test]
 fn typescript_openapi_auth_service_preserves_semantic_zod_and_union_bodies() -> Result<()> {
-    let schema_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/auth-service.openapi.yaml");
+    let schema_path =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testing_data/schemas/auth-service.openapi.yaml");
 
     let dto = DtoConfig {
         node: NodeDtoStyle::Zod,
@@ -887,7 +889,8 @@ fn ruby_openapi_generated_code_validates() -> Result<()> {
 
 #[test]
 fn ruby_openapi_auth_service_example_validates() -> Result<()> {
-    let schema_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/auth-service.openapi.yaml");
+    let schema_path =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testing_data/schemas/auth-service.openapi.yaml");
 
     let dto = DtoConfig {
         ruby: RubyDtoStyle::DrySchema,
@@ -1057,7 +1060,8 @@ fn rust_generation_uses_spikard_app() -> Result<()> {
 
 #[test]
 fn rust_openapi_auth_service_preserves_named_inline_and_union_request_bodies() -> Result<()> {
-    let schema_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/auth-service.openapi.yaml");
+    let schema_path =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testing_data/schemas/auth-service.openapi.yaml");
 
     let code = generate_from_openapi(&schema_path, TargetLanguage::Rust, &DtoConfig::default())?;
 
@@ -1089,7 +1093,8 @@ fn rust_openapi_auth_service_preserves_named_inline_and_union_request_bodies() -
 
 #[test]
 fn rust_openapi_auth_service_generates_named_nested_component_models() -> Result<()> {
-    let schema_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/auth-service.openapi.yaml");
+    let schema_path =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testing_data/schemas/auth-service.openapi.yaml");
 
     let code = generate_from_openapi(&schema_path, TargetLanguage::Rust, &DtoConfig::default())?;
 
@@ -1115,7 +1120,8 @@ fn rust_openapi_auth_service_generates_named_nested_component_models() -> Result
 
 #[test]
 fn rust_openapi_auth_service_example_validates() -> Result<()> {
-    let schema_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/auth-service.openapi.yaml");
+    let schema_path =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testing_data/schemas/auth-service.openapi.yaml");
 
     let code = generate_from_openapi(&schema_path, TargetLanguage::Rust, &DtoConfig::default())?;
     let report = QualityValidator::new(TargetLanguage::Rust)
@@ -1545,7 +1551,8 @@ fn asyncapi_handler_generation_writes_elixir_typed_scaffold() -> Result<()> {
 #[test]
 fn asyncapi_chat_service_example_generates_php_typed_scaffold() -> Result<()> {
     let dir = tempdir()?;
-    let schema_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/chat-service.asyncapi.yaml");
+    let schema_path =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testing_data/schemas/chat-service.asyncapi.yaml");
     let output = dir.path().join("chat_handlers.php");
 
     let request = CodegenRequest {
@@ -1586,7 +1593,8 @@ fn asyncapi_chat_service_example_generates_php_typed_scaffold() -> Result<()> {
 #[test]
 fn asyncapi_chat_service_example_generates_elixir_typed_scaffold() -> Result<()> {
     let dir = tempdir()?;
-    let schema_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/chat-service.asyncapi.yaml");
+    let schema_path =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testing_data/schemas/chat-service.asyncapi.yaml");
     let output = dir.path().join("chat_handlers.ex");
 
     let request = CodegenRequest {
@@ -1627,7 +1635,8 @@ fn asyncapi_chat_service_example_generates_elixir_typed_scaffold() -> Result<()>
 #[test]
 fn asyncapi_chat_service_example_generates_ruby_typed_scaffold() -> Result<()> {
     let dir = tempdir()?;
-    let schema_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../examples/schemas/chat-service.asyncapi.yaml");
+    let schema_path =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../testing_data/schemas/chat-service.asyncapi.yaml");
     let output = dir.path().join("chat_handlers.rb");
 
     let request = CodegenRequest {
