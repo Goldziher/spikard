@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.4] - 2026-05-21
+
+### Fixed
+
+- `crates/spikard-ffi/Cargo.toml`: Restored workspace inheritance (`version.workspace = true`, `license.workspace = true`, `repository.workspace = true`, and `spikard{,-core,-graphql,-http} = { workspace = true }`). The alef v0.17.17 regen in v0.15.3 reverted these back to path-only deps and literal package metadata, which broke `cargo publish` for `spikard-ffi` (`all dependencies must have a version requirement specified when publishing. dependency \`spikard\` does not specify a version`). 6 of 7 crates published at v0.15.3; this release republishes all seven (existing 0.15.3 versions are immutable, so the registry now carries both 0.15.3 and 0.15.4 for the six that already shipped). alef itself has no per-crate dependency-style override yet, but on this manifest alef leaves an existing `workspace = true` declaration alone — the v0.15.3 regression was specifically because the previous regen rewrote a literal-versioned manifest, not because alef actively prefers path-only.
+
 ## [0.15.3] - 2026-05-21
 
 ### Fixed

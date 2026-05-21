@@ -1,6 +1,6 @@
 [package]
 name = "spikard-rb"
-version = "0.15.3"
+version = "0.15.4"
 edition = "2024"
 license = "MIT"
 description = "Rust-centric multi-language HTTP framework with polyglot bindings"
