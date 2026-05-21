@@ -51,7 +51,7 @@ Add to `mix.exs`:
 ```elixir
 def deps do
   [
-    {:spikard, "~> 0.15.1"}
+    {:spikard, "~> 0.15.2"}
   ]
 end
 ```

@@ -599,7 +599,7 @@ jobs:
       - uses: kreuzberg-dev/actions/setup-rust@v1
       - uses: kreuzberg-dev/actions/publish-crates@v1
         with:
-          crates: "spikard-core spikard-http spikard-graphql spikard spikard-codegen spikard-cli"
+          crates: "spikard-core spikard-http spikard-graphql spikard spikard-codegen spikard-cli spikard-ffi"
           version: ${{ needs.prepare.outputs.version }}
           dry-run: ${{ needs.prepare.outputs.dry_run }}
 

@@ -2,7 +2,7 @@
 title: "Python API Reference"
 ---
 
-## Python API Reference <span class="version-badge">v0.15.1</span>
+## Python API Reference <span class="version-badge">v0.15.2</span>
 
 ### Functions
 

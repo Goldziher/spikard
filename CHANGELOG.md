@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.2] - 2026-05-21
+
+### Added
+
+- `spikard-ffi` added to the crates.io publish list in `publish.yaml`. The internal FFI crate now ships alongside the other six (`spikard`, `spikard-core`, `spikard-http`, `spikard-graphql`, `spikard-codegen`, `spikard-cli`). `crates/spikard-ffi/Cargo.toml` switched to workspace inheritance for `version`, `license`, and `repository`, and the internal `spikard*` deps now resolve via `workspace = true` so future bumps stay in sync.
+
+### Fixed
+
+- Regenerated all polyglot bindings against [alef v0.17.15](https://github.com/kreuzberg-dev/alef/releases/tag/v0.17.15). Picks up the Elixir `mix.exs` packaging fix — emitted `files: ~w(…)` no longer lists `lib/` (the directory never exists; Elixir module lives in `crates/spikard-elixir/src/`) or `checksum-*.exs` (no `rustler_precompiled` upload step is scaffolded), unblocking `mix hex.publish`.
+- `publish.yaml`: Pass `nuget-user: nhirschfeld` to the `publish-nuget` step so the OIDC token exchange with nuget.org includes the package owner's profile name (required by the `/api/v2/token` protocol).
+- Three protocol bugs in `kreuzberg-dev/actions@v1` shipped alongside this release: `publish-nuget` OIDC exchange now hits `/api/v2/token` with audience `https://www.nuget.org` and body `{username, tokenType: "ApiKey"}` (matches the official `NuGet/login@v1`); `publish-rubygems` falls back to `BUNDLE_GEM__PUSH_KEY` when the caller's step-level `GEM_HOST_API_KEY` shadows the OIDC-exported value with an empty secret; `publish-maven` imports `MAVEN_GPG_PRIVATE_KEY` into the keyring (accepts armored or base64) before invoking `mvn deploy`; `publish-maven-gradle` accepts base64-encoded GPG keys; `finalize-release` retries the release lookup 6× to absorb GH API propagation race.
+
 ## [0.15.1] - 2026-05-21
 
 ### Fixed

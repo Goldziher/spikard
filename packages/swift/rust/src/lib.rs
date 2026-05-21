@@ -972,10 +972,13 @@ impl AsyncApiConfig {
         let mut __target: spikard_http::AsyncApiConfig = ::std::default::Default::default();
         __target.enabled = enabled;
         if let Some(s) = spec {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.spec = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.spec = Some(t);
             }
         }
         AsyncApiConfig(__target)
@@ -1123,16 +1126,25 @@ pub struct BackgroundJobMetadata(pub spikard_http::BackgroundJobMetadata);
 impl BackgroundJobMetadata {
     pub fn new(name: String, request_id: Option<String>) -> BackgroundJobMetadata {
         let mut __target: spikard_http::BackgroundJobMetadata = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&name) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&name)
+                .unwrap_or_else(|_| ::serde_json::Value::String(name.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.name = t;
             }
         }
         if let Some(s) = request_id {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.request_id = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.request_id = Some(t);
             }
         }
         BackgroundJobMetadata(__target)
@@ -1233,8 +1245,14 @@ impl JsonRpcConfig {
     pub fn new(enabled: bool, endpoint_path: String, enable_batch: bool, max_batch_size: usize) -> JsonRpcConfig {
         let mut __target: spikard_http::JsonRpcConfig = ::std::default::Default::default();
         __target.enabled = enabled;
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&endpoint_path) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&endpoint_path)
+                .unwrap_or_else(|_| ::serde_json::Value::String(endpoint_path.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.endpoint_path = t;
             }
         }
@@ -1282,35 +1300,68 @@ impl OpenApiConfig {
     ) -> OpenApiConfig {
         let mut __target: spikard_http::OpenApiConfig = ::std::default::Default::default();
         __target.enabled = enabled;
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&title) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&title)
+                .unwrap_or_else(|_| ::serde_json::Value::String(title.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.title = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&version) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&version)
+                .unwrap_or_else(|_| ::serde_json::Value::String(version.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.version = t;
             }
         }
         if let Some(s) = description {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.description = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.description = Some(t);
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&swagger_ui_path) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&swagger_ui_path)
+                .unwrap_or_else(|_| ::serde_json::Value::String(swagger_ui_path.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.swagger_ui_path = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&redoc_path) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&redoc_path)
+                .unwrap_or_else(|_| ::serde_json::Value::String(redoc_path.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.redoc_path = t;
             }
         }
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&openapi_json_path) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&openapi_json_path)
+                .unwrap_or_else(|_| ::serde_json::Value::String(openapi_json_path.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.openapi_json_path = t;
             }
         }
@@ -1404,10 +1455,13 @@ impl Response {
     pub fn new(content: Option<String>, status_code: u16, headers: String) -> Response {
         let mut __target: spikard_http::Response = ::std::default::Default::default();
         if let Some(s) = content {
-            if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&s) {
-                if let Ok(t) = ::serde_json::from_value(v) {
-                    __target.content = Some(t);
-                }
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.content = Some(t);
             }
         }
         __target.status_code = status_code;
@@ -1541,8 +1595,14 @@ impl ServerConfig {
         enable_http_trace: bool,
     ) -> ServerConfig {
         let mut __target: spikard_http::ServerConfig = ::std::default::Default::default();
-        if let Ok(v) = ::serde_json::from_str::<::serde_json::Value>(&host) {
-            if let Ok(t) = ::serde_json::from_value(v) {
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&host)
+                .unwrap_or_else(|_| ::serde_json::Value::String(host.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.host = t;
             }
         }
