@@ -341,7 +341,7 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
-      - uses: ruby/setup-ruby@v1.308.0
+      - uses: ruby/setup-ruby@v1.310.0
         with:
           ruby-version: "3.4"
           bundler-cache: true

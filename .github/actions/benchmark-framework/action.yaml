@@ -154,7 +154,7 @@ runs:
 
     - name: Setup Ruby environment for non-spikard apps
       if: steps.detect.outputs.language == 'ruby' && inputs.framework != 'spikard-ruby'
-      uses: ruby/setup-ruby@v1.308.0
+      uses: ruby/setup-ruby@v1.310.0
       with:
         ruby-version: "3.4"
         bundler: "4.0.0"
