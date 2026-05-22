@@ -60,8 +60,14 @@
   <a href="https://github.com/Goldziher/spikard/blob/main/LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-007ec6" alt="License">
   </a>
-  <a href="https://github.com/Goldziher/spikard">
+  <a href="https://github.com/Goldziher/spikard/tree/main/docs">
     <img src="https://img.shields.io/badge/docs-GitHub-007ec6" alt="Documentation">
+  </a>
+</div>
+
+<div align="center" style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 28px 0 24px;">
+  <a href="https://discord.gg/pXxagNK2zN">
+    <img height="32" src="https://img.shields.io/badge/Discord-Join%20our%20community-007ec6?logo=discord&logoColor=white" alt="Join Discord">
   </a>
 </div>
 
@@ -69,6 +75,13 @@ Go bindings for the spikard polyglot HTTP framework. Backed by the Rust core via
 
 > **Version 0.15.5**
 > Report issues at [github.com/Goldziher/spikard](https://github.com/Goldziher/spikard/issues).
+
+## What This Package Provides
+
+- **Go module over the Rust HTTP core** — route definitions, request extraction, validation, and middleware through Go structs and errors.
+- **Spec-driven generation** — OpenAPI, AsyncAPI, GraphQL SDL, JSON-RPC, and SQL-to-HTTP metadata use the shared Rust implementation.
+- **Static-link workflow** — build against `spikard-ffi` and ship a self-contained Go binary.
+- **Cross-binding parity** — behavior matches the Python, Node.js, Ruby, PHP, Elixir, Java, .NET, Kotlin, Dart, Swift, Zig, WASM, Rust, and C FFI packages.
 
 ## Install
 

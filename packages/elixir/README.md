@@ -60,12 +60,26 @@
   <a href="https://github.com/Goldziher/spikard/blob/main/LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-007ec6" alt="License">
   </a>
-  <a href="https://github.com/Goldziher/spikard">
+  <a href="https://github.com/Goldziher/spikard/tree/main/docs">
     <img src="https://img.shields.io/badge/docs-GitHub-007ec6" alt="Documentation">
   </a>
 </div>
 
+<div align="center" style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 28px 0 24px;">
+  <a href="https://discord.gg/pXxagNK2zN">
+    <img height="32" src="https://img.shields.io/badge/Discord-Join%20our%20community-007ec6?logo=discord&logoColor=white" alt="Join Discord">
+  </a>
+</div>
+
 Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Elixir bindings via Rustler NIF with OTP integration.
+
+## What This Package Provides
+
+- **HTTP application core** — typed routing, request data extraction, validation, lifecycle hooks, and Tower middleware from the Rust engine.
+- **Spec-driven work** — OpenAPI, AsyncAPI, GraphQL SDL, JSON-RPC, and SQL-to-HTTP codegen are shared across bindings.
+- **Cross-language parity** — generated bindings use the same DTOs, fixtures, and error model, so behavior does not drift between runtimes.
+- **Native integration** — no sidecar server required; each package calls the Rust core through its language-native bridge.
+- **BEAM package** — Rustler NIF binding for OTP applications.
 
 ## Installation
 
@@ -104,7 +118,7 @@ See the [spikard repository](https://github.com/Goldziher/spikard) for usage exa
 ## Documentation
 
 - **[Repository](https://github.com/Goldziher/spikard)** — source code, examples, and contributing guide
-- **[Examples](https://github.com/Goldziher/spikard/tree/main/examples)** — working examples per language
+- **[Examples](https://github.com/Goldziher/spikard/tree/main/crates/spikard-http/examples)** — working server examples
 - **[Issues](https://github.com/Goldziher/spikard/issues)** — bug reports and feature requests
 
 ## Contributing

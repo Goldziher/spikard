@@ -4,7 +4,12 @@
 
 {{ description }}
 
-**Powered by a Rust core** — native performance for HTTP routing, middleware, and schema validation.
+## What This Package Provides
+
+- **Python-native HTTP app API** — async route handlers, typed config, request extraction, validation, and middleware hooks.
+- **Spec-driven generation** — OpenAPI, AsyncAPI, GraphQL SDL, JSON-RPC, and SQL-to-HTTP codegen through the shared Rust core.
+- **Fixture-backed parity** — Python behavior is tested against the same fixtures as the Node.js, Ruby, PHP, Elixir, Go, Java, .NET, Kotlin, Dart, Swift, Zig, WASM, Rust, and C FFI packages.
+- **No sidecar server** — the package calls the Rust core directly.
 
 ## Installation
 

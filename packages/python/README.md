@@ -60,14 +60,25 @@
   <a href="https://github.com/Goldziher/spikard/blob/main/LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-007ec6" alt="License">
   </a>
-  <a href="https://github.com/Goldziher/spikard">
+  <a href="https://github.com/Goldziher/spikard/tree/main/docs">
     <img src="https://img.shields.io/badge/docs-GitHub-007ec6" alt="Documentation">
+  </a>
+</div>
+
+<div align="center" style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 28px 0 24px;">
+  <a href="https://discord.gg/pXxagNK2zN">
+    <img height="32" src="https://img.shields.io/badge/Discord-Join%20our%20community-007ec6?logo=discord&logoColor=white" alt="Join Discord">
   </a>
 </div>
 
 Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Native Python bindings with async/await support.
 
-**Powered by a Rust core** — native performance for HTTP routing, middleware, and schema validation.
+## What This Package Provides
+
+- **Python-native HTTP app API** — async route handlers, typed config, request extraction, validation, and middleware hooks.
+- **Spec-driven generation** — OpenAPI, AsyncAPI, GraphQL SDL, JSON-RPC, and SQL-to-HTTP codegen through the shared Rust core.
+- **Fixture-backed parity** — Python behavior is tested against the same fixtures as the Node.js, Ruby, PHP, Elixir, Go, Java, .NET, Kotlin, Dart, Swift, Zig, WASM, Rust, and C FFI packages.
+- **No sidecar server** — the package calls the Rust core directly.
 
 ## Installation
 

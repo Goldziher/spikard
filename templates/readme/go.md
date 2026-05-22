@@ -7,6 +7,13 @@ Go bindings for the spikard polyglot HTTP framework. Backed by the Rust core via
 > **Version {{ version }}**
 > Report issues at [github.com/Goldziher/spikard](https://github.com/Goldziher/spikard/issues).
 
+## What This Package Provides
+
+- **Go module over the Rust HTTP core** — route definitions, request extraction, validation, and middleware through Go structs and errors.
+- **Spec-driven generation** — OpenAPI, AsyncAPI, GraphQL SDL, JSON-RPC, and SQL-to-HTTP metadata use the shared Rust implementation.
+- **Static-link workflow** — build against `spikard-ffi` and ship a self-contained Go binary.
+- **Cross-binding parity** — behavior matches the Python, Node.js, Ruby, PHP, Elixir, Java, .NET, Kotlin, Dart, Swift, Zig, WASM, Rust, and C FFI packages.
+
 ## Install
 
 ### Development (monorepo)

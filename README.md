@@ -60,8 +60,14 @@
   <a href="https://github.com/Goldziher/spikard/blob/main/LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-007ec6" alt="License">
   </a>
-  <a href="https://github.com/Goldziher/spikard">
+  <a href="https://github.com/Goldziher/spikard/tree/main/docs">
     <img src="https://img.shields.io/badge/docs-GitHub-007ec6" alt="Documentation">
+  </a>
+</div>
+
+<div align="center" style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 28px 0 24px;">
+  <a href="https://discord.gg/pXxagNK2zN">
+    <img height="32" src="https://img.shields.io/badge/Discord-Join%20our%20community-007ec6?logo=discord&logoColor=white" alt="Join Discord">
   </a>
 </div>
 
