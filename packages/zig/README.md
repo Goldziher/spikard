@@ -1,6 +1,11 @@
 # Spikard
 
 <div align="center" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 20px 0;">
+  <!-- Built with -->
+  <a href="https://github.com/kreuzberg-dev/alef">
+    <img src="https://img.shields.io/badge/bindings%20by-alef%20%D7%90-007ec6" alt="Bindings by alef">
+  </a>
+
   <!-- Language Bindings -->
   <a href="https://crates.io/crates/spikard">
     <img src="https://img.shields.io/crates/v/spikard?label=Rust&color=007ec6" alt="Rust">
@@ -11,14 +16,14 @@
   <a href="https://www.npmjs.com/package/@spikard/node">
     <img src="https://img.shields.io/npm/v/@spikard/node?label=Node.js&color=007ec6" alt="Node.js">
   </a>
-  <a href="https://www.npmjs.com/package/@spikard/wasm">
-    <img src="https://img.shields.io/npm/v/@spikard/wasm?label=WASM&color=007ec6" alt="WASM">
+  <a href="https://www.npmjs.com/package/@spikard/node-wasm">
+    <img src="https://img.shields.io/npm/v/@spikard/node-wasm?label=WASM&color=007ec6" alt="WASM">
   </a>
   <a href="https://rubygems.org/gems/spikard">
     <img src="https://img.shields.io/gem/v/spikard?label=Ruby&color=007ec6" alt="Ruby">
   </a>
-  <a href="https://packagist.org/packages/spikard/spikard">
-    <img src="https://img.shields.io/packagist/v/spikard/spikard?label=PHP&color=007ec6" alt="PHP">
+  <a href="https://packagist.org/packages/goldziher/spikard">
+    <img src="https://img.shields.io/packagist/v/goldziher/spikard?label=PHP&color=007ec6" alt="PHP">
   </a>
   <a href="https://hex.pm/packages/spikard">
     <img src="https://img.shields.io/hexpm/v/spikard?label=Elixir&color=007ec6" alt="Elixir">
@@ -31,6 +36,24 @@
   </a>
   <a href="https://www.nuget.org/packages/Spikard/">
     <img src="https://img.shields.io/nuget/v/Spikard?label=C%23&color=007ec6" alt="C#">
+  </a>
+  <a href="https://central.sonatype.com/artifact/dev.spikard/spikard">
+    <img src="https://img.shields.io/maven-central/v/dev.spikard/spikard?label=Kotlin&color=007ec6" alt="Kotlin">
+  </a>
+  <a href="https://pub.dev/packages/spikard">
+    <img src="https://img.shields.io/pub/v/spikard?label=Dart&color=007ec6" alt="Dart">
+  </a>
+  <a href="https://github.com/Goldziher/spikard/tree/main/packages/swift">
+    <img src="https://img.shields.io/badge/Swift-Spikard-007ec6" alt="Swift">
+  </a>
+  <a href="https://github.com/Goldziher/spikard/tree/main/packages/zig">
+    <img src="https://img.shields.io/badge/Zig-spikard-007ec6" alt="Zig">
+  </a>
+  <a href="https://github.com/Goldziher/spikard/tree/main/crates/spikard-ffi">
+    <img src="https://img.shields.io/badge/C-FFI-007ec6" alt="C FFI">
+  </a>
+  <a href="https://github.com/Goldziher/homebrew-tap">
+    <img src="https://img.shields.io/badge/Homebrew-007ec6?logo=homebrew&logoColor=white" alt="Homebrew">
   </a>
 
   <!-- Project Info -->
@@ -54,6 +77,7 @@ Add to `build.zig.zon`:
 };
 ```
 
+
 ### System Requirements
 
 - **Zig 0.13+** required; needs `spikard-ffi` static library at link time
@@ -61,6 +85,7 @@ Add to `build.zig.zon`:
 ## Quick Start
 
 See the [spikard repository](https://github.com/Goldziher/spikard) for usage examples and guides.
+
 
 ## Features
 
@@ -70,6 +95,7 @@ See the [spikard repository](https://github.com/Goldziher/spikard) for usage exa
 - **Lifecycle hooks** — `onRequest`, `preValidation`, `preHandler`, `onResponse`, `onError`
 - **Fixture-driven testing** — shared JSON fixtures drive tests across all language bindings
 - **Polyglot** — single Rust core, thin bindings for Python, Node.js, Ruby, PHP, Elixir, Go, Java, C#, Kotlin, Dart, Gleam, WASM, Swift, Zig, and C FFI
+
 
 ## Documentation
 

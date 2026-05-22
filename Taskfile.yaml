@@ -529,12 +529,28 @@ tasks:
     desc: "Generate all README files from templates"
     cmds:
       - alef readme
+      - task: readme:root
 
   readme:validate:
     desc: "Validate that generated READMEs are up to date"
     cmds:
       - alef readme
+      - task: readme:root
       - git diff --exit-code
+
+  readme:root:
+    desc: "Render the root README from templates/readme/root.md"
+    internal: true
+    cmds:
+      - |
+        python3 - <<'PY'
+        from pathlib import Path
+
+        template = Path("templates/readme/root.md").read_text()
+        badges = Path("templates/readme/partials/badges.html.jinja").read_text()
+        rendered = template.replace("{% include 'partials/badges.html.jinja' %}", badges.rstrip())
+        Path("README.md").write_text(rendered)
+        PY
 
   # === OpenAPI client codegen (spikard framework feature) ===
   codegen:python:

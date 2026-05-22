@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.17.22"
+alef_version = "0.17.32"
 languages = [
   "python",
   "node",
@@ -171,7 +171,7 @@ build = "cd packages/elixir && mix compile"
 build_release = "cd packages/elixir && MIX_ENV=prod mix compile"
 
 [crates.wasm]
-package_name = "@spikard/wasm"
+package_name = "@spikard/node-wasm"
 core_crate_override = "spikard-http"
 exclude_extra_dependencies = ["spikard-core", "spikard-http", "spikard-graphql"]
 features = ["di", "wasm"]
@@ -802,7 +802,7 @@ name = "spikard"
 path = "../../packages/ruby"
 
 [crates.e2e.packages.php]
-name = "spikard/spikard"
+name = "goldziher/spikard"
 path = "../../packages/php"
 
 [crates.e2e.packages.elixir]
@@ -838,7 +838,7 @@ name = "spikard"
 path = "../../packages/zig"
 
 [crates.e2e.packages.wasm]
-name = "spikard-wasm"
+name = "@spikard/node-wasm"
 path = "../../crates/spikard-wasm/pkg"
 
 [crates.e2e.registry]
@@ -855,7 +855,7 @@ name = "@spikard/node"
 name = "spikard"
 
 [crates.e2e.registry.packages.php]
-name = "spikard/spikard"
+name = "goldziher/spikard"
 
 [crates.e2e.registry.packages.elixir]
 name = "spikard"
@@ -885,7 +885,7 @@ name = "Spikard"
 name = "spikard"
 
 [crates.e2e.registry.packages.wasm]
-name = "@spikard/wasm"
+name = "@spikard/node-wasm"
 
 [crates.scaffold]
 description = "Rust-centric multi-language HTTP framework with polyglot bindings"
@@ -934,8 +934,8 @@ snippets = { quickstart = "quickstart_routes.md", hello_route = "hello_route.md"
 [crates.readme.languages.php]
 template = "language_package.md"
 name = "Spikard"
-package_name = "spikard/spikard"
-badge_url = "https://img.shields.io/packagist/v/spikard/spikard?label=PHP&color=007ec6"
+package_name = "goldziher/spikard"
+badge_url = "https://img.shields.io/packagist/v/goldziher/spikard?label=PHP&color=007ec6"
 docs_url = "https://github.com/Goldziher/spikard"
 description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. PHP 8.2+ bindings via ext-php-rs."
 package_manager = ["composer"]
@@ -1006,7 +1006,7 @@ snippets = {}
 template = "language_package.md"
 name = "Spikard"
 package_name = "spikard"
-badge_url = "https://img.shields.io/badge/Dart-spikard-007ec6"
+badge_url = "https://img.shields.io/pub/v/spikard?label=Dart&color=007ec6"
 docs_url = "https://github.com/Goldziher/spikard"
 description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Dart bindings via flutter_rust_bridge with isolate-safe Future/Stream APIs."
 package_manager = ["pub"]
@@ -1016,8 +1016,8 @@ snippets = {}
 template = "language_package.md"
 output_path = "crates/spikard-wasm/README.md"
 name = "Spikard WASM"
-package_name = "@spikard/wasm"
-badge_url = "https://img.shields.io/npm/v/@spikard/wasm?label=WASM&color=007ec6"
+package_name = "@spikard/node-wasm"
+badge_url = "https://img.shields.io/npm/v/@spikard/node-wasm?label=WASM&color=007ec6"
 docs_url = "https://github.com/Goldziher/spikard"
 description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. WebAssembly bindings for browsers, Deno, and Cloudflare Workers."
 package_manager = ["npm", "pnpm", "yarn"]
