@@ -446,14 +446,14 @@ JSON-RPC method metadata for routes that support JSON-RPC
 This struct captures the metadata needed to expose HTTP routes as JSON-RPC methods,
 enabling discovery and documentation of RPC-compatible endpoints.
 
-| Field           | Type           | Default | Description                                    |
-| --------------- | -------------- | ------- | ---------------------------------------------- |
-| `method_name`   | `const char*`  | —       | The JSON-RPC method name (e.g., "user.create") |
-| `description`   | `const char**` | `NULL`  | Optional description of what the method does   |
-| `params_schema` | `void**`       | `NULL`  | Optional JSON Schema for method parameters     |
-| `result_schema` | `void**`       | `NULL`  | Optional JSON Schema for the result            |
-| `deprecated`    | `bool`         | —       | Whether this method is deprecated              |
-| `tags`          | `const char**` | —       | Tags for categorizing and grouping methods     |
+| Field           | Type           | Default                | Description                                    |
+| --------------- | -------------- | ---------------------- | ---------------------------------------------- |
+| `method_name`   | `const char*`  | —                      | The JSON-RPC method name (e.g., "user.create") |
+| `description`   | `const char**` | `NULL`                 | Optional description of what the method does   |
+| `params_schema` | `void**`       | `NULL`                 | Optional JSON Schema for method parameters     |
+| `result_schema` | `void**`       | `NULL`                 | Optional JSON Schema for the result            |
+| `deprecated`    | `bool`         | `/* serde(default) */` | Whether this method is deprecated              |
+| `tags`          | `const char**` | `/* serde(default) */` | Tags for categorizing and grouping methods     |
 
 ---
 
@@ -461,13 +461,13 @@ enabling discovery and documentation of RPC-compatible endpoints.
 
 JWT authentication configuration
 
-| Field       | Type            | Default | Description                                           |
-| ----------- | --------------- | ------- | ----------------------------------------------------- |
-| `secret`    | `const char*`   | —       | Secret key for JWT verification                       |
-| `algorithm` | `const char*`   | —       | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
-| `audience`  | `const char***` | `NULL`  | Required audience claim                               |
-| `issuer`    | `const char**`  | `NULL`  | Required issuer claim                                 |
-| `leeway`    | `uint64_t`      | —       | Leeway for expiration checks (seconds)                |
+| Field       | Type            | Default                | Description                                           |
+| ----------- | --------------- | ---------------------- | ----------------------------------------------------- |
+| `secret`    | `const char*`   | —                      | Secret key for JWT verification                       |
+| `algorithm` | `const char*`   | —                      | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
+| `audience`  | `const char***` | `NULL`                 | Required audience claim                               |
+| `issuer`    | `const char**`  | `NULL`                 | Required issuer claim                                 |
+| `leeway`    | `uint64_t`      | `/* serde(default) */` | Leeway for expiration checks (seconds)                |
 
 ---
 

@@ -1,5 +1,5 @@
 {
-  "name": "spikard/e2e-php",
+  "name": "goldziher/e2e-php",
   "description": "E2e tests for PHP bindings",
   "type": "project",
   "require-dev": {

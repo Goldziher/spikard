@@ -463,14 +463,14 @@ JSON-RPC method metadata for routes that support JSON-RPC
 This struct captures the metadata needed to expose HTTP routes as JSON-RPC methods,
 enabling discovery and documentation of RPC-compatible endpoints.
 
-| Field           | Type                | Default | Description                                    |
-| --------------- | ------------------- | ------- | ---------------------------------------------- |
-| `method_name`   | `String.t()`        | —       | The JSON-RPC method name (e.g., "user.create") |
-| `description`   | `String.t() \| nil` | `nil`   | Optional description of what the method does   |
-| `params_schema` | `term() \| nil`     | `nil`   | Optional JSON Schema for method parameters     |
-| `result_schema` | `term() \| nil`     | `nil`   | Optional JSON Schema for the result            |
-| `deprecated`    | `boolean()`         | —       | Whether this method is deprecated              |
-| `tags`          | `list(String.t())`  | —       | Tags for categorizing and grouping methods     |
+| Field           | Type                | Default                | Description                                    |
+| --------------- | ------------------- | ---------------------- | ---------------------------------------------- |
+| `method_name`   | `String.t()`        | —                      | The JSON-RPC method name (e.g., "user.create") |
+| `description`   | `String.t() \| nil` | `nil`                  | Optional description of what the method does   |
+| `params_schema` | `term() \| nil`     | `nil`                  | Optional JSON Schema for method parameters     |
+| `result_schema` | `term() \| nil`     | `nil`                  | Optional JSON Schema for the result            |
+| `deprecated`    | `boolean()`         | `/* serde(default) */` | Whether this method is deprecated              |
+| `tags`          | `list(String.t())`  | `/* serde(default) */` | Tags for categorizing and grouping methods     |
 
 ---
 
@@ -478,13 +478,13 @@ enabling discovery and documentation of RPC-compatible endpoints.
 
 JWT authentication configuration
 
-| Field       | Type                      | Default | Description                                           |
-| ----------- | ------------------------- | ------- | ----------------------------------------------------- |
-| `secret`    | `String.t()`              | —       | Secret key for JWT verification                       |
-| `algorithm` | `String.t()`              | —       | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
-| `audience`  | `list(String.t()) \| nil` | `nil`   | Required audience claim                               |
-| `issuer`    | `String.t() \| nil`       | `nil`   | Required issuer claim                                 |
-| `leeway`    | `integer()`               | —       | Leeway for expiration checks (seconds)                |
+| Field       | Type                      | Default                | Description                                           |
+| ----------- | ------------------------- | ---------------------- | ----------------------------------------------------- |
+| `secret`    | `String.t()`              | —                      | Secret key for JWT verification                       |
+| `algorithm` | `String.t()`              | —                      | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
+| `audience`  | `list(String.t()) \| nil` | `nil`                  | Required audience claim                               |
+| `issuer`    | `String.t() \| nil`       | `nil`                  | Required issuer claim                                 |
+| `leeway`    | `integer()`               | `/* serde(default) */` | Leeway for expiration checks (seconds)                |
 
 ---
 

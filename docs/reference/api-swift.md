@@ -460,14 +460,14 @@ JSON-RPC method metadata for routes that support JSON-RPC
 This struct captures the metadata needed to expose HTTP routes as JSON-RPC methods,
 enabling discovery and documentation of RPC-compatible endpoints.
 
-| Field          | Type       | Default | Description                                    |
-| -------------- | ---------- | ------- | ---------------------------------------------- |
-| `methodName`   | `String`   | —       | The JSON-RPC method name (e.g., "user.create") |
-| `description`  | `String?`  | `null`  | Optional description of what the method does   |
-| `paramsSchema` | `String?`  | `null`  | Optional JSON Schema for method parameters     |
-| `resultSchema` | `String?`  | `null`  | Optional JSON Schema for the result            |
-| `deprecated`   | `Bool`     | —       | Whether this method is deprecated              |
-| `tags`         | `[String]` | —       | Tags for categorizing and grouping methods     |
+| Field          | Type       | Default                | Description                                    |
+| -------------- | ---------- | ---------------------- | ---------------------------------------------- |
+| `methodName`   | `String`   | —                      | The JSON-RPC method name (e.g., "user.create") |
+| `description`  | `String?`  | `null`                 | Optional description of what the method does   |
+| `paramsSchema` | `String?`  | `null`                 | Optional JSON Schema for method parameters     |
+| `resultSchema` | `String?`  | `null`                 | Optional JSON Schema for the result            |
+| `deprecated`   | `Bool`     | `/* serde(default) */` | Whether this method is deprecated              |
+| `tags`         | `[String]` | `/* serde(default) */` | Tags for categorizing and grouping methods     |
 
 ---
 
@@ -475,13 +475,13 @@ enabling discovery and documentation of RPC-compatible endpoints.
 
 JWT authentication configuration
 
-| Field       | Type        | Default | Description                                           |
-| ----------- | ----------- | ------- | ----------------------------------------------------- |
-| `secret`    | `String`    | —       | Secret key for JWT verification                       |
-| `algorithm` | `String`    | —       | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
-| `audience`  | `[String]?` | `null`  | Required audience claim                               |
-| `issuer`    | `String?`   | `null`  | Required issuer claim                                 |
-| `leeway`    | `UInt64`    | —       | Leeway for expiration checks (seconds)                |
+| Field       | Type        | Default                | Description                                           |
+| ----------- | ----------- | ---------------------- | ----------------------------------------------------- |
+| `secret`    | `String`    | —                      | Secret key for JWT verification                       |
+| `algorithm` | `String`    | —                      | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
+| `audience`  | `[String]?` | `null`                 | Required audience claim                               |
+| `issuer`    | `String?`   | `null`                 | Required issuer claim                                 |
+| `leeway`    | `UInt64`    | `/* serde(default) */` | Leeway for expiration checks (seconds)                |
 
 ---
 

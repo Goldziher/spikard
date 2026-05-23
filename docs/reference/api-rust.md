@@ -460,14 +460,14 @@ JSON-RPC method metadata for routes that support JSON-RPC
 This struct captures the metadata needed to expose HTTP routes as JSON-RPC methods,
 enabling discovery and documentation of RPC-compatible endpoints.
 
-| Field           | Type                        | Default | Description                                    |
-| --------------- | --------------------------- | ------- | ---------------------------------------------- |
-| `method_name`   | `String`                    | —       | The JSON-RPC method name (e.g., "user.create") |
-| `description`   | `Option<String>`            | `None`  | Optional description of what the method does   |
-| `params_schema` | `Option<serde_json::Value>` | `None`  | Optional JSON Schema for method parameters     |
-| `result_schema` | `Option<serde_json::Value>` | `None`  | Optional JSON Schema for the result            |
-| `deprecated`    | `bool`                      | —       | Whether this method is deprecated              |
-| `tags`          | `Vec<String>`               | —       | Tags for categorizing and grouping methods     |
+| Field           | Type                        | Default                | Description                                    |
+| --------------- | --------------------------- | ---------------------- | ---------------------------------------------- |
+| `method_name`   | `String`                    | —                      | The JSON-RPC method name (e.g., "user.create") |
+| `description`   | `Option<String>`            | `None`                 | Optional description of what the method does   |
+| `params_schema` | `Option<serde_json::Value>` | `None`                 | Optional JSON Schema for method parameters     |
+| `result_schema` | `Option<serde_json::Value>` | `None`                 | Optional JSON Schema for the result            |
+| `deprecated`    | `bool`                      | `/* serde(default) */` | Whether this method is deprecated              |
+| `tags`          | `Vec<String>`               | `/* serde(default) */` | Tags for categorizing and grouping methods     |
 
 ---
 
@@ -475,13 +475,13 @@ enabling discovery and documentation of RPC-compatible endpoints.
 
 JWT authentication configuration
 
-| Field       | Type                  | Default | Description                                           |
-| ----------- | --------------------- | ------- | ----------------------------------------------------- |
-| `secret`    | `String`              | —       | Secret key for JWT verification                       |
-| `algorithm` | `String`              | —       | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
-| `audience`  | `Option<Vec<String>>` | `None`  | Required audience claim                               |
-| `issuer`    | `Option<String>`      | `None`  | Required issuer claim                                 |
-| `leeway`    | `u64`                 | —       | Leeway for expiration checks (seconds)                |
+| Field       | Type                  | Default                | Description                                           |
+| ----------- | --------------------- | ---------------------- | ----------------------------------------------------- |
+| `secret`    | `String`              | —                      | Secret key for JWT verification                       |
+| `algorithm` | `String`              | —                      | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
+| `audience`  | `Option<Vec<String>>` | `None`                 | Required audience claim                               |
+| `issuer`    | `Option<String>`      | `None`                 | Required issuer claim                                 |
+| `leeway`    | `u64`                 | `/* serde(default) */` | Leeway for expiration checks (seconds)                |
 
 ---
 

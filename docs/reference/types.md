@@ -161,7 +161,7 @@ Configuration for gRPC support
 Controls how the server handles gRPC requests, including compression,
 timeouts, and protocol settings.
 
-# Stream Limits
+## Stream Limits
 
 This configuration enforces message-level size limits but delegates
 concurrent stream limiting to the HTTP/2 transport layer:
@@ -196,7 +196,7 @@ concurrent stream limiting to the HTTP/2 transport layer:
 
 ---
 
-#### JsonRpcConfig
+### JsonRpcConfig
 
 JSON-RPC server configuration
 
@@ -229,7 +229,7 @@ OpenAPI configuration
 
 ---
 
-#### Response
+##### Response
 
 HTTP Response with custom status code, headers, and content
 
@@ -241,21 +241,21 @@ HTTP Response with custom status code, headers, and content
 
 ---
 
-#### JwtConfig
+##### JwtConfig
 
 JWT authentication configuration
 
-| Field       | Type             | Default | Description                                           |
-| ----------- | ---------------- | ------- | ----------------------------------------------------- |
-| `secret`    | `String`         | —       | Secret key for JWT verification                       |
-| `algorithm` | `String`         | —       | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
-| `audience`  | `Vec<String>`    | `None`  | Required audience claim                               |
-| `issuer`    | `Option<String>` | `None`  | Required issuer claim                                 |
-| `leeway`    | `u64`            | —       | Leeway for expiration checks (seconds)                |
+| Field       | Type             | Default                | Description                                           |
+| ----------- | ---------------- | ---------------------- | ----------------------------------------------------- |
+| `secret`    | `String`         | —                      | Secret key for JWT verification                       |
+| `algorithm` | `String`         | —                      | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
+| `audience`  | `Vec<String>`    | `None`                 | Required audience claim                               |
+| `issuer`    | `Option<String>` | `None`                 | Required issuer claim                                 |
+| `leeway`    | `u64`            | `/* serde(default) */` | Leeway for expiration checks (seconds)                |
 
 ---
 
-#### ApiKeyConfig
+##### ApiKeyConfig
 
 API Key authentication configuration
 
@@ -266,7 +266,7 @@ API Key authentication configuration
 
 ---
 
-#### StaticFilesConfig
+##### StaticFilesConfig
 
 Static file serving configuration
 
@@ -279,7 +279,7 @@ Static file serving configuration
 
 ---
 
-#### ServerConfig
+##### ServerConfig
 
 Server configuration
 
@@ -309,9 +309,9 @@ Server configuration
 
 ---
 
-### Metadata Types
+#### Metadata Types
 
-#### BackgroundJobMetadata
+##### BackgroundJobMetadata
 
 | Field        | Type             | Default | Description |
 | ------------ | ---------------- | ------- | ----------- |
@@ -320,9 +320,9 @@ Server configuration
 
 ---
 
-### Other Types
+#### Other Types
 
-#### UploadFile
+##### UploadFile
 
 Represents an uploaded file from multipart/form-data requests.
 
@@ -340,7 +340,7 @@ base64 decoding and implements standard I/O traits for compatibility.
 
 ---
 
-#### ResponseSnapshot
+##### ResponseSnapshot
 
 Snapshot of an Axum response used by higher-level language bindings.
 
@@ -352,25 +352,25 @@ Snapshot of an Axum response used by higher-level language bindings.
 
 ---
 
-#### JsonRpcMethodInfo
+##### JsonRpcMethodInfo
 
 JSON-RPC method metadata for routes that support JSON-RPC
 
 This struct captures the metadata needed to expose HTTP routes as JSON-RPC methods,
 enabling discovery and documentation of RPC-compatible endpoints.
 
-| Field           | Type                        | Default | Description                                    |
-| --------------- | --------------------------- | ------- | ---------------------------------------------- |
-| `method_name`   | `String`                    | —       | The JSON-RPC method name (e.g., "user.create") |
-| `description`   | `Option<String>`            | `None`  | Optional description of what the method does   |
-| `params_schema` | `Option<serde_json::Value>` | `None`  | Optional JSON Schema for method parameters     |
-| `result_schema` | `Option<serde_json::Value>` | `None`  | Optional JSON Schema for the result            |
-| `deprecated`    | `bool`                      | —       | Whether this method is deprecated              |
-| `tags`          | `Vec<String>`               | —       | Tags for categorizing and grouping methods     |
+| Field           | Type                        | Default                | Description                                    |
+| --------------- | --------------------------- | ---------------------- | ---------------------------------------------- |
+| `method_name`   | `String`                    | —                      | The JSON-RPC method name (e.g., "user.create") |
+| `description`   | `Option<String>`            | `None`                 | Optional description of what the method does   |
+| `params_schema` | `Option<serde_json::Value>` | `None`                 | Optional JSON Schema for method parameters     |
+| `result_schema` | `Option<serde_json::Value>` | `None`                 | Optional JSON Schema for the result            |
+| `deprecated`    | `bool`                      | `/* serde(default) */` | Whether this method is deprecated              |
+| `tags`          | `Vec<String>`               | `/* serde(default) */` | Tags for categorizing and grouping methods     |
 
 ---
 
-#### ProblemDetails
+##### ProblemDetails
 
 RFC 9457 Problem Details for HTTP APIs
 
@@ -378,7 +378,7 @@ A machine-readable format for specifying errors in HTTP API responses.
 Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
 if not specified.
 
-# Content-Type
+## Content-Type
 
 Responses using this struct should set:
 
@@ -407,7 +407,7 @@ Content-Type: application/problem+json
 
 ---
 
-#### ParsedChannel
+### ParsedChannel
 
 A single channel extracted from an AsyncAPI spec
 
@@ -432,7 +432,7 @@ A single operation extracted from an AsyncAPI spec
 
 ---
 
-#### ParsedMessage
+##### ParsedMessage
 
 A resolved message (name + JSON Schema)
 
@@ -443,7 +443,7 @@ A resolved message (name + JSON Schema)
 
 ---
 
-#### ParseRequest
+##### ParseRequest
 
 Request body for `POST /asyncapi/parse`
 
@@ -453,7 +453,7 @@ Request body for `POST /asyncapi/parse`
 
 ---
 
-#### ValidationResponse
+##### ValidationResponse
 
 Response body for `POST /asyncapi/validate`
 
@@ -464,7 +464,7 @@ Response body for `POST /asyncapi/validate`
 
 ---
 
-#### ValidateRequest
+##### ValidateRequest
 
 Request body for `POST /asyncapi/validate`
 
@@ -477,7 +477,7 @@ Request body for `POST /asyncapi/validate`
 
 ---
 
-#### ContactInfo
+##### ContactInfo
 
 Contact information
 
@@ -489,7 +489,7 @@ Contact information
 
 ---
 
-#### LicenseInfo
+##### LicenseInfo
 
 License information
 
@@ -500,7 +500,7 @@ License information
 
 ---
 
-#### ServerInfo
+##### ServerInfo
 
 Server information
 
@@ -511,14 +511,14 @@ Server information
 
 ---
 
-#### SseEvent
+##### SseEvent
 
 An individual SSE event
 
 Represents a single Server-Sent Event to be sent to a connected client.
 Events can have an optional type, ID, and retry timeout for advanced scenarios.
 
-# SSE Format
+## SSE Format
 
 Events are serialized to the following text format:
 
@@ -538,7 +538,7 @@ retry: 3000
 
 ---
 
-#### TestingSseEvent
+### TestingSseEvent
 
 A single Server-Sent Event.
 
@@ -562,7 +562,7 @@ Snapshot of a GraphQL subscription exchange over WebSocket.
 
 ---
 
-#### TestClient
+##### TestClient
 
 Core test client for making HTTP requests to a Spikard application.
 
@@ -575,9 +575,9 @@ _Opaque type — fields are not directly accessible._
 
 ---
 
-### Enums
+#### Enums
 
-#### Method
+##### Method
 
 HTTP method
 
@@ -594,7 +594,7 @@ HTTP method
 
 ---
 
-#### SecuritySchemeInfo
+##### SecuritySchemeInfo
 
 Security scheme types
 
@@ -605,7 +605,7 @@ Security scheme types
 
 ---
 
-#### SnapshotError
+##### SnapshotError
 
 Possible errors while converting an Axum response into a snapshot.
 
@@ -616,7 +616,7 @@ Possible errors while converting an Axum response into a snapshot.
 
 ---
 
-#### WebSocketMessage
+##### WebSocketMessage
 
 A WebSocket message that can be text or binary.
 

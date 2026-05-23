@@ -468,14 +468,14 @@ JSON-RPC method metadata for routes that support JSON-RPC
 This struct captures the metadata needed to expose HTTP routes as JSON-RPC methods,
 enabling discovery and documentation of RPC-compatible endpoints.
 
-| Field           | Type                     | Default | Description                                    |
-| --------------- | ------------------------ | ------- | ---------------------------------------------- |
-| `method_name`   | `str`                    | —       | The JSON-RPC method name (e.g., "user.create") |
-| `description`   | `str \| None`            | `None`  | Optional description of what the method does   |
-| `params_schema` | `dict[str, Any] \| None` | `None`  | Optional JSON Schema for method parameters     |
-| `result_schema` | `dict[str, Any] \| None` | `None`  | Optional JSON Schema for the result            |
-| `deprecated`    | `bool`                   | —       | Whether this method is deprecated              |
-| `tags`          | `list[str]`              | —       | Tags for categorizing and grouping methods     |
+| Field           | Type                     | Default                | Description                                    |
+| --------------- | ------------------------ | ---------------------- | ---------------------------------------------- |
+| `method_name`   | `str`                    | —                      | The JSON-RPC method name (e.g., "user.create") |
+| `description`   | `str \| None`            | `None`                 | Optional description of what the method does   |
+| `params_schema` | `dict[str, Any] \| None` | `None`                 | Optional JSON Schema for method parameters     |
+| `result_schema` | `dict[str, Any] \| None` | `None`                 | Optional JSON Schema for the result            |
+| `deprecated`    | `bool`                   | `/* serde(default) */` | Whether this method is deprecated              |
+| `tags`          | `list[str]`              | `/* serde(default) */` | Tags for categorizing and grouping methods     |
 
 ---
 
@@ -483,13 +483,13 @@ enabling discovery and documentation of RPC-compatible endpoints.
 
 JWT authentication configuration
 
-| Field       | Type                | Default | Description                                           |
-| ----------- | ------------------- | ------- | ----------------------------------------------------- |
-| `secret`    | `str`               | —       | Secret key for JWT verification                       |
-| `algorithm` | `str`               | —       | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
-| `audience`  | `list[str] \| None` | `None`  | Required audience claim                               |
-| `issuer`    | `str \| None`       | `None`  | Required issuer claim                                 |
-| `leeway`    | `int`               | —       | Leeway for expiration checks (seconds)                |
+| Field       | Type                | Default                | Description                                           |
+| ----------- | ------------------- | ---------------------- | ----------------------------------------------------- |
+| `secret`    | `str`               | —                      | Secret key for JWT verification                       |
+| `algorithm` | `str`               | —                      | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
+| `audience`  | `list[str] \| None` | `None`                 | Required audience claim                               |
+| `issuer`    | `str \| None`       | `None`                 | Required issuer claim                                 |
+| `leeway`    | `int`               | `/* serde(default) */` | Leeway for expiration checks (seconds)                |
 
 ---
 

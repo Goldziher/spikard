@@ -22,23 +22,23 @@ Rust-centric polyglot HTTP framework with type-safe routing, OpenAPI/AsyncAPI/Gr
 
 Each binding ships through its native package manager. Use the package README for platform requirements and build details.
 
-| Target | Package | README |
-| ------ | ------- | ------ |
-| Rust | `spikard` on crates.io | [crates/spikard](crates/spikard/README.md) |
-| Python | `spikard` on PyPI | [packages/python](packages/python/README.md) |
-| Node.js | `@spikard/node` on npm | [crates/spikard-node](crates/spikard-node/README.md) |
-| WASM | `@spikard/node-wasm` on npm | [crates/spikard-wasm](crates/spikard-wasm/README.md) |
-| Ruby | `spikard` on RubyGems | [packages/ruby](packages/ruby/README.md) |
-| PHP | `goldziher/spikard` on Packagist | [packages/php](packages/php/README.md) |
-| Elixir | `spikard` on Hex | [packages/elixir](packages/elixir/README.md) |
-| Go | `github.com/Goldziher/spikard` | [packages/go](packages/go/README.md) |
-| Java | `dev.spikard:spikard` on Maven Central | [packages/java](packages/java/README.md) |
-| C# | `Spikard` on NuGet | [packages/csharp](packages/csharp/README.md) |
-| Kotlin | `dev.spikard:spikard` on Maven Central | [packages/kotlin](packages/kotlin/README.md) |
-| Dart | `spikard` on pub.dev | [packages/dart](packages/dart/README.md) |
-| Swift | `Spikard` through SwiftPM | [packages/swift](packages/swift/README.md) |
-| Zig | `spikard` through `build.zig.zon` | [packages/zig](packages/zig/README.md) |
-| C FFI | `spikard-ffi` shared/static library | [crates/spikard-ffi](crates/spikard-ffi/README.md) |
+| Target  | Package                                | README                                               |
+| ------- | -------------------------------------- | ---------------------------------------------------- |
+| Rust    | `spikard` on crates.io                 | [crates/spikard](crates/spikard/README.md)           |
+| Python  | `spikard` on PyPI                      | [packages/python](packages/python/README.md)         |
+| Node.js | `@spikard/node` on npm                 | [crates/spikard-node](crates/spikard-node/README.md) |
+| WASM    | `@spikard/node-wasm` on npm            | [crates/spikard-wasm](crates/spikard-wasm/README.md) |
+| Ruby    | `spikard` on RubyGems                  | [packages/ruby](packages/ruby/README.md)             |
+| PHP     | `goldziher/spikard` on Packagist       | [packages/php](packages/php/README.md)               |
+| Elixir  | `spikard` on Hex                       | [packages/elixir](packages/elixir/README.md)         |
+| Go      | `github.com/Goldziher/spikard`         | [packages/go](packages/go/README.md)                 |
+| Java    | `dev.spikard:spikard` on Maven Central | [packages/java](packages/java/README.md)             |
+| C#      | `Spikard` on NuGet                     | [packages/csharp](packages/csharp/README.md)         |
+| Kotlin  | `dev.spikard:spikard` on Maven Central | [packages/kotlin](packages/kotlin/README.md)         |
+| Dart    | `spikard` on pub.dev                   | [packages/dart](packages/dart/README.md)             |
+| Swift   | `Spikard` through SwiftPM              | [packages/swift](packages/swift/README.md)           |
+| Zig     | `spikard` through `build.zig.zon`      | [packages/zig](packages/zig/README.md)               |
+| C FFI   | `spikard-ffi` shared/static library    | [crates/spikard-ffi](crates/spikard-ffi/README.md)   |
 
 ## Quick Start
 

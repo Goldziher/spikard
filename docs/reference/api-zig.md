@@ -460,14 +460,14 @@ JSON-RPC method metadata for routes that support JSON-RPC
 This struct captures the metadata needed to expose HTTP routes as JSON-RPC methods,
 enabling discovery and documentation of RPC-compatible endpoints.
 
-| Field          | Type                   | Default | Description                                    |
-| -------------- | ---------------------- | ------- | ---------------------------------------------- |
-| `methodName`   | `[:0]const u8`         | —       | The JSON-RPC method name (e.g., "user.create") |
-| `description`  | `[:0]const u8?`        | `null`  | Optional description of what the method does   |
-| `paramsSchema` | `[:0]const u8?`        | `null`  | Optional JSON Schema for method parameters     |
-| `resultSchema` | `[:0]const u8?`        | `null`  | Optional JSON Schema for the result            |
-| `deprecated`   | `bool`                 | —       | Whether this method is deprecated              |
-| `tags`         | `[]const [:0]const u8` | —       | Tags for categorizing and grouping methods     |
+| Field          | Type                   | Default                | Description                                    |
+| -------------- | ---------------------- | ---------------------- | ---------------------------------------------- |
+| `methodName`   | `[:0]const u8`         | —                      | The JSON-RPC method name (e.g., "user.create") |
+| `description`  | `[:0]const u8?`        | `null`                 | Optional description of what the method does   |
+| `paramsSchema` | `[:0]const u8?`        | `null`                 | Optional JSON Schema for method parameters     |
+| `resultSchema` | `[:0]const u8?`        | `null`                 | Optional JSON Schema for the result            |
+| `deprecated`   | `bool`                 | `/* serde(default) */` | Whether this method is deprecated              |
+| `tags`         | `[]const [:0]const u8` | `/* serde(default) */` | Tags for categorizing and grouping methods     |
 
 ---
 
@@ -475,13 +475,13 @@ enabling discovery and documentation of RPC-compatible endpoints.
 
 JWT authentication configuration
 
-| Field       | Type                    | Default | Description                                           |
-| ----------- | ----------------------- | ------- | ----------------------------------------------------- |
-| `secret`    | `[:0]const u8`          | —       | Secret key for JWT verification                       |
-| `algorithm` | `[:0]const u8`          | —       | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
-| `audience`  | `[]const [:0]const u8?` | `null`  | Required audience claim                               |
-| `issuer`    | `[:0]const u8?`         | `null`  | Required issuer claim                                 |
-| `leeway`    | `u64`                   | —       | Leeway for expiration checks (seconds)                |
+| Field       | Type                    | Default                | Description                                           |
+| ----------- | ----------------------- | ---------------------- | ----------------------------------------------------- |
+| `secret`    | `[:0]const u8`          | —                      | Secret key for JWT verification                       |
+| `algorithm` | `[:0]const u8`          | —                      | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
+| `audience`  | `[]const [:0]const u8?` | `null`                 | Required audience claim                               |
+| `issuer`    | `[:0]const u8?`         | `null`                 | Required issuer claim                                 |
+| `leeway`    | `u64`                   | `/* serde(default) */` | Leeway for expiration checks (seconds)                |
 
 ---
 

@@ -42,7 +42,7 @@ repos:
 
   # Python
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.13
+    rev: v0.15.14
     hooks:
       - id: ruff
         args: [--fix]
@@ -215,7 +215,7 @@ repos:
 
   # Alef: verify generated bindings are up to date and sync package versions
   - repo: https://github.com/kreuzberg-dev/alef
-    rev: v0.17.17
+    rev: v0.17.32
     hooks:
       - id: alef-verify
       - id: alef-sync-versions
