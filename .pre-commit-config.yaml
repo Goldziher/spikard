@@ -50,7 +50,7 @@ repos:
 
   # Shared kreuzberg-dev polyglot hooks
   - repo: https://github.com/kreuzberg-dev/pre-commit-hooks
-    rev: v1.1.17
+    rev: v1.1.18
     hooks:
       - id: cargo-sort
         exclude: ^(crates/spikard-(wasm|node|py|php|ffi)|packages/(dart|swift)/rust|packages/ruby/ext/spikard_rb/native)/Cargo\.toml$
@@ -155,8 +155,15 @@ repos:
         exclude: ^(e2e/|test_apps/|tools/)
       - id: golangci-lint
         exclude: ^(e2e/|test_apps/|tools/)
+        # golangci-lint auto-discovers every go.mod; scope it to the binding
+        # module so the e2e/ exclusion (which file-filtering can't enforce for
+        # whole-module linting) actually holds.
+        env:
+          KREUZBERG_GO_MOD_DIRS: "packages/go"
       - id: govulncheck
         exclude: ^(e2e/|test_apps/|tools/)
+        env:
+          KREUZBERG_GO_MOD_DIRS: "packages/go"
       - id: rubocop
         files: ^packages/ruby/.*\.rb$
       - id: rubocop-lint
@@ -215,7 +222,7 @@ repos:
 
   # Alef: verify generated bindings are up to date and sync package versions
   - repo: https://github.com/kreuzberg-dev/alef
-    rev: v0.17.32
+    rev: v0.18.1
     hooks:
       - id: alef-verify
       - id: alef-sync-versions
@@ -234,7 +241,7 @@ repos:
 
   # Spelling: fast Rust-based spell checker (last — runs after all formatters)
   - repo: https://github.com/crate-ci/typos
-    rev: v1.46.2
+    rev: v1.46.3
     hooks:
       - id: typos
         args: [--force-exclude]
