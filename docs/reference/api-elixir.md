@@ -75,10 +75,10 @@ def schema_full()
 
 API Key authentication configuration
 
-| Field         | Type               | Default | Description                              |
-| ------------- | ------------------ | ------- | ---------------------------------------- |
-| `keys`        | `list(String.t())` | —       | Valid API keys                           |
-| `header_name` | `String.t()`       | —       | Header name to check (e.g., "X-API-Key") |
+| Field         | Type               | Default                | Description                              |
+| ------------- | ------------------ | ---------------------- | ---------------------------------------- |
+| `keys`        | `list(String.t())` | —                      | Valid API keys                           |
+| `header_name` | `String.t()`       | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
 
 ---
 
@@ -481,7 +481,7 @@ JWT authentication configuration
 | Field       | Type                      | Default                | Description                                           |
 | ----------- | ------------------------- | ---------------------- | ----------------------------------------------------- |
 | `secret`    | `String.t()`              | —                      | Secret key for JWT verification                       |
-| `algorithm` | `String.t()`              | —                      | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
+| `algorithm` | `String.t()`              | `/* serde(default) */` | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
 | `audience`  | `list(String.t()) \| nil` | `nil`                  | Required audience claim                               |
 | `issuer`    | `String.t() \| nil`       | `nil`                  | Required issuer claim                                 |
 | `leeway`    | `integer()`               | `/* serde(default) */` | Leeway for expiration checks (seconds)                |
@@ -992,12 +992,12 @@ def with_retry(retry_ms)
 
 Static file serving configuration
 
-| Field           | Type                | Default | Description                            |
-| --------------- | ------------------- | ------- | -------------------------------------- |
-| `directory`     | `String.t()`        | —       | Directory path to serve                |
-| `route_prefix`  | `String.t()`        | —       | URL path prefix (e.g., "/static")      |
-| `index_file`    | `boolean()`         | —       | Fallback to index.html for directories |
-| `cache_control` | `String.t() \| nil` | `nil`   | Cache-Control header value             |
+| Field           | Type                | Default                | Description                            |
+| --------------- | ------------------- | ---------------------- | -------------------------------------- |
+| `directory`     | `String.t()`        | —                      | Directory path to serve                |
+| `route_prefix`  | `String.t()`        | —                      | URL path prefix (e.g., "/static")      |
+| `index_file`    | `boolean()`         | `/* serde(default) */` | Fallback to index.html for directories |
+| `cache_control` | `String.t() \| nil` | `nil`                  | Cache-Control header value             |
 
 ---
 

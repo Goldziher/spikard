@@ -105,6 +105,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ContactInfo dco_decode_box_autoadd_contact_info(dynamic raw);
 
   @protected
+  GraphQLError dco_decode_box_autoadd_graph_ql_error(dynamic raw);
+
+  @protected
   GrpcConfig dco_decode_box_autoadd_grpc_config(dynamic raw);
 
   @protected
@@ -136,6 +139,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   FullSchemaConfig dco_decode_full_schema_config(dynamic raw);
+
+  @protected
+  GraphQLError dco_decode_graph_ql_error(dynamic raw);
 
   @protected
   GraphQLSubscriptionSnapshot dco_decode_graph_ql_subscription_snapshot(
@@ -390,6 +396,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ContactInfo sse_decode_box_autoadd_contact_info(SseDeserializer deserializer);
 
   @protected
+  GraphQLError sse_decode_box_autoadd_graph_ql_error(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   GrpcConfig sse_decode_box_autoadd_grpc_config(SseDeserializer deserializer);
 
   @protected
@@ -427,6 +438,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   FullSchemaConfig sse_decode_full_schema_config(SseDeserializer deserializer);
+
+  @protected
+  GraphQLError sse_decode_graph_ql_error(SseDeserializer deserializer);
 
   @protected
   GraphQLSubscriptionSnapshot sse_decode_graph_ql_subscription_snapshot(
@@ -746,6 +760,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_graph_ql_error(
+    GraphQLError self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_grpc_config(
     GrpcConfig self,
     SseSerializer serializer,
@@ -804,6 +824,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     FullSchemaConfig self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_graph_ql_error(GraphQLError self, SseSerializer serializer);
 
   @protected
   void sse_encode_graph_ql_subscription_snapshot(

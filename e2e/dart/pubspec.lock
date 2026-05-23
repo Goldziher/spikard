@@ -303,7 +303,7 @@ packages:
       path: "../../packages/dart"
       relative: true
     source: path
-    version: "0.14.0"
+    version: "0.15.5"
   stack_trace:
     dependency: transitive
     description:

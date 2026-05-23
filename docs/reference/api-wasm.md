@@ -72,10 +72,10 @@ function schemaFull(): FullSchemaConfig;
 
 API Key authentication configuration
 
-| Field        | Type            | Default | Description                              |
-| ------------ | --------------- | ------- | ---------------------------------------- |
-| `keys`       | `Array<string>` | —       | Valid API keys                           |
-| `headerName` | `string`        | —       | Header name to check (e.g., "X-API-Key") |
+| Field        | Type            | Default                | Description                              |
+| ------------ | --------------- | ---------------------- | ---------------------------------------- |
+| `keys`       | `Array<string>` | —                      | Valid API keys                           |
+| `headerName` | `string`        | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
 
 ---
 
@@ -272,7 +272,7 @@ JWT authentication configuration
 | Field       | Type                    | Default                | Description                                           |
 | ----------- | ----------------------- | ---------------------- | ----------------------------------------------------- |
 | `secret`    | `string`                | —                      | Secret key for JWT verification                       |
-| `algorithm` | `string`                | —                      | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
+| `algorithm` | `string`                | `/* serde(default) */` | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
 | `audience`  | `Array<string> \| null` | `null`                 | Required audience claim                               |
 | `issuer`    | `string \| null`        | `null`                 | Required issuer claim                                 |
 | `leeway`    | `number`                | `/* serde(default) */` | Leeway for expiration checks (seconds)                |

@@ -87,7 +87,6 @@ Rust-centric polyglot HTTP framework built on Axum and Tower-HTTP. Type-safe rou
 cargo add spikard
 ```
 
-
 ### System Requirements
 
 - See [Installation Guide](https://github.com/Goldziher/spikard#installation) for requirements
@@ -128,7 +127,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-
 ## Features
 
 - **HTTP routing** — type-safe route definitions with path, query, and body parameter validation
@@ -137,7 +135,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 - **Lifecycle hooks** — `onRequest`, `preValidation`, `preHandler`, `onResponse`, `onError`
 - **Fixture-driven testing** — shared JSON fixtures drive tests across all language bindings
 - **Polyglot** — single Rust core, thin bindings for Python, Node.js, Ruby, PHP, Elixir, Go, Java, C#, Kotlin, Dart, Gleam, WASM, Swift, Zig, and C FFI
-
 
 ## Routing
 
@@ -152,7 +149,6 @@ app.route(post("/users"), |ctx: Context| async move {
     Ok(Json(user))
 })?;
 ```
-
 
 ## Validation
 
@@ -175,7 +171,6 @@ app.route(
 )?;
 ```
 
-
 ## Middleware
 
 ```rust
@@ -184,7 +179,6 @@ use tower_http::trace::TraceLayer;
 let mut app = App::new();
 app.layer(TraceLayer::new_for_http());
 ```
-
 
 ## Documentation
 

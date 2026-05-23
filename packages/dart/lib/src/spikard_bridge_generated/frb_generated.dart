@@ -64,7 +64,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => 24332636;
+  int get rustContentHash => 1086532066;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -235,6 +235,14 @@ abstract class RustLibApi extends BaseApi {
   });
 
   Future<UploadFile> crateCreateUploadFileFromJson({required String json});
+
+  Future<String> crateGraphQlErrorErrorType({required GraphQLError that});
+
+  Future<bool> crateGraphQlErrorIsTransient({required GraphQLError that});
+
+  Future<PlatformInt64> crateGraphQlErrorStatusCode({
+    required GraphQLError that,
+  });
 
   Future<FullSchemaConfig> crateSchemaFull();
 
@@ -1703,6 +1711,100 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<String> crateGraphQlErrorErrorType({required GraphQLError that}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_graph_ql_error(that, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 43,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateGraphQlErrorErrorTypeConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateGraphQlErrorErrorTypeConstMeta => const TaskConstMeta(
+    debugName: "graph_ql_error_error_type",
+    argNames: ["that"],
+  );
+
+  @override
+  Future<bool> crateGraphQlErrorIsTransient({required GraphQLError that}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_graph_ql_error(that, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 44,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_bool,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateGraphQlErrorIsTransientConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateGraphQlErrorIsTransientConstMeta =>
+      const TaskConstMeta(
+        debugName: "graph_ql_error_is_transient",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<PlatformInt64> crateGraphQlErrorStatusCode({
+    required GraphQLError that,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_graph_ql_error(that, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 45,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_i_64,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateGraphQlErrorStatusCodeConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateGraphQlErrorStatusCodeConstMeta =>
+      const TaskConstMeta(
+        debugName: "graph_ql_error_status_code",
+        argNames: ["that"],
+      );
+
+  @override
   Future<FullSchemaConfig> crateSchemaFull() {
     return handler.executeNormal(
       NormalTask(
@@ -1711,7 +1813,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 43,
+            funcId: 46,
             port: port_,
           );
         },
@@ -1738,7 +1840,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 44,
+            funcId: 47,
             port: port_,
           );
         },
@@ -1765,7 +1867,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 45,
+            funcId: 48,
             port: port_,
           );
         },
@@ -1966,6 +2068,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  GraphQLError dco_decode_box_autoadd_graph_ql_error(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_graph_ql_error(raw);
+  }
+
+  @protected
   GrpcConfig dco_decode_box_autoadd_grpc_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_grpc_config(raw);
@@ -2061,6 +2169,58 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       complexityLimit: dco_decode_opt_box_autoadd_i_64(arr[1]),
       depthLimit: dco_decode_opt_box_autoadd_i_64(arr[2]),
     );
+  }
+
+  @protected
+  GraphQLError dco_decode_graph_ql_error(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return GraphQLError_ExecutionError(field0: dco_decode_String(raw[1]));
+      case 1:
+        return GraphQLError_SchemaBuildError(field0: dco_decode_String(raw[1]));
+      case 2:
+        return GraphQLError_RequestHandlingError(
+          field0: dco_decode_String(raw[1]),
+        );
+      case 3:
+        return GraphQLError_SerializationError(
+          field0: dco_decode_String(raw[1]),
+        );
+      case 4:
+        return GraphQLError_JsonError(field0: dco_decode_String(raw[1]));
+      case 5:
+        return GraphQLError_ValidationError(field0: dco_decode_String(raw[1]));
+      case 6:
+        return GraphQLError_ParseError(field0: dco_decode_String(raw[1]));
+      case 7:
+        return GraphQLError_AuthenticationError(
+          field0: dco_decode_String(raw[1]),
+        );
+      case 8:
+        return GraphQLError_AuthorizationError(
+          field0: dco_decode_String(raw[1]),
+        );
+      case 9:
+        return GraphQLError_NotFound(field0: dco_decode_String(raw[1]));
+      case 10:
+        return GraphQLError_RateLimitExceeded(
+          field0: dco_decode_String(raw[1]),
+        );
+      case 11:
+        return GraphQLError_InvalidInput(
+          message: dco_decode_String(raw[1]),
+          details: dco_decode_String(raw[2]),
+        );
+      case 12:
+        return GraphQLError_ComplexityLimitExceeded();
+      case 13:
+        return GraphQLError_DepthLimitExceeded();
+      case 14:
+        return GraphQLError_InternalError(field0: dco_decode_String(raw[1]));
+      default:
+        throw Exception("unreachable");
+    }
   }
 
   @protected
@@ -2804,6 +2964,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  GraphQLError sse_decode_box_autoadd_graph_ql_error(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_graph_ql_error(deserializer));
+  }
+
+  @protected
   GrpcConfig sse_decode_box_autoadd_grpc_config(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_grpc_config(deserializer));
@@ -2909,6 +3077,64 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       complexityLimit: var_complexityLimit,
       depthLimit: var_depthLimit,
     );
+  }
+
+  @protected
+  GraphQLError sse_decode_graph_ql_error(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        var var_field0 = sse_decode_String(deserializer);
+        return GraphQLError_ExecutionError(field0: var_field0);
+      case 1:
+        var var_field0 = sse_decode_String(deserializer);
+        return GraphQLError_SchemaBuildError(field0: var_field0);
+      case 2:
+        var var_field0 = sse_decode_String(deserializer);
+        return GraphQLError_RequestHandlingError(field0: var_field0);
+      case 3:
+        var var_field0 = sse_decode_String(deserializer);
+        return GraphQLError_SerializationError(field0: var_field0);
+      case 4:
+        var var_field0 = sse_decode_String(deserializer);
+        return GraphQLError_JsonError(field0: var_field0);
+      case 5:
+        var var_field0 = sse_decode_String(deserializer);
+        return GraphQLError_ValidationError(field0: var_field0);
+      case 6:
+        var var_field0 = sse_decode_String(deserializer);
+        return GraphQLError_ParseError(field0: var_field0);
+      case 7:
+        var var_field0 = sse_decode_String(deserializer);
+        return GraphQLError_AuthenticationError(field0: var_field0);
+      case 8:
+        var var_field0 = sse_decode_String(deserializer);
+        return GraphQLError_AuthorizationError(field0: var_field0);
+      case 9:
+        var var_field0 = sse_decode_String(deserializer);
+        return GraphQLError_NotFound(field0: var_field0);
+      case 10:
+        var var_field0 = sse_decode_String(deserializer);
+        return GraphQLError_RateLimitExceeded(field0: var_field0);
+      case 11:
+        var var_message = sse_decode_String(deserializer);
+        var var_details = sse_decode_String(deserializer);
+        return GraphQLError_InvalidInput(
+          message: var_message,
+          details: var_details,
+        );
+      case 12:
+        return GraphQLError_ComplexityLimitExceeded();
+      case 13:
+        return GraphQLError_DepthLimitExceeded();
+      case 14:
+        var var_field0 = sse_decode_String(deserializer);
+        return GraphQLError_InternalError(field0: var_field0);
+      default:
+        throw UnimplementedError('');
+    }
   }
 
   @protected
@@ -3874,6 +4100,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_graph_ql_error(
+    GraphQLError self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_graph_ql_error(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_grpc_config(
     GrpcConfig self,
     SseSerializer serializer,
@@ -3976,6 +4211,60 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_bool(self.introspectionEnabled, serializer);
     sse_encode_opt_box_autoadd_i_64(self.complexityLimit, serializer);
     sse_encode_opt_box_autoadd_i_64(self.depthLimit, serializer);
+  }
+
+  @protected
+  void sse_encode_graph_ql_error(GraphQLError self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case GraphQLError_ExecutionError(field0: final field0):
+        sse_encode_i_32(0, serializer);
+        sse_encode_String(field0, serializer);
+      case GraphQLError_SchemaBuildError(field0: final field0):
+        sse_encode_i_32(1, serializer);
+        sse_encode_String(field0, serializer);
+      case GraphQLError_RequestHandlingError(field0: final field0):
+        sse_encode_i_32(2, serializer);
+        sse_encode_String(field0, serializer);
+      case GraphQLError_SerializationError(field0: final field0):
+        sse_encode_i_32(3, serializer);
+        sse_encode_String(field0, serializer);
+      case GraphQLError_JsonError(field0: final field0):
+        sse_encode_i_32(4, serializer);
+        sse_encode_String(field0, serializer);
+      case GraphQLError_ValidationError(field0: final field0):
+        sse_encode_i_32(5, serializer);
+        sse_encode_String(field0, serializer);
+      case GraphQLError_ParseError(field0: final field0):
+        sse_encode_i_32(6, serializer);
+        sse_encode_String(field0, serializer);
+      case GraphQLError_AuthenticationError(field0: final field0):
+        sse_encode_i_32(7, serializer);
+        sse_encode_String(field0, serializer);
+      case GraphQLError_AuthorizationError(field0: final field0):
+        sse_encode_i_32(8, serializer);
+        sse_encode_String(field0, serializer);
+      case GraphQLError_NotFound(field0: final field0):
+        sse_encode_i_32(9, serializer);
+        sse_encode_String(field0, serializer);
+      case GraphQLError_RateLimitExceeded(field0: final field0):
+        sse_encode_i_32(10, serializer);
+        sse_encode_String(field0, serializer);
+      case GraphQLError_InvalidInput(
+        message: final message,
+        details: final details,
+      ):
+        sse_encode_i_32(11, serializer);
+        sse_encode_String(message, serializer);
+        sse_encode_String(details, serializer);
+      case GraphQLError_ComplexityLimitExceeded():
+        sse_encode_i_32(12, serializer);
+      case GraphQLError_DepthLimitExceeded():
+        sse_encode_i_32(13, serializer);
+      case GraphQLError_InternalError(field0: final field0):
+        sse_encode_i_32(14, serializer);
+        sse_encode_String(field0, serializer);
+    }
   }
 
   @protected

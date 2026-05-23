@@ -28,7 +28,7 @@
 
 use crate::*;
 use flutter_rust_bridge::for_generated::byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
-use flutter_rust_bridge::for_generated::{transform_result_dco, Lifetimeable, Lockable};
+use flutter_rust_bridge::for_generated::{Lifetimeable, Lockable, transform_result_dco};
 use flutter_rust_bridge::{Handler, IntoIntoDart};
 
 // Section: boilerplate
@@ -39,7 +39,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.12.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 24332636;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1086532066;
 
 // Section: executor
 
@@ -1317,6 +1317,90 @@ fn wire__crate__create_upload_file_from_json_impl(
         },
     )
 }
+fn wire__crate__graph_ql_error_error_type_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "graph_ql_error_error_type",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_)
+            };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::GraphQLError>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Result::<_, ()>::Ok(crate::GraphQLError::error_type(&api_that))?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__graph_ql_error_is_transient_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "graph_ql_error_is_transient",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_)
+            };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::GraphQLError>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Result::<_, ()>::Ok(crate::GraphQLError::is_transient(&api_that))?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__graph_ql_error_status_code_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "graph_ql_error_status_code",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_)
+            };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <crate::GraphQLError>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Result::<_, ()>::Ok(crate::GraphQLError::status_code(&api_that))?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
 fn wire__crate__schema_full_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -1451,6 +1535,50 @@ const _: fn() = || {
         let _: bool = FullSchemaConfig.introspection_enabled;
         let _: Option<i64> = FullSchemaConfig.complexity_limit;
         let _: Option<i64> = FullSchemaConfig.depth_limit;
+    }
+    match None::<crate::GraphQLError>.unwrap() {
+        crate::GraphQLError::ExecutionError { field0 } => {
+            let _: String = field0;
+        }
+        crate::GraphQLError::SchemaBuildError { field0 } => {
+            let _: String = field0;
+        }
+        crate::GraphQLError::RequestHandlingError { field0 } => {
+            let _: String = field0;
+        }
+        crate::GraphQLError::SerializationError { field0 } => {
+            let _: String = field0;
+        }
+        crate::GraphQLError::JsonError { field0 } => {
+            let _: String = field0;
+        }
+        crate::GraphQLError::ValidationError { field0 } => {
+            let _: String = field0;
+        }
+        crate::GraphQLError::ParseError { field0 } => {
+            let _: String = field0;
+        }
+        crate::GraphQLError::AuthenticationError { field0 } => {
+            let _: String = field0;
+        }
+        crate::GraphQLError::AuthorizationError { field0 } => {
+            let _: String = field0;
+        }
+        crate::GraphQLError::NotFound { field0 } => {
+            let _: String = field0;
+        }
+        crate::GraphQLError::RateLimitExceeded { field0 } => {
+            let _: String = field0;
+        }
+        crate::GraphQLError::InvalidInput { message, details } => {
+            let _: String = message;
+            let _: String = details;
+        }
+        crate::GraphQLError::ComplexityLimitExceeded => {}
+        crate::GraphQLError::DepthLimitExceeded => {}
+        crate::GraphQLError::InternalError { field0 } => {
+            let _: String = field0;
+        }
     }
     {
         let GraphQLSubscriptionSnapshot = None::<crate::GraphQLSubscriptionSnapshot>.unwrap();
@@ -1839,6 +1967,80 @@ impl SseDecode for crate::FullSchemaConfig {
             complexity_limit: var_complexityLimit,
             depth_limit: var_depthLimit,
         };
+    }
+}
+
+impl SseDecode for crate::GraphQLError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::GraphQLError::ExecutionError { field0: var_field0 };
+            }
+            1 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::GraphQLError::SchemaBuildError { field0: var_field0 };
+            }
+            2 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::GraphQLError::RequestHandlingError { field0: var_field0 };
+            }
+            3 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::GraphQLError::SerializationError { field0: var_field0 };
+            }
+            4 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::GraphQLError::JsonError { field0: var_field0 };
+            }
+            5 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::GraphQLError::ValidationError { field0: var_field0 };
+            }
+            6 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::GraphQLError::ParseError { field0: var_field0 };
+            }
+            7 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::GraphQLError::AuthenticationError { field0: var_field0 };
+            }
+            8 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::GraphQLError::AuthorizationError { field0: var_field0 };
+            }
+            9 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::GraphQLError::NotFound { field0: var_field0 };
+            }
+            10 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::GraphQLError::RateLimitExceeded { field0: var_field0 };
+            }
+            11 => {
+                let mut var_message = <String>::sse_decode(deserializer);
+                let mut var_details = <String>::sse_decode(deserializer);
+                return crate::GraphQLError::InvalidInput {
+                    message: var_message,
+                    details: var_details,
+                };
+            }
+            12 => {
+                return crate::GraphQLError::ComplexityLimitExceeded;
+            }
+            13 => {
+                return crate::GraphQLError::DepthLimitExceeded;
+            }
+            14 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::GraphQLError::InternalError { field0: var_field0 };
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
     }
 }
 
@@ -2649,9 +2851,12 @@ fn pde_ffi_dispatcher_primary_impl(
         40 => wire__crate__create_sse_event_from_json_impl(port, ptr, rust_vec_len, data_len),
         41 => wire__crate__create_static_files_config_from_json_impl(port, ptr, rust_vec_len, data_len),
         42 => wire__crate__create_upload_file_from_json_impl(port, ptr, rust_vec_len, data_len),
-        43 => wire__crate__schema_full_impl(port, ptr, rust_vec_len, data_len),
-        44 => wire__crate__schema_query_mutation_impl(port, ptr, rust_vec_len, data_len),
-        45 => wire__crate__schema_query_only_impl(port, ptr, rust_vec_len, data_len),
+        43 => wire__crate__graph_ql_error_error_type_impl(port, ptr, rust_vec_len, data_len),
+        44 => wire__crate__graph_ql_error_is_transient_impl(port, ptr, rust_vec_len, data_len),
+        45 => wire__crate__graph_ql_error_status_code_impl(port, ptr, rust_vec_len, data_len),
+        46 => wire__crate__schema_full_impl(port, ptr, rust_vec_len, data_len),
+        47 => wire__crate__schema_query_mutation_impl(port, ptr, rust_vec_len, data_len),
+        48 => wire__crate__schema_query_only_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -2832,6 +3037,66 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::FullSchemaConfig> {
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<crate::FullSchemaConfig> {}
 impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::FullSchemaConfig>> for crate::FullSchemaConfig {
     fn into_into_dart(self) -> FrbWrapper<crate::FullSchemaConfig> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::GraphQLError> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self.0 {
+            crate::GraphQLError::ExecutionError { field0 } => {
+                [0.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::GraphQLError::SchemaBuildError { field0 } => {
+                [1.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::GraphQLError::RequestHandlingError { field0 } => {
+                [2.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::GraphQLError::SerializationError { field0 } => {
+                [3.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::GraphQLError::JsonError { field0 } => {
+                [4.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::GraphQLError::ValidationError { field0 } => {
+                [5.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::GraphQLError::ParseError { field0 } => {
+                [6.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::GraphQLError::AuthenticationError { field0 } => {
+                [7.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::GraphQLError::AuthorizationError { field0 } => {
+                [8.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::GraphQLError::NotFound { field0 } => {
+                [9.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::GraphQLError::RateLimitExceeded { field0 } => {
+                [10.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::GraphQLError::InvalidInput { message, details } => [
+                11.into_dart(),
+                message.into_into_dart().into_dart(),
+                details.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::GraphQLError::ComplexityLimitExceeded => [12.into_dart()].into_dart(),
+            crate::GraphQLError::DepthLimitExceeded => [13.into_dart()].into_dart(),
+            crate::GraphQLError::InternalError { field0 } => {
+                [14.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<crate::GraphQLError> {}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::GraphQLError>> for crate::GraphQLError {
+    fn into_into_dart(self) -> FrbWrapper<crate::GraphQLError> {
         self.into()
     }
 }
@@ -3442,6 +3707,76 @@ impl SseEncode for crate::FullSchemaConfig {
     }
 }
 
+impl SseEncode for crate::GraphQLError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::GraphQLError::ExecutionError { field0 } => {
+                <i32>::sse_encode(0, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::GraphQLError::SchemaBuildError { field0 } => {
+                <i32>::sse_encode(1, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::GraphQLError::RequestHandlingError { field0 } => {
+                <i32>::sse_encode(2, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::GraphQLError::SerializationError { field0 } => {
+                <i32>::sse_encode(3, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::GraphQLError::JsonError { field0 } => {
+                <i32>::sse_encode(4, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::GraphQLError::ValidationError { field0 } => {
+                <i32>::sse_encode(5, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::GraphQLError::ParseError { field0 } => {
+                <i32>::sse_encode(6, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::GraphQLError::AuthenticationError { field0 } => {
+                <i32>::sse_encode(7, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::GraphQLError::AuthorizationError { field0 } => {
+                <i32>::sse_encode(8, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::GraphQLError::NotFound { field0 } => {
+                <i32>::sse_encode(9, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::GraphQLError::RateLimitExceeded { field0 } => {
+                <i32>::sse_encode(10, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::GraphQLError::InvalidInput { message, details } => {
+                <i32>::sse_encode(11, serializer);
+                <String>::sse_encode(message, serializer);
+                <String>::sse_encode(details, serializer);
+            }
+            crate::GraphQLError::ComplexityLimitExceeded => {
+                <i32>::sse_encode(12, serializer);
+            }
+            crate::GraphQLError::DepthLimitExceeded => {
+                <i32>::sse_encode(13, serializer);
+            }
+            crate::GraphQLError::InternalError { field0 } => {
+                <i32>::sse_encode(14, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
 impl SseEncode for crate::GraphQLSubscriptionSnapshot {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -4005,7 +4340,7 @@ mod io {
     use super::*;
     use crate::*;
     use flutter_rust_bridge::for_generated::byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
-    use flutter_rust_bridge::for_generated::{transform_result_dco, Lifetimeable, Lockable};
+    use flutter_rust_bridge::for_generated::{Lifetimeable, Lockable, transform_result_dco};
     use flutter_rust_bridge::{Handler, IntoIntoDart};
 
     // Section: boilerplate
@@ -4060,7 +4395,7 @@ mod web {
     use flutter_rust_bridge::for_generated::byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
     use flutter_rust_bridge::for_generated::wasm_bindgen;
     use flutter_rust_bridge::for_generated::wasm_bindgen::prelude::*;
-    use flutter_rust_bridge::for_generated::{transform_result_dco, Lifetimeable, Lockable};
+    use flutter_rust_bridge::for_generated::{Lifetimeable, Lockable, transform_result_dco};
     use flutter_rust_bridge::{Handler, IntoIntoDart};
 
     // Section: boilerplate

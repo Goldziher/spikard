@@ -72,10 +72,10 @@ pub fn schema_full() -> FullSchemaConfig
 
 API Key authentication configuration
 
-| Field         | Type          | Default | Description                              |
-| ------------- | ------------- | ------- | ---------------------------------------- |
-| `keys`        | `Vec<String>` | —       | Valid API keys                           |
-| `header_name` | `String`      | —       | Header name to check (e.g., "X-API-Key") |
+| Field         | Type          | Default                | Description                              |
+| ------------- | ------------- | ---------------------- | ---------------------------------------- |
+| `keys`        | `Vec<String>` | —                      | Valid API keys                           |
+| `header_name` | `String`      | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
 
 ---
 
@@ -478,7 +478,7 @@ JWT authentication configuration
 | Field       | Type                  | Default                | Description                                           |
 | ----------- | --------------------- | ---------------------- | ----------------------------------------------------- |
 | `secret`    | `String`              | —                      | Secret key for JWT verification                       |
-| `algorithm` | `String`              | —                      | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
+| `algorithm` | `String`              | `/* serde(default) */` | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
 | `audience`  | `Option<Vec<String>>` | `None`                 | Required audience claim                               |
 | `issuer`    | `Option<String>`      | `None`                 | Required issuer claim                                 |
 | `leeway`    | `u64`                 | `/* serde(default) */` | Leeway for expiration checks (seconds)                |
@@ -989,12 +989,12 @@ pub fn with_retry(&self, retry_ms: u64) -> SseEvent
 
 Static file serving configuration
 
-| Field           | Type             | Default | Description                            |
-| --------------- | ---------------- | ------- | -------------------------------------- |
-| `directory`     | `String`         | —       | Directory path to serve                |
-| `route_prefix`  | `String`         | —       | URL path prefix (e.g., "/static")      |
-| `index_file`    | `bool`           | —       | Fallback to index.html for directories |
-| `cache_control` | `Option<String>` | `None`  | Cache-Control header value             |
+| Field           | Type             | Default                | Description                            |
+| --------------- | ---------------- | ---------------------- | -------------------------------------- |
+| `directory`     | `String`         | —                      | Directory path to serve                |
+| `route_prefix`  | `String`         | —                      | URL path prefix (e.g., "/static")      |
+| `index_file`    | `bool`           | `/* serde(default) */` | Fallback to index.html for directories |
+| `cache_control` | `Option<String>` | `None`                 | Cache-Control header value             |
 
 ---
 

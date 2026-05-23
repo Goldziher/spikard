@@ -72,10 +72,10 @@ SpikardFullSchemaConfig* spikard_schema_full();
 
 API Key authentication configuration
 
-| Field         | Type           | Default | Description                              |
-| ------------- | -------------- | ------- | ---------------------------------------- |
-| `keys`        | `const char**` | —       | Valid API keys                           |
-| `header_name` | `const char*`  | —       | Header name to check (e.g., "X-API-Key") |
+| Field         | Type           | Default                | Description                              |
+| ------------- | -------------- | ---------------------- | ---------------------------------------- |
+| `keys`        | `const char**` | —                      | Valid API keys                           |
+| `header_name` | `const char*`  | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
 
 ---
 
@@ -464,7 +464,7 @@ JWT authentication configuration
 | Field       | Type            | Default                | Description                                           |
 | ----------- | --------------- | ---------------------- | ----------------------------------------------------- |
 | `secret`    | `const char*`   | —                      | Secret key for JWT verification                       |
-| `algorithm` | `const char*`   | —                      | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
+| `algorithm` | `const char*`   | `/* serde(default) */` | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
 | `audience`  | `const char***` | `NULL`                 | Required audience claim                               |
 | `issuer`    | `const char**`  | `NULL`                 | Required issuer claim                                 |
 | `leeway`    | `uint64_t`      | `/* serde(default) */` | Leeway for expiration checks (seconds)                |
@@ -941,12 +941,12 @@ SpikardSseEvent spikard_with_retry(uint64_t retry_ms);
 
 Static file serving configuration
 
-| Field           | Type           | Default | Description                            |
-| --------------- | -------------- | ------- | -------------------------------------- |
-| `directory`     | `const char*`  | —       | Directory path to serve                |
-| `route_prefix`  | `const char*`  | —       | URL path prefix (e.g., "/static")      |
-| `index_file`    | `bool`         | —       | Fallback to index.html for directories |
-| `cache_control` | `const char**` | `NULL`  | Cache-Control header value             |
+| Field           | Type           | Default                | Description                            |
+| --------------- | -------------- | ---------------------- | -------------------------------------- |
+| `directory`     | `const char*`  | —                      | Directory path to serve                |
+| `route_prefix`  | `const char*`  | —                      | URL path prefix (e.g., "/static")      |
+| `index_file`    | `bool`         | `/* serde(default) */` | Fallback to index.html for directories |
+| `cache_control` | `const char**` | `NULL`                 | Cache-Control header value             |
 
 ---
 

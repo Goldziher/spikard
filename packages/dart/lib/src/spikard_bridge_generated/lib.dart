@@ -8,8 +8,8 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'lib.freezed.dart';
 
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `Method`, `ParseRequest`, `SnapshotError`, `ValidateRequest`, `ValidationResponse`, `WebSocketMessage`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `Method`, `ParseRequest`, `SchemaError`, `SnapshotError`, `TestingSseEvent`, `ValidateRequest`, `ValidationResponse`, `WebSocketMessage`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
 
 /// Create a simple schema configuration with only Query type.
 ///
@@ -186,8 +186,12 @@ abstract class TestClient implements RustOpaqueInterface {
   });
 }
 
+/// API Key authentication configuration
 class ApiKeyConfig {
+  /// Valid API keys
   final List<String> keys;
+
+  /// Header name to check (e.g., "X-API-Key")
   final String headerName;
 
   const ApiKeyConfig({required this.keys, required this.headerName});
@@ -204,8 +208,12 @@ class ApiKeyConfig {
           headerName == other.headerName;
 }
 
+/// AsyncAPI HTTP endpoint configuration
 class AsyncApiConfig {
+  /// Enable AsyncAPI endpoints (default: false)
   final bool enabled;
+
+  /// Pre-registered AsyncAPI spec to serve from GET /asyncapi.json
   final String? spec;
 
   const AsyncApiConfig({required this.enabled, this.spec});
@@ -240,6 +248,7 @@ class BackgroundJobMetadata {
           requestId == other.requestId;
 }
 
+/// Configuration for in-process background task execution.
 class BackgroundTaskConfig {
   final PlatformInt64 maxQueueSize;
   final PlatformInt64 maxConcurrentTasks;
@@ -267,10 +276,18 @@ class BackgroundTaskConfig {
           drainTimeoutSecs == other.drainTimeoutSecs;
 }
 
+/// Compression configuration shared across runtimes
 class CompressionConfig {
+  /// Enable gzip compression
   final bool gzip;
+
+  /// Enable brotli compression
   final bool brotli;
+
+  /// Minimum response size to compress (bytes)
   final PlatformInt64 minSize;
+
+  /// Compression quality (0-11 for brotli, 0-9 for gzip)
   final PlatformInt64 quality;
 
   const CompressionConfig({
@@ -295,9 +312,15 @@ class CompressionConfig {
           quality == other.quality;
 }
 
+/// Contact information
 class ContactInfo {
+  /// Name of the contact person or organisation.
   final String? name;
+
+  /// Contact email address.
   final String? email;
+
+  /// URL pointing to the contact information page.
   final String? url;
 
   const ContactInfo({this.name, this.email, this.url});
@@ -315,6 +338,7 @@ class ContactInfo {
           url == other.url;
 }
 
+/// CORS configuration for a route
 class CorsConfig {
   final List<String> allowedOrigins;
   final List<String> allowedMethods;
@@ -354,9 +378,15 @@ class CorsConfig {
           allowCredentials == other.allowCredentials;
 }
 
+/// Configuration for fully-featured schemas with Query, Mutation, and Subscription types
 class FullSchemaConfig {
+  /// Enable introspection queries
   final bool introspectionEnabled;
+
+  /// Maximum query complexity (None = unlimited)
   final PlatformInt64? complexityLimit;
+
+  /// Maximum query depth (None = unlimited)
   final PlatformInt64? depthLimit;
 
   const FullSchemaConfig({
@@ -381,11 +411,160 @@ class FullSchemaConfig {
           depthLimit == other.depthLimit;
 }
 
+@freezed
+sealed class GraphQLError with _$GraphQLError {
+  const GraphQLError._();
+
+  /// Error during schema execution
+  ///
+  /// Occurs when the GraphQL executor encounters a runtime error during query execution.
+  const factory GraphQLError.executionError({required String field0}) =
+      GraphQLError_ExecutionError;
+
+  /// Error during schema building
+  ///
+  /// Occurs when schema construction fails due to invalid definitions or conflicts.
+  const factory GraphQLError.schemaBuildError({required String field0}) =
+      GraphQLError_SchemaBuildError;
+
+  /// Error during request handling
+  ///
+  /// Occurs when the HTTP request cannot be properly handled or parsed.
+  const factory GraphQLError.requestHandlingError({required String field0}) =
+      GraphQLError_RequestHandlingError;
+
+  /// Serialization error
+  ///
+  /// Occurs during JSON serialization/deserialization of GraphQL values.
+  const factory GraphQLError.serializationError({required String field0}) =
+      GraphQLError_SerializationError;
+
+  /// JSON parsing error
+  ///
+  /// Occurs when JSON input cannot be parsed.
+  const factory GraphQLError.jsonError({required String field0}) =
+      GraphQLError_JsonError;
+
+  /// GraphQL validation error
+  ///
+  /// Occurs when a GraphQL query fails schema validation.
+  const factory GraphQLError.validationError({required String field0}) =
+      GraphQLError_ValidationError;
+
+  /// GraphQL parse error
+  ///
+  /// Occurs when the GraphQL query string cannot be parsed.
+  const factory GraphQLError.parseError({required String field0}) =
+      GraphQLError_ParseError;
+
+  /// Authentication error
+  ///
+  /// Occurs when request authentication fails.
+  const factory GraphQLError.authenticationError({required String field0}) =
+      GraphQLError_AuthenticationError;
+
+  /// Authorization error
+  ///
+  /// Occurs when user lacks required permissions.
+  const factory GraphQLError.authorizationError({required String field0}) =
+      GraphQLError_AuthorizationError;
+
+  /// Not found error
+  ///
+  /// Occurs when a requested resource is not found.
+  const factory GraphQLError.notFound({required String field0}) =
+      GraphQLError_NotFound;
+
+  /// Rate limit error
+  ///
+  /// Occurs when rate limit is exceeded.
+  const factory GraphQLError.rateLimitExceeded({required String field0}) =
+      GraphQLError_RateLimitExceeded;
+
+  /// Invalid input error with validation details
+  ///
+  /// Occurs during input validation with detailed error information.
+  const factory GraphQLError.invalidInput({
+    required String message,
+    required String details,
+  }) = GraphQLError_InvalidInput;
+
+  /// Query complexity limit exceeded
+  ///
+  /// Occurs when a GraphQL query exceeds the configured complexity limit.
+  const factory GraphQLError.complexityLimitExceeded() =
+      GraphQLError_ComplexityLimitExceeded;
+
+  /// Query depth limit exceeded
+  ///
+  /// Occurs when a GraphQL query exceeds the configured depth limit.
+  const factory GraphQLError.depthLimitExceeded() =
+      GraphQLError_DepthLimitExceeded;
+
+  /// Internal server error
+  ///
+  /// Occurs when an unexpected internal error happens.
+  const factory GraphQLError.internalError({required String field0}) =
+      GraphQLError_InternalError;
+
+  /// Stable machine-readable error type identifier (`SCREAMING_SNAKE_CASE`).
+  ///
+  /// Public alias for the same codes returned by [`Self::error_code`], kept
+  /// available to bindings that surface the identifier alongside the
+  /// human-readable message.
+  Future<String> errorType() =>
+      RustLib.instance.api.crateGraphQlErrorErrorType(that: this);
+
+  /// Whether the error condition is transient and may succeed on retry.
+  ///
+  /// Returns true for upstream/infrastructure failures (rate limit, internal
+  /// error) and false for client-input errors (validation, parse, auth).
+  /// Bindings forward this signal to retry/back-off logic.
+  Future<bool> isTransient() =>
+      RustLib.instance.api.crateGraphQlErrorIsTransient(that: this);
+
+  /// Convert error to HTTP status code
+  ///
+  /// Maps GraphQL error types to appropriate HTTP status codes:
+  /// - 400: Bad Request for parse/request-handling errors
+  /// - 401: Unauthorized for authentication errors
+  /// - 403: Forbidden for authorization errors
+  /// - 404: Not Found for resource not found
+  /// - 422: Unprocessable Entity for validation failures
+  /// - 429: Too Many Requests for rate limit errors
+  /// - 500: Internal Server Error for schema/serialization/internal errors
+  /// - 200: OK for GraphQL execution errors returned in GraphQL response body
+  ///
+  /// # Examples
+  ///
+  /// ```ignore
+  /// use spikard_graphql::error::GraphQLError;
+  ///
+  /// let error = GraphQLError::AuthenticationError("Invalid token".to_string());
+  /// assert_eq!(error.status_code(), 401);
+  ///
+  /// let error = GraphQLError::ExecutionError("Query failed".to_string());
+  /// assert_eq!(error.status_code(), 200); // GraphQL spec: errors return 200 with errors in body
+  /// ```
+  Future<PlatformInt64> statusCode() =>
+      RustLib.instance.api.crateGraphQlErrorStatusCode(that: this);
+}
+
+/// Snapshot of a GraphQL subscription exchange over WebSocket.
 class GraphQLSubscriptionSnapshot {
+  /// Operation id used for the subscription request.
   final String operationId;
+
+  /// Whether the server acknowledged the GraphQL WebSocket connection.
   final bool acknowledged;
+
+  /// First `next.payload` received for this subscription, if any.
   final String? event;
+
+  /// GraphQL protocol errors emitted by the server.
   final List<String> errors;
+
+  /// Whether a `complete` frame was observed for this operation.
   final bool completeReceived;
 
   const GraphQLSubscriptionSnapshot({
@@ -416,15 +595,100 @@ class GraphQLSubscriptionSnapshot {
           completeReceived == other.completeReceived;
 }
 
+/// Configuration for gRPC support
+///
+/// Controls how the server handles gRPC requests, including compression,
+/// timeouts, and protocol settings.
+///
+/// # Stream Limits
+///
+/// This configuration enforces message-level size limits but delegates
+/// concurrent stream limiting to the HTTP/2 transport layer:
+///
+/// - **Message Size Limits**: The `max_message_size` field is enforced per
+///   individual message (request or response) in both unary and streaming RPCs.
+///   When a single message exceeds this limit, the request is rejected with
+///   `PAYLOAD_TOO_LARGE` (HTTP 413).
+///
+/// - **Concurrent Stream Limits**: The `max_concurrent_streams` is an advisory
+///   configuration passed to the HTTP/2 layer for connection-level stream
+///   negotiation. The HTTP/2 transport automatically enforces this limit and
+///   returns GOAWAY frames when exceeded. Applications should not rely on
+///   custom enforcement of this limit.
+///
+/// - **Stream Response Size Limits**: The `max_stream_response_bytes` field caps the
+///   total encoded bytes emitted across a server-streaming or bidi-streaming response.
+///   When the cumulative size exceeds the limit, the stream is terminated with
+///   `tonic::Status::resource_exhausted`. Defaults to `None` (unbounded).
+///
+/// # Example
+///
+/// ```ignore
+/// let mut config = GrpcConfig::default();
+/// config.max_message_size = 10 * 1024 * 1024; // 10MB per message
+/// config.max_concurrent_streams = 50; // Advised to HTTP/2 layer
+/// ```
 class GrpcConfig {
+  /// Enable gRPC support
   final bool enabled;
+
+  /// Maximum message size in bytes (for both sending and receiving)
+  ///
+  /// This limit applies to individual messages in both unary and streaming RPCs.
+  /// When a single message exceeds this size, the request is rejected with HTTP 413
+  /// (Payload Too Large).
+  ///
+  /// Default: 4MB (4194304 bytes)
+  ///
+  /// # Note
+  /// This limit does NOT apply to the total response size in streaming RPCs.
+  /// For multi-message streams, the total response can exceed this limit as long
+  /// as each individual message stays within the limit.
   final PlatformInt64 maxMessageSize;
+
+  /// Enable gzip compression for gRPC messages
   final bool enableCompression;
+
+  /// Timeout for gRPC requests in seconds (None = no timeout)
   final PlatformInt64? requestTimeout;
+
+  /// Maximum number of concurrent streams per connection (HTTP/2 advisory)
+  ///
+  /// This value is communicated to HTTP/2 clients as the server's flow control limit.
+  /// The HTTP/2 transport layer enforces this limit automatically via SETTINGS frames
+  /// and GOAWAY responses. Applications should NOT implement custom enforcement.
+  ///
+  /// Default: 100 streams per connection
+  ///
+  /// # Stream Limiting Strategy
+  /// - **Per Connection**: This limit applies per HTTP/2 connection, not globally
+  /// - **Transport Enforcement**: HTTP/2 handles all stream limiting; applications
+  ///   need not implement custom checks
+  /// - **Streaming Requests**: In server streaming or bidi streaming, each logical
+  ///   RPC consumes one stream slot. Message ordering within a stream follows
+  ///   HTTP/2 frame ordering.
   final PlatformInt64 maxConcurrentStreams;
+
+  /// Enable HTTP/2 keepalive
   final bool enableKeepalive;
+
+  /// HTTP/2 keepalive interval in seconds
   final PlatformInt64 keepaliveInterval;
+
+  /// HTTP/2 keepalive timeout in seconds
   final PlatformInt64 keepaliveTimeout;
+
+  /// Total byte cap across an entire streaming response.
+  ///
+  /// When `Some(n)`, the streaming adapter aborts the stream with
+  /// `tonic::Status::resource_exhausted` once the cumulative encoded message
+  /// bytes exceed `n`. The stream yields the error item and then terminates.
+  ///
+  /// Per-message cap remains `max_message_size`. This limit applies to
+  /// server-streaming and bidirectional-streaming RPCs only; unary RPCs are
+  /// governed solely by `max_message_size`.
+  ///
+  /// Default: `None` (unbounded total response size).
   final PlatformInt64? maxStreamResponseBytes;
 
   const GrpcConfig({
@@ -467,10 +731,18 @@ class GrpcConfig {
           maxStreamResponseBytes == other.maxStreamResponseBytes;
 }
 
+/// JSON-RPC server configuration
 class JsonRpcConfig {
+  /// Enable JSON-RPC endpoint
   final bool enabled;
+
+  /// HTTP endpoint path for JSON-RPC requests (default: "/rpc")
   final String endpointPath;
+
+  /// Enable batch request processing (default: true)
   final bool enableBatch;
+
+  /// Maximum number of requests in a batch (default: 100)
   final PlatformInt64 maxBatchSize;
 
   const JsonRpcConfig({
@@ -498,12 +770,53 @@ class JsonRpcConfig {
           maxBatchSize == other.maxBatchSize;
 }
 
+/// JSON-RPC method metadata for routes that support JSON-RPC
+///
+/// This struct captures the metadata needed to expose HTTP routes as JSON-RPC methods,
+/// enabling discovery and documentation of RPC-compatible endpoints.
+///
+/// # Examples
+///
+/// ```ignore
+/// use spikard_core::router::JsonRpcMethodInfo;
+/// use serde_json::json;
+///
+/// let rpc_info = JsonRpcMethodInfo {
+///     method_name: "user.create".to_string(),
+///     description: Some("Creates a new user".to_string()),
+///     params_schema: Some(json!({
+///         "type": "object",
+///         "properties": {
+///             "name": {"type": "string"}
+///         }
+///     })),
+///     result_schema: Some(json!({
+///         "type": "object",
+///         "properties": {
+///             "id": {"type": "integer"}
+///         }
+///     })),
+///     deprecated: false,
+///     tags: vec!["users".to_string()],
+/// };
+/// ```
 class JsonRpcMethodInfo {
+  /// The JSON-RPC method name (e.g., "user.create")
   final String methodName;
+
+  /// Optional description of what the method does
   final String? description;
+
+  /// Optional JSON Schema for method parameters
   final String? paramsSchema;
+
+  /// Optional JSON Schema for the result
   final String? resultSchema;
+
+  /// Whether this method is deprecated
   final bool deprecated;
+
+  /// Tags for categorizing and grouping methods
   final List<String> tags;
 
   const JsonRpcMethodInfo({
@@ -537,11 +850,21 @@ class JsonRpcMethodInfo {
           tags == other.tags;
 }
 
+/// JWT authentication configuration
 class JwtConfig {
+  /// Secret key for JWT verification
   final String secret;
+
+  /// Required algorithm (HS256, HS384, HS512, RS256, etc.)
   final String algorithm;
+
+  /// Required audience claim
   final List<String>? audience;
+
+  /// Required issuer claim
   final String? issuer;
+
+  /// Leeway for expiration checks (seconds)
   final PlatformInt64 leeway;
 
   const JwtConfig({
@@ -572,8 +895,12 @@ class JwtConfig {
           leeway == other.leeway;
 }
 
+/// License information
 class LicenseInfo {
+  /// SPDX license identifier or display name (e.g. `"MIT"`).
   final String name;
+
+  /// URL to the full license text.
   final String? url;
 
   const LicenseInfo({required this.name, this.url});
@@ -590,17 +917,39 @@ class LicenseInfo {
           url == other.url;
 }
 
+/// OpenAPI configuration
 class OpenApiConfig {
+  /// Enable OpenAPI generation (default: false for zero overhead)
   final bool enabled;
+
+  /// API title
   final String title;
+
+  /// API version
   final String version;
+
+  /// API description (supports markdown)
   final String? description;
+
+  /// Path to serve Swagger UI (default: "/docs")
   final String swaggerUiPath;
+
+  /// Path to serve Redoc (default: "/redoc")
   final String redocPath;
+
+  /// Path to serve OpenAPI JSON spec (default: "/openapi.json")
   final String openapiJsonPath;
+
+  /// Contact information
   final ContactInfo? contact;
+
+  /// License information
   final LicenseInfo? license;
+
+  /// Server definitions
   final List<ServerInfo> servers;
+
+  /// Security schemes (auto-detected from middleware if not provided)
   final Map<String, SecuritySchemeInfo> securitySchemes;
 
   const OpenApiConfig({
@@ -649,6 +998,7 @@ class OpenApiConfig {
           securitySchemes == other.securitySchemes;
 }
 
+/// Full parse result returned by `POST /asyncapi/parse`
 class ParseResult {
   final String specVersion;
   final String title;
@@ -688,10 +1038,18 @@ class ParseResult {
           messages == other.messages;
 }
 
+/// A single channel extracted from an AsyncAPI spec
 class ParsedChannel {
+  /// Channel key from the spec (e.g. "chat/messages")
   final String name;
+
+  /// Channel address / path
   final String address;
+
+  /// Message names declared on this channel
   final List<String> messages;
+
+  /// Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility
   final String? bindings;
 
   const ParsedChannel({
@@ -716,8 +1074,12 @@ class ParsedChannel {
           bindings == other.bindings;
 }
 
+/// A resolved message (name + JSON Schema)
 class ParsedMessage {
+  /// Message name
   final String name;
+
+  /// Resolved JSON Schema for the message payload, if available
   final String? schema;
 
   const ParsedMessage({required this.name, this.schema});
@@ -734,9 +1096,15 @@ class ParsedMessage {
           schema == other.schema;
 }
 
+/// A single operation extracted from an AsyncAPI spec
 class ParsedOperation {
+  /// Operation name
   final String name;
+
+  /// Operation action: "send" or "receive"
   final String action;
+
+  /// Channel reference (resolved to the channel name)
   final String channel;
 
   const ParsedOperation({
@@ -758,12 +1126,50 @@ class ParsedOperation {
           channel == other.channel;
 }
 
+/// RFC 9457 Problem Details for HTTP APIs
+///
+/// A machine-readable format for specifying errors in HTTP API responses.
+/// Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
+/// if not specified.
+///
+/// # Content-Type
+/// Responses using this struct should set:
+/// ```text
+/// Content-Type: application/problem+json
+/// ```
+///
+/// ```json
+/// {
+///   "type": "https://spikard.dev/errors/validation-error",
+///   "title": "Request Validation Failed",
+///   "status": 422,
+///   "detail": "2 validation errors in request body",
+///   "errors": [...]
+/// }
+/// ```
 class ProblemDetails {
+  /// A URI reference that identifies the problem type.
+  /// Defaults to "about:blank" when absent.
+  /// Should be a stable, human-readable identifier for the problem type.
   final String typeUri;
+
+  /// A short, human-readable summary of the problem type.
+  /// Should not change from occurrence to occurrence of the problem.
   final String title;
+
+  /// The HTTP status code generated by the origin server.
+  /// This is advisory; the actual HTTP status code takes precedence.
   final PlatformInt64 status;
+
+  /// A human-readable explanation specific to this occurrence of the problem.
   final String? detail;
+
+  /// A URI reference that identifies the specific occurrence of the problem.
+  /// It may or may not yield further information if dereferenced.
   final String? instance;
+
+  /// Extension members - problem-type-specific data.
+  /// For validation errors, this typically contains an "errors" array.
   final Map<String, String> extensions;
 
   const ProblemDetails({
@@ -797,9 +1203,15 @@ class ProblemDetails {
           extensions == other.extensions;
 }
 
+/// Configuration for schemas with Query and Mutation types
 class QueryMutationConfig {
+  /// Enable introspection queries
   final bool introspectionEnabled;
+
+  /// Maximum query complexity (None = unlimited)
   final PlatformInt64? complexityLimit;
+
+  /// Maximum query depth (None = unlimited)
   final PlatformInt64? depthLimit;
 
   const QueryMutationConfig({
@@ -824,9 +1236,15 @@ class QueryMutationConfig {
           depthLimit == other.depthLimit;
 }
 
+/// Configuration for schemas with only Query type
 class QueryOnlyConfig {
+  /// Enable introspection queries
   final bool introspectionEnabled;
+
+  /// Maximum query complexity (None = unlimited)
   final PlatformInt64? complexityLimit;
+
+  /// Maximum query depth (None = unlimited)
   final PlatformInt64? depthLimit;
 
   const QueryOnlyConfig({
@@ -851,9 +1269,15 @@ class QueryOnlyConfig {
           depthLimit == other.depthLimit;
 }
 
+/// Rate limiting configuration shared across runtimes
 class RateLimitConfig {
+  /// Requests per second
   final PlatformInt64 perSecond;
+
+  /// Burst allowance
   final PlatformInt64 burst;
+
+  /// Use IP-based rate limiting
   final bool ipBased;
 
   const RateLimitConfig({
@@ -875,9 +1299,15 @@ class RateLimitConfig {
           ipBased == other.ipBased;
 }
 
+/// HTTP Response with custom status code, headers, and content
 class Response {
+  /// Response body content
   final String? content;
+
+  /// HTTP status code (defaults to 200)
   final PlatformInt64 statusCode;
+
+  /// Response headers
   final Map<String, String> headers;
 
   const Response({
@@ -899,9 +1329,15 @@ class Response {
           headers == other.headers;
 }
 
+/// Snapshot of an Axum response used by higher-level language bindings.
 class ResponseSnapshot {
+  /// HTTP status code.
   final PlatformInt64 status;
+
+  /// Response headers (lowercase keys for predictable lookups).
   final Map<String, String> headers;
+
+  /// Response body bytes (decoded for supported encodings).
   final Uint8List body;
 
   const ResponseSnapshot({
@@ -923,9 +1359,18 @@ class ResponseSnapshot {
           body == other.body;
 }
 
+/// Configuration for GraphQL schema building.
+///
+/// Encapsulates all schema-level configuration options including
+/// introspection control, complexity limits, and depth limits.
 class SchemaConfig {
+  /// Enable introspection queries
   final bool introspectionEnabled;
+
+  /// Maximum query complexity (None = unlimited)
   final PlatformInt64? complexityLimit;
+
+  /// Maximum query depth (None = unlimited)
   final PlatformInt64? depthLimit;
 
   const SchemaConfig({
@@ -964,25 +1409,63 @@ sealed class SecuritySchemeInfo with _$SecuritySchemeInfo {
   }) = SecuritySchemeInfo_ApiKey;
 }
 
+/// Server configuration
 class ServerConfig {
+  /// Host to bind to
   final String host;
+
+  /// Port to bind to
   final PlatformInt64 port;
+
+  /// Number of Tokio runtime worker threads used by binding-managed server runtimes
   final PlatformInt64 workers;
+
+  /// Enable request ID generation and propagation
   final bool enableRequestId;
+
+  /// Maximum request body size in bytes (None = unlimited, not recommended)
   final PlatformInt64? maxBodySize;
+
+  /// Request timeout in seconds (None = no timeout)
   final PlatformInt64? requestTimeout;
+
+  /// Enable compression middleware
   final CompressionConfig? compression;
+
+  /// Enable rate limiting
   final RateLimitConfig? rateLimit;
+
+  /// JWT authentication configuration
   final JwtConfig? jwtAuth;
+
+  /// API Key authentication configuration
   final ApiKeyConfig? apiKeyAuth;
+
+  /// Static file serving configuration
   final List<StaticFilesConfig> staticFiles;
+
+  /// Enable graceful shutdown on SIGTERM/SIGINT
   final bool gracefulShutdown;
+
+  /// Graceful shutdown timeout (seconds)
   final PlatformInt64 shutdownTimeout;
+
+  /// AsyncAPI HTTP endpoint configuration
   final AsyncApiConfig? asyncapi;
+
+  /// OpenAPI documentation configuration
   final OpenApiConfig? openapi;
+
+  /// JSON-RPC configuration
   final JsonRpcConfig? jsonrpc;
+
+  /// gRPC configuration
   final GrpcConfig? grpc;
+
+  /// Background task executor configuration
   final BackgroundTaskConfig backgroundTasks;
+
+  /// Enable per-request HTTP tracing (tower-http `TraceLayer`)
   final bool enableHttpTrace;
 
   const ServerConfig({
@@ -1055,8 +1538,12 @@ class ServerConfig {
           enableHttpTrace == other.enableHttpTrace;
 }
 
+/// Server information
 class ServerInfo {
+  /// Base URL of the server (e.g. `"https://api.example.com/v1"`).
   final String url;
+
+  /// Optional human-readable description of the server environment.
   final String? description;
 
   const ServerInfo({required this.url, this.description});
@@ -1073,10 +1560,38 @@ class ServerInfo {
           description == other.description;
 }
 
+/// An individual SSE event
+///
+/// Represents a single Server-Sent Event to be sent to a connected client.
+/// Events can have an optional type, ID, and retry timeout for advanced scenarios.
+///
+/// # Fields
+///
+/// * `event_type` - Optional event type string (used for client-side event filtering)
+/// * `data` - JSON data payload to send to the client
+/// * `id` - Optional event ID (clients can use this to resume after disconnect)
+/// * `retry` - Optional retry timeout in milliseconds (tells client when to reconnect)
+///
+/// # SSE Format
+///
+/// Events are serialized to the following text format:
+/// ```text
+/// event: event_type
+/// data: {"json":"value"}
+/// id: event-123
+/// retry: 3000
+/// ```
 class SseEvent {
+  /// Event type (optional)
   final String? eventType;
+
+  /// Event data (JSON value)
   final String data;
+
+  /// Event ID (optional, for client-side reconnection)
   final String? id;
+
+  /// Retry timeout in milliseconds (optional)
   final PlatformInt64? retry;
 
   const SseEvent({this.eventType, required this.data, this.id, this.retry});
@@ -1096,10 +1611,18 @@ class SseEvent {
           retry == other.retry;
 }
 
+/// Static file serving configuration
 class StaticFilesConfig {
+  /// Directory path to serve
   final String directory;
+
+  /// URL path prefix (e.g., "/static")
   final String routePrefix;
+
+  /// Fallback to index.html for directories
   final bool indexFile;
+
+  /// Cache-Control header value
   final String? cacheControl;
 
   const StaticFilesConfig({
@@ -1127,11 +1650,42 @@ class StaticFilesConfig {
           cacheControl == other.cacheControl;
 }
 
+/// Represents an uploaded file from multipart/form-data requests.
+///
+/// This struct provides efficient access to file content with automatic
+/// base64 decoding and implements standard I/O traits for compatibility.
+///
+/// # Example
+///
+/// ```rust
+/// use spikard::UploadFile;
+/// use serde::Deserialize;
+///
+/// #[derive(Deserialize)]
+/// struct UploadRequest {
+///     file: UploadFile,
+///     description: String,
+/// }
+///
+/// // In a handler:
+/// // let body: UploadRequest = ctx.json()?;
+/// // let content = body.file.as_bytes();
+/// // let filename = &body.file.filename;
+/// ```
 class UploadFile {
+  /// Original filename from the client
   final String filename;
+
+  /// MIME type of the uploaded file
   final String? contentType;
+
+  /// Size of the file in bytes
   final PlatformInt64? size;
+
+  /// File content (may be base64 encoded)
   final Uint8List content;
+
+  /// Content encoding type
   final String? contentEncoding;
 
   const UploadFile({

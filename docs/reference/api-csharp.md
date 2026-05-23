@@ -72,10 +72,10 @@ public static FullSchemaConfig SchemaFull()
 
 API Key authentication configuration
 
-| Field        | Type           | Default | Description                              |
-| ------------ | -------------- | ------- | ---------------------------------------- |
-| `Keys`       | `List<string>` | —       | Valid API keys                           |
-| `HeaderName` | `string`       | —       | Header name to check (e.g., "X-API-Key") |
+| Field        | Type           | Default                | Description                              |
+| ------------ | -------------- | ---------------------- | ---------------------------------------- |
+| `Keys`       | `List<string>` | —                      | Valid API keys                           |
+| `HeaderName` | `string`       | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
 
 ---
 
@@ -464,7 +464,7 @@ JWT authentication configuration
 | Field       | Type            | Default                | Description                                           |
 | ----------- | --------------- | ---------------------- | ----------------------------------------------------- |
 | `Secret`    | `string`        | —                      | Secret key for JWT verification                       |
-| `Algorithm` | `string`        | —                      | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
+| `Algorithm` | `string`        | `/* serde(default) */` | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
 | `Audience`  | `List<string>?` | `null`                 | Required audience claim                               |
 | `Issuer`    | `string?`       | `null`                 | Required issuer claim                                 |
 | `Leeway`    | `ulong`         | `/* serde(default) */` | Leeway for expiration checks (seconds)                |
@@ -941,12 +941,12 @@ public SseEvent WithRetry(ulong retryMs)
 
 Static file serving configuration
 
-| Field          | Type      | Default | Description                            |
-| -------------- | --------- | ------- | -------------------------------------- |
-| `Directory`    | `string`  | —       | Directory path to serve                |
-| `RoutePrefix`  | `string`  | —       | URL path prefix (e.g., "/static")      |
-| `IndexFile`    | `bool`    | —       | Fallback to index.html for directories |
-| `CacheControl` | `string?` | `null`  | Cache-Control header value             |
+| Field          | Type      | Default                | Description                            |
+| -------------- | --------- | ---------------------- | -------------------------------------- |
+| `Directory`    | `string`  | —                      | Directory path to serve                |
+| `RoutePrefix`  | `string`  | —                      | URL path prefix (e.g., "/static")      |
+| `IndexFile`    | `bool`    | `/* serde(default) */` | Fallback to index.html for directories |
+| `CacheControl` | `string?` | `null`                 | Cache-Control header value             |
 
 ---
 

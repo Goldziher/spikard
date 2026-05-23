@@ -72,10 +72,10 @@ pub fn schema_full() FullSchemaConfig
 
 API Key authentication configuration
 
-| Field        | Type                   | Default | Description                              |
-| ------------ | ---------------------- | ------- | ---------------------------------------- |
-| `keys`       | `[]const [:0]const u8` | —       | Valid API keys                           |
-| `headerName` | `[:0]const u8`         | —       | Header name to check (e.g., "X-API-Key") |
+| Field        | Type                   | Default                | Description                              |
+| ------------ | ---------------------- | ---------------------- | ---------------------------------------- |
+| `keys`       | `[]const [:0]const u8` | —                      | Valid API keys                           |
+| `headerName` | `[:0]const u8`         | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
 
 ---
 
@@ -478,7 +478,7 @@ JWT authentication configuration
 | Field       | Type                    | Default                | Description                                           |
 | ----------- | ----------------------- | ---------------------- | ----------------------------------------------------- |
 | `secret`    | `[:0]const u8`          | —                      | Secret key for JWT verification                       |
-| `algorithm` | `[:0]const u8`          | —                      | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
+| `algorithm` | `[:0]const u8`          | `/* serde(default) */` | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
 | `audience`  | `[]const [:0]const u8?` | `null`                 | Required audience claim                               |
 | `issuer`    | `[:0]const u8?`         | `null`                 | Required issuer claim                                 |
 | `leeway`    | `u64`                   | `/* serde(default) */` | Leeway for expiration checks (seconds)                |
@@ -989,12 +989,12 @@ pub fn withRetry(self: *const SseEvent, retry_ms: u64) SseEvent
 
 Static file serving configuration
 
-| Field          | Type            | Default | Description                            |
-| -------------- | --------------- | ------- | -------------------------------------- |
-| `directory`    | `[:0]const u8`  | —       | Directory path to serve                |
-| `routePrefix`  | `[:0]const u8`  | —       | URL path prefix (e.g., "/static")      |
-| `indexFile`    | `bool`          | —       | Fallback to index.html for directories |
-| `cacheControl` | `[:0]const u8?` | `null`  | Cache-Control header value             |
+| Field          | Type            | Default                | Description                            |
+| -------------- | --------------- | ---------------------- | -------------------------------------- |
+| `directory`    | `[:0]const u8`  | —                      | Directory path to serve                |
+| `routePrefix`  | `[:0]const u8`  | —                      | URL path prefix (e.g., "/static")      |
+| `indexFile`    | `bool`          | `/* serde(default) */` | Fallback to index.html for directories |
+| `cacheControl` | `[:0]const u8?` | `null`                 | Cache-Control header value             |
 
 ---
 

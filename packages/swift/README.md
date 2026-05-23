@@ -89,7 +89,6 @@ Add to `Package.swift`:
 .package(url: "https://github.com/Goldziher/spikard", from: "0.15.5")
 ```
 
-
 ### System Requirements
 
 - **Swift 5.9+** / macOS 13+ or Linux required
@@ -97,7 +96,6 @@ Add to `Package.swift`:
 ## Quick Start
 
 See the [spikard repository](https://github.com/Goldziher/spikard) for usage examples and guides.
-
 
 ## Features
 
@@ -107,7 +105,6 @@ See the [spikard repository](https://github.com/Goldziher/spikard) for usage exa
 - **Lifecycle hooks** — `onRequest`, `preValidation`, `preHandler`, `onResponse`, `onError`
 - **Fixture-driven testing** — shared JSON fixtures drive tests across all language bindings
 - **Polyglot** — single Rust core, thin bindings for Python, Node.js, Ruby, PHP, Elixir, Go, Java, C#, Kotlin, Dart, Gleam, WASM, Swift, Zig, and C FFI
-
 
 ## Documentation
 

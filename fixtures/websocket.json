@@ -3,6 +3,10 @@
     "id": "ws_upgrade_handshake",
     "description": "Tests WebSocket upgrade returns 101 Switching Protocols with correct Sec-WebSocket-Accept header",
     "category": "websocket",
+    "skip": {
+      "languages": ["dart", "java", "kotlin", "ruby", "php", "swift"],
+      "reason": "The HTTP clients used by these languages' e2e suites (dart:io HttpClient, java.net.http, OkHttp, Net::HTTP, Guzzle, URLSession) cannot read a non-final 101 Switching Protocols response, so the WebSocket upgrade handshake is excluded for them rather than emitted as a skipped placeholder."
+    },
     "http": {
       "handler": {
         "route": "/ws",

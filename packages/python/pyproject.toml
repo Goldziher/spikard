@@ -8,6 +8,7 @@ version = "0.15.5"
 description = "Rust-centric multi-language HTTP framework with polyglot bindings"
 keywords = [ "framework", "http", "polyglot", "rust", "web" ]
 license = "MIT"
+license-files = [ "LICENSE" ]
 authors = [ { name = "Na'aman Hirschfeld <nhirschfeld@gmail.com>" } ]
 requires-python = ">=3.10"
 classifiers = [

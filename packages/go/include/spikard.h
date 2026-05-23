@@ -1494,6 +1494,13 @@ char *spikard_background_job_metadata_to_json(const SPIKARDBackgroundJobMetadata
 void spikard_background_job_metadata_free(SPIKARDBackgroundJobMetadata *ptr);
 
 /**
+ * Get the `name` field from a `BackgroundJobMetadata`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_background_job_metadata_name(const SPIKARDBackgroundJobMetadata *ptr);
+
+/**
  * Get the `request_id` field from a `BackgroundJobMetadata`.
  * # Safety
  * Pointer must be a valid handle returned by this library.

@@ -87,7 +87,6 @@ Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC code
 composer require goldziher/spikard
 ```
 
-
 ### System Requirements
 
 - **PHP 8.2+** required
@@ -140,7 +139,6 @@ $app = (new App(new ServerConfig(port: 8000)))
 $app->run();
 ```
 
-
 ## Features
 
 - **HTTP routing** — type-safe route definitions with path, query, and body parameter validation
@@ -149,7 +147,6 @@ $app->run();
 - **Lifecycle hooks** — `onRequest`, `preValidation`, `preHandler`, `onResponse`, `onError`
 - **Fixture-driven testing** — shared JSON fixtures drive tests across all language bindings
 - **Polyglot** — single Rust core, thin bindings for Python, Node.js, Ruby, PHP, Elixir, Go, Java, C#, Kotlin, Dart, Gleam, WASM, Swift, Zig, and C FFI
-
 
 ## Routing
 
@@ -199,7 +196,6 @@ $app = (new App(new ServerConfig(port: 8000)))
     ->registerController(new ResourceController());
 ```
 
-
 ## Validation
 
 ```php
@@ -247,7 +243,6 @@ final class PaymentsController
 $app = (new App(new ServerConfig(port: 8000)))
     ->registerController(new PaymentsController());
 ```
-
 
 ## Documentation
 

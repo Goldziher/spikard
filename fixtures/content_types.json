@@ -323,8 +323,8 @@
     "description": "Content-Length header mismatch with actual body size should fail",
     "category": "content_types",
     "skip": {
-      "languages": ["node"],
-      "reason": "Node.js fetch rejects requests where Content-Length mismatches the actual body before sending"
+      "languages": ["node", "zig"],
+      "reason": "HTTP clients that derive Content-Length from the request body (Node.js fetch, Zig std.http.Client) cannot send a deliberately mismatched Content-Length, so this server-side validation cannot be exercised from them"
     },
     "http": {
       "handler": {

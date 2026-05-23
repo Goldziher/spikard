@@ -929,44 +929,20 @@ pub enum GraphQLError {
 impl From<&GraphQLError> for spikard_graphql::error::GraphQLError {
     fn from(m: &GraphQLError) -> Self {
         match m {
-            GraphQLError::ExecutionError { field0: f_field0 } => Self::ExecutionError {
-                field0: f_field0.clone(),
-            },
-            GraphQLError::SchemaBuildError { field0: f_field0 } => Self::SchemaBuildError {
-                field0: f_field0.clone(),
-            },
-            GraphQLError::RequestHandlingError { field0: f_field0 } => Self::RequestHandlingError {
-                field0: f_field0.clone(),
-            },
-            GraphQLError::SerializationError { field0: f_field0 } => Self::SerializationError {
-                field0: f_field0.clone(),
-            },
-            GraphQLError::JsonError { field0: f_field0 } => Self::JsonError {
-                field0: f_field0.clone(),
-            },
-            GraphQLError::ValidationError { field0: f_field0 } => Self::ValidationError {
-                field0: f_field0.clone(),
-            },
-            GraphQLError::ParseError { field0: f_field0 } => Self::ParseError {
-                field0: f_field0.clone(),
-            },
-            GraphQLError::AuthenticationError { field0: f_field0 } => Self::AuthenticationError {
-                field0: f_field0.clone(),
-            },
-            GraphQLError::AuthorizationError { field0: f_field0 } => Self::AuthorizationError {
-                field0: f_field0.clone(),
-            },
-            GraphQLError::NotFound { field0: f_field0 } => Self::NotFound {
-                field0: f_field0.clone(),
-            },
-            GraphQLError::RateLimitExceeded { field0: f_field0 } => Self::RateLimitExceeded {
-                field0: f_field0.clone(),
-            },
+            GraphQLError::ExecutionError { field0: f_field0 } => Self::ExecutionError(f_field0.clone()),
+            GraphQLError::SchemaBuildError { field0: f_field0 } => Self::SchemaBuildError(f_field0.clone()),
+            GraphQLError::RequestHandlingError { field0: f_field0 } => Self::RequestHandlingError(f_field0.clone()),
+            GraphQLError::SerializationError { field0: f_field0 } => Self::SerializationError(f_field0.clone()),
+            GraphQLError::JsonError { field0: f_field0 } => Self::JsonError(f_field0.clone()),
+            GraphQLError::ValidationError { field0: f_field0 } => Self::ValidationError(f_field0.clone()),
+            GraphQLError::ParseError { field0: f_field0 } => Self::ParseError(f_field0.clone()),
+            GraphQLError::AuthenticationError { field0: f_field0 } => Self::AuthenticationError(f_field0.clone()),
+            GraphQLError::AuthorizationError { field0: f_field0 } => Self::AuthorizationError(f_field0.clone()),
+            GraphQLError::NotFound { field0: f_field0 } => Self::NotFound(f_field0.clone()),
+            GraphQLError::RateLimitExceeded { field0: f_field0 } => Self::RateLimitExceeded(f_field0.clone()),
             GraphQLError::ComplexityLimitExceeded => Self::ComplexityLimitExceeded,
             GraphQLError::DepthLimitExceeded => Self::DepthLimitExceeded,
-            GraphQLError::InternalError { field0: f_field0 } => Self::InternalError {
-                field0: f_field0.clone(),
-            },
+            GraphQLError::InternalError { field0: f_field0 } => Self::InternalError(f_field0.clone()),
             _ => unreachable!("mirror variant has sanitized fields and cannot be converted to the core error type"),
         }
     }
@@ -1257,7 +1233,7 @@ impl From<spikard_http::BackgroundTaskConfig> for BackgroundTaskConfig {
 impl From<spikard_http::BackgroundJobMetadata> for BackgroundJobMetadata {
     fn from(v: spikard_http::BackgroundJobMetadata) -> Self {
         BackgroundJobMetadata {
-            name: v.name.into_owned(),
+            name: v.name.into(),
             request_id: v.request_id.map(|s| s.into()),
         }
     }

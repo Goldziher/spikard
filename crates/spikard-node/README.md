@@ -101,7 +101,6 @@ pnpm add @spikard/node
 yarn add @spikard/node
 ```
 
-
 ### System Requirements
 
 - **Node.js 18+** required (NAPI-RS native bindings)
@@ -143,7 +142,6 @@ if (require.main === module) {
 }
 ```
 
-
 ## Features
 
 - **HTTP routing** — type-safe route definitions with path, query, and body parameter validation
@@ -152,7 +150,6 @@ if (require.main === module) {
 - **Lifecycle hooks** — `onRequest`, `preValidation`, `preHandler`, `onResponse`, `onError`
 - **Fixture-driven testing** — shared JSON fixtures drive tests across all language bindings
 - **Polyglot** — single Rust core, thin bindings for Python, Node.js, Ruby, PHP, Elixir, Go, Java, C#, Kotlin, Dart, Gleam, WASM, Swift, Zig, and C FFI
-
 
 ## Routing
 
@@ -186,7 +183,6 @@ app.addRoute(
 );
 ```
 
-
 ## Validation
 
 ```typescript
@@ -218,7 +214,6 @@ app.addRoute(
 );
 ```
 
-
 ## Middleware
 
 ```typescript
@@ -231,7 +226,6 @@ app.onRequest(async (request: Request): Promise<Request> => {
   return request;
 });
 ```
-
 
 ## Documentation
 
