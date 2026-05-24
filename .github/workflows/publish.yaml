@@ -267,25 +267,25 @@ jobs:
   build-python-sdist:
     name: Build Python sdist
     # The sdist compiles on the consumer's machine, so its Cargo.toml must carry
-    # registry version-deps, not workspace paths. rewrite-native-deps rewrites
-    # them with --require-registry, which needs the core crates published first.
+    # registry version-deps, not workspace paths. build-python-sdist@v1 rewrites
+    # them (--require-registry) then runs maturin sdist, so the core crates must be
+    # on crates.io first. The status guard lets it run when publish-crates is
+    # skipped, blocking only on its actual failure.
     needs: [prepare, publish-crates]
-    if: ${{ needs.prepare.outputs.release_python == 'true' }}
+    if: ${{ !cancelled() && needs.publish-crates.result != 'failure' && needs.prepare.outputs.release_python == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
-      - uses: kreuzberg-dev/actions/setup-python-env@v1
+      - uses: actions/setup-python@v6.2.0
         with:
           python-version: "3.14"
-      - name: Rewrite native dependencies to registry versions
-        uses: kreuzberg-dev/actions/rewrite-native-deps@v1
+      - uses: kreuzberg-dev/actions/build-python-sdist@v1
         with:
-          lang: python
-      - name: Build sdist
-        run: cd packages/python && uv run maturin sdist --out ../../dist/python
+          package-dir: packages/python
+          output-dir: dist/python
       - uses: actions/upload-artifact@v7.0.1
         with:
           name: python-sdist
@@ -341,10 +341,12 @@ jobs:
   build-ruby:
     name: Build Ruby gem
     # build-ruby-gem@v1 rewrites workspace path-deps to registry version-deps
-    # (--require-registry) before compiling, so the core crates must already be
-    # on crates.io: depend on publish-crates.
+    # (--require-registry) before compiling, so the core crates must be on
+    # crates.io first: order after publish-crates. The status guard lets the build
+    # still run when publish-crates is skipped (crates already published), blocking
+    # only on its actual failure.
     needs: [prepare, publish-crates]
-    if: ${{ needs.prepare.outputs.release_ruby == 'true' }}
+    if: ${{ !cancelled() && needs.publish-crates.result != 'failure' && needs.prepare.outputs.release_ruby == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
@@ -373,9 +375,10 @@ jobs:
   build-php:
     name: Build PHP extension
     # build-php-extension@v1 rewrites path-deps to registry versions before
-    # building; the core crates must be published first.
+    # building; the core crates must be published first. The status guard lets the
+    # build run when publish-crates is skipped, blocking only on its actual failure.
     needs: [prepare, publish-crates]
-    if: ${{ needs.prepare.outputs.release_php == 'true' }}
+    if: ${{ !cancelled() && needs.publish-crates.result != 'failure' && needs.prepare.outputs.release_php == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
@@ -466,9 +469,11 @@ jobs:
   build-elixir:
     name: Build Elixir NIF (${{ matrix.label }})
     # build-elixir-natives@v1 rewrites path-deps to registry versions before
-    # building (so the hex source fallback resolves); needs published crates.
+    # building (so the hex source fallback resolves); needs published crates. The
+    # status guard lets the build run when publish-crates is skipped, blocking only
+    # on its actual failure.
     needs: [prepare, publish-crates]
-    if: ${{ needs.prepare.outputs.release_elixir == 'true' }}
+    if: ${{ !cancelled() && needs.publish-crates.result != 'failure' && needs.prepare.outputs.release_elixir == 'true' }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
     strategy:
