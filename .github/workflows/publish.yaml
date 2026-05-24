@@ -742,6 +742,18 @@ jobs:
         with:
           elixir-version: "1.18"
           otp-version: "27"
+      - uses: kreuzberg-dev/actions/setup-rust@v1
+      # Build the Hex source tarball with the NIF crate's workspace path-deps
+      # rewritten to registry version-deps, so the published package compiles
+      # standalone when a consumer has no precompiled NIF. On dry-runs the
+      # rewrite is skipped (the version isn't on crates.io yet) and a Cargo.lock
+      # is generated from the workspace instead. Leaves the rewritten tree for
+      # the publish-hex step's `mix hex.publish` to package.
+      - uses: kreuzberg-dev/actions/build-elixir-hex@v1
+        with:
+          package-dir: packages/elixir
+          nif-crate-path: packages/elixir/native/spikard_nif
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
       - uses: kreuzberg-dev/actions/publish-hex@v1
         env:
           HEX_API_KEY: ${{ secrets.HEX_API_KEY }}

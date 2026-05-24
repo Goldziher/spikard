@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - `crates/spikard-ffi/Cargo.toml`: added `version` requirements to the internal `spikard-core`, `spikard-graphql`, and `spikard-http` deps (they were path-only). `cargo publish` rejects path-only deps ("all dependencies must have a version requirement specified when publishing"), which broke crates.io publishing of `spikard-ffi` — a regression latent since the alef 0.18.1 regen, first hit when 0.15.6-rc.1 became the first release to publish crates since 0.15.4. The other six crates published at rc.1 before `spikard-ffi` failed; rc.2 republishes the full set.
+- `crates/spikard-py/src/pyproject.toml`: bumped the `[project]` version to the PEP 440-normalized `0.15.6rc2` to match the generated `packages/python/pyproject.toml`. The alef Python source template's literal version is not bumped by `alef sync-versions` and must use the normalized (not canonical `-rc.N`) form, so `alef validate versions` failed on the real (`is_tag=true`) release path that runs the check.
+
+### Changed
+
+- `publish.yaml`: the Hex publish now runs `kreuzberg-dev/actions/build-elixir-hex@v1` before `publish-hex`, rewriting the NIF crate's workspace path-deps to registry version-deps so the published Hex source tarball compiles standalone on consumers without a precompiled NIF (the Hex analog of the Python sdist / Ruby gem dep rewrite). Skipped on dry-runs.
 
 ### Notes
 
