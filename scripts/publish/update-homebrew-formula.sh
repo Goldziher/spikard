@@ -15,8 +15,8 @@ tap_dir="${TAP_DIR:?TAP_DIR is required (path to homebrew-tap checkout)}"
 formula="${tap_dir}/Formula/spikard.rb"
 
 [[ -f "$formula" ]] || {
-	echo "Missing $formula" >&2
-	exit 1
+  echo "Missing $formula" >&2
+  exit 1
 }
 
 work_dir="$(mktemp -d)"
@@ -25,16 +25,16 @@ trap 'rm -rf "$work_dir"' EXIT
 # Source archive SHA: GitHub auto-generates the source tarball at /archive/${tag}.tar.gz.
 # Download via curl since `gh release download` only fetches uploaded assets.
 download_source_sha() {
-	local url="https://github.com/Goldziher/spikard/archive/${tag}.tar.gz"
-	echo "Downloading source archive from $url..." >&2
-	curl -fsSL "$url" -o "$work_dir/source.tar.gz"
-	shasum -a 256 "$work_dir/source.tar.gz" | awk '{print $1}'
+  local url="https://github.com/Goldziher/spikard/archive/${tag}.tar.gz"
+  echo "Downloading source archive from $url..." >&2
+  curl -fsSL "$url" -o "$work_dir/source.tar.gz"
+  shasum -a 256 "$work_dir/source.tar.gz" | awk '{print $1}'
 }
 
 source_sha=$(download_source_sha)
 
 write_formula() {
-	cat >"$formula" <<EOF
+  cat >"$formula" <<EOF
 # typed: false
 # frozen_string_literal: true
 

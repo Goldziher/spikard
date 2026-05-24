@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Regenerated all bindings/e2e against [alef v0.19.4](https://github.com/kreuzberg-dev/alef/releases/tag/v0.19.4): the Dart and Zig e2e harnesses now spawn the mock server (fixing their `localhost:8080` connection-refused failures), and `alef validate versions` PEP 440-normalizes both sides of the Python pyproject check. Bumped the `.pre-commit-config.yaml` alef hook and `alef.toml` pin to `0.19.4`.
 - `publish.yaml`: the Hex publish now runs `kreuzberg-dev/actions/build-elixir-hex@v1` before `publish-hex`, rewriting the NIF crate's workspace path-deps to registry version-deps so the published Hex source tarball compiles standalone on consumers without a precompiled NIF (the Hex analog of the Python sdist / Ruby gem dep rewrite). Skipped on dry-runs.
 - `publish.yaml`: Homebrew now builds **real** bottles via `homebrew-build-bottles@v1` + `homebrew-merge-bottles@v1` (macOS `arm64_sequoia`/`sequoia` + Linux `x86_64_linux`/`arm64_linux`, with `install-homebrew-linux@v1` on Linux), replacing the synthetic `build-homebrew-bottle@v1`. The formula source URL/SHA is updated by `scripts/publish/update-homebrew-formula.sh`, then bottles are built (`brew install --build-bottle`) and the bottle DSL is merged into the tap formula. Matches the sibling repos (html-to-markdown, tree-sitter-language-pack, kreuzberg).
 

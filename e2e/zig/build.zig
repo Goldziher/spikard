@@ -17,6 +17,66 @@ pub fn build(b: *std.Build) void {
     spikard_module.addIncludePath(.{ .cwd_relative = ffi_include });
     spikard_module.linkSystemLibrary("spikard_ffi", .{});
 
+    const _alloc = b.allocator;
+    var mock_server_url: ?[]const u8 = b.graph.environ_map.get("MOCK_SERVER_URL");
+    var mock_servers_json: ?[]const u8 = null;
+    var mock_servers_map = std.StringHashMap([]const u8).init(_alloc);
+    if (mock_server_url == null) {
+        const _bin = b.pathFromRoot("../rust/target/release/mock-server");
+        const _fixtures = b.pathFromRoot("../../fixtures");
+        var _threaded = std.Io.Threaded.init(_alloc, .{});
+        const _io = _threaded.io();
+        const _spawned = std.process.spawn(_io, .{
+            .argv = &.{ _bin, _fixtures },
+            .stdin = .pipe,
+            .stdout = .pipe,
+            .stderr = .inherit,
+        });
+        if (_spawned) |_child| {
+            // The child is intentionally not awaited: it lives for the duration
+            // of the `zig build` process, which spans test execution.
+            const _stdout = _child.stdout.?;
+            var _buf: [65536]u8 = undefined;
+            var _file_reader = _stdout.readerStreaming(_io, &_buf);
+            const _r = &_file_reader.interface;
+            // Read startup lines: MOCK_SERVER_URL= then MOCK_SERVERS= (always
+            // emitted, possibly `{}`). Cap the loop so a misbehaving server
+            // cannot block the build indefinitely.
+            var _saw_url = false;
+            var _i: usize = 0;
+            while (_i < 64) : (_i += 1) {
+                const _line_raw = _r.takeDelimiterExclusive('\n') catch break;
+                const _line = std.mem.trim(u8, _line_raw, " \r\t");
+                if (std.mem.startsWith(u8, _line, "MOCK_SERVER_URL=")) {
+                    mock_server_url = _alloc.dupe(u8, _line["MOCK_SERVER_URL=".len..]) catch null;
+                    _saw_url = true;
+                } else if (std.mem.startsWith(u8, _line, "MOCK_SERVERS=")) {
+                    const _json = _line["MOCK_SERVERS=".len..];
+                    mock_servers_json = _alloc.dupe(u8, _json) catch null;
+                    if (std.json.parseFromSlice(std.json.Value, _alloc, _json, .{})) |_parsed| {
+                        if (_parsed.value == .object) {
+                            var _entries = _parsed.value.object.iterator();
+                            while (_entries.next()) |_entry| {
+                                if (_entry.value_ptr.* == .string) {
+                                    const _key = std.fmt.allocPrint(_alloc, "MOCK_SERVER_{s}", .{_entry.key_ptr.*}) catch continue;
+                                    for (_key) |*_c| _c.* = std.ascii.toUpper(_c.*);
+                                    const _val = _alloc.dupe(u8, _entry.value_ptr.*.string) catch continue;
+                                    mock_servers_map.put(_key, _val) catch {};
+                                }
+                            }
+                        }
+                    } else |_| {}
+                    break;
+                } else if (_saw_url) {
+                    break;
+                }
+            }
+        } else |_| {
+            // Binary not built — leave mock_server_url null so tests surface a
+            // clear connection error rather than a build failure.
+        }
+    }
+
     const auth_module = b.createModule(.{
         .root_source_file = b.path("src/auth_test.zig"),
         .target = target,
@@ -30,6 +90,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const auth_run = b.addRunArtifact(auth_tests);
+    if (mock_server_url) |_url| {
+        auth_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        auth_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            auth_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&auth_run.step);
 
     const background_module = b.createModule(.{
@@ -45,6 +117,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const background_run = b.addRunArtifact(background_tests);
+    if (mock_server_url) |_url| {
+        background_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        background_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            background_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&background_run.step);
 
     const background_tasks_module = b.createModule(.{
@@ -60,6 +144,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const background_tasks_run = b.addRunArtifact(background_tasks_tests);
+    if (mock_server_url) |_url| {
+        background_tasks_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        background_tasks_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            background_tasks_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&background_tasks_run.step);
 
     const body_limits_module = b.createModule(.{
@@ -75,6 +171,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const body_limits_run = b.addRunArtifact(body_limits_tests);
+    if (mock_server_url) |_url| {
+        body_limits_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        body_limits_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            body_limits_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&body_limits_run.step);
 
     const compression_module = b.createModule(.{
@@ -90,6 +198,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const compression_run = b.addRunArtifact(compression_tests);
+    if (mock_server_url) |_url| {
+        compression_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        compression_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            compression_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&compression_run.step);
 
     const content_types_module = b.createModule(.{
@@ -105,6 +225,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const content_types_run = b.addRunArtifact(content_types_tests);
+    if (mock_server_url) |_url| {
+        content_types_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        content_types_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            content_types_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&content_types_run.step);
 
     const cookies_module = b.createModule(.{
@@ -120,6 +252,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const cookies_run = b.addRunArtifact(cookies_tests);
+    if (mock_server_url) |_url| {
+        cookies_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        cookies_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            cookies_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&cookies_run.step);
 
     const cors_module = b.createModule(.{
@@ -135,6 +279,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const cors_run = b.addRunArtifact(cors_tests);
+    if (mock_server_url) |_url| {
+        cors_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        cors_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            cors_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&cors_run.step);
 
     const di_module = b.createModule(.{
@@ -150,6 +306,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const di_run = b.addRunArtifact(di_tests);
+    if (mock_server_url) |_url| {
+        di_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        di_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            di_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&di_run.step);
 
     const edge_cases_module = b.createModule(.{
@@ -165,6 +333,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const edge_cases_run = b.addRunArtifact(edge_cases_tests);
+    if (mock_server_url) |_url| {
+        edge_cases_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        edge_cases_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            edge_cases_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&edge_cases_run.step);
 
     const graphql_operations_module = b.createModule(.{
@@ -180,6 +360,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const graphql_operations_run = b.addRunArtifact(graphql_operations_tests);
+    if (mock_server_url) |_url| {
+        graphql_operations_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        graphql_operations_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            graphql_operations_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&graphql_operations_run.step);
 
     const graphql_schema_module = b.createModule(.{
@@ -195,6 +387,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const graphql_schema_run = b.addRunArtifact(graphql_schema_tests);
+    if (mock_server_url) |_url| {
+        graphql_schema_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        graphql_schema_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            graphql_schema_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&graphql_schema_run.step);
 
     const grpc_module = b.createModule(.{
@@ -210,6 +414,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const grpc_run = b.addRunArtifact(grpc_tests);
+    if (mock_server_url) |_url| {
+        grpc_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        grpc_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            grpc_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&grpc_run.step);
 
     const headers_module = b.createModule(.{
@@ -225,6 +441,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const headers_run = b.addRunArtifact(headers_tests);
+    if (mock_server_url) |_url| {
+        headers_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        headers_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            headers_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&headers_run.step);
 
     const http_methods_module = b.createModule(.{
@@ -240,6 +468,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const http_methods_run = b.addRunArtifact(http_methods_tests);
+    if (mock_server_url) |_url| {
+        http_methods_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        http_methods_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            http_methods_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&http_methods_run.step);
 
     const json_bodies_module = b.createModule(.{
@@ -255,6 +495,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const json_bodies_run = b.addRunArtifact(json_bodies_tests);
+    if (mock_server_url) |_url| {
+        json_bodies_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        json_bodies_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            json_bodies_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&json_bodies_run.step);
 
     const jsonrpc_module = b.createModule(.{
@@ -270,6 +522,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const jsonrpc_run = b.addRunArtifact(jsonrpc_tests);
+    if (mock_server_url) |_url| {
+        jsonrpc_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        jsonrpc_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            jsonrpc_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&jsonrpc_run.step);
 
     const lifecycle_hooks_module = b.createModule(.{
@@ -285,6 +549,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const lifecycle_hooks_run = b.addRunArtifact(lifecycle_hooks_tests);
+    if (mock_server_url) |_url| {
+        lifecycle_hooks_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        lifecycle_hooks_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            lifecycle_hooks_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&lifecycle_hooks_run.step);
 
     const multipart_module = b.createModule(.{
@@ -300,6 +576,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const multipart_run = b.addRunArtifact(multipart_tests);
+    if (mock_server_url) |_url| {
+        multipart_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        multipart_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            multipart_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&multipart_run.step);
 
     const openapi_module = b.createModule(.{
@@ -315,6 +603,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const openapi_run = b.addRunArtifact(openapi_tests);
+    if (mock_server_url) |_url| {
+        openapi_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        openapi_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            openapi_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&openapi_run.step);
 
     const openrpc_module = b.createModule(.{
@@ -330,6 +630,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const openrpc_run = b.addRunArtifact(openrpc_tests);
+    if (mock_server_url) |_url| {
+        openrpc_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        openrpc_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            openrpc_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&openrpc_run.step);
 
     const path_params_module = b.createModule(.{
@@ -345,6 +657,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const path_params_run = b.addRunArtifact(path_params_tests);
+    if (mock_server_url) |_url| {
+        path_params_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        path_params_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            path_params_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&path_params_run.step);
 
     const problem_details_module = b.createModule(.{
@@ -360,6 +684,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const problem_details_run = b.addRunArtifact(problem_details_tests);
+    if (mock_server_url) |_url| {
+        problem_details_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        problem_details_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            problem_details_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&problem_details_run.step);
 
     const query_params_module = b.createModule(.{
@@ -375,6 +711,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const query_params_run = b.addRunArtifact(query_params_tests);
+    if (mock_server_url) |_url| {
+        query_params_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        query_params_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            query_params_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&query_params_run.step);
 
     const rate_limit_module = b.createModule(.{
@@ -390,6 +738,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const rate_limit_run = b.addRunArtifact(rate_limit_tests);
+    if (mock_server_url) |_url| {
+        rate_limit_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        rate_limit_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            rate_limit_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&rate_limit_run.step);
 
     const request_id_module = b.createModule(.{
@@ -405,6 +765,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const request_id_run = b.addRunArtifact(request_id_tests);
+    if (mock_server_url) |_url| {
+        request_id_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        request_id_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            request_id_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&request_id_run.step);
 
     const request_timeout_module = b.createModule(.{
@@ -420,6 +792,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const request_timeout_run = b.addRunArtifact(request_timeout_tests);
+    if (mock_server_url) |_url| {
+        request_timeout_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        request_timeout_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            request_timeout_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&request_timeout_run.step);
 
     const response_module = b.createModule(.{
@@ -435,6 +819,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const response_run = b.addRunArtifact(response_tests);
+    if (mock_server_url) |_url| {
+        response_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        response_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            response_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&response_run.step);
 
     const server_config_module = b.createModule(.{
@@ -450,6 +846,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const server_config_run = b.addRunArtifact(server_config_tests);
+    if (mock_server_url) |_url| {
+        server_config_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        server_config_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            server_config_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&server_config_run.step);
 
     const sse_module = b.createModule(.{
@@ -465,6 +873,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const sse_run = b.addRunArtifact(sse_tests);
+    if (mock_server_url) |_url| {
+        sse_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        sse_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            sse_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&sse_run.step);
 
     const static_files_module = b.createModule(.{
@@ -480,6 +900,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const static_files_run = b.addRunArtifact(static_files_tests);
+    if (mock_server_url) |_url| {
+        static_files_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        static_files_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            static_files_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&static_files_run.step);
 
     const status_codes_module = b.createModule(.{
@@ -495,6 +927,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const status_codes_run = b.addRunArtifact(status_codes_tests);
+    if (mock_server_url) |_url| {
+        status_codes_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        status_codes_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            status_codes_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&status_codes_run.step);
 
     const streaming_module = b.createModule(.{
@@ -510,6 +954,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const streaming_run = b.addRunArtifact(streaming_tests);
+    if (mock_server_url) |_url| {
+        streaming_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        streaming_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            streaming_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&streaming_run.step);
 
     const upload_module = b.createModule(.{
@@ -525,6 +981,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const upload_run = b.addRunArtifact(upload_tests);
+    if (mock_server_url) |_url| {
+        upload_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        upload_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            upload_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&upload_run.step);
 
     const url_encoded_module = b.createModule(.{
@@ -540,6 +1008,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const url_encoded_run = b.addRunArtifact(url_encoded_tests);
+    if (mock_server_url) |_url| {
+        url_encoded_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        url_encoded_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            url_encoded_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&url_encoded_run.step);
 
     const validation_errors_module = b.createModule(.{
@@ -555,6 +1035,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const validation_errors_run = b.addRunArtifact(validation_errors_tests);
+    if (mock_server_url) |_url| {
+        validation_errors_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        validation_errors_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            validation_errors_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&validation_errors_run.step);
 
     const websocket_module = b.createModule(.{
@@ -570,6 +1062,18 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
     const websocket_run = b.addRunArtifact(websocket_tests);
+    if (mock_server_url) |_url| {
+        websocket_run.setEnvironmentVariable("MOCK_SERVER_URL", _url);
+    }
+    if (mock_servers_json) |_json| {
+        websocket_run.setEnvironmentVariable("MOCK_SERVERS", _json);
+    }
+    {
+        var _it = mock_servers_map.iterator();
+        while (_it.next()) |_entry| {
+            websocket_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
+        }
+    }
     test_step.dependOn(&websocket_run.step);
 
 }

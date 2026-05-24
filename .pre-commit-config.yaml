@@ -215,7 +215,7 @@ repos:
 
   # Alef: verify generated bindings are up to date and sync package versions
   - repo: https://github.com/kreuzberg-dev/alef
-    rev: v0.19.0
+    rev: v0.19.4
     hooks:
       - id: alef-verify
       - id: alef-sync-versions
