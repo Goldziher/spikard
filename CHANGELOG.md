@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Alef-scaffolded `.gitattributes` marking generated trees (`crates/spikard-{ffi,node,php,py,wasm}`, `packages/*`, `e2e/`) as `linguist-generated` so GitHub language stats and diffs collapse them.
 
+### Changed
+
+- `publish.yaml`: source-build jobs (Python sdist, Ruby gem, PHP extension, Elixir NIF) now skip the `--require-registry` path-dep → registry-dep rewrite on dry-runs and build via workspace path-deps instead. The rewrite resolves the in-flight version against crates.io, which doesn't exist until a real release publishes the core crates, so dry-runs previously failed at `cargo generate-lockfile`. Real releases are unaffected (the rewrite still runs).
+
 ## [0.15.5] - 2026-05-21
 
 ### Changed

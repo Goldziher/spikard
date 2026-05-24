@@ -286,6 +286,10 @@ jobs:
         with:
           package-dir: packages/python
           output-dir: dist/python
+          # On dry-runs the in-flight version isn't on crates.io, so the
+          # --require-registry rewrite can't resolve. Skip it and build via
+          # workspace path-deps; real releases publish the core crates first.
+          rewrite-native-deps: ${{ needs.prepare.outputs.dry_run != 'true' }}
       - uses: actions/upload-artifact@v7.0.1
         with:
           name: python-sdist
@@ -361,6 +365,9 @@ jobs:
       - uses: kreuzberg-dev/actions/build-ruby-gem@v1
         with:
           package-dir: packages/ruby
+          # Skip the registry rewrite on dry-runs (unpublished version cannot
+          # resolve); build via workspace path-deps instead.
+          rewrite-native-deps: ${{ needs.prepare.outputs.dry_run != 'true' }}
       - name: Pack gem
         run: |
           mkdir -p dist/ruby
@@ -392,6 +399,9 @@ jobs:
         with:
           crate-name: spikard-php
           lib-name: spikard_php
+          # Skip the registry rewrite on dry-runs (unpublished version cannot
+          # resolve); build via workspace path-deps instead.
+          rewrite-native-deps: ${{ needs.prepare.outputs.dry_run != 'true' }}
 
   build-cli:
     name: Build CLI
@@ -539,6 +549,9 @@ jobs:
           package-dir: packages/elixir
           nif-version: ${{ needs.prepare.outputs.version }}
           nif-api-version: ${{ matrix.nif }}
+          # Skip the registry rewrite on dry-runs (unpublished version cannot
+          # resolve); build via workspace path-deps instead.
+          rewrite-native-deps: ${{ needs.prepare.outputs.dry_run != 'true' }}
       - uses: actions/upload-artifact@v7.0.1
         with:
           name: elixir-${{ matrix.label }}-nif-${{ matrix.nif }}
