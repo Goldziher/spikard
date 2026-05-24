@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.6-rc.1] - 2026-05-24
+
+### Fixed
+
+- Regenerated all polyglot bindings against [alef v0.19.2](https://github.com/kreuzberg-dev/alef/releases/tag/v0.19.2). The Swift `packages/swift/rust/Cargo.toml` now emits `version` requirements on the internal `spikard-{core,graphql,http}` path-deps, so the bridge crate resolves when the Swift package is built from a tag; the Swift bridge surface (`RustBridgeC.h` / `Spikard.swift`) expands to match the current core API.
+
+### Added
+
+- Alef-scaffolded `.gitattributes` marking generated trees (`crates/spikard-{ffi,node,php,py,wasm}`, `packages/*`, `e2e/`) as `linguist-generated` so GitHub language stats and diffs collapse them.
+
 ## [0.15.5] - 2026-05-21
 
 ### Changed

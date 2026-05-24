@@ -4,7 +4,7 @@ defmodule Spikard.MixProject do
   def project do
     [
       app: :spikard,
-      version: "0.15.5",
+      version: "0.15.6-rc.1",
       elixir: "~> 1.14",
       elixirc_paths: ["lib", Path.expand("../../crates/spikard-elixir/src", __DIR__)],
       rustler_crates: [spikard_nif: [mode: :release]],

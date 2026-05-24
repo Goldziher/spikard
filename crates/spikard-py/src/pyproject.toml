@@ -1,15 +1,15 @@
 [build-system]
 build-backend = "maturin"
-requires = [ "maturin>=1,<2" ]
+requires = ["maturin>=1,<2"]
 
 [project]
 name = "spikard"
 version = "0.15.5"
 description = "Rust-centric multi-language HTTP framework with polyglot bindings"
-keywords = [ "framework", "http", "polyglot", "rust", "web" ]
+keywords = ["framework", "http", "polyglot", "rust", "web"]
 license = "MIT"
-license-files = [ "LICENSE" ]
-authors = [ { name = "Na'aman Hirschfeld <nhirschfeld@gmail.com>" } ]
+license-files = ["LICENSE"]
+authors = [{ name = "Na'aman Hirschfeld <nhirschfeld@gmail.com>" }]
 requires-python = ">=3.10"
 classifiers = [
   "Programming Language :: Python :: 3 :: Only",
@@ -23,22 +23,22 @@ urls.repository = "https://github.com/Goldziher/spikard"
 homepage = "https://github.com/Goldziher/spikard"
 
 [dependency-groups]
-dev = [ "mypy>=1.19", "ruff>=0.14.8" ]
+dev = ["mypy>=1.19", "ruff>=0.14.8"]
 
 [tool.maturin]
 module-name = "spikard._spikard"
 manifest-path = "../../crates/spikard-py/Cargo.toml"
 # abi3-py310 produces a single wheel per platform that loads on Python 3.10+,
 # avoiding a per-Python-version build matrix.
-features = [ "pyo3/extension-module", "pyo3/abi3-py310" ]
-python-packages = [ "spikard" ]
+features = ["pyo3/extension-module", "pyo3/abi3-py310"]
+python-packages = ["spikard"]
 
 [tool.ruff]
 target-version = "py310"
 line-length = 120
 format.docstring-code-line-length = 120
 format.docstring-code-format = true
-lint.select = [ "ALL" ]
+lint.select = ["ALL"]
 lint.ignore = [
   "ANN401",
   "ASYNC109",
@@ -64,16 +64,16 @@ lint.ignore = [
   "TD",
   "TRY",
 ]
-lint.per-file-ignores."spikard/__init__.py" = [ "I001" ]
+lint.per-file-ignores."spikard/__init__.py" = ["I001"]
 # The alef Python codegen still emits cosmetic warnings on the wrapper
 # modules: api.py keeps the legacy `from typing import AsyncIterator` and a
 # single-line import block, options.py carries # noqa: TC001 / F401 markers
 # that turn out unused on every regen, __init__.py star-imports re-sort with
 # a different convention. Silence these specific rules on the wrappers until
 # the codegen is updated to emit ruff-clean output.
-lint.per-file-ignores."spikard/api.py" = [ "F401", "I001", "UP035" ]
-lint.per-file-ignores."spikard/options.py" = [ "F401", "RUF100" ]
-lint.per-file-ignores."tests/**" = [ "ANN", "D103", "PLR2004", "S101" ]
+lint.per-file-ignores."spikard/api.py" = ["F401", "I001", "UP035"]
+lint.per-file-ignores."spikard/options.py" = ["F401", "RUF100"]
+lint.per-file-ignores."tests/**" = ["ANN", "D103", "PLR2004", "S101"]
 lint.mccabe.max-complexity = 15
 lint.pydocstyle.convention = "google"
 lint.pylint.max-args = 10
