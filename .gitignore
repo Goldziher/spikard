@@ -37,6 +37,9 @@ node_modules/
 !pnpm-lock.yaml
 Cargo.lock
 !packages/ruby/ext/spikard_rb/Cargo.lock
+# The Elixir NIF crate ships its Cargo.lock in the Hex source tarball
+# (mix.exs files list) so the package compiles standalone on consumers.
+!packages/elixir/native/spikard_nif/Cargo.lock
 
 # --- Logs and temp ---
 *.log
