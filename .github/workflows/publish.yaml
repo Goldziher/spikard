@@ -266,7 +266,10 @@ jobs:
 
   build-python-sdist:
     name: Build Python sdist
-    needs: prepare
+    # The sdist compiles on the consumer's machine, so its Cargo.toml must carry
+    # registry version-deps, not workspace paths. rewrite-native-deps rewrites
+    # them with --require-registry, which needs the core crates published first.
+    needs: [prepare, publish-crates]
     if: ${{ needs.prepare.outputs.release_python == 'true' }}
     runs-on: ubuntu-latest
     steps:
@@ -277,6 +280,10 @@ jobs:
       - uses: kreuzberg-dev/actions/setup-python-env@v1
         with:
           python-version: "3.14"
+      - name: Rewrite native dependencies to registry versions
+        uses: kreuzberg-dev/actions/rewrite-native-deps@v1
+        with:
+          lang: python
       - name: Build sdist
         run: cd packages/python && uv run maturin sdist --out ../../dist/python
       - uses: actions/upload-artifact@v7.0.1
@@ -333,7 +340,10 @@ jobs:
 
   build-ruby:
     name: Build Ruby gem
-    needs: prepare
+    # build-ruby-gem@v1 rewrites workspace path-deps to registry version-deps
+    # (--require-registry) before compiling, so the core crates must already be
+    # on crates.io: depend on publish-crates.
+    needs: [prepare, publish-crates]
     if: ${{ needs.prepare.outputs.release_ruby == 'true' }}
     runs-on: ubuntu-latest
     steps:
@@ -362,7 +372,9 @@ jobs:
 
   build-php:
     name: Build PHP extension
-    needs: prepare
+    # build-php-extension@v1 rewrites path-deps to registry versions before
+    # building; the core crates must be published first.
+    needs: [prepare, publish-crates]
     if: ${{ needs.prepare.outputs.release_php == 'true' }}
     runs-on: ubuntu-latest
     steps:
@@ -453,7 +465,9 @@ jobs:
 
   build-elixir:
     name: Build Elixir NIF (${{ matrix.label }})
-    needs: prepare
+    # build-elixir-natives@v1 rewrites path-deps to registry versions before
+    # building (so the hex source fallback resolves); needs published crates.
+    needs: [prepare, publish-crates]
     if: ${{ needs.prepare.outputs.release_elixir == 'true' }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
