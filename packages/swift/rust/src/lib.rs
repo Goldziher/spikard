@@ -1773,14 +1773,15 @@ impl Method {
 }
 
 pub enum SecuritySchemeInfo {
-    /// Data variants not directly bridgeable — represented as Unknown.
-    Unknown,
+    Http,
+    ApiKey,
 }
 
 impl From<spikard_http::SecuritySchemeInfo> for SecuritySchemeInfo {
     fn from(val: spikard_http::SecuritySchemeInfo) -> Self {
         match val {
-            _ => Self::Unknown,
+            spikard_http::SecuritySchemeInfo::Http { .. } => Self::Http,
+            spikard_http::SecuritySchemeInfo::ApiKey { .. } => Self::ApiKey,
         }
     }
 }
@@ -1788,7 +1789,8 @@ impl From<spikard_http::SecuritySchemeInfo> for SecuritySchemeInfo {
 impl SecuritySchemeInfo {
     pub fn to_string(&self) -> String {
         match self {
-            Self::Unknown => "unknown".to_string(),
+            Self::Http => "http".to_string(),
+            Self::ApiKey => "apiKey".to_string(),
         }
     }
 }

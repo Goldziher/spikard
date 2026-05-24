@@ -29,7 +29,7 @@ bench = false
 async-trait = "0.1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-spikard = { path = "../../../crates/spikard", features = ["di"] }
+spikard = { version = "0.15.5", path = "../../../crates/spikard", features = ["di"] }
 spikard-core = { path = "../../../crates/spikard-core" }
 spikard-graphql = { path = "../../../crates/spikard-graphql" }
 spikard-http = { path = "../../../crates/spikard-http" }

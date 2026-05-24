@@ -329,9 +329,11 @@ pub const GrpcConfig = struct {
     /// Default: 100 streams per connection
     ///
     /// # Stream Limiting Strategy
+    ///
     /// - **Per Connection**: This limit applies per HTTP/2 connection, not globally
     /// - **Transport Enforcement**: HTTP/2 handles all stream limiting; applications
     ///   need not implement custom checks
+    ///
     /// - **Streaming Requests**: In server streaming or bidi streaming, each logical
     ///   RPC consumes one stream slot. Message ordering within a stream follows
     ///   HTTP/2 frame ordering.

@@ -19,7 +19,7 @@ defmodule Spikard.MixProject do
       licenses: ["MIT"],
       links: %{"GitHub" => "https://github.com/Goldziher/spikard"},
       files:
-        ~w(.formatter.exs mix.exs README* checksum-*.exs native/spikard_nif/Cargo.toml native/spikard_nif/Cargo.lock native/spikard_nif/src native/spikard_nif/build.rs ../../crates/spikard-elixir/src/*.ex)
+        ~w(.formatter.exs mix.exs README* checksum-*.exs native/spikard_nif/Cargo.toml native/spikard_nif/Cargo.lock native/spikard_nif/src ../../crates/spikard-elixir/src/*.ex)
     ]
   end
 

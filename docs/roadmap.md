@@ -26,15 +26,15 @@ The toolbox follows the existing architecture ([ADR 0001](adr/0001-architecture-
 
 ## Subsystems
 
-| Subsystem | Crate | Foundation | Model |
-|-----------|-------|------------|-------|
-| Storage | `spikard-storage` | [Apache OpenDAL](https://opendal.apache.org/) (S3, GCS, Azure Blob, filesystem, in-memory, and more) | Request/response client: read, write, delete, list, stat, presign |
-| Message brokers | `spikard-messaging` | NATS, MQTT, Redis, AMQP, Kafka — each behind a Cargo feature | Consumer loop owned by Rust; a host handler runs per message |
-| Task queue + scheduler | `spikard-tasks` | [apalis](https://github.com/geofmureithi/apalis) (Redis, PostgreSQL, SQLite, MySQL, cron) | Durable queue and cron scheduling; the durable upgrade of in-process background tasks |
-| Caching | `spikard-cache` | [moka](https://github.com/moka-rs/moka) in-memory and Redis | Request/response key-value cache with TTL |
-| Observability | `spikard-telemetry` | [OpenTelemetry](https://opentelemetry.io/docs/languages/rust/) (OTLP traces, metrics, logs) | Cross-cutting; one tracer and meter for the whole application |
-| Database access | `spikard-db` | [sqlx](https://github.com/launchbadge/sqlx) (PostgreSQL, MySQL, SQLite) with pooling | Pooled access and a thin query API returning JSON rows |
-| CloudEvents handlers | `spikard-cloudevents` | CNCF [CloudEvents](https://cloudevents.io/) 1.0.2 ([sdk-rust](https://github.com/cloudevents/sdk-rust)) | Decode events (HTTP binary/structured or a broker binding), dispatch a light handler by event `type`; FaaS-compatible (Knative, Cloud Run functions, Azure Event Grid) |
+| Subsystem              | Crate                 | Foundation                                                                                              | Model                                                                                                                                                                  |
+| ---------------------- | --------------------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Storage                | `spikard-storage`     | [Apache OpenDAL](https://opendal.apache.org/) (S3, GCS, Azure Blob, filesystem, in-memory, and more)    | Request/response client: read, write, delete, list, stat, presign                                                                                                      |
+| Message brokers        | `spikard-messaging`   | NATS, MQTT, Redis, AMQP, Kafka — each behind a Cargo feature                                            | Consumer loop owned by Rust; a host handler runs per message                                                                                                           |
+| Task queue + scheduler | `spikard-tasks`       | [apalis](https://github.com/geofmureithi/apalis) (Redis, PostgreSQL, SQLite, MySQL, cron)               | Durable queue and cron scheduling; the durable upgrade of in-process background tasks                                                                                  |
+| Caching                | `spikard-cache`       | [moka](https://github.com/moka-rs/moka) in-memory and Redis                                             | Request/response key-value cache with TTL                                                                                                                              |
+| Observability          | `spikard-telemetry`   | [OpenTelemetry](https://opentelemetry.io/docs/languages/rust/) (OTLP traces, metrics, logs)             | Cross-cutting; one tracer and meter for the whole application                                                                                                          |
+| Database access        | `spikard-db`          | [sqlx](https://github.com/launchbadge/sqlx) (PostgreSQL, MySQL, SQLite) with pooling                    | Pooled access and a thin query API returning JSON rows                                                                                                                 |
+| CloudEvents handlers   | `spikard-cloudevents` | CNCF [CloudEvents](https://cloudevents.io/) 1.0.2 ([sdk-rust](https://github.com/cloudevents/sdk-rust)) | Decode events (HTTP binary/structured or a broker binding), dispatch a light handler by event `type`; FaaS-compatible (Knative, Cloud Run functions, Azure Event Grid) |
 
 ## Cross-cutting decisions
 

@@ -34,8 +34,8 @@ A three-layer hybrid strategy:
 
 ## Consequences
 
-- Subsystem *correctness* (real-broker semantics) is validated once in Rust per ADR
-  0001; *binding parity* is validated across all languages via the memory-backend
+- Subsystem _correctness_ (real-broker semantics) is validated once in Rust per ADR
+  0001; _binding parity_ is validated across all languages via the memory-backend
   fixtures. Bindings are not asked to run containers.
 - The fixture schema and the e2e generator gain a non-HTTP vocabulary — a generator
   change scoped here and sequenced in roadmap phase 0 so later subsystems can add
