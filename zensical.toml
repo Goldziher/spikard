@@ -21,6 +21,7 @@ nav = [
 
   # Core Concepts & Features
   { "Features" = "features.md" },
+  { "Roadmap" = "roadmap.md" },
   { "Concepts" = [
     { "Architecture" = "concepts/architecture.md" },
     { "Architecture Diagram" = "concepts/architecture-diagram.md" },
@@ -101,6 +102,16 @@ nav = [
     { "ADR 0011 - gRPC FFI Bindings Strategy" = "adr/0011-grpc-ffi-bindings-strategy.md" },
     { "ADR 0012 - gRPC Testing Infrastructure" = "adr/0012-grpc-testing-infrastructure.md" },
     { "ADR 0013 - GraphQL HTTP Integration" = "adr/0013-graphql-http-integration.md" },
+    { "ADR 0014 - Service Toolbox Crate Layering" = "adr/0014-service-toolbox-crate-layering.md" },
+    { "ADR 0015 - Application Runtime and Consumers" = "adr/0015-application-runtime-and-consumers.md" },
+    { "ADR 0016 - Storage (OpenDAL)" = "adr/0016-storage-opendal.md" },
+    { "ADR 0017 - Message Brokers and Feature Flags" = "adr/0017-message-brokers-and-feature-flags.md" },
+    { "ADR 0018 - Task Queue and Scheduler" = "adr/0018-task-queue-and-scheduler.md" },
+    { "ADR 0019 - Caching" = "adr/0019-caching.md" },
+    { "ADR 0020 - Database Access and Pooling" = "adr/0020-database-access-and-pooling.md" },
+    { "ADR 0021 - Telemetry for Services" = "adr/0021-telemetry-for-services.md" },
+    { "ADR 0022 - Hybrid Service Testing" = "adr/0022-hybrid-service-testing.md" },
+    { "ADR 0023 - CloudEvents Handlers" = "adr/0023-cloudevents-handlers.md" },
   ] },
 
   # Support
