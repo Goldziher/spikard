@@ -1,6 +1,6 @@
 {
   "name": "@spikard/node",
-  "version": "0.15.6-rc.1",
+  "version": "0.15.6-rc.2",
   "description": "Rust-centric multi-language HTTP framework with polyglot bindings",
   "license": "MIT",
   "repository": {

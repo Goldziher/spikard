@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.6-rc.2] - 2026-05-24
+
+### Fixed
+
+- `crates/spikard-ffi/Cargo.toml`: added `version` requirements to the internal `spikard-core`, `spikard-graphql`, and `spikard-http` deps (they were path-only). `cargo publish` rejects path-only deps ("all dependencies must have a version requirement specified when publishing"), which broke crates.io publishing of `spikard-ffi` — a regression latent since the alef 0.18.1 regen, first hit when 0.15.6-rc.1 became the first release to publish crates since 0.15.4. The other six crates published at rc.1 before `spikard-ffi` failed; rc.2 republishes the full set.
+
+### Notes
+
+- 0.15.6-rc.1 published partially (PyPI, npm, NuGet, Kotlin, Maven, Packagist, and six of seven crates) before `spikard-ffi` failed; rc.2 is the first complete 0.15.6 release candidate.
+
 ## [0.15.6-rc.1] - 2026-05-24
 
 ### Fixed
