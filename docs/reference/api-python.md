@@ -1035,7 +1035,7 @@ Make a GET request
 **Signature:**
 
 ```python
-def get(self, path: str, query_params: list[str], headers: list[str]) -> ResponseSnapshot
+def get(self, path: str, query_params: list[list[str]], headers: list[list[str]]) -> ResponseSnapshot
 ```
 
 #### post()
@@ -1045,7 +1045,7 @@ Make a POST request
 **Signature:**
 
 ```python
-def post(self, path: str, json: dict[str, Any], form_data: list[str], multipart: str, query_params: list[str], headers: list[str]) -> ResponseSnapshot
+def post(self, path: str, json: dict[str, Any], form_data: list[list[str]], multipart: str, query_params: list[list[str]], headers: list[list[str]]) -> ResponseSnapshot
 ```
 
 #### request_raw()
@@ -1055,7 +1055,7 @@ Make a request with a raw body payload.
 **Signature:**
 
 ```python
-def request_raw(self, method: Method, path: str, body: bytes, query_params: list[str], headers: list[str]) -> ResponseSnapshot
+def request_raw(self, method: Method, path: str, body: bytes, query_params: list[list[str]], headers: list[list[str]]) -> ResponseSnapshot
 ```
 
 #### put()
@@ -1065,7 +1065,7 @@ Make a PUT request
 **Signature:**
 
 ```python
-def put(self, path: str, json: dict[str, Any], query_params: list[str], headers: list[str]) -> ResponseSnapshot
+def put(self, path: str, json: dict[str, Any], query_params: list[list[str]], headers: list[list[str]]) -> ResponseSnapshot
 ```
 
 #### patch()
@@ -1075,7 +1075,7 @@ Make a PATCH request
 **Signature:**
 
 ```python
-def patch(self, path: str, json: dict[str, Any], query_params: list[str], headers: list[str]) -> ResponseSnapshot
+def patch(self, path: str, json: dict[str, Any], query_params: list[list[str]], headers: list[list[str]]) -> ResponseSnapshot
 ```
 
 #### delete()
@@ -1085,7 +1085,7 @@ Make a DELETE request
 **Signature:**
 
 ```python
-def delete(self, path: str, query_params: list[str], headers: list[str]) -> ResponseSnapshot
+def delete(self, path: str, query_params: list[list[str]], headers: list[list[str]]) -> ResponseSnapshot
 ```
 
 #### options()
@@ -1095,7 +1095,7 @@ Make an OPTIONS request
 **Signature:**
 
 ```python
-def options(self, path: str, query_params: list[str], headers: list[str]) -> ResponseSnapshot
+def options(self, path: str, query_params: list[list[str]], headers: list[list[str]]) -> ResponseSnapshot
 ```
 
 #### head()
@@ -1105,7 +1105,7 @@ Make a HEAD request
 **Signature:**
 
 ```python
-def head(self, path: str, query_params: list[str], headers: list[str]) -> ResponseSnapshot
+def head(self, path: str, query_params: list[list[str]], headers: list[list[str]]) -> ResponseSnapshot
 ```
 
 #### trace()
@@ -1115,7 +1115,7 @@ Make a TRACE request
 **Signature:**
 
 ```python
-def trace(self, path: str, query_params: list[str], headers: list[str]) -> ResponseSnapshot
+def trace(self, path: str, query_params: list[list[str]], headers: list[list[str]]) -> ResponseSnapshot
 ```
 
 #### graphql_at()

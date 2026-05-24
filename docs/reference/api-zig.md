@@ -1016,7 +1016,7 @@ Make a GET request
 **Signature:**
 
 ```zig
-pub fn get(self: *const TestClient, path: [:0]const u8, query_params: ?[]const [:0]const u8, headers: ?[]const [:0]const u8) SnapshotError!ResponseSnapshot
+pub fn get(self: *const TestClient, path: [:0]const u8, query_params: ?[]const []const [:0]const u8, headers: ?[]const []const [:0]const u8) SnapshotError!ResponseSnapshot
 ```
 
 #### post()
@@ -1026,7 +1026,7 @@ Make a POST request
 **Signature:**
 
 ```zig
-pub fn post(self: *const TestClient, path: [:0]const u8, json: ?[:0]const u8, form_data: ?[]const [:0]const u8, multipart: [:0]const u8, query_params: ?[]const [:0]const u8, headers: ?[]const [:0]const u8) SnapshotError!ResponseSnapshot
+pub fn post(self: *const TestClient, path: [:0]const u8, json: ?[:0]const u8, form_data: ?[]const []const [:0]const u8, multipart: [:0]const u8, query_params: ?[]const []const [:0]const u8, headers: ?[]const []const [:0]const u8) SnapshotError!ResponseSnapshot
 ```
 
 #### requestRaw()
@@ -1036,7 +1036,7 @@ Make a request with a raw body payload.
 **Signature:**
 
 ```zig
-pub fn requestRaw(self: *const TestClient, method: Method, path: [:0]const u8, body: []const u8, query_params: ?[]const [:0]const u8, headers: ?[]const [:0]const u8) SnapshotError!ResponseSnapshot
+pub fn requestRaw(self: *const TestClient, method: Method, path: [:0]const u8, body: []const u8, query_params: ?[]const []const [:0]const u8, headers: ?[]const []const [:0]const u8) SnapshotError!ResponseSnapshot
 ```
 
 #### put()
@@ -1046,7 +1046,7 @@ Make a PUT request
 **Signature:**
 
 ```zig
-pub fn put(self: *const TestClient, path: [:0]const u8, json: ?[:0]const u8, query_params: ?[]const [:0]const u8, headers: ?[]const [:0]const u8) SnapshotError!ResponseSnapshot
+pub fn put(self: *const TestClient, path: [:0]const u8, json: ?[:0]const u8, query_params: ?[]const []const [:0]const u8, headers: ?[]const []const [:0]const u8) SnapshotError!ResponseSnapshot
 ```
 
 #### patch()
@@ -1056,7 +1056,7 @@ Make a PATCH request
 **Signature:**
 
 ```zig
-pub fn patch(self: *const TestClient, path: [:0]const u8, json: ?[:0]const u8, query_params: ?[]const [:0]const u8, headers: ?[]const [:0]const u8) SnapshotError!ResponseSnapshot
+pub fn patch(self: *const TestClient, path: [:0]const u8, json: ?[:0]const u8, query_params: ?[]const []const [:0]const u8, headers: ?[]const []const [:0]const u8) SnapshotError!ResponseSnapshot
 ```
 
 #### delete()
@@ -1066,7 +1066,7 @@ Make a DELETE request
 **Signature:**
 
 ```zig
-pub fn delete(self: *const TestClient, path: [:0]const u8, query_params: ?[]const [:0]const u8, headers: ?[]const [:0]const u8) SnapshotError!ResponseSnapshot
+pub fn delete(self: *const TestClient, path: [:0]const u8, query_params: ?[]const []const [:0]const u8, headers: ?[]const []const [:0]const u8) SnapshotError!ResponseSnapshot
 ```
 
 #### options()
@@ -1076,7 +1076,7 @@ Make an OPTIONS request
 **Signature:**
 
 ```zig
-pub fn options(self: *const TestClient, path: [:0]const u8, query_params: ?[]const [:0]const u8, headers: ?[]const [:0]const u8) SnapshotError!ResponseSnapshot
+pub fn options(self: *const TestClient, path: [:0]const u8, query_params: ?[]const []const [:0]const u8, headers: ?[]const []const [:0]const u8) SnapshotError!ResponseSnapshot
 ```
 
 #### head()
@@ -1086,7 +1086,7 @@ Make a HEAD request
 **Signature:**
 
 ```zig
-pub fn head(self: *const TestClient, path: [:0]const u8, query_params: ?[]const [:0]const u8, headers: ?[]const [:0]const u8) SnapshotError!ResponseSnapshot
+pub fn head(self: *const TestClient, path: [:0]const u8, query_params: ?[]const []const [:0]const u8, headers: ?[]const []const [:0]const u8) SnapshotError!ResponseSnapshot
 ```
 
 #### trace()
@@ -1096,7 +1096,7 @@ Make a TRACE request
 **Signature:**
 
 ```zig
-pub fn trace(self: *const TestClient, path: [:0]const u8, query_params: ?[]const [:0]const u8, headers: ?[]const [:0]const u8) SnapshotError!ResponseSnapshot
+pub fn trace(self: *const TestClient, path: [:0]const u8, query_params: ?[]const []const [:0]const u8, headers: ?[]const []const [:0]const u8) SnapshotError!ResponseSnapshot
 ```
 
 #### graphqlAt()

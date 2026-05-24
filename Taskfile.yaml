@@ -200,6 +200,13 @@ tasks:
     desc: "Run full alef pipeline (generate + stubs + scaffold + readme + docs + e2e)"
     cmds:
       - alef all --clean
+      # alef emits non-canonical TOML in the generated pyproject.toml files (compact arrays,
+      # unnormalised version specifiers, non-canonical section order). Normalise them with the
+      # exact pyproject-fmt version the prek hook enforces (see .pre-commit-config.yaml — keep
+      # the pin in sync) so regen output is stable under the hook instead of churning every run.
+      # pyproject-fmt exits 1 when it reformats, which is the expected case here.
+      - cmd: uvx --from "pyproject-fmt==2.21.2" pyproject-fmt pyproject.toml packages/python/pyproject.toml
+        ignore_error: true
 
   alef:verify:
     desc: "Check bindings are up-to-date (CI mode)"

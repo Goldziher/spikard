@@ -664,7 +664,7 @@ Make a GET request
 **Signature:**
 
 ```typescript
-get(path: string, queryParams: Array<string>, headers: Array<string>): ResponseSnapshot
+get(path: string, queryParams: Array<Array<string>>, headers: Array<Array<string>>): ResponseSnapshot
 ```
 
 #### post()
@@ -674,7 +674,7 @@ Make a POST request
 **Signature:**
 
 ```typescript
-post(path: string, json: unknown, formData: Array<string>, multipart: string, queryParams: Array<string>, headers: Array<string>): ResponseSnapshot
+post(path: string, json: unknown, formData: Array<Array<string>>, multipart: string, queryParams: Array<Array<string>>, headers: Array<Array<string>>): ResponseSnapshot
 ```
 
 #### requestRaw()
@@ -684,7 +684,7 @@ Make a request with a raw body payload.
 **Signature:**
 
 ```typescript
-requestRaw(method: Method, path: string, body: Buffer, queryParams: Array<string>, headers: Array<string>): ResponseSnapshot
+requestRaw(method: Method, path: string, body: Buffer, queryParams: Array<Array<string>>, headers: Array<Array<string>>): ResponseSnapshot
 ```
 
 #### put()
@@ -694,7 +694,7 @@ Make a PUT request
 **Signature:**
 
 ```typescript
-put(path: string, json: unknown, queryParams: Array<string>, headers: Array<string>): ResponseSnapshot
+put(path: string, json: unknown, queryParams: Array<Array<string>>, headers: Array<Array<string>>): ResponseSnapshot
 ```
 
 #### patch()
@@ -704,7 +704,7 @@ Make a PATCH request
 **Signature:**
 
 ```typescript
-patch(path: string, json: unknown, queryParams: Array<string>, headers: Array<string>): ResponseSnapshot
+patch(path: string, json: unknown, queryParams: Array<Array<string>>, headers: Array<Array<string>>): ResponseSnapshot
 ```
 
 #### delete()
@@ -714,7 +714,7 @@ Make a DELETE request
 **Signature:**
 
 ```typescript
-delete(path: string, queryParams: Array<string>, headers: Array<string>): ResponseSnapshot
+delete(path: string, queryParams: Array<Array<string>>, headers: Array<Array<string>>): ResponseSnapshot
 ```
 
 #### options()
@@ -724,7 +724,7 @@ Make an OPTIONS request
 **Signature:**
 
 ```typescript
-options(path: string, queryParams: Array<string>, headers: Array<string>): ResponseSnapshot
+options(path: string, queryParams: Array<Array<string>>, headers: Array<Array<string>>): ResponseSnapshot
 ```
 
 #### head()
@@ -734,7 +734,7 @@ Make a HEAD request
 **Signature:**
 
 ```typescript
-head(path: string, queryParams: Array<string>, headers: Array<string>): ResponseSnapshot
+head(path: string, queryParams: Array<Array<string>>, headers: Array<Array<string>>): ResponseSnapshot
 ```
 
 #### trace()
@@ -744,7 +744,7 @@ Make a TRACE request
 **Signature:**
 
 ```typescript
-trace(path: string, queryParams: Array<string>, headers: Array<string>): ResponseSnapshot
+trace(path: string, queryParams: Array<Array<string>>, headers: Array<Array<string>>): ResponseSnapshot
 ```
 
 #### graphqlAt()

@@ -1016,7 +1016,7 @@ Make a GET request
 **Signature:**
 
 ```swift
-public func get(path: String, queryParams: [String]? = nil, headers: [String]? = nil) throws -> ResponseSnapshot
+public func get(path: String, queryParams: [[String]]? = nil, headers: [[String]]? = nil) throws -> ResponseSnapshot
 ```
 
 #### post()
@@ -1026,7 +1026,7 @@ Make a POST request
 **Signature:**
 
 ```swift
-public func post(path: String, json: String? = nil, formData: [String]? = nil, multipart: String, queryParams: [String]? = nil, headers: [String]? = nil) throws -> ResponseSnapshot
+public func post(path: String, json: String? = nil, formData: [[String]]? = nil, multipart: String, queryParams: [[String]]? = nil, headers: [[String]]? = nil) throws -> ResponseSnapshot
 ```
 
 #### requestRaw()
@@ -1036,7 +1036,7 @@ Make a request with a raw body payload.
 **Signature:**
 
 ```swift
-public func requestRaw(method: Method, path: String, body: Data, queryParams: [String]? = nil, headers: [String]? = nil) throws -> ResponseSnapshot
+public func requestRaw(method: Method, path: String, body: Data, queryParams: [[String]]? = nil, headers: [[String]]? = nil) throws -> ResponseSnapshot
 ```
 
 #### put()
@@ -1046,7 +1046,7 @@ Make a PUT request
 **Signature:**
 
 ```swift
-public func put(path: String, json: String? = nil, queryParams: [String]? = nil, headers: [String]? = nil) throws -> ResponseSnapshot
+public func put(path: String, json: String? = nil, queryParams: [[String]]? = nil, headers: [[String]]? = nil) throws -> ResponseSnapshot
 ```
 
 #### patch()
@@ -1056,7 +1056,7 @@ Make a PATCH request
 **Signature:**
 
 ```swift
-public func patch(path: String, json: String? = nil, queryParams: [String]? = nil, headers: [String]? = nil) throws -> ResponseSnapshot
+public func patch(path: String, json: String? = nil, queryParams: [[String]]? = nil, headers: [[String]]? = nil) throws -> ResponseSnapshot
 ```
 
 #### delete()
@@ -1066,7 +1066,7 @@ Make a DELETE request
 **Signature:**
 
 ```swift
-public func delete(path: String, queryParams: [String]? = nil, headers: [String]? = nil) throws -> ResponseSnapshot
+public func delete(path: String, queryParams: [[String]]? = nil, headers: [[String]]? = nil) throws -> ResponseSnapshot
 ```
 
 #### options()
@@ -1076,7 +1076,7 @@ Make an OPTIONS request
 **Signature:**
 
 ```swift
-public func options(path: String, queryParams: [String]? = nil, headers: [String]? = nil) throws -> ResponseSnapshot
+public func options(path: String, queryParams: [[String]]? = nil, headers: [[String]]? = nil) throws -> ResponseSnapshot
 ```
 
 #### head()
@@ -1086,7 +1086,7 @@ Make a HEAD request
 **Signature:**
 
 ```swift
-public func head(path: String, queryParams: [String]? = nil, headers: [String]? = nil) throws -> ResponseSnapshot
+public func head(path: String, queryParams: [[String]]? = nil, headers: [[String]]? = nil) throws -> ResponseSnapshot
 ```
 
 #### trace()
@@ -1096,7 +1096,7 @@ Make a TRACE request
 **Signature:**
 
 ```swift
-public func trace(path: String, queryParams: [String]? = nil, headers: [String]? = nil) throws -> ResponseSnapshot
+public func trace(path: String, queryParams: [[String]]? = nil, headers: [[String]]? = nil) throws -> ResponseSnapshot
 ```
 
 #### graphqlAt()

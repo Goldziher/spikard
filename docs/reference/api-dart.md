@@ -1016,7 +1016,7 @@ Make a GET request
 **Signature:**
 
 ```dart
-ResponseSnapshot get(String path, [List<String>? queryParams, List<String>? headers])
+ResponseSnapshot get(String path, [List<List<String>>? queryParams, List<List<String>>? headers])
 ```
 
 #### post()
@@ -1026,7 +1026,7 @@ Make a POST request
 **Signature:**
 
 ```dart
-ResponseSnapshot post(String path, String multipart, [String? json, List<String>? formData, List<String>? queryParams, List<String>? headers])
+ResponseSnapshot post(String path, String multipart, [String? json, List<List<String>>? formData, List<List<String>>? queryParams, List<List<String>>? headers])
 ```
 
 #### requestRaw()
@@ -1036,7 +1036,7 @@ Make a request with a raw body payload.
 **Signature:**
 
 ```dart
-ResponseSnapshot requestRaw(Method method, String path, Uint8List body, [List<String>? queryParams, List<String>? headers])
+ResponseSnapshot requestRaw(Method method, String path, Uint8List body, [List<List<String>>? queryParams, List<List<String>>? headers])
 ```
 
 #### put()
@@ -1046,7 +1046,7 @@ Make a PUT request
 **Signature:**
 
 ```dart
-ResponseSnapshot put(String path, [String? json, List<String>? queryParams, List<String>? headers])
+ResponseSnapshot put(String path, [String? json, List<List<String>>? queryParams, List<List<String>>? headers])
 ```
 
 #### patch()
@@ -1056,7 +1056,7 @@ Make a PATCH request
 **Signature:**
 
 ```dart
-ResponseSnapshot patch(String path, [String? json, List<String>? queryParams, List<String>? headers])
+ResponseSnapshot patch(String path, [String? json, List<List<String>>? queryParams, List<List<String>>? headers])
 ```
 
 #### delete()
@@ -1066,7 +1066,7 @@ Make a DELETE request
 **Signature:**
 
 ```dart
-ResponseSnapshot delete(String path, [List<String>? queryParams, List<String>? headers])
+ResponseSnapshot delete(String path, [List<List<String>>? queryParams, List<List<String>>? headers])
 ```
 
 #### options()
@@ -1076,7 +1076,7 @@ Make an OPTIONS request
 **Signature:**
 
 ```dart
-ResponseSnapshot options(String path, [List<String>? queryParams, List<String>? headers])
+ResponseSnapshot options(String path, [List<List<String>>? queryParams, List<List<String>>? headers])
 ```
 
 #### head()
@@ -1086,7 +1086,7 @@ Make a HEAD request
 **Signature:**
 
 ```dart
-ResponseSnapshot head(String path, [List<String>? queryParams, List<String>? headers])
+ResponseSnapshot head(String path, [List<List<String>>? queryParams, List<List<String>>? headers])
 ```
 
 #### trace()
@@ -1096,7 +1096,7 @@ Make a TRACE request
 **Signature:**
 
 ```dart
-ResponseSnapshot trace(String path, [List<String>? queryParams, List<String>? headers])
+ResponseSnapshot trace(String path, [List<List<String>>? queryParams, List<List<String>>? headers])
 ```
 
 #### graphqlAt()

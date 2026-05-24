@@ -1016,7 +1016,7 @@ Make a GET request
 **Signature:**
 
 ```rust
-pub fn get(&self, path: &str, query_params: Option<Vec<String>>, headers: Option<Vec<String>>) -> ResponseSnapshot
+pub fn get(&self, path: &str, query_params: Option<Vec<Vec<String>>>, headers: Option<Vec<Vec<String>>>) -> ResponseSnapshot
 ```
 
 #### post()
@@ -1026,7 +1026,7 @@ Make a POST request
 **Signature:**
 
 ```rust
-pub fn post(&self, path: &str, json: Option<serde_json::Value>, form_data: Option<Vec<String>>, multipart: &str, query_params: Option<Vec<String>>, headers: Option<Vec<String>>) -> ResponseSnapshot
+pub fn post(&self, path: &str, json: Option<serde_json::Value>, form_data: Option<Vec<Vec<String>>>, multipart: &str, query_params: Option<Vec<Vec<String>>>, headers: Option<Vec<Vec<String>>>) -> ResponseSnapshot
 ```
 
 #### request_raw()
@@ -1036,7 +1036,7 @@ Make a request with a raw body payload.
 **Signature:**
 
 ```rust
-pub fn request_raw(&self, method: Method, path: &str, body: &[u8], query_params: Option<Vec<String>>, headers: Option<Vec<String>>) -> ResponseSnapshot
+pub fn request_raw(&self, method: Method, path: &str, body: &[u8], query_params: Option<Vec<Vec<String>>>, headers: Option<Vec<Vec<String>>>) -> ResponseSnapshot
 ```
 
 #### put()
@@ -1046,7 +1046,7 @@ Make a PUT request
 **Signature:**
 
 ```rust
-pub fn put(&self, path: &str, json: Option<serde_json::Value>, query_params: Option<Vec<String>>, headers: Option<Vec<String>>) -> ResponseSnapshot
+pub fn put(&self, path: &str, json: Option<serde_json::Value>, query_params: Option<Vec<Vec<String>>>, headers: Option<Vec<Vec<String>>>) -> ResponseSnapshot
 ```
 
 #### patch()
@@ -1056,7 +1056,7 @@ Make a PATCH request
 **Signature:**
 
 ```rust
-pub fn patch(&self, path: &str, json: Option<serde_json::Value>, query_params: Option<Vec<String>>, headers: Option<Vec<String>>) -> ResponseSnapshot
+pub fn patch(&self, path: &str, json: Option<serde_json::Value>, query_params: Option<Vec<Vec<String>>>, headers: Option<Vec<Vec<String>>>) -> ResponseSnapshot
 ```
 
 #### delete()
@@ -1066,7 +1066,7 @@ Make a DELETE request
 **Signature:**
 
 ```rust
-pub fn delete(&self, path: &str, query_params: Option<Vec<String>>, headers: Option<Vec<String>>) -> ResponseSnapshot
+pub fn delete(&self, path: &str, query_params: Option<Vec<Vec<String>>>, headers: Option<Vec<Vec<String>>>) -> ResponseSnapshot
 ```
 
 #### options()
@@ -1076,7 +1076,7 @@ Make an OPTIONS request
 **Signature:**
 
 ```rust
-pub fn options(&self, path: &str, query_params: Option<Vec<String>>, headers: Option<Vec<String>>) -> ResponseSnapshot
+pub fn options(&self, path: &str, query_params: Option<Vec<Vec<String>>>, headers: Option<Vec<Vec<String>>>) -> ResponseSnapshot
 ```
 
 #### head()
@@ -1086,7 +1086,7 @@ Make a HEAD request
 **Signature:**
 
 ```rust
-pub fn head(&self, path: &str, query_params: Option<Vec<String>>, headers: Option<Vec<String>>) -> ResponseSnapshot
+pub fn head(&self, path: &str, query_params: Option<Vec<Vec<String>>>, headers: Option<Vec<Vec<String>>>) -> ResponseSnapshot
 ```
 
 #### trace()
@@ -1096,7 +1096,7 @@ Make a TRACE request
 **Signature:**
 
 ```rust
-pub fn trace(&self, path: &str, query_params: Option<Vec<String>>, headers: Option<Vec<String>>) -> ResponseSnapshot
+pub fn trace(&self, path: &str, query_params: Option<Vec<Vec<String>>>, headers: Option<Vec<Vec<String>>>) -> ResponseSnapshot
 ```
 
 #### graphql_at()

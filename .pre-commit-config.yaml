@@ -155,15 +155,8 @@ repos:
         exclude: ^(e2e/|test_apps/|tools/)
       - id: golangci-lint
         exclude: ^(e2e/|test_apps/|tools/)
-        # golangci-lint auto-discovers every go.mod; scope it to the binding
-        # module so the e2e/ exclusion (which file-filtering can't enforce for
-        # whole-module linting) actually holds.
-        env:
-          KREUZBERG_GO_MOD_DIRS: "packages/go"
       - id: govulncheck
         exclude: ^(e2e/|test_apps/|tools/)
-        env:
-          KREUZBERG_GO_MOD_DIRS: "packages/go"
       - id: rubocop
         files: ^packages/ruby/.*\.rb$
       - id: rubocop-lint
