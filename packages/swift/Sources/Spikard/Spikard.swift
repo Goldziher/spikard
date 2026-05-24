@@ -913,6 +913,45 @@ extension Method {
 public enum SecuritySchemeInfo: Codable, Sendable, Hashable {
     case http(scheme: String, bearerFormat: String?)
     case apiKey(location: String, name: String)
+
+    private enum CodingKeys: String, CodingKey {
+        case type
+        case bearerFormat
+        case location = "in"
+        case name
+        case scheme
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let type = try container.decode(String.self, forKey: .type)
+        switch type {
+        case "http":
+            self = .http(scheme: try container.decode(String.self, forKey: .scheme), bearerFormat: try container.decodeIfPresent(String.self, forKey: .bearerFormat))
+        case "apiKey":
+            self = .apiKey(location: try container.decode(String.self, forKey: .location), name: try container.decode(String.self, forKey: .name))
+        default:
+            throw DecodingError.dataCorruptedError(
+                forKey: .type,
+                in: container,
+                debugDescription: "Unknown SecuritySchemeInfo type: \(type)"
+            )
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        case .http(let scheme, let bearerFormat):
+            try container.encode("http", forKey: .type)
+            try container.encode(scheme, forKey: .scheme)
+            try container.encodeIfPresent(bearerFormat, forKey: .bearerFormat)
+        case .apiKey(let location, let name):
+            try container.encode("apiKey", forKey: .type)
+            try container.encode(location, forKey: .location)
+            try container.encode(name, forKey: .name)
+        }
+    }
 }
 extension SecuritySchemeInfo {
     func intoRust() throws -> RustBridge.SecuritySchemeInfo {

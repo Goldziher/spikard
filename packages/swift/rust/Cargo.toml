@@ -30,9 +30,9 @@ async-trait = "0.1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 spikard = { version = "0.15.5", path = "../../../crates/spikard", features = ["di"] }
-spikard-core = { path = "../../../crates/spikard-core" }
-spikard-graphql = { path = "../../../crates/spikard-graphql" }
-spikard-http = { path = "../../../crates/spikard-http" }
+spikard-core = { path = "../../../crates/spikard-core", version = "0.15.5" }
+spikard-graphql = { path = "../../../crates/spikard-graphql", version = "0.15.5" }
+spikard-http = { path = "../../../crates/spikard-http", version = "0.15.5" }
 swift-bridge = "0.1.59"
 tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }
 
