@@ -222,12 +222,6 @@ jobs:
           package: spikard
           version: ${{ needs.prepare.outputs.version }}
 
-      # Swift and Zig have no central registry — they are consumed directly from
-      # the GitHub release tag, which the prepare job always creates for this tag
-      # before this job runs. A tag-existence probe would therefore always report
-      # "exists", so publish-swift/publish-zig are gated only on whether the
-      # release was requested, not on a registry check.
-
   build-python:
     name: Build Python wheels
     needs: prepare
@@ -546,7 +540,7 @@ jobs:
   build-jvm-dotnet-dart-swift-zig:
     name: Build package-only targets
     needs: prepare
-    if: ${{ needs.prepare.outputs.release_java == 'true' || needs.prepare.outputs.release_kotlin == 'true' || needs.prepare.outputs.release_csharp == 'true' || needs.prepare.outputs.release_dart == 'true' || needs.prepare.outputs.release_swift == 'true' || needs.prepare.outputs.release_zig == 'true' }}
+    if: ${{ needs.prepare.outputs.release_java == 'true' || needs.prepare.outputs.release_kotlin == 'true' || needs.prepare.outputs.release_csharp == 'true' || needs.prepare.outputs.release_dart == 'true' || needs.prepare.outputs.release_zig == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
@@ -834,51 +828,6 @@ jobs:
           nuget-user: nhirschfeld
           dry-run: ${{ needs.prepare.outputs.dry_run }}
 
-  publish-swift:
-    name: Publish Swift metadata
-    needs: [prepare, build-jvm-dotnet-dart-swift-zig]
-    # No swift_exists gate: Swift has no central registry, so the check-registries
-    # "exists" probe is a GitHub-release-tag lookup that is always true here — the
-    # prepare job creates the draft Release for this tag before check-registries
-    # runs, so the probe would always skip this job. The publish-swift action is
-    # idempotent (validate Package.swift, verify the tag, ping the Swift Package
-    # Index to expedite re-indexing), so it must run on every fresh tag release.
-    if: ${{ !cancelled() && needs.prepare.outputs.release_swift == 'true' && needs.build-jvm-dotnet-dart-swift-zig.result == 'success' }}
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v6.0.2
-        with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: kreuzberg-dev/actions/publish-swift@v1
-        with:
-          working-directory: packages/swift
-          tag: ${{ needs.prepare.outputs.tag }}
-          package-url: https://github.com/Goldziher/spikard
-          dry-run: ${{ needs.prepare.outputs.dry_run }}
-
-  publish-zig:
-    name: Publish Zig metadata
-    needs: [prepare, build-jvm-dotnet-dart-swift-zig]
-    # No zig_exists gate: Zig has no central registry, so the check-registries
-    # "exists" probe is a GitHub-release-tag lookup that is always true here — the
-    # prepare job creates the draft Release for this tag before check-registries
-    # runs, so the probe would always skip this job. The publish-zig action is
-    # idempotent (validate build.zig.zon, verify the tag, append the resolved
-    # tarball URL + SHA-256 to the release notes), so it must run on every fresh
-    # tag release.
-    if: ${{ !cancelled() && needs.prepare.outputs.release_zig == 'true' && needs.build-jvm-dotnet-dart-swift-zig.result == 'success' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6.0.2
-        with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: kreuzberg-dev/actions/publish-zig@v1
-        with:
-          working-directory: packages/zig
-          tag: ${{ needs.prepare.outputs.tag }}
-          zig-version: "0.16.0"
-          dry-run: ${{ needs.prepare.outputs.dry_run }}
-
   check-homebrew:
     name: Check Homebrew tap for formula
     needs: [prepare]
@@ -1072,8 +1021,6 @@ jobs:
       - publish-maven
       - publish-kotlin
       - publish-nuget
-      - publish-swift
-      - publish-zig
       - publish-homebrew-bottles
     if: ${{ always() && needs.prepare.outputs.is_tag == 'true' }}
     runs-on: ubuntu-latest
