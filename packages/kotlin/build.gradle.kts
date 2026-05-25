@@ -1,9 +1,17 @@
+import com.vanniktech.maven.publish.JavadocJar
+import com.vanniktech.maven.publish.KotlinJvm
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+buildscript {
+  dependencies {
+    classpath("com.vanniktech:gradle-maven-publish-plugin:0.36.0")
+  }
+}
 
 plugins {
   `java-library`
   kotlin("jvm") version "2.3.21"
-  `maven-publish`
+  id("com.vanniktech.maven.publish") version "0.36.0"
   id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
 }
 
@@ -48,13 +56,6 @@ sourceSets {
       // the Maven `src/main/java/` convention.
       srcDir("../java")
     }
-    kotlin {
-      // The alef Kotlin backend emits binding sources at the project root
-      // (`packages/kotlin/`) rather than the Maven
-      // `src/main/kotlin/` convention. Pull them in explicitly so they end up
-      // in the compiled jar alongside any standard-layout sources.
-      srcDir(".")
-    }
   }
 }
 
@@ -97,13 +98,49 @@ tasks.withType<Test>().configureEach {
   useJUnit()
 }
 
-// Publish under a Kotlin-specific artifactId so consumers can disambiguate
-// the Kotlin module from the sibling Java facade in the same Maven group.
-publishing {
-  publications {
-    create<MavenPublication>("maven") {
-      artifactId = "spikard-kotlin"
-      from(components["java"])
+// Publish to Maven Central via the vanniktech plugin: signs all publications
+// and uploads with publishingType=AUTOMATIC, so `publishAndReleaseToMavenCentral`
+// auto-releases the Central Portal deployment (the bare `maven-publish` plugin
+// can only stage, leaving the artifact unreleased). The Kotlin-specific
+// artifactId disambiguates this module from the sibling Java facade in the same
+// Maven group; the version is inherited from the top-level `version` above
+// (kept current by `alef sync-versions`), so it is omitted from `coordinates`.
+mavenPublishing {
+  configure(
+    KotlinJvm(
+      javadocJar = JavadocJar.Empty(),
+      sourcesJar = true,
+    ),
+  )
+
+  publishToMavenCentral()
+  signAllPublications()
+
+  coordinates(
+    groupId = "dev.spikard",
+    artifactId = "spikard-kotlin",
+  )
+
+  pom {
+    name.set("spikard-kotlin")
+    description.set("Rust-centric multi-language HTTP framework with polyglot bindings")
+    url.set("https://github.com/Goldziher/spikard")
+    licenses {
+      license {
+        name.set("MIT")
+        url.set("https://opensource.org/licenses/MIT")
+      }
+    }
+    developers {
+      developer {
+        name.set("Na'aman Hirschfeld")
+        email.set("nhirschfeld@gmail.com")
+      }
+    }
+    scm {
+      url.set("https://github.com/Goldziher/spikard")
+      connection.set("scm:git:git://github.com/Goldziher/spikard.git")
+      developerConnection.set("scm:git:ssh://git@github.com:Goldziher/spikard.git")
     }
   }
 }

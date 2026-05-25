@@ -806,12 +806,10 @@ jobs:
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         with:
           working-directory: packages/kotlin
-          # alef-generated build.gradle.kts uses the bare `maven-publish` Gradle
-          # plugin (task: `publish`). The action's default target task is
-          # `publishAndReleaseToMavenCentral` which comes from vanniktech's
-          # wrapper plugin — not present here. Releasing from the Central Portal
-          # staging repo still requires a manual click for now.
-          gradle-task: publish
+          # build.gradle.kts applies the vanniktech maven-publish plugin, so the
+          # action's default `publishAndReleaseToMavenCentral` task uploads with
+          # publishingType=AUTOMATIC and auto-releases the Central Portal
+          # deployment (no manual staging-close step).
           dry-run: ${{ needs.prepare.outputs.dry_run }}
 
   publish-nuget:
@@ -820,7 +818,7 @@ jobs:
     if: ${{ !cancelled() && needs.prepare.outputs.release_csharp == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.nuget_exists != 'true') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v8.0.1
+      - uses: actions/download-artifact@v8
         with:
           name: package-targets
           path: dist/packages
@@ -853,6 +851,9 @@ jobs:
           working-directory: packages/zig
           tag: ${{ needs.prepare.outputs.tag }}
           zig-version: "0.16.0"
+          package-name: spikard-zig
+          update-release-notes: "true"
+          update-existing: "true"
           dry-run: ${{ needs.prepare.outputs.dry_run }}
 
   check-homebrew:

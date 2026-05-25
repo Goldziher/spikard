@@ -215,7 +215,7 @@ repos:
 
   # Alef: verify generated bindings are up to date and sync package versions
   - repo: https://github.com/kreuzberg-dev/alef
-    rev: v0.19.9
+    rev: v0.19.10
     hooks:
       - id: alef-verify
       - id: alef-sync-versions
@@ -228,7 +228,7 @@ repos:
 
   # GitHub Actions: check refs are up to date
   - repo: https://github.com/Goldziher/gh-actions-updater
-    rev: v0.1.4
+    rev: v0.1.5
     hooks:
       - id: gh-actions-updater
 
