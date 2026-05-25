@@ -5,8 +5,10 @@
     .minimum_zig_version = "0.16.0",
     .dependencies = .{
         .spikard = .{
-            .url = "https://registry.example.com/spikard/v0.1.0.tar.gz",
-            .hash = "0000000000000000000000000000000000000000000000000000000000000000",
+            .url = "https://github.com/Goldziher/spikard/releases/download/v0.15.6-rc.4/spikard-zig-v0.15.6-rc.4.tar.gz",
+            // alef: hash not pinned — run `zig fetch --save https://github.com/Goldziher/spikard/releases/download/v0.15.6-rc.4/spikard-zig-v0.15.6-rc.4.tar.gz` once to populate,
+            //       then set `hash` under [crates.e2e.registry.packages.zig] in alef.toml.
+            .hash = "TODO",
         },
     },
     .paths = .{

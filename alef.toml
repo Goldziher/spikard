@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.19.6"
+alef_version = "0.19.9"
 languages = [
   "python",
   "node",
@@ -765,11 +765,12 @@ e2e = "cd e2e/wasm && pnpm vitest run"
 [crates.publish]
 core_crate = "crates/spikard"
 
-[crates.publish.languages.ruby]
-vendor_mode = "core-only"
-
+# ruby + elixir intentionally use alef's default `Registry` vendor mode: their
+# native ext / NIF builds the Rust crate from source on the user's machine and
+# pulls spikard from crates.io (path-deps rewritten to registry version-deps).
+# The old `core-only` vendoring left an unresolvable `path =` in the shipped
+# manifest, which is exactly issue #87 (gem fails to install).
 [crates.publish.languages.elixir]
-vendor_mode = "core-only"
 nif_versions = ["2.16", "2.17"]
 
 [crates.e2e]
@@ -794,6 +795,9 @@ languages = [
   # the wasm binding exports validateJsonSchema + problemDetails only, not the
   # handle_request HTTP adapter. Non-HTTP fixtures still generate runnable tests.
   "wasm",
+  # brew: a Homebrew formula test app (registry mode) that installs the published
+  # CLI via `brew install` and exercises it, verifying the tap/bottle release.
+  "brew",
 ]
 
 [crates.e2e.call]
@@ -885,7 +889,12 @@ name = "dev.spikard:spikard"
 name = "Spikard"
 
 [crates.e2e.registry.packages.kotlin]
-name = "dev.spikard:spikard"
+# Published Maven artifactId only — the group (`dev.spikard`) comes from
+# `[crates.kotlin] package`. The kotlin binding publishes under artifactId
+# `spikard-kotlin` (see packages/kotlin/build.gradle.kts), distinct from the
+# sibling Java facade `dev.spikard:spikard`. The generated registry coordinate
+# is `dev.spikard:spikard-kotlin:<version>`.
+name = "spikard-kotlin"
 
 [crates.e2e.registry.packages.dart]
 name = "spikard"

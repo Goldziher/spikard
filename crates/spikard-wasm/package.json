@@ -1,6 +1,6 @@
 {
   "name": "@spikard/node-wasm",
-  "version": "0.15.6-rc.3",
+  "version": "0.15.6-rc.4",
   "private": false,
   "description": "Rust-centric multi-language HTTP framework with polyglot bindings",
   "license": "MIT",
