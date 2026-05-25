@@ -89,7 +89,7 @@ jobs:
             os: ubuntu-latest
             command: wasm-pack build crates/spikard-wasm --release --target bundler
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v6
 
       - name: Setup Rust
         uses: kreuzberg-dev/actions/setup-rust@v1
@@ -117,7 +117,7 @@ jobs:
 
       - name: Setup Ruby
         if: matrix.language == 'ruby'
-        uses: ruby/setup-ruby@v1.310.0
+        uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.4"
           bundler-cache: true
@@ -138,13 +138,13 @@ jobs:
 
       - name: Setup Go
         if: matrix.language == 'go'
-        uses: actions/setup-go@v6.4.0
+        uses: actions/setup-go@v6
         with:
           go-version-file: packages/go/go.mod
 
       - name: Setup JDK 25 for Maven
         if: matrix.language == 'java'
-        uses: actions/setup-java@v4.8.0
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "25"
@@ -155,7 +155,7 @@ jobs:
 
       - name: Setup .NET
         if: matrix.language == 'csharp'
-        uses: actions/setup-dotnet@v5.2.0
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "10.0.x"
 
@@ -168,7 +168,7 @@ jobs:
 
       - name: Setup Dart
         if: matrix.language == 'dart'
-        uses: dart-lang/setup-dart@v1.7.2
+        uses: dart-lang/setup-dart@v1
 
       - name: Setup Swift
         if: matrix.language == 'swift'

@@ -28,7 +28,7 @@ jobs:
     name: Lint prose
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v6
 
       - name: Setup textlint
         uses: kreuzberg-dev/actions/setup-textlint@v1
@@ -40,7 +40,7 @@ jobs:
     name: Build docs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v6
 
       - name: Setup Python
         uses: kreuzberg-dev/actions/setup-python-env@v1
