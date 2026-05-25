@@ -222,6 +222,10 @@ jobs:
           package: spikard
           version: ${{ needs.prepare.outputs.version }}
 
+      # Zig has no central registry. It is consumed directly from the GitHub
+      # release tag, so publish-zig is gated only on whether the release was
+      # requested, not on a registry check.
+
   build-python:
     name: Build Python wheels
     needs: prepare
@@ -828,6 +832,29 @@ jobs:
           nuget-user: nhirschfeld
           dry-run: ${{ needs.prepare.outputs.dry_run }}
 
+  publish-zig:
+    name: Publish Zig metadata
+    needs: [prepare, build-jvm-dotnet-dart-swift-zig]
+    # No zig_exists gate: Zig has no central registry, so the check-registries
+    # "exists" probe is a GitHub-release-tag lookup that is always true here — the
+    # prepare job creates the draft Release for this tag before check-registries
+    # runs, so the probe would always skip this job. The publish-zig action is
+    # idempotent (validate build.zig.zon, verify the tag, append the resolved
+    # tarball URL + SHA-256 to the release notes), so it must run on every fresh
+    # tag release.
+    if: ${{ !cancelled() && needs.prepare.outputs.release_zig == 'true' && needs.build-jvm-dotnet-dart-swift-zig.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - uses: kreuzberg-dev/actions/publish-zig@v1
+        with:
+          working-directory: packages/zig
+          tag: ${{ needs.prepare.outputs.tag }}
+          zig-version: "0.16.0"
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
+
   check-homebrew:
     name: Check Homebrew tap for formula
     needs: [prepare]
@@ -1021,6 +1048,7 @@ jobs:
       - publish-maven
       - publish-kotlin
       - publish-nuget
+      - publish-zig
       - publish-homebrew-bottles
     if: ${{ always() && needs.prepare.outputs.is_tag == 'true' }}
     runs-on: ubuntu-latest
