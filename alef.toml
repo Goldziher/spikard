@@ -646,6 +646,15 @@ check = "pnpm dlx oxlint --fix crates/spikard-wasm"
 precondition = "test -d crates/spikard-ffi/include"
 check = "find crates/spikard-ffi/include -name '*.h' | xargs clang-format --dry-run --Werror"
 
+# `--no-install-project`: the uv project lives at crates/spikard-py/src/, but its
+# maturin `manifest-path` (../../crates/spikard-py/Cargo.toml) only resolves from the
+# deployed packages/python/ dir, so building the extension here fails. An upgrade only
+# needs to relock dependencies — the extension is built separately via `maturin develop`.
+[crates.update.python]
+precondition = "command -v uv >/dev/null 2>&1"
+update = "cd crates/spikard-py/src/ && uv sync --all-packages --all-extras --no-install-project"
+upgrade = "cd crates/spikard-py/src/ && uv sync --all-packages --all-extras --upgrade --no-install-project"
+
 [crates.update.kotlin]
 precondition = "command -v gradle >/dev/null 2>&1"
 update = "echo 'kotlin: no-op (versions pinned by generated Gradle files)'"
