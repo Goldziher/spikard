@@ -145,8 +145,6 @@ jobs:
       maven_kotlin_exists: ${{ steps.maven.outputs.kotlin_exists }}
       nuget_exists: ${{ steps.nuget.outputs.exists }}
       pub_exists: ${{ steps.pub.outputs.exists }}
-      swift_exists: ${{ steps.swift.outputs.exists }}
-      zig_exists: ${{ steps.zig.outputs.exists }}
     steps:
       - id: pypi
         if: ${{ needs.prepare.outputs.release_python == 'true' }}
@@ -224,23 +222,11 @@ jobs:
           package: spikard
           version: ${{ needs.prepare.outputs.version }}
 
-      - id: swift
-        if: ${{ needs.prepare.outputs.release_swift == 'true' }}
-        uses: kreuzberg-dev/actions/check-registry@v1
-        with:
-          registry: swift
-          package: Spikard
-          version: ${{ needs.prepare.outputs.version }}
-          repo: ${{ github.repository }}
-
-      - id: zig
-        if: ${{ needs.prepare.outputs.release_zig == 'true' }}
-        uses: kreuzberg-dev/actions/check-registry@v1
-        with:
-          registry: zig
-          package: spikard
-          version: ${{ needs.prepare.outputs.version }}
-          repo: ${{ github.repository }}
+      # Swift and Zig have no central registry — they are consumed directly from
+      # the GitHub release tag, which the prepare job always creates for this tag
+      # before this job runs. A tag-existence probe would therefore always report
+      # "exists", so publish-swift/publish-zig are gated only on whether the
+      # release was requested, not on a registry check.
 
   build-python:
     name: Build Python wheels
@@ -614,7 +600,7 @@ jobs:
           assets: |
             spikard-cli-*.tar.gz
             spikard-*-ffi-*.tar.gz
-            libspikard_nif-*.so.tar.gz
+            libspikard_nif-*.tar.gz
           fail-if-empty: "false"
           clobber: ${{ needs.prepare.outputs.force_republish }}
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -731,8 +717,12 @@ jobs:
 
   publish-hex:
     name: Publish Hex
-    needs: [prepare, check-registries, build-elixir]
-    if: ${{ !cancelled() && needs.prepare.outputs.release_elixir == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.hex_exists != 'true') }}
+    needs: [prepare, check-registries, build-elixir, upload-release-assets]
+    # Excludes dry-runs: generate-elixir-checksums (required for mix hex.build's
+    # checksum-*.exs files-list entry) downloads the per-platform NIF tarballs
+    # from the GitHub Release, which upload-release-assets only attaches on a
+    # real tag release.
+    if: ${{ !cancelled() && needs.prepare.outputs.release_elixir == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && needs.build-elixir.result == 'success' && needs.upload-release-assets.result == 'success' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.hex_exists != 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
@@ -743,6 +733,22 @@ jobs:
           elixir-version: "1.18"
           otp-version: "27"
       - uses: kreuzberg-dev/actions/setup-rust@v1
+      # Generate the RustlerPrecompiled checksum file (checksum-Elixir.Spikard.Native.exs)
+      # by downloading the per-platform NIF tarballs that upload-release-assets attached
+      # to the GitHub Release. mix.exs lists `checksum-*.exs` in its files: glob, so this
+      # must exist before `mix hex.build` runs or the build fails with "Missing files".
+      # Targets must match the assets actually uploaded (the build-elixir matrix builds
+      # these four triples; Windows is msvc, matching the uploaded artifact name).
+      - name: Generate NIF checksum file
+        uses: kreuzberg-dev/actions/generate-elixir-checksums@v1
+        with:
+          github-repo: ${{ github.repository }}
+          tag: ${{ needs.prepare.outputs.tag }}
+          version: ${{ needs.prepare.outputs.version }}
+          lib-name: spikard_nif
+          nif-versions: "2.16,2.17"
+          targets: x86_64-unknown-linux-gnu,aarch64-unknown-linux-gnu,aarch64-apple-darwin,x86_64-pc-windows-msvc
+          output-path: packages/elixir/checksum-Elixir.Spikard.Native.exs
       # Build the Hex source tarball with the NIF crate's workspace path-deps
       # rewritten to registry version-deps, so the published package compiles
       # standalone when a consumer has no precompiled NIF. On dry-runs the
@@ -830,8 +836,14 @@ jobs:
 
   publish-swift:
     name: Publish Swift metadata
-    needs: [prepare, check-registries, build-jvm-dotnet-dart-swift-zig]
-    if: ${{ !cancelled() && needs.prepare.outputs.release_swift == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.swift_exists != 'true') }}
+    needs: [prepare, build-jvm-dotnet-dart-swift-zig]
+    # No swift_exists gate: Swift has no central registry, so the check-registries
+    # "exists" probe is a GitHub-release-tag lookup that is always true here — the
+    # prepare job creates the draft Release for this tag before check-registries
+    # runs, so the probe would always skip this job. The publish-swift action is
+    # idempotent (validate Package.swift, verify the tag, ping the Swift Package
+    # Index to expedite re-indexing), so it must run on every fresh tag release.
+    if: ${{ !cancelled() && needs.prepare.outputs.release_swift == 'true' && needs.build-jvm-dotnet-dart-swift-zig.result == 'success' }}
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v6.0.2
@@ -846,8 +858,15 @@ jobs:
 
   publish-zig:
     name: Publish Zig metadata
-    needs: [prepare, check-registries, build-jvm-dotnet-dart-swift-zig]
-    if: ${{ !cancelled() && needs.prepare.outputs.release_zig == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.zig_exists != 'true') }}
+    needs: [prepare, build-jvm-dotnet-dart-swift-zig]
+    # No zig_exists gate: Zig has no central registry, so the check-registries
+    # "exists" probe is a GitHub-release-tag lookup that is always true here — the
+    # prepare job creates the draft Release for this tag before check-registries
+    # runs, so the probe would always skip this job. The publish-zig action is
+    # idempotent (validate build.zig.zon, verify the tag, append the resolved
+    # tarball URL + SHA-256 to the release notes), so it must run on every fresh
+    # tag release.
+    if: ${{ !cancelled() && needs.prepare.outputs.release_zig == 'true' && needs.build-jvm-dotnet-dart-swift-zig.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
