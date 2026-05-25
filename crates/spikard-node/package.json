@@ -1,6 +1,6 @@
 {
   "name": "@spikard/node",
-  "version": "0.15.6-rc.2",
+  "version": "0.15.6-rc.3",
   "description": "Rust-centric multi-language HTTP framework with polyglot bindings",
   "license": "MIT",
   "repository": {
@@ -24,6 +24,7 @@
   },
   "napi": {
     "binaryName": "spikard-node",
+    "packageName": "@spikard/node",
     "targets": [
       "x86_64-unknown-linux-gnu",
       "aarch64-unknown-linux-gnu",

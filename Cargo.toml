@@ -24,7 +24,7 @@ exclude = [
 ]
 
 [workspace.package]
-version = "0.15.6-rc.2"
+version = "0.15.6-rc.3"
 edition = "2024"
 authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
 license = "MIT"
@@ -50,11 +50,11 @@ prost-types = "0.14"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 # Core library
-spikard = { version = "0.15.6-rc.2", path = "crates/spikard" }
-spikard-codegen = { version = "0.15.6-rc.2", path = "crates/spikard-codegen" }
-spikard-core = { version = "0.15.6-rc.2", path = "crates/spikard-core" }
-spikard-graphql = { version = "0.15.6-rc.2", path = "crates/spikard-graphql" }
-spikard-http = { version = "0.15.6-rc.2", path = "crates/spikard-http" }
+spikard = { version = "0.15.6-rc.3", path = "crates/spikard" }
+spikard-codegen = { version = "0.15.6-rc.3", path = "crates/spikard-codegen" }
+spikard-core = { version = "0.15.6-rc.3", path = "crates/spikard-core" }
+spikard-graphql = { version = "0.15.6-rc.3", path = "crates/spikard-graphql" }
+spikard-http = { version = "0.15.6-rc.3", path = "crates/spikard-http" }
 
 # Utilities
 thiserror = "2.0"

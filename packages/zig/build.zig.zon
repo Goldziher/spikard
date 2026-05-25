@@ -1,6 +1,6 @@
 .{
     .name = .spikard,
-    .version = "0.15.6-rc.2",
+    .version = "0.15.6-rc.3",
     .fingerprint = 0x2d086215531c8edf,
     .minimum_zig_version = "0.16.0",
     .dependencies = .{},

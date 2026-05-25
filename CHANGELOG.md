@@ -7,11 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.6-rc.3] - 2026-05-25
+
+### Changed
+
+- Regenerated all bindings, e2e, and scaffolding against [alef v0.19.6](https://github.com/kreuzberg-dev/alef/releases/tag/v0.19.6), bumping the `alef.toml` pin and the `.pre-commit-config.yaml` alef hook to 0.19.6. 0.19.6 lands a batch of codegen/sync fixes so the generated tree is both formatter-clean against the pinned hooks and fully version-consistent — making several previously hand-patched items native: `version` requirements on `crates/spikard-ffi`'s internal path-deps (so `cargo publish` accepts the crate), the Elixir Hex `mix.exs` `files` list shipping `../../crates/spikard-elixir/src` (NIF `lib.rs` + `.ex` modules), de-duplicated Python `__init__.py` re-exports, `pyproject-fmt`-canonical `pyproject.toml`, the PSR-12 blank line after `<?php`, and `sync-versions` now also bumping the Kotlin `build.gradle.kts` version, the Elixir NIF `Cargo.lock`, and the `docs/reference/api-*.md` version badges.
+
 ### Fixed
 
 - `publish.yaml`: the Hex publish now generates the RustlerPrecompiled checksum file via `kreuzberg-dev/actions/generate-elixir-checksums@v1` before `build-elixir-hex@v1`. `mix.exs` lists `checksum-*.exs` in its package `files`, so `mix hex.build` failed at rc.2 with `Missing files: checksum-*.exs`. The step downloads the per-platform NIF tarballs from the GitHub Release, so `publish-hex` is now gated on a real tag release (`is_tag == 'true'`) and on `upload-release-assets` succeeding.
 - `publish.yaml`: widened the `upload-release-assets` NIF glob from `libspikard_nif-*.so.tar.gz` to `libspikard_nif-*.tar.gz` so the macOS `.dylib` and Windows `.dll` tarballs are attached to the Release (previously only the four Linux `.so` assets were uploaded, which would have starved the checksum step).
-- `packages/elixir/mix.exs`: replaced the non-existent `native/spikard_nif/src` and the `../../crates/spikard-elixir/src/*.ex` glob in the Hex package `files` with the whole `../../crates/spikard-elixir/src` directory (which holds both `lib.rs` and the `.ex` modules), so the NIF source ships and the package compiles standalone. Forward-port of alef `d8d0e6c7` (shipped in alef 0.19.5; spikard was last regenerated with 0.19.4).
 - `publish.yaml`: removed the self-defeating `swift_exists`/`zig_exists` registry-existence gate on `publish-swift`/`publish-zig`. Swift and Zig have no central registry, so `check-registry` falls back to a GitHub release-tag lookup — which the `prepare` job's draft Release always satisfies, so both jobs always skipped. They now gate only on the release being requested and the build succeeding, and rely on each action's own `dry-run` handling for idempotency.
 
 ## [0.15.6-rc.2] - 2026-05-24
