@@ -144,7 +144,7 @@ jobs:
         if: matrix.language == 'kotlin'
         uses: kreuzberg-dev/actions/setup-gradle@v1
         with:
-          java-version: "21"
+          java-version: "24"
           gradle-version: "9.5.1"
 
       - name: Setup .NET
