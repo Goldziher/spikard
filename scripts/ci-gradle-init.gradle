@@ -1,0 +1,19 @@
+// CI-only Gradle init script for the Kotlin e2e suite.
+//
+// The generated e2e/kotlin/build.gradle.kts is not hand-edited (alef output),
+// so test-worker JVM settings are injected here via --init-script instead.
+//
+// On memory-limited CI runners Gradle's MemoryRequestingWorkerProcess fails to
+// fork the test worker ("Cannot abort process 'Gradle Test Executor N' because
+// it is not in started or detached state"). Capping the worker heap and forcing
+// a single fork keeps the per-worker memory request within what the runner can
+// satisfy. --enable-native-access silences the restricted-FFM warning the
+// spikard java/kotlin bindings would otherwise emit on JDK 22+.
+allprojects {
+    tasks.withType(Test).configureEach {
+        maxParallelForks = 1
+        forkEvery = 0
+        maxHeapSize = "1g"
+        jvmArgs += ["-XX:MaxMetaspaceSize=512m", "--enable-native-access=ALL-UNNAMED"]
+    }
+}
