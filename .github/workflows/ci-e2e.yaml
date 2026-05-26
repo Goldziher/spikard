@@ -145,7 +145,7 @@ jobs:
         uses: kreuzberg-dev/actions/setup-gradle@v1
         with:
           java-version: "25"
-          gradle-version: "9.1.0"
+          gradle-version: "9.5.1"
 
       - name: Setup .NET
         if: matrix.language == 'csharp'
