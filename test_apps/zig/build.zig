@@ -4,18 +4,11 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
     const test_step = b.step("test", "Run tests");
-    const ffi_path = b.option([]const u8, "ffi_path", "Path to directory containing libspikard_ffi") orelse "../../target/release";
-    const ffi_include = b.option([]const u8, "ffi_include_path", "Path to directory containing FFI header") orelse "../../crates/spikard-ffi/include";
 
-    const spikard_module = b.addModule("spikard", .{
-        .root_source_file = b.path("../../packages/zig/src/spikard.zig"),
+    const spikard_module = b.dependency("spikard", .{
         .target = target,
         .optimize = optimize,
-        .link_libc = true,
-    });
-    spikard_module.addLibraryPath(.{ .cwd_relative = ffi_path });
-    spikard_module.addIncludePath(.{ .cwd_relative = ffi_include });
-    spikard_module.linkSystemLibrary("spikard_ffi", .{});
+    }).module("spikard");
 
     const _alloc = b.allocator;
     var mock_server_url: ?[]const u8 = b.graph.environ_map.get("MOCK_SERVER_URL");

@@ -50,7 +50,7 @@ repos:
 
   # Shared kreuzberg-dev polyglot hooks
   - repo: https://github.com/kreuzberg-dev/pre-commit-hooks
-    rev: v1.1.18
+    rev: v1.1.19
     hooks:
       - id: cargo-sort
         exclude: ^(crates/spikard-(wasm|node|py|php|ffi)|packages/(dart|swift)/rust|packages/ruby/ext/spikard_rb/native)/Cargo\.toml$
@@ -215,7 +215,7 @@ repos:
 
   # Alef: verify generated bindings are up to date and sync package versions
   - repo: https://github.com/kreuzberg-dev/alef
-    rev: v0.19.10
+    rev: v0.19.14
     hooks:
       - id: alef-verify
       - id: alef-sync-versions
