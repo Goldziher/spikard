@@ -9,13 +9,13 @@
     "url": "https://github.com/Goldziher/spikard",
     "directory": "crates/spikard-wasm"
   },
-  "type": "module",
   "files": [
     "pkg",
     "*.wasm",
     "*.d.ts",
     "README.md"
   ],
+  "type": "module",
   "main": "pkg/nodejs/spikard_wasm.js",
   "module": "pkg/web/spikard_wasm.js",
   "types": "pkg/nodejs/spikard_wasm.d.ts",

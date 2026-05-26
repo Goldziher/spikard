@@ -7,12 +7,24 @@
     "type": "git",
     "url": "git+https://github.com/Goldziher/spikard.git"
   },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "*.node"
+  ],
   "main": "index.js",
   "types": "index.d.ts",
-  "files": ["index.js", "index.d.ts", "*.node"],
+  "scripts": {
+    "build": "napi build --platform --release",
+    "artifacts": "napi artifacts",
+    "prepublishOnly": "napi prepublish -t npm --skip-optional-publish"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^3.6.2"
+  },
   "napi": {
-    "packageName": "@spikard/node",
     "binaryName": "spikard-node",
+    "packageName": "@spikard/node",
     "targets": [
       "x86_64-unknown-linux-gnu",
       "aarch64-unknown-linux-gnu",
@@ -22,11 +34,7 @@
       "aarch64-pc-windows-msvc"
     ]
   },
-  "scripts": {
-    "build": "napi build --platform --release",
-    "artifacts": "napi artifacts",
-    "prepublishOnly": "napi prepublish -t npm --skip-optional-publish"
-  },
-  "engines": { "node": ">= 18" },
-  "devDependencies": { "@napi-rs/cli": "^3.6.2" }
+  "engines": {
+    "node": ">= 18"
+  }
 }
