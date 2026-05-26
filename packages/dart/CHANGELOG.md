@@ -2,6 +2,6 @@
 
 All notable changes to this package will be documented in this file.
 
-## 0.15.6-rc.5
+## 0.15.6-rc.6
 
 - Initial release.

@@ -31,9 +31,9 @@
         <dependency>
             <groupId>dev.spikard</groupId>
             <artifactId>spikard</artifactId>
-            <version>0.15.6-rc.5</version>
+            <version>0.15.6-rc.6</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/../../packages/java/target/spikard-0.15.6-rc.5.jar</systemPath>
+            <systemPath>${project.basedir}/../../packages/java/target/spikard-0.15.6-rc.6.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

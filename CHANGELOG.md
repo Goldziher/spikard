@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.6-rc.6] - 2026-05-26
+
+### Changed
+
+- Regenerated all bindings, e2e, scaffolding, and docs against [alef v0.19.18](https://github.com/kreuzberg-dev/alef/releases/tag/v0.19.18) (from 0.19.14), bumping the `alef.toml` pin and the `.pre-commit-config.yaml` alef hook to 0.19.18. 0.19.15–0.19.18 land codegen fixes: napi omits a redundant `..Default::default()` in single-field streaming requests, wasm filters `binding_excluded` fields out of input-DTO codegen, and the extractor auto-excludes fields with trait-object types.
+
+### Fixed
+
+- CI E2E: the fixture mock-server (and each language's native binding) is now built inside the per-language test before-hooks instead of relying on a stale runner binary, fixing `connection refused` against `localhost` across go/node/ruby/elixir/java/dart/wasm.
+- CI E2E: bumped the Kotlin e2e Gradle to 9.5.1, and made the Zig e2e command self-diagnosing — it echoes the resolved `MOCK_SERVER_URL` and fails fast with the server log if the mock-server never starts.
+
 ## [0.15.6-rc.4] - 2026-05-25
 
 ### Fixed
