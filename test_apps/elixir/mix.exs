@@ -12,7 +12,7 @@ defmodule E2eElixir.MixProject do
 
   defp deps do
     [
-      {:spikard, "0.15.6-rc.6"},
+      {:spikard, "0.15.6-rc.7"},
       {:rustler_precompiled, "~> 0.9"},
       {:rustler, "~> 0.37.0", runtime: false},
       {:req, "~> 0.5"},

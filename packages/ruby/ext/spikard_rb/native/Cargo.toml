@@ -1,6 +1,6 @@
 [package]
 name = "spikard-rb"
-version = "0.15.6-rc.6"
+version = "0.15.6-rc.7"
 edition = "2024"
 license = "MIT"
 description = "Rust-centric multi-language HTTP framework with polyglot bindings"
@@ -17,10 +17,10 @@ crate-type = ["cdylib"]
 magnus = "0.8"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-spikard = { version = "0.15.6-rc.6", path = "../../../../../crates/spikard", features = ["di"] }
-spikard-core = { path = "../../../../../crates/spikard-core", version = "0.15.6-rc.6" }
-spikard-graphql = { path = "../../../../../crates/spikard-graphql", version = "0.15.6-rc.6" }
-spikard-http = { path = "../../../../../crates/spikard-http", version = "0.15.6-rc.6" }
+spikard = { version = "0.15.6-rc.7", path = "../../../../../crates/spikard", features = ["di"] }
+spikard-core = { path = "../../../../../crates/spikard-core", version = "0.15.6-rc.7" }
+spikard-graphql = { path = "../../../../../crates/spikard-graphql", version = "0.15.6-rc.7" }
+spikard-http = { path = "../../../../../crates/spikard-http", version = "0.15.6-rc.7" }
 tokio = { version = "1", features = ["rt-multi-thread"] }
 [package.metadata.cargo-machete]
 ignored = ["tokio"]

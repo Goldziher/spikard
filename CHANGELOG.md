@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.6-rc.7] - 2026-05-26
+
+### Fixed
+
+- CI E2E is now fully green across all 14 language suites. The Kotlin e2e Gradle test worker failed to fork (`Cannot abort process 'Gradle Test Executor N' because it is not in started or detached state`) because the generated `build.gradle.kts` set the test `workingDir` to an absent `test_documents/` directory and passed no `jvmArgs`; fixed in [alef v0.19.21](https://github.com/kreuzberg-dev/alef/releases/tag/v0.19.21) by guarding `workingDir` on existence and enabling `--enable-preview --enable-native-access=ALL-UNNAMED` on the Panama test fork (Kotlin e2e runs on JDK 25). The Dart and Zig e2e teardowns no longer run `pkill -f 'mock-server …'`, which matched and SIGTERM-ed their own parent `sh -c` on Linux (the command's argv contains the pattern), failing green runs.
+
+### Changed
+
+- Regenerated all bindings, e2e, scaffolding, and docs against [alef v0.19.21](https://github.com/kreuzberg-dev/alef/releases/tag/v0.19.21) (from 0.19.18), bumping the `alef.toml` pin and the `.pre-commit-config.yaml` alef hook. The committed Swift `RustBridgeC.h` is now a small placeholder that the `cargo build -p spikard-swift` step populates, rather than a checked-in build artifact.
+
 ## [0.15.6-rc.6] - 2026-05-26
 
 ### Changed

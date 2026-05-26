@@ -1,6 +1,6 @@
 [package]
 name = "spikard-php"
-version = "0.15.6-rc.6"
+version = "0.15.6-rc.7"
 edition = "2024"
 license = "MIT"
 description = "Rust-centric multi-language HTTP framework with polyglot bindings"
@@ -12,14 +12,14 @@ categories = ["text-processing"]
 crate-type = ["cdylib"]
 
 [dependencies]
-spikard = { version = "0.15.6-rc.6", path = "../spikard", features = ["di"] }
+spikard = { version = "0.15.6-rc.7", path = "../spikard", features = ["di"] }
 ext-php-rs = "0.15"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }
-spikard-core = { path = "../spikard-core", version = "0.15.6-rc.6" }
-spikard-graphql = { path = "../spikard-graphql", version = "0.15.6-rc.6" }
-spikard-http = { path = "../spikard-http", version = "0.15.6-rc.6" }
+spikard-core = { path = "../spikard-core", version = "0.15.6-rc.7" }
+spikard-graphql = { path = "../spikard-graphql", version = "0.15.6-rc.7" }
+spikard-http = { path = "../spikard-http", version = "0.15.6-rc.7" }
 
 # `ahash` and `futures-util` are conditionally included but not directly used in PHP code.
 [package.metadata.cargo-machete]
