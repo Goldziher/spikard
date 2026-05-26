@@ -756,7 +756,7 @@ e2e = "cd e2e/swift_e2e && CLANG_MODULE_CACHE_PATH=.build/clang-module-cache swi
 precondition = "command -v zig >/dev/null 2>&1"
 before = "cargo build --release -p spikard-ffi && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
 command = ":"
-e2e = "cd e2e/zig && rm -f /tmp/alef_zig_ms.log; (tail -f /dev/null | ../rust/target/release/mock-server ../../fixtures > /tmp/alef_zig_ms.log 2>&1) & MS=$!; for i in $(seq 1 100); do U=$(sed -n 's/^MOCK_SERVER_URL=//p' /tmp/alef_zig_ms.log | head -1); [ -n \"$U\" ] && break; sleep 0.1; done; MOCK_SERVER_URL=\"$U\" zig build test; RC=$?; kill $MS 2>/dev/null; pkill -f 'mock-server ../../fixtures' 2>/dev/null; exit $RC"
+e2e = "cd e2e/zig && rm -f /tmp/alef_zig_ms.log; (tail -f /dev/null | ../rust/target/release/mock-server ../../fixtures > /tmp/alef_zig_ms.log 2>&1) & MS=$!; for i in $(seq 1 200); do U=$(sed -n 's/^MOCK_SERVER_URL=//p' /tmp/alef_zig_ms.log | head -1); [ -n \"$U\" ] && break; sleep 0.1; done; echo \"MOCK_SERVER_URL=$U\"; if [ -z \"$U\" ]; then echo '--- mock-server log ---'; cat /tmp/alef_zig_ms.log; kill $MS 2>/dev/null; exit 1; fi; MOCK_SERVER_URL=\"$U\" zig build test --summary all; RC=$?; if [ $RC -ne 0 ]; then echo '--- mock-server log ---'; cat /tmp/alef_zig_ms.log; fi; kill $MS 2>/dev/null; pkill -f 'mock-server ../../fixtures' 2>/dev/null; exit $RC"
 
 [crates.test.wasm]
 precondition = "command -v wasm-pack >/dev/null 2>&1"
