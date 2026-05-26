@@ -38,6 +38,17 @@ tasks.test {
     val libPath = System.getProperty("native.lib.path") ?: "${rootDir}/../../target/release"
     systemProperty("java.library.path", libPath)
     systemProperty("jna.library.path", libPath)
-    // Resolve fixture paths (e.g. "docx/fake.docx") against test_documents/.
-    workingDir = file("${rootDir}/../../test_documents")
+    // Panama FFI bindings are compiled with --enable-preview against the
+    // java.lang.foreign API, so the forked test worker must enable preview +
+    // native access — otherwise the worker JVM aborts before JUnit starts and
+    // Gradle reports a misleading "Gradle Test Executor N ... not in started or
+    // detached state". Mirrors the Maven surefire argLine.
+    jvmArgs("--enable-preview", "--enable-native-access=ALL-UNNAMED")
+    // Resolve fixture paths (e.g. "docx/fake.docx") against test_documents/ when
+    // the consumer ships such fixtures. Guard on existence: Gradle test workers
+    // fail to fork if workingDir points at a directory that does not exist.
+    val testDocuments = file("${rootDir}/../../test_documents")
+    if (testDocuments.isDirectory) {
+        workingDir = testDocuments
+    }
 }

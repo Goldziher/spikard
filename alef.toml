@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.19.18"
+alef_version = "0.19.21"
 languages = [
   "python",
   "node",
@@ -741,7 +741,7 @@ e2e = "dotnet test e2e/csharp -p:NuGetAudit=false"
 precondition = "command -v gradle >/dev/null 2>&1"
 before = "cargo build --release -p spikard-ffi && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
 command = "cd packages/kotlin && gradle test --no-daemon"
-e2e = "cd e2e/kotlin && gradle test --no-daemon --max-workers=1 --init-script ../../scripts/ci-gradle-init.gradle"
+e2e = "cd e2e/kotlin && gradle test --no-daemon"
 
 [crates.test.dart]
 precondition = "command -v dart >/dev/null 2>&1"

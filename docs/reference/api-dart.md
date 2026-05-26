@@ -72,10 +72,10 @@ FullSchemaConfig schemaFull()
 
 API Key authentication configuration
 
-| Field        | Type           | Default                | Description                              |
-| ------------ | -------------- | ---------------------- | ---------------------------------------- |
-| `keys`       | `List<String>` | —                      | Valid API keys                           |
-| `headerName` | `String`       | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `keys` | `List<String>` | — | Valid API keys |
+| `headerName` | `String` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
 
 ---
 
@@ -83,19 +83,19 @@ API Key authentication configuration
 
 AsyncAPI HTTP endpoint configuration
 
-| Field     | Type      | Default | Description                                                   |
-| --------- | --------- | ------- | ------------------------------------------------------------- |
-| `enabled` | `bool`    | —       | Enable AsyncAPI endpoints (default: false)                    |
-| `spec`    | `String?` | `null`  | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | `bool` | — | Enable AsyncAPI endpoints (default: false) |
+| `spec` | `String?` | `null` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 
 #### BackgroundJobMetadata
 
-| Field       | Type      | Default | Description |
-| ----------- | --------- | ------- | ----------- |
-| `name`      | `String`  | —       | The name    |
-| `requestId` | `String?` | `null`  | Request id  |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `String` | — | The name |
+| `requestId` | `String?` | `null` | Request id |
 
 ### Methods
 
@@ -113,11 +113,11 @@ static BackgroundJobMetadata default()
 
 Configuration for in-process background task execution.
 
-| Field                | Type  | Default | Description              |
-| -------------------- | ----- | ------- | ------------------------ |
-| `maxQueueSize`       | `int` | `1024`  | Maximum queue size       |
-| `maxConcurrentTasks` | `int` | `128`   | Maximum concurrent tasks |
-| `drainTimeoutSecs`   | `int` | `30`    | Drain timeout secs       |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `maxQueueSize` | `int` | `1024` | Maximum queue size |
+| `maxConcurrentTasks` | `int` | `128` | Maximum concurrent tasks |
+| `drainTimeoutSecs` | `int` | `30` | Drain timeout secs |
 
 ### Methods
 
@@ -135,12 +135,12 @@ static BackgroundTaskConfig default()
 
 Compression configuration shared across runtimes
 
-| Field     | Type   | Default | Description                                         |
-| --------- | ------ | ------- | --------------------------------------------------- |
-| `gzip`    | `bool` | `true`  | Enable gzip compression                             |
-| `brotli`  | `bool` | `true`  | Enable brotli compression                           |
-| `minSize` | `int`  | —       | Minimum response size to compress (bytes)           |
-| `quality` | `int`  | —       | Compression quality (0-11 for brotli, 0-9 for gzip) |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `gzip` | `bool` | `true` | Enable gzip compression |
+| `brotli` | `bool` | `true` | Enable brotli compression |
+| `minSize` | `int` | — | Minimum response size to compress (bytes) |
+| `quality` | `int` | — | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
 ### Methods
 
@@ -158,11 +158,11 @@ static CompressionConfig default()
 
 Contact information
 
-| Field   | Type      | Default | Description                                   |
-| ------- | --------- | ------- | --------------------------------------------- |
-| `name`  | `String?` | `null`  | Name of the contact person or organisation.   |
-| `email` | `String?` | `null`  | Contact email address.                        |
-| `url`   | `String?` | `null`  | URL pointing to the contact information page. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `String?` | `null` | Name of the contact person or organisation. |
+| `email` | `String?` | `null` | Contact email address. |
+| `url` | `String?` | `null` | URL pointing to the contact information page. |
 
 ---
 
@@ -170,16 +170,16 @@ Contact information
 
 CORS configuration for a route
 
-| Field                | Type            | Default | Description          |
-| -------------------- | --------------- | ------- | -------------------- |
-| `allowedOrigins`     | `List<String>`  | `[]`    | Allowed origins      |
-| `allowedMethods`     | `List<String>`  | `[]`    | Allowed methods      |
-| `allowedHeaders`     | `List<String>`  | `[]`    | Allowed headers      |
-| `exposeHeaders`      | `List<String>?` | `null`  | Expose headers       |
-| `maxAge`             | `int?`          | `null`  | Maximum age          |
-| `allowCredentials`   | `bool?`         | `null`  | Allow credentials    |
-| `methodsJoinedCache` | `String`        | —       | Methods joined cache |
-| `headersJoinedCache` | `String`        | —       | Headers joined cache |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `allowedOrigins` | `List<String>` | `[]` | Allowed origins |
+| `allowedMethods` | `List<String>` | `[]` | Allowed methods |
+| `allowedHeaders` | `List<String>` | `[]` | Allowed headers |
+| `exposeHeaders` | `List<String>?` | `null` | Expose headers |
+| `maxAge` | `int?` | `null` | Maximum age |
+| `allowCredentials` | `bool?` | `null` | Allow credentials |
+| `methodsJoinedCache` | `String` | — | Methods joined cache |
+| `headersJoinedCache` | `String` | — | Headers joined cache |
 
 ### Methods
 
@@ -247,11 +247,11 @@ static CorsConfig default()
 
 Configuration for fully-featured schemas with Query, Mutation, and Subscription types
 
-| Field                  | Type   | Default | Description                                 |
-| ---------------------- | ------ | ------- | ------------------------------------------- |
-| `introspectionEnabled` | `bool` | `true`  | Enable introspection queries                |
-| `complexityLimit`      | `int?` | `null`  | Maximum query complexity (None = unlimited) |
-| `depthLimit`           | `int?` | `null`  | Maximum query depth (None = unlimited)      |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `introspectionEnabled` | `bool` | `true` | Enable introspection queries |
+| `complexityLimit` | `int?` | `null` | Maximum query complexity (None = unlimited) |
+| `depthLimit` | `int?` | `null` | Maximum query depth (None = unlimited) |
 
 ### Methods
 
@@ -368,13 +368,13 @@ static GraphQlRouteConfig default()
 
 Snapshot of a GraphQL subscription exchange over WebSocket.
 
-| Field              | Type           | Default | Description                                                       |
-| ------------------ | -------------- | ------- | ----------------------------------------------------------------- |
-| `operationId`      | `String`       | —       | Operation id used for the subscription request.                   |
-| `acknowledged`     | `bool`         | —       | Whether the server acknowledged the GraphQL WebSocket connection. |
-| `event`            | `String?`      | `null`  | First `next.payload` received for this subscription, if any.      |
-| `errors`           | `List<String>` | —       | GraphQL protocol errors emitted by the server.                    |
-| `completeReceived` | `bool`         | —       | Whether a `complete` frame was observed for this operation.       |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `operationId` | `String` | — | Operation id used for the subscription request. |
+| `acknowledged` | `bool` | — | Whether the server acknowledged the GraphQL WebSocket connection. |
+| `event` | `String?` | `null` | First `next.payload` received for this subscription, if any. |
+| `errors` | `List<String>` | — | GraphQL protocol errors emitted by the server. |
+| `completeReceived` | `bool` | — | Whether a `complete` frame was observed for this operation. |
 
 ---
 
@@ -406,17 +406,17 @@ concurrent stream limiting to the HTTP/2 transport layer:
   When the cumulative size exceeds the limit, the stream is terminated with
   `tonic.Status.resource_exhausted`. Defaults to `null` (unbounded).
 
-| Field                    | Type   | Default | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| ------------------------ | ------ | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `enabled`                | `bool` | `true`  | Enable gRPC support                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `maxMessageSize`         | `int`  | —       | Maximum message size in bytes (for both sending and receiving) This limit applies to individual messages in both unary and streaming RPCs. When a single message exceeds this size, the request is rejected with HTTP 413 (Payload Too Large). Default: 4MB (4194304 bytes) **Note:** This limit does NOT apply to the total response size in streaming RPCs. For multi-message streams, the total response can exceed this limit as long as each individual message stays within the limit.                                                                                                                                                                                                                                                               |
-| `enableCompression`      | `bool` | `true`  | Enable gzip compression for gRPC messages                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `requestTimeout`         | `int?` | `null`  | Timeout for gRPC requests in seconds (None = no timeout)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `maxConcurrentStreams`   | `int`  | —       | Maximum number of concurrent streams per connection (HTTP/2 advisory) This value is communicated to HTTP/2 clients as the server's flow control limit. The HTTP/2 transport layer enforces this limit automatically via SETTINGS frames and GOAWAY responses. Applications should NOT implement custom enforcement. Default: 100 streams per connection # Stream Limiting Strategy - **Per Connection**: This limit applies per HTTP/2 connection, not globally - **Transport Enforcement**: HTTP/2 handles all stream limiting; applications need not implement custom checks - **Streaming Requests**: In server streaming or bidi streaming, each logical RPC consumes one stream slot. Message ordering within a stream follows HTTP/2 frame ordering. |
-| `enableKeepalive`        | `bool` | `true`  | Enable HTTP/2 keepalive                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `keepaliveInterval`      | `int`  | —       | HTTP/2 keepalive interval in seconds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `keepaliveTimeout`       | `int`  | —       | HTTP/2 keepalive timeout in seconds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `maxStreamResponseBytes` | `int?` | `null`  | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `null` (unbounded total response size).                                                                                                                                                                                                                                                            |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | `bool` | `true` | Enable gRPC support |
+| `maxMessageSize` | `int` | — | Maximum message size in bytes (for both sending and receiving) This limit applies to individual messages in both unary and streaming RPCs. When a single message exceeds this size, the request is rejected with HTTP 413 (Payload Too Large). Default: 4MB (4194304 bytes) **Note:** This limit does NOT apply to the total response size in streaming RPCs. For multi-message streams, the total response can exceed this limit as long as each individual message stays within the limit. |
+| `enableCompression` | `bool` | `true` | Enable gzip compression for gRPC messages |
+| `requestTimeout` | `int?` | `null` | Timeout for gRPC requests in seconds (None = no timeout) |
+| `maxConcurrentStreams` | `int` | — | Maximum number of concurrent streams per connection (HTTP/2 advisory) This value is communicated to HTTP/2 clients as the server's flow control limit. The HTTP/2 transport layer enforces this limit automatically via SETTINGS frames and GOAWAY responses. Applications should NOT implement custom enforcement. Default: 100 streams per connection # Stream Limiting Strategy - **Per Connection**: This limit applies per HTTP/2 connection, not globally - **Transport Enforcement**: HTTP/2 handles all stream limiting; applications need not implement custom checks - **Streaming Requests**: In server streaming or bidi streaming, each logical RPC consumes one stream slot. Message ordering within a stream follows HTTP/2 frame ordering. |
+| `enableKeepalive` | `bool` | `true` | Enable HTTP/2 keepalive |
+| `keepaliveInterval` | `int` | — | HTTP/2 keepalive interval in seconds |
+| `keepaliveTimeout` | `int` | — | HTTP/2 keepalive timeout in seconds |
+| `maxStreamResponseBytes` | `int?` | `null` | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `null` (unbounded total response size). |
 
 ### Methods
 
@@ -434,12 +434,12 @@ static GrpcConfig default()
 
 JSON-RPC server configuration
 
-| Field          | Type     | Default | Description                                                |
-| -------------- | -------- | ------- | ---------------------------------------------------------- |
-| `enabled`      | `bool`   | `true`  | Enable JSON-RPC endpoint                                   |
-| `endpointPath` | `String` | —       | HTTP endpoint path for JSON-RPC requests (default: "/rpc") |
-| `enableBatch`  | `bool`   | —       | Enable batch request processing (default: true)            |
-| `maxBatchSize` | `int`    | —       | Maximum number of requests in a batch (default: 100)       |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | `bool` | `true` | Enable JSON-RPC endpoint |
+| `endpointPath` | `String` | — | HTTP endpoint path for JSON-RPC requests (default: "/rpc") |
+| `enableBatch` | `bool` | — | Enable batch request processing (default: true) |
+| `maxBatchSize` | `int` | — | Maximum number of requests in a batch (default: 100) |
 
 ### Methods
 
@@ -460,14 +460,14 @@ JSON-RPC method metadata for routes that support JSON-RPC
 This struct captures the metadata needed to expose HTTP routes as JSON-RPC methods,
 enabling discovery and documentation of RPC-compatible endpoints.
 
-| Field          | Type           | Default                | Description                                    |
-| -------------- | -------------- | ---------------------- | ---------------------------------------------- |
-| `methodName`   | `String`       | —                      | The JSON-RPC method name (e.g., "user.create") |
-| `description`  | `String?`      | `null`                 | Optional description of what the method does   |
-| `paramsSchema` | `String?`      | `null`                 | Optional JSON Schema for method parameters     |
-| `resultSchema` | `String?`      | `null`                 | Optional JSON Schema for the result            |
-| `deprecated`   | `bool`         | `/* serde(default) */` | Whether this method is deprecated              |
-| `tags`         | `List<String>` | `/* serde(default) */` | Tags for categorizing and grouping methods     |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `methodName` | `String` | — | The JSON-RPC method name (e.g., "user.create") |
+| `description` | `String?` | `null` | Optional description of what the method does |
+| `paramsSchema` | `String?` | `null` | Optional JSON Schema for method parameters |
+| `resultSchema` | `String?` | `null` | Optional JSON Schema for the result |
+| `deprecated` | `bool` | `/* serde(default) */` | Whether this method is deprecated |
+| `tags` | `List<String>` | `/* serde(default) */` | Tags for categorizing and grouping methods |
 
 ---
 
@@ -475,13 +475,13 @@ enabling discovery and documentation of RPC-compatible endpoints.
 
 JWT authentication configuration
 
-| Field       | Type            | Default                | Description                                           |
-| ----------- | --------------- | ---------------------- | ----------------------------------------------------- |
-| `secret`    | `String`        | —                      | Secret key for JWT verification                       |
-| `algorithm` | `String`        | `/* serde(default) */` | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
-| `audience`  | `List<String>?` | `null`                 | Required audience claim                               |
-| `issuer`    | `String?`       | `null`                 | Required issuer claim                                 |
-| `leeway`    | `int`           | `/* serde(default) */` | Leeway for expiration checks (seconds)                |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `secret` | `String` | — | Secret key for JWT verification |
+| `algorithm` | `String` | `/* serde(default) */` | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
+| `audience` | `List<String>?` | `null` | Required audience claim |
+| `issuer` | `String?` | `null` | Required issuer claim |
+| `leeway` | `int` | `/* serde(default) */` | Leeway for expiration checks (seconds) |
 
 ---
 
@@ -489,10 +489,10 @@ JWT authentication configuration
 
 License information
 
-| Field  | Type      | Default | Description                                             |
-| ------ | --------- | ------- | ------------------------------------------------------- |
-| `name` | `String`  | —       | SPDX license identifier or display name (e.g. `"MIT"`). |
-| `url`  | `String?` | `null`  | URL to the full license text.                           |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `String` | — | SPDX license identifier or display name (e.g. `"MIT"`). |
+| `url` | `String?` | `null` | URL to the full license text. |
 
 ---
 
@@ -500,19 +500,19 @@ License information
 
 OpenAPI configuration
 
-| Field             | Type                              | Default   | Description                                                      |
-| ----------------- | --------------------------------- | --------- | ---------------------------------------------------------------- |
-| `enabled`         | `bool`                            | `false`   | Enable OpenAPI generation (default: false for zero overhead)     |
-| `title`           | `String`                          | `"API"`   | API title                                                        |
-| `version`         | `String`                          | `"1.0.0"` | API version                                                      |
-| `description`     | `String?`                         | `null`    | API description (supports markdown)                              |
-| `swaggerUiPath`   | `String`                          | —         | Path to serve Swagger UI (default: "/docs")                      |
-| `redocPath`       | `String`                          | —         | Path to serve Redoc (default: "/redoc")                          |
-| `openapiJsonPath` | `String`                          | —         | Path to serve OpenAPI JSON spec (default: "/openapi.json")       |
-| `contact`         | `ContactInfo?`                    | `null`    | Contact information                                              |
-| `license`         | `LicenseInfo?`                    | `null`    | License information                                              |
-| `servers`         | `List<ServerInfo>`                | `[]`      | Server definitions                                               |
-| `securitySchemes` | `Map<String, SecuritySchemeInfo>` | `{}`      | Security schemes (auto-detected from middleware if not provided) |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | `bool` | `false` | Enable OpenAPI generation (default: false for zero overhead) |
+| `title` | `String` | `"API"` | API title |
+| `version` | `String` | `"1.0.0"` | API version |
+| `description` | `String?` | `null` | API description (supports markdown) |
+| `swaggerUiPath` | `String` | — | Path to serve Swagger UI (default: "/docs") |
+| `redocPath` | `String` | — | Path to serve Redoc (default: "/redoc") |
+| `openapiJsonPath` | `String` | — | Path to serve OpenAPI JSON spec (default: "/openapi.json") |
+| `contact` | `ContactInfo?` | `null` | Contact information |
+| `license` | `LicenseInfo?` | `null` | License information |
+| `servers` | `List<ServerInfo>` | `[]` | Server definitions |
+| `securitySchemes` | `Map<String, SecuritySchemeInfo>` | `{}` | Security schemes (auto-detected from middleware if not provided) |
 
 ### Methods
 
@@ -530,9 +530,9 @@ static OpenApiConfig default()
 
 Request body for `POST /asyncapi/parse`
 
-| Field  | Type     | Default | Description |
-| ------ | -------- | ------- | ----------- |
-| `spec` | `String` | —       | Spec        |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `spec` | `String` | — | Spec |
 
 ---
 
@@ -540,14 +540,14 @@ Request body for `POST /asyncapi/parse`
 
 Full parse result returned by `POST /asyncapi/parse`
 
-| Field         | Type                    | Default | Description  |
-| ------------- | ----------------------- | ------- | ------------ |
-| `specVersion` | `String`                | —       | Spec version |
-| `title`       | `String`                | —       | Title        |
-| `apiVersion`  | `String`                | —       | Api version  |
-| `channels`    | `List<ParsedChannel>`   | —       | Channels     |
-| `operations`  | `List<ParsedOperation>` | —       | Operations   |
-| `messages`    | `List<ParsedMessage>`   | —       | Messages     |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `specVersion` | `String` | — | Spec version |
+| `title` | `String` | — | Title |
+| `apiVersion` | `String` | — | Api version |
+| `channels` | `List<ParsedChannel>` | — | Channels |
+| `operations` | `List<ParsedOperation>` | — | Operations |
+| `messages` | `List<ParsedMessage>` | — | Messages |
 
 ---
 
@@ -555,12 +555,12 @@ Full parse result returned by `POST /asyncapi/parse`
 
 A single channel extracted from an AsyncAPI spec
 
-| Field      | Type           | Default | Description                                                           |
-| ---------- | -------------- | ------- | --------------------------------------------------------------------- |
-| `name`     | `String`       | —       | Channel key from the spec (e.g. "chat/messages")                      |
-| `address`  | `String`       | —       | Channel address / path                                                |
-| `messages` | `List<String>` | —       | Message names declared on this channel                                |
-| `bindings` | `String?`      | `null`  | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `String` | — | Channel key from the spec (e.g. "chat/messages") |
+| `address` | `String` | — | Channel address / path |
+| `messages` | `List<String>` | — | Message names declared on this channel |
+| `bindings` | `String?` | `null` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
 
@@ -568,10 +568,10 @@ A single channel extracted from an AsyncAPI spec
 
 A resolved message (name + JSON Schema)
 
-| Field    | Type      | Default | Description                                                |
-| -------- | --------- | ------- | ---------------------------------------------------------- |
-| `name`   | `String`  | —       | Message name                                               |
-| `schema` | `String?` | `null`  | Resolved JSON Schema for the message payload, if available |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `String` | — | Message name |
+| `schema` | `String?` | `null` | Resolved JSON Schema for the message payload, if available |
 
 ---
 
@@ -579,11 +579,11 @@ A resolved message (name + JSON Schema)
 
 A single operation extracted from an AsyncAPI spec
 
-| Field     | Type     | Default | Description                                      |
-| --------- | -------- | ------- | ------------------------------------------------ |
-| `name`    | `String` | —       | Operation name                                   |
-| `action`  | `String` | —       | Operation action: "send" or "receive"            |
-| `channel` | `String` | —       | Channel reference (resolved to the channel name) |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `name` | `String` | — | Operation name |
+| `action` | `String` | — | Operation action: "send" or "receive" |
+| `channel` | `String` | — | Channel reference (resolved to the channel name) |
 
 ---
 
@@ -596,9 +596,7 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ### Content-Type
-
 Responses using this struct should set:
-
 ```text
 Content-Type: application/problem+json
 ```
@@ -613,14 +611,14 @@ Content-Type: application/problem+json
 }
 ```
 
-| Field        | Type                  | Default | Description                                                                                                                                                  |
-| ------------ | --------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `typeUri`    | `String`              | —       | A URI reference that identifies the problem type. Defaults to "about:blank" when absent. Should be a stable, human-readable identifier for the problem type. |
-| `title`      | `String`              | —       | A short, human-readable summary of the problem type. Should not change from occurrence to occurrence of the problem.                                         |
-| `status`     | `int`                 | —       | The HTTP status code generated by the origin server. This is advisory; the actual HTTP status code takes precedence.                                         |
-| `detail`     | `String?`             | `null`  | A human-readable explanation specific to this occurrence of the problem.                                                                                     |
-| `instance`   | `String?`             | `null`  | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced.                         |
-| `extensions` | `Map<String, String>` | —       | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array.                                            |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `typeUri` | `String` | — | A URI reference that identifies the problem type. Defaults to "about:blank" when absent. Should be a stable, human-readable identifier for the problem type. |
+| `title` | `String` | — | A short, human-readable summary of the problem type. Should not change from occurrence to occurrence of the problem. |
+| `status` | `int` | — | The HTTP status code generated by the origin server. This is advisory; the actual HTTP status code takes precedence. |
+| `detail` | `String?` | `null` | A human-readable explanation specific to this occurrence of the problem. |
+| `instance` | `String?` | `null` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
+| `extensions` | `Map<String, String>` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
 
 ### Methods
 
@@ -716,11 +714,11 @@ String toJsonPretty()
 
 Configuration for schemas with Query and Mutation types
 
-| Field                  | Type   | Default | Description                                 |
-| ---------------------- | ------ | ------- | ------------------------------------------- |
-| `introspectionEnabled` | `bool` | `true`  | Enable introspection queries                |
-| `complexityLimit`      | `int?` | `null`  | Maximum query complexity (None = unlimited) |
-| `depthLimit`           | `int?` | `null`  | Maximum query depth (None = unlimited)      |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `introspectionEnabled` | `bool` | `true` | Enable introspection queries |
+| `complexityLimit` | `int?` | `null` | Maximum query complexity (None = unlimited) |
+| `depthLimit` | `int?` | `null` | Maximum query depth (None = unlimited) |
 
 ### Methods
 
@@ -738,11 +736,11 @@ static QueryMutationConfig default()
 
 Configuration for schemas with only Query type
 
-| Field                  | Type   | Default | Description                                 |
-| ---------------------- | ------ | ------- | ------------------------------------------- |
-| `introspectionEnabled` | `bool` | `true`  | Enable introspection queries                |
-| `complexityLimit`      | `int?` | `null`  | Maximum query complexity (None = unlimited) |
-| `depthLimit`           | `int?` | `null`  | Maximum query depth (None = unlimited)      |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `introspectionEnabled` | `bool` | `true` | Enable introspection queries |
+| `complexityLimit` | `int?` | `null` | Maximum query complexity (None = unlimited) |
+| `depthLimit` | `int?` | `null` | Maximum query depth (None = unlimited) |
 
 ### Methods
 
@@ -760,11 +758,11 @@ static QueryOnlyConfig default()
 
 Rate limiting configuration shared across runtimes
 
-| Field       | Type   | Default | Description                |
-| ----------- | ------ | ------- | -------------------------- |
-| `perSecond` | `int`  | `100`   | Requests per second        |
-| `burst`     | `int`  | `200`   | Burst allowance            |
-| `ipBased`   | `bool` | `true`  | Use IP-based rate limiting |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `perSecond` | `int` | `100` | Requests per second |
+| `burst` | `int` | `200` | Burst allowance |
+| `ipBased` | `bool` | `true` | Use IP-based rate limiting |
 
 ### Methods
 
@@ -782,11 +780,11 @@ static RateLimitConfig default()
 
 HTTP Response with custom status code, headers, and content
 
-| Field        | Type                  | Default | Description                        |
-| ------------ | --------------------- | ------- | ---------------------------------- |
-| `content`    | `String?`             | `null`  | Response body content              |
-| `statusCode` | `int`                 | —       | HTTP status code (defaults to 200) |
-| `headers`    | `Map<String, String>` | `{}`    | Response headers                   |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `content` | `String?` | `null` | Response body content |
+| `statusCode` | `int` | — | HTTP status code (defaults to 200) |
+| `headers` | `Map<String, String>` | `{}` | Response headers |
 
 ### Methods
 
@@ -824,11 +822,11 @@ static Response default()
 
 Snapshot of an Axum response used by higher-level language bindings.
 
-| Field     | Type                  | Default | Description                                                |
-| --------- | --------------------- | ------- | ---------------------------------------------------------- |
-| `status`  | `int`                 | —       | HTTP status code.                                          |
-| `headers` | `Map<String, String>` | —       | Response headers (lowercase keys for predictable lookups). |
-| `body`    | `Uint8List`           | —       | Response body bytes (decoded for supported encodings).     |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `status` | `int` | — | HTTP status code. |
+| `headers` | `Map<String, String>` | — | Response headers (lowercase keys for predictable lookups). |
+| `body` | `Uint8List` | — | Response body bytes (decoded for supported encodings). |
 
 ### Methods
 
@@ -861,11 +859,11 @@ Configuration for GraphQL schema building.
 Encapsulates all schema-level configuration options including
 introspection control, complexity limits, and depth limits.
 
-| Field                  | Type   | Default | Description                                 |
-| ---------------------- | ------ | ------- | ------------------------------------------- |
-| `introspectionEnabled` | `bool` | `true`  | Enable introspection queries                |
-| `complexityLimit`      | `int?` | `null`  | Maximum query complexity (None = unlimited) |
-| `depthLimit`           | `int?` | `null`  | Maximum query depth (None = unlimited)      |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `introspectionEnabled` | `bool` | `true` | Enable introspection queries |
+| `complexityLimit` | `int?` | `null` | Maximum query complexity (None = unlimited) |
+| `depthLimit` | `int?` | `null` | Maximum query depth (None = unlimited) |
 
 ### Methods
 
@@ -883,29 +881,29 @@ static SchemaConfig default()
 
 Server configuration
 
-| Field              | Type                      | Default       | Description                                                                    |
-| ------------------ | ------------------------- | ------------- | ------------------------------------------------------------------------------ |
-| `host`             | `String`                  | `"127.0.0.1"` | Host to bind to                                                                |
-| `port`             | `int`                     | `8000`        | Port to bind to                                                                |
-| `workers`          | `int`                     | `1`           | Number of Tokio runtime worker threads used by binding-managed server runtimes |
-| `enableRequestId`  | `bool`                    | `false`       | Enable request ID generation and propagation                                   |
-| `maxBodySize`      | `int?`                    | `null`        | Maximum request body size in bytes (None = unlimited, not recommended)         |
-| `requestTimeout`   | `int?`                    | `null`        | Request timeout in seconds (None = no timeout)                                 |
-| `compression`      | `CompressionConfig?`      | `null`        | Enable compression middleware                                                  |
-| `rateLimit`        | `RateLimitConfig?`        | `null`        | Enable rate limiting                                                           |
-| `jwtAuth`          | `JwtConfig?`              | `null`        | JWT authentication configuration                                               |
-| `apiKeyAuth`       | `ApiKeyConfig?`           | `null`        | API Key authentication configuration                                           |
-| `staticFiles`      | `List<StaticFilesConfig>` | `[]`          | Static file serving configuration                                              |
-| `gracefulShutdown` | `bool`                    | `true`        | Enable graceful shutdown on SIGTERM/SIGINT                                     |
-| `shutdownTimeout`  | `int`                     | `30`          | Graceful shutdown timeout (seconds)                                            |
-| `asyncapi`         | `AsyncApiConfig?`         | `null`        | AsyncAPI HTTP endpoint configuration                                           |
-| `openapi`          | `OpenApiConfig?`          | `null`        | OpenAPI documentation configuration                                            |
-| `jsonrpc`          | `JsonRpcConfig?`          | `null`        | JSON-RPC configuration                                                         |
-| `grpc`             | `GrpcConfig?`             | `null`        | gRPC configuration                                                             |
-| `lifecycleHooks`   | `String?`                 | `null`        | Lifecycle hooks for request/response processing                                |
-| `backgroundTasks`  | `BackgroundTaskConfig`    | —             | Background task executor configuration                                         |
-| `enableHttpTrace`  | `bool`                    | `false`       | Enable per-request HTTP tracing (tower-http `TraceLayer`)                      |
-| `diContainer`      | `String?`                 | `null`        | Dependency injection container (requires 'di' feature)                         |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `host` | `String` | `"127.0.0.1"` | Host to bind to |
+| `port` | `int` | `8000` | Port to bind to |
+| `workers` | `int` | `1` | Number of Tokio runtime worker threads used by binding-managed server runtimes |
+| `enableRequestId` | `bool` | `false` | Enable request ID generation and propagation |
+| `maxBodySize` | `int?` | `null` | Maximum request body size in bytes (None = unlimited, not recommended) |
+| `requestTimeout` | `int?` | `null` | Request timeout in seconds (None = no timeout) |
+| `compression` | `CompressionConfig?` | `null` | Enable compression middleware |
+| `rateLimit` | `RateLimitConfig?` | `null` | Enable rate limiting |
+| `jwtAuth` | `JwtConfig?` | `null` | JWT authentication configuration |
+| `apiKeyAuth` | `ApiKeyConfig?` | `null` | API Key authentication configuration |
+| `staticFiles` | `List<StaticFilesConfig>` | `[]` | Static file serving configuration |
+| `gracefulShutdown` | `bool` | `true` | Enable graceful shutdown on SIGTERM/SIGINT |
+| `shutdownTimeout` | `int` | `30` | Graceful shutdown timeout (seconds) |
+| `asyncapi` | `AsyncApiConfig?` | `null` | AsyncAPI HTTP endpoint configuration |
+| `openapi` | `OpenApiConfig?` | `null` | OpenAPI documentation configuration |
+| `jsonrpc` | `JsonRpcConfig?` | `null` | JSON-RPC configuration |
+| `grpc` | `GrpcConfig?` | `null` | gRPC configuration |
+| `lifecycleHooks` | `String?` | `null` | Lifecycle hooks for request/response processing |
+| `backgroundTasks` | `BackgroundTaskConfig` | — | Background task executor configuration |
+| `enableHttpTrace` | `bool` | `false` | Enable per-request HTTP tracing (tower-http `TraceLayer`) |
+| `diContainer` | `String?` | `null` | Dependency injection container (requires 'di' feature) |
 
 ### Methods
 
@@ -923,10 +921,10 @@ static ServerConfig default()
 
 Server information
 
-| Field         | Type      | Default | Description                                                     |
-| ------------- | --------- | ------- | --------------------------------------------------------------- |
-| `url`         | `String`  | —       | Base URL of the server (e.g. `"<https://api.example.com/v1"`>). |
-| `description` | `String?` | `null`  | Optional human-readable description of the server environment.  |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `url` | `String` | — | Base URL of the server (e.g. `"<https://api.example.com/v1"`>). |
+| `description` | `String?` | `null` | Optional human-readable description of the server environment. |
 
 ---
 
@@ -940,7 +938,6 @@ Events can have an optional type, ID, and retry timeout for advanced scenarios.
 ### SSE Format
 
 Events are serialized to the following text format:
-
 ```text
 event: event_type
 data: {"json":"value"}
@@ -948,12 +945,12 @@ id: event-123
 retry: 3000
 ```
 
-| Field       | Type      | Default | Description                                       |
-| ----------- | --------- | ------- | ------------------------------------------------- |
-| `eventType` | `String?` | `null`  | Event type (optional)                             |
-| `data`      | `String`  | —       | Event data (JSON value)                           |
-| `id`        | `String?` | `null`  | Event ID (optional, for client-side reconnection) |
-| `retry`     | `int?`    | `null`  | Retry timeout in milliseconds (optional)          |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `eventType` | `String?` | `null` | Event type (optional) |
+| `data` | `String` | — | Event data (JSON value) |
+| `id` | `String?` | `null` | Event ID (optional, for client-side reconnection) |
+| `retry` | `int?` | `null` | Retry timeout in milliseconds (optional) |
 
 ### Methods
 
@@ -989,12 +986,12 @@ SseEvent withRetry(int retryMs)
 
 Static file serving configuration
 
-| Field          | Type      | Default                | Description                            |
-| -------------- | --------- | ---------------------- | -------------------------------------- |
-| `directory`    | `String`  | —                      | Directory path to serve                |
-| `routePrefix`  | `String`  | —                      | URL path prefix (e.g., "/static")      |
-| `indexFile`    | `bool`    | `/* serde(default) */` | Fallback to index.html for directories |
-| `cacheControl` | `String?` | `null`                 | Cache-Control header value             |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `directory` | `String` | — | Directory path to serve |
+| `routePrefix` | `String` | — | URL path prefix (e.g., "/static") |
+| `indexFile` | `bool` | `/* serde(default) */` | Fallback to index.html for directories |
+| `cacheControl` | `String?` | `null` | Cache-Control header value |
 
 ---
 
@@ -1165,9 +1162,9 @@ GraphQlSubscriptionSnapshot graphqlSubscription(String query, [String? variables
 
 A single Server-Sent Event.
 
-| Field  | Type     | Default | Description                  |
-| ------ | -------- | ------- | ---------------------------- |
-| `data` | `String` | —       | The data field of the event. |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `data` | `String` | — | The data field of the event. |
 
 ---
 
@@ -1178,14 +1175,14 @@ Represents an uploaded file from multipart/form-data requests.
 This struct provides efficient access to file content with automatic
 base64 decoding and implements standard I/O traits for compatibility.
 
-| Field             | Type        | Default | Description                              |
-| ----------------- | ----------- | ------- | ---------------------------------------- |
-| `filename`        | `String`    | —       | Original filename from the client        |
-| `contentType`     | `String?`   | `null`  | MIME type of the uploaded file           |
-| `size`            | `int?`      | `null`  | Size of the file in bytes                |
-| `content`         | `Uint8List` | —       | File content (may be base64 encoded)     |
-| `contentEncoding` | `String?`   | `null`  | Content encoding type                    |
-| `cursor`          | `String`    | —       | Internal cursor for Read/Seek operations |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `filename` | `String` | — | Original filename from the client |
+| `contentType` | `String?` | `null` | MIME type of the uploaded file |
+| `size` | `int?` | `null` | Size of the file in bytes |
+| `content` | `Uint8List` | — | File content (may be base64 encoded) |
+| `contentEncoding` | `String?` | `null` | Content encoding type |
+| `cursor` | `String` | — | Internal cursor for Read/Seek operations |
 
 ### Methods
 
@@ -1231,12 +1228,12 @@ String contentTypeOrDefault()
 
 Request body for `POST /asyncapi/validate`
 
-| Field     | Type     | Default | Description |
-| --------- | -------- | ------- | ----------- |
-| `spec`    | `String` | —       | Spec        |
-| `channel` | `String` | —       | Channel     |
-| `message` | `String` | —       | Message     |
-| `payload` | `String` | —       | Payload     |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `spec` | `String` | — | Spec |
+| `channel` | `String` | — | Channel |
+| `message` | `String` | — | Message |
+| `payload` | `String` | — | Payload |
 
 ---
 
@@ -1244,10 +1241,10 @@ Request body for `POST /asyncapi/validate`
 
 Response body for `POST /asyncapi/validate`
 
-| Field    | Type           | Default | Description |
-| -------- | -------------- | ------- | ----------- |
-| `valid`  | `bool`         | —       | Valid       |
-| `errors` | `List<String>` | —       | Errors      |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `valid` | `bool` | — | Valid |
+| `errors` | `List<String>` | — | Errors |
 
 ---
 
@@ -1257,10 +1254,10 @@ Response body for `POST /asyncapi/validate`
 
 Possible errors while converting an Axum response into a snapshot.
 
-| Value           | Description                                                            |
-| --------------- | ---------------------------------------------------------------------- |
+| Value | Description |
+|-------|-------------|
 | `InvalidHeader` | Response header could not be decoded to UTF-8. — Fields: `0`: `String` |
-| `Decompression` | Body decompression failed. — Fields: `0`: `String`                     |
+| `Decompression` | Body decompression failed. — Fields: `0`: `String` |
 
 ---
 
@@ -1268,13 +1265,13 @@ Possible errors while converting an Axum response into a snapshot.
 
 A WebSocket message that can be text or binary.
 
-| Value    | Description                                                                                                                                                                                                                    |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Text`   | A text message. — Fields: `0`: `String`                                                                                                                                                                                        |
-| `Binary` | A binary message. — Fields: `0`: `Uint8List`                                                                                                                                                                                   |
-| `Close`  | A close message with a numeric close code (RFC 6455) and optional reason text. Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received, 1006 Abnormal Closure. — Fields: `code`: `int`, `reason`: `String` |
-| `Ping`   | A ping message. — Fields: `0`: `Uint8List`                                                                                                                                                                                     |
-| `Pong`   | A pong message. — Fields: `0`: `Uint8List`                                                                                                                                                                                     |
+| Value | Description |
+|-------|-------------|
+| `Text` | A text message. — Fields: `0`: `String` |
+| `Binary` | A binary message. — Fields: `0`: `Uint8List` |
+| `Close` | A close message with a numeric close code (RFC 6455) and optional reason text. Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received, 1006 Abnormal Closure. — Fields: `code`: `int`, `reason`: `String` |
+| `Ping` | A ping message. — Fields: `0`: `Uint8List` |
+| `Pong` | A pong message. — Fields: `0`: `Uint8List` |
 
 ---
 
@@ -1282,16 +1279,16 @@ A WebSocket message that can be text or binary.
 
 HTTP method
 
-| Value     | Description |
-| --------- | ----------- |
-| `Get`     | Get         |
-| `Post`    | Post        |
-| `Put`     | Put         |
-| `Patch`   | Patch       |
-| `Delete`  | Delete      |
-| `Head`    | Head        |
-| `Options` | Options     |
-| `Trace`   | Trace       |
+| Value | Description |
+|-------|-------------|
+| `Get` | Get |
+| `Post` | Post |
+| `Put` | Put |
+| `Patch` | Patch |
+| `Delete` | Delete |
+| `Head` | Head |
+| `Options` | Options |
+| `Trace` | Trace |
 
 ---
 
@@ -1299,10 +1296,10 @@ HTTP method
 
 Security scheme types
 
-| Value    | Description                                                 |
-| -------- | ----------------------------------------------------------- |
-| `Http`   | Http — Fields: `scheme`: `String`, `bearerFormat`: `String` |
-| `ApiKey` | Api key — Fields: `location`: `String`, `name`: `String`    |
+| Value | Description |
+|-------|-------------|
+| `Http` | Http — Fields: `scheme`: `String`, `bearerFormat`: `String` |
+| `ApiKey` | Api key — Fields: `location`: `String`, `name`: `String` |
 
 ---
 
@@ -1315,23 +1312,23 @@ Errors that can occur during GraphQL operations
 These errors are compatible with async-graphql error handling and can be
 converted to structured HTTP responses matching the project's error fixtures.
 
-| Variant                   | Description                                                                                                       |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `ExecutionError`          | Error during schema execution Occurs when the GraphQL executor encounters a runtime error during query execution. |
-| `SchemaBuildError`        | Error during schema building Occurs when schema construction fails due to invalid definitions or conflicts.       |
-| `RequestHandlingError`    | Error during request handling Occurs when the HTTP request cannot be properly handled or parsed.                  |
-| `SerializationError`      | Serialization error Occurs during JSON serialization/deserialization of GraphQL values.                           |
-| `JsonError`               | JSON parsing error Occurs when JSON input cannot be parsed.                                                       |
-| `ValidationError`         | GraphQL validation error Occurs when a GraphQL query fails schema validation.                                     |
-| `ParseError`              | GraphQL parse error Occurs when the GraphQL query string cannot be parsed.                                        |
-| `AuthenticationError`     | Authentication error Occurs when request authentication fails.                                                    |
-| `AuthorizationError`      | Authorization error Occurs when user lacks required permissions.                                                  |
-| `NotFound`                | Not found error Occurs when a requested resource is not found.                                                    |
-| `RateLimitExceeded`       | Rate limit error Occurs when rate limit is exceeded.                                                              |
-| `InvalidInput`            | Invalid input error with validation details Occurs during input validation with detailed error information.       |
-| `ComplexityLimitExceeded` | Query complexity limit exceeded Occurs when a GraphQL query exceeds the configured complexity limit.              |
-| `DepthLimitExceeded`      | Query depth limit exceeded Occurs when a GraphQL query exceeds the configured depth limit.                        |
-| `InternalError`           | Internal server error Occurs when an unexpected internal error happens.                                           |
+| Variant | Description |
+|---------|-------------|
+| `ExecutionError` | Error during schema execution Occurs when the GraphQL executor encounters a runtime error during query execution. |
+| `SchemaBuildError` | Error during schema building Occurs when schema construction fails due to invalid definitions or conflicts. |
+| `RequestHandlingError` | Error during request handling Occurs when the HTTP request cannot be properly handled or parsed. |
+| `SerializationError` | Serialization error Occurs during JSON serialization/deserialization of GraphQL values. |
+| `JsonError` | JSON parsing error Occurs when JSON input cannot be parsed. |
+| `ValidationError` | GraphQL validation error Occurs when a GraphQL query fails schema validation. |
+| `ParseError` | GraphQL parse error Occurs when the GraphQL query string cannot be parsed. |
+| `AuthenticationError` | Authentication error Occurs when request authentication fails. |
+| `AuthorizationError` | Authorization error Occurs when user lacks required permissions. |
+| `NotFound` | Not found error Occurs when a requested resource is not found. |
+| `RateLimitExceeded` | Rate limit error Occurs when rate limit is exceeded. |
+| `InvalidInput` | Invalid input error with validation details Occurs during input validation with detailed error information. |
+| `ComplexityLimitExceeded` | Query complexity limit exceeded Occurs when a GraphQL query exceeds the configured complexity limit. |
+| `DepthLimitExceeded` | Query depth limit exceeded Occurs when a GraphQL query exceeds the configured depth limit. |
+| `InternalError` | Internal server error Occurs when an unexpected internal error happens. |
 
 ---
 
@@ -1339,11 +1336,11 @@ converted to structured HTTP responses matching the project's error fixtures.
 
 Error type for schema building operations
 
-| Variant                   | Description                    |
-| ------------------------- | ------------------------------ |
-| `BuildingFailed`          | Generic schema building error  |
-| `ValidationError`         | Configuration validation error |
-| `ComplexityLimitExceeded` | Complexity limit exceeded      |
-| `DepthLimitExceeded`      | Depth limit exceeded           |
+| Variant | Description |
+|---------|-------------|
+| `BuildingFailed` | Generic schema building error |
+| `ValidationError` | Configuration validation error |
+| `ComplexityLimitExceeded` | Complexity limit exceeded |
+| `DepthLimitExceeded` | Depth limit exceeded |
 
 ---

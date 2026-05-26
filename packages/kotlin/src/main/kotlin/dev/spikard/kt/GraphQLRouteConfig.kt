@@ -5,50 +5,62 @@ package dev.spikard.kt
 import dev.spikard.GraphQLRouteConfig
 
 /** Coroutine-friendly wrapper around the Java `dev.spikard.GraphQLRouteConfig` facade. */
-class GraphQLRouteConfig internal constructor(
-    internal val inner: dev.spikard.GraphQLRouteConfig,
-) : AutoCloseable {
+class GraphQLRouteConfig internal constructor(internal val inner: dev.spikard.GraphQLRouteConfig) : AutoCloseable {
     // Set the HTTP path for the GraphQL endpoint
     //
     // # Arguments
     //
     // * `path` - The URL path (e.g., "/graphql", "/api/graphql")
-    fun path(path: String): GraphQLRouteConfig = inner.path(path)
+    fun path(path: String): GraphQLRouteConfig {
+        return inner.path(path)
+    }
 
     // Set the HTTP method for the GraphQL endpoint
     //
     // # Arguments
     //
     // * `method` - The HTTP method (typically "POST")
-    fun method(method: String): GraphQLRouteConfig = inner.method(method)
+    fun method(method: String): GraphQLRouteConfig {
+        return inner.method(method)
+    }
 
     // Enable or disable the GraphQL Playground UI
     //
     // # Arguments
     //
     // * `enable` - Whether to enable playground
-    fun enablePlayground(enable: Boolean): GraphQLRouteConfig = inner.enablePlayground(enable)
+    fun enablePlayground(enable: Boolean): GraphQLRouteConfig {
+        return inner.enablePlayground(enable)
+    }
 
     // Set a custom description for documentation
     //
     // # Arguments
     //
     // * `description` - Documentation string
-    fun description(description: String): GraphQLRouteConfig = inner.description(description)
+    fun description(description: String): GraphQLRouteConfig {
+        return inner.description(description)
+    }
 
     // Get the configured path
-    fun getPath(): String = inner.getPath()
+    fun getPath(): String {
+        return inner.getPath()
+    }
 
     // Get the configured method
-    fun getMethod(): String = inner.getMethod()
+    fun getMethod(): String {
+        return inner.getMethod()
+    }
 
     // Check if playground is enabled
-    fun isPlaygroundEnabled(): Boolean = inner.isPlaygroundEnabled()
+    fun isPlaygroundEnabled(): Boolean {
+        return inner.isPlaygroundEnabled()
+    }
 
     // Get the description if set
-    fun getDescription(): String? = inner.getDescription().orElse(null)
-
-    override fun close() {
-        inner.close()
+    fun getDescription(): String? {
+        return inner.getDescription().orElse(null)
     }
+
+    override fun close() { inner.close() }
 }
