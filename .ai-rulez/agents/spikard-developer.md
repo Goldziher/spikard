@@ -39,5 +39,5 @@ Tools: `tools/benchmark-harness`, `tools/snippet-runner`, `tools/test-generator`
 
 - `task build` / `task test` / `task lint` / `task format` for standard operations
 - `task test:rust`, `task test:python`, `task test:node`, `task test:ruby`, `task test:php` for per-language tests
-- `task generate:e2e` for fixture-driven test generation
+- `task e2e:generate` for fixture-driven test generation
 - Pre-commit hooks enforce formatting, linting, and version sync

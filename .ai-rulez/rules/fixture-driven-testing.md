@@ -12,7 +12,7 @@ All features must be tested against JSON fixtures in `testing_data/`. The same f
 2. Extend parametrized test suites (e.g., `packages/python/tests/test_all_fixtures.py`)
 3. Run `task test` to verify Rust, Python, and JS checks pass
 4. Run per-language tests: `task test:rust`, `task test:python`, `task test:node`, `task test:ruby`, `task test:php`
-5. Run `task generate:e2e` for cross-language test generation from fixtures
+5. Run `task e2e:generate` for cross-language test generation from fixtures
 
 ## Fixture Directories
 
