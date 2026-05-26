@@ -3,17 +3,20 @@
 // The generated e2e/kotlin/build.gradle.kts is not hand-edited (alef output),
 // so test-worker JVM settings are injected here via --init-script instead.
 //
-// On memory-limited CI runners Gradle's MemoryRequestingWorkerProcess fails to
-// fork the test worker ("Cannot abort process 'Gradle Test Executor N' because
-// it is not in started or detached state"). Capping the worker heap and forcing
-// a single fork keeps the per-worker memory request within what the runner can
-// satisfy. --enable-native-access silences the restricted-FFM warning the
-// spikard java/kotlin bindings would otherwise emit on JDK 22+.
+// The spikard java binding (loaded transitively by the kotlin e2e) is compiled
+// with `--enable-preview` against the java.lang.foreign FFM API on JDK 25, so
+// its classes are version-locked: the test-worker JVM must run on JDK 25 with
+// `--enable-preview` AND `--enable-native-access=ALL-UNNAMED`, or it aborts at
+// class-load before JUnit starts — surfacing as Gradle's misleading "Cannot
+// abort process 'Gradle Test Executor N' because it is not in started or
+// detached state". The Maven java e2e already passes these via its test argLine;
+// this injects the same contract for the Gradle worker. heap/fork caps are
+// belt-and-suspenders for memory-limited runners.
 allprojects {
     tasks.withType(Test).configureEach {
         maxParallelForks = 1
         forkEvery = 0
         maxHeapSize = "1g"
-        jvmArgs += ["-XX:MaxMetaspaceSize=512m", "--enable-native-access=ALL-UNNAMED"]
+        jvmArgs += ["-XX:MaxMetaspaceSize=512m", "--enable-native-access=ALL-UNNAMED", "--enable-preview"]
     }
 }
