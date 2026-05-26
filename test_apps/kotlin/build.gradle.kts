@@ -24,7 +24,7 @@ repositories {
 }
 
 dependencies {
-    testImplementation("dev.spikard:spikard-kotlin:0.15.6-rc.4")
+    testImplementation("dev.spikard:spikard-kotlin:0.15.6-rc.5")
     testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.0")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:6.1.0")
     testImplementation("org.junit.platform:junit-platform-launcher:6.1.0")
