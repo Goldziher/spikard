@@ -32,6 +32,9 @@ dart = "class"
 swift = "struct"
 zig = "struct"
 
+[workspace.format]
+enabled = false
+
 [workspace.sync]
 extra_paths = []
 
@@ -738,7 +741,7 @@ e2e = "dotnet test e2e/csharp -p:NuGetAudit=false"
 precondition = "command -v gradle >/dev/null 2>&1"
 before = "cargo build --release -p spikard-ffi && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
 command = "cd packages/kotlin && gradle test --no-daemon"
-e2e = "cd e2e/kotlin && gradle test --no-daemon --max-workers=1 --init-script ../../scripts/ci-gradle-init.gradle --stacktrace --info"
+e2e = "cd e2e/kotlin && gradle test --no-daemon --max-workers=1 --init-script ../../scripts/ci-gradle-init.gradle"
 
 [crates.test.dart]
 precondition = "command -v dart >/dev/null 2>&1"

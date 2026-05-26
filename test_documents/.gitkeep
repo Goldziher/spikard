@@ -1,0 +1,3 @@
+# Keeps test_documents/ present in fresh checkouts: the generated e2e
+# build.gradle.kts / pom.xml set the test workingDir here, and Gradle test
+# workers fail to fork if the directory is absent.
