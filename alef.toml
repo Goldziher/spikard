@@ -698,13 +698,13 @@ e2e = "uv run pytest e2e/python/"
 
 [crates.test.node]
 precondition = "command -v pnpm >/dev/null 2>&1"
-before = "cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
+before = "cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release && pnpm install && pnpm --filter @spikard/node exec napi build --platform --release"
 command = ":"
-e2e = "cd e2e/node && pnpm vitest run --config vitest.config.ts --reporter dot"
+e2e = "pnpm --filter @spikard/node-e2e-typescript exec vitest run --config vitest.config.ts --reporter dot"
 
 [crates.test.ruby]
 precondition = "command -v bundle >/dev/null 2>&1"
-before = "cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
+before = "cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release && cd packages/ruby && bundle install --quiet && bundle exec rake compile"
 e2e = "cd e2e/ruby && bundle install --quiet && bundle exec rspec"
 
 [crates.test.php]
@@ -714,16 +714,17 @@ e2e = "cd e2e/php && composer install --no-interaction --quiet && php run_tests.
 
 [crates.test.elixir]
 precondition = "command -v mix >/dev/null 2>&1"
+before = "cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
 e2e = "cd e2e/elixir && mix deps.get && RUSTLER_PRECOMPILED_FORCE_BUILD_ALL=1 mix test"
 
 [crates.test.go]
 precondition = "command -v go >/dev/null 2>&1"
-before = "cargo build --release -p spikard-ffi"
+before = "cargo build --release -p spikard-ffi && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
 e2e = "cd e2e/go && go test ./... -count=1"
 
 [crates.test.java]
 precondition = "command -v mvn >/dev/null 2>&1"
-before = "cargo build --release -p spikard-ffi && mvn -f packages/java/pom.xml package -DskipTests -q"
+before = "cargo build --release -p spikard-ffi && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release && mvn -f packages/java/pom.xml package -DskipTests -q"
 command = ":"
 e2e = "cd e2e/java && mvn test -q"
 
@@ -743,7 +744,7 @@ e2e = "cd e2e/kotlin && gradle test --no-daemon"
 precondition = "command -v dart >/dev/null 2>&1"
 before = "cargo build --release --manifest-path packages/dart/rust/Cargo.toml && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
 command = ":"
-e2e = "cd e2e/dart && mkdir -p rust/target/release && cp ../../packages/dart/rust/target/release/libspikard_dart.dylib rust/target/release/ && dart pub get && rm -f /tmp/alef_dart_ms.log; (tail -f /dev/null | ../rust/target/release/mock-server ../../fixtures > /tmp/alef_dart_ms.log 2>&1) & MS=$!; for i in $(seq 1 100); do U=$(sed -n 's/^MOCK_SERVER_URL=//p' /tmp/alef_dart_ms.log | head -1); [ -n \"$U\" ] && break; sleep 0.1; done; MOCK_SERVER_URL=\"$U\" dart test; RC=$?; kill $MS 2>/dev/null; pkill -f 'mock-server ../../fixtures' 2>/dev/null; exit $RC"
+e2e = "cd e2e/dart && mkdir -p rust/target/release && DART_LIB_EXT=so; case \"$(uname)\" in Darwin) DART_LIB_EXT=dylib;; MINGW*|MSYS*|CYGWIN*) DART_LIB_EXT=dll;; esac; cp \"../../packages/dart/rust/target/release/libspikard_dart.$DART_LIB_EXT\" rust/target/release/ && dart pub get && rm -f /tmp/alef_dart_ms.log; (tail -f /dev/null | ../rust/target/release/mock-server ../../fixtures > /tmp/alef_dart_ms.log 2>&1) & MS=$!; for i in $(seq 1 100); do U=$(sed -n 's/^MOCK_SERVER_URL=//p' /tmp/alef_dart_ms.log | head -1); [ -n \"$U\" ] && break; sleep 0.1; done; MOCK_SERVER_URL=\"$U\" dart test; RC=$?; kill $MS 2>/dev/null; pkill -f 'mock-server ../../fixtures' 2>/dev/null; exit $RC"
 
 [crates.test.swift]
 precondition = "command -v swift >/dev/null 2>&1"
@@ -759,7 +760,7 @@ e2e = "cd e2e/zig && rm -f /tmp/alef_zig_ms.log; (tail -f /dev/null | ../rust/ta
 
 [crates.test.wasm]
 precondition = "command -v wasm-pack >/dev/null 2>&1"
-before = "wasm-pack build crates/spikard-wasm --release --target bundler && cd e2e/wasm && pnpm install"
+before = "cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release && wasm-pack build crates/spikard-wasm --release --target bundler && cd e2e/wasm && pnpm install"
 e2e = "cd e2e/wasm && pnpm vitest run"
 
 [crates.publish]
