@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name = "spikard"
-  spec.version = "0.15.6.pre.rc.4"
+  spec.version = "0.15.6.pre.rc.5"
   spec.authors       = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
   spec.summary       = "Rust-centric multi-language HTTP framework with polyglot bindings"
   spec.description   = "Rust-centric multi-language HTTP framework with polyglot bindings"
@@ -12,7 +12,9 @@ Gem::Specification.new do |spec|
   spec.metadata["keywords"] = %w[http web framework polyglot rust].join(",")
   spec.metadata["rubygems_mfa_required"] = "true"
 
-  spec.files         = Dir.glob(%w[lib/**/* ext/**/* sig/**/* Steepfile]).reject { |f| f.include?("/native/target/") || f.include?("/native/tmp/") }
+  spec.files = Dir.glob(%w[lib/**/* ext/**/* sig/**/* Steepfile]).reject do |f|
+    f.include?("/native/target/") || f.include?("/native/tmp/")
+  end
   spec.require_paths = ["lib"]
   spec.extensions    = ["ext/spikard_rb/extconf.rb"]
 
