@@ -9,10 +9,10 @@ Gem::Specification.new do |spec|
   spec.homepage      = "https://github.com/Goldziher/spikard"
   spec.license       = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
-  spec.metadata["keywords"] = %w[http web framework polyglot rust].join(",")
+  spec.metadata["keywords"] = %w[framework http polyglot rust web].join(",")
   spec.metadata["rubygems_mfa_required"] = "true"
 
-  spec.files = Dir.glob(%w[lib/**/* ext/**/* sig/**/* Steepfile]).reject do |f|
+  spec.files = Dir.glob(%w[README* LICENSE* lib/**/* ext/**/* sig/**/* Steepfile]).reject do |f|
     f.include?("/native/target/") || f.include?("/native/tmp/")
   end
   spec.require_paths = ["lib"]

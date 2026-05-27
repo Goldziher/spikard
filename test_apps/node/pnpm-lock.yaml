@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@spikard/node':
-        specifier: 0.15.6-rc.4
-        version: 0.15.6-rc.4
+        specifier: 0.15.6-rc.7
+        version: 0.15.6-rc.7
       vitest:
         specifier: ^4.1.5
         version: 4.1.7(vite@8.0.14)
@@ -136,8 +136,8 @@ packages:
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
 
-  '@spikard/node@0.15.6-rc.4':
-    resolution: {integrity: sha512-dhZeBJXycF8GoS8j2ceLiI80EH24onDg2nRRXvtE+lV5Tq0rjSJb9vfgXkDrves6nQg4LBIN4o4KvhyiKnczEw==}
+  '@spikard/node@0.15.6-rc.7':
+    resolution: {integrity: sha512-YKSuozAusfwc9b2dGjiXDk/lw2oJJ82eL/0mCpg2DTDomNF1NgH/+2PnaVEP7Nz/gA0KIRYDBNs8hBFcRZ3W5w==}
     engines: {node: '>= 18'}
 
   '@standard-schema/spec@1.1.0':
@@ -527,7 +527,7 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.1': {}
 
-  '@spikard/node@0.15.6-rc.4': {}
+  '@spikard/node@0.15.6-rc.7': {}
 
   '@standard-schema/spec@1.1.0': {}
 
