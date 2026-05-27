@@ -16,10 +16,9 @@ description: "Common Task Commands"
 
 **Build Commands**:
 
-- `task build`: Build all (respects BUILD_PROFILE)
-- `task build:all`: Build all languages
-- `task build:all:dev`: Build all in debug mode
-- `task build:all:release`: Build all in release mode
+- `task build`: Build core only (respects BUILD_PROFILE)
+- `task build:bindings`: Build language bindings explicitly
+- `task build:all`: Build core plus bindings explicitly
 - `task rust:build`: Build Rust core (respects BUILD_PROFILE)
 - `task rust:build:dev`: Build Rust in debug mode
 - `task rust:build:release`: Build Rust in release mode
@@ -33,16 +32,16 @@ description: "Common Task Commands"
 
 **Test Commands**:
 
-- `task test`: Run tests (respects BUILD_PROFILE)
-- `task test:all`: Run all tests across all languages
-- `task test:all:fast`: Run fast tests (skip slow integration tests)
+- `task test`: Run core tests (respects BUILD_PROFILE)
 - `task rust:test`: Run Rust tests
 - `task python:test`: Run Python tests (pytest)
 - `task node:test`: Run TypeScript tests (vitest)
 - `task go:test`: Run Go tests
 - `task java:test`: Run Java tests (Maven)
 - `task ruby:test`: Run Ruby tests (RSpec)
-- `task e2e`: Run E2E tests
+- `task e2e:generate`: Generate E2E tests from fixtures
+- `task e2e:build`: Build bindings and generated E2E support binaries
+- `task e2e:test`: Run E2E tests
 - `task e2e:all`: Run all E2E tests across all languages
 
 **Linting & Formatting**:
@@ -50,8 +49,9 @@ description: "Common Task Commands"
 - `task lint`: Lint current project
 - `task lint:all`: Lint all languages
 - `task lint:check`: CI linting (for GitHub Actions, fails on issues)
-- `task format`: Format code (auto-fixes)
+- `task format`: Format repo code (auto-fixes); excludes Alef formatting
 - `task format:check`: Check formatting (fails if needs formatting)
+- `task alef:format`: Format Alef-generated output explicitly
 - `task rust:fmt`: Format Rust (cargo fmt)
 - `task rust:clippy`: Lint Rust (cargo clippy)
 - `task python:lint`: Lint Python (ruff, mypy)
@@ -66,3 +66,8 @@ description: "Common Task Commands"
 - `task pre-commit`: Run pre-commit hooks manually
 - `task pdfium:install`: Download and install PDFium library
 - `task smoke`: Run smoke tests (quick validation)
+
+**Alef Generation**:
+
+- `task alef:generate`: Run `alef all --clean --format=false`; does not build bindings or format generated output
+- Do not add legacy aliases for build, Alef, or e2e workflows

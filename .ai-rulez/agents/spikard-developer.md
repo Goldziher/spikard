@@ -37,7 +37,9 @@ Tools: `tools/benchmark-harness`, `tools/snippet-runner`, `tools/test-generator`
 
 ## Development Workflow
 
-- `task build` / `task test` / `task lint` / `task format` for standard operations
+- `task build` is core-only; use `task build:bindings` or `task build:all` explicitly when bindings are needed
+- `task test` / `task lint` / `task format` for standard operations; `task format` excludes Alef formatting
 - `task test:rust`, `task test:python`, `task test:node`, `task test:ruby`, `task test:php` for per-language tests
-- `task e2e:generate` for fixture-driven test generation
+- `task alef:generate` runs `alef all --clean --format=false`; use `task alef:format` explicitly when needed
+- `task e2e:generate`, `task e2e:build`, `task e2e:test`, and `task e2e:all` for generated e2e suites
 - Pre-commit hooks enforce formatting, linting, and version sync
