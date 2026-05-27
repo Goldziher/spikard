@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	moduleVersion = "0.15.6-rc.8"
+	moduleVersion = "0.15.6-rc.9"
 	repoURL       = "https://github.com/Goldziher/spikard"
 	assetPrefix   = "spikard"
 )

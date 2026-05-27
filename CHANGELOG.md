@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.6-rc.9] - 2026-05-27
+
+### Fixed
+
+- Resolved a `tungstenite` version skew that broke every FFI and wheel build (CI Bindings, CI E2E, Deploy Documentation, and all Publish Release build jobs). `spikard-http` pinned `tungstenite = "=0.28.0"` directly while `axum`/`axum-test` pull `tungstenite 0.29` transitively, so `testing.rs` mixed two incompatible `CloseFrame` types (`error[E0308]: expected CloseFrame, found tungstenite::protocol::CloseFrame`). The direct dependency is now `tungstenite = "0.29"`, collapsing the graph to a single version. The break surfaced only in CI because the root `Cargo.lock` is not committed, so CI re-resolves to the newest compatible transitive releases.
+- `task version:set` now runs `alef scaffold` as part of the sync step, so a version bump re-emits the napi platform `optionalDependencies` in `crates/spikard-node/package.json` at the new version. Previously they lagged the prior release, which (combined with the lockfile) failed CI's pnpm install.
+
+### Changed
+
+- CI Node installs now honor `frozen-lockfile: false` via [kreuzberg-dev/actions v1.8.5](https://github.com/kreuzberg-dev/actions/releases/tag/v1.8.5): the napi platform `optionalDependencies` pin the under-release version, which is not yet published and therefore cannot be recorded in the lockfile.
+
 ## [0.15.6-rc.8] - 2026-05-27
 
 ### Fixed
