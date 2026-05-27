@@ -48,7 +48,7 @@ tonic = { version = "0.14", features = ["transport", "codegen", "gzip"] }
 tower-http = { workspace = true }
 tower_governor = { workspace = true }
 tracing-subscriber.workspace = true
-tungstenite = "=0.28.0"
+tungstenite = "0.29"
 
 # wasm: narrow axum (no `tokio` feature → no tokio/net → no mio)
 # Explicitly list every axum feature we need on wasm; skip `tokio` which enables tokio/net.

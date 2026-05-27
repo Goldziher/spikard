@@ -15,6 +15,10 @@ tasks:
       - "{{.ALEF}} readme"
       - "{{.ALEF}} docs"
       - "{{.ALEF}} generate --clean"
+      # scaffold re-emits package manifests (e.g. the napi platform
+      # optionalDependencies) at the new version; without it a version bump
+      # leaves crates/spikard-node/package.json pinned to the prior version.
+      - "{{.ALEF}} scaffold"
       - "{{.ALEF}} stubs"
       - "{{.ALEF}} e2e generate"
 
