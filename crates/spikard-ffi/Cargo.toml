@@ -1,6 +1,6 @@
 [package]
 name = "spikard-ffi"
-version = "0.15.6-rc.7"
+version = "0.15.6-rc.8"
 edition = "2021"
 license = "MIT"
 description = "Rust-centric multi-language HTTP framework with polyglot bindings"
@@ -13,13 +13,13 @@ repository = "https://github.com/Goldziher/spikard"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-spikard = { path = "../spikard", version = "0.15.6-rc.7", features = ["di"] }
+spikard = { path = "../spikard", version = "0.15.6-rc.8", features = ["di"] }
 ahash = "0.8"
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }
-spikard-core = { path = "../spikard-core", version = "0.15.6-rc.7" }
-spikard-graphql = { path = "../spikard-graphql", version = "0.15.6-rc.7" }
-spikard-http = { path = "../spikard-http", version = "0.15.6-rc.7" }
+spikard-core = { path = "../spikard-core", version = "0.15.6-rc.8" }
+spikard-graphql = { path = "../spikard-graphql", version = "0.15.6-rc.8" }
+spikard-http = { path = "../spikard-http", version = "0.15.6-rc.8" }
 
 # `serde_json`, `ahash`, and `tokio` are emitted unconditionally above so the
 # manifest is stable across regens (and so the C FFI codegen can pull them in

@@ -1,6 +1,6 @@
 [package]
 name = "spikard-dart"
-version = "0.15.6-rc.7"
+version = "0.15.6-rc.8"
 edition = "2024"
 license = "MIT"
 

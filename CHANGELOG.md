@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.6-rc.8] - 2026-05-27
+
+### Fixed
+
+- The generated Go `packages/go/embed_ffi.go` now declares `package spikard` (matching `binding.go`) instead of an erroneous hardcoded `package tspack`, fixed upstream in [alef v0.19.23](https://github.com/kreuzberg-dev/alef/releases/tag/v0.19.23). The file is `//go:build ignore` so `go build` was unaffected, but the foreign package name was incorrect for vendoring tooling.
+
+### Changed
+
+- Regenerated all bindings, e2e, scaffolding, and docs against [alef v0.19.23](https://github.com/kreuzberg-dev/alef/releases/tag/v0.19.23) (from 0.19.21), bumping the `alef.toml` pin and the alef pre-commit hook. Generation now runs with alef's own post-generation formatters so committed output matches `alef verify` hashes.
+
 ## [0.15.6-rc.7] - 2026-05-26
 
 ### Fixed

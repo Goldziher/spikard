@@ -38,4 +38,5 @@ class SpikardBridge {
   static Future<FullSchemaConfig> schemaFull() async {
     return await rust_bridge.schemaFull();
   }
+
 }
