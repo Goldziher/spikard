@@ -4,12 +4,6 @@ default_install_hook_types:
 exclude: ^docs/snippets/|vendor/|node_modules/|target/|invalid*|dist/|artifacts/|test_documents/|test_apps/|scripts/ci/|^e2e/|\.cache/|\.venv/
 
 repos:
-  # AI-Rulez: auto-generate AI assistant configuration files
-  - repo: https://github.com/Goldziher/ai-rulez
-    rev: v4.2.1
-    hooks:
-      - id: ai-rulez-generate
-
   # Commit message linting
   - repo: https://github.com/Goldziher/gitfluff
     rev: v0.8.0
@@ -18,10 +12,11 @@ repos:
         args: ["--write"]
         stages: [commit-msg]
 
-  # General file checks
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0
+  # Shared kreuzberg-dev polyglot hooks
+  - repo: https://github.com/kreuzberg-dev/pre-commit-hooks
+    rev: v1.2.3
     hooks:
+      - id: ai-rulez-generate
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-merge-conflict
@@ -33,25 +28,9 @@ repos:
         args: ["--allow-multiple-documents", "--unsafe"]
       - id: check-toml
       - id: check-case-conflict
-
-  # TOML formatting
-  - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: "v2.21.2"
-    hooks:
       - id: pyproject-fmt
-
-  # Python
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.14
-    hooks:
       - id: ruff
-        args: [--fix]
       - id: ruff-format
-
-  # Shared kreuzberg-dev polyglot hooks
-  - repo: https://github.com/kreuzberg-dev/pre-commit-hooks
-    rev: v1.1.19
-    hooks:
       - id: cargo-sort
         exclude: ^(crates/spikard-(wasm|node|py|php|ffi)|packages/(dart|swift)/rust|packages/ruby/ext/spikard_rb/native)/Cargo\.toml$
       - id: cargo-fmt
@@ -212,29 +191,9 @@ repos:
       - id: cpd
         args: ["--minimum-tokens=120"]
         exclude: ^packages/java/src/main/java/dev/spikard/
-
-  # Alef: verify generated bindings are up to date and sync package versions
-  - repo: https://github.com/kreuzberg-dev/alef
-    rev: v0.19.21
-    hooks:
       - id: alef-verify
       - id: alef-sync-versions
-
-  # GitHub Actions: linting
-  - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.12
-    hooks:
       - id: actionlint
-
-  # GitHub Actions: check refs are up to date
-  - repo: https://github.com/Goldziher/gh-actions-updater
-    rev: v0.1.5
-    hooks:
       - id: gh-actions-updater
-
-  # Spelling: fast Rust-based spell checker (last — runs after all formatters)
-  - repo: https://github.com/crate-ci/typos
-    rev: v1.46.3
-    hooks:
       - id: typos
         args: [--force-exclude]

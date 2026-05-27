@@ -169,10 +169,10 @@ tasks:
       - alef update --latest
       - prek autoupdate
       - cmd: |
-          if command -v gh-actions-updater >/dev/null 2>&1; then
-            gh-actions-updater --update .
+          if command -v gau >/dev/null 2>&1; then
+            gau --update .
           else
-            echo "gh-actions-updater not installed; skipping (optional)"
+            echo "gau not installed; skipping (optional)"
           fi
         ignore_error: true
 
