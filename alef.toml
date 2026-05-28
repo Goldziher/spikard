@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.19.24"
+alef_version = "0.20.5"
 languages = [
   "python",
   "node",
@@ -54,7 +54,7 @@ auto_path_mappings = false
 
 [[crates.source_crates]]
 name = "spikard"
-sources = ["crates/spikard/src/upload.rs", "crates/spikard/src/testing.rs"]
+sources = ["crates/spikard/src/lib.rs", "crates/spikard/src/upload.rs", "crates/spikard/src/testing.rs"]
 
 [[crates.source_crates]]
 name = "spikard-core"
@@ -108,6 +108,10 @@ output = "packages/python/spikard/"
 
 [crates.python.extra_dependencies]
 tokio = { version = "1", features = ["full"] }
+# Required by the generated service.rs handler bridge: the Handler::call trait
+# signature uses axum::http::Request<axum::body::Body> (the bridge ignores the raw
+# request and operates on the RequestData wire type, but must match the trait).
+axum = { version = "0.8", default-features = false }
 
 [crates.build_commands.python]
 precondition = "command -v maturin >/dev/null 2>&1"
@@ -299,6 +303,49 @@ build_release = "cd packages/zig && zig build -Doptimize=ReleaseSafe -Dffi_path=
 [crates.zig]
 module_name = "spikard"
 
+# ---------------------------------------------------------------------------
+# Service API — App builder + handler contracts
+# ---------------------------------------------------------------------------
+
+[[crates.services]]
+owner_type = "App"
+constructor = "new"
+configurators = ["config"]
+skip_languages = ["wasm"]
+
+# NOTE: websocket/sse registrations are temporarily omitted. Their contracts
+# (WebSocketHandler/SseEventProducer) use `-> impl Future` (RPITIT) return types and
+# are NOT dyn-compatible, so the current `Arc<dyn Contract>` handler-bridge codegen
+# cannot wrap them. Re-add once the service-API codegen supports non-object-safe
+# contracts via a concrete wrapper struct instead of a trait object.
+[[crates.services.registrations]]
+method = "route"
+callback_param = "handler"
+callback_bound = "IntoHandler"
+callback_contract = "Handler"
+
+[[crates.services.entrypoints]]
+method = "run"
+kind = "run"
+
+[[crates.services.entrypoints]]
+method = "into_router"
+kind = "finalize"
+
+[[crates.handler_contracts]]
+trait_name = "Handler"
+dispatch_method = "call"
+is_async = true
+wire_request_type = "RequestData"
+wire_response_type = "Response"
+# The dispatch method `call(&self, request: Request<Body>, request_data: RequestData)` receives a
+# foreign framework type the wire bridge ignores; supply it verbatim. The bridge produces the
+# library's real dispatch return type via the response adapter.
+dispatch_extra_params = ["_request: axum::http::Request<axum::body::Body>"]
+wire_param_name = "request_data"
+dispatch_return_type = "spikard::HandlerResult"
+response_adapter = "spikard::handler_result_from_response"
+
 [crates.output]
 python = "crates/spikard-py/src/"
 node = "crates/spikard-node/src/"
@@ -397,10 +444,8 @@ types = [
   "FactoryFn",
   "FastRouter",
   "GenericGrpcService",
-  "Handler",
   "HandlerResponse",
   "HandlerResult",
-  "IntoHandler",
   "LifecycleHooks",
   "LifecycleHooksBuilder",
   "MessageStream",
@@ -409,6 +454,14 @@ types = [
   "PreParsedJson",
   "PreReadBody",
   "RegistryError",
+  # RequestContext is the Rust-side handler ergonomic wrapper (holds Request<Body>,
+  # returns borrows); it does not cross FFI — handlers receive the RequestData wire
+  # type. Pulled into the surface only because App lives in crates/spikard/src/lib.rs.
+  "RequestContext",
+  # RequestData is the Handler wire-request type, used by-NAME in the service config
+  # (wire_request_type) and serialized as the *core* spikard::RequestData in the handler
+  # bridge — it is NOT needed as a generated pyclass (and has no Default, which broke codegen).
+  "RequestData",
   "ResolvedDependencies",
   "RouteInfo",
   "RpcMode",
@@ -450,14 +503,9 @@ types = [
   "ParameterValidator",
   "ValidationError",
   "ValidationErrorDetail",
-  # Traits (can't be instantiated in bindings)
-  "SseEventProducer",
-  "WebSocketHandler",
   # Internal enums with wrong module paths
   "ParameterSource",
   "BackgroundSpawnError",
-  # Types causing residual errors
-  "RequestData",
   # TestServer is the internal axum-test-based server (uses TestWebSocket etc.);
   # bindings use TestClient + test_client_from_app instead.
   "TestServer",
