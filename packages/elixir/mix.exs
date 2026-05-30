@@ -7,7 +7,12 @@ defmodule Spikard.MixProject do
       version: "0.15.6-rc.9",
       elixir: "~> 1.14",
       elixirc_paths: ["lib", Path.expand("../../crates/spikard-elixir/src", __DIR__)],
-      rustler_crates: [spikard_nif: [mode: :release, targets: ~w(aarch64-apple-darwin aarch64-unknown-linux-gnu x86_64-unknown-linux-gnu x86_64-pc-windows-gnu)]],
+      rustler_crates: [
+        spikard_nif: [
+          mode: :release,
+          targets: ~w(aarch64-apple-darwin aarch64-unknown-linux-gnu x86_64-unknown-linux-gnu x86_64-pc-windows-gnu)
+        ]
+      ],
       description: "Rust-centric multi-language HTTP framework with polyglot bindings",
       package: package(),
       deps: deps()

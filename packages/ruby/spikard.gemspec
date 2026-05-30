@@ -12,11 +12,9 @@ Gem::Specification.new do |spec|
   spec.metadata["keywords"] = %w[framework http polyglot rust web].join(",")
   spec.metadata["rubygems_mfa_required"] = "true"
 
-  spec.files = Dir.glob(%w[README* LICENSE* lib/**/* ext/**/* sig/**/* Steepfile]).reject do |f|
-    f.include?("/native/target/") || f.include?("/native/tmp/")
-  end
+  spec.files         = Dir.glob(%w[README* LICENSE* lib/**/* ext/**/* sig/**/* Steepfile]).select { |f| File.file?(f) }.reject { |f| f.include?("/native/target/") || f.include?("/native/tmp/") }
   spec.require_paths = ["lib"]
-  spec.extensions    = ["ext/spikard_rb/extconf.rb"]
+  spec.extensions    = ["ext/spikard_rb/native/extconf.rb"]
 
   spec.add_dependency "rb_sys", "~> 0.9"
   spec.add_dependency "sorbet-runtime", "~> 0.5"

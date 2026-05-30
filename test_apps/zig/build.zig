@@ -1,10 +1,12 @@
 const std = @import("std");
+const builtin = @import("builtin");
 
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
     const test_step = b.step("test", "Run tests");
 
+    // Fetch the published Zig package from the registry.
     const spikard_module = b.dependency("spikard", .{
         .target = target,
         .optimize = optimize,

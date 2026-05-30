@@ -8,22 +8,22 @@ readme = false
 keywords = ["framework", "http", "polyglot", "rust", "web"]
 categories = ["text-processing"]
 
-[lib]
-crate-type = ["cdylib"]
-
-[dependencies]
-spikard = { version = "0.15.6-rc.9", path = "../spikard", features = ["di"] }
-ext-php-rs = "0.15"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-tokio = { version = "1", features = ["full"] }
-spikard-core = { path = "../spikard-core", version = "0.15.6-rc.9" }
-spikard-graphql = { path = "../spikard-graphql", version = "0.15.6-rc.9" }
-spikard-http = { path = "../spikard-http", version = "0.15.6-rc.9" }
-
 # `ahash` and `futures-util` are conditionally included but not directly used in PHP code.
 [package.metadata.cargo-machete]
 ignored = ["tokio", "ahash"]
 
+[lib]
+crate-type = ["cdylib"]
+
 [features]
 extension-module = []
+
+[dependencies]
+ext-php-rs = "0.15"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+spikard = { version = "0.15.6-rc.9", path = "../spikard", features = ["di"] }
+spikard-core = { path = "../spikard-core", version = "0.15.6-rc.9" }
+spikard-graphql = { path = "../spikard-graphql", version = "0.15.6-rc.9" }
+spikard-http = { path = "../spikard-http", version = "0.15.6-rc.9" }
+tokio = { version = "1", features = ["full"] }

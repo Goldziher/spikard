@@ -45,77 +45,6 @@ mod ffi {
     }
 
     extern "Rust" {
-        type CorsConfig;
-        #[swift_bridge(init)]
-        fn new(
-            allowed_origins: Vec<String>,
-            allowed_methods: Vec<String>,
-            allowed_headers: Vec<String>,
-            expose_headers: Option<Vec<String>>,
-            max_age: Option<u32>,
-            allow_credentials: Option<bool>,
-        ) -> CorsConfig;
-        #[swift_bridge(swift_name = "allowedOrigins")]
-        fn allowed_origins(&self) -> Vec<String>;
-        #[swift_bridge(swift_name = "allowedMethods")]
-        fn allowed_methods(&self) -> Vec<String>;
-        #[swift_bridge(swift_name = "allowedHeaders")]
-        fn allowed_headers(&self) -> Vec<String>;
-        #[swift_bridge(swift_name = "exposeHeaders")]
-        fn expose_headers(&self) -> Option<Vec<String>>;
-        #[swift_bridge(swift_name = "maxAge")]
-        fn max_age(&self) -> Option<u32>;
-        #[swift_bridge(swift_name = "allowCredentials")]
-        fn allow_credentials(&self) -> Option<bool>;
-    }
-
-    extern "Rust" {
-        type CompressionConfig;
-        #[swift_bridge(init)]
-        fn new(gzip: bool, brotli: bool, min_size: usize, quality: u32) -> CompressionConfig;
-        fn gzip(&self) -> bool;
-        fn brotli(&self) -> bool;
-        #[swift_bridge(swift_name = "minSize")]
-        fn min_size(&self) -> usize;
-        fn quality(&self) -> u32;
-    }
-
-    extern "Rust" {
-        type RateLimitConfig;
-        #[swift_bridge(init)]
-        fn new(per_second: u64, burst: u32, ip_based: bool) -> RateLimitConfig;
-        #[swift_bridge(swift_name = "perSecond")]
-        fn per_second(&self) -> u64;
-        fn burst(&self) -> u32;
-        #[swift_bridge(swift_name = "ipBased")]
-        fn ip_based(&self) -> bool;
-    }
-
-    extern "Rust" {
-        type JsonRpcMethodInfo;
-        #[swift_bridge(swift_name = "methodName")]
-        fn method_name(&self) -> String;
-        fn description(&self) -> Option<String>;
-        #[swift_bridge(swift_name = "paramsSchema")]
-        fn params_schema(&self) -> Option<String>;
-        #[swift_bridge(swift_name = "resultSchema")]
-        fn result_schema(&self) -> Option<String>;
-        fn deprecated(&self) -> bool;
-        fn tags(&self) -> Vec<String>;
-    }
-
-    extern "Rust" {
-        type ProblemDetails;
-        #[swift_bridge(swift_name = "typeUri")]
-        fn type_uri(&self) -> String;
-        fn title(&self) -> String;
-        fn status(&self) -> u16;
-        fn detail(&self) -> Option<String>;
-        fn instance(&self) -> Option<String>;
-        fn extensions(&self) -> String;
-    }
-
-    extern "Rust" {
         type GraphQLRouteConfig;
     }
 
@@ -203,65 +132,6 @@ mod ffi {
     }
 
     extern "Rust" {
-        type AsyncApiConfig;
-        #[swift_bridge(init)]
-        fn new(enabled: bool, spec: Option<String>) -> AsyncApiConfig;
-        fn enabled(&self) -> bool;
-        fn spec(&self) -> Option<String>;
-    }
-
-    extern "Rust" {
-        type ParsedChannel;
-        fn name(&self) -> String;
-        fn address(&self) -> String;
-        fn messages(&self) -> Vec<String>;
-        fn bindings(&self) -> Option<String>;
-    }
-
-    extern "Rust" {
-        type ParsedOperation;
-        fn name(&self) -> String;
-        fn action(&self) -> String;
-        fn channel(&self) -> String;
-    }
-
-    extern "Rust" {
-        type ParsedMessage;
-        fn name(&self) -> String;
-        fn schema(&self) -> Option<String>;
-    }
-
-    extern "Rust" {
-        type ParseResult;
-        #[swift_bridge(swift_name = "specVersion")]
-        fn spec_version(&self) -> String;
-        fn title(&self) -> String;
-        #[swift_bridge(swift_name = "apiVersion")]
-        fn api_version(&self) -> String;
-        fn channels(&self) -> Vec<ParsedChannel>;
-        fn operations(&self) -> Vec<ParsedOperation>;
-        fn messages(&self) -> Vec<ParsedMessage>;
-    }
-
-    extern "Rust" {
-        type ParseRequest;
-        fn spec(&self) -> String;
-    }
-
-    extern "Rust" {
-        type ValidationResponse;
-        fn valid(&self) -> bool;
-    }
-
-    extern "Rust" {
-        type ValidateRequest;
-        fn spec(&self) -> String;
-        fn channel(&self) -> String;
-        fn message(&self) -> String;
-        fn payload(&self) -> String;
-    }
-
-    extern "Rust" {
         type BackgroundTaskConfig;
         #[swift_bridge(init)]
         fn new(max_queue_size: usize, max_concurrent_tasks: usize, drain_timeout_secs: u64) -> BackgroundTaskConfig;
@@ -280,6 +150,53 @@ mod ffi {
         fn name(&self) -> String;
         #[swift_bridge(swift_name = "requestId")]
         fn request_id(&self) -> Option<String>;
+    }
+
+    extern "Rust" {
+        type CorsConfig;
+        #[swift_bridge(init)]
+        fn new(
+            allowed_origins: Vec<String>,
+            allowed_methods: Vec<String>,
+            allowed_headers: Vec<String>,
+            expose_headers: Option<Vec<String>>,
+            max_age: Option<u32>,
+            allow_credentials: Option<bool>,
+        ) -> CorsConfig;
+        #[swift_bridge(swift_name = "allowedOrigins")]
+        fn allowed_origins(&self) -> Vec<String>;
+        #[swift_bridge(swift_name = "allowedMethods")]
+        fn allowed_methods(&self) -> Vec<String>;
+        #[swift_bridge(swift_name = "allowedHeaders")]
+        fn allowed_headers(&self) -> Vec<String>;
+        #[swift_bridge(swift_name = "exposeHeaders")]
+        fn expose_headers(&self) -> Option<Vec<String>>;
+        #[swift_bridge(swift_name = "maxAge")]
+        fn max_age(&self) -> Option<u32>;
+        #[swift_bridge(swift_name = "allowCredentials")]
+        fn allow_credentials(&self) -> Option<bool>;
+    }
+
+    extern "Rust" {
+        type CompressionConfig;
+        #[swift_bridge(init)]
+        fn new(gzip: bool, brotli: bool, min_size: usize, quality: u32) -> CompressionConfig;
+        fn gzip(&self) -> bool;
+        fn brotli(&self) -> bool;
+        #[swift_bridge(swift_name = "minSize")]
+        fn min_size(&self) -> usize;
+        fn quality(&self) -> u32;
+    }
+
+    extern "Rust" {
+        type RateLimitConfig;
+        #[swift_bridge(init)]
+        fn new(per_second: u64, burst: u32, ip_based: bool) -> RateLimitConfig;
+        #[swift_bridge(swift_name = "perSecond")]
+        fn per_second(&self) -> u64;
+        fn burst(&self) -> u32;
+        #[swift_bridge(swift_name = "ipBased")]
+        fn ip_based(&self) -> bool;
     }
 
     extern "Rust" {
@@ -362,25 +279,6 @@ mod ffi {
     }
 
     extern "Rust" {
-        type ContactInfo;
-        fn name(&self) -> Option<String>;
-        fn email(&self) -> Option<String>;
-        fn url(&self) -> Option<String>;
-    }
-
-    extern "Rust" {
-        type LicenseInfo;
-        fn name(&self) -> String;
-        fn url(&self) -> Option<String>;
-    }
-
-    extern "Rust" {
-        type ServerInfo;
-        fn url(&self) -> String;
-        fn description(&self) -> Option<String>;
-    }
-
-    extern "Rust" {
         type Response;
         #[swift_bridge(init)]
         fn new(content: Option<String>, status_code: u16, headers: String) -> Response;
@@ -397,11 +295,6 @@ mod ffi {
         fn data(&self) -> String;
         fn id(&self) -> Option<String>;
         fn retry(&self) -> Option<u64>;
-    }
-
-    extern "Rust" {
-        type TestingSseEvent;
-        fn data(&self) -> String;
     }
 
     extern "Rust" {
@@ -488,6 +381,136 @@ mod ffi {
     }
 
     extern "Rust" {
+        type RouteBuilder;
+    }
+
+    extern "Rust" {
+        #[swift_bridge(swift_name = "routeBuilderHandlerName")]
+        fn route_builder_handler_name(client: &RouteBuilder, name: String) -> RouteBuilder;
+        #[swift_bridge(swift_name = "routeBuilderRequestSchemaJson")]
+        fn route_builder_request_schema_json(client: &RouteBuilder, schema: String) -> RouteBuilder;
+        #[swift_bridge(swift_name = "routeBuilderResponseSchemaJson")]
+        fn route_builder_response_schema_json(client: &RouteBuilder, schema: String) -> RouteBuilder;
+        #[swift_bridge(swift_name = "routeBuilderParamsSchemaJson")]
+        fn route_builder_params_schema_json(client: &RouteBuilder, schema: String) -> RouteBuilder;
+        #[swift_bridge(swift_name = "routeBuilderFileParamsJson")]
+        fn route_builder_file_params_json(client: &RouteBuilder, schema: String) -> RouteBuilder;
+        #[swift_bridge(swift_name = "routeBuilderCors")]
+        fn route_builder_cors(client: &RouteBuilder, cors: CorsConfig) -> RouteBuilder;
+        #[swift_bridge(swift_name = "routeBuilderSync")]
+        fn route_builder_sync(client: &RouteBuilder) -> RouteBuilder;
+        #[swift_bridge(swift_name = "routeBuilderHandlerDependencies")]
+        fn route_builder_handler_dependencies(client: &RouteBuilder, dependencies: Vec<String>) -> RouteBuilder;
+    }
+
+    extern "Rust" {
+        type JsonRpcMethodInfo;
+        #[swift_bridge(swift_name = "methodName")]
+        fn method_name(&self) -> String;
+        fn description(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "paramsSchema")]
+        fn params_schema(&self) -> Option<String>;
+        #[swift_bridge(swift_name = "resultSchema")]
+        fn result_schema(&self) -> Option<String>;
+        fn deprecated(&self) -> bool;
+        fn tags(&self) -> Vec<String>;
+    }
+
+    extern "Rust" {
+        type ProblemDetails;
+        #[swift_bridge(swift_name = "typeUri")]
+        fn type_uri(&self) -> String;
+        fn title(&self) -> String;
+        fn status(&self) -> u16;
+        fn detail(&self) -> Option<String>;
+        fn instance(&self) -> Option<String>;
+        fn extensions(&self) -> String;
+    }
+
+    extern "Rust" {
+        type AsyncApiConfig;
+        #[swift_bridge(init)]
+        fn new(enabled: bool, spec: Option<String>) -> AsyncApiConfig;
+        fn enabled(&self) -> bool;
+        fn spec(&self) -> Option<String>;
+    }
+
+    extern "Rust" {
+        type ParsedChannel;
+        fn name(&self) -> String;
+        fn address(&self) -> String;
+        fn messages(&self) -> Vec<String>;
+        fn bindings(&self) -> Option<String>;
+    }
+
+    extern "Rust" {
+        type ParsedOperation;
+        fn name(&self) -> String;
+        fn action(&self) -> String;
+        fn channel(&self) -> String;
+    }
+
+    extern "Rust" {
+        type ParsedMessage;
+        fn name(&self) -> String;
+        fn schema(&self) -> Option<String>;
+    }
+
+    extern "Rust" {
+        type ParseResult;
+        #[swift_bridge(swift_name = "specVersion")]
+        fn spec_version(&self) -> String;
+        fn title(&self) -> String;
+        #[swift_bridge(swift_name = "apiVersion")]
+        fn api_version(&self) -> String;
+        fn channels(&self) -> Vec<ParsedChannel>;
+        fn operations(&self) -> Vec<ParsedOperation>;
+        fn messages(&self) -> Vec<ParsedMessage>;
+    }
+
+    extern "Rust" {
+        type ParseRequest;
+        fn spec(&self) -> String;
+    }
+
+    extern "Rust" {
+        type ValidationResponse;
+        fn valid(&self) -> bool;
+    }
+
+    extern "Rust" {
+        type ValidateRequest;
+        fn spec(&self) -> String;
+        fn channel(&self) -> String;
+        fn message(&self) -> String;
+        fn payload(&self) -> String;
+    }
+
+    extern "Rust" {
+        type ContactInfo;
+        fn name(&self) -> Option<String>;
+        fn email(&self) -> Option<String>;
+        fn url(&self) -> Option<String>;
+    }
+
+    extern "Rust" {
+        type LicenseInfo;
+        fn name(&self) -> String;
+        fn url(&self) -> Option<String>;
+    }
+
+    extern "Rust" {
+        type ServerInfo;
+        fn url(&self) -> String;
+        fn description(&self) -> Option<String>;
+    }
+
+    extern "Rust" {
+        type TestingSseEvent;
+        fn data(&self) -> String;
+    }
+
+    extern "Rust" {
         type Method;
         fn to_string(&self) -> String;
     }
@@ -507,19 +530,31 @@ mod ffi {
     }
 
     extern "Rust" {
-
-        #[swift_bridge(swift_name = "uploadFileFromJson")]
-        fn upload_file_from_json(json: String) -> Result<UploadFile, String>;
+        type App;
+        #[swift_bridge(init)]
+        fn new() -> App;
+    }
+    extern "Rust" {
+        // Expose the opaque pointer as a `usize` so the Swift wrapper can hand it
+        // through the @_silgen_name'd extern "C" callback-registration shim. The
+        // swift-bridge generated class stores its raw pointer as an `internal`
+        // field, so the consumer module cannot reach it directly.
+        #[swift_bridge(swift_name = "appRawPtr")]
+        fn app_raw_ptr(client: &mut App) -> usize;
+        #[swift_bridge(swift_name = "config")]
+        fn config(client: &mut App);
+        #[swift_bridge(swift_name = "run")]
+        fn run(client: &mut App) -> String;
+    }
+    extern "Rust" {
         #[swift_bridge(swift_name = "corsConfigFromJson")]
         fn cors_config_from_json(json: String) -> Result<CorsConfig, String>;
-        #[swift_bridge(swift_name = "compressionConfigFromJson")]
-        fn compression_config_from_json(json: String) -> Result<CompressionConfig, String>;
-        #[swift_bridge(swift_name = "rateLimitConfigFromJson")]
-        fn rate_limit_config_from_json(json: String) -> Result<RateLimitConfig, String>;
-        #[swift_bridge(swift_name = "jsonRpcMethodInfoFromJson")]
-        fn json_rpc_method_info_from_json(json: String) -> Result<JsonRpcMethodInfo, String>;
-        #[swift_bridge(swift_name = "problemDetailsFromJson")]
-        fn problem_details_from_json(json: String) -> Result<ProblemDetails, String>;
+        #[swift_bridge(swift_name = "serverConfigFromJson")]
+        fn server_config_from_json(json: String) -> Result<ServerConfig, String>;
+    }
+    extern "Rust" {
+        #[swift_bridge(swift_name = "uploadFileFromJson")]
+        fn upload_file_from_json(json: String) -> Result<UploadFile, String>;
         #[swift_bridge(swift_name = "schemaConfigFromJson")]
         fn schema_config_from_json(json: String) -> Result<SchemaConfig, String>;
         #[swift_bridge(swift_name = "queryOnlyConfigFromJson")]
@@ -528,32 +563,20 @@ mod ffi {
         fn query_mutation_config_from_json(json: String) -> Result<QueryMutationConfig, String>;
         #[swift_bridge(swift_name = "fullSchemaConfigFromJson")]
         fn full_schema_config_from_json(json: String) -> Result<FullSchemaConfig, String>;
-        #[swift_bridge(swift_name = "asyncApiConfigFromJson")]
-        fn async_api_config_from_json(json: String) -> Result<AsyncApiConfig, String>;
-        #[swift_bridge(swift_name = "parsedChannelFromJson")]
-        fn parsed_channel_from_json(json: String) -> Result<ParsedChannel, String>;
-        #[swift_bridge(swift_name = "parsedOperationFromJson")]
-        fn parsed_operation_from_json(json: String) -> Result<ParsedOperation, String>;
-        #[swift_bridge(swift_name = "parsedMessageFromJson")]
-        fn parsed_message_from_json(json: String) -> Result<ParsedMessage, String>;
-        #[swift_bridge(swift_name = "parseResultFromJson")]
-        fn parse_result_from_json(json: String) -> Result<ParseResult, String>;
         #[swift_bridge(swift_name = "backgroundTaskConfigFromJson")]
         fn background_task_config_from_json(json: String) -> Result<BackgroundTaskConfig, String>;
         #[swift_bridge(swift_name = "backgroundJobMetadataFromJson")]
         fn background_job_metadata_from_json(json: String) -> Result<BackgroundJobMetadata, String>;
+        #[swift_bridge(swift_name = "compressionConfigFromJson")]
+        fn compression_config_from_json(json: String) -> Result<CompressionConfig, String>;
+        #[swift_bridge(swift_name = "rateLimitConfigFromJson")]
+        fn rate_limit_config_from_json(json: String) -> Result<RateLimitConfig, String>;
         #[swift_bridge(swift_name = "grpcConfigFromJson")]
         fn grpc_config_from_json(json: String) -> Result<GrpcConfig, String>;
         #[swift_bridge(swift_name = "jsonRpcConfigFromJson")]
         fn json_rpc_config_from_json(json: String) -> Result<JsonRpcConfig, String>;
         #[swift_bridge(swift_name = "openApiConfigFromJson")]
         fn open_api_config_from_json(json: String) -> Result<OpenApiConfig, String>;
-        #[swift_bridge(swift_name = "contactInfoFromJson")]
-        fn contact_info_from_json(json: String) -> Result<ContactInfo, String>;
-        #[swift_bridge(swift_name = "licenseInfoFromJson")]
-        fn license_info_from_json(json: String) -> Result<LicenseInfo, String>;
-        #[swift_bridge(swift_name = "serverInfoFromJson")]
-        fn server_info_from_json(json: String) -> Result<ServerInfo, String>;
         #[swift_bridge(swift_name = "responseFromJson")]
         fn response_from_json(json: String) -> Result<Response, String>;
         #[swift_bridge(swift_name = "sseEventFromJson")]
@@ -564,17 +587,93 @@ mod ffi {
         fn api_key_config_from_json(json: String) -> Result<ApiKeyConfig, String>;
         #[swift_bridge(swift_name = "staticFilesConfigFromJson")]
         fn static_files_config_from_json(json: String) -> Result<StaticFilesConfig, String>;
-        #[swift_bridge(swift_name = "serverConfigFromJson")]
-        fn server_config_from_json(json: String) -> Result<ServerConfig, String>;
+        #[swift_bridge(swift_name = "jsonRpcMethodInfoFromJson")]
+        fn json_rpc_method_info_from_json(json: String) -> Result<JsonRpcMethodInfo, String>;
+        #[swift_bridge(swift_name = "problemDetailsFromJson")]
+        fn problem_details_from_json(json: String) -> Result<ProblemDetails, String>;
+        #[swift_bridge(swift_name = "asyncApiConfigFromJson")]
+        fn async_api_config_from_json(json: String) -> Result<AsyncApiConfig, String>;
+        #[swift_bridge(swift_name = "parsedChannelFromJson")]
+        fn parsed_channel_from_json(json: String) -> Result<ParsedChannel, String>;
+        #[swift_bridge(swift_name = "parsedOperationFromJson")]
+        fn parsed_operation_from_json(json: String) -> Result<ParsedOperation, String>;
+        #[swift_bridge(swift_name = "parsedMessageFromJson")]
+        fn parsed_message_from_json(json: String) -> Result<ParsedMessage, String>;
+        #[swift_bridge(swift_name = "parseResultFromJson")]
+        fn parse_result_from_json(json: String) -> Result<ParseResult, String>;
+        #[swift_bridge(swift_name = "contactInfoFromJson")]
+        fn contact_info_from_json(json: String) -> Result<ContactInfo, String>;
+        #[swift_bridge(swift_name = "licenseInfoFromJson")]
+        fn license_info_from_json(json: String) -> Result<LicenseInfo, String>;
+        #[swift_bridge(swift_name = "serverInfoFromJson")]
+        fn server_info_from_json(json: String) -> Result<ServerInfo, String>;
     }
     extern "Rust" {
-
         #[swift_bridge(swift_name = "methodFromJson")]
         fn method_from_json(json: String) -> Result<Method, String>;
         #[swift_bridge(swift_name = "securitySchemeInfoFromJson")]
         fn security_scheme_info_from_json(json: String) -> Result<SecuritySchemeInfo, String>;
     }
 }
+
+/// Wrapper for App service instance.
+/// Holds the inner service in a blocking mutex to allow mutable access
+/// across FFI boundaries.
+pub struct App {
+    pub inner: tokio::sync::Mutex<Option<spikard::App>>,
+}
+
+impl App {
+    /// Create a new service instance.
+    pub fn new() -> Self {
+        Self {
+            inner: tokio::sync::Mutex::new(Some(spikard::App::new())),
+        }
+    }
+
+    /// Configure the service.
+    pub fn config(&mut self) {
+        // Placeholder for future configuration.
+    }
+
+    /// Run the service (blocking, drives the Tokio runtime).
+    ///
+    /// Returns an empty string on success or the error message.
+    pub fn run(&mut self) -> String {
+        let rt = match tokio::runtime::Runtime::new() {
+            Ok(rt) => rt,
+            Err(e) => return format!("runtime error: {:?}", e),
+        };
+        rt.block_on(async {
+            let mut guard = self.inner.lock().await;
+            if let Some(app) = guard.take() {
+                match app.run().await {
+                    Ok(()) => String::new(),
+                    Err(e) => format!("{:?}", e),
+                }
+            } else {
+                "service already consumed".to_string()
+            }
+        })
+    }
+}
+
+/// Free-function shim so the bridge declaration resolves.
+pub fn config(client: &mut App) {
+    client.config()
+}
+
+/// Free-function shim so the bridge declaration resolves.
+pub fn run(client: &mut App) -> String {
+    client.run()
+}
+
+/// Expose the wrapper's address as a usize for cross-bridge ptr handoff.
+pub fn app_raw_ptr(client: &mut App) -> usize {
+    client as *mut App as usize
+}
+
+mod extern_callbacks;
 
 pub struct UploadFile(pub spikard::UploadFile);
 impl UploadFile {
@@ -599,7 +698,238 @@ impl UploadFile {
     }
 }
 
-pub struct CorsConfig(pub spikard_core::CorsConfig);
+pub struct GraphQLRouteConfig(pub spikard::GraphQLRouteConfig);
+
+pub fn graph_ql_route_config_path(client: &GraphQLRouteConfig, path: String) -> GraphQLRouteConfig {
+    GraphQLRouteConfig(client.0.clone().path(&path))
+}
+pub fn graph_ql_route_config_method(client: &GraphQLRouteConfig, method: String) -> GraphQLRouteConfig {
+    GraphQLRouteConfig(client.0.clone().method(&method))
+}
+pub fn graph_ql_route_config_enable_playground(client: &GraphQLRouteConfig, enable: bool) -> GraphQLRouteConfig {
+    GraphQLRouteConfig(client.0.clone().enable_playground(enable))
+}
+pub fn graph_ql_route_config_description(client: &GraphQLRouteConfig, description: String) -> GraphQLRouteConfig {
+    GraphQLRouteConfig(client.0.clone().description(&description))
+}
+pub fn graph_ql_route_config_get_path(client: &GraphQLRouteConfig) -> String {
+    client.0.get_path().to_string()
+}
+pub fn graph_ql_route_config_get_method(client: &GraphQLRouteConfig) -> String {
+    client.0.get_method().to_string()
+}
+pub fn graph_ql_route_config_is_playground_enabled(client: &GraphQLRouteConfig) -> bool {
+    client.0.is_playground_enabled()
+}
+pub fn graph_ql_route_config_get_description(client: &GraphQLRouteConfig) -> String {
+    serde_json::to_string(&(client.0.get_description())).expect("serializable return")
+}
+
+pub struct SchemaConfig(pub spikard::SchemaConfig);
+impl SchemaConfig {
+    pub fn new(
+        introspection_enabled: bool,
+        complexity_limit: Option<usize>,
+        depth_limit: Option<usize>,
+    ) -> SchemaConfig {
+        SchemaConfig(spikard::SchemaConfig {
+            introspection_enabled,
+            complexity_limit,
+            depth_limit,
+        })
+    }
+    pub fn introspection_enabled(&self) -> bool {
+        ::serde_json::to_value(&self.0.introspection_enabled)
+            .ok()
+            .and_then(|j| ::serde_json::from_value(j).ok())
+            .unwrap_or_default()
+    }
+    pub fn complexity_limit(&self) -> Option<usize> {
+        self.0.complexity_limit.as_ref().and_then(|v| {
+            ::serde_json::to_value(v)
+                .ok()
+                .and_then(|j| ::serde_json::from_value(j).ok())
+        })
+    }
+    pub fn depth_limit(&self) -> Option<usize> {
+        self.0.depth_limit.as_ref().and_then(|v| {
+            ::serde_json::to_value(v)
+                .ok()
+                .and_then(|j| ::serde_json::from_value(j).ok())
+        })
+    }
+}
+
+pub struct QueryOnlyConfig(pub spikard::QueryOnlyConfig);
+impl QueryOnlyConfig {
+    pub fn new(
+        introspection_enabled: bool,
+        complexity_limit: Option<usize>,
+        depth_limit: Option<usize>,
+    ) -> QueryOnlyConfig {
+        QueryOnlyConfig(spikard::QueryOnlyConfig {
+            introspection_enabled,
+            complexity_limit,
+            depth_limit,
+        })
+    }
+    pub fn introspection_enabled(&self) -> bool {
+        ::serde_json::to_value(&self.0.introspection_enabled)
+            .ok()
+            .and_then(|j| ::serde_json::from_value(j).ok())
+            .unwrap_or_default()
+    }
+    pub fn complexity_limit(&self) -> Option<usize> {
+        self.0.complexity_limit.as_ref().and_then(|v| {
+            ::serde_json::to_value(v)
+                .ok()
+                .and_then(|j| ::serde_json::from_value(j).ok())
+        })
+    }
+    pub fn depth_limit(&self) -> Option<usize> {
+        self.0.depth_limit.as_ref().and_then(|v| {
+            ::serde_json::to_value(v)
+                .ok()
+                .and_then(|j| ::serde_json::from_value(j).ok())
+        })
+    }
+}
+
+pub struct QueryMutationConfig(pub spikard::QueryMutationConfig);
+impl QueryMutationConfig {
+    pub fn new(
+        introspection_enabled: bool,
+        complexity_limit: Option<usize>,
+        depth_limit: Option<usize>,
+    ) -> QueryMutationConfig {
+        QueryMutationConfig(spikard::QueryMutationConfig {
+            introspection_enabled,
+            complexity_limit,
+            depth_limit,
+        })
+    }
+    pub fn introspection_enabled(&self) -> bool {
+        ::serde_json::to_value(&self.0.introspection_enabled)
+            .ok()
+            .and_then(|j| ::serde_json::from_value(j).ok())
+            .unwrap_or_default()
+    }
+    pub fn complexity_limit(&self) -> Option<usize> {
+        self.0.complexity_limit.as_ref().and_then(|v| {
+            ::serde_json::to_value(v)
+                .ok()
+                .and_then(|j| ::serde_json::from_value(j).ok())
+        })
+    }
+    pub fn depth_limit(&self) -> Option<usize> {
+        self.0.depth_limit.as_ref().and_then(|v| {
+            ::serde_json::to_value(v)
+                .ok()
+                .and_then(|j| ::serde_json::from_value(j).ok())
+        })
+    }
+}
+
+pub struct FullSchemaConfig(pub spikard::FullSchemaConfig);
+impl FullSchemaConfig {
+    pub fn new(
+        introspection_enabled: bool,
+        complexity_limit: Option<usize>,
+        depth_limit: Option<usize>,
+    ) -> FullSchemaConfig {
+        FullSchemaConfig(spikard::FullSchemaConfig {
+            introspection_enabled,
+            complexity_limit,
+            depth_limit,
+        })
+    }
+    pub fn introspection_enabled(&self) -> bool {
+        ::serde_json::to_value(&self.0.introspection_enabled)
+            .ok()
+            .and_then(|j| ::serde_json::from_value(j).ok())
+            .unwrap_or_default()
+    }
+    pub fn complexity_limit(&self) -> Option<usize> {
+        self.0.complexity_limit.as_ref().and_then(|v| {
+            ::serde_json::to_value(v)
+                .ok()
+                .and_then(|j| ::serde_json::from_value(j).ok())
+        })
+    }
+    pub fn depth_limit(&self) -> Option<usize> {
+        self.0.depth_limit.as_ref().and_then(|v| {
+            ::serde_json::to_value(v)
+                .ok()
+                .and_then(|j| ::serde_json::from_value(j).ok())
+        })
+    }
+}
+
+pub struct BackgroundTaskConfig(pub spikard::BackgroundTaskConfig);
+impl BackgroundTaskConfig {
+    pub fn new(max_queue_size: usize, max_concurrent_tasks: usize, drain_timeout_secs: u64) -> BackgroundTaskConfig {
+        BackgroundTaskConfig(spikard::BackgroundTaskConfig {
+            max_queue_size,
+            max_concurrent_tasks,
+            drain_timeout_secs,
+        })
+    }
+    pub fn max_queue_size(&self) -> usize {
+        ::serde_json::to_value(&self.0.max_queue_size)
+            .ok()
+            .and_then(|j| ::serde_json::from_value(j).ok())
+            .unwrap_or_default()
+    }
+    pub fn max_concurrent_tasks(&self) -> usize {
+        ::serde_json::to_value(&self.0.max_concurrent_tasks)
+            .ok()
+            .and_then(|j| ::serde_json::from_value(j).ok())
+            .unwrap_or_default()
+    }
+    pub fn drain_timeout_secs(&self) -> u64 {
+        ::serde_json::to_value(&self.0.drain_timeout_secs)
+            .ok()
+            .and_then(|j| ::serde_json::from_value(j).ok())
+            .unwrap_or_default()
+    }
+}
+
+pub struct BackgroundJobMetadata(pub spikard::BackgroundJobMetadata);
+impl BackgroundJobMetadata {
+    pub fn new(name: String, request_id: Option<String>) -> BackgroundJobMetadata {
+        let mut __target: spikard::BackgroundJobMetadata = ::std::default::Default::default();
+        {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&name)
+                .unwrap_or(::serde_json::Value::String(name.clone()));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.name = t;
+            }
+        }
+        if let Some(s) = request_id {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.request_id = Some(t);
+            }
+        }
+        BackgroundJobMetadata(__target)
+    }
+    pub fn name(&self) -> String {
+        self.0.name.to_string()
+    }
+    pub fn request_id(&self) -> Option<String> {
+        self.0.request_id.clone()
+    }
+}
+
+pub struct CorsConfig(pub spikard::CorsConfig);
 impl CorsConfig {
     pub fn new(
         allowed_origins: Vec<String>,
@@ -609,7 +939,7 @@ impl CorsConfig {
         max_age: Option<u32>,
         allow_credentials: Option<bool>,
     ) -> CorsConfig {
-        let mut __target: spikard_core::CorsConfig = ::std::default::Default::default();
+        let mut __target: spikard::CorsConfig = ::std::default::Default::default();
         if let Ok(__v) = ::serde_json::to_value(allowed_origins) {
             if let Ok(t) = ::serde_json::from_value(__v) {
                 __target.allowed_origins = t;
@@ -675,10 +1005,10 @@ impl CorsConfig {
     }
 }
 
-pub struct CompressionConfig(pub spikard_core::CompressionConfig);
+pub struct CompressionConfig(pub spikard::CompressionConfig);
 impl CompressionConfig {
     pub fn new(gzip: bool, brotli: bool, min_size: usize, quality: u32) -> CompressionConfig {
-        CompressionConfig(spikard_core::CompressionConfig {
+        CompressionConfig(spikard::CompressionConfig {
             gzip,
             brotli,
             min_size,
@@ -711,10 +1041,10 @@ impl CompressionConfig {
     }
 }
 
-pub struct RateLimitConfig(pub spikard_core::RateLimitConfig);
+pub struct RateLimitConfig(pub spikard::RateLimitConfig);
 impl RateLimitConfig {
     pub fn new(per_second: u64, burst: u32, ip_based: bool) -> RateLimitConfig {
-        RateLimitConfig(spikard_core::RateLimitConfig {
+        RateLimitConfig(spikard::RateLimitConfig {
             per_second,
             burst,
             ip_based,
@@ -740,424 +1070,7 @@ impl RateLimitConfig {
     }
 }
 
-pub struct JsonRpcMethodInfo(pub spikard_core::JsonRpcMethodInfo);
-impl JsonRpcMethodInfo {
-    pub fn method_name(&self) -> String {
-        self.0.method_name.clone()
-    }
-    pub fn description(&self) -> Option<String> {
-        self.0.description.clone()
-    }
-    pub fn params_schema(&self) -> Option<String> {
-        self.0
-            .params_schema
-            .as_ref()
-            .and_then(|v| serde_json::to_string(v).ok())
-    }
-    pub fn result_schema(&self) -> Option<String> {
-        self.0
-            .result_schema
-            .as_ref()
-            .and_then(|v| serde_json::to_string(v).ok())
-    }
-    pub fn deprecated(&self) -> bool {
-        ::serde_json::to_value(&self.0.deprecated)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
-    }
-    pub fn tags(&self) -> Vec<String> {
-        ::serde_json::to_value(&self.0.tags)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
-    }
-}
-
-pub struct ProblemDetails(pub spikard_core::ProblemDetails);
-impl ProblemDetails {
-    pub fn type_uri(&self) -> String {
-        self.0.type_uri.clone()
-    }
-    pub fn title(&self) -> String {
-        self.0.title.clone()
-    }
-    pub fn status(&self) -> u16 {
-        ::serde_json::to_value(&self.0.status)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
-    }
-    pub fn detail(&self) -> Option<String> {
-        self.0.detail.clone()
-    }
-    pub fn instance(&self) -> Option<String> {
-        self.0.instance.clone()
-    }
-    pub fn extensions(&self) -> String {
-        serde_json::to_string(&self.0.extensions).expect("serializable extensions")
-    }
-}
-
-pub struct GraphQLRouteConfig(pub spikard_graphql::GraphQLRouteConfig);
-
-pub fn graph_ql_route_config_path(client: &GraphQLRouteConfig, path: String) -> GraphQLRouteConfig {
-    GraphQLRouteConfig(client.0.clone().path(&path))
-}
-pub fn graph_ql_route_config_method(client: &GraphQLRouteConfig, method: String) -> GraphQLRouteConfig {
-    GraphQLRouteConfig(client.0.clone().method(&method))
-}
-pub fn graph_ql_route_config_enable_playground(client: &GraphQLRouteConfig, enable: bool) -> GraphQLRouteConfig {
-    GraphQLRouteConfig(client.0.clone().enable_playground(enable))
-}
-pub fn graph_ql_route_config_description(client: &GraphQLRouteConfig, description: String) -> GraphQLRouteConfig {
-    GraphQLRouteConfig(client.0.clone().description(&description))
-}
-pub fn graph_ql_route_config_get_path(client: &GraphQLRouteConfig) -> String {
-    client.0.get_path().to_string()
-}
-pub fn graph_ql_route_config_get_method(client: &GraphQLRouteConfig) -> String {
-    client.0.get_method().to_string()
-}
-pub fn graph_ql_route_config_is_playground_enabled(client: &GraphQLRouteConfig) -> bool {
-    client.0.is_playground_enabled()
-}
-pub fn graph_ql_route_config_get_description(client: &GraphQLRouteConfig) -> String {
-    serde_json::to_string(&(client.0.get_description())).expect("serializable return")
-}
-
-pub struct SchemaConfig(pub spikard_graphql::SchemaConfig);
-impl SchemaConfig {
-    pub fn new(
-        introspection_enabled: bool,
-        complexity_limit: Option<usize>,
-        depth_limit: Option<usize>,
-    ) -> SchemaConfig {
-        SchemaConfig(spikard_graphql::SchemaConfig {
-            introspection_enabled,
-            complexity_limit,
-            depth_limit,
-        })
-    }
-    pub fn introspection_enabled(&self) -> bool {
-        ::serde_json::to_value(&self.0.introspection_enabled)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
-    }
-    pub fn complexity_limit(&self) -> Option<usize> {
-        self.0.complexity_limit.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
-    }
-    pub fn depth_limit(&self) -> Option<usize> {
-        self.0.depth_limit.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
-    }
-}
-
-pub struct QueryOnlyConfig(pub spikard_graphql::QueryOnlyConfig);
-impl QueryOnlyConfig {
-    pub fn new(
-        introspection_enabled: bool,
-        complexity_limit: Option<usize>,
-        depth_limit: Option<usize>,
-    ) -> QueryOnlyConfig {
-        QueryOnlyConfig(spikard_graphql::QueryOnlyConfig {
-            introspection_enabled,
-            complexity_limit,
-            depth_limit,
-        })
-    }
-    pub fn introspection_enabled(&self) -> bool {
-        ::serde_json::to_value(&self.0.introspection_enabled)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
-    }
-    pub fn complexity_limit(&self) -> Option<usize> {
-        self.0.complexity_limit.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
-    }
-    pub fn depth_limit(&self) -> Option<usize> {
-        self.0.depth_limit.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
-    }
-}
-
-pub struct QueryMutationConfig(pub spikard_graphql::QueryMutationConfig);
-impl QueryMutationConfig {
-    pub fn new(
-        introspection_enabled: bool,
-        complexity_limit: Option<usize>,
-        depth_limit: Option<usize>,
-    ) -> QueryMutationConfig {
-        QueryMutationConfig(spikard_graphql::QueryMutationConfig {
-            introspection_enabled,
-            complexity_limit,
-            depth_limit,
-        })
-    }
-    pub fn introspection_enabled(&self) -> bool {
-        ::serde_json::to_value(&self.0.introspection_enabled)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
-    }
-    pub fn complexity_limit(&self) -> Option<usize> {
-        self.0.complexity_limit.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
-    }
-    pub fn depth_limit(&self) -> Option<usize> {
-        self.0.depth_limit.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
-    }
-}
-
-pub struct FullSchemaConfig(pub spikard_graphql::FullSchemaConfig);
-impl FullSchemaConfig {
-    pub fn new(
-        introspection_enabled: bool,
-        complexity_limit: Option<usize>,
-        depth_limit: Option<usize>,
-    ) -> FullSchemaConfig {
-        FullSchemaConfig(spikard_graphql::FullSchemaConfig {
-            introspection_enabled,
-            complexity_limit,
-            depth_limit,
-        })
-    }
-    pub fn introspection_enabled(&self) -> bool {
-        ::serde_json::to_value(&self.0.introspection_enabled)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
-    }
-    pub fn complexity_limit(&self) -> Option<usize> {
-        self.0.complexity_limit.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
-    }
-    pub fn depth_limit(&self) -> Option<usize> {
-        self.0.depth_limit.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
-    }
-}
-
-pub struct AsyncApiConfig(pub spikard_http::AsyncApiConfig);
-impl AsyncApiConfig {
-    pub fn new(enabled: bool, spec: Option<String>) -> AsyncApiConfig {
-        let mut __target: spikard_http::AsyncApiConfig = ::std::default::Default::default();
-        __target.enabled = enabled;
-        if let Some(s) = spec {
-            // Try JSON parse first (handles enum/object values); on parse failure
-            // treat the raw input as a JSON string scalar so plain `String` /
-            // string-like enum fields don't end up empty for inputs that aren't
-            // valid JSON tokens (e.g. `tts-1`).
-            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
-            if let Ok(t) = ::serde_json::from_value(__v) {
-                __target.spec = Some(t);
-            }
-        }
-        AsyncApiConfig(__target)
-    }
-    pub fn enabled(&self) -> bool {
-        ::serde_json::to_value(&self.0.enabled)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
-    }
-    pub fn spec(&self) -> Option<String> {
-        self.0.spec.as_ref().and_then(|v| serde_json::to_string(v).ok())
-    }
-}
-
-pub struct ParsedChannel(pub spikard_http::ParsedChannel);
-impl ParsedChannel {
-    pub fn name(&self) -> String {
-        self.0.name.clone()
-    }
-    pub fn address(&self) -> String {
-        self.0.address.clone()
-    }
-    pub fn messages(&self) -> Vec<String> {
-        ::serde_json::to_value(&self.0.messages)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
-    }
-    pub fn bindings(&self) -> Option<String> {
-        self.0.bindings.as_ref().and_then(|v| serde_json::to_string(v).ok())
-    }
-}
-
-pub struct ParsedOperation(pub spikard_http::ParsedOperation);
-impl ParsedOperation {
-    pub fn name(&self) -> String {
-        self.0.name.clone()
-    }
-    pub fn action(&self) -> String {
-        self.0.action.clone()
-    }
-    pub fn channel(&self) -> String {
-        self.0.channel.clone()
-    }
-}
-
-pub struct ParsedMessage(pub spikard_http::ParsedMessage);
-impl ParsedMessage {
-    pub fn name(&self) -> String {
-        self.0.name.clone()
-    }
-    pub fn schema(&self) -> Option<String> {
-        self.0.schema.as_ref().and_then(|v| serde_json::to_string(v).ok())
-    }
-}
-
-pub struct ParseResult(pub spikard_http::ParseResult);
-impl ParseResult {
-    pub fn spec_version(&self) -> String {
-        self.0.spec_version.clone()
-    }
-    pub fn title(&self) -> String {
-        self.0.title.clone()
-    }
-    pub fn api_version(&self) -> String {
-        self.0.api_version.clone()
-    }
-    pub fn channels(&self) -> Vec<ParsedChannel> {
-        self.0.channels.iter().map(|elem| ParsedChannel(elem.clone())).collect()
-    }
-    pub fn operations(&self) -> Vec<ParsedOperation> {
-        self.0
-            .operations
-            .iter()
-            .map(|elem| ParsedOperation(elem.clone()))
-            .collect()
-    }
-    pub fn messages(&self) -> Vec<ParsedMessage> {
-        self.0.messages.iter().map(|elem| ParsedMessage(elem.clone())).collect()
-    }
-}
-
-pub struct ParseRequest(pub spikard_http::asyncapi::ParseRequest);
-impl ParseRequest {
-    pub fn spec(&self) -> String {
-        format!("{:?}", &self.0.spec)
-    }
-}
-
-pub struct ValidationResponse(pub spikard_http::ValidationResponse);
-impl ValidationResponse {
-    pub fn valid(&self) -> bool {
-        self.0.valid.clone()
-    }
-    // alef: skipped getter `errors` — type cannot be bridged through swift-bridge
-}
-
-pub struct ValidateRequest(pub spikard_http::ValidateRequest);
-impl ValidateRequest {
-    pub fn spec(&self) -> String {
-        format!("{:?}", &self.0.spec)
-    }
-    pub fn channel(&self) -> String {
-        format!("{:?}", &self.0.channel)
-    }
-    pub fn message(&self) -> String {
-        format!("{:?}", &self.0.message)
-    }
-    pub fn payload(&self) -> String {
-        format!("{:?}", &self.0.payload)
-    }
-}
-
-pub struct BackgroundTaskConfig(pub spikard_http::BackgroundTaskConfig);
-impl BackgroundTaskConfig {
-    pub fn new(max_queue_size: usize, max_concurrent_tasks: usize, drain_timeout_secs: u64) -> BackgroundTaskConfig {
-        BackgroundTaskConfig(spikard_http::BackgroundTaskConfig {
-            max_queue_size,
-            max_concurrent_tasks,
-            drain_timeout_secs,
-        })
-    }
-    pub fn max_queue_size(&self) -> usize {
-        ::serde_json::to_value(&self.0.max_queue_size)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
-    }
-    pub fn max_concurrent_tasks(&self) -> usize {
-        ::serde_json::to_value(&self.0.max_concurrent_tasks)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
-    }
-    pub fn drain_timeout_secs(&self) -> u64 {
-        ::serde_json::to_value(&self.0.drain_timeout_secs)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
-    }
-}
-
-pub struct BackgroundJobMetadata(pub spikard_http::BackgroundJobMetadata);
-impl BackgroundJobMetadata {
-    pub fn new(name: String, request_id: Option<String>) -> BackgroundJobMetadata {
-        let mut __target: spikard_http::BackgroundJobMetadata = ::std::default::Default::default();
-        {
-            // Try JSON parse first (handles enum/object values); on parse failure
-            // treat the raw input as a JSON string scalar so plain `String` /
-            // string-like enum fields don't end up empty for inputs that aren't
-            // valid JSON tokens (e.g. `tts-1`).
-            let __v = ::serde_json::from_str::<::serde_json::Value>(&name)
-                .unwrap_or(::serde_json::Value::String(name.clone()));
-            if let Ok(t) = ::serde_json::from_value(__v) {
-                __target.name = t;
-            }
-        }
-        if let Some(s) = request_id {
-            // Try JSON parse first (handles enum/object values); on parse failure
-            // treat the raw input as a JSON string scalar so plain `String` /
-            // string-like enum fields don't end up empty for inputs that aren't
-            // valid JSON tokens (e.g. `tts-1`).
-            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
-            if let Ok(t) = ::serde_json::from_value(__v) {
-                __target.request_id = Some(t);
-            }
-        }
-        BackgroundJobMetadata(__target)
-    }
-    pub fn name(&self) -> String {
-        self.0.name.to_string()
-    }
-    pub fn request_id(&self) -> Option<String> {
-        self.0.request_id.clone()
-    }
-}
-
-pub struct GrpcConfig(pub spikard_http::GrpcConfig);
+pub struct GrpcConfig(pub spikard::GrpcConfig);
 impl GrpcConfig {
     pub fn new(
         enabled: bool,
@@ -1170,7 +1083,7 @@ impl GrpcConfig {
         keepalive_timeout: u64,
         max_stream_response_bytes: Option<usize>,
     ) -> GrpcConfig {
-        GrpcConfig(spikard_http::GrpcConfig {
+        GrpcConfig(spikard::GrpcConfig {
             enabled,
             max_message_size,
             enable_compression,
@@ -1240,10 +1153,10 @@ impl GrpcConfig {
     }
 }
 
-pub struct JsonRpcConfig(pub spikard_http::JsonRpcConfig);
+pub struct JsonRpcConfig(pub spikard::JsonRpcConfig);
 impl JsonRpcConfig {
     pub fn new(enabled: bool, endpoint_path: String, enable_batch: bool, max_batch_size: usize) -> JsonRpcConfig {
-        let mut __target: spikard_http::JsonRpcConfig = ::std::default::Default::default();
+        let mut __target: spikard::JsonRpcConfig = ::std::default::Default::default();
         __target.enabled = enabled;
         {
             // Try JSON parse first (handles enum/object values); on parse failure
@@ -1283,7 +1196,7 @@ impl JsonRpcConfig {
     }
 }
 
-pub struct OpenApiConfig(pub spikard_http::OpenApiConfig);
+pub struct OpenApiConfig(pub spikard::OpenApiConfig);
 impl OpenApiConfig {
     pub fn new(
         enabled: bool,
@@ -1298,7 +1211,7 @@ impl OpenApiConfig {
         servers: Vec<ServerInfo>,
         security_schemes: String,
     ) -> OpenApiConfig {
-        let mut __target: spikard_http::OpenApiConfig = ::std::default::Default::default();
+        let mut __target: spikard::OpenApiConfig = ::std::default::Default::default();
         __target.enabled = enabled;
         {
             // Try JSON parse first (handles enum/object values); on parse failure
@@ -1417,43 +1330,10 @@ impl OpenApiConfig {
     }
 }
 
-pub struct ContactInfo(pub spikard_http::ContactInfo);
-impl ContactInfo {
-    pub fn name(&self) -> Option<String> {
-        self.0.name.clone()
-    }
-    pub fn email(&self) -> Option<String> {
-        self.0.email.clone()
-    }
-    pub fn url(&self) -> Option<String> {
-        self.0.url.clone()
-    }
-}
-
-pub struct LicenseInfo(pub spikard_http::LicenseInfo);
-impl LicenseInfo {
-    pub fn name(&self) -> String {
-        self.0.name.clone()
-    }
-    pub fn url(&self) -> Option<String> {
-        self.0.url.clone()
-    }
-}
-
-pub struct ServerInfo(pub spikard_http::ServerInfo);
-impl ServerInfo {
-    pub fn url(&self) -> String {
-        self.0.url.clone()
-    }
-    pub fn description(&self) -> Option<String> {
-        self.0.description.clone()
-    }
-}
-
-pub struct Response(pub spikard_http::Response);
+pub struct Response(pub spikard::Response);
 impl Response {
     pub fn new(content: Option<String>, status_code: u16, headers: String) -> Response {
-        let mut __target: spikard_http::Response = ::std::default::Default::default();
+        let mut __target: spikard::Response = ::std::default::Default::default();
         if let Some(s) = content {
             // Try JSON parse first (handles enum/object values); on parse failure
             // treat the raw input as a JSON string scalar so plain `String` /
@@ -1486,7 +1366,7 @@ impl Response {
     }
 }
 
-pub struct SseEvent(pub spikard_http::SseEvent);
+pub struct SseEvent(pub spikard::SseEvent);
 impl SseEvent {
     pub fn event_type(&self) -> Option<String> {
         self.0.event_type.clone()
@@ -1506,14 +1386,7 @@ impl SseEvent {
     }
 }
 
-pub struct TestingSseEvent(pub spikard_http::testing::SseEvent);
-impl TestingSseEvent {
-    pub fn data(&self) -> String {
-        format!("{:?}", &self.0.data)
-    }
-}
-
-pub struct JwtConfig(pub spikard_http::JwtConfig);
+pub struct JwtConfig(pub spikard::JwtConfig);
 impl JwtConfig {
     pub fn secret(&self) -> String {
         self.0.secret.clone()
@@ -1539,7 +1412,7 @@ impl JwtConfig {
     }
 }
 
-pub struct ApiKeyConfig(pub spikard_http::ApiKeyConfig);
+pub struct ApiKeyConfig(pub spikard::ApiKeyConfig);
 impl ApiKeyConfig {
     pub fn keys(&self) -> Vec<String> {
         ::serde_json::to_value(&self.0.keys)
@@ -1552,7 +1425,7 @@ impl ApiKeyConfig {
     }
 }
 
-pub struct StaticFilesConfig(pub spikard_http::StaticFilesConfig);
+pub struct StaticFilesConfig(pub spikard::StaticFilesConfig);
 impl StaticFilesConfig {
     pub fn directory(&self) -> String {
         self.0.directory.clone()
@@ -1571,7 +1444,7 @@ impl StaticFilesConfig {
     }
 }
 
-pub struct ServerConfig(pub spikard_http::ServerConfig);
+pub struct ServerConfig(pub spikard::ServerConfig);
 impl ServerConfig {
     pub fn new(
         host: String,
@@ -1594,7 +1467,7 @@ impl ServerConfig {
         background_tasks: BackgroundTaskConfig,
         enable_http_trace: bool,
     ) -> ServerConfig {
-        let mut __target: spikard_http::ServerConfig = ::std::default::Default::default();
+        let mut __target: spikard::ServerConfig = ::std::default::Default::default();
         {
             // Try JSON parse first (handles enum/object values); on parse failure
             // treat the raw input as a JSON string scalar so plain `String` /
@@ -1731,6 +1604,278 @@ impl ServerConfig {
     }
 }
 
+pub struct RouteBuilder(pub spikard::RouteBuilder);
+
+pub fn route_builder_handler_name(client: &RouteBuilder, name: String) -> RouteBuilder {
+    RouteBuilder(client.0.clone().handler_name(&name))
+}
+pub fn route_builder_request_schema_json(client: &RouteBuilder, schema: String) -> RouteBuilder {
+    RouteBuilder(
+        client
+            .0
+            .clone()
+            .request_schema_json(serde_json::from_str::<serde_json::Value>(&schema).unwrap_or(serde_json::Value::Null)),
+    )
+}
+pub fn route_builder_response_schema_json(client: &RouteBuilder, schema: String) -> RouteBuilder {
+    RouteBuilder(
+        client.0.clone().response_schema_json(
+            serde_json::from_str::<serde_json::Value>(&schema).unwrap_or(serde_json::Value::Null),
+        ),
+    )
+}
+pub fn route_builder_params_schema_json(client: &RouteBuilder, schema: String) -> RouteBuilder {
+    RouteBuilder(
+        client
+            .0
+            .clone()
+            .params_schema_json(serde_json::from_str::<serde_json::Value>(&schema).unwrap_or(serde_json::Value::Null)),
+    )
+}
+pub fn route_builder_file_params_json(client: &RouteBuilder, schema: String) -> RouteBuilder {
+    RouteBuilder(
+        client
+            .0
+            .clone()
+            .file_params_json(serde_json::from_str::<serde_json::Value>(&schema).unwrap_or(serde_json::Value::Null)),
+    )
+}
+pub fn route_builder_cors(client: &RouteBuilder, cors: CorsConfig) -> RouteBuilder {
+    RouteBuilder(client.0.clone().cors(cors.0))
+}
+pub fn route_builder_sync(client: &RouteBuilder) -> RouteBuilder {
+    RouteBuilder(client.0.clone().sync())
+}
+pub fn route_builder_handler_dependencies(client: &RouteBuilder, dependencies: Vec<String>) -> RouteBuilder {
+    RouteBuilder(client.0.clone().handler_dependencies(dependencies))
+}
+
+pub struct JsonRpcMethodInfo(pub spikard_core::JsonRpcMethodInfo);
+impl JsonRpcMethodInfo {
+    pub fn method_name(&self) -> String {
+        self.0.method_name.clone()
+    }
+    pub fn description(&self) -> Option<String> {
+        self.0.description.clone()
+    }
+    pub fn params_schema(&self) -> Option<String> {
+        self.0
+            .params_schema
+            .as_ref()
+            .and_then(|v| serde_json::to_string(v).ok())
+    }
+    pub fn result_schema(&self) -> Option<String> {
+        self.0
+            .result_schema
+            .as_ref()
+            .and_then(|v| serde_json::to_string(v).ok())
+    }
+    pub fn deprecated(&self) -> bool {
+        ::serde_json::to_value(&self.0.deprecated)
+            .ok()
+            .and_then(|j| ::serde_json::from_value(j).ok())
+            .unwrap_or_default()
+    }
+    pub fn tags(&self) -> Vec<String> {
+        ::serde_json::to_value(&self.0.tags)
+            .ok()
+            .and_then(|j| ::serde_json::from_value(j).ok())
+            .unwrap_or_default()
+    }
+}
+
+pub struct ProblemDetails(pub spikard_core::ProblemDetails);
+impl ProblemDetails {
+    pub fn type_uri(&self) -> String {
+        self.0.type_uri.clone()
+    }
+    pub fn title(&self) -> String {
+        self.0.title.clone()
+    }
+    pub fn status(&self) -> u16 {
+        ::serde_json::to_value(&self.0.status)
+            .ok()
+            .and_then(|j| ::serde_json::from_value(j).ok())
+            .unwrap_or_default()
+    }
+    pub fn detail(&self) -> Option<String> {
+        self.0.detail.clone()
+    }
+    pub fn instance(&self) -> Option<String> {
+        self.0.instance.clone()
+    }
+    pub fn extensions(&self) -> String {
+        serde_json::to_string(&self.0.extensions).expect("serializable extensions")
+    }
+}
+
+pub struct AsyncApiConfig(pub spikard_http::AsyncApiConfig);
+impl AsyncApiConfig {
+    pub fn new(enabled: bool, spec: Option<String>) -> AsyncApiConfig {
+        let mut __target: spikard_http::AsyncApiConfig = ::std::default::Default::default();
+        __target.enabled = enabled;
+        if let Some(s) = spec {
+            // Try JSON parse first (handles enum/object values); on parse failure
+            // treat the raw input as a JSON string scalar so plain `String` /
+            // string-like enum fields don't end up empty for inputs that aren't
+            // valid JSON tokens (e.g. `tts-1`).
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) {
+                __target.spec = Some(t);
+            }
+        }
+        AsyncApiConfig(__target)
+    }
+    pub fn enabled(&self) -> bool {
+        ::serde_json::to_value(&self.0.enabled)
+            .ok()
+            .and_then(|j| ::serde_json::from_value(j).ok())
+            .unwrap_or_default()
+    }
+    pub fn spec(&self) -> Option<String> {
+        self.0.spec.as_ref().and_then(|v| serde_json::to_string(v).ok())
+    }
+}
+
+pub struct ParsedChannel(pub spikard_http::ParsedChannel);
+impl ParsedChannel {
+    pub fn name(&self) -> String {
+        self.0.name.clone()
+    }
+    pub fn address(&self) -> String {
+        self.0.address.clone()
+    }
+    pub fn messages(&self) -> Vec<String> {
+        ::serde_json::to_value(&self.0.messages)
+            .ok()
+            .and_then(|j| ::serde_json::from_value(j).ok())
+            .unwrap_or_default()
+    }
+    pub fn bindings(&self) -> Option<String> {
+        self.0.bindings.as_ref().and_then(|v| serde_json::to_string(v).ok())
+    }
+}
+
+pub struct ParsedOperation(pub spikard_http::ParsedOperation);
+impl ParsedOperation {
+    pub fn name(&self) -> String {
+        self.0.name.clone()
+    }
+    pub fn action(&self) -> String {
+        self.0.action.clone()
+    }
+    pub fn channel(&self) -> String {
+        self.0.channel.clone()
+    }
+}
+
+pub struct ParsedMessage(pub spikard_http::ParsedMessage);
+impl ParsedMessage {
+    pub fn name(&self) -> String {
+        self.0.name.clone()
+    }
+    pub fn schema(&self) -> Option<String> {
+        self.0.schema.as_ref().and_then(|v| serde_json::to_string(v).ok())
+    }
+}
+
+pub struct ParseResult(pub spikard_http::ParseResult);
+impl ParseResult {
+    pub fn spec_version(&self) -> String {
+        self.0.spec_version.clone()
+    }
+    pub fn title(&self) -> String {
+        self.0.title.clone()
+    }
+    pub fn api_version(&self) -> String {
+        self.0.api_version.clone()
+    }
+    pub fn channels(&self) -> Vec<ParsedChannel> {
+        self.0.channels.iter().map(|elem| ParsedChannel(elem.clone())).collect()
+    }
+    pub fn operations(&self) -> Vec<ParsedOperation> {
+        self.0
+            .operations
+            .iter()
+            .map(|elem| ParsedOperation(elem.clone()))
+            .collect()
+    }
+    pub fn messages(&self) -> Vec<ParsedMessage> {
+        self.0.messages.iter().map(|elem| ParsedMessage(elem.clone())).collect()
+    }
+}
+
+pub struct ParseRequest(pub spikard_http::asyncapi::ParseRequest);
+impl ParseRequest {
+    pub fn spec(&self) -> String {
+        format!("{:?}", &self.0.spec)
+    }
+}
+
+pub struct ValidationResponse(pub spikard_http::ValidationResponse);
+impl ValidationResponse {
+    pub fn valid(&self) -> bool {
+        self.0.valid.clone()
+    }
+    // alef: skipped getter `errors` — type cannot be bridged through swift-bridge
+}
+
+pub struct ValidateRequest(pub spikard_http::ValidateRequest);
+impl ValidateRequest {
+    pub fn spec(&self) -> String {
+        format!("{:?}", &self.0.spec)
+    }
+    pub fn channel(&self) -> String {
+        format!("{:?}", &self.0.channel)
+    }
+    pub fn message(&self) -> String {
+        format!("{:?}", &self.0.message)
+    }
+    pub fn payload(&self) -> String {
+        format!("{:?}", &self.0.payload)
+    }
+}
+
+pub struct ContactInfo(pub spikard_http::ContactInfo);
+impl ContactInfo {
+    pub fn name(&self) -> Option<String> {
+        self.0.name.clone()
+    }
+    pub fn email(&self) -> Option<String> {
+        self.0.email.clone()
+    }
+    pub fn url(&self) -> Option<String> {
+        self.0.url.clone()
+    }
+}
+
+pub struct LicenseInfo(pub spikard_http::LicenseInfo);
+impl LicenseInfo {
+    pub fn name(&self) -> String {
+        self.0.name.clone()
+    }
+    pub fn url(&self) -> Option<String> {
+        self.0.url.clone()
+    }
+}
+
+pub struct ServerInfo(pub spikard_http::ServerInfo);
+impl ServerInfo {
+    pub fn url(&self) -> String {
+        self.0.url.clone()
+    }
+    pub fn description(&self) -> Option<String> {
+        self.0.description.clone()
+    }
+}
+
+pub struct TestingSseEvent(pub spikard_http::testing::SseEvent);
+impl TestingSseEvent {
+    pub fn data(&self) -> String {
+        format!("{:?}", &self.0.data)
+    }
+}
+
 pub enum Method {
     Get,
     Post,
@@ -1739,20 +1884,22 @@ pub enum Method {
     Delete,
     Head,
     Options,
+    Connect,
     Trace,
 }
 
-impl From<spikard_core::Method> for Method {
-    fn from(val: spikard_core::Method) -> Self {
+impl From<spikard::Method> for Method {
+    fn from(val: spikard::Method) -> Self {
         match val {
-            spikard_core::Method::Get => Self::Get,
-            spikard_core::Method::Post => Self::Post,
-            spikard_core::Method::Put => Self::Put,
-            spikard_core::Method::Patch => Self::Patch,
-            spikard_core::Method::Delete => Self::Delete,
-            spikard_core::Method::Head => Self::Head,
-            spikard_core::Method::Options => Self::Options,
-            spikard_core::Method::Trace => Self::Trace,
+            spikard::Method::Get => Self::Get,
+            spikard::Method::Post => Self::Post,
+            spikard::Method::Put => Self::Put,
+            spikard::Method::Patch => Self::Patch,
+            spikard::Method::Delete => Self::Delete,
+            spikard::Method::Head => Self::Head,
+            spikard::Method::Options => Self::Options,
+            spikard::Method::Connect => Self::Connect,
+            spikard::Method::Trace => Self::Trace,
         }
     }
 }
@@ -1767,6 +1914,7 @@ impl Method {
             Self::Delete => "Delete".to_string(),
             Self::Head => "Head".to_string(),
             Self::Options => "Options".to_string(),
+            Self::Connect => "Connect".to_string(),
             Self::Trace => "Trace".to_string(),
         }
     }
@@ -1807,24 +1955,99 @@ pub fn schema_full() -> FullSchemaConfig {
     FullSchemaConfig(spikard_graphql::schema_full())
 }
 
+pub fn cors_config_from_json(json: String) -> Result<CorsConfig, String> {
+    serde_json::from_str::<spikard::CorsConfig>(&json)
+        .map(CorsConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn server_config_from_json(json: String) -> Result<ServerConfig, String> {
+    serde_json::from_str::<spikard::ServerConfig>(&json)
+        .map(ServerConfig)
+        .map_err(|e| e.to_string())
+}
 pub fn upload_file_from_json(json: String) -> Result<UploadFile, String> {
     serde_json::from_str::<spikard::UploadFile>(&json)
         .map(UploadFile)
         .map_err(|e| e.to_string())
 }
-pub fn cors_config_from_json(json: String) -> Result<CorsConfig, String> {
-    serde_json::from_str::<spikard_core::CorsConfig>(&json)
-        .map(CorsConfig)
+pub fn schema_config_from_json(json: String) -> Result<SchemaConfig, String> {
+    serde_json::from_str::<spikard::SchemaConfig>(&json)
+        .map(SchemaConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn query_only_config_from_json(json: String) -> Result<QueryOnlyConfig, String> {
+    serde_json::from_str::<spikard::QueryOnlyConfig>(&json)
+        .map(QueryOnlyConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn query_mutation_config_from_json(json: String) -> Result<QueryMutationConfig, String> {
+    serde_json::from_str::<spikard::QueryMutationConfig>(&json)
+        .map(QueryMutationConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn full_schema_config_from_json(json: String) -> Result<FullSchemaConfig, String> {
+    serde_json::from_str::<spikard::FullSchemaConfig>(&json)
+        .map(FullSchemaConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn background_task_config_from_json(json: String) -> Result<BackgroundTaskConfig, String> {
+    serde_json::from_str::<spikard::BackgroundTaskConfig>(&json)
+        .map(BackgroundTaskConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn background_job_metadata_from_json(json: String) -> Result<BackgroundJobMetadata, String> {
+    serde_json::from_str::<spikard::BackgroundJobMetadata>(&json)
+        .map(BackgroundJobMetadata)
         .map_err(|e| e.to_string())
 }
 pub fn compression_config_from_json(json: String) -> Result<CompressionConfig, String> {
-    serde_json::from_str::<spikard_core::CompressionConfig>(&json)
+    serde_json::from_str::<spikard::CompressionConfig>(&json)
         .map(CompressionConfig)
         .map_err(|e| e.to_string())
 }
 pub fn rate_limit_config_from_json(json: String) -> Result<RateLimitConfig, String> {
-    serde_json::from_str::<spikard_core::RateLimitConfig>(&json)
+    serde_json::from_str::<spikard::RateLimitConfig>(&json)
         .map(RateLimitConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn grpc_config_from_json(json: String) -> Result<GrpcConfig, String> {
+    serde_json::from_str::<spikard::GrpcConfig>(&json)
+        .map(GrpcConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn json_rpc_config_from_json(json: String) -> Result<JsonRpcConfig, String> {
+    serde_json::from_str::<spikard::JsonRpcConfig>(&json)
+        .map(JsonRpcConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn open_api_config_from_json(json: String) -> Result<OpenApiConfig, String> {
+    serde_json::from_str::<spikard::OpenApiConfig>(&json)
+        .map(OpenApiConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn response_from_json(json: String) -> Result<Response, String> {
+    serde_json::from_str::<spikard::Response>(&json)
+        .map(Response)
+        .map_err(|e| e.to_string())
+}
+pub fn sse_event_from_json(json: String) -> Result<SseEvent, String> {
+    serde_json::from_str::<spikard::SseEvent>(&json)
+        .map(SseEvent)
+        .map_err(|e| e.to_string())
+}
+pub fn jwt_config_from_json(json: String) -> Result<JwtConfig, String> {
+    serde_json::from_str::<spikard::JwtConfig>(&json)
+        .map(JwtConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn api_key_config_from_json(json: String) -> Result<ApiKeyConfig, String> {
+    serde_json::from_str::<spikard::ApiKeyConfig>(&json)
+        .map(ApiKeyConfig)
+        .map_err(|e| e.to_string())
+}
+pub fn static_files_config_from_json(json: String) -> Result<StaticFilesConfig, String> {
+    serde_json::from_str::<spikard::StaticFilesConfig>(&json)
+        .map(StaticFilesConfig)
         .map_err(|e| e.to_string())
 }
 pub fn json_rpc_method_info_from_json(json: String) -> Result<JsonRpcMethodInfo, String> {
@@ -1835,26 +2058,6 @@ pub fn json_rpc_method_info_from_json(json: String) -> Result<JsonRpcMethodInfo,
 pub fn problem_details_from_json(json: String) -> Result<ProblemDetails, String> {
     serde_json::from_str::<spikard_core::ProblemDetails>(&json)
         .map(ProblemDetails)
-        .map_err(|e| e.to_string())
-}
-pub fn schema_config_from_json(json: String) -> Result<SchemaConfig, String> {
-    serde_json::from_str::<spikard_graphql::SchemaConfig>(&json)
-        .map(SchemaConfig)
-        .map_err(|e| e.to_string())
-}
-pub fn query_only_config_from_json(json: String) -> Result<QueryOnlyConfig, String> {
-    serde_json::from_str::<spikard_graphql::QueryOnlyConfig>(&json)
-        .map(QueryOnlyConfig)
-        .map_err(|e| e.to_string())
-}
-pub fn query_mutation_config_from_json(json: String) -> Result<QueryMutationConfig, String> {
-    serde_json::from_str::<spikard_graphql::QueryMutationConfig>(&json)
-        .map(QueryMutationConfig)
-        .map_err(|e| e.to_string())
-}
-pub fn full_schema_config_from_json(json: String) -> Result<FullSchemaConfig, String> {
-    serde_json::from_str::<spikard_graphql::FullSchemaConfig>(&json)
-        .map(FullSchemaConfig)
         .map_err(|e| e.to_string())
 }
 pub fn async_api_config_from_json(json: String) -> Result<AsyncApiConfig, String> {
@@ -1882,31 +2085,6 @@ pub fn parse_result_from_json(json: String) -> Result<ParseResult, String> {
         .map(ParseResult)
         .map_err(|e| e.to_string())
 }
-pub fn background_task_config_from_json(json: String) -> Result<BackgroundTaskConfig, String> {
-    serde_json::from_str::<spikard_http::BackgroundTaskConfig>(&json)
-        .map(BackgroundTaskConfig)
-        .map_err(|e| e.to_string())
-}
-pub fn background_job_metadata_from_json(json: String) -> Result<BackgroundJobMetadata, String> {
-    serde_json::from_str::<spikard_http::BackgroundJobMetadata>(&json)
-        .map(BackgroundJobMetadata)
-        .map_err(|e| e.to_string())
-}
-pub fn grpc_config_from_json(json: String) -> Result<GrpcConfig, String> {
-    serde_json::from_str::<spikard_http::GrpcConfig>(&json)
-        .map(GrpcConfig)
-        .map_err(|e| e.to_string())
-}
-pub fn json_rpc_config_from_json(json: String) -> Result<JsonRpcConfig, String> {
-    serde_json::from_str::<spikard_http::JsonRpcConfig>(&json)
-        .map(JsonRpcConfig)
-        .map_err(|e| e.to_string())
-}
-pub fn open_api_config_from_json(json: String) -> Result<OpenApiConfig, String> {
-    serde_json::from_str::<spikard_http::OpenApiConfig>(&json)
-        .map(OpenApiConfig)
-        .map_err(|e| e.to_string())
-}
 pub fn contact_info_from_json(json: String) -> Result<ContactInfo, String> {
     serde_json::from_str::<spikard_http::ContactInfo>(&json)
         .map(ContactInfo)
@@ -1922,38 +2100,8 @@ pub fn server_info_from_json(json: String) -> Result<ServerInfo, String> {
         .map(ServerInfo)
         .map_err(|e| e.to_string())
 }
-pub fn response_from_json(json: String) -> Result<Response, String> {
-    serde_json::from_str::<spikard_http::Response>(&json)
-        .map(Response)
-        .map_err(|e| e.to_string())
-}
-pub fn sse_event_from_json(json: String) -> Result<SseEvent, String> {
-    serde_json::from_str::<spikard_http::SseEvent>(&json)
-        .map(SseEvent)
-        .map_err(|e| e.to_string())
-}
-pub fn jwt_config_from_json(json: String) -> Result<JwtConfig, String> {
-    serde_json::from_str::<spikard_http::JwtConfig>(&json)
-        .map(JwtConfig)
-        .map_err(|e| e.to_string())
-}
-pub fn api_key_config_from_json(json: String) -> Result<ApiKeyConfig, String> {
-    serde_json::from_str::<spikard_http::ApiKeyConfig>(&json)
-        .map(ApiKeyConfig)
-        .map_err(|e| e.to_string())
-}
-pub fn static_files_config_from_json(json: String) -> Result<StaticFilesConfig, String> {
-    serde_json::from_str::<spikard_http::StaticFilesConfig>(&json)
-        .map(StaticFilesConfig)
-        .map_err(|e| e.to_string())
-}
-pub fn server_config_from_json(json: String) -> Result<ServerConfig, String> {
-    serde_json::from_str::<spikard_http::ServerConfig>(&json)
-        .map(ServerConfig)
-        .map_err(|e| e.to_string())
-}
 pub fn method_from_json(json: String) -> Result<Method, String> {
-    serde_json::from_str::<spikard_core::Method>(&json)
+    serde_json::from_str::<spikard::Method>(&json)
         .map(Method::from)
         .map_err(|e| e.to_string())
 }

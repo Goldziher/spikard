@@ -2,18 +2,30 @@
 
 package dev.spikard.kt
 
+
 import dev.spikard.Spikard as Bridge
 
 typealias UploadFile = dev.spikard.UploadFile
-typealias CorsConfig = dev.spikard.CorsConfig
-typealias CompressionConfig = dev.spikard.CompressionConfig
-typealias RateLimitConfig = dev.spikard.RateLimitConfig
-typealias JsonRpcMethodInfo = dev.spikard.JsonRpcMethodInfo
-typealias ProblemDetails = dev.spikard.ProblemDetails
 typealias SchemaConfig = dev.spikard.SchemaConfig
 typealias QueryOnlyConfig = dev.spikard.QueryOnlyConfig
 typealias QueryMutationConfig = dev.spikard.QueryMutationConfig
 typealias FullSchemaConfig = dev.spikard.FullSchemaConfig
+typealias BackgroundTaskConfig = dev.spikard.BackgroundTaskConfig
+typealias BackgroundJobMetadata = dev.spikard.BackgroundJobMetadata
+typealias CorsConfig = dev.spikard.CorsConfig
+typealias CompressionConfig = dev.spikard.CompressionConfig
+typealias RateLimitConfig = dev.spikard.RateLimitConfig
+typealias GrpcConfig = dev.spikard.GrpcConfig
+typealias JsonRpcConfig = dev.spikard.JsonRpcConfig
+typealias OpenApiConfig = dev.spikard.OpenApiConfig
+typealias Response = dev.spikard.Response
+typealias SseEvent = dev.spikard.SseEvent
+typealias JwtConfig = dev.spikard.JwtConfig
+typealias ApiKeyConfig = dev.spikard.ApiKeyConfig
+typealias StaticFilesConfig = dev.spikard.StaticFilesConfig
+typealias ServerConfig = dev.spikard.ServerConfig
+typealias JsonRpcMethodInfo = dev.spikard.JsonRpcMethodInfo
+typealias ProblemDetails = dev.spikard.ProblemDetails
 typealias AsyncApiConfig = dev.spikard.AsyncApiConfig
 typealias ParsedChannel = dev.spikard.ParsedChannel
 typealias ParsedOperation = dev.spikard.ParsedOperation
@@ -22,29 +34,33 @@ typealias ParseResult = dev.spikard.ParseResult
 typealias ParseRequest = dev.spikard.ParseRequest
 typealias ValidationResponse = dev.spikard.ValidationResponse
 typealias ValidateRequest = dev.spikard.ValidateRequest
-typealias BackgroundTaskConfig = dev.spikard.BackgroundTaskConfig
-typealias BackgroundJobMetadata = dev.spikard.BackgroundJobMetadata
-typealias GrpcConfig = dev.spikard.GrpcConfig
-typealias JsonRpcConfig = dev.spikard.JsonRpcConfig
-typealias OpenApiConfig = dev.spikard.OpenApiConfig
 typealias ContactInfo = dev.spikard.ContactInfo
 typealias LicenseInfo = dev.spikard.LicenseInfo
 typealias ServerInfo = dev.spikard.ServerInfo
-typealias Response = dev.spikard.Response
-typealias SseEvent = dev.spikard.SseEvent
 typealias TestingSseEvent = dev.spikard.TestingSseEvent
-typealias JwtConfig = dev.spikard.JwtConfig
-typealias ApiKeyConfig = dev.spikard.ApiKeyConfig
-typealias StaticFilesConfig = dev.spikard.StaticFilesConfig
-typealias ServerConfig = dev.spikard.ServerConfig
 
 typealias Method = dev.spikard.Method
 typealias SecuritySchemeInfo = dev.spikard.SecuritySchemeInfo
 
+typealias AppErrorException = dev.spikard.AppErrorException
 typealias GraphQLErrorException = dev.spikard.GraphQLErrorException
 typealias SchemaErrorException = dev.spikard.SchemaErrorException
 
 object Spikard {
+
+    /**
+     * Convert a handler-bridge outcome into a `HandlerResult`.
+     *
+     * Language bindings produce a `Response` wire DTO (or a boxed error) from the host callback;
+     * the `Handler` trait requires an `axum` response. This builds the `axum` response from the DTO's
+     * `content` (serialized as JSON), `status_code`, and `headers`, mapping any error to a `500`
+     * problem. It is the response adapter referenced by the generated handler bridges.
+     */
+    fun handlerResultFromResponse(outcome: Response): String {
+
+        return Bridge.handlerResultFromResponse(outcome)
+    }
+
     /**
      * Create a simple schema configuration with only Query type.
      *
@@ -54,7 +70,10 @@ object Spikard {
      *
      * A `QueryOnlyConfig` with default settings
      */
-    fun schemaQueryOnly(): QueryOnlyConfig = Bridge.schemaQueryOnly()
+    fun schemaQueryOnly(): QueryOnlyConfig {
+
+        return Bridge.schemaQueryOnly()
+    }
 
     /**
      * Create a schema configuration with Query and Mutation types.
@@ -65,7 +84,10 @@ object Spikard {
      *
      * A `QueryMutationConfig` with default settings
      */
-    fun schemaQueryMutation(): QueryMutationConfig = Bridge.schemaQueryMutation()
+    fun schemaQueryMutation(): QueryMutationConfig {
+
+        return Bridge.schemaQueryMutation()
+    }
 
     /**
      * Create a schema configuration with all three root types.
@@ -76,5 +98,9 @@ object Spikard {
      *
      * A `FullSchemaConfig` with default settings
      */
-    fun schemaFull(): FullSchemaConfig = Bridge.schemaFull()
+    fun schemaFull(): FullSchemaConfig {
+
+        return Bridge.schemaFull()
+    }
+
 }

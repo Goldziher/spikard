@@ -28,195 +28,6 @@ import RustBridge
 /// ```
 public typealias UploadFile = RustBridge.UploadFile
 
-/// CORS configuration for a route
-public struct CorsConfig: Codable, Sendable, Hashable {
-    public let allowedOrigins: [String]
-    public let allowedMethods: [String]
-    public let allowedHeaders: [String]
-    public let exposeHeaders: [String]?
-    public let maxAge: UInt32?
-    public let allowCredentials: Bool?
-    public init(allowedOrigins: [String], allowedMethods: [String], allowedHeaders: [String], exposeHeaders: [String]? = nil, maxAge: UInt32? = nil, allowCredentials: Bool? = nil) {
-        self.allowedOrigins = allowedOrigins
-        self.allowedMethods = allowedMethods
-        self.allowedHeaders = allowedHeaders
-        self.exposeHeaders = exposeHeaders
-        self.maxAge = maxAge
-        self.allowCredentials = allowCredentials
-    }
-    private enum CodingKeys: String, CodingKey {
-        case allowedOrigins = "allowed_origins"
-        case allowedMethods = "allowed_methods"
-        case allowedHeaders = "allowed_headers"
-        case exposeHeaders = "expose_headers"
-        case maxAge = "max_age"
-        case allowCredentials = "allow_credentials"
-    }
-    public init(from decoder: any Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.allowedOrigins = try container.decodeIfPresent([String].self, forKey: .allowedOrigins) ?? []
-        self.allowedMethods = try container.decodeIfPresent([String].self, forKey: .allowedMethods) ?? []
-        self.allowedHeaders = try container.decodeIfPresent([String].self, forKey: .allowedHeaders) ?? []
-        self.exposeHeaders = try container.decodeIfPresent([String].self, forKey: .exposeHeaders) ?? nil
-        self.maxAge = try container.decodeIfPresent(UInt32.self, forKey: .maxAge) ?? nil
-        self.allowCredentials = try container.decodeIfPresent(Bool.self, forKey: .allowCredentials) ?? nil
-    }
-}
-
-// MARK: - Internal FFI conversions for CorsConfig
-internal extension CorsConfig {
-    init(_ rb: RustBridge.CorsConfigRef) throws {
-        self.allowedOrigins = rb.allowedOrigins().map { $0.as_str().toString() }
-        self.allowedMethods = rb.allowedMethods().map { $0.as_str().toString() }
-        self.allowedHeaders = rb.allowedHeaders().map { $0.as_str().toString() }
-        self.exposeHeaders = rb.exposeHeaders()?.map { $0.as_str().toString() }
-        self.maxAge = rb.maxAge()
-        self.allowCredentials = rb.allowCredentials()
-    }
-    func intoRust() throws -> RustBridge.CorsConfig {
-        let data = try JSONEncoder().encode(self)
-        let json = String(data: data, encoding: .utf8) ?? "{}"
-        return try RustBridge.corsConfigFromJson(json)
-    }
-}
-
-/// Compression configuration shared across runtimes
-public struct CompressionConfig: Codable, Sendable, Hashable {
-    /// Enable gzip compression
-    public let gzip: Bool
-    /// Enable brotli compression
-    public let brotli: Bool
-    /// Minimum response size to compress (bytes)
-    public let minSize: UInt
-    /// Compression quality (0-11 for brotli, 0-9 for gzip)
-    public let quality: UInt32
-    public init(gzip: Bool, brotli: Bool, minSize: UInt, quality: UInt32) {
-        self.gzip = gzip
-        self.brotli = brotli
-        self.minSize = minSize
-        self.quality = quality
-    }
-    private enum CodingKeys: String, CodingKey {
-        case gzip = "gzip"
-        case brotli = "brotli"
-        case minSize = "min_size"
-        case quality = "quality"
-    }
-    public init(from decoder: any Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.gzip = try container.decodeIfPresent(Bool.self, forKey: .gzip) ?? true
-        self.brotli = try container.decodeIfPresent(Bool.self, forKey: .brotli) ?? true
-        self.minSize = try container.decodeIfPresent(UInt.self, forKey: .minSize) ?? 0
-        self.quality = try container.decodeIfPresent(UInt32.self, forKey: .quality) ?? 0
-    }
-}
-
-// MARK: - Internal FFI conversions for CompressionConfig
-internal extension CompressionConfig {
-    init(_ rb: RustBridge.CompressionConfigRef) throws {
-        self.gzip = rb.gzip()
-        self.brotli = rb.brotli()
-        self.minSize = rb.minSize()
-        self.quality = rb.quality()
-    }
-    func intoRust() throws -> RustBridge.CompressionConfig {
-        return RustBridge.CompressionConfig(self.gzip, self.brotli, self.minSize, self.quality)
-    }
-}
-
-/// Rate limiting configuration shared across runtimes
-public struct RateLimitConfig: Codable, Sendable, Hashable {
-    /// Requests per second
-    public let perSecond: UInt64
-    /// Burst allowance
-    public let burst: UInt32
-    /// Use IP-based rate limiting
-    public let ipBased: Bool
-    public init(perSecond: UInt64, burst: UInt32, ipBased: Bool) {
-        self.perSecond = perSecond
-        self.burst = burst
-        self.ipBased = ipBased
-    }
-    private enum CodingKeys: String, CodingKey {
-        case perSecond = "per_second"
-        case burst = "burst"
-        case ipBased = "ip_based"
-    }
-    public init(from decoder: any Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.perSecond = try container.decodeIfPresent(UInt64.self, forKey: .perSecond) ?? 100
-        self.burst = try container.decodeIfPresent(UInt32.self, forKey: .burst) ?? 200
-        self.ipBased = try container.decodeIfPresent(Bool.self, forKey: .ipBased) ?? true
-    }
-}
-
-// MARK: - Internal FFI conversions for RateLimitConfig
-internal extension RateLimitConfig {
-    init(_ rb: RustBridge.RateLimitConfigRef) throws {
-        self.perSecond = rb.perSecond()
-        self.burst = rb.burst()
-        self.ipBased = rb.ipBased()
-    }
-    func intoRust() throws -> RustBridge.RateLimitConfig {
-        return RustBridge.RateLimitConfig(self.perSecond, self.burst, self.ipBased)
-    }
-}
-
-/// JSON-RPC method metadata for routes that support JSON-RPC
-///
-/// This struct captures the metadata needed to expose HTTP routes as JSON-RPC methods,
-/// enabling discovery and documentation of RPC-compatible endpoints.
-///
-/// # Examples
-///
-/// ```ignore
-/// use spikard_core::router::JsonRpcMethodInfo;
-/// use serde_json::json;
-///
-/// let rpc_info = JsonRpcMethodInfo {
-///     method_name: "user.create".to_string(),
-///     description: Some("Creates a new user".to_string()),
-///     params_schema: Some(json!({
-///         "type": "object",
-///         "properties": {
-///             "name": {"type": "string"}
-///         }
-///     })),
-///     result_schema: Some(json!({
-///         "type": "object",
-///         "properties": {
-///             "id": {"type": "integer"}
-///         }
-///     })),
-///     deprecated: false,
-///     tags: vec!["users".to_string()],
-/// };
-/// ```
-public typealias JsonRpcMethodInfo = RustBridge.JsonRpcMethodInfo
-
-/// RFC 9457 Problem Details for HTTP APIs
-///
-/// A machine-readable format for specifying errors in HTTP API responses.
-/// Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
-/// if not specified.
-///
-/// # Content-Type
-/// Responses using this struct should set:
-/// ```text
-/// Content-Type: application/problem+json
-/// ```
-///
-/// ```json
-/// {
-///   "type": "https://spikard.dev/errors/validation-error",
-///   "title": "Request Validation Failed",
-///   "status": 422,
-///   "detail": "2 validation errors in request body",
-///   "errors": [...]
-/// }
-/// ```
-public typealias ProblemDetails = RustBridge.ProblemDetails
-
 /// Configuration for GraphQL schema building.
 ///
 /// Encapsulates all schema-level configuration options including
@@ -372,56 +183,6 @@ internal extension FullSchemaConfig {
     }
 }
 
-/// AsyncAPI HTTP endpoint configuration
-public typealias AsyncApiConfig = RustBridge.AsyncApiConfig
-
-/// A single channel extracted from an AsyncAPI spec
-public typealias ParsedChannel = RustBridge.ParsedChannel
-
-/// A single operation extracted from an AsyncAPI spec
-public struct ParsedOperation: Codable, Sendable, Hashable {
-    /// Operation name
-    public let name: String
-    /// Operation action: "send" or "receive"
-    public let action: String
-    /// Channel reference (resolved to the channel name)
-    public let channel: String
-    public init(name: String, action: String, channel: String) {
-        self.name = name
-        self.action = action
-        self.channel = channel
-    }
-}
-
-// MARK: - Internal FFI conversions for ParsedOperation
-internal extension ParsedOperation {
-    init(_ rb: RustBridge.ParsedOperationRef) throws {
-        self.name = rb.name().toString()
-        self.action = rb.action().toString()
-        self.channel = rb.channel().toString()
-    }
-    func intoRust() throws -> RustBridge.ParsedOperation {
-        let data = try JSONEncoder().encode(self)
-        let json = String(data: data, encoding: .utf8) ?? "{}"
-        return try RustBridge.parsedOperationFromJson(json)
-    }
-}
-
-/// A resolved message (name + JSON Schema)
-public typealias ParsedMessage = RustBridge.ParsedMessage
-
-/// Full parse result returned by `POST /asyncapi/parse`
-public typealias ParseResult = RustBridge.ParseResult
-
-/// Request body for `POST /asyncapi/parse`
-public typealias ParseRequest = RustBridge.ParseRequest
-
-/// Response body for `POST /asyncapi/validate`
-public typealias ValidationResponse = RustBridge.ValidationResponse
-
-/// Request body for `POST /asyncapi/validate`
-public typealias ValidateRequest = RustBridge.ValidateRequest
-
 /// Configuration for in-process background task execution.
 public struct BackgroundTaskConfig: Codable, Sendable, Hashable {
     public let maxQueueSize: UInt
@@ -483,6 +244,140 @@ internal extension BackgroundJobMetadata {
     }
     func intoRust() throws -> RustBridge.BackgroundJobMetadata {
         return RustBridge.BackgroundJobMetadata(RustString(self.name), self.requestId.map(RustString.init))
+    }
+}
+
+/// CORS configuration for a route
+public struct CorsConfig: Codable, Sendable, Hashable {
+    public let allowedOrigins: [String]
+    public let allowedMethods: [String]
+    public let allowedHeaders: [String]
+    public let exposeHeaders: [String]?
+    public let maxAge: UInt32?
+    public let allowCredentials: Bool?
+    public init(allowedOrigins: [String], allowedMethods: [String], allowedHeaders: [String], exposeHeaders: [String]? = nil, maxAge: UInt32? = nil, allowCredentials: Bool? = nil) {
+        self.allowedOrigins = allowedOrigins
+        self.allowedMethods = allowedMethods
+        self.allowedHeaders = allowedHeaders
+        self.exposeHeaders = exposeHeaders
+        self.maxAge = maxAge
+        self.allowCredentials = allowCredentials
+    }
+    private enum CodingKeys: String, CodingKey {
+        case allowedOrigins = "allowed_origins"
+        case allowedMethods = "allowed_methods"
+        case allowedHeaders = "allowed_headers"
+        case exposeHeaders = "expose_headers"
+        case maxAge = "max_age"
+        case allowCredentials = "allow_credentials"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.allowedOrigins = try container.decodeIfPresent([String].self, forKey: .allowedOrigins) ?? []
+        self.allowedMethods = try container.decodeIfPresent([String].self, forKey: .allowedMethods) ?? []
+        self.allowedHeaders = try container.decodeIfPresent([String].self, forKey: .allowedHeaders) ?? []
+        self.exposeHeaders = try container.decodeIfPresent([String].self, forKey: .exposeHeaders) ?? nil
+        self.maxAge = try container.decodeIfPresent(UInt32.self, forKey: .maxAge) ?? nil
+        self.allowCredentials = try container.decodeIfPresent(Bool.self, forKey: .allowCredentials) ?? nil
+    }
+}
+
+// MARK: - Internal FFI conversions for CorsConfig
+internal extension CorsConfig {
+    init(_ rb: RustBridge.CorsConfigRef) throws {
+        self.allowedOrigins = rb.allowedOrigins().map { $0.as_str().toString() }
+        self.allowedMethods = rb.allowedMethods().map { $0.as_str().toString() }
+        self.allowedHeaders = rb.allowedHeaders().map { $0.as_str().toString() }
+        self.exposeHeaders = rb.exposeHeaders()?.map { $0.as_str().toString() }
+        self.maxAge = rb.maxAge()
+        self.allowCredentials = rb.allowCredentials()
+    }
+    func intoRust() throws -> RustBridge.CorsConfig {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.corsConfigFromJson(json)
+    }
+}
+
+/// Compression configuration shared across runtimes
+public struct CompressionConfig: Codable, Sendable, Hashable {
+    /// Enable gzip compression
+    public let gzip: Bool
+    /// Enable brotli compression
+    public let brotli: Bool
+    /// Minimum response size to compress (bytes)
+    public let minSize: UInt
+    /// Compression quality (0-11 for brotli, 0-9 for gzip)
+    public let quality: UInt32
+    public init(gzip: Bool, brotli: Bool, minSize: UInt, quality: UInt32) {
+        self.gzip = gzip
+        self.brotli = brotli
+        self.minSize = minSize
+        self.quality = quality
+    }
+    private enum CodingKeys: String, CodingKey {
+        case gzip = "gzip"
+        case brotli = "brotli"
+        case minSize = "min_size"
+        case quality = "quality"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.gzip = try container.decodeIfPresent(Bool.self, forKey: .gzip) ?? true
+        self.brotli = try container.decodeIfPresent(Bool.self, forKey: .brotli) ?? true
+        self.minSize = try container.decodeIfPresent(UInt.self, forKey: .minSize) ?? 0
+        self.quality = try container.decodeIfPresent(UInt32.self, forKey: .quality) ?? 0
+    }
+}
+
+// MARK: - Internal FFI conversions for CompressionConfig
+internal extension CompressionConfig {
+    init(_ rb: RustBridge.CompressionConfigRef) throws {
+        self.gzip = rb.gzip()
+        self.brotli = rb.brotli()
+        self.minSize = rb.minSize()
+        self.quality = rb.quality()
+    }
+    func intoRust() throws -> RustBridge.CompressionConfig {
+        return RustBridge.CompressionConfig(self.gzip, self.brotli, self.minSize, self.quality)
+    }
+}
+
+/// Rate limiting configuration shared across runtimes
+public struct RateLimitConfig: Codable, Sendable, Hashable {
+    /// Requests per second
+    public let perSecond: UInt64
+    /// Burst allowance
+    public let burst: UInt32
+    /// Use IP-based rate limiting
+    public let ipBased: Bool
+    public init(perSecond: UInt64, burst: UInt32, ipBased: Bool) {
+        self.perSecond = perSecond
+        self.burst = burst
+        self.ipBased = ipBased
+    }
+    private enum CodingKeys: String, CodingKey {
+        case perSecond = "per_second"
+        case burst = "burst"
+        case ipBased = "ip_based"
+    }
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.perSecond = try container.decodeIfPresent(UInt64.self, forKey: .perSecond) ?? 100
+        self.burst = try container.decodeIfPresent(UInt32.self, forKey: .burst) ?? 200
+        self.ipBased = try container.decodeIfPresent(Bool.self, forKey: .ipBased) ?? true
+    }
+}
+
+// MARK: - Internal FFI conversions for RateLimitConfig
+internal extension RateLimitConfig {
+    init(_ rb: RustBridge.RateLimitConfigRef) throws {
+        self.perSecond = rb.perSecond()
+        self.burst = rb.burst()
+        self.ipBased = rb.ipBased()
+    }
+    func intoRust() throws -> RustBridge.RateLimitConfig {
+        return RustBridge.RateLimitConfig(self.perSecond, self.burst, self.ipBased)
     }
 }
 
@@ -674,85 +569,6 @@ internal extension JsonRpcConfig {
 /// OpenAPI configuration
 public typealias OpenApiConfig = RustBridge.OpenApiConfig
 
-/// Contact information
-public struct ContactInfo: Codable, Sendable, Hashable {
-    /// Name of the contact person or organisation.
-    public let name: String?
-    /// Contact email address.
-    public let email: String?
-    /// URL pointing to the contact information page.
-    public let url: String?
-    public init(name: String? = nil, email: String? = nil, url: String? = nil) {
-        self.name = name
-        self.email = email
-        self.url = url
-    }
-}
-
-// MARK: - Internal FFI conversions for ContactInfo
-internal extension ContactInfo {
-    init(_ rb: RustBridge.ContactInfoRef) throws {
-        self.name = rb.name()?.toString()
-        self.email = rb.email()?.toString()
-        self.url = rb.url()?.toString()
-    }
-    func intoRust() throws -> RustBridge.ContactInfo {
-        let data = try JSONEncoder().encode(self)
-        let json = String(data: data, encoding: .utf8) ?? "{}"
-        return try RustBridge.contactInfoFromJson(json)
-    }
-}
-
-/// License information
-public struct LicenseInfo: Codable, Sendable, Hashable {
-    /// SPDX license identifier or display name (e.g. `"MIT"`).
-    public let name: String
-    /// URL to the full license text.
-    public let url: String?
-    public init(name: String, url: String? = nil) {
-        self.name = name
-        self.url = url
-    }
-}
-
-// MARK: - Internal FFI conversions for LicenseInfo
-internal extension LicenseInfo {
-    init(_ rb: RustBridge.LicenseInfoRef) throws {
-        self.name = rb.name().toString()
-        self.url = rb.url()?.toString()
-    }
-    func intoRust() throws -> RustBridge.LicenseInfo {
-        let data = try JSONEncoder().encode(self)
-        let json = String(data: data, encoding: .utf8) ?? "{}"
-        return try RustBridge.licenseInfoFromJson(json)
-    }
-}
-
-/// Server information
-public struct ServerInfo: Codable, Sendable, Hashable {
-    /// Base URL of the server (e.g. `"https://api.example.com/v1"`).
-    public let url: String
-    /// Optional human-readable description of the server environment.
-    public let description: String?
-    public init(url: String, description: String? = nil) {
-        self.url = url
-        self.description = description
-    }
-}
-
-// MARK: - Internal FFI conversions for ServerInfo
-internal extension ServerInfo {
-    init(_ rb: RustBridge.ServerInfoRef) throws {
-        self.url = rb.url().toString()
-        self.description = rb.description()?.toString()
-    }
-    func intoRust() throws -> RustBridge.ServerInfo {
-        let data = try JSONEncoder().encode(self)
-        let json = String(data: data, encoding: .utf8) ?? "{}"
-        return try RustBridge.serverInfoFromJson(json)
-    }
-}
-
 /// HTTP Response with custom status code, headers, and content
 public typealias Response = RustBridge.Response
 
@@ -778,9 +594,6 @@ public typealias Response = RustBridge.Response
 /// retry: 3000
 /// ```
 public typealias SseEvent = RustBridge.SseEvent
-
-/// A single Server-Sent Event.
-public typealias TestingSseEvent = RustBridge.TestingSseEvent
 
 /// JWT authentication configuration
 public struct JwtConfig: Codable, Sendable, Hashable {
@@ -890,6 +703,193 @@ internal extension StaticFilesConfig {
 /// Server configuration
 public typealias ServerConfig = RustBridge.ServerConfig
 
+/// JSON-RPC method metadata for routes that support JSON-RPC
+///
+/// This struct captures the metadata needed to expose HTTP routes as JSON-RPC methods,
+/// enabling discovery and documentation of RPC-compatible endpoints.
+///
+/// # Examples
+///
+/// ```ignore
+/// use spikard_core::router::JsonRpcMethodInfo;
+/// use serde_json::json;
+///
+/// let rpc_info = JsonRpcMethodInfo {
+///     method_name: "user.create".to_string(),
+///     description: Some("Creates a new user".to_string()),
+///     params_schema: Some(json!({
+///         "type": "object",
+///         "properties": {
+///             "name": {"type": "string"}
+///         }
+///     })),
+///     result_schema: Some(json!({
+///         "type": "object",
+///         "properties": {
+///             "id": {"type": "integer"}
+///         }
+///     })),
+///     deprecated: false,
+///     tags: vec!["users".to_string()],
+/// };
+/// ```
+public typealias JsonRpcMethodInfo = RustBridge.JsonRpcMethodInfo
+
+/// RFC 9457 Problem Details for HTTP APIs
+///
+/// A machine-readable format for specifying errors in HTTP API responses.
+/// Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
+/// if not specified.
+///
+/// # Content-Type
+/// Responses using this struct should set:
+/// ```text
+/// Content-Type: application/problem+json
+/// ```
+///
+/// ```json
+/// {
+///   "type": "https://spikard.dev/errors/validation-error",
+///   "title": "Request Validation Failed",
+///   "status": 422,
+///   "detail": "2 validation errors in request body",
+///   "errors": [...]
+/// }
+/// ```
+public typealias ProblemDetails = RustBridge.ProblemDetails
+
+/// AsyncAPI HTTP endpoint configuration
+public typealias AsyncApiConfig = RustBridge.AsyncApiConfig
+
+/// A single channel extracted from an AsyncAPI spec
+public typealias ParsedChannel = RustBridge.ParsedChannel
+
+/// A single operation extracted from an AsyncAPI spec
+public struct ParsedOperation: Codable, Sendable, Hashable {
+    /// Operation name
+    public let name: String
+    /// Operation action: "send" or "receive"
+    public let action: String
+    /// Channel reference (resolved to the channel name)
+    public let channel: String
+    public init(name: String, action: String, channel: String) {
+        self.name = name
+        self.action = action
+        self.channel = channel
+    }
+}
+
+// MARK: - Internal FFI conversions for ParsedOperation
+internal extension ParsedOperation {
+    init(_ rb: RustBridge.ParsedOperationRef) throws {
+        self.name = rb.name().toString()
+        self.action = rb.action().toString()
+        self.channel = rb.channel().toString()
+    }
+    func intoRust() throws -> RustBridge.ParsedOperation {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.parsedOperationFromJson(json)
+    }
+}
+
+/// A resolved message (name + JSON Schema)
+public typealias ParsedMessage = RustBridge.ParsedMessage
+
+/// Full parse result returned by `POST /asyncapi/parse`
+public typealias ParseResult = RustBridge.ParseResult
+
+/// Request body for `POST /asyncapi/parse`
+public typealias ParseRequest = RustBridge.ParseRequest
+
+/// Response body for `POST /asyncapi/validate`
+public typealias ValidationResponse = RustBridge.ValidationResponse
+
+/// Request body for `POST /asyncapi/validate`
+public typealias ValidateRequest = RustBridge.ValidateRequest
+
+/// Contact information
+public struct ContactInfo: Codable, Sendable, Hashable {
+    /// Name of the contact person or organisation.
+    public let name: String?
+    /// Contact email address.
+    public let email: String?
+    /// URL pointing to the contact information page.
+    public let url: String?
+    public init(name: String? = nil, email: String? = nil, url: String? = nil) {
+        self.name = name
+        self.email = email
+        self.url = url
+    }
+}
+
+// MARK: - Internal FFI conversions for ContactInfo
+internal extension ContactInfo {
+    init(_ rb: RustBridge.ContactInfoRef) throws {
+        self.name = rb.name()?.toString()
+        self.email = rb.email()?.toString()
+        self.url = rb.url()?.toString()
+    }
+    func intoRust() throws -> RustBridge.ContactInfo {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.contactInfoFromJson(json)
+    }
+}
+
+/// License information
+public struct LicenseInfo: Codable, Sendable, Hashable {
+    /// SPDX license identifier or display name (e.g. `"MIT"`).
+    public let name: String
+    /// URL to the full license text.
+    public let url: String?
+    public init(name: String, url: String? = nil) {
+        self.name = name
+        self.url = url
+    }
+}
+
+// MARK: - Internal FFI conversions for LicenseInfo
+internal extension LicenseInfo {
+    init(_ rb: RustBridge.LicenseInfoRef) throws {
+        self.name = rb.name().toString()
+        self.url = rb.url()?.toString()
+    }
+    func intoRust() throws -> RustBridge.LicenseInfo {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.licenseInfoFromJson(json)
+    }
+}
+
+/// Server information
+public struct ServerInfo: Codable, Sendable, Hashable {
+    /// Base URL of the server (e.g. `"https://api.example.com/v1"`).
+    public let url: String
+    /// Optional human-readable description of the server environment.
+    public let description: String?
+    public init(url: String, description: String? = nil) {
+        self.url = url
+        self.description = description
+    }
+}
+
+// MARK: - Internal FFI conversions for ServerInfo
+internal extension ServerInfo {
+    init(_ rb: RustBridge.ServerInfoRef) throws {
+        self.url = rb.url().toString()
+        self.description = rb.description()?.toString()
+    }
+    func intoRust() throws -> RustBridge.ServerInfo {
+        let data = try JSONEncoder().encode(self)
+        let json = String(data: data, encoding: .utf8) ?? "{}"
+        return try RustBridge.serverInfoFromJson(json)
+    }
+}
+
+/// A single Server-Sent Event.
+public typealias TestingSseEvent = RustBridge.TestingSseEvent
+
 /// HTTP method
 public enum Method: String, Codable, Sendable, Hashable {
     case get = "Get"
@@ -899,6 +899,7 @@ public enum Method: String, Codable, Sendable, Hashable {
     case delete = "Delete"
     case head = "Head"
     case options = "Options"
+    case connect = "Connect"
     case trace = "Trace"
 }
 extension Method {
@@ -959,6 +960,16 @@ extension SecuritySchemeInfo {
         let json = String(data: data, encoding: .utf8) ?? "null"
         return try RustBridge.securitySchemeInfoFromJson(json)
     }
+}
+
+/// Error type for application builder operations.
+public enum AppError: Swift.Error {
+    /// Route registration failed.
+    case route(message: String, field0: String)
+    /// Server/router construction failed.
+    case server(message: String, field0: String)
+    /// Failed to extract DTO from the request context.
+    case decode(message: String, field0: String)
 }
 
 /// Errors that can occur during GraphQL operations
@@ -1100,6 +1111,42 @@ public enum SchemaError: Swift.Error {
     case depthLimitExceeded(message: String, limit: UInt, actual: UInt)
 }
 
+// MARK: - JSON-String Convenience Overloads
+// These overloads accept JSON-encoded config parameters and decode them automatically.
+// Enables e2e tests to pass JSON strings directly without typed config construction.
+
+/// Resolves a string argument as either a file path or literal UTF-8 content.
+/// Searches: current working directory, ALEF_TEST_DOCUMENTS_DIR env var,
+/// and ancestor `test_documents/` or `fixtures/` directories (up to 16 levels).
+/// If no file is found, treats the string as UTF-8 content and returns its bytes.
+private func _loadBytesFromPathOrUtf8(_ pathOrContent: String) throws -> [UInt8] {
+    let fm = FileManager.default
+    var roots: [String] = [fm.currentDirectoryPath]
+    if let envRoot = ProcessInfo.processInfo.environment["ALEF_TEST_DOCUMENTS_DIR"] {
+        roots.append(envRoot)
+    }
+    var walker = URL(fileURLWithPath: fm.currentDirectoryPath)
+    for _ in 0..<16 {
+        roots.append(walker.appendingPathComponent("test_documents").path)
+        roots.append(walker.appendingPathComponent("fixtures").path)
+        let parent = walker.deletingLastPathComponent()
+        if parent.path == walker.path { break }
+        walker = parent
+    }
+    let candidates = [pathOrContent] + roots.map { ($0 as NSString).appendingPathComponent(pathOrContent) }
+    for path in candidates {
+        if fm.fileExists(atPath: path), let data = try? Data(contentsOf: URL(fileURLWithPath: path)) {
+            return [UInt8](data)
+        }
+    }
+    return [UInt8](pathOrContent.utf8)
+}
+
+public func handlerResultFromResponse(_ configJson: String) -> String {
+    let config = try responseFromJson(configJson)
+    return try handlerResultFromResponse(config: config)
+}
+
 // MARK: - From-JSON Helpers
 // Public helpers that decode JSON into first-class Swift types.
 // First-class struct types (Codable) use JSONDecoder directly.
@@ -1107,29 +1154,6 @@ public enum SchemaError: Swift.Error {
 
 public func uploadFileFromJson(_ json: String) throws -> UploadFile {
     return try RustBridge.uploadFileFromJson(json)
-}
-
-public func corsConfigFromJson(_ json: String) throws -> CorsConfig {
-    let data = json.data(using: .utf8) ?? Data()
-    return try JSONDecoder().decode(CorsConfig.self, from: data)
-}
-
-public func compressionConfigFromJson(_ json: String) throws -> CompressionConfig {
-    let data = json.data(using: .utf8) ?? Data()
-    return try JSONDecoder().decode(CompressionConfig.self, from: data)
-}
-
-public func rateLimitConfigFromJson(_ json: String) throws -> RateLimitConfig {
-    let data = json.data(using: .utf8) ?? Data()
-    return try JSONDecoder().decode(RateLimitConfig.self, from: data)
-}
-
-public func jsonRpcMethodInfoFromJson(_ json: String) throws -> JsonRpcMethodInfo {
-    return try RustBridge.jsonRpcMethodInfoFromJson(json)
-}
-
-public func problemDetailsFromJson(_ json: String) throws -> ProblemDetails {
-    return try RustBridge.problemDetailsFromJson(json)
 }
 
 public func schemaConfigFromJson(_ json: String) throws -> SchemaConfig {
@@ -1152,27 +1176,6 @@ public func fullSchemaConfigFromJson(_ json: String) throws -> FullSchemaConfig 
     return try JSONDecoder().decode(FullSchemaConfig.self, from: data)
 }
 
-public func asyncApiConfigFromJson(_ json: String) throws -> AsyncApiConfig {
-    return try RustBridge.asyncApiConfigFromJson(json)
-}
-
-public func parsedChannelFromJson(_ json: String) throws -> ParsedChannel {
-    return try RustBridge.parsedChannelFromJson(json)
-}
-
-public func parsedOperationFromJson(_ json: String) throws -> ParsedOperation {
-    let data = json.data(using: .utf8) ?? Data()
-    return try JSONDecoder().decode(ParsedOperation.self, from: data)
-}
-
-public func parsedMessageFromJson(_ json: String) throws -> ParsedMessage {
-    return try RustBridge.parsedMessageFromJson(json)
-}
-
-public func parseResultFromJson(_ json: String) throws -> ParseResult {
-    return try RustBridge.parseResultFromJson(json)
-}
-
 public func backgroundTaskConfigFromJson(_ json: String) throws -> BackgroundTaskConfig {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(BackgroundTaskConfig.self, from: data)
@@ -1181,6 +1184,21 @@ public func backgroundTaskConfigFromJson(_ json: String) throws -> BackgroundTas
 public func backgroundJobMetadataFromJson(_ json: String) throws -> BackgroundJobMetadata {
     let data = json.data(using: .utf8) ?? Data()
     return try JSONDecoder().decode(BackgroundJobMetadata.self, from: data)
+}
+
+public func corsConfigFromJson(_ json: String) throws -> CorsConfig {
+    let data = json.data(using: .utf8) ?? Data()
+    return try JSONDecoder().decode(CorsConfig.self, from: data)
+}
+
+public func compressionConfigFromJson(_ json: String) throws -> CompressionConfig {
+    let data = json.data(using: .utf8) ?? Data()
+    return try JSONDecoder().decode(CompressionConfig.self, from: data)
+}
+
+public func rateLimitConfigFromJson(_ json: String) throws -> RateLimitConfig {
+    let data = json.data(using: .utf8) ?? Data()
+    return try JSONDecoder().decode(RateLimitConfig.self, from: data)
 }
 
 public func grpcConfigFromJson(_ json: String) throws -> GrpcConfig {
@@ -1195,21 +1213,6 @@ public func jsonRpcConfigFromJson(_ json: String) throws -> JsonRpcConfig {
 
 public func openApiConfigFromJson(_ json: String) throws -> OpenApiConfig {
     return try RustBridge.openApiConfigFromJson(json)
-}
-
-public func contactInfoFromJson(_ json: String) throws -> ContactInfo {
-    let data = json.data(using: .utf8) ?? Data()
-    return try JSONDecoder().decode(ContactInfo.self, from: data)
-}
-
-public func licenseInfoFromJson(_ json: String) throws -> LicenseInfo {
-    let data = json.data(using: .utf8) ?? Data()
-    return try JSONDecoder().decode(LicenseInfo.self, from: data)
-}
-
-public func serverInfoFromJson(_ json: String) throws -> ServerInfo {
-    let data = json.data(using: .utf8) ?? Data()
-    return try JSONDecoder().decode(ServerInfo.self, from: data)
 }
 
 public func responseFromJson(_ json: String) throws -> Response {
@@ -1237,6 +1240,50 @@ public func staticFilesConfigFromJson(_ json: String) throws -> StaticFilesConfi
 
 public func serverConfigFromJson(_ json: String) throws -> ServerConfig {
     return try RustBridge.serverConfigFromJson(json)
+}
+
+public func jsonRpcMethodInfoFromJson(_ json: String) throws -> JsonRpcMethodInfo {
+    return try RustBridge.jsonRpcMethodInfoFromJson(json)
+}
+
+public func problemDetailsFromJson(_ json: String) throws -> ProblemDetails {
+    return try RustBridge.problemDetailsFromJson(json)
+}
+
+public func asyncApiConfigFromJson(_ json: String) throws -> AsyncApiConfig {
+    return try RustBridge.asyncApiConfigFromJson(json)
+}
+
+public func parsedChannelFromJson(_ json: String) throws -> ParsedChannel {
+    return try RustBridge.parsedChannelFromJson(json)
+}
+
+public func parsedOperationFromJson(_ json: String) throws -> ParsedOperation {
+    let data = json.data(using: .utf8) ?? Data()
+    return try JSONDecoder().decode(ParsedOperation.self, from: data)
+}
+
+public func parsedMessageFromJson(_ json: String) throws -> ParsedMessage {
+    return try RustBridge.parsedMessageFromJson(json)
+}
+
+public func parseResultFromJson(_ json: String) throws -> ParseResult {
+    return try RustBridge.parseResultFromJson(json)
+}
+
+public func contactInfoFromJson(_ json: String) throws -> ContactInfo {
+    let data = json.data(using: .utf8) ?? Data()
+    return try JSONDecoder().decode(ContactInfo.self, from: data)
+}
+
+public func licenseInfoFromJson(_ json: String) throws -> LicenseInfo {
+    let data = json.data(using: .utf8) ?? Data()
+    return try JSONDecoder().decode(LicenseInfo.self, from: data)
+}
+
+public func serverInfoFromJson(_ json: String) throws -> ServerInfo {
+    let data = json.data(using: .utf8) ?? Data()
+    return try JSONDecoder().decode(ServerInfo.self, from: data)
 }
 
 public func methodFromJson(_ json: String) throws -> Method {
@@ -1292,14 +1339,6 @@ public func schemaFull() throws -> FullSchemaConfig {
 }
 
 // swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
-extension RustBridge.CorsConfig: @unchecked Sendable {}
-// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
-extension RustBridge.CompressionConfig: @unchecked Sendable {}
-// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
-extension RustBridge.RateLimitConfig: @unchecked Sendable {}
-// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
-extension RustBridge.ProblemDetails: @unchecked Sendable {}
-// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
 extension RustBridge.GraphQLRouteConfig: @unchecked Sendable {}
 // swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
 extension RustBridge.SchemaConfig: @unchecked Sendable {}
@@ -1314,6 +1353,12 @@ extension RustBridge.BackgroundTaskConfig: @unchecked Sendable {}
 // swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
 extension RustBridge.BackgroundJobMetadata: @unchecked Sendable {}
 // swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.CorsConfig: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.CompressionConfig: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.RateLimitConfig: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
 extension RustBridge.GrpcConfig: @unchecked Sendable {}
 // swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
 extension RustBridge.JsonRpcConfig: @unchecked Sendable {}
@@ -1325,3 +1370,7 @@ extension RustBridge.Response: @unchecked Sendable {}
 extension RustBridge.SseEvent: @unchecked Sendable {}
 // swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
 extension RustBridge.ServerConfig: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.RouteBuilder: @unchecked Sendable {}
+// swift-bridge opaque type used across Task.detached boundaries — Rust type is Send + Sync.
+extension RustBridge.ProblemDetails: @unchecked Sendable {}

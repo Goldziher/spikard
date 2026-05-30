@@ -8,6 +8,9 @@ readme = false
 keywords = ["framework", "http", "polyglot", "rust", "web"]
 categories = ["text-processing"]
 
+[package.metadata.cargo-machete]
+ignored = ["tokio"]
+
 [lib]
 name = "spikard_rb"
 path = "../src/lib.rs"
@@ -22,5 +25,3 @@ spikard-core = { path = "../../../../../crates/spikard-core", version = "0.15.6-
 spikard-graphql = { path = "../../../../../crates/spikard-graphql", version = "0.15.6-rc.9" }
 spikard-http = { path = "../../../../../crates/spikard-http", version = "0.15.6-rc.9" }
 tokio = { version = "1", features = ["rt-multi-thread"] }
-[package.metadata.cargo-machete]
-ignored = ["tokio"]

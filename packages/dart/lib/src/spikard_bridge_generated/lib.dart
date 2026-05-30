@@ -8,8 +8,17 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'lib.freezed.dart';
 
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `Method`, `ParseRequest`, `SchemaError`, `SnapshotError`, `TestingSseEvent`, `ValidateRequest`, `ValidationResponse`, `WebSocketMessage`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `AppError`, `Method`, `ParseRequest`, `SchemaError`, `SnapshotError`, `TestingSseEvent`, `ValidateRequest`, `ValidationResponse`, `WebSocketMessage`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
+
+/// Convert a handler-bridge outcome into a `HandlerResult`.
+///
+/// Language bindings produce a `Response` wire DTO (or a boxed error) from the host callback;
+/// the `Handler` trait requires an `axum` response. This builds the `axum` response from the DTO's
+/// `content` (serialized as JSON), `status_code`, and `headers`, mapping any error to a `500`
+/// problem. It is the response adapter referenced by the generated handler bridges.
+Future<String> handlerResultFromResponse({required Response outcome}) =>
+    RustLib.instance.api.crateHandlerResultFromResponse(outcome: outcome);
 
 /// Create a simple schema configuration with only Query type.
 ///
@@ -43,27 +52,6 @@ Future<FullSchemaConfig> schemaFull() => RustLib.instance.api.crateSchemaFull();
 Future<UploadFile> createUploadFileFromJson({required String json}) =>
     RustLib.instance.api.crateCreateUploadFileFromJson(json: json);
 
-Future<ResponseSnapshot> createResponseSnapshotFromJson({
-  required String json,
-}) => RustLib.instance.api.crateCreateResponseSnapshotFromJson(json: json);
-
-Future<CorsConfig> createCorsConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateCorsConfigFromJson(json: json);
-
-Future<CompressionConfig> createCompressionConfigFromJson({
-  required String json,
-}) => RustLib.instance.api.crateCreateCompressionConfigFromJson(json: json);
-
-Future<RateLimitConfig> createRateLimitConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateRateLimitConfigFromJson(json: json);
-
-Future<JsonRpcMethodInfo> createJsonRpcMethodInfoFromJson({
-  required String json,
-}) => RustLib.instance.api.crateCreateJsonRpcMethodInfoFromJson(json: json);
-
-Future<ProblemDetails> createProblemDetailsFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateProblemDetailsFromJson(json: json);
-
 Future<SchemaConfig> createSchemaConfigFromJson({required String json}) =>
     RustLib.instance.api.crateCreateSchemaConfigFromJson(json: json);
 
@@ -78,21 +66,6 @@ Future<FullSchemaConfig> createFullSchemaConfigFromJson({
   required String json,
 }) => RustLib.instance.api.crateCreateFullSchemaConfigFromJson(json: json);
 
-Future<AsyncApiConfig> createAsyncApiConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateAsyncApiConfigFromJson(json: json);
-
-Future<ParsedChannel> createParsedChannelFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateParsedChannelFromJson(json: json);
-
-Future<ParsedOperation> createParsedOperationFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateParsedOperationFromJson(json: json);
-
-Future<ParsedMessage> createParsedMessageFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateParsedMessageFromJson(json: json);
-
-Future<ParseResult> createParseResultFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateParseResultFromJson(json: json);
-
 Future<BackgroundTaskConfig> createBackgroundTaskConfigFromJson({
   required String json,
 }) => RustLib.instance.api.crateCreateBackgroundTaskConfigFromJson(json: json);
@@ -100,6 +73,16 @@ Future<BackgroundTaskConfig> createBackgroundTaskConfigFromJson({
 Future<BackgroundJobMetadata> createBackgroundJobMetadataFromJson({
   required String json,
 }) => RustLib.instance.api.crateCreateBackgroundJobMetadataFromJson(json: json);
+
+Future<CorsConfig> createCorsConfigFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateCorsConfigFromJson(json: json);
+
+Future<CompressionConfig> createCompressionConfigFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateCompressionConfigFromJson(json: json);
+
+Future<RateLimitConfig> createRateLimitConfigFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateRateLimitConfigFromJson(json: json);
 
 Future<GrpcConfig> createGrpcConfigFromJson({required String json}) =>
     RustLib.instance.api.crateCreateGrpcConfigFromJson(json: json);
@@ -109,15 +92,6 @@ Future<JsonRpcConfig> createJsonRpcConfigFromJson({required String json}) =>
 
 Future<OpenApiConfig> createOpenApiConfigFromJson({required String json}) =>
     RustLib.instance.api.crateCreateOpenApiConfigFromJson(json: json);
-
-Future<ContactInfo> createContactInfoFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateContactInfoFromJson(json: json);
-
-Future<LicenseInfo> createLicenseInfoFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateLicenseInfoFromJson(json: json);
-
-Future<ServerInfo> createServerInfoFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateServerInfoFromJson(json: json);
 
 Future<Response> createResponseFromJson({required String json}) =>
     RustLib.instance.api.crateCreateResponseFromJson(json: json);
@@ -138,6 +112,41 @@ Future<StaticFilesConfig> createStaticFilesConfigFromJson({
 Future<ServerConfig> createServerConfigFromJson({required String json}) =>
     RustLib.instance.api.crateCreateServerConfigFromJson(json: json);
 
+Future<JsonRpcMethodInfo> createJsonRpcMethodInfoFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateJsonRpcMethodInfoFromJson(json: json);
+
+Future<ProblemDetails> createProblemDetailsFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateProblemDetailsFromJson(json: json);
+
+Future<AsyncApiConfig> createAsyncApiConfigFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateAsyncApiConfigFromJson(json: json);
+
+Future<ParsedChannel> createParsedChannelFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateParsedChannelFromJson(json: json);
+
+Future<ParsedOperation> createParsedOperationFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateParsedOperationFromJson(json: json);
+
+Future<ParsedMessage> createParsedMessageFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateParsedMessageFromJson(json: json);
+
+Future<ParseResult> createParseResultFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateParseResultFromJson(json: json);
+
+Future<ContactInfo> createContactInfoFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateContactInfoFromJson(json: json);
+
+Future<LicenseInfo> createLicenseInfoFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateLicenseInfoFromJson(json: json);
+
+Future<ServerInfo> createServerInfoFromJson({required String json}) =>
+    RustLib.instance.api.crateCreateServerInfoFromJson(json: json);
+
+Future<ResponseSnapshot> createResponseSnapshotFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateResponseSnapshotFromJson(json: json);
+
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<GraphQLRouteConfig>>
 abstract class GraphQlRouteConfig implements RustOpaqueInterface {
   Future<GraphQlRouteConfig> description({required String description});
@@ -155,6 +164,27 @@ abstract class GraphQlRouteConfig implements RustOpaqueInterface {
   Future<GraphQlRouteConfig> method({required String method});
 
   Future<GraphQlRouteConfig> path({required String path});
+}
+
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<RouteBuilder>>
+abstract class RouteBuilder implements RustOpaqueInterface {
+  Future<RouteBuilder> cors({required CorsConfig cors});
+
+  Future<RouteBuilder> fileParamsJson({required String schema});
+
+  Future<RouteBuilder> handlerDependencies({
+    required List<String> dependencies,
+  });
+
+  Future<RouteBuilder> handlerName({required String name});
+
+  Future<RouteBuilder> paramsSchemaJson({required String schema});
+
+  Future<RouteBuilder> requestSchemaJson({required String schema});
+
+  Future<RouteBuilder> responseSchemaJson({required String schema});
+
+  Future<RouteBuilder> sync_();
 }
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TestClient>>

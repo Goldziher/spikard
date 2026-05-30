@@ -7,13 +7,11 @@ let package = Package(
         .macOS(.v13),
         .iOS(.v16),
     ],
-    dependencies: [
-        .package(url: "https://github.com/Goldziher/spikard.git", from: "0.15.6-rc.9"),
-    ],
     targets: [
+                .binaryTarget(name: "Spikard", url: "https://github.com/Goldziher/spikard/releases/download/v0.15.6-rc.9/Spikard-rs.artifactbundle.zip", checksum: "__ALEF_SWIFT_CHECKSUM__"),
         .testTarget(
             name: "SpikardE2ETests",
-            dependencies: [.product(name: "Spikard", package: "spikard")]
+            dependencies: [.target(name: "Spikard")]
         ),
     ]
 )

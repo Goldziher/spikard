@@ -290,6 +290,7 @@ fn create_method_router(
                 | crate::Method::Delete
                 | crate::Method::Head
                 | crate::Method::Options
+                | crate::Method::Connect
                 | crate::Method::Trace => MethodRouter::new(),
             }
         } else {
@@ -363,6 +364,7 @@ fn create_method_router(
                 | crate::Method::Delete
                 | crate::Method::Head
                 | crate::Method::Options
+                | crate::Method::Connect
                 | crate::Method::Trace => MethodRouter::new(),
             }
         }
@@ -440,7 +442,10 @@ fn create_method_router(
                     )
                 },
             ),
-            crate::Method::Post | crate::Method::Put | crate::Method::Patch => MethodRouter::new(),
+            crate::Method::Post
+            | crate::Method::Put
+            | crate::Method::Patch
+            | crate::Method::Connect => MethodRouter::new(),
         }
     } else {
         let handler_clone = handler.clone();
@@ -506,7 +511,10 @@ fn create_method_router(
                     call_with_optional_hooks(req, request_data, handler_clone, hooks_clone).await,
                 )
             }),
-            crate::Method::Post | crate::Method::Put | crate::Method::Patch => MethodRouter::new(),
+            crate::Method::Post
+            | crate::Method::Put
+            | crate::Method::Patch
+            | crate::Method::Connect => MethodRouter::new(),
         }
     }
 }
@@ -678,6 +686,7 @@ fn build_router_with_handlers_inner(
                     crate::Method::Delete => axum::routing::delete(static_handler),
                     crate::Method::Head => axum::routing::head(static_handler),
                     crate::Method::Options => axum::routing::options(static_handler),
+                    crate::Method::Connect => MethodRouter::new(),
                     crate::Method::Trace => axum::routing::trace(static_handler),
                 };
 

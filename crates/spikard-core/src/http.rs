@@ -13,6 +13,7 @@ pub enum Method {
     Delete,
     Head,
     Options,
+    Connect,
     Trace,
 }
 
@@ -27,6 +28,7 @@ impl Method {
             Self::Delete => "DELETE",
             Self::Head => "HEAD",
             Self::Options => "OPTIONS",
+            Self::Connect => "CONNECT",
             Self::Trace => "TRACE",
         }
     }
@@ -48,6 +50,7 @@ impl From<Method> for http::method::Method {
             Method::Delete => Self::DELETE,
             Method::Head => Self::HEAD,
             Method::Options => Self::OPTIONS,
+            Method::Connect => Self::CONNECT,
             Method::Trace => Self::TRACE,
         }
     }
@@ -63,6 +66,7 @@ impl From<&Method> for http::method::Method {
             Method::Delete => Self::DELETE,
             Method::Head => Self::HEAD,
             Method::Options => Self::OPTIONS,
+            Method::Connect => Self::CONNECT,
             Method::Trace => Self::TRACE,
         }
     }
@@ -80,6 +84,7 @@ impl std::str::FromStr for Method {
             "DELETE" => Ok(Self::Delete),
             "HEAD" => Ok(Self::Head),
             "OPTIONS" => Ok(Self::Options),
+            "CONNECT" => Ok(Self::Connect),
             "TRACE" => Ok(Self::Trace),
             _ => Err(format!("Unknown HTTP method: {s}")),
         }

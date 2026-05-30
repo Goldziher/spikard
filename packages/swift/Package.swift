@@ -43,7 +43,11 @@ let package = Package(
         .linkedFramework("SystemConfiguration", .when(platforms: [.macOS])),
       ]
     ),
-    .target(name: "Spikard", dependencies: ["RustBridge"], path: "Sources/Spikard"),
-    .testTarget(name: "SpikardTests", dependencies: ["Spikard"], path: "Tests/SpikardTests"),
+    .target(
+      name: "Spikard", dependencies: ["RustBridge"],
+      path: "Sources/Spikard"),
+    .testTarget(
+      name: "SpikardTests", dependencies: ["Spikard"],
+      path: "Tests/SpikardTests"),
   ]
 )

@@ -331,6 +331,51 @@ callback_param = "handler"
 callback_bound = "IntoHandler"
 callback_contract = "Handler"
 
+[[crates.services.registrations.variants]]
+name = "get"
+fixed = { method = "Get" }
+doc = "Register a GET route at the given path."
+
+[[crates.services.registrations.variants]]
+name = "post"
+fixed = { method = "Post" }
+doc = "Register a POST route at the given path."
+
+[[crates.services.registrations.variants]]
+name = "put"
+fixed = { method = "Put" }
+doc = "Register a PUT route at the given path."
+
+[[crates.services.registrations.variants]]
+name = "patch"
+fixed = { method = "Patch" }
+doc = "Register a PATCH route at the given path."
+
+[[crates.services.registrations.variants]]
+name = "delete"
+fixed = { method = "Delete" }
+doc = "Register a DELETE route at the given path."
+
+[[crates.services.registrations.variants]]
+name = "head"
+fixed = { method = "Head" }
+doc = "Register a HEAD route at the given path."
+
+[[crates.services.registrations.variants]]
+name = "options"
+fixed = { method = "Options" }
+doc = "Register an OPTIONS route at the given path."
+
+[[crates.services.registrations.variants]]
+name = "connect"
+fixed = { method = "Connect" }
+doc = "Register a CONNECT route at the given path."
+
+[[crates.services.registrations.variants]]
+name = "trace"
+fixed = { method = "Trace" }
+doc = "Register a TRACE route at the given path."
+
 [[crates.services.entrypoints]]
 method = "run"
 kind = "run"

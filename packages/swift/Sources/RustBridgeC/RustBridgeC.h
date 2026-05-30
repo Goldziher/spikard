@@ -185,66 +185,6 @@ void* __swift_bridge__$Vec_UploadFile$get_mut(void* vec_ptr, uintptr_t index);
 uintptr_t __swift_bridge__$Vec_UploadFile$len(void* vec_ptr);
 void* __swift_bridge__$Vec_UploadFile$as_ptr(void* vec_ptr);
 
-typedef struct CorsConfig CorsConfig;
-void __swift_bridge__$CorsConfig$_free(void* self);
-
-void* __swift_bridge__$Vec_CorsConfig$new(void);
-void __swift_bridge__$Vec_CorsConfig$drop(void* vec_ptr);
-void __swift_bridge__$Vec_CorsConfig$push(void* vec_ptr, void* item_ptr);
-void* __swift_bridge__$Vec_CorsConfig$pop(void* vec_ptr);
-void* __swift_bridge__$Vec_CorsConfig$get(void* vec_ptr, uintptr_t index);
-void* __swift_bridge__$Vec_CorsConfig$get_mut(void* vec_ptr, uintptr_t index);
-uintptr_t __swift_bridge__$Vec_CorsConfig$len(void* vec_ptr);
-void* __swift_bridge__$Vec_CorsConfig$as_ptr(void* vec_ptr);
-
-typedef struct CompressionConfig CompressionConfig;
-void __swift_bridge__$CompressionConfig$_free(void* self);
-
-void* __swift_bridge__$Vec_CompressionConfig$new(void);
-void __swift_bridge__$Vec_CompressionConfig$drop(void* vec_ptr);
-void __swift_bridge__$Vec_CompressionConfig$push(void* vec_ptr, void* item_ptr);
-void* __swift_bridge__$Vec_CompressionConfig$pop(void* vec_ptr);
-void* __swift_bridge__$Vec_CompressionConfig$get(void* vec_ptr, uintptr_t index);
-void* __swift_bridge__$Vec_CompressionConfig$get_mut(void* vec_ptr, uintptr_t index);
-uintptr_t __swift_bridge__$Vec_CompressionConfig$len(void* vec_ptr);
-void* __swift_bridge__$Vec_CompressionConfig$as_ptr(void* vec_ptr);
-
-typedef struct RateLimitConfig RateLimitConfig;
-void __swift_bridge__$RateLimitConfig$_free(void* self);
-
-void* __swift_bridge__$Vec_RateLimitConfig$new(void);
-void __swift_bridge__$Vec_RateLimitConfig$drop(void* vec_ptr);
-void __swift_bridge__$Vec_RateLimitConfig$push(void* vec_ptr, void* item_ptr);
-void* __swift_bridge__$Vec_RateLimitConfig$pop(void* vec_ptr);
-void* __swift_bridge__$Vec_RateLimitConfig$get(void* vec_ptr, uintptr_t index);
-void* __swift_bridge__$Vec_RateLimitConfig$get_mut(void* vec_ptr, uintptr_t index);
-uintptr_t __swift_bridge__$Vec_RateLimitConfig$len(void* vec_ptr);
-void* __swift_bridge__$Vec_RateLimitConfig$as_ptr(void* vec_ptr);
-
-typedef struct JsonRpcMethodInfo JsonRpcMethodInfo;
-void __swift_bridge__$JsonRpcMethodInfo$_free(void* self);
-
-void* __swift_bridge__$Vec_JsonRpcMethodInfo$new(void);
-void __swift_bridge__$Vec_JsonRpcMethodInfo$drop(void* vec_ptr);
-void __swift_bridge__$Vec_JsonRpcMethodInfo$push(void* vec_ptr, void* item_ptr);
-void* __swift_bridge__$Vec_JsonRpcMethodInfo$pop(void* vec_ptr);
-void* __swift_bridge__$Vec_JsonRpcMethodInfo$get(void* vec_ptr, uintptr_t index);
-void* __swift_bridge__$Vec_JsonRpcMethodInfo$get_mut(void* vec_ptr, uintptr_t index);
-uintptr_t __swift_bridge__$Vec_JsonRpcMethodInfo$len(void* vec_ptr);
-void* __swift_bridge__$Vec_JsonRpcMethodInfo$as_ptr(void* vec_ptr);
-
-typedef struct ProblemDetails ProblemDetails;
-void __swift_bridge__$ProblemDetails$_free(void* self);
-
-void* __swift_bridge__$Vec_ProblemDetails$new(void);
-void __swift_bridge__$Vec_ProblemDetails$drop(void* vec_ptr);
-void __swift_bridge__$Vec_ProblemDetails$push(void* vec_ptr, void* item_ptr);
-void* __swift_bridge__$Vec_ProblemDetails$pop(void* vec_ptr);
-void* __swift_bridge__$Vec_ProblemDetails$get(void* vec_ptr, uintptr_t index);
-void* __swift_bridge__$Vec_ProblemDetails$get_mut(void* vec_ptr, uintptr_t index);
-uintptr_t __swift_bridge__$Vec_ProblemDetails$len(void* vec_ptr);
-void* __swift_bridge__$Vec_ProblemDetails$as_ptr(void* vec_ptr);
-
 typedef struct GraphQLRouteConfig GraphQLRouteConfig;
 void __swift_bridge__$GraphQLRouteConfig$_free(void* self);
 
@@ -304,6 +244,210 @@ void* __swift_bridge__$Vec_FullSchemaConfig$get(void* vec_ptr, uintptr_t index);
 void* __swift_bridge__$Vec_FullSchemaConfig$get_mut(void* vec_ptr, uintptr_t index);
 uintptr_t __swift_bridge__$Vec_FullSchemaConfig$len(void* vec_ptr);
 void* __swift_bridge__$Vec_FullSchemaConfig$as_ptr(void* vec_ptr);
+
+typedef struct BackgroundTaskConfig BackgroundTaskConfig;
+void __swift_bridge__$BackgroundTaskConfig$_free(void* self);
+
+void* __swift_bridge__$Vec_BackgroundTaskConfig$new(void);
+void __swift_bridge__$Vec_BackgroundTaskConfig$drop(void* vec_ptr);
+void __swift_bridge__$Vec_BackgroundTaskConfig$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_BackgroundTaskConfig$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_BackgroundTaskConfig$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_BackgroundTaskConfig$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_BackgroundTaskConfig$len(void* vec_ptr);
+void* __swift_bridge__$Vec_BackgroundTaskConfig$as_ptr(void* vec_ptr);
+
+typedef struct BackgroundJobMetadata BackgroundJobMetadata;
+void __swift_bridge__$BackgroundJobMetadata$_free(void* self);
+
+void* __swift_bridge__$Vec_BackgroundJobMetadata$new(void);
+void __swift_bridge__$Vec_BackgroundJobMetadata$drop(void* vec_ptr);
+void __swift_bridge__$Vec_BackgroundJobMetadata$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_BackgroundJobMetadata$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_BackgroundJobMetadata$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_BackgroundJobMetadata$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_BackgroundJobMetadata$len(void* vec_ptr);
+void* __swift_bridge__$Vec_BackgroundJobMetadata$as_ptr(void* vec_ptr);
+
+typedef struct CorsConfig CorsConfig;
+void __swift_bridge__$CorsConfig$_free(void* self);
+
+void* __swift_bridge__$Vec_CorsConfig$new(void);
+void __swift_bridge__$Vec_CorsConfig$drop(void* vec_ptr);
+void __swift_bridge__$Vec_CorsConfig$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_CorsConfig$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_CorsConfig$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_CorsConfig$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_CorsConfig$len(void* vec_ptr);
+void* __swift_bridge__$Vec_CorsConfig$as_ptr(void* vec_ptr);
+
+typedef struct CompressionConfig CompressionConfig;
+void __swift_bridge__$CompressionConfig$_free(void* self);
+
+void* __swift_bridge__$Vec_CompressionConfig$new(void);
+void __swift_bridge__$Vec_CompressionConfig$drop(void* vec_ptr);
+void __swift_bridge__$Vec_CompressionConfig$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_CompressionConfig$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_CompressionConfig$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_CompressionConfig$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_CompressionConfig$len(void* vec_ptr);
+void* __swift_bridge__$Vec_CompressionConfig$as_ptr(void* vec_ptr);
+
+typedef struct RateLimitConfig RateLimitConfig;
+void __swift_bridge__$RateLimitConfig$_free(void* self);
+
+void* __swift_bridge__$Vec_RateLimitConfig$new(void);
+void __swift_bridge__$Vec_RateLimitConfig$drop(void* vec_ptr);
+void __swift_bridge__$Vec_RateLimitConfig$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_RateLimitConfig$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_RateLimitConfig$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_RateLimitConfig$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_RateLimitConfig$len(void* vec_ptr);
+void* __swift_bridge__$Vec_RateLimitConfig$as_ptr(void* vec_ptr);
+
+typedef struct GrpcConfig GrpcConfig;
+void __swift_bridge__$GrpcConfig$_free(void* self);
+
+void* __swift_bridge__$Vec_GrpcConfig$new(void);
+void __swift_bridge__$Vec_GrpcConfig$drop(void* vec_ptr);
+void __swift_bridge__$Vec_GrpcConfig$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_GrpcConfig$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_GrpcConfig$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_GrpcConfig$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_GrpcConfig$len(void* vec_ptr);
+void* __swift_bridge__$Vec_GrpcConfig$as_ptr(void* vec_ptr);
+
+typedef struct JsonRpcConfig JsonRpcConfig;
+void __swift_bridge__$JsonRpcConfig$_free(void* self);
+
+void* __swift_bridge__$Vec_JsonRpcConfig$new(void);
+void __swift_bridge__$Vec_JsonRpcConfig$drop(void* vec_ptr);
+void __swift_bridge__$Vec_JsonRpcConfig$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_JsonRpcConfig$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_JsonRpcConfig$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_JsonRpcConfig$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_JsonRpcConfig$len(void* vec_ptr);
+void* __swift_bridge__$Vec_JsonRpcConfig$as_ptr(void* vec_ptr);
+
+typedef struct OpenApiConfig OpenApiConfig;
+void __swift_bridge__$OpenApiConfig$_free(void* self);
+
+void* __swift_bridge__$Vec_OpenApiConfig$new(void);
+void __swift_bridge__$Vec_OpenApiConfig$drop(void* vec_ptr);
+void __swift_bridge__$Vec_OpenApiConfig$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_OpenApiConfig$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_OpenApiConfig$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_OpenApiConfig$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_OpenApiConfig$len(void* vec_ptr);
+void* __swift_bridge__$Vec_OpenApiConfig$as_ptr(void* vec_ptr);
+
+typedef struct Response Response;
+void __swift_bridge__$Response$_free(void* self);
+
+void* __swift_bridge__$Vec_Response$new(void);
+void __swift_bridge__$Vec_Response$drop(void* vec_ptr);
+void __swift_bridge__$Vec_Response$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_Response$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_Response$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_Response$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_Response$len(void* vec_ptr);
+void* __swift_bridge__$Vec_Response$as_ptr(void* vec_ptr);
+
+typedef struct SseEvent SseEvent;
+void __swift_bridge__$SseEvent$_free(void* self);
+
+void* __swift_bridge__$Vec_SseEvent$new(void);
+void __swift_bridge__$Vec_SseEvent$drop(void* vec_ptr);
+void __swift_bridge__$Vec_SseEvent$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_SseEvent$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_SseEvent$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_SseEvent$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_SseEvent$len(void* vec_ptr);
+void* __swift_bridge__$Vec_SseEvent$as_ptr(void* vec_ptr);
+
+typedef struct JwtConfig JwtConfig;
+void __swift_bridge__$JwtConfig$_free(void* self);
+
+void* __swift_bridge__$Vec_JwtConfig$new(void);
+void __swift_bridge__$Vec_JwtConfig$drop(void* vec_ptr);
+void __swift_bridge__$Vec_JwtConfig$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_JwtConfig$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_JwtConfig$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_JwtConfig$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_JwtConfig$len(void* vec_ptr);
+void* __swift_bridge__$Vec_JwtConfig$as_ptr(void* vec_ptr);
+
+typedef struct ApiKeyConfig ApiKeyConfig;
+void __swift_bridge__$ApiKeyConfig$_free(void* self);
+
+void* __swift_bridge__$Vec_ApiKeyConfig$new(void);
+void __swift_bridge__$Vec_ApiKeyConfig$drop(void* vec_ptr);
+void __swift_bridge__$Vec_ApiKeyConfig$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_ApiKeyConfig$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_ApiKeyConfig$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_ApiKeyConfig$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_ApiKeyConfig$len(void* vec_ptr);
+void* __swift_bridge__$Vec_ApiKeyConfig$as_ptr(void* vec_ptr);
+
+typedef struct StaticFilesConfig StaticFilesConfig;
+void __swift_bridge__$StaticFilesConfig$_free(void* self);
+
+void* __swift_bridge__$Vec_StaticFilesConfig$new(void);
+void __swift_bridge__$Vec_StaticFilesConfig$drop(void* vec_ptr);
+void __swift_bridge__$Vec_StaticFilesConfig$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_StaticFilesConfig$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_StaticFilesConfig$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_StaticFilesConfig$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_StaticFilesConfig$len(void* vec_ptr);
+void* __swift_bridge__$Vec_StaticFilesConfig$as_ptr(void* vec_ptr);
+
+typedef struct ServerConfig ServerConfig;
+void __swift_bridge__$ServerConfig$_free(void* self);
+
+void* __swift_bridge__$Vec_ServerConfig$new(void);
+void __swift_bridge__$Vec_ServerConfig$drop(void* vec_ptr);
+void __swift_bridge__$Vec_ServerConfig$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_ServerConfig$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_ServerConfig$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_ServerConfig$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_ServerConfig$len(void* vec_ptr);
+void* __swift_bridge__$Vec_ServerConfig$as_ptr(void* vec_ptr);
+
+typedef struct RouteBuilder RouteBuilder;
+void __swift_bridge__$RouteBuilder$_free(void* self);
+
+void* __swift_bridge__$Vec_RouteBuilder$new(void);
+void __swift_bridge__$Vec_RouteBuilder$drop(void* vec_ptr);
+void __swift_bridge__$Vec_RouteBuilder$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_RouteBuilder$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_RouteBuilder$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_RouteBuilder$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_RouteBuilder$len(void* vec_ptr);
+void* __swift_bridge__$Vec_RouteBuilder$as_ptr(void* vec_ptr);
+
+typedef struct JsonRpcMethodInfo JsonRpcMethodInfo;
+void __swift_bridge__$JsonRpcMethodInfo$_free(void* self);
+
+void* __swift_bridge__$Vec_JsonRpcMethodInfo$new(void);
+void __swift_bridge__$Vec_JsonRpcMethodInfo$drop(void* vec_ptr);
+void __swift_bridge__$Vec_JsonRpcMethodInfo$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_JsonRpcMethodInfo$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_JsonRpcMethodInfo$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_JsonRpcMethodInfo$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_JsonRpcMethodInfo$len(void* vec_ptr);
+void* __swift_bridge__$Vec_JsonRpcMethodInfo$as_ptr(void* vec_ptr);
+
+typedef struct ProblemDetails ProblemDetails;
+void __swift_bridge__$ProblemDetails$_free(void* self);
+
+void* __swift_bridge__$Vec_ProblemDetails$new(void);
+void __swift_bridge__$Vec_ProblemDetails$drop(void* vec_ptr);
+void __swift_bridge__$Vec_ProblemDetails$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_ProblemDetails$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_ProblemDetails$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_ProblemDetails$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_ProblemDetails$len(void* vec_ptr);
+void* __swift_bridge__$Vec_ProblemDetails$as_ptr(void* vec_ptr);
 
 typedef struct AsyncApiConfig AsyncApiConfig;
 void __swift_bridge__$AsyncApiConfig$_free(void* self);
@@ -401,66 +545,6 @@ void* __swift_bridge__$Vec_ValidateRequest$get_mut(void* vec_ptr, uintptr_t inde
 uintptr_t __swift_bridge__$Vec_ValidateRequest$len(void* vec_ptr);
 void* __swift_bridge__$Vec_ValidateRequest$as_ptr(void* vec_ptr);
 
-typedef struct BackgroundTaskConfig BackgroundTaskConfig;
-void __swift_bridge__$BackgroundTaskConfig$_free(void* self);
-
-void* __swift_bridge__$Vec_BackgroundTaskConfig$new(void);
-void __swift_bridge__$Vec_BackgroundTaskConfig$drop(void* vec_ptr);
-void __swift_bridge__$Vec_BackgroundTaskConfig$push(void* vec_ptr, void* item_ptr);
-void* __swift_bridge__$Vec_BackgroundTaskConfig$pop(void* vec_ptr);
-void* __swift_bridge__$Vec_BackgroundTaskConfig$get(void* vec_ptr, uintptr_t index);
-void* __swift_bridge__$Vec_BackgroundTaskConfig$get_mut(void* vec_ptr, uintptr_t index);
-uintptr_t __swift_bridge__$Vec_BackgroundTaskConfig$len(void* vec_ptr);
-void* __swift_bridge__$Vec_BackgroundTaskConfig$as_ptr(void* vec_ptr);
-
-typedef struct BackgroundJobMetadata BackgroundJobMetadata;
-void __swift_bridge__$BackgroundJobMetadata$_free(void* self);
-
-void* __swift_bridge__$Vec_BackgroundJobMetadata$new(void);
-void __swift_bridge__$Vec_BackgroundJobMetadata$drop(void* vec_ptr);
-void __swift_bridge__$Vec_BackgroundJobMetadata$push(void* vec_ptr, void* item_ptr);
-void* __swift_bridge__$Vec_BackgroundJobMetadata$pop(void* vec_ptr);
-void* __swift_bridge__$Vec_BackgroundJobMetadata$get(void* vec_ptr, uintptr_t index);
-void* __swift_bridge__$Vec_BackgroundJobMetadata$get_mut(void* vec_ptr, uintptr_t index);
-uintptr_t __swift_bridge__$Vec_BackgroundJobMetadata$len(void* vec_ptr);
-void* __swift_bridge__$Vec_BackgroundJobMetadata$as_ptr(void* vec_ptr);
-
-typedef struct GrpcConfig GrpcConfig;
-void __swift_bridge__$GrpcConfig$_free(void* self);
-
-void* __swift_bridge__$Vec_GrpcConfig$new(void);
-void __swift_bridge__$Vec_GrpcConfig$drop(void* vec_ptr);
-void __swift_bridge__$Vec_GrpcConfig$push(void* vec_ptr, void* item_ptr);
-void* __swift_bridge__$Vec_GrpcConfig$pop(void* vec_ptr);
-void* __swift_bridge__$Vec_GrpcConfig$get(void* vec_ptr, uintptr_t index);
-void* __swift_bridge__$Vec_GrpcConfig$get_mut(void* vec_ptr, uintptr_t index);
-uintptr_t __swift_bridge__$Vec_GrpcConfig$len(void* vec_ptr);
-void* __swift_bridge__$Vec_GrpcConfig$as_ptr(void* vec_ptr);
-
-typedef struct JsonRpcConfig JsonRpcConfig;
-void __swift_bridge__$JsonRpcConfig$_free(void* self);
-
-void* __swift_bridge__$Vec_JsonRpcConfig$new(void);
-void __swift_bridge__$Vec_JsonRpcConfig$drop(void* vec_ptr);
-void __swift_bridge__$Vec_JsonRpcConfig$push(void* vec_ptr, void* item_ptr);
-void* __swift_bridge__$Vec_JsonRpcConfig$pop(void* vec_ptr);
-void* __swift_bridge__$Vec_JsonRpcConfig$get(void* vec_ptr, uintptr_t index);
-void* __swift_bridge__$Vec_JsonRpcConfig$get_mut(void* vec_ptr, uintptr_t index);
-uintptr_t __swift_bridge__$Vec_JsonRpcConfig$len(void* vec_ptr);
-void* __swift_bridge__$Vec_JsonRpcConfig$as_ptr(void* vec_ptr);
-
-typedef struct OpenApiConfig OpenApiConfig;
-void __swift_bridge__$OpenApiConfig$_free(void* self);
-
-void* __swift_bridge__$Vec_OpenApiConfig$new(void);
-void __swift_bridge__$Vec_OpenApiConfig$drop(void* vec_ptr);
-void __swift_bridge__$Vec_OpenApiConfig$push(void* vec_ptr, void* item_ptr);
-void* __swift_bridge__$Vec_OpenApiConfig$pop(void* vec_ptr);
-void* __swift_bridge__$Vec_OpenApiConfig$get(void* vec_ptr, uintptr_t index);
-void* __swift_bridge__$Vec_OpenApiConfig$get_mut(void* vec_ptr, uintptr_t index);
-uintptr_t __swift_bridge__$Vec_OpenApiConfig$len(void* vec_ptr);
-void* __swift_bridge__$Vec_OpenApiConfig$as_ptr(void* vec_ptr);
-
 typedef struct ContactInfo ContactInfo;
 void __swift_bridge__$ContactInfo$_free(void* self);
 
@@ -497,30 +581,6 @@ void* __swift_bridge__$Vec_ServerInfo$get_mut(void* vec_ptr, uintptr_t index);
 uintptr_t __swift_bridge__$Vec_ServerInfo$len(void* vec_ptr);
 void* __swift_bridge__$Vec_ServerInfo$as_ptr(void* vec_ptr);
 
-typedef struct Response Response;
-void __swift_bridge__$Response$_free(void* self);
-
-void* __swift_bridge__$Vec_Response$new(void);
-void __swift_bridge__$Vec_Response$drop(void* vec_ptr);
-void __swift_bridge__$Vec_Response$push(void* vec_ptr, void* item_ptr);
-void* __swift_bridge__$Vec_Response$pop(void* vec_ptr);
-void* __swift_bridge__$Vec_Response$get(void* vec_ptr, uintptr_t index);
-void* __swift_bridge__$Vec_Response$get_mut(void* vec_ptr, uintptr_t index);
-uintptr_t __swift_bridge__$Vec_Response$len(void* vec_ptr);
-void* __swift_bridge__$Vec_Response$as_ptr(void* vec_ptr);
-
-typedef struct SseEvent SseEvent;
-void __swift_bridge__$SseEvent$_free(void* self);
-
-void* __swift_bridge__$Vec_SseEvent$new(void);
-void __swift_bridge__$Vec_SseEvent$drop(void* vec_ptr);
-void __swift_bridge__$Vec_SseEvent$push(void* vec_ptr, void* item_ptr);
-void* __swift_bridge__$Vec_SseEvent$pop(void* vec_ptr);
-void* __swift_bridge__$Vec_SseEvent$get(void* vec_ptr, uintptr_t index);
-void* __swift_bridge__$Vec_SseEvent$get_mut(void* vec_ptr, uintptr_t index);
-uintptr_t __swift_bridge__$Vec_SseEvent$len(void* vec_ptr);
-void* __swift_bridge__$Vec_SseEvent$as_ptr(void* vec_ptr);
-
 typedef struct TestingSseEvent TestingSseEvent;
 void __swift_bridge__$TestingSseEvent$_free(void* self);
 
@@ -532,54 +592,6 @@ void* __swift_bridge__$Vec_TestingSseEvent$get(void* vec_ptr, uintptr_t index);
 void* __swift_bridge__$Vec_TestingSseEvent$get_mut(void* vec_ptr, uintptr_t index);
 uintptr_t __swift_bridge__$Vec_TestingSseEvent$len(void* vec_ptr);
 void* __swift_bridge__$Vec_TestingSseEvent$as_ptr(void* vec_ptr);
-
-typedef struct JwtConfig JwtConfig;
-void __swift_bridge__$JwtConfig$_free(void* self);
-
-void* __swift_bridge__$Vec_JwtConfig$new(void);
-void __swift_bridge__$Vec_JwtConfig$drop(void* vec_ptr);
-void __swift_bridge__$Vec_JwtConfig$push(void* vec_ptr, void* item_ptr);
-void* __swift_bridge__$Vec_JwtConfig$pop(void* vec_ptr);
-void* __swift_bridge__$Vec_JwtConfig$get(void* vec_ptr, uintptr_t index);
-void* __swift_bridge__$Vec_JwtConfig$get_mut(void* vec_ptr, uintptr_t index);
-uintptr_t __swift_bridge__$Vec_JwtConfig$len(void* vec_ptr);
-void* __swift_bridge__$Vec_JwtConfig$as_ptr(void* vec_ptr);
-
-typedef struct ApiKeyConfig ApiKeyConfig;
-void __swift_bridge__$ApiKeyConfig$_free(void* self);
-
-void* __swift_bridge__$Vec_ApiKeyConfig$new(void);
-void __swift_bridge__$Vec_ApiKeyConfig$drop(void* vec_ptr);
-void __swift_bridge__$Vec_ApiKeyConfig$push(void* vec_ptr, void* item_ptr);
-void* __swift_bridge__$Vec_ApiKeyConfig$pop(void* vec_ptr);
-void* __swift_bridge__$Vec_ApiKeyConfig$get(void* vec_ptr, uintptr_t index);
-void* __swift_bridge__$Vec_ApiKeyConfig$get_mut(void* vec_ptr, uintptr_t index);
-uintptr_t __swift_bridge__$Vec_ApiKeyConfig$len(void* vec_ptr);
-void* __swift_bridge__$Vec_ApiKeyConfig$as_ptr(void* vec_ptr);
-
-typedef struct StaticFilesConfig StaticFilesConfig;
-void __swift_bridge__$StaticFilesConfig$_free(void* self);
-
-void* __swift_bridge__$Vec_StaticFilesConfig$new(void);
-void __swift_bridge__$Vec_StaticFilesConfig$drop(void* vec_ptr);
-void __swift_bridge__$Vec_StaticFilesConfig$push(void* vec_ptr, void* item_ptr);
-void* __swift_bridge__$Vec_StaticFilesConfig$pop(void* vec_ptr);
-void* __swift_bridge__$Vec_StaticFilesConfig$get(void* vec_ptr, uintptr_t index);
-void* __swift_bridge__$Vec_StaticFilesConfig$get_mut(void* vec_ptr, uintptr_t index);
-uintptr_t __swift_bridge__$Vec_StaticFilesConfig$len(void* vec_ptr);
-void* __swift_bridge__$Vec_StaticFilesConfig$as_ptr(void* vec_ptr);
-
-typedef struct ServerConfig ServerConfig;
-void __swift_bridge__$ServerConfig$_free(void* self);
-
-void* __swift_bridge__$Vec_ServerConfig$new(void);
-void __swift_bridge__$Vec_ServerConfig$drop(void* vec_ptr);
-void __swift_bridge__$Vec_ServerConfig$push(void* vec_ptr, void* item_ptr);
-void* __swift_bridge__$Vec_ServerConfig$pop(void* vec_ptr);
-void* __swift_bridge__$Vec_ServerConfig$get(void* vec_ptr, uintptr_t index);
-void* __swift_bridge__$Vec_ServerConfig$get_mut(void* vec_ptr, uintptr_t index);
-uintptr_t __swift_bridge__$Vec_ServerConfig$len(void* vec_ptr);
-void* __swift_bridge__$Vec_ServerConfig$as_ptr(void* vec_ptr);
 
 typedef struct Method Method;
 void __swift_bridge__$Method$_free(void* self);
@@ -605,39 +617,23 @@ void* __swift_bridge__$Vec_SecuritySchemeInfo$get_mut(void* vec_ptr, uintptr_t i
 uintptr_t __swift_bridge__$Vec_SecuritySchemeInfo$len(void* vec_ptr);
 void* __swift_bridge__$Vec_SecuritySchemeInfo$as_ptr(void* vec_ptr);
 
+typedef struct App App;
+void __swift_bridge__$App$_free(void* self);
+
+void* __swift_bridge__$Vec_App$new(void);
+void __swift_bridge__$Vec_App$drop(void* vec_ptr);
+void __swift_bridge__$Vec_App$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_App$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_App$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_App$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_App$len(void* vec_ptr);
+void* __swift_bridge__$Vec_App$as_ptr(void* vec_ptr);
+
 void* __swift_bridge__$UploadFile$filename(void* self);
 void* __swift_bridge__$UploadFile$content_type(void* self);
 struct __private__OptionUsize __swift_bridge__$UploadFile$size(void* self);
 void* __swift_bridge__$UploadFile$content(void* self);
 void* __swift_bridge__$UploadFile$content_encoding(void* self);
-void* __swift_bridge__$CorsConfig$new(void* allowed_origins, void* allowed_methods, void* allowed_headers, void* expose_headers, struct __private__OptionU32 max_age, struct __private__OptionBool allow_credentials);
-void* __swift_bridge__$CorsConfig$allowed_origins(void* self);
-void* __swift_bridge__$CorsConfig$allowed_methods(void* self);
-void* __swift_bridge__$CorsConfig$allowed_headers(void* self);
-void* __swift_bridge__$CorsConfig$expose_headers(void* self);
-struct __private__OptionU32 __swift_bridge__$CorsConfig$max_age(void* self);
-struct __private__OptionBool __swift_bridge__$CorsConfig$allow_credentials(void* self);
-void* __swift_bridge__$CompressionConfig$new(bool gzip, bool brotli, uintptr_t min_size, uint32_t quality);
-bool __swift_bridge__$CompressionConfig$gzip(void* self);
-bool __swift_bridge__$CompressionConfig$brotli(void* self);
-uintptr_t __swift_bridge__$CompressionConfig$min_size(void* self);
-uint32_t __swift_bridge__$CompressionConfig$quality(void* self);
-void* __swift_bridge__$RateLimitConfig$new(uint64_t per_second, uint32_t burst, bool ip_based);
-uint64_t __swift_bridge__$RateLimitConfig$per_second(void* self);
-uint32_t __swift_bridge__$RateLimitConfig$burst(void* self);
-bool __swift_bridge__$RateLimitConfig$ip_based(void* self);
-void* __swift_bridge__$JsonRpcMethodInfo$method_name(void* self);
-void* __swift_bridge__$JsonRpcMethodInfo$description(void* self);
-void* __swift_bridge__$JsonRpcMethodInfo$params_schema(void* self);
-void* __swift_bridge__$JsonRpcMethodInfo$result_schema(void* self);
-bool __swift_bridge__$JsonRpcMethodInfo$deprecated(void* self);
-void* __swift_bridge__$JsonRpcMethodInfo$tags(void* self);
-void* __swift_bridge__$ProblemDetails$type_uri(void* self);
-void* __swift_bridge__$ProblemDetails$title(void* self);
-uint16_t __swift_bridge__$ProblemDetails$status(void* self);
-void* __swift_bridge__$ProblemDetails$detail(void* self);
-void* __swift_bridge__$ProblemDetails$instance(void* self);
-void* __swift_bridge__$ProblemDetails$extensions(void* self);
 void* __swift_bridge__$graph_ql_route_config_path(void* client, void* path);
 void* __swift_bridge__$graph_ql_route_config_method(void* client, void* method);
 void* __swift_bridge__$graph_ql_route_config_enable_playground(void* client, bool enable);
@@ -662,30 +658,6 @@ void* __swift_bridge__$FullSchemaConfig$new(bool introspection_enabled, struct _
 bool __swift_bridge__$FullSchemaConfig$introspection_enabled(void* self);
 struct __private__OptionUsize __swift_bridge__$FullSchemaConfig$complexity_limit(void* self);
 struct __private__OptionUsize __swift_bridge__$FullSchemaConfig$depth_limit(void* self);
-void* __swift_bridge__$AsyncApiConfig$new(bool enabled, void* spec);
-bool __swift_bridge__$AsyncApiConfig$enabled(void* self);
-void* __swift_bridge__$AsyncApiConfig$spec(void* self);
-void* __swift_bridge__$ParsedChannel$name(void* self);
-void* __swift_bridge__$ParsedChannel$address(void* self);
-void* __swift_bridge__$ParsedChannel$messages(void* self);
-void* __swift_bridge__$ParsedChannel$bindings(void* self);
-void* __swift_bridge__$ParsedOperation$name(void* self);
-void* __swift_bridge__$ParsedOperation$action(void* self);
-void* __swift_bridge__$ParsedOperation$channel(void* self);
-void* __swift_bridge__$ParsedMessage$name(void* self);
-void* __swift_bridge__$ParsedMessage$schema(void* self);
-void* __swift_bridge__$ParseResult$spec_version(void* self);
-void* __swift_bridge__$ParseResult$title(void* self);
-void* __swift_bridge__$ParseResult$api_version(void* self);
-void* __swift_bridge__$ParseResult$channels(void* self);
-void* __swift_bridge__$ParseResult$operations(void* self);
-void* __swift_bridge__$ParseResult$messages(void* self);
-void* __swift_bridge__$ParseRequest$spec(void* self);
-bool __swift_bridge__$ValidationResponse$valid(void* self);
-void* __swift_bridge__$ValidateRequest$spec(void* self);
-void* __swift_bridge__$ValidateRequest$channel(void* self);
-void* __swift_bridge__$ValidateRequest$message(void* self);
-void* __swift_bridge__$ValidateRequest$payload(void* self);
 void* __swift_bridge__$BackgroundTaskConfig$new(uintptr_t max_queue_size, uintptr_t max_concurrent_tasks, uint64_t drain_timeout_secs);
 uintptr_t __swift_bridge__$BackgroundTaskConfig$max_queue_size(void* self);
 uintptr_t __swift_bridge__$BackgroundTaskConfig$max_concurrent_tasks(void* self);
@@ -693,6 +665,22 @@ uint64_t __swift_bridge__$BackgroundTaskConfig$drain_timeout_secs(void* self);
 void* __swift_bridge__$BackgroundJobMetadata$new(void* name, void* request_id);
 void* __swift_bridge__$BackgroundJobMetadata$name(void* self);
 void* __swift_bridge__$BackgroundJobMetadata$request_id(void* self);
+void* __swift_bridge__$CorsConfig$new(void* allowed_origins, void* allowed_methods, void* allowed_headers, void* expose_headers, struct __private__OptionU32 max_age, struct __private__OptionBool allow_credentials);
+void* __swift_bridge__$CorsConfig$allowed_origins(void* self);
+void* __swift_bridge__$CorsConfig$allowed_methods(void* self);
+void* __swift_bridge__$CorsConfig$allowed_headers(void* self);
+void* __swift_bridge__$CorsConfig$expose_headers(void* self);
+struct __private__OptionU32 __swift_bridge__$CorsConfig$max_age(void* self);
+struct __private__OptionBool __swift_bridge__$CorsConfig$allow_credentials(void* self);
+void* __swift_bridge__$CompressionConfig$new(bool gzip, bool brotli, uintptr_t min_size, uint32_t quality);
+bool __swift_bridge__$CompressionConfig$gzip(void* self);
+bool __swift_bridge__$CompressionConfig$brotli(void* self);
+uintptr_t __swift_bridge__$CompressionConfig$min_size(void* self);
+uint32_t __swift_bridge__$CompressionConfig$quality(void* self);
+void* __swift_bridge__$RateLimitConfig$new(uint64_t per_second, uint32_t burst, bool ip_based);
+uint64_t __swift_bridge__$RateLimitConfig$per_second(void* self);
+uint32_t __swift_bridge__$RateLimitConfig$burst(void* self);
+bool __swift_bridge__$RateLimitConfig$ip_based(void* self);
 void* __swift_bridge__$GrpcConfig$new(bool enabled, uintptr_t max_message_size, bool enable_compression, struct __private__OptionU64 request_timeout, uint32_t max_concurrent_streams, bool enable_keepalive, uint64_t keepalive_interval, uint64_t keepalive_timeout, struct __private__OptionUsize max_stream_response_bytes);
 bool __swift_bridge__$GrpcConfig$enabled(void* self);
 uintptr_t __swift_bridge__$GrpcConfig$max_message_size(void* self);
@@ -720,13 +708,6 @@ void* __swift_bridge__$OpenApiConfig$contact(void* self);
 void* __swift_bridge__$OpenApiConfig$license(void* self);
 void* __swift_bridge__$OpenApiConfig$servers(void* self);
 void* __swift_bridge__$OpenApiConfig$security_schemes(void* self);
-void* __swift_bridge__$ContactInfo$name(void* self);
-void* __swift_bridge__$ContactInfo$email(void* self);
-void* __swift_bridge__$ContactInfo$url(void* self);
-void* __swift_bridge__$LicenseInfo$name(void* self);
-void* __swift_bridge__$LicenseInfo$url(void* self);
-void* __swift_bridge__$ServerInfo$url(void* self);
-void* __swift_bridge__$ServerInfo$description(void* self);
 void* __swift_bridge__$Response$new(void* content, uint16_t status_code, void* headers);
 void* __swift_bridge__$Response$content(void* self);
 uint16_t __swift_bridge__$Response$status_code(void* self);
@@ -735,7 +716,6 @@ void* __swift_bridge__$SseEvent$event_type(void* self);
 void* __swift_bridge__$SseEvent$data(void* self);
 void* __swift_bridge__$SseEvent$id(void* self);
 struct __private__OptionU64 __swift_bridge__$SseEvent$retry(void* self);
-void* __swift_bridge__$TestingSseEvent$data(void* self);
 void* __swift_bridge__$JwtConfig$secret(void* self);
 void* __swift_bridge__$JwtConfig$algorithm(void* self);
 void* __swift_bridge__$JwtConfig$audience(void* self);
@@ -767,40 +747,96 @@ void* __swift_bridge__$ServerConfig$jsonrpc(void* self);
 void* __swift_bridge__$ServerConfig$grpc(void* self);
 void* __swift_bridge__$ServerConfig$background_tasks(void* self);
 bool __swift_bridge__$ServerConfig$enable_http_trace(void* self);
+void* __swift_bridge__$route_builder_handler_name(void* client, void* name);
+void* __swift_bridge__$route_builder_request_schema_json(void* client, void* schema);
+void* __swift_bridge__$route_builder_response_schema_json(void* client, void* schema);
+void* __swift_bridge__$route_builder_params_schema_json(void* client, void* schema);
+void* __swift_bridge__$route_builder_file_params_json(void* client, void* schema);
+void* __swift_bridge__$route_builder_cors(void* client, void* cors);
+void* __swift_bridge__$route_builder_sync(void* client);
+void* __swift_bridge__$route_builder_handler_dependencies(void* client, void* dependencies);
+void* __swift_bridge__$JsonRpcMethodInfo$method_name(void* self);
+void* __swift_bridge__$JsonRpcMethodInfo$description(void* self);
+void* __swift_bridge__$JsonRpcMethodInfo$params_schema(void* self);
+void* __swift_bridge__$JsonRpcMethodInfo$result_schema(void* self);
+bool __swift_bridge__$JsonRpcMethodInfo$deprecated(void* self);
+void* __swift_bridge__$JsonRpcMethodInfo$tags(void* self);
+void* __swift_bridge__$ProblemDetails$type_uri(void* self);
+void* __swift_bridge__$ProblemDetails$title(void* self);
+uint16_t __swift_bridge__$ProblemDetails$status(void* self);
+void* __swift_bridge__$ProblemDetails$detail(void* self);
+void* __swift_bridge__$ProblemDetails$instance(void* self);
+void* __swift_bridge__$ProblemDetails$extensions(void* self);
+void* __swift_bridge__$AsyncApiConfig$new(bool enabled, void* spec);
+bool __swift_bridge__$AsyncApiConfig$enabled(void* self);
+void* __swift_bridge__$AsyncApiConfig$spec(void* self);
+void* __swift_bridge__$ParsedChannel$name(void* self);
+void* __swift_bridge__$ParsedChannel$address(void* self);
+void* __swift_bridge__$ParsedChannel$messages(void* self);
+void* __swift_bridge__$ParsedChannel$bindings(void* self);
+void* __swift_bridge__$ParsedOperation$name(void* self);
+void* __swift_bridge__$ParsedOperation$action(void* self);
+void* __swift_bridge__$ParsedOperation$channel(void* self);
+void* __swift_bridge__$ParsedMessage$name(void* self);
+void* __swift_bridge__$ParsedMessage$schema(void* self);
+void* __swift_bridge__$ParseResult$spec_version(void* self);
+void* __swift_bridge__$ParseResult$title(void* self);
+void* __swift_bridge__$ParseResult$api_version(void* self);
+void* __swift_bridge__$ParseResult$channels(void* self);
+void* __swift_bridge__$ParseResult$operations(void* self);
+void* __swift_bridge__$ParseResult$messages(void* self);
+void* __swift_bridge__$ParseRequest$spec(void* self);
+bool __swift_bridge__$ValidationResponse$valid(void* self);
+void* __swift_bridge__$ValidateRequest$spec(void* self);
+void* __swift_bridge__$ValidateRequest$channel(void* self);
+void* __swift_bridge__$ValidateRequest$message(void* self);
+void* __swift_bridge__$ValidateRequest$payload(void* self);
+void* __swift_bridge__$ContactInfo$name(void* self);
+void* __swift_bridge__$ContactInfo$email(void* self);
+void* __swift_bridge__$ContactInfo$url(void* self);
+void* __swift_bridge__$LicenseInfo$name(void* self);
+void* __swift_bridge__$LicenseInfo$url(void* self);
+void* __swift_bridge__$ServerInfo$url(void* self);
+void* __swift_bridge__$ServerInfo$description(void* self);
+void* __swift_bridge__$TestingSseEvent$data(void* self);
 void* __swift_bridge__$Method$to_string(void* self);
 void* __swift_bridge__$SecuritySchemeInfo$to_string(void* self);
 void* __swift_bridge__$schema_query_only(void);
 void* __swift_bridge__$schema_query_mutation(void);
 void* __swift_bridge__$schema_full(void);
-struct __private__ResultPtrAndPtr __swift_bridge__$upload_file_from_json(void* json);
+void* __swift_bridge__$App$new(void);
+uintptr_t __swift_bridge__$app_raw_ptr(void* client);
+void __swift_bridge__$config(void* client);
+void* __swift_bridge__$run(void* client);
 struct __private__ResultPtrAndPtr __swift_bridge__$cors_config_from_json(void* json);
-struct __private__ResultPtrAndPtr __swift_bridge__$compression_config_from_json(void* json);
-struct __private__ResultPtrAndPtr __swift_bridge__$rate_limit_config_from_json(void* json);
-struct __private__ResultPtrAndPtr __swift_bridge__$json_rpc_method_info_from_json(void* json);
-struct __private__ResultPtrAndPtr __swift_bridge__$problem_details_from_json(void* json);
+struct __private__ResultPtrAndPtr __swift_bridge__$server_config_from_json(void* json);
+struct __private__ResultPtrAndPtr __swift_bridge__$upload_file_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$schema_config_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$query_only_config_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$query_mutation_config_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$full_schema_config_from_json(void* json);
-struct __private__ResultPtrAndPtr __swift_bridge__$async_api_config_from_json(void* json);
-struct __private__ResultPtrAndPtr __swift_bridge__$parsed_channel_from_json(void* json);
-struct __private__ResultPtrAndPtr __swift_bridge__$parsed_operation_from_json(void* json);
-struct __private__ResultPtrAndPtr __swift_bridge__$parsed_message_from_json(void* json);
-struct __private__ResultPtrAndPtr __swift_bridge__$parse_result_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$background_task_config_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$background_job_metadata_from_json(void* json);
+struct __private__ResultPtrAndPtr __swift_bridge__$compression_config_from_json(void* json);
+struct __private__ResultPtrAndPtr __swift_bridge__$rate_limit_config_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$grpc_config_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$json_rpc_config_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$open_api_config_from_json(void* json);
-struct __private__ResultPtrAndPtr __swift_bridge__$contact_info_from_json(void* json);
-struct __private__ResultPtrAndPtr __swift_bridge__$license_info_from_json(void* json);
-struct __private__ResultPtrAndPtr __swift_bridge__$server_info_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$response_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$sse_event_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$jwt_config_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$api_key_config_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$static_files_config_from_json(void* json);
-struct __private__ResultPtrAndPtr __swift_bridge__$server_config_from_json(void* json);
+struct __private__ResultPtrAndPtr __swift_bridge__$json_rpc_method_info_from_json(void* json);
+struct __private__ResultPtrAndPtr __swift_bridge__$problem_details_from_json(void* json);
+struct __private__ResultPtrAndPtr __swift_bridge__$async_api_config_from_json(void* json);
+struct __private__ResultPtrAndPtr __swift_bridge__$parsed_channel_from_json(void* json);
+struct __private__ResultPtrAndPtr __swift_bridge__$parsed_operation_from_json(void* json);
+struct __private__ResultPtrAndPtr __swift_bridge__$parsed_message_from_json(void* json);
+struct __private__ResultPtrAndPtr __swift_bridge__$parse_result_from_json(void* json);
+struct __private__ResultPtrAndPtr __swift_bridge__$contact_info_from_json(void* json);
+struct __private__ResultPtrAndPtr __swift_bridge__$license_info_from_json(void* json);
+struct __private__ResultPtrAndPtr __swift_bridge__$server_info_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$method_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$security_scheme_info_from_json(void* json);
 
