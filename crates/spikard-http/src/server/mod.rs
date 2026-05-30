@@ -442,10 +442,9 @@ fn create_method_router(
                     )
                 },
             ),
-            crate::Method::Post
-            | crate::Method::Put
-            | crate::Method::Patch
-            | crate::Method::Connect => MethodRouter::new(),
+            crate::Method::Post | crate::Method::Put | crate::Method::Patch | crate::Method::Connect => {
+                MethodRouter::new()
+            }
         }
     } else {
         let handler_clone = handler.clone();
@@ -511,10 +510,9 @@ fn create_method_router(
                     call_with_optional_hooks(req, request_data, handler_clone, hooks_clone).await,
                 )
             }),
-            crate::Method::Post
-            | crate::Method::Put
-            | crate::Method::Patch
-            | crate::Method::Connect => MethodRouter::new(),
+            crate::Method::Post | crate::Method::Put | crate::Method::Patch | crate::Method::Connect => {
+                MethodRouter::new()
+            }
         }
     }
 }
