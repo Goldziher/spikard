@@ -27,48 +27,6 @@ Full parse result returned by `POST /asyncapi/parse`
 
 See [Configuration Reference](configuration.md) for detailed defaults and language-specific representations.
 
-#### CorsConfig
-
-CORS configuration for a route
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `allowed_origins` | `Vec<String>` | `vec![]` | Allowed origins |
-| `allowed_methods` | `Vec<String>` | `vec![]` | Allowed methods |
-| `allowed_headers` | `Vec<String>` | `vec![]` | Allowed headers |
-| `expose_headers` | `Vec<String>` | `None` | Expose headers |
-| `max_age` | `Option<u32>` | `None` | Maximum age |
-| `allow_credentials` | `Option<bool>` | `None` | Allow credentials |
-| `methods_joined_cache` | `String` | — | Methods joined cache |
-| `headers_joined_cache` | `String` | — | Headers joined cache |
-
----
-
-#### CompressionConfig
-
-Compression configuration shared across runtimes
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `gzip` | `bool` | `true` | Enable gzip compression |
-| `brotli` | `bool` | `true` | Enable brotli compression |
-| `min_size` | `usize` | — | Minimum response size to compress (bytes) |
-| `quality` | `u32` | — | Compression quality (0-11 for brotli, 0-9 for gzip) |
-
----
-
-#### RateLimitConfig
-
-Rate limiting configuration shared across runtimes
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `per_second` | `u64` | `100` | Requests per second |
-| `burst` | `u32` | `200` | Burst allowance |
-| `ip_based` | `bool` | `true` | Use IP-based rate limiting |
-
----
-
 #### GraphQLRouteConfig
 
 Configuration for GraphQL routes
@@ -131,17 +89,6 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 
 ---
 
-#### AsyncApiConfig
-
-AsyncAPI HTTP endpoint configuration
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `enabled` | `bool` | — | Enable AsyncAPI endpoints (default: false) |
-| `spec` | `Option<serde_json::Value>` | `Default::default()` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
-
----
-
 #### BackgroundTaskConfig
 
 Configuration for in-process background task execution.
@@ -151,6 +98,48 @@ Configuration for in-process background task execution.
 | `max_queue_size` | `usize` | `1024` | Maximum queue size |
 | `max_concurrent_tasks` | `usize` | `128` | Maximum concurrent tasks |
 | `drain_timeout_secs` | `u64` | `30` | Drain timeout secs |
+
+---
+
+#### CorsConfig
+
+CORS configuration for a route
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `allowed_origins` | `Vec<String>` | `vec![]` | Allowed origins |
+| `allowed_methods` | `Vec<String>` | `vec![]` | Allowed methods |
+| `allowed_headers` | `Vec<String>` | `vec![]` | Allowed headers |
+| `expose_headers` | `Vec<String>` | `None` | Expose headers |
+| `max_age` | `Option<u32>` | `None` | Maximum age |
+| `allow_credentials` | `Option<bool>` | `None` | Allow credentials |
+| `methods_joined_cache` | `String` | — | Methods joined cache |
+| `headers_joined_cache` | `String` | — | Headers joined cache |
+
+---
+
+#### CompressionConfig
+
+Compression configuration shared across runtimes
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `gzip` | `bool` | `true` | Enable gzip compression |
+| `brotli` | `bool` | `true` | Enable brotli compression |
+| `min_size` | `usize` | — | Minimum response size to compress (bytes) |
+| `quality` | `u32` | — | Compression quality (0-11 for brotli, 0-9 for gzip) |
+
+---
+
+#### RateLimitConfig
+
+Rate limiting configuration shared across runtimes
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `per_second` | `u64` | `100` | Requests per second |
+| `burst` | `u32` | `200` | Burst allowance |
+| `ip_based` | `bool` | `true` | Use IP-based rate limiting |
 
 ---
 
@@ -309,6 +298,25 @@ Server configuration
 
 ---
 
+#### App
+
+Spikard application builder.
+
+*Opaque type — fields are not directly accessible.*
+
+---
+
+#### AsyncApiConfig
+
+AsyncAPI HTTP endpoint configuration
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | `bool` | — | Enable AsyncAPI endpoints (default: false) |
+| `spec` | `Option<serde_json::Value>` | `Default::default()` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+
+---
+
 ### Metadata Types
 
 #### BackgroundJobMetadata
@@ -340,15 +348,96 @@ base64 decoding and implements standard I/O traits for compatibility.
 
 ---
 
-#### ResponseSnapshot
+#### Handler
 
-Snapshot of an Axum response used by higher-level language bindings.
+Handler trait that all language bindings must implement
+
+This trait is completely language-agnostic. Each binding (Python, Node, WASM)
+implements this trait to bridge their runtime to our HTTP server.
+
+*Opaque type — fields are not directly accessible.*
+
+---
+
+#### SseEventProducer
+
+SSE event producer trait
+
+Implement this trait to create custom Server-Sent Event (SSE) producers for your application.
+The producer generates events that are streamed to connected clients.
+
+### Understanding SSE
+
+Server-Sent Events (SSE) provide one-way communication from server to client over HTTP.
+Unlike WebSocket, SSE uses standard HTTP and automatically handles reconnection.
+Use SSE when you need to push data to clients without bidirectional communication.
+
+### Implementing the Trait
+
+You must implement the `next_event` method to generate events. The `on_connect` and
+`on_disconnect` methods are optional lifecycle hooks.
+
+*Opaque type — fields are not directly accessible.*
+
+---
+
+#### SseEvent
+
+An individual SSE event
+
+Represents a single Server-Sent Event to be sent to a connected client.
+Events can have an optional type, ID, and retry timeout for advanced scenarios.
+
+### SSE Format
+
+Events are serialized to the following text format:
+
+```text
+event: event_type
+data: {"json":"value"}
+id: event-123
+retry: 3000
+```
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `status` | `u16` | — | HTTP status code. |
-| `headers` | `HashMap<String, String>` | — | Response headers (lowercase keys for predictable lookups). |
-| `body` | `Vec<u8>` | — | Response body bytes (decoded for supported encodings). |
+| `event_type` | `Option<String>` | `None` | Event type (optional) |
+| `data` | `serde_json::Value` | — | Event data (JSON value) |
+| `id` | `Option<String>` | `None` | Event ID (optional, for client-side reconnection) |
+| `retry` | `Option<u64>` | `None` | Retry timeout in milliseconds (optional) |
+
+---
+
+#### WebSocketHandler
+
+WebSocket message handler trait
+
+Implement this trait to create custom WebSocket message handlers for your application.
+The handler processes JSON messages received from WebSocket clients and can optionally
+send responses back.
+
+### Implementing the Trait
+
+You must implement the `handle_message` method. The `on_connect` and `on_disconnect`
+methods are optional and provide lifecycle hooks.
+
+*Opaque type — fields are not directly accessible.*
+
+---
+
+#### RouteBuilder
+
+Builder for defining a route.
+
+*Opaque type — fields are not directly accessible.*
+
+---
+
+#### IntoHandler
+
+Convert user-facing handler functions into the low-level `Handler` trait.
+
+*Opaque type — fields are not directly accessible.*
 
 ---
 
@@ -379,7 +468,9 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ### Content-Type
+
 Responses using this struct should set:
+
 ```text
 Content-Type: application/problem+json
 ```
@@ -509,29 +600,15 @@ Server information
 
 ---
 
-#### SseEvent
+#### ResponseSnapshot
 
-An individual SSE event
-
-Represents a single Server-Sent Event to be sent to a connected client.
-Events can have an optional type, ID, and retry timeout for advanced scenarios.
-
-### SSE Format
-
-Events are serialized to the following text format:
-```text
-event: event_type
-data: {"json":"value"}
-id: event-123
-retry: 3000
-```
+Snapshot of an Axum response used by higher-level language bindings.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `event_type` | `Option<String>` | `None` | Event type (optional) |
-| `data` | `serde_json::Value` | — | Event data (JSON value) |
-| `id` | `Option<String>` | `None` | Event ID (optional, for client-side reconnection) |
-| `retry` | `Option<u64>` | `None` | Retry timeout in milliseconds (optional) |
+| `status` | `u16` | — | HTTP status code. |
+| `headers` | `HashMap<String, String>` | — | Response headers (lowercase keys for predictable lookups). |
+| `body` | `Vec<u8>` | — | Response body bytes (decoded for supported encodings). |
 
 ---
 

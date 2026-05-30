@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.20.5"
+alef_version = "0.21.0"
 languages = [
   "python",
   "node",
@@ -185,11 +185,14 @@ features = ["di", "wasm"]
 source_crate_remaps = ["spikard-core", "spikard"]
 custom_rust_modules = ["dispatch"]
 exclude_types = [
+  "App",
+  "AppError",
   "BackgroundJobMetadata",
   "BackgroundTaskConfig",
   "GrpcConfig",
   "GraphQLSubscriptionSnapshot",
   "ResponseSnapshot",
+  "RouteBuilder",
   "SnapshotError",
   "SseEvent",
   "SseEventProducer",
@@ -204,6 +207,10 @@ exclude_types = [
   "GraphQLRouteConfig",
   "QueryMutationConfig",
   "QueryOnlyConfig",
+  # SchemaConfig and FullSchemaConfig are from spikard-graphql; they're
+  # re-exported via the spikard facade but the wasm crate doesn't use them.
+  "SchemaConfig",
+  "FullSchemaConfig",
 ]
 
 [crates.wasm.extra_dependencies]
@@ -341,7 +348,7 @@ wire_response_type = "Response"
 # The dispatch method `call(&self, request: Request<Body>, request_data: RequestData)` receives a
 # foreign framework type the wire bridge ignores; supply it verbatim. The bridge produces the
 # library's real dispatch return type via the response adapter.
-dispatch_extra_params = ["_request: axum::http::Request<axum::body::Body>"]
+dispatch_extra_params = ["_request: spikard::Request<spikard::Body>"]
 wire_param_name = "request_data"
 dispatch_return_type = "spikard::HandlerResult"
 response_adapter = "spikard::handler_result_from_response"

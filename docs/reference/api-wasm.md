@@ -6,6 +6,31 @@ title: "WebAssembly API Reference"
 
 ### Functions
 
+#### handlerResultFromResponse()
+
+Convert a handler-bridge outcome into a `HandlerResult`.
+
+Language bindings produce a `Response` wire DTO (or a boxed error) from the host callback;
+the `Handler` trait requires an `axum` response. This builds the `axum` response from the DTO's
+`content` (serialized as JSON), `status_code`, and `headers`, mapping any error to a `500`
+problem. It is the response adapter referenced by the generated handler bridges.
+
+**Signature:**
+
+```typescript
+function handlerResultFromResponse(outcome: Response): string
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `outcome` | `Response` | Yes | The response |
+
+**Returns:** `string`
+
+---
+
 #### schemaQueryOnly()
 
 Create a simple schema configuration with only Query type.
@@ -76,6 +101,104 @@ API Key authentication configuration
 |-------|------|---------|-------------|
 | `keys` | `Array<string>` | — | Valid API keys |
 | `headerName` | `string` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
+
+---
+
+#### App
+
+Spikard application builder.
+
+### Methods
+
+#### config()
+
+Set the server configuration.
+
+**Signature:**
+
+```typescript
+config(config: ServerConfig): App
+```
+
+#### mergeAxumRouter()
+
+Attach an existing Axum router to this application, returning ownership.
+
+**Signature:**
+
+```typescript
+mergeAxumRouter(router: string): App
+```
+
+#### attachAxumRouter()
+
+Attach an Axum router using a mutable reference for incremental configuration.
+
+**Signature:**
+
+```typescript
+attachAxumRouter(router: string): App
+```
+
+#### intoRouter()
+
+Build the underlying Axum router.
+
+**Errors:**
+
+Returns an error if server or router construction fails.
+
+**Signature:**
+
+```typescript
+intoRouter(): string
+```
+
+#### run()
+
+Run the HTTP server using the configured routes.
+
+**Errors:**
+
+Returns an error if server construction or execution fails.
+
+**Signature:**
+
+```typescript
+run(): void
+```
+
+#### default()
+
+**Signature:**
+
+```typescript
+static default(): App
+```
+
+#### new()
+
+Create a new application with the default server configuration.
+
+**Signature:**
+
+```typescript
+static new(): App
+```
+
+#### route()
+
+Register a route using the provided builder and handler function.
+
+**Errors:**
+
+Returns an error if route construction fails or if the handler registration fails.
+
+**Signature:**
+
+```typescript
+route(builder: RouteBuilder, handler: H): App
+```
 
 ---
 
@@ -220,6 +343,129 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 
 ```typescript
 static default(): FullSchemaConfig
+```
+
+---
+
+#### Handler
+
+Handler trait that all language bindings must implement
+
+This trait is completely language-agnostic. Each binding (Python, Node, WASM)
+implements this trait to bridge their runtime to our HTTP server.
+
+### Methods
+
+#### call()
+
+Handle an HTTP request
+
+Takes the extracted request data and returns a future that resolves to either:
+
+- Ok(Response): A successful HTTP response
+- Err((StatusCode, String)): An error with status code and message
+
+**Signature:**
+
+```typescript
+call(request: Request, requestData: RequestData): HandlerResult
+```
+
+#### prefersRawJsonBody()
+
+Whether this handler prefers consuming `RequestData.raw_body` over the parsed
+`RequestData.body` for JSON requests.
+
+When `true`, the server may skip eager JSON parsing when there is no request-body
+schema validator attached to the route.
+
+**Signature:**
+
+```typescript
+prefersRawJsonBody(): boolean
+```
+
+#### prefersParameterExtraction()
+
+Whether this handler wants to perform its own parameter validation/extraction (path/query/header/cookie).
+
+When `true`, the server will skip `ParameterValidator.validate_and_extract` in `ValidatingHandler`.
+This is useful for language bindings which need to transform validated parameters into
+language-specific values (e.g., Python kwargs) without duplicating work. When `false`,
+the server stores validated output in `RequestData.validated_params`.
+
+**Signature:**
+
+```typescript
+prefersParameterExtraction(): boolean
+```
+
+#### wantsHeaders()
+
+Whether this handler needs the parsed headers map in `RequestData`.
+
+When `false`, the server may skip building `RequestData.headers` for requests without a body.
+(Requests with bodies still typically need `Content-Type` decisions.)
+
+**Signature:**
+
+```typescript
+wantsHeaders(): boolean
+```
+
+#### wantsCookies()
+
+Whether this handler needs the parsed cookies map in `RequestData`.
+
+When `false`, the server may skip parsing cookies for requests without a body.
+
+**Signature:**
+
+```typescript
+wantsCookies(): boolean
+```
+
+#### wantsRequestExtensions()
+
+Whether this handler needs `RequestData` stored in request extensions.
+
+When `false`, the server avoids inserting `RequestData` into extensions to
+skip cloning in hot paths.
+
+**Signature:**
+
+```typescript
+wantsRequestExtensions(): boolean
+```
+
+#### staticResponse()
+
+Return a pre-built static response if this handler always produces the
+same output. When `Some`, the server bypasses the full middleware
+pipeline and serves the pre-built response directly.
+
+**Signature:**
+
+```typescript
+staticResponse(): StaticResponse | null
+```
+
+---
+
+#### IntoHandler
+
+Convert user-facing handler functions into the low-level `Handler` trait.
+
+### Methods
+
+#### intoHandler()
+
+Convert this value into a shared request handler.
+
+**Signature:**
+
+```typescript
+intoHandler(): Handler
 ```
 
 ---
@@ -390,7 +636,9 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ### Content-Type
+
 Responses using this struct should set:
+
 ```text
 Content-Type: application/problem+json
 ```
@@ -564,6 +812,94 @@ setCookie(key: string, value: string, secure: boolean, httpOnly: boolean, maxAge
 
 ```typescript
 static default(): Response
+```
+
+---
+
+#### RouteBuilder
+
+Builder for defining a route.
+
+### Methods
+
+#### handlerName()
+
+Assign an explicit handler name.
+
+**Signature:**
+
+```typescript
+handlerName(name: string): RouteBuilder
+```
+
+#### requestSchemaJson()
+
+Provide a raw JSON schema for the request body.
+
+**Signature:**
+
+```typescript
+requestSchemaJson(schema: unknown): RouteBuilder
+```
+
+#### responseSchemaJson()
+
+Provide a raw JSON schema for the response body.
+
+**Signature:**
+
+```typescript
+responseSchemaJson(schema: unknown): RouteBuilder
+```
+
+#### paramsSchemaJson()
+
+Provide a raw JSON schema for request parameters.
+
+**Signature:**
+
+```typescript
+paramsSchemaJson(schema: unknown): RouteBuilder
+```
+
+#### fileParamsJson()
+
+Provide multipart file parameter configuration.
+
+**Signature:**
+
+```typescript
+fileParamsJson(schema: unknown): RouteBuilder
+```
+
+#### cors()
+
+Attach a CORS configuration for this route.
+
+**Signature:**
+
+```typescript
+cors(cors: CorsConfig): RouteBuilder
+```
+
+#### sync()
+
+Mark the route as synchronous.
+
+**Signature:**
+
+```typescript
+sync(): RouteBuilder
+```
+
+#### handlerDependencies()
+
+Declare the dependency keys that must be resolved before this handler runs.
+
+**Signature:**
+
+```typescript
+handlerDependencies(dependencies: Array<string>): RouteBuilder
 ```
 
 ---
@@ -872,6 +1208,20 @@ Security scheme types
 ---
 
 ### Errors
+
+#### AppError
+
+Error type for application builder operations.
+
+Errors are thrown as plain `Error` objects with descriptive messages.
+
+| Variant | Description |
+|---------|-------------|
+| `Route` | Route registration failed. |
+| `Server` | Server/router construction failed. |
+| `Decode` | Failed to extract DTO from the request context. |
+
+---
 
 #### GraphQlError
 

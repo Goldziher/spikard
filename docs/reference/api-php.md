@@ -6,6 +6,31 @@ title: "PHP API Reference"
 
 ### Functions
 
+#### handlerResultFromResponse()
+
+Convert a handler-bridge outcome into a `HandlerResult`.
+
+Language bindings produce a `Response` wire DTO (or a boxed error) from the host callback;
+the `Handler` trait requires an `axum` response. This builds the `axum` response from the DTO's
+`content` (serialized as JSON), `status_code`, and `headers`, mapping any error to a `500`
+problem. It is the response adapter referenced by the generated handler bridges.
+
+**Signature:**
+
+```php
+public static function handlerResultFromResponse(Response $outcome): string
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `outcome` | `Response` | Yes | The response |
+
+**Returns:** `string`
+
+---
+
 #### schemaQueryOnly()
 
 Create a simple schema configuration with only Query type.
@@ -76,6 +101,104 @@ API Key authentication configuration
 |-------|------|---------|-------------|
 | `keys` | `array<string>` | — | Valid API keys |
 | `headerName` | `string` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
+
+---
+
+#### App
+
+Spikard application builder.
+
+### Methods
+
+#### config()
+
+Set the server configuration.
+
+**Signature:**
+
+```php
+public function config(ServerConfig $config): App
+```
+
+#### mergeAxumRouter()
+
+Attach an existing Axum router to this application, returning ownership.
+
+**Signature:**
+
+```php
+public function mergeAxumRouter(string $router): App
+```
+
+#### attachAxumRouter()
+
+Attach an Axum router using a mutable reference for incremental configuration.
+
+**Signature:**
+
+```php
+public function attachAxumRouter(string $router): App
+```
+
+#### intoRouter()
+
+Build the underlying Axum router.
+
+**Errors:**
+
+Returns an error if server or router construction fails.
+
+**Signature:**
+
+```php
+public function intoRouter(): string
+```
+
+#### run()
+
+Run the HTTP server using the configured routes.
+
+**Errors:**
+
+Returns an error if server construction or execution fails.
+
+**Signature:**
+
+```php
+public function run(): void
+```
+
+#### default()
+
+**Signature:**
+
+```php
+public static function default(): App
+```
+
+#### new()
+
+Create a new application with the default server configuration.
+
+**Signature:**
+
+```php
+public static function new(): App
+```
+
+#### route()
+
+Register a route using the provided builder and handler function.
+
+**Errors:**
+
+Returns an error if route construction fails or if the handler registration fails.
+
+**Signature:**
+
+```php
+public function route(RouteBuilder $builder, H $handler): App
+```
 
 ---
 
@@ -430,6 +553,129 @@ public static function default(): GrpcConfig
 
 ---
 
+#### Handler
+
+Handler trait that all language bindings must implement
+
+This trait is completely language-agnostic. Each binding (Python, Node, WASM)
+implements this trait to bridge their runtime to our HTTP server.
+
+### Methods
+
+#### call()
+
+Handle an HTTP request
+
+Takes the extracted request data and returns a future that resolves to either:
+
+- Ok(Response): A successful HTTP response
+- Err((StatusCode, String)): An error with status code and message
+
+**Signature:**
+
+```php
+public function call(Request $request, RequestData $requestData): HandlerResult
+```
+
+#### prefersRawJsonBody()
+
+Whether this handler prefers consuming `RequestData::raw_body` over the parsed
+`RequestData::body` for JSON requests.
+
+When `true`, the server may skip eager JSON parsing when there is no request-body
+schema validator attached to the route.
+
+**Signature:**
+
+```php
+public function prefersRawJsonBody(): bool
+```
+
+#### prefersParameterExtraction()
+
+Whether this handler wants to perform its own parameter validation/extraction (path/query/header/cookie).
+
+When `true`, the server will skip `ParameterValidator::validate_and_extract` in `ValidatingHandler`.
+This is useful for language bindings which need to transform validated parameters into
+language-specific values (e.g., Python kwargs) without duplicating work. When `false`,
+the server stores validated output in `RequestData::validated_params`.
+
+**Signature:**
+
+```php
+public function prefersParameterExtraction(): bool
+```
+
+#### wantsHeaders()
+
+Whether this handler needs the parsed headers map in `RequestData`.
+
+When `false`, the server may skip building `RequestData::headers` for requests without a body.
+(Requests with bodies still typically need `Content-Type` decisions.)
+
+**Signature:**
+
+```php
+public function wantsHeaders(): bool
+```
+
+#### wantsCookies()
+
+Whether this handler needs the parsed cookies map in `RequestData`.
+
+When `false`, the server may skip parsing cookies for requests without a body.
+
+**Signature:**
+
+```php
+public function wantsCookies(): bool
+```
+
+#### wantsRequestExtensions()
+
+Whether this handler needs `RequestData` stored in request extensions.
+
+When `false`, the server avoids inserting `RequestData` into extensions to
+skip cloning in hot paths.
+
+**Signature:**
+
+```php
+public function wantsRequestExtensions(): bool
+```
+
+#### staticResponse()
+
+Return a pre-built static response if this handler always produces the
+same output. When `Some`, the server bypasses the full middleware
+pipeline and serves the pre-built response directly.
+
+**Signature:**
+
+```php
+public function staticResponse(): ?StaticResponse
+```
+
+---
+
+#### IntoHandler
+
+Convert user-facing handler functions into the low-level `Handler` trait.
+
+### Methods
+
+#### intoHandler()
+
+Convert this value into a shared request handler.
+
+**Signature:**
+
+```php
+public function intoHandler(): Handler
+```
+
+---
+
 #### JsonRpcConfig
 
 JSON-RPC server configuration
@@ -596,7 +842,9 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ### Content-Type
+
 Responses using this struct should set:
+
 ```text
 Content-Type: application/problem+json
 ```
@@ -852,6 +1100,94 @@ public function header(string $name): ?string
 
 ---
 
+#### RouteBuilder
+
+Builder for defining a route.
+
+### Methods
+
+#### handlerName()
+
+Assign an explicit handler name.
+
+**Signature:**
+
+```php
+public function handlerName(string $name): RouteBuilder
+```
+
+#### requestSchemaJson()
+
+Provide a raw JSON schema for the request body.
+
+**Signature:**
+
+```php
+public function requestSchemaJson(mixed $schema): RouteBuilder
+```
+
+#### responseSchemaJson()
+
+Provide a raw JSON schema for the response body.
+
+**Signature:**
+
+```php
+public function responseSchemaJson(mixed $schema): RouteBuilder
+```
+
+#### paramsSchemaJson()
+
+Provide a raw JSON schema for request parameters.
+
+**Signature:**
+
+```php
+public function paramsSchemaJson(mixed $schema): RouteBuilder
+```
+
+#### fileParamsJson()
+
+Provide multipart file parameter configuration.
+
+**Signature:**
+
+```php
+public function fileParamsJson(mixed $schema): RouteBuilder
+```
+
+#### cors()
+
+Attach a CORS configuration for this route.
+
+**Signature:**
+
+```php
+public function cors(CorsConfig $cors): RouteBuilder
+```
+
+#### sync()
+
+Mark the route as synchronous.
+
+**Signature:**
+
+```php
+public function sync(): RouteBuilder
+```
+
+#### handlerDependencies()
+
+Declare the dependency keys that must be resolved before this handler runs.
+
+**Signature:**
+
+```php
+public function handlerDependencies(array<string> $dependencies): RouteBuilder
+```
+
+---
+
 #### SchemaConfig
 
 Configuration for GraphQL schema building.
@@ -938,6 +1274,7 @@ Events can have an optional type, ID, and retry timeout for advanced scenarios.
 ### SSE Format
 
 Events are serialized to the following text format:
+
 ```text
 event: event_type
 data: {"json":"value"}
@@ -978,6 +1315,72 @@ if the connection is lost. The client browser will automatically handle reconnec
 
 ```php
 public function withRetry(int $retryMs): SseEvent
+```
+
+---
+
+#### SseEventProducer
+
+SSE event producer trait
+
+Implement this trait to create custom Server-Sent Event (SSE) producers for your application.
+The producer generates events that are streamed to connected clients.
+
+### Understanding SSE
+
+Server-Sent Events (SSE) provide one-way communication from server to client over HTTP.
+Unlike WebSocket, SSE uses standard HTTP and automatically handles reconnection.
+Use SSE when you need to push data to clients without bidirectional communication.
+
+### Implementing the Trait
+
+You must implement the `next_event` method to generate events. The `on_connect` and
+`on_disconnect` methods are optional lifecycle hooks.
+
+### Methods
+
+#### nextEvent()
+
+Generate the next event
+
+Called repeatedly to produce the event stream. Should return `Some(event)` when
+an event is ready to send, or `null` when the stream should end.
+
+**Returns:**
+
+- `Some(event)` - Event to send to the client
+- `null` - Stream complete, connection will close
+
+**Signature:**
+
+```php
+public function nextEvent(): Future
+```
+
+#### onConnect()
+
+Called when a client connects to the SSE endpoint
+
+Optional lifecycle hook invoked when a new SSE connection is established.
+Default implementation does nothing.
+
+**Signature:**
+
+```php
+public function onConnect(): Future
+```
+
+#### onDisconnect()
+
+Called when a client disconnects from the SSE endpoint
+
+Optional lifecycle hook invoked when an SSE connection is closed (either by the
+client or the stream ending). Default implementation does nothing.
+
+**Signature:**
+
+```php
+public function onDisconnect(): Future
 ```
 
 ---
@@ -1085,32 +1488,68 @@ Response body for `POST /asyncapi/validate`
 
 ---
 
+#### WebSocketHandler
+
+WebSocket message handler trait
+
+Implement this trait to create custom WebSocket message handlers for your application.
+The handler processes JSON messages received from WebSocket clients and can optionally
+send responses back.
+
+### Implementing the Trait
+
+You must implement the `handle_message` method. The `on_connect` and `on_disconnect`
+methods are optional and provide lifecycle hooks.
+
+### Methods
+
+#### handleMessage()
+
+Handle incoming WebSocket message
+
+Called whenever a text message is received from a WebSocket client.
+Messages are automatically parsed as JSON.
+
+**Returns:**
+
+- `Some(value)` - JSON value to send back to the client
+- `null` - No response to send
+
+**Signature:**
+
+```php
+public function handleMessage(mixed $message): Future
+```
+
+#### onConnect()
+
+Called when a client connects to the WebSocket
+
+Optional lifecycle hook invoked when a new WebSocket connection is established.
+Default implementation does nothing.
+
+**Signature:**
+
+```php
+public function onConnect(): Future
+```
+
+#### onDisconnect()
+
+Called when a client disconnects from the WebSocket
+
+Optional lifecycle hook invoked when a WebSocket connection is closed
+(either by the client or due to an error). Default implementation does nothing.
+
+**Signature:**
+
+```php
+public function onDisconnect(): Future
+```
+
+---
+
 ### Enums
-
-#### SnapshotError
-
-Possible errors while converting an Axum response into a snapshot.
-
-| Value | Description |
-|-------|-------------|
-| `InvalidHeader` | Response header could not be decoded to UTF-8. — Fields: `0`: `string` |
-| `Decompression` | Body decompression failed. — Fields: `0`: `string` |
-
----
-
-#### WebSocketMessage
-
-A WebSocket message that can be text or binary.
-
-| Value | Description |
-|-------|-------------|
-| `Text` | A text message. — Fields: `0`: `string` |
-| `Binary` | A binary message. — Fields: `0`: `string` |
-| `Close` | A close message with a numeric close code (RFC 6455) and optional reason text. Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received, 1006 Abnormal Closure. — Fields: `code`: `int`, `reason`: `string` |
-| `Ping` | A ping message. — Fields: `0`: `string` |
-| `Pong` | A pong message. — Fields: `0`: `string` |
-
----
 
 #### Method
 
@@ -1140,7 +1579,44 @@ Security scheme types
 
 ---
 
+#### SnapshotError
+
+Possible errors while converting an Axum response into a snapshot.
+
+| Value | Description |
+|-------|-------------|
+| `InvalidHeader` | Response header could not be decoded to UTF-8. — Fields: `0`: `string` |
+| `Decompression` | Body decompression failed. — Fields: `0`: `string` |
+
+---
+
+#### WebSocketMessage
+
+A WebSocket message that can be text or binary.
+
+| Value | Description |
+|-------|-------------|
+| `Text` | A text message. — Fields: `0`: `string` |
+| `Binary` | A binary message. — Fields: `0`: `string` |
+| `Close` | A close message with a numeric close code (RFC 6455) and optional reason text. Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received, 1006 Abnormal Closure. — Fields: `code`: `int`, `reason`: `string` |
+| `Ping` | A ping message. — Fields: `0`: `string` |
+| `Pong` | A pong message. — Fields: `0`: `string` |
+
+---
+
 ### Errors
+
+#### AppError
+
+Error type for application builder operations.
+
+| Variant | Description |
+|---------|-------------|
+| `Route` | Route registration failed. |
+| `Server` | Server/router construction failed. |
+| `Decode` | Failed to extract DTO from the request context. |
+
+---
 
 #### GraphQlError
 

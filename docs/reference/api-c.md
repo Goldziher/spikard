@@ -6,6 +6,31 @@ title: "C API Reference"
 
 ### Functions
 
+#### spikard_handler_result_from_response()
+
+Convert a handler-bridge outcome into a `HandlerResult`.
+
+Language bindings produce a `Response` wire DTO (or a boxed error) from the host callback;
+the `Handler` trait requires an `axum` response. This builds the `axum` response from the DTO's
+`content` (serialized as JSON), `status_code`, and `headers`, mapping any error to a `500`
+problem. It is the response adapter referenced by the generated handler bridges.
+
+**Signature:**
+
+```c
+const char* spikard_handler_result_from_response(SpikardResponse outcome);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `outcome` | `SpikardResponse` | Yes | The response |
+
+**Returns:** `const char*`
+
+---
+
 #### spikard_schema_query_only()
 
 Create a simple schema configuration with only Query type.
@@ -76,6 +101,104 @@ API Key authentication configuration
 |-------|------|---------|-------------|
 | `keys` | `const char**` | — | Valid API keys |
 | `header_name` | `const char*` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
+
+---
+
+#### SpikardApp
+
+Spikard application builder.
+
+### Methods
+
+#### spikard_config()
+
+Set the server configuration.
+
+**Signature:**
+
+```c
+SpikardApp spikard_config(SpikardServerConfig config);
+```
+
+#### spikard_merge_axum_router()
+
+Attach an existing Axum router to this application, returning ownership.
+
+**Signature:**
+
+```c
+SpikardApp spikard_merge_axum_router(const char* router);
+```
+
+#### spikard_attach_axum_router()
+
+Attach an Axum router using a mutable reference for incremental configuration.
+
+**Signature:**
+
+```c
+SpikardApp spikard_attach_axum_router(const char* router);
+```
+
+#### spikard_into_router()
+
+Build the underlying Axum router.
+
+**Errors:**
+
+Returns an error if server or router construction fails.
+
+**Signature:**
+
+```c
+const char* spikard_into_router();
+```
+
+#### spikard_run()
+
+Run the HTTP server using the configured routes.
+
+**Errors:**
+
+Returns an error if server construction or execution fails.
+
+**Signature:**
+
+```c
+void spikard_run();
+```
+
+#### spikard_default()
+
+**Signature:**
+
+```c
+SpikardApp spikard_default();
+```
+
+#### spikard_new()
+
+Create a new application with the default server configuration.
+
+**Signature:**
+
+```c
+SpikardApp spikard_new();
+```
+
+#### spikard_route()
+
+Register a route using the provided builder and handler function.
+
+**Errors:**
+
+Returns an error if route construction fails or if the handler registration fails.
+
+**Signature:**
+
+```c
+SpikardApp spikard_route(SpikardRouteBuilder builder, SpikardH handler);
+```
 
 ---
 
@@ -416,6 +539,129 @@ SpikardGrpcConfig spikard_default();
 
 ---
 
+#### SpikardHandler
+
+Handler trait that all language bindings must implement
+
+This trait is completely language-agnostic. Each binding (Python, Node, WASM)
+implements this trait to bridge their runtime to our HTTP server.
+
+### Methods
+
+#### spikard_call()
+
+Handle an HTTP request
+
+Takes the extracted request data and returns a future that resolves to either:
+
+- Ok(Response): A successful HTTP response
+- Err((StatusCode, String)): An error with status code and message
+
+**Signature:**
+
+```c
+SpikardHandlerResult spikard_call(SpikardRequest request, SpikardRequestData request_data);
+```
+
+#### spikard_prefers_raw_json_body()
+
+Whether this handler prefers consuming `RequestData.raw_body` over the parsed
+`RequestData.body` for JSON requests.
+
+When `true`, the server may skip eager JSON parsing when there is no request-body
+schema validator attached to the route.
+
+**Signature:**
+
+```c
+bool spikard_prefers_raw_json_body();
+```
+
+#### spikard_prefers_parameter_extraction()
+
+Whether this handler wants to perform its own parameter validation/extraction (path/query/header/cookie).
+
+When `true`, the server will skip `ParameterValidator.validate_and_extract` in `ValidatingHandler`.
+This is useful for language bindings which need to transform validated parameters into
+language-specific values (e.g., Python kwargs) without duplicating work. When `false`,
+the server stores validated output in `RequestData.validated_params`.
+
+**Signature:**
+
+```c
+bool spikard_prefers_parameter_extraction();
+```
+
+#### spikard_wants_headers()
+
+Whether this handler needs the parsed headers map in `RequestData`.
+
+When `false`, the server may skip building `RequestData.headers` for requests without a body.
+(Requests with bodies still typically need `Content-Type` decisions.)
+
+**Signature:**
+
+```c
+bool spikard_wants_headers();
+```
+
+#### spikard_wants_cookies()
+
+Whether this handler needs the parsed cookies map in `RequestData`.
+
+When `false`, the server may skip parsing cookies for requests without a body.
+
+**Signature:**
+
+```c
+bool spikard_wants_cookies();
+```
+
+#### spikard_wants_request_extensions()
+
+Whether this handler needs `RequestData` stored in request extensions.
+
+When `false`, the server avoids inserting `RequestData` into extensions to
+skip cloning in hot paths.
+
+**Signature:**
+
+```c
+bool spikard_wants_request_extensions();
+```
+
+#### spikard_static_response()
+
+Return a pre-built static response if this handler always produces the
+same output. When `Some`, the server bypasses the full middleware
+pipeline and serves the pre-built response directly.
+
+**Signature:**
+
+```c
+SpikardStaticResponse* spikard_static_response();
+```
+
+---
+
+#### SpikardIntoHandler
+
+Convert user-facing handler functions into the low-level `Handler` trait.
+
+### Methods
+
+#### spikard_into_handler()
+
+Convert this value into a shared request handler.
+
+**Signature:**
+
+```c
+SpikardHandler spikard_into_handler();
+```
+
+---
+
 #### SpikardJsonRpcConfig
 
 JSON-RPC server configuration
@@ -582,7 +828,9 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ### Content-Type
+
 Responses using this struct should set:
+
 ```text
 Content-Type: application/problem+json
 ```
@@ -804,6 +1052,94 @@ SpikardResponse spikard_default();
 
 ---
 
+#### SpikardRouteBuilder
+
+Builder for defining a route.
+
+### Methods
+
+#### spikard_handler_name()
+
+Assign an explicit handler name.
+
+**Signature:**
+
+```c
+SpikardRouteBuilder spikard_handler_name(const char* name);
+```
+
+#### spikard_request_schema_json()
+
+Provide a raw JSON schema for the request body.
+
+**Signature:**
+
+```c
+SpikardRouteBuilder spikard_request_schema_json(void* schema);
+```
+
+#### spikard_response_schema_json()
+
+Provide a raw JSON schema for the response body.
+
+**Signature:**
+
+```c
+SpikardRouteBuilder spikard_response_schema_json(void* schema);
+```
+
+#### spikard_params_schema_json()
+
+Provide a raw JSON schema for request parameters.
+
+**Signature:**
+
+```c
+SpikardRouteBuilder spikard_params_schema_json(void* schema);
+```
+
+#### spikard_file_params_json()
+
+Provide multipart file parameter configuration.
+
+**Signature:**
+
+```c
+SpikardRouteBuilder spikard_file_params_json(void* schema);
+```
+
+#### spikard_cors()
+
+Attach a CORS configuration for this route.
+
+**Signature:**
+
+```c
+SpikardRouteBuilder spikard_cors(SpikardCorsConfig cors);
+```
+
+#### spikard_sync()
+
+Mark the route as synchronous.
+
+**Signature:**
+
+```c
+SpikardRouteBuilder spikard_sync();
+```
+
+#### spikard_handler_dependencies()
+
+Declare the dependency keys that must be resolved before this handler runs.
+
+**Signature:**
+
+```c
+SpikardRouteBuilder spikard_handler_dependencies(const char** dependencies);
+```
+
+---
+
 #### SpikardSchemaConfig
 
 Configuration for GraphQL schema building.
@@ -890,6 +1226,7 @@ Events can have an optional type, ID, and retry timeout for advanced scenarios.
 ### SSE Format
 
 Events are serialized to the following text format:
+
 ```text
 event: event_type
 data: {"json":"value"}
@@ -930,6 +1267,72 @@ if the connection is lost. The client browser will automatically handle reconnec
 
 ```c
 SpikardSseEvent spikard_with_retry(uint64_t retry_ms);
+```
+
+---
+
+#### SpikardSseEventProducer
+
+SSE event producer trait
+
+Implement this trait to create custom Server-Sent Event (SSE) producers for your application.
+The producer generates events that are streamed to connected clients.
+
+### Understanding SSE
+
+Server-Sent Events (SSE) provide one-way communication from server to client over HTTP.
+Unlike WebSocket, SSE uses standard HTTP and automatically handles reconnection.
+Use SSE when you need to push data to clients without bidirectional communication.
+
+### Implementing the Trait
+
+You must implement the `next_event` method to generate events. The `on_connect` and
+`on_disconnect` methods are optional lifecycle hooks.
+
+### Methods
+
+#### spikard_next_event()
+
+Generate the next event
+
+Called repeatedly to produce the event stream. Should return `Some(event)` when
+an event is ready to send, or `NULL` when the stream should end.
+
+**Returns:**
+
+- `Some(event)` - Event to send to the client
+- `NULL` - Stream complete, connection will close
+
+**Signature:**
+
+```c
+SpikardFuture spikard_next_event();
+```
+
+#### spikard_on_connect()
+
+Called when a client connects to the SSE endpoint
+
+Optional lifecycle hook invoked when a new SSE connection is established.
+Default implementation does nothing.
+
+**Signature:**
+
+```c
+SpikardFuture spikard_on_connect();
+```
+
+#### spikard_on_disconnect()
+
+Called when a client disconnects from the SSE endpoint
+
+Optional lifecycle hook invoked when an SSE connection is closed (either by the
+client or the stream ending). Default implementation does nothing.
+
+**Signature:**
+
+```c
+SpikardFuture spikard_on_disconnect();
 ```
 
 ---
@@ -1037,6 +1440,67 @@ Response body for `POST /asyncapi/validate`
 
 ---
 
+#### SpikardWebSocketHandler
+
+WebSocket message handler trait
+
+Implement this trait to create custom WebSocket message handlers for your application.
+The handler processes JSON messages received from WebSocket clients and can optionally
+send responses back.
+
+### Implementing the Trait
+
+You must implement the `handle_message` method. The `on_connect` and `on_disconnect`
+methods are optional and provide lifecycle hooks.
+
+### Methods
+
+#### spikard_handle_message()
+
+Handle incoming WebSocket message
+
+Called whenever a text message is received from a WebSocket client.
+Messages are automatically parsed as JSON.
+
+**Returns:**
+
+- `Some(value)` - JSON value to send back to the client
+- `NULL` - No response to send
+
+**Signature:**
+
+```c
+SpikardFuture spikard_handle_message(void* message);
+```
+
+#### spikard_on_connect()
+
+Called when a client connects to the WebSocket
+
+Optional lifecycle hook invoked when a new WebSocket connection is established.
+Default implementation does nothing.
+
+**Signature:**
+
+```c
+SpikardFuture spikard_on_connect();
+```
+
+#### spikard_on_disconnect()
+
+Called when a client disconnects from the WebSocket
+
+Optional lifecycle hook invoked when a WebSocket connection is closed
+(either by the client or due to an error). Default implementation does nothing.
+
+**Signature:**
+
+```c
+SpikardFuture spikard_on_disconnect();
+```
+
+---
+
 ### Enums
 
 #### SpikardMethod
@@ -1068,6 +1532,18 @@ Security scheme types
 ---
 
 ### Errors
+
+#### SpikardAppError
+
+Error type for application builder operations.
+
+| Variant | Description |
+|---------|-------------|
+| `SPIKARD_ROUTE` | Route registration failed. |
+| `SPIKARD_SERVER` | Server/router construction failed. |
+| `SPIKARD_DECODE` | Failed to extract DTO from the request context. |
+
+---
 
 #### SpikardGraphQlError
 
