@@ -14,9 +14,11 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 
-use axum::http::{Request, StatusCode};
+pub use axum::body::Body;
+pub use axum::http::Request;
+use axum::http::StatusCode;
 use axum::routing::get as axum_get;
-use axum::{Router as AxumRouter, body::Body};
+use axum::Router as AxumRouter;
 use schemars::JsonSchema;
 use serde::de::DeserializeOwned;
 use serde_json::Value;
@@ -37,13 +39,46 @@ pub use spikard_http::{
     websocket::WebSocketHandler,
 };
 pub use spikard_http::{JsonRpcMethodInfo, ProblemDetails};
+pub use spikard_http::{RequestData, handler_trait::Handler};
 use spikard_http::{
-    RequestData, SchemaRegistry,
-    handler_trait::Handler,
+    SchemaRegistry,
     sse::{SseState, sse_handler},
     websocket::{WebSocketState, websocket_handler},
 };
+
 pub use upload::UploadFile;
+
+/// Convert a binding-side handler outcome into the framework's `HandlerResult`.
+///
+/// Binding handler bridges return `Result<Response, BoxError>` after invoking
+/// the host-language callable; this adapter folds the result into the
+/// axum-compatible `HandlerResult` shape the trait dispatch expects.
+#[doc(hidden)]
+pub fn handler_result_from_response(
+    outcome: Result<Response, Box<dyn std::error::Error + Send + Sync>>,
+) -> HandlerResult {
+    use axum::http::{HeaderName, HeaderValue, StatusCode};
+    match outcome {
+        Ok(response) => {
+            let status = StatusCode::from_u16(response.status_code).unwrap_or(StatusCode::OK);
+            let body = match &response.content {
+                Some(serde_json::Value::String(s)) => Body::from(s.clone()),
+                Some(value) => Body::from(value.to_string()),
+                None => Body::empty(),
+            };
+            let mut builder = axum::http::Response::builder().status(status);
+            for (k, v) in &response.headers {
+                if let (Ok(name), Ok(value)) = (HeaderName::try_from(k), HeaderValue::try_from(v)) {
+                    builder = builder.header(name, value);
+                }
+            }
+            builder
+                .body(body)
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        }
+        Err(err) => Err((StatusCode::INTERNAL_SERVER_ERROR, err.to_string())),
+    }
+}
 
 pub mod testing;
 pub use testing::{
@@ -648,6 +683,12 @@ where
 {
     fn into_handler(self) -> Arc<dyn Handler> {
         Arc::new(FnHandler { inner: self })
+    }
+}
+
+impl IntoHandler for Arc<dyn Handler> {
+    fn into_handler(self) -> Arc<dyn Handler> {
+        self
     }
 }
 
