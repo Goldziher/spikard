@@ -7,7 +7,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /** Coroutine-friendly wrapper around the Java `dev.spikard.App` service facade. */
-class App internal constructor(internal val inner: dev.spikard.App) : AutoCloseable {
+class App internal constructor(
+    internal val inner: dev.spikard.App,
+) : AutoCloseable {
     constructor() : this(dev.spikard.App())
 
     // Register a route using the provided builder and handler function.
@@ -15,43 +17,64 @@ class App internal constructor(internal val inner: dev.spikard.App) : AutoClosea
     // # Errors
     //
     // Returns an error if route construction fails or if the handler registration fails.
-    fun route(handler: (String) -> String, builder: RouteBuilder): Int = inner.registerAppRoute(Callable { request -> handler(request) }, builder.inner)
+    fun route(
+        handler: (String) -> String,
+        builder: RouteBuilder,
+    ): Int = inner.registerAppRoute(Callable { request -> handler(request) }, builder.inner)
 
-    // Register a GET route at the given path.    fun get(path: String): Int {
-        return route(handler, spikard::Method::Get, path)
-    }
+    // Register a GET route at the given path.
+    fun get(
+        handler: (String) -> String,
+        path: String,
+    ): Int = route(handler, RouteBuilder(dev.spikard.RouteBuilder.create(Method.Get, path)))
 
-    // Register a POST route at the given path.    fun post(path: String): Int {
-        return route(handler, spikard::Method::Post, path)
-    }
+    // Register a POST route at the given path.
+    fun post(
+        handler: (String) -> String,
+        path: String,
+    ): Int = route(handler, RouteBuilder(dev.spikard.RouteBuilder.create(Method.Post, path)))
 
-    // Register a PUT route at the given path.    fun put(path: String): Int {
-        return route(handler, spikard::Method::Put, path)
-    }
+    // Register a PUT route at the given path.
+    fun put(
+        handler: (String) -> String,
+        path: String,
+    ): Int = route(handler, RouteBuilder(dev.spikard.RouteBuilder.create(Method.Put, path)))
 
-    // Register a PATCH route at the given path.    fun patch(path: String): Int {
-        return route(handler, spikard::Method::Patch, path)
-    }
+    // Register a PATCH route at the given path.
+    fun patch(
+        handler: (String) -> String,
+        path: String,
+    ): Int = route(handler, RouteBuilder(dev.spikard.RouteBuilder.create(Method.Patch, path)))
 
-    // Register a DELETE route at the given path.    fun delete(path: String): Int {
-        return route(handler, spikard::Method::Delete, path)
-    }
+    // Register a DELETE route at the given path.
+    fun delete(
+        handler: (String) -> String,
+        path: String,
+    ): Int = route(handler, RouteBuilder(dev.spikard.RouteBuilder.create(Method.Delete, path)))
 
-    // Register a HEAD route at the given path.    fun head(path: String): Int {
-        return route(handler, spikard::Method::Head, path)
-    }
+    // Register a HEAD route at the given path.
+    fun head(
+        handler: (String) -> String,
+        path: String,
+    ): Int = route(handler, RouteBuilder(dev.spikard.RouteBuilder.create(Method.Head, path)))
 
-    // Register an OPTIONS route at the given path.    fun options(path: String): Int {
-        return route(handler, spikard::Method::Options, path)
-    }
+    // Register an OPTIONS route at the given path.
+    fun options(
+        handler: (String) -> String,
+        path: String,
+    ): Int = route(handler, RouteBuilder(dev.spikard.RouteBuilder.create(Method.Options, path)))
 
-    // Register a CONNECT route at the given path.    fun connect(path: String): Int {
-        return route(handler, spikard::Method::Connect, path)
-    }
+    // Register a CONNECT route at the given path.
+    fun connect(
+        handler: (String) -> String,
+        path: String,
+    ): Int = route(handler, RouteBuilder(dev.spikard.RouteBuilder.create(Method.Connect, path)))
 
-    // Register a TRACE route at the given path.    fun trace(path: String): Int {
-        return route(handler, spikard::Method::Trace, path)
-    }
+    // Register a TRACE route at the given path.
+    fun trace(
+        handler: (String) -> String,
+        path: String,
+    ): Int = route(handler, RouteBuilder(dev.spikard.RouteBuilder.create(Method.Trace, path)))
 
     // Run the HTTP server using the configured routes.
     //
@@ -60,5 +83,7 @@ class App internal constructor(internal val inner: dev.spikard.App) : AutoClosea
     // Returns an error if server construction or execution fails.
     suspend fun run() = withContext(Dispatchers.IO) { inner.run() }
 
-    override fun close() { inner.close() }
+    override fun close() {
+        inner.close()
+    }
 }
