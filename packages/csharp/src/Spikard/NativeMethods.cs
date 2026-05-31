@@ -149,11 +149,6 @@ internal static partial class NativeMethods
     [DllImport(LibName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "spikard_upload_file_to_json")]
     internal static extern IntPtr UploadFileToJson(IntPtr ptr);
 
-    [DllImport(LibName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "spikard_handler_result_from_response")]
-    internal static extern IntPtr HandlerResultFromResponse(
-        IntPtr outcome
-    );
-
     [DllImport(LibName, CallingConvention = CallingConvention.Cdecl, EntryPoint = "spikard_schema_query_only")]
     internal static extern IntPtr SchemaQueryOnly();
 

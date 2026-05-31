@@ -24,46 +24,6 @@ public static class SpikardLib
     };
 
     /// <summary>
-    /// Convert a handler-bridge outcome into a `HandlerResult`(crate.handler_trait.HandlerResult).
-    ///
-    /// Language bindings produce a `Response` wire DTO (or a boxed error) from the host callback;
-    /// the `Handler` trait requires an `axum` response. This builds the `axum` response from the DTO's
-    /// `content` (serialized as JSON), `status_code`, and `headers`, mapping any error to a `500`
-    /// problem. It is the response adapter referenced by the generated handler bridges.
-    /// </summary>
-    /// <param name="outcome"></param>
-    public static string HandlerResultFromResponse(Response outcome)
-    {
-        ArgumentNullException.ThrowIfNull(outcome);
-        var outcomeJson = JsonSerializer.Serialize(outcome, JsonSerializationOptions);
-        var outcomeHandle = NativeMethods.ResponseFromJson(outcomeJson);
-        if (outcomeHandle == IntPtr.Zero)
-        {
-            var ec = NativeMethods.LastErrorCode();
-            var ctxPtr = NativeMethods.LastErrorContext();
-            var msg = global::System.Runtime.InteropServices.Marshal.PtrToStringUTF8(ctxPtr) ?? "ResponseFromJson failed";
-            throw new SpikardException(ec, msg);
-        }
-        try
-        {
-            var nativeResult = NativeMethods.HandlerResultFromResponse(
-            outcomeHandle
-            );
-            if (nativeResult == IntPtr.Zero)
-            {
-                throw GetLastError();
-            }
-            var returnValue = global::System.Runtime.InteropServices.Marshal.PtrToStringUTF8(nativeResult) ?? string.Empty;
-            NativeMethods.FreeString(nativeResult);
-            return returnValue;
-        }
-        finally
-        {
-            if (outcomeHandle != global::System.IntPtr.Zero) NativeMethods.ResponseFree(outcomeHandle);
-        }
-    }
-
-    /// <summary>
     /// Create a simple schema configuration with only Query type.
     ///
     /// This is a convenience function for schemas that only have queries.

@@ -1476,6 +1476,11 @@ impl RouteBuilder {
             inner: Arc::new(spikard::RouteBuilder::new(method_core, path)),
         }
     }
+
+    #[new]
+    pub fn py_new(method: Method, path: String) -> Self {
+        Self::new(method, path)
+    }
 }
 
 #[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
@@ -2703,13 +2708,6 @@ impl<'de> serde::Deserialize<'de> for WebSocketMessage {
 }
 
 #[pyfunction]
-#[pyo3(signature = (outcome))]
-pub fn handler_result_from_response(outcome: Response) -> String {
-    let _ = outcome;
-    String::from("[unimplemented: handler_result_from_response]")
-}
-
-#[pyfunction]
 #[pyo3(signature = ())]
 pub fn schema_query_only() -> QueryOnlyConfig {
     spikard_graphql::schema_query_only().into()
@@ -3710,7 +3708,6 @@ pub fn _spikard(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<SecuritySchemeInfo>()?;
     m.add_class::<SnapshotError>()?;
     m.add_class::<WebSocketMessage>()?;
-    m.add_function(wrap_pyfunction!(handler_result_from_response, m)?)?;
     m.add_function(wrap_pyfunction!(schema_query_only, m)?)?;
     m.add_function(wrap_pyfunction!(schema_query_mutation, m)?)?;
     m.add_function(wrap_pyfunction!(schema_full, m)?)?;

@@ -892,7 +892,6 @@ enum WebSocketMessage: string
 
 class SpikardPhpApi
 {
-    public static function handlerResultFromResponse(\Spikard\Php\Response $outcome): string { throw new \RuntimeException('Not implemented.'); }
     public static function schemaQueryOnly(): \Spikard\Php\QueryOnlyConfig { throw new \RuntimeException('Not implemented.'); }
     public static function schemaQueryMutation(): \Spikard\Php\QueryMutationConfig { throw new \RuntimeException('Not implemented.'); }
     public static function schemaFull(): \Spikard\Php\FullSchemaConfig { throw new \RuntimeException('Not implemented.'); }

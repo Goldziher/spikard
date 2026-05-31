@@ -5,26 +5,18 @@
 # Issues & docs: https://github.com/sample_crate-dev/alef
 """Public API for conversion."""
 
-import json
 from typing import Any, TypeVar
 
 import spikard._spikard as _rust
-
-from ._spikard import Response
 from .options import FullSchemaConfig, QueryMutationConfig, QueryOnlyConfig
 
 _E = TypeVar("_E")
-
 
 def _pascal_to_snake(value: str) -> str:
     """Convert PascalCase/camelCase to snake_case (AtxClosed -> atx_closed)."""
     out_chars: list[str] = []
     for index, ch in enumerate(value):
-        if (
-            ch.isupper()
-            and index > 0
-            and (value[index - 1].islower() or (index + 1 < len(value) and value[index + 1].islower()))
-        ):
+        if ch.isupper() and index > 0 and (value[index - 1].islower() or (index + 1 < len(value) and value[index + 1].islower())):
             out_chars.append("_")
         out_chars.append(ch.lower())
     return "".join(out_chars)
@@ -54,30 +46,6 @@ def _coerce_enum(enum_cls: type[_E], value: object) -> _E:
             return attr
     msg = f"unknown {getattr(enum_cls, '__name__', enum_cls)!s} value: {value!r}"
     raise ValueError(msg)
-
-
-def _to_rust_response(value: Response | dict[str, Any] | None) -> _rust.Response | None:
-    """Convert Python Response to Rust binding type."""
-    if isinstance(value, str):
-        value = json.loads(value)
-    if isinstance(value, dict):
-        value = Response(**value)
-    if value is None:
-        return None
-    return _rust.Response(
-        content=value.content,
-        status_code=value.status_code,
-        headers=value.headers,
-    )
-
-
-def handler_result_from_response(outcome: Response | None = None) -> str:
-    """Convert a handler-bridge outcome into a [`HandlerResult`](crate::handler_trait::HandlerRe."""
-    _rust_outcome = _to_rust_response(outcome)
-
-    if _rust_outcome is None:
-        _rust_outcome = _rust.Response()
-    return _rust.handler_result_from_response(outcome=_rust_outcome)
 
 
 def schema_query_only() -> QueryOnlyConfig:

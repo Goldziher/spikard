@@ -6,48 +6,6 @@ title: "Configuration Reference"
 
 This page documents all configuration types and their defaults across all languages.
 
-### CorsConfig
-
-CORS configuration for a route
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `allowed_origins` | `list[str]` | `[]` | Allowed origins |
-| `allowed_methods` | `list[str]` | `[]` | Allowed methods |
-| `allowed_headers` | `list[str]` | `[]` | Allowed headers |
-| `expose_headers` | `list[str] \| None` | `None` | Expose headers |
-| `max_age` | `int \| None` | `None` | Maximum age |
-| `allow_credentials` | `bool \| None` | `None` | Allow credentials |
-| `methods_joined_cache` | `str` | — | Methods joined cache |
-| `headers_joined_cache` | `str` | — | Headers joined cache |
-
----
-
-### CompressionConfig
-
-Compression configuration shared across runtimes
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `gzip` | `bool` | `True` | Enable gzip compression |
-| `brotli` | `bool` | `True` | Enable brotli compression |
-| `min_size` | `int` | — | Minimum response size to compress (bytes) |
-| `quality` | `int` | — | Compression quality (0-11 for brotli, 0-9 for gzip) |
-
----
-
-### RateLimitConfig
-
-Rate limiting configuration shared across runtimes
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `per_second` | `int` | `100` | Requests per second |
-| `burst` | `int` | `200` | Burst allowance |
-| `ip_based` | `bool` | `True` | Use IP-based rate limiting |
-
----
-
 ### SchemaConfig
 
 Configuration for GraphQL schema building.
@@ -99,17 +57,6 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 
 ---
 
-### AsyncApiConfig
-
-AsyncAPI HTTP endpoint configuration
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `enabled` | `bool` | — | Enable AsyncAPI endpoints (default: false) |
-| `spec` | `dict[str, Any] \| None` | `None` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
-
----
-
 ### BackgroundTaskConfig
 
 Configuration for in-process background task execution.
@@ -128,6 +75,48 @@ Configuration for in-process background task execution.
 |-------|------|---------|-------------|
 | `name` | `str` | — | The name |
 | `request_id` | `str \| None` | `None` | Request id |
+
+---
+
+### CorsConfig
+
+CORS configuration for a route
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `allowed_origins` | `list[str]` | `[]` | Allowed origins |
+| `allowed_methods` | `list[str]` | `[]` | Allowed methods |
+| `allowed_headers` | `list[str]` | `[]` | Allowed headers |
+| `expose_headers` | `list[str] \| None` | `None` | Expose headers |
+| `max_age` | `int \| None` | `None` | Maximum age |
+| `allow_credentials` | `bool \| None` | `None` | Allow credentials |
+| `methods_joined_cache` | `str` | — | Methods joined cache |
+| `headers_joined_cache` | `str` | — | Headers joined cache |
+
+---
+
+### CompressionConfig
+
+Compression configuration shared across runtimes
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `gzip` | `bool` | `True` | Enable gzip compression |
+| `brotli` | `bool` | `True` | Enable brotli compression |
+| `min_size` | `int` | — | Minimum response size to compress (bytes) |
+| `quality` | `int` | — | Compression quality (0-11 for brotli, 0-9 for gzip) |
+
+---
+
+### RateLimitConfig
+
+Rate limiting configuration shared across runtimes
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `per_second` | `int` | `100` | Requests per second |
+| `burst` | `int` | `200` | Burst allowance |
+| `ip_based` | `bool` | `True` | Use IP-based rate limiting |
 
 ---
 
@@ -283,6 +272,17 @@ Server configuration
 | `background_tasks` | `BackgroundTaskConfig` | — | Background task executor configuration |
 | `enable_http_trace` | `bool` | `False` | Enable per-request HTTP tracing (tower-http `TraceLayer`) |
 | `di_container` | `str \| None` | `None` | Dependency injection container (requires 'di' feature) |
+
+---
+
+### AsyncApiConfig
+
+AsyncAPI HTTP endpoint configuration
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | `bool` | — | Enable AsyncAPI endpoints (default: false) |
+| `spec` | `dict[str, Any] \| None` | `None` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 

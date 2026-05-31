@@ -1993,17 +1993,6 @@ impl WasmSecuritySchemeInfo {
     }
 }
 
-/// Convert a handler-bridge outcome into a `HandlerResult`(crate.handler_trait.HandlerResult).
-///
-/// Language bindings produce a `Response` wire DTO (or a boxed error) from the host callback;
-/// the `Handler` trait requires an `axum` response. This builds the `axum` response from the DTO's
-/// `content` (serialized as JSON), `status_code`, and `headers`, mapping any error to a `500`
-/// problem. It is the response adapter referenced by the generated handler bridges.
-#[wasm_bindgen(js_name = "handlerResultFromResponse")]
-pub fn handler_result_from_response(_outcome: WasmResponse) -> String {
-    String::from("[unimplemented: handler_result_from_response]")
-}
-
 #[allow(clippy::redundant_closure, clippy::useless_conversion)]
 impl From<WasmCorsConfig> for spikard_http::CorsConfig {
     fn from(val: WasmCorsConfig) -> Self {

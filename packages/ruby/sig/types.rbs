@@ -435,8 +435,6 @@ module Spikard
   class WebSocketMessage
   end
 
-  def self.handler_result_from_response: (Response outcome) -> String
-
   def self.schema_query_only: () -> QueryOnlyConfig
 
   def self.schema_query_mutation: () -> QueryMutationConfig

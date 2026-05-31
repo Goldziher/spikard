@@ -1655,16 +1655,6 @@ impl From<OpenApiConfig> for spikard::OpenApiConfig {
     }
 }
 
-impl From<Response> for spikard::Response {
-    fn from(v: Response) -> Self {
-        spikard::Response {
-            content: v.content.as_deref().and_then(|s| serde_json::from_str(s).ok()),
-            status_code: v.status_code as _,
-            headers: v.headers.into_iter().map(|(k, v)| (k.into(), v.into())).collect(),
-        }
-    }
-}
-
 impl From<JwtConfig> for spikard::JwtConfig {
     fn from(v: JwtConfig) -> Self {
         spikard::JwtConfig {
@@ -1780,17 +1770,6 @@ impl From<SecuritySchemeInfo> for spikard_http::SecuritySchemeInfo {
             }
         }
     }
-}
-
-/// Convert a handler-bridge outcome into a `HandlerResult`.
-///
-/// Language bindings produce a `Response` wire DTO (or a boxed error) from the host callback;
-/// the `Handler` trait requires an `axum` response. This builds the `axum` response from the DTO's
-/// `content` (serialized as JSON), `status_code`, and `headers`, mapping any error to a `500`
-/// problem. It is the response adapter referenced by the generated handler bridges.
-pub fn handler_result_from_response(outcome: Response) -> String {
-    let _ = outcome;
-    String::new()
 }
 
 /// Create a simple schema configuration with only Query type.

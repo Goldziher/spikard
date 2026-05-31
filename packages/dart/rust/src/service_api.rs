@@ -88,7 +88,8 @@ impl App {
         builder: RouteBuilder,
         handler: impl Fn(String) -> DartFnFuture<String> + Send + Sync + 'static,
     ) -> i32 {
-        let bridge: std::sync::Arc<dyn spikard::Handler> = std::sync::Arc::new(crate::DartHandlerHandler::new(handler));
+        let bridge: std::sync::Arc<dyn spikard_http::Handler> =
+            std::sync::Arc::new(crate::DartHandlerHandler::new(handler));
         let mut guard = self.inner.blocking_lock();
         if let Some(inner) = guard.as_mut() {
             inner.route(builder.inner, bridge);

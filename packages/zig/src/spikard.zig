@@ -26,7 +26,7 @@ pub fn _last_error() ?[]const u8 {
 /// will replace this once the IR exposes per-variant numeric codes.
 inline fn _first_error(comptime E: type) E {
     const fields = @typeInfo(E).error_set orelse return @as(E, error.Unknown);
-    if (fields.len == 0) unreachable;
+    if (fields.len == 0) return @as(E, error.Unknown);
     return @field(E, fields[0].name);
 }
 
@@ -565,28 +565,6 @@ pub const SecuritySchemeInfo = union(enum) {
         name: []const u8,
     },
 };
-
-/// Convert a handler-bridge outcome into a `HandlerResult`.
-///
-/// Language bindings produce a `Response` wire DTO (or a boxed error) from the host callback;
-/// the `Handler` trait requires an `axum` response. This builds the `axum` response from the DTO's
-/// `content` (serialized as JSON), `status_code`, and `headers`, mapping any error to a `500`
-/// problem. It is the response adapter referenced by the generated handler bridges.
-pub fn handler_result_from_response(outcome: []const u8) error{OutOfMemory}![]u8 {
-    const outcome_z = try std.fmt.allocPrintSentinel(
-        std.heap.c_allocator, "{s}", .{outcome}, 0);
-    defer std.heap.c_allocator.free(outcome_z);
-    const outcome_handle = c.spikard_response_from_json(outcome_z);
-    if (outcome_handle) |h| c.spikard_response_free(h);
-    const _result = c.spikard_handler_result_from_response(outcome_handle);
-    const _result_len = c.spikard_handler_result_from_response_len(outcome_handle);
-    return blk: {
-        const slice = _result[0.._result_len];
-        const owned = try std.heap.c_allocator.dupe(u8, slice);
-        _free_string(_result);
-        break :blk owned;
-    };
-}
 
 /// Create a simple schema configuration with only Query type.
 ///

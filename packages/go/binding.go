@@ -831,37 +831,6 @@ type TestingSseEvent struct {
 	Data string `json:"data"`
 }
 
-// HandlerResultFromResponse convert a handler-bridge outcome into a [`HandlerResult`](crate::handler_trait::HandlerResult).
-//
-// Language bindings produce a [`Response`] wire DTO (or a boxed error) from the host callback;
-// the `Handler` trait requires an `axum` response. This builds the `axum` response from the DTO's
-// `content` (serialized as JSON), `status_code`, and `headers`, mapping any error to a `500`
-// problem. It is the response adapter referenced by the generated handler bridges.
-func HandlerResultFromResponse(outcome Response) (string, error) {
-	jsonBytescOutcome, err := json.Marshal(outcome)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal: %w", err)
-	}
-	// When the parameter is a nil pointer (Option<&T> on the Rust side), json.Marshal
-	// emits "null" which the FFI's _from_json rejects. Substitute "{}" so a default
-	// instance is constructed instead — semantically equivalent to None for query types
-	// whose fields are all optional with serde(default).
-	if string(jsonBytescOutcome) == "null" {
-		jsonBytescOutcome = []byte("{}")
-	}
-	tmpStrcOutcome := C.CString(string(jsonBytescOutcome))
-	cOutcome := C.spikard_response_from_json(tmpStrcOutcome)
-	C.free(unsafe.Pointer(tmpStrcOutcome))
-	if cOutcome == nil {
-		return "", fmt.Errorf("failed to create response: %s", C.GoString(C.spikard_last_error_context()))
-	}
-	defer C.spikard_response_free(cOutcome)
-
-	ptr := C.spikard_handler_result_from_response(cOutcome)
-	defer C.spikard_free_string(ptr)
-	return C.GoString(ptr), nil
-}
-
 // SchemaQueryOnly create a simple schema configuration with only Query type.
 //
 // This is a convenience function for schemas that only have queries.

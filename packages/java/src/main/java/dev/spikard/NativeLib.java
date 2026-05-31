@@ -250,12 +250,6 @@ final class NativeLib {
     }
 
 
-    static final MethodHandle SPIKARD_HANDLER_RESULT_FROM_RESPONSE = LINKER.downcallHandle(
-        LIB.find("spikard_handler_result_from_response").orElseThrow(),
-        FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
-    );
-
-
     static final MethodHandle SPIKARD_SCHEMA_QUERY_ONLY = LINKER.downcallHandle(
         LIB.find("spikard_schema_query_only").orElseThrow(),
         FunctionDescriptor.of(ValueLayout.ADDRESS)
@@ -440,18 +434,6 @@ final class NativeLib {
 
     static final MethodHandle SPIKARD_FULL_SCHEMA_CONFIG_FREE = LINKER.downcallHandle(
         LIB.find("spikard_full_schema_config_free").orElseThrow(),
-        FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
-    );
-
-
-    static final MethodHandle SPIKARD_RESPONSE_FROM_JSON = LINKER.downcallHandle(
-        LIB.find("spikard_response_from_json").orElseThrow(),
-        FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS)
-    );
-
-
-    static final MethodHandle SPIKARD_RESPONSE_FREE = LINKER.downcallHandle(
-        LIB.find("spikard_response_free").orElseThrow(),
         FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)
     );
 

@@ -30,8 +30,9 @@ pub extern "C" fn app_route_via_callback(
     // SAFETY: The caller guarantees a valid, live pointer to the service instance.
     let app = unsafe { &mut *app };
 
-    // Wrap the raw C callback function as Arc<dyn spikard::Handler>.
-    let handler: std::sync::Arc<dyn spikard::Handler> = std::sync::Arc::new(SwiftCCallbackHandler { ctx, callback });
+    // Wrap the raw C callback function as Arc<dyn spikard_http::Handler>.
+    let handler: std::sync::Arc<dyn spikard_http::Handler> =
+        std::sync::Arc::new(SwiftCCallbackHandler { ctx, callback });
 
     // Call the service's registration method with metadata params positionally + handler.
     // Named metadata params arrive as swift-bridge tuple-struct wrappers; `.0` unwraps to
@@ -53,7 +54,7 @@ struct SwiftCCallbackHandler {
 unsafe impl Send for SwiftCCallbackHandler {}
 unsafe impl Sync for SwiftCCallbackHandler {}
 
-impl spikard::Handler for SwiftCCallbackHandler {
+impl spikard_http::Handler for SwiftCCallbackHandler {
     fn call(
         &self,
         _request: spikard::Request<spikard::Body>,

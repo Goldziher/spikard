@@ -4075,26 +4075,6 @@ impl magnus::TryConvert for WebSocketMessage {
 unsafe impl IntoValueFromNative for WebSocketMessage {}
 unsafe impl TryConvertOwned for WebSocketMessage {}
 
-#[allow(unused_variables)]
-fn handler_result_from_response(args: &[magnus::Value]) -> Result<String, Error> {
-    let args = magnus::scan_args::scan_args::<(), (Option<magnus::Value>,), (), (), (), ()>(args)?;
-    let (outcome,) = args.optional;
-
-    let outcome: spikard::Response = match outcome {
-        Some(_v) if !_v.is_nil() => {
-            let binding_val: Response = Response::try_convert(_v).map_err(|e| {
-                magnus::Error::new(unsafe { Ruby::get_unchecked() }.exception_type_error(), e.to_string())
-            })?;
-            binding_val.into()
-        }
-        _ => Default::default(),
-    };
-    Err(magnus::Error::new(
-        unsafe { Ruby::get_unchecked() }.exception_runtime_error(),
-        "Not implemented: handler_result_from_response",
-    ))
-}
-
 fn schema_query_only() -> QueryOnlyConfig {
     spikard_graphql::schema_query_only().into()
 }
@@ -5568,11 +5548,6 @@ fn ruby_init(ruby: &Ruby) -> Result<(), Error> {
     class.define_method(
         "graphql_subscription_async",
         method!(TestClient::graphql_subscription_async, 3),
-    )?;
-
-    module.define_module_function(
-        "handler_result_from_response",
-        function!(handler_result_from_response, -1),
     )?;
 
     module.define_module_function("schema_query_only", function!(schema_query_only, 0))?;

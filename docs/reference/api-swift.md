@@ -6,31 +6,6 @@ title: "Swift API Reference"
 
 ### Functions
 
-#### handlerResultFromResponse()
-
-Convert a handler-bridge outcome into a `HandlerResult`.
-
-Language bindings produce a `Response` wire DTO (or a boxed error) from the host callback;
-the `Handler` trait requires an `axum` response. This builds the `axum` response from the DTO's
-`content` (serialized as JSON), `status_code`, and `headers`, mapping any error to a `500`
-problem. It is the response adapter referenced by the generated handler bridges.
-
-**Signature:**
-
-```swift
-public static func handlerResultFromResponse(outcome: Response) -> String
-```
-
-**Parameters:**
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `outcome` | `Response` | Yes | The response |
-
-**Returns:** `String`
-
----
-
 #### schemaQueryOnly()
 
 Create a simple schema configuration with only Query type.
@@ -110,6 +85,16 @@ Spikard application builder.
 
 ### Methods
 
+#### new()
+
+Create a new application with the default server configuration.
+
+**Signature:**
+
+```swift
+public static func new() -> App
+```
+
 #### config()
 
 Set the server configuration.
@@ -174,16 +159,6 @@ public func run() throws
 
 ```swift
 public static func default() -> App
-```
-
-#### new()
-
-Create a new application with the default server configuration.
-
-**Signature:**
-
-```swift
-public static func new() -> App
 ```
 
 #### route()
@@ -396,6 +371,22 @@ Provides a builder pattern for configuring GraphQL route parameters
 for the Spikard HTTP server's routing system.
 
 ### Methods
+
+#### new()
+
+Create a new GraphQL route configuration with defaults
+
+Default values:
+
+- path: "/graphql"
+- method: "POST"
+- `enable_playground`: false
+
+**Signature:**
+
+```swift
+public static func new() -> GraphQlRouteConfig
+```
 
 #### path()
 
@@ -842,9 +833,7 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ### Content-Type
-
 Responses using this struct should set:
-
 ```text
 Content-Type: application/problem+json
 ```
@@ -1106,6 +1095,16 @@ Builder for defining a route.
 
 ### Methods
 
+#### new()
+
+Create a new builder for the provided HTTP method and path.
+
+**Signature:**
+
+```swift
+public static func new(method: Method, path: String) -> RouteBuilder
+```
+
 #### handlerName()
 
 Assign an explicit handler name.
@@ -1274,7 +1273,6 @@ Events can have an optional type, ID, and retry timeout for advanced scenarios.
 ### SSE Format
 
 Events are serialized to the following text format:
-
 ```text
 event: event_type
 data: {"json":"value"}
@@ -1727,6 +1725,7 @@ HTTP method
 | `Delete` | Delete |
 | `Head` | Head |
 | `Options` | Options |
+| `Connect` | Connect |
 | `Trace` | Trace |
 
 ---

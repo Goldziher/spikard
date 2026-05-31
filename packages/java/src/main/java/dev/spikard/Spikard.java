@@ -8,19 +8,6 @@ public final class Spikard {
     private Spikard() { }
 
     /**
-     * Convert a handler-bridge outcome into a HandlerResult(crate.handler_trait.HandlerResult).
-     *
-     * Language bindings produce a Response wire DTO (or a boxed error) from the host callback;
-     * the {@code Handler} trait requires an {@code axum} response. This builds the {@code axum} response from the DTO's
-     * {@code content} (serialized as JSON), {@code status_code}, and {@code headers}, mapping any error to a {@code 500}
-     * problem. It is the response adapter referenced by the generated handler bridges.
-     */
-    public static String handlerResultFromResponse(final Response outcome) throws SpikardRsException {
-        java.util.Objects.requireNonNull(outcome, "outcome must not be null");
-        return SpikardRs.handlerResultFromResponse(outcome);
-    }
-
-    /**
      * Create a simple schema configuration with only Query type.
      *
      * This is a convenience function for schemas that only have queries.

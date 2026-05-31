@@ -6095,34 +6095,6 @@ fn get_ffi_runtime() -> &'static tokio::runtime::Runtime {
     RUNTIME.get_or_init(|| tokio::runtime::Runtime::new().expect("Failed to create tokio runtime"))
 }
 
-/// Convert a handler-bridge outcome into a `HandlerResult` (crate::handler_trait::HandlerResult).
-///
-/// Language bindings produce a [`Response`] wire DTO (or a boxed error) from the host callback;
-/// the `Handler` trait requires an `axum` response. This builds the `axum` response from the DTO's
-/// `content` (serialized as JSON), `status_code`, and `headers`, mapping any error to a `500`
-/// problem. It is the response adapter referenced by the generated handler bridges.
-/// \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
-/// freed with the appropriate free function.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn spikard_handler_result_from_response(
-    _outcome: *const spikard::Response,
-) -> *mut std::ffi::c_char {
-    clear_last_error();
-    set_last_error(99, "Not implemented: handler_result_from_response");
-    std::ptr::null_mut()
-}
-
-/// Return the byte length of the C string most recently returned by
-/// `spikard_handler_result_from_response` on this thread. Returns 0 when the primary call returned null
-/// or failed before producing a string. Enables safe slice construction in Zig and Java FFM Panama
-/// without a NUL-scan.
-/// \note SAFETY: Pointer arguments are ignored and are present only to keep the companion ABI aligned
-/// with `spikard_handler_result_from_response`.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn spikard_handler_result_from_response_len(_outcome: *const spikard::Response) -> usize {
-    0
-}
-
 /// Create a simple schema configuration with only Query type.
 ///
 /// This is a convenience function for schemas that only have queries.

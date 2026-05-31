@@ -2705,19 +2705,6 @@ pub struct SpikardPhpApi;
 #[php_impl]
 impl SpikardPhpApi {
     /**
-     * Convert a handler-bridge outcome into a `HandlerResult`(crate.handler_trait.HandlerResult).
-     *
-     * Language bindings produce a `Response` wire DTO (or a boxed error) from the host callback;
-     * the `Handler` trait requires an `axum` response. This builds the `axum` response from the DTO's
-     * `content` (serialized as JSON), `status_code`, and `headers`, mapping any error to a `500`
-     * problem. It is the response adapter referenced by the generated handler bridges.
-     */
-    #[php(name = "handlerResultFromResponse")]
-    pub fn handler_result_from_response(outcome: &Response) -> String {
-        String::new()
-    }
-
-    /**
      * Create a simple schema configuration with only Query type.
      *
      * This is a convenience function for schemas that only have queries.

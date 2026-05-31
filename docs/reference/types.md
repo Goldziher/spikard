@@ -348,17 +348,6 @@ base64 decoding and implements standard I/O traits for compatibility.
 
 ---
 
-#### Handler
-
-Handler trait that all language bindings must implement
-
-This trait is completely language-agnostic. Each binding (Python, Node, WASM)
-implements this trait to bridge their runtime to our HTTP server.
-
-*Opaque type — fields are not directly accessible.*
-
----
-
 #### SseEventProducer
 
 SSE event producer trait
@@ -391,7 +380,6 @@ Events can have an optional type, ID, and retry timeout for advanced scenarios.
 ### SSE Format
 
 Events are serialized to the following text format:
-
 ```text
 event: event_type
 data: {"json":"value"}
@@ -468,9 +456,7 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ### Content-Type
-
 Responses using this struct should set:
-
 ```text
 Content-Type: application/problem+json
 ```
@@ -563,6 +549,17 @@ Request body for `POST /asyncapi/validate`
 | `channel` | `String` | — | Channel |
 | `message` | `String` | — | Message |
 | `payload` | `serde_json::Value` | — | Payload |
+
+---
+
+#### Handler
+
+Handler trait that all language bindings must implement
+
+This trait is completely language-agnostic. Each binding (Python, Node, WASM)
+implements this trait to bridge their runtime to our HTTP server.
+
+*Opaque type — fields are not directly accessible.*
 
 ---
 
@@ -664,6 +661,7 @@ HTTP method
 | `Delete` | Delete |
 | `Head` | Head |
 | `Options` | Options |
+| `Connect` | Connect |
 | `Trace` | Trace |
 
 ---

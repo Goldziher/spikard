@@ -12,35 +12,6 @@ public final class SpikardRs {
     private SpikardRs() { }
 
     /**
-     * Convert a handler-bridge outcome into a HandlerResult(crate.handler_trait.HandlerResult).
-     *
-     * Language bindings produce a Response wire DTO (or a boxed error) from the host callback;
-     * the {@code Handler} trait requires an {@code axum} response. This builds the {@code axum} response from the DTO's
-     * {@code content} (serialized as JSON), {@code status_code}, and {@code headers}, mapping any error to a {@code 500}
-     * problem. It is the response adapter referenced by the generated handler bridges.
-     */
-    public static String handlerResultFromResponse(final Response outcome) throws SpikardRsException {
-        try (var arena = Arena.ofShared()) {
-            var coutcomeJson = outcome != null ? MAPPER.writeValueAsString(outcome) : null;
-            var coutcomeJsonSeg = coutcomeJson != null ? arena.allocateFrom(coutcomeJson) : MemorySegment.NULL;
-            var coutcome = coutcomeJson != null
-                ? (MemorySegment) NativeLib.SPIKARD_RESPONSE_FROM_JSON.invoke(coutcomeJsonSeg)
-                : MemorySegment.NULL;
-            var resultPtr = (MemorySegment) NativeLib.SPIKARD_HANDLER_RESULT_FROM_RESPONSE.invoke(coutcome);
-            if (!coutcome.equals(MemorySegment.NULL)) {
-                NativeLib.SPIKARD_RESPONSE_FREE.invoke(coutcome);
-            }
-            if (resultPtr.equals(MemorySegment.NULL)) {
-                checkLastError();                return null;            }
-            String str = resultPtr.reinterpret(Long.MAX_VALUE).getString(0);
-            NativeLib.SPIKARD_FREE_STRING.invoke(resultPtr);
-            return str;
-        } catch (Throwable e) {
-            throw new SpikardRsException("FFI call failed", e);
-        }
-    }
-
-    /**
      * Create a simple schema configuration with only Query type.
      *
      * This is a convenience function for schemas that only have queries.

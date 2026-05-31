@@ -6,18 +6,6 @@
 defmodule Spikard do
   @moduledoc "High-level API for spikard"
 
-  @doc "Convert a handler-bridge outcome into a [`HandlerResult`](crate::handler_trait::HandlerResult)."
-  @spec handler_result_from_response() :: String.t()
-  def handler_result_from_response do
-    Spikard.Native.handler_result_from_response(nil)
-  end
-
-  @doc "Convert a handler-bridge outcome into a [`HandlerResult`](crate::handler_trait::HandlerResult)."
-  @spec handler_result_from_response(String.t() | nil) :: String.t()
-  def handler_result_from_response(outcome) do
-    Spikard.Native.handler_result_from_response(outcome)
-  end
-
   @doc "Create a simple schema configuration with only Query type."
   @spec schema_query_only() :: map()
   def schema_query_only do

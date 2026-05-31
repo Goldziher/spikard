@@ -6,6 +6,18 @@ title: "Error Reference"
 
 All error types thrown by the library across all languages.
 
+### AppError
+
+Error type for application builder operations.
+
+| Variant | Message | Description |
+|---------|---------|-------------|
+| `Route` | Failed to register route: {0} | Route registration failed. |
+| `Server` | Failed to build server: {0} | Server/router construction failed. |
+| `Decode` | Failed to decode payload: {0} | Failed to extract DTO from the request context. |
+
+---
+
 ### GraphQLError
 
 Errors that can occur during GraphQL operations

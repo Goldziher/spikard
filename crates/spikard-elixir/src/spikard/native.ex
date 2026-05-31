@@ -17,16 +17,6 @@ defmodule Spikard.Native do
     force_build: System.get_env("SPIKARD_BUILD") in ["1", "true"] or Mix.env() in [:dev]
 
   @doc """
-  Convert a handler-bridge outcome into a [`HandlerResult`](crate::handler_trait::HandlerResult).
-
-  Language bindings produce a [`Response`] wire DTO (or a boxed error) from the host callback;
-  the `Handler` trait requires an `axum` response. This builds the `axum` response from the DTO's
-  `content` (serialized as JSON), `status_code`, and `headers`, mapping any error to a `500`
-  problem. It is the response adapter referenced by the generated handler bridges.
-  """
-  def handler_result_from_response(_outcome), do: :erlang.nif_error(:nif_not_loaded)
-
-  @doc """
   Create a simple schema configuration with only Query type.
 
   This is a convenience function for schemas that only have queries.

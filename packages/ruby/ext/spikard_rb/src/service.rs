@@ -136,7 +136,7 @@ pub fn app_run(registrations: &Opaque<Value>) -> magnus::error::Result<()> {
                     let path: String = meta_array
                         .get::<String>(0)
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-                    let builder: spikard::RouteBuilder = spikard::RouteBuilder(spikard::Method::Get, path);
+                    let builder: spikard::RouteBuilder = spikard::RouteBuilder::new(spikard::Method::Get, path);
                     owner
                         .route(builder, handler)
                         .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e.to_string()))?;
@@ -154,7 +154,7 @@ pub fn app_run(registrations: &Opaque<Value>) -> magnus::error::Result<()> {
                     let path: String = meta_array
                         .get::<String>(0)
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-                    let builder: spikard::RouteBuilder = spikard::RouteBuilder(spikard::Method::Post, path);
+                    let builder: spikard::RouteBuilder = spikard::RouteBuilder::new(spikard::Method::Post, path);
                     owner
                         .route(builder, handler)
                         .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e.to_string()))?;
@@ -172,7 +172,7 @@ pub fn app_run(registrations: &Opaque<Value>) -> magnus::error::Result<()> {
                     let path: String = meta_array
                         .get::<String>(0)
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-                    let builder: spikard::RouteBuilder = spikard::RouteBuilder(spikard::Method::Put, path);
+                    let builder: spikard::RouteBuilder = spikard::RouteBuilder::new(spikard::Method::Put, path);
                     owner
                         .route(builder, handler)
                         .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e.to_string()))?;
@@ -190,7 +190,7 @@ pub fn app_run(registrations: &Opaque<Value>) -> magnus::error::Result<()> {
                     let path: String = meta_array
                         .get::<String>(0)
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-                    let builder: spikard::RouteBuilder = spikard::RouteBuilder(spikard::Method::Patch, path);
+                    let builder: spikard::RouteBuilder = spikard::RouteBuilder::new(spikard::Method::Patch, path);
                     owner
                         .route(builder, handler)
                         .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e.to_string()))?;
@@ -208,7 +208,7 @@ pub fn app_run(registrations: &Opaque<Value>) -> magnus::error::Result<()> {
                     let path: String = meta_array
                         .get::<String>(0)
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-                    let builder: spikard::RouteBuilder = spikard::RouteBuilder(spikard::Method::Delete, path);
+                    let builder: spikard::RouteBuilder = spikard::RouteBuilder::new(spikard::Method::Delete, path);
                     owner
                         .route(builder, handler)
                         .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e.to_string()))?;
@@ -226,7 +226,7 @@ pub fn app_run(registrations: &Opaque<Value>) -> magnus::error::Result<()> {
                     let path: String = meta_array
                         .get::<String>(0)
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-                    let builder: spikard::RouteBuilder = spikard::RouteBuilder(spikard::Method::Head, path);
+                    let builder: spikard::RouteBuilder = spikard::RouteBuilder::new(spikard::Method::Head, path);
                     owner
                         .route(builder, handler)
                         .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e.to_string()))?;
@@ -244,7 +244,7 @@ pub fn app_run(registrations: &Opaque<Value>) -> magnus::error::Result<()> {
                     let path: String = meta_array
                         .get::<String>(0)
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-                    let builder: spikard::RouteBuilder = spikard::RouteBuilder(spikard::Method::Options, path);
+                    let builder: spikard::RouteBuilder = spikard::RouteBuilder::new(spikard::Method::Options, path);
                     owner
                         .route(builder, handler)
                         .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e.to_string()))?;
@@ -262,7 +262,7 @@ pub fn app_run(registrations: &Opaque<Value>) -> magnus::error::Result<()> {
                     let path: String = meta_array
                         .get::<String>(0)
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-                    let builder: spikard::RouteBuilder = spikard::RouteBuilder(spikard::Method::Connect, path);
+                    let builder: spikard::RouteBuilder = spikard::RouteBuilder::new(spikard::Method::Connect, path);
                     owner
                         .route(builder, handler)
                         .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e.to_string()))?;
@@ -280,7 +280,7 @@ pub fn app_run(registrations: &Opaque<Value>) -> magnus::error::Result<()> {
                     let path: String = meta_array
                         .get::<String>(0)
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-                    let builder: spikard::RouteBuilder = spikard::RouteBuilder(spikard::Method::Trace, path);
+                    let builder: spikard::RouteBuilder = spikard::RouteBuilder::new(spikard::Method::Trace, path);
                     owner
                         .route(builder, handler)
                         .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e.to_string()))?;
@@ -358,7 +358,7 @@ pub fn app_into_router(registrations: &Opaque<Value>) -> magnus::error::Result<(
                     let path: String = meta_array
                         .get::<String>(0)
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-                    let builder: spikard::RouteBuilder = spikard::RouteBuilder(spikard::Method::Get, path);
+                    let builder: spikard::RouteBuilder = spikard::RouteBuilder::new(spikard::Method::Get, path);
                     owner
                         .route(builder, handler)
                         .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e.to_string()))?;
@@ -376,7 +376,7 @@ pub fn app_into_router(registrations: &Opaque<Value>) -> magnus::error::Result<(
                     let path: String = meta_array
                         .get::<String>(0)
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-                    let builder: spikard::RouteBuilder = spikard::RouteBuilder(spikard::Method::Post, path);
+                    let builder: spikard::RouteBuilder = spikard::RouteBuilder::new(spikard::Method::Post, path);
                     owner
                         .route(builder, handler)
                         .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e.to_string()))?;
@@ -394,7 +394,7 @@ pub fn app_into_router(registrations: &Opaque<Value>) -> magnus::error::Result<(
                     let path: String = meta_array
                         .get::<String>(0)
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-                    let builder: spikard::RouteBuilder = spikard::RouteBuilder(spikard::Method::Put, path);
+                    let builder: spikard::RouteBuilder = spikard::RouteBuilder::new(spikard::Method::Put, path);
                     owner
                         .route(builder, handler)
                         .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e.to_string()))?;
@@ -412,7 +412,7 @@ pub fn app_into_router(registrations: &Opaque<Value>) -> magnus::error::Result<(
                     let path: String = meta_array
                         .get::<String>(0)
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-                    let builder: spikard::RouteBuilder = spikard::RouteBuilder(spikard::Method::Patch, path);
+                    let builder: spikard::RouteBuilder = spikard::RouteBuilder::new(spikard::Method::Patch, path);
                     owner
                         .route(builder, handler)
                         .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e.to_string()))?;
@@ -430,7 +430,7 @@ pub fn app_into_router(registrations: &Opaque<Value>) -> magnus::error::Result<(
                     let path: String = meta_array
                         .get::<String>(0)
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-                    let builder: spikard::RouteBuilder = spikard::RouteBuilder(spikard::Method::Delete, path);
+                    let builder: spikard::RouteBuilder = spikard::RouteBuilder::new(spikard::Method::Delete, path);
                     owner
                         .route(builder, handler)
                         .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e.to_string()))?;
@@ -448,7 +448,7 @@ pub fn app_into_router(registrations: &Opaque<Value>) -> magnus::error::Result<(
                     let path: String = meta_array
                         .get::<String>(0)
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-                    let builder: spikard::RouteBuilder = spikard::RouteBuilder(spikard::Method::Head, path);
+                    let builder: spikard::RouteBuilder = spikard::RouteBuilder::new(spikard::Method::Head, path);
                     owner
                         .route(builder, handler)
                         .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e.to_string()))?;
@@ -466,7 +466,7 @@ pub fn app_into_router(registrations: &Opaque<Value>) -> magnus::error::Result<(
                     let path: String = meta_array
                         .get::<String>(0)
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-                    let builder: spikard::RouteBuilder = spikard::RouteBuilder(spikard::Method::Options, path);
+                    let builder: spikard::RouteBuilder = spikard::RouteBuilder::new(spikard::Method::Options, path);
                     owner
                         .route(builder, handler)
                         .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e.to_string()))?;
@@ -484,7 +484,7 @@ pub fn app_into_router(registrations: &Opaque<Value>) -> magnus::error::Result<(
                     let path: String = meta_array
                         .get::<String>(0)
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-                    let builder: spikard::RouteBuilder = spikard::RouteBuilder(spikard::Method::Connect, path);
+                    let builder: spikard::RouteBuilder = spikard::RouteBuilder::new(spikard::Method::Connect, path);
                     owner
                         .route(builder, handler)
                         .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e.to_string()))?;
@@ -502,7 +502,7 @@ pub fn app_into_router(registrations: &Opaque<Value>) -> magnus::error::Result<(
                     let path: String = meta_array
                         .get::<String>(0)
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-                    let builder: spikard::RouteBuilder = spikard::RouteBuilder(spikard::Method::Trace, path);
+                    let builder: spikard::RouteBuilder = spikard::RouteBuilder::new(spikard::Method::Trace, path);
                     owner
                         .route(builder, handler)
                         .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e.to_string()))?;

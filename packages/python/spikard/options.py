@@ -305,7 +305,6 @@ class OpenApiConfig:
 
 class Response(TypedDict, total=False):
     """HTTP Response with custom status code, headers, and content."""
-
     content: str | None
 
     """Response body content"""
@@ -315,7 +314,6 @@ class Response(TypedDict, total=False):
     headers: dict[str, str]
 
     """Response headers"""
-
 
 @dataclass(frozen=True, slots=True)
 class ServerConfig:

@@ -36,12 +36,8 @@ from ._spikard import (
     ValidationResponse,
     WebSocketMessage,
 )
-from .api import (
-    handler_result_from_response,
-    schema_full,
-    schema_query_mutation,
-    schema_query_only,
-)
+from .api import schema_full, schema_query_mutation, schema_query_only
+
 from .exceptions import (
     AppError,
     AuthenticationError,
@@ -151,7 +147,6 @@ __all__ = [
     "ValidationError",
     "ValidationResponse",
     "WebSocketMessage",
-    "handler_result_from_response",
     "schema_full",
     "schema_query_mutation",
     "schema_query_only",

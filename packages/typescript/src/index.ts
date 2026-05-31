@@ -4,7 +4,6 @@ export {
   Method,
   RouteBuilder,
   TestClient,
-  handlerResultFromResponse,
   schemaFull,
   schemaQueryMutation,
   schemaQueryOnly,

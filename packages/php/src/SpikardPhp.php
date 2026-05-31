@@ -12,22 +12,6 @@ namespace Spikard\Php;
 final class SpikardPhp
 {
     /**
-     * Convert a handler-bridge outcome into a [`HandlerResult`](crate::handler_trait::HandlerResult).
-     *
-     * Language bindings produce a [`Response`] wire DTO (or a boxed error) from the host callback;
-     * the `Handler` trait requires an `axum` response. This builds the `axum` response from the DTO's
-     * `content` (serialized as JSON), `status_code`, and `headers`, mapping any error to a `500`
-     * problem. It is the response adapter referenced by the generated handler bridges.
-     *
-     * @param Response $outcome
-     * @return string
-     */
-    public static function handlerResultFromResponse(
-Response $outcome): string
-    {
-        return \Spikard\Php\SpikardPhpApi::handlerResultFromResponse($outcome); // delegate to native extension class
-    }
-    /**
      * Create a simple schema configuration with only Query type.
      *
      * This is a convenience function for schemas that only have queries.
