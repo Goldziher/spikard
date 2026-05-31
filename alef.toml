@@ -921,6 +921,10 @@ port = 8000
 # C# binding App has route() not register_route(), and config(string) not config(ServerConfig)
 register_method = "route"
 
+[crates.e2e.harness.overrides.node]
+# Node binding ships as @spikard/node, not bare spikard.
+imports = ["@spikard/node"]
+
 [crates.e2e.call]
 result_var = "response"
 async = true
