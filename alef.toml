@@ -917,6 +917,10 @@ response_body_field = "content"
 host = "127.0.0.1"
 port = 8000
 
+[crates.e2e.harness.overrides.csharp]
+# C# binding App has route() not register_route(), and config(string) not config(ServerConfig)
+register_method = "route"
+
 [crates.e2e.call]
 result_var = "response"
 async = true
