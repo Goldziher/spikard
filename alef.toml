@@ -904,6 +904,17 @@ languages = [
   "brew",
 ]
 
+[crates.e2e.harness]
+# Server-pattern harness config for HTTP fixtures (spikard-specific).
+# When HTTP fixtures are present, the harness spawns the SUT app and registers
+# handlers per fixture, returning canned expected responses.
+imports = ["spikard"]
+app_class = "App"
+register_method = "register_route"
+run_method = "run"
+host = "127.0.0.1"
+port = 8000
+
 [crates.e2e.call]
 result_var = "response"
 async = true

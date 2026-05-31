@@ -9,7 +9,7 @@ keywords = ["framework", "http", "polyglot", "rust", "web"]
 categories = ["text-processing"]
 
 [package.metadata.cargo-machete]
-ignored = ["tokio"]
+ignored = ["tokio", "rb-sys"]
 
 [lib]
 name = "spikard_rb"
@@ -18,6 +18,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 magnus = "0.8"
+rb-sys = "0.9"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 spikard = { version = "0.15.6-rc.9", path = "../../../../../crates/spikard", features = ["di"] }
