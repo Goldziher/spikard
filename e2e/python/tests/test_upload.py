@@ -38,6 +38,7 @@ def test_upload_file_as_bytes() -> None:
         "Content-Type": "multipart/form-data",
     }
     _body = {"file": {"content": "binary data", "filename": "binary.bin"}}
+    _headers.setdefault("Content-Type", "multipart/form-data; boundary=alef-boundary")
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
@@ -67,6 +68,7 @@ def test_upload_file_basic_success() -> None:
         "Content-Type": "multipart/form-data",
     }
     _body = {"file": {"content": "Hello, World!", "filename": "test.txt"}}
+    _headers.setdefault("Content-Type", "multipart/form-data; boundary=alef-boundary")
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
@@ -96,6 +98,7 @@ def test_upload_file_content_type_or_default() -> None:
         "Content-Type": "multipart/form-data",
     }
     _body = {"file": {"content": "Some content", "filename": "unknown.xyz"}}
+    _headers.setdefault("Content-Type", "multipart/form-data; boundary=alef-boundary")
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
@@ -125,6 +128,7 @@ def test_upload_file_read_to_string() -> None:
         "Content-Type": "multipart/form-data",
     }
     _body = {"file": {"content": "Hello, World!", "filename": "text.txt"}}
+    _headers.setdefault("Content-Type", "multipart/form-data; boundary=alef-boundary")
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
@@ -154,6 +158,7 @@ def test_upload_file_with_custom_content_type() -> None:
         "Content-Type": "multipart/form-data",
     }
     _body = {"file": {"content": '{"key": "value"}', "content_type": "application/json", "filename": "data.json"}}
+    _headers.setdefault("Content-Type", "multipart/form-data; boundary=alef-boundary")
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
@@ -183,6 +188,7 @@ def test_upload_file_with_form_fields() -> None:
         "Content-Type": "multipart/form-data",
     }
     _body = {"description": "Important document", "file": {"content": "PDF content", "filename": "document.pdf"}, "tags": ["important", "archive"]}
+    _headers.setdefault("Content-Type", "multipart/form-data; boundary=alef-boundary")
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
@@ -212,6 +218,7 @@ def test_upload_file_with_gzip_content_encoding() -> None:
         "Content-Type": "multipart/form-data",
     }
     _body = {"file": {"content": "compressed data", "content_encoding": "gzip", "filename": "data.gz"}}
+    _headers.setdefault("Content-Type", "multipart/form-data; boundary=alef-boundary")
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
@@ -241,6 +248,7 @@ def test_upload_multiple_files() -> None:
         "Content-Type": "multipart/form-data",
     }
     _body = {"files": [{"content": "Content 1", "filename": "file1.txt"}, {"content": "Content 2", "filename": "file2.txt"}]}
+    _headers.setdefault("Content-Type", "multipart/form-data; boundary=alef-boundary")
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
