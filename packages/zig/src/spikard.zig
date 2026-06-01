@@ -633,13 +633,13 @@ pub fn schema_full() error{OutOfMemory}![]u8 {
 /// - path: "/graphql"
 /// - method: "POST"
 /// - `enable_playground`: false
-pub fn new() GraphQLRouteConfig {
+pub fn new_graph_ql_route_config() GraphQLRouteConfig {
     const _handle = c.spikard_graph_ql_route_config_new();
     if (_handle == null) return _first_error(anyerror);
     return .{ ._handle = @as(*c.SPIKARDGraphQLRouteConfig, @ptrCast(_handle.?)) };
 }
 
-pub fn default() GraphQLRouteConfig {
+pub fn default_graph_ql_route_config() GraphQLRouteConfig {
     const _handle = c.spikard_graph_ql_route_config_default();
     if (_handle == null) return _first_error(anyerror);
     return .{ ._handle = @as(*c.SPIKARDGraphQLRouteConfig, @ptrCast(_handle.?)) };
@@ -723,7 +723,7 @@ pub const GraphQLRouteConfig = struct {
 };
 
 /// Create a new builder for the provided HTTP method and path.
-pub fn new(method: Method, path: []const u8) error{OutOfMemory}!RouteBuilder {
+pub fn new_route_builder(method: Method, path: []const u8) error{OutOfMemory}!RouteBuilder {
     const method_i32: i32 = @intFromEnum(method);
     const path_z = try std.heap.c_allocator.dupeZ(u8, path);
     defer std.heap.c_allocator.free(path_z);

@@ -8,6 +8,7 @@ package dev.spikard;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.Arena;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.List;
 
 /**
