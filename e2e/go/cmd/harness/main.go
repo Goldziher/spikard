@@ -89,7 +89,7 @@ func main() {
 		// If there's a body schema, attach it to the builder.
 		if bodySchema != nil {
 			bodySchemaJSON, _ := json.Marshal(bodySchema)
-			builder = builder.RequestSchemaJSON(string(bodySchemaJSON))
+			builder = builder.RequestSchemaJSON(json.RawMessage(bodySchemaJSON))
 		}
 
 		// Register the route with the handler.
