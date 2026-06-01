@@ -479,7 +479,7 @@ namespace Spikard
     {
         // Tests that :uuid type syntax auto-generates validation that rejects invalid UUIDs
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
-        var id:uuid = "";
+        var id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/path_parameter_type_syntax_invalid_uuid/type-syntax/items/{id:uuid}");
@@ -495,7 +495,7 @@ namespace Spikard
     {
         // Tests that explicit parameter schema merges with auto-generated type syntax schema
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
-        var count:int = "";
+        var count = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/path_parameter_type_syntax_with_override/type-syntax/items-count/{count:int}");
@@ -511,7 +511,7 @@ namespace Spikard
     {
         // Tests path parameter with :int type syntax auto-generates integer type
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
-        var user_id:int = "";
+        var user_id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/path_parameter_with_type_syntax_integer/type-syntax/users/{user_id:int}");
@@ -527,7 +527,7 @@ namespace Spikard
     {
         // Tests path parameter with :uuid type syntax auto-generates UUID validation
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
-        var id:uuid = "";
+        var id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/path_parameter_with_type_syntax_uuid/type-syntax/items/{id:uuid}");
@@ -543,7 +543,7 @@ namespace Spikard
     {
         // Tests path type parameter that captures remaining path segments
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
-        var file_path:path = "";
+        var file_path = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/path_type_parameter_file_path/files/{file_path:path}");

@@ -242,6 +242,7 @@ namespace Spikard
     {
         // Tests server serves static files from configured directory
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var file = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/server_static_files_configuration/static/{file}");

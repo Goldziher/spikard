@@ -27,6 +27,7 @@ namespace Spikard
     {
         // Tests DELETE method to remove a resource
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Delete, $"{baseUrl}/fixtures/delete_remove_resource/items/{id}");
@@ -42,6 +43,7 @@ namespace Spikard
     {
         // Tests DELETE on non-existent resource returns 404
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Delete, $"{baseUrl}/fixtures/delete_resource_not_found/items/{id}");
@@ -57,6 +59,7 @@ namespace Spikard
     {
         // Tests DELETE returning deleted resource data
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Delete, $"{baseUrl}/fixtures/delete_with_response_body/items/{id}");
@@ -72,6 +75,7 @@ namespace Spikard
     {
         // Tests HEAD method returns headers without response body
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Head, $"{baseUrl}/fixtures/head_get_metadata_without_body/items/{id}");
@@ -85,6 +89,7 @@ namespace Spikard
     {
         // Tests PATCH method for partial resource updates
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Patch, $"{baseUrl}/fixtures/patch_partial_update/items/{id}");
@@ -101,6 +106,7 @@ namespace Spikard
     {
         // Tests PATCH updating multiple fields at once
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Patch, $"{baseUrl}/fixtures/patch_update_multiple_fields/items/{id}");
@@ -117,6 +123,7 @@ namespace Spikard
     {
         // Tests PUT method for complete resource replacement
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Put, $"{baseUrl}/fixtures/put_complete_resource_replacement/items/{id}");
@@ -133,6 +140,7 @@ namespace Spikard
     {
         // Tests PUT creating new resource at specific URI
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Put, $"{baseUrl}/fixtures/put_create_resource_if_doesn_t_exist/items/{id}");
@@ -149,6 +157,7 @@ namespace Spikard
     {
         // Tests PUT idempotency - repeated calls produce same result
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Put, $"{baseUrl}/fixtures/put_idempotent_operation/items/{id}");
@@ -165,6 +174,7 @@ namespace Spikard
     {
         // Tests PUT with missing required fields returns 422
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Put, $"{baseUrl}/fixtures/put_missing_required_field/items/{id}");
@@ -181,6 +191,7 @@ namespace Spikard
     {
         // Tests PUT with invalid data returns 422
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Put, $"{baseUrl}/fixtures/put_validation_error/items/{id}");
