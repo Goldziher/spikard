@@ -7,16 +7,16 @@
     "type": "git",
     "url": "git+https://github.com/Goldziher/spikard.git"
   },
-  "main": "index.js",
+  "main": "index-wrapper.js",
   "types": "index.d.ts",
   "exports": {
     ".": {
       "types": "./index.d.ts",
-      "require": "./index.js",
-      "default": "./index.js"
+      "require": "./index-wrapper.js",
+      "default": "./index-wrapper.js"
     }
   },
-  "files": ["index.js", "index.d.ts", "service.ts", "*.node"],
+  "files": ["index.js", "index-wrapper.js", "index.d.ts", "service.js", "service.ts", "*.node"],
   "optionalDependencies": {
     "@spikard/node-linux-x64-gnu": "0.15.6-rc.9",
     "@spikard/node-linux-arm64-gnu": "0.15.6-rc.9",

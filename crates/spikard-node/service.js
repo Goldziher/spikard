@@ -1,6 +1,5 @@
 // Auto-generated service API class
-
-const { app_run } = require('./index');
+// Delayed requires to avoid circular dependencies with index.js
 
 /**
  * Spikard application builder.
@@ -138,6 +137,7 @@ class App {
    * Returns an error if server construction or execution fails.
    */
   async run() {
+    const { app_run } = require('./index');
     return await app_run(this._registrations);
   }
 
