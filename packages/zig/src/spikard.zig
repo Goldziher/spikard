@@ -31,7 +31,7 @@ inline fn _first_error(comptime E: type) E {
 }
 
 /// Error type for application builder operations.
-pub const AppError = error {
+pub const AppError = error{
     Route,
     Server,
     Decode,
@@ -42,7 +42,7 @@ pub const AppError = error {
 ///
 /// These errors are compatible with async-graphql error handling and can be
 /// converted to structured HTTP responses matching the project's error fixtures.
-pub const GraphQLError = error {
+pub const GraphQLError = error{
     ExecutionError,
     SchemaBuildError,
     RequestHandlingError,
@@ -62,7 +62,7 @@ pub const GraphQLError = error {
 };
 
 /// Error type for schema building operations
-pub const SchemaError = error {
+pub const SchemaError = error{
     BuildingFailed,
     ValidationError,
     ComplexityLimitExceeded,
@@ -582,8 +582,7 @@ pub fn schema_query_only() error{OutOfMemory}![]u8 {
         const slice = std.mem.sliceTo(_json_ptr, 0);
         const owned = try std.heap.c_allocator.dupe(u8, slice);
         break :blk owned;
-    }
-;
+    };
 }
 
 /// Create a schema configuration with Query and Mutation types.
@@ -602,8 +601,7 @@ pub fn schema_query_mutation() error{OutOfMemory}![]u8 {
         const slice = std.mem.sliceTo(_json_ptr, 0);
         const owned = try std.heap.c_allocator.dupe(u8, slice);
         break :blk owned;
-    }
-;
+    };
 }
 
 /// Create a schema configuration with all three root types.
@@ -622,8 +620,7 @@ pub fn schema_full() error{OutOfMemory}![]u8 {
         const slice = std.mem.sliceTo(_json_ptr, 0);
         const owned = try std.heap.c_allocator.dupe(u8, slice);
         break :blk owned;
-    }
-;
+    };
 }
 
 /// Create a new GraphQL route configuration with defaults
@@ -769,11 +766,12 @@ pub const RouteBuilder = struct {
     }
 
     /// Attach a CORS configuration for this route.
-    pub fn cors(self: *RouteBuilder, value: []const u8) error{OutOfMemory}!RouteBuilder {
+    pub fn cors(self: *RouteBuilder, value: []const u8) error{ OutOfMemory, InvalidJson }!RouteBuilder {
         const value_z = try std.heap.c_allocator.dupeZ(u8, value);
         defer std.heap.c_allocator.free(value_z);
         const value_handle = c.spikard_cors_config_from_json(value_z.ptr);
-        c.spikard_cors_config_free(value_handle);
+        if (value_handle == null) return error.InvalidJson;
+        defer c.spikard_cors_config_free(value_handle);
         const _result = c.spikard_route_builder_cors(@as(*c.SPIKARDRouteBuilder, @ptrCast(self._handle)), value_handle);
         return RouteBuilder{ ._handle = _result.? };
     }

@@ -1,54 +1,45 @@
 ExUnit.start()
 
-# Spawn mock-server binary and set MOCK_SERVER_URL for all tests.
-# If MOCK_SERVER_URL is already set, a parent process (e.g. `alef test-apps
-# run`) started a shared mock-server and exported its URL (plus any
-# MOCK_SERVERS / MOCK_SERVER_<FIXTURE_ID> vars). Use it as-is and do NOT
-# spawn our own server.
-mock_server_bin = Path.expand("../../rust/target/release/mock-server", __DIR__)
-fixtures_dir = Path.expand("../../../fixtures", __DIR__)
+# Spawn app_harness subprocess and set SUT_URL
+# If SUT_URL is already set, a parent process started a shared harness.
+# Use it as-is and do NOT spawn our own.
 
-unless System.get_env("MOCK_SERVER_URL") do
-  if File.exists?(mock_server_bin) do
-    port = Port.open({:spawn_executable, mock_server_bin}, [
-      :binary,
-      # Use a large line buffer (default 1024 truncates `MOCK_SERVERS={...}` lines for
-      # fixture sets with many host-root routes, splitting them into `:noeol` chunks
-      # that the prefix-match clauses below would never see).
-      {:line, 65_536},
-      args: [fixtures_dir]
-    ])
-    # Read startup lines: MOCK_SERVER_URL= then MOCK_SERVERS= (always emitted, possibly `{}`).
-    # The standalone mock-server prints noisy stderr lines BEFORE the stdout sentinels;
-    # selective receive ignores anything that doesn't match the two prefix patterns.
-    # Each iteration only halts after the MOCK_SERVERS= line is processed.
-    {url, _} =
-      Enum.reduce_while(1..16, {nil, port}, fn _, {url_acc, p} ->
-        receive do
-          {^p, {:data, {:eol, "MOCK_SERVER_URL=" <> u}}} ->
-            {:cont, {u, p}}
+unless System.get_env("SUT_URL") do
+  app_harness_bin = Path.expand("app_harness.exs", __DIR__)
 
-          {^p, {:data, {:eol, "MOCK_SERVERS=" <> json_val}}} ->
-            System.put_env("MOCK_SERVERS", json_val)
-            case Jason.decode(json_val) do
-              {:ok, servers} ->
-                Enum.each(servers, fn {fid, furl} ->
-                  System.put_env("MOCK_SERVER_#{String.upcase(fid)}", furl)
-                end)
+  port = Port.open({:spawn_executable, System.find_executable("elixir")}, [
+    :binary,
+    {:line, 65_536},
+    args: [app_harness_bin]
+  ])
 
-              _ ->
-                :ok
-            end
+  url = "http://127.0.0.1:8000"
 
-            {:halt, {url_acc, p}}
-        after
-          30_000 ->
-            raise "mock-server startup timeout"
+  # Poll until the harness accepts TCP connections
+  deadline = :erlang.monotonic_time(:millisecond) + 15_000
+  ready = false
+
+  {ready, url} =
+    Enum.reduce_while(1..150, {false, url}, fn _, {_, url_acc} ->
+      now = :erlang.monotonic_time(:millisecond)
+      if now > deadline do
+        {:halt, {false, url_acc}}
+      else
+        case :gen_tcp.connect(String.to_charlist("127.0.0.1"), 8000, [], 500) do
+          {:ok, socket} ->
+            :gen_tcp.close(socket)
+            {:halt, {true, url_acc}}
+          {:error, _} ->
+            Process.sleep(100)
+            {:cont, {false, url_acc}}
         end
-      end)
+      end
+    end)
 
-    if url != nil do
-      System.put_env("MOCK_SERVER_URL", url)
-    end
+  unless ready do
+    Port.close(port)
+    raise "App harness did not become reachable on 127.0.0.1:8000 within 15s"
   end
+
+  System.put_env("SUT_URL", url)
 end

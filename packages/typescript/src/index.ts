@@ -2,12 +2,11 @@ export {
   App,
   GraphQLRouteConfig,
   Method,
-  RouteBuilder,
   TestClient,
   schemaFull,
   schemaQueryMutation,
   schemaQueryOnly,
-} from '@spikard/node';
+} from "@spikard/node";
 
 export type {
   ApiKeyConfig,
@@ -48,4 +47,4 @@ export type {
   ValidateRequest,
   ValidationResponse,
   WebSocketMessage,
-} from '@spikard/node';
+} from "@spikard/node";

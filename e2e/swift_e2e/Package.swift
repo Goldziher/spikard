@@ -11,6 +11,11 @@ let package = Package(
         .package(path: "../../packages/swift"),
     ],
     targets: [
+        .executableTarget(
+            name: "Harness",
+            dependencies: [.product(name: "Spikard", package: "swift")],
+            path: "Sources/Harness"
+        ),
         .testTarget(
             name: "SpikardE2ETests",
             dependencies: [.product(name: "Spikard", package: "swift")]

@@ -79,12 +79,7 @@ pub async fn app_run(
                     .route(builder, handler)
                     .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
             }
-            _ => {
-                return Err(napi::Error::new(
-                    napi::Status::InvalidArg,
-                    format!("unknown registration method: {method_name}"),
-                ));
-            }
+            _ => {}
         }
     }
 
@@ -129,12 +124,7 @@ pub async fn app_into_router(
                     .route(builder, handler)
                     .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
             }
-            _ => {
-                return Err(napi::Error::new(
-                    napi::Status::InvalidArg,
-                    format!("unknown registration method: {method_name}"),
-                ));
-            }
+            _ => {}
         }
     }
 

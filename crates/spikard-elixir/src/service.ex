@@ -154,11 +154,11 @@ defmodule App do
     end
 
     defp find_handler(_method, []), do: nil
-    defp find_handler(method, [{^method, _metadata, _handler} = entry | _rest]) do
+    defp find_handler(target, [{name, _metadata, _handler} = entry | _rest]) when name == target do
       entry
     end
-    defp find_handler(method, [_head | rest]) do
-      find_handler(method, rest)
+    defp find_handler(target, [_head | rest]) do
+      find_handler(target, rest)
     end
 
   end
