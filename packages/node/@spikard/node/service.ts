@@ -1,6 +1,6 @@
 // Auto-generated service API class
 
-import type { JsObject, RequestData, Response } from '../index';
+import type { JsObject, Method, RequestData, Response, RouteBuilder, ServerConfig } from '../index';
 import { app_run } from '../index';
 
 /**
@@ -49,7 +49,8 @@ export class App {
    * Register a GET route at the given path.
    */
   get(path: string, handler: (...args: any[]) => any): this {
-    this._registrations.push(["route", [path], handler]);
+    const builder = new RouteBuilder(Method.Get, path);
+    this._registrations.push(["route", [builder], handler]);
     return this;
   }
 
@@ -57,7 +58,8 @@ export class App {
    * Register a POST route at the given path.
    */
   post(path: string, handler: (...args: any[]) => any): this {
-    this._registrations.push(["route", [path], handler]);
+    const builder = new RouteBuilder(Method.Post, path);
+    this._registrations.push(["route", [builder], handler]);
     return this;
   }
 
@@ -65,7 +67,8 @@ export class App {
    * Register a PUT route at the given path.
    */
   put(path: string, handler: (...args: any[]) => any): this {
-    this._registrations.push(["route", [path], handler]);
+    const builder = new RouteBuilder(Method.Put, path);
+    this._registrations.push(["route", [builder], handler]);
     return this;
   }
 
@@ -73,7 +76,8 @@ export class App {
    * Register a PATCH route at the given path.
    */
   patch(path: string, handler: (...args: any[]) => any): this {
-    this._registrations.push(["route", [path], handler]);
+    const builder = new RouteBuilder(Method.Patch, path);
+    this._registrations.push(["route", [builder], handler]);
     return this;
   }
 
@@ -81,7 +85,8 @@ export class App {
    * Register a DELETE route at the given path.
    */
   delete(path: string, handler: (...args: any[]) => any): this {
-    this._registrations.push(["route", [path], handler]);
+    const builder = new RouteBuilder(Method.Delete, path);
+    this._registrations.push(["route", [builder], handler]);
     return this;
   }
 
@@ -89,7 +94,8 @@ export class App {
    * Register a HEAD route at the given path.
    */
   head(path: string, handler: (...args: any[]) => any): this {
-    this._registrations.push(["route", [path], handler]);
+    const builder = new RouteBuilder(Method.Head, path);
+    this._registrations.push(["route", [builder], handler]);
     return this;
   }
 
@@ -97,7 +103,8 @@ export class App {
    * Register an OPTIONS route at the given path.
    */
   options(path: string, handler: (...args: any[]) => any): this {
-    this._registrations.push(["route", [path], handler]);
+    const builder = new RouteBuilder(Method.Options, path);
+    this._registrations.push(["route", [builder], handler]);
     return this;
   }
 
@@ -105,7 +112,8 @@ export class App {
    * Register a CONNECT route at the given path.
    */
   connect(path: string, handler: (...args: any[]) => any): this {
-    this._registrations.push(["route", [path], handler]);
+    const builder = new RouteBuilder(Method.Connect, path);
+    this._registrations.push(["route", [builder], handler]);
     return this;
   }
 
@@ -113,7 +121,8 @@ export class App {
    * Register a TRACE route at the given path.
    */
   trace(path: string, handler: (...args: any[]) => any): this {
-    this._registrations.push(["route", [path], handler]);
+    const builder = new RouteBuilder(Method.Trace, path);
+    this._registrations.push(["route", [builder], handler]);
     return this;
   }
 

@@ -8,57 +8,65 @@ import { describe, expect, it } from 'vitest';
 
 
 describe('sse', () => {  it('sse_event_retry_5000_milliseconds: Tests SSE event with 5000ms retry interval', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/sse_event_retry_5000_milliseconds`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/sse_event_retry_5000_milliseconds/events/retry-5s`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual', headers: {
       "Accept": "text/event-stream",
     } });
     expect(response.status).toBe(200);    expect(response.headers.get('content-type')).toBe('text/event-stream');  });
 
   it('sse_event_with_all_fields: Tests SSE event with all optional fields (id, type, retry)', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/sse_event_with_all_fields`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/sse_event_with_all_fields/events/complete`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual', headers: {
       "Accept": "text/event-stream",
     } });
     expect(response.status).toBe(200);    expect(response.headers.get('content-type')).toBe('text/event-stream');  });
 
   it('sse_event_with_data_and_metadata: Tests SSE event with JSON data and metadata fields', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/sse_event_with_data_and_metadata`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/sse_event_with_data_and_metadata/events/data`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual', headers: {
       "Accept": "text/event-stream",
     } });
     expect(response.status).toBe(200);    expect(response.headers.get('content-type')).toBe('text/event-stream');  });
 
   it('sse_event_with_id_field: Tests SSE event includes unique ID field', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/sse_event_with_id_field`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/sse_event_with_id_field/events/with-id`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual', headers: {
       "Accept": "text/event-stream",
     } });
     expect(response.status).toBe(200);    expect(response.headers.get('content-type')).toBe('text/event-stream');  });
 
   it('sse_event_with_retry_field: Tests SSE event includes retry interval field', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/sse_event_with_retry_field`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/sse_event_with_retry_field/events/with-retry`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual', headers: {
       "Accept": "text/event-stream",
     } });
     expect(response.status).toBe(200);    expect(response.headers.get('content-type')).toBe('text/event-stream');  });
 
   it('sse_event_with_type_field: Tests SSE event includes event type field', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/sse_event_with_type_field`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/sse_event_with_type_field/events/typed`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual', headers: {
       "Accept": "text/event-stream",
     } });
     expect(response.status).toBe(200);    expect(response.headers.get('content-type')).toBe('text/event-stream');  });
 
   it('sse_multiple_events_stream: Tests SSE stream with multiple consecutive events', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/sse_multiple_events_stream`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/sse_multiple_events_stream/events/multi`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual', headers: {
       "Accept": "text/event-stream",
     } });
     expect(response.status).toBe(200);    expect(response.headers.get('content-type')).toBe('text/event-stream');  });
 
   it('sse_simple_event_stream: Tests Server-Sent Events with simple text events', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/sse_simple_event_stream`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/sse_simple_event_stream/events`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual', headers: {
       "Accept": "text/event-stream",
     } });
     expect(response.status).toBe(200);    expect(response.headers.get('cache-control')).toBe('no-cache');    expect(response.headers.get('content-type')).toBe('text/event-stream');  });

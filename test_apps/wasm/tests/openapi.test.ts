@@ -8,60 +8,70 @@ import { describe, expect, it } from 'vitest';
 
 
 describe('openapi', () => {  it('openapi_basic_spec_generation: Tests OpenAPI specification is generated from route definitions', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/openapi_basic_spec_generation`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/openapi_basic_spec_generation/openapi.json`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual' });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ info: { title: "API" }, openapi: "3.0.0" });    expect(response.headers.get('content-type')).toBe('application/json');  });
 
   it('openapi_contact_information: Tests OpenAPI spec includes contact information', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/openapi_contact_information`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/openapi_contact_information/openapi.json`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual' });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ info: { contact: { name: "API Support", url: "https://example.com/support" } } });  });
 
   it('openapi_disabled_returns_404: Tests OpenAPI returns 404 when explicitly disabled', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/openapi_disabled_returns_404`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/openapi_disabled_returns_404/openapi.json`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual' });
     expect(response.status).toBe(404);  });
 
   it('openapi_enabled_flag_true: Tests OpenAPI can be explicitly enabled', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/openapi_enabled_flag_true`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/openapi_enabled_flag_true/openapi.json`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual' });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ openapi: "3.0.0" });  });
 
   it('openapi_json_endpoint_path: Tests OpenAPI JSON is served at configured endpoint', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/openapi_json_endpoint_path`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/openapi_json_endpoint_path/api/openapi.json`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual' });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ openapi: "3.0.0" });    expect(response.headers.get('content-type')).toBe('application/json');  });
 
   it('openapi_license_information: Tests OpenAPI spec includes license information', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/openapi_license_information`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/openapi_license_information/openapi.json`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual' });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ info: { license: { name: "MIT" } } });  });
 
   it('openapi_redoc_path: Tests ReDoc UI is served at configured path', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/openapi_redoc_path`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/openapi_redoc_path/redoc`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual' });
     expect(response.status).toBe(200);    expect(response.headers.get('content-type')).toBe('text/html');  });
 
   it('openapi_security_schemes_definition: Tests OpenAPI spec includes security schemes', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/openapi_security_schemes_definition`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/openapi_security_schemes_definition/openapi.json`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual' });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ components: { securitySchemes: { bearerAuth: { scheme: "bearer", type: "http" } } } });  });
 
   it('openapi_servers_configuration: Tests OpenAPI spec includes configured servers', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/openapi_servers_configuration`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/openapi_servers_configuration/openapi.json`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual' });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ servers: [{ url: "https://api.example.com" }, { url: "https://staging-api.example.com" }] });  });
 
   it('openapi_swagger_ui_path: Tests Swagger UI is served at configured path', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/openapi_swagger_ui_path`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/openapi_swagger_ui_path/docs`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual' });
     expect(response.status).toBe(200);    expect(response.headers.get('content-type')).toBe('text/html');  });
 
 });

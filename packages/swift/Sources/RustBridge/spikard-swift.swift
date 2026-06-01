@@ -1,6 +1,4 @@
-// swift-format-ignore-file
 import RustBridgeC
-
 public func graphQlRouteConfigPath<GenericIntoRustString: IntoRustString>(_ client: GraphQLRouteConfigRef, _ path: GenericIntoRustString) -> GraphQLRouteConfig {
     GraphQLRouteConfig(ptr: __swift_bridge__$graph_ql_route_config_path(client.ptr, { let rustString = path.intoRustString(); rustString.isOwned = false; return rustString.ptr }()))
 }
@@ -3688,3 +3686,6 @@ extension App: Vectorizable {
         __swift_bridge__$Vec_App$len(vecPtr)
     }
 }
+
+
+

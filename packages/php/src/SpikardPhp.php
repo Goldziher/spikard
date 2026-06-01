@@ -19,7 +19,8 @@ final class SpikardPhp
      * @return QueryOnlyConfig
      */
     public static function schemaQueryOnly(
-    ): QueryOnlyConfig {
+): QueryOnlyConfig
+    {
         return \Spikard\Php\SpikardPhpApi::schemaQueryOnly(); // delegate to native extension class
     }
     /**
@@ -30,7 +31,8 @@ final class SpikardPhp
      * @return QueryMutationConfig
      */
     public static function schemaQueryMutation(
-    ): QueryMutationConfig {
+): QueryMutationConfig
+    {
         return \Spikard\Php\SpikardPhpApi::schemaQueryMutation(); // delegate to native extension class
     }
     /**
@@ -41,7 +43,8 @@ final class SpikardPhp
      * @return FullSchemaConfig
      */
     public static function schemaFull(
-    ): FullSchemaConfig {
+): FullSchemaConfig
+    {
         return \Spikard\Php\SpikardPhpApi::schemaFull(); // delegate to native extension class
     }
 }

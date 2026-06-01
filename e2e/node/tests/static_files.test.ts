@@ -8,14 +8,16 @@ import { describe, expect, it } from 'vitest';
 
 
 describe('static_files', () => {  it('static_file_server_returns_text_file: Tests serving a plain text file with Cache-Control headers.', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/static_file_server_returns_text_file`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/static_file_server_returns_text_file/public/hello.txt`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual' });
     expect(response.status).toBe(200);    const text = await response.text();
     expect(text).toBe('Hello from static storage');    expect(response.headers.get('cache-control')).toBe('public, max-age=60');    expect(response.headers.get('content-type')).toBe('text/plain');  });
 
   it('static_server_returns_index_html_for_directory: When index files are enabled the server should serve index.html when the directory root is requested.', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/static_server_returns_index_html_for_directory`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/static_server_returns_index_html_for_directory/app/`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual' });
     expect(response.status).toBe(200);    const text = await response.text();
     expect(text).toBe('<!doctype html><h1>Welcome</h1>');    expect(response.headers.get('content-type')).toBe('text/html');  });
 

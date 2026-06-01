@@ -8,105 +8,121 @@ import { describe, expect, it } from 'vitest';
 
 
 describe('server_config', () => {  it('server_background_tasks_configuration: Tests server with background tasks configured', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/server_background_tasks_configuration`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/server_background_tasks_configuration/task`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual' });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ background_tasks_enabled: true });  });
 
   it('server_compression_enabled: Tests server compresses responses when enabled', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/server_compression_enabled`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/server_compression_enabled/data`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual', headers: {
       "Accept-Encoding": "gzip",
     } });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ compressed: true });  });
 
   it('server_custom_host_port: Tests server configured with custom host and port', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/server_custom_host_port`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/server_custom_host_port/config`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual' });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ host: "127.0.0.1", port: 9000 });  });
 
   it('server_default_configuration: Tests server with default configuration (0.0.0.0:8080)', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/server_default_configuration`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/server_default_configuration/status`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual' });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ message: "Server is running with default config", status: "ok" });  });
 
   it('server_enable_http_trace_logging: Tests server with HTTP trace logging enabled', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/server_enable_http_trace_logging`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/server_enable_http_trace_logging/trace`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual' });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ trace_enabled: true });  });
 
   it('server_graceful_shutdown_enabled: Tests server graceful shutdown waits for in-flight requests', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/server_graceful_shutdown_enabled`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/server_graceful_shutdown_enabled/shutdown`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual' });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ graceful_shutdown: true });  });
 
   it('server_grpc_integration: Tests server with gRPC protocol integration', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/server_grpc_integration`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/server_grpc_integration/api.Service/Method`;
+    const response = await fetch(url, { method: 'POST', redirect: 'manual', headers: {
       "Content-Type": "application/grpc",
       "te": "trailers",
     }, body: JSON.stringify({ data: "test" }) });
     expect(response.status).toBe(200);    expect(response.headers.get('content-type')).toBe('application/grpc');    expect(response.headers.get('grpc-status')).toBe('0');  });
 
   it('server_jwt_and_api_key_auth_combined: Tests server with both JWT and API key authentication configured', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/server_jwt_and_api_key_auth_combined`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/server_jwt_and_api_key_auth_combined/secure`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual', headers: {
       "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0IiwiZXhwIjoyNjI2NzgzOTQ2fQ.test",
     } });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ authenticated: true });  });
 
   it('server_max_body_size_configuration: Tests server respects max body size limit', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/server_max_body_size_configuration`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/server_max_body_size_configuration/upload`;
+    const response = await fetch(url, { method: 'POST', redirect: 'manual', headers: {
       "Content-Type": "application/json",
     }, body: JSON.stringify({ data: "x" }) });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ received: 1 });  });
 
   it('server_openapi_integration: Tests server with OpenAPI documentation integration', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/server_openapi_integration`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/server_openapi_integration/openapi.json`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual' });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ openapi: "3.0.0" });    expect(response.headers.get('content-type')).toBe('application/json');  });
 
   it('server_rate_limit_configuration: Tests server enforces rate limiting configuration', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/server_rate_limit_configuration`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/server_rate_limit_configuration/limited`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual' });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ limited: false });  });
 
   it('server_request_id_enabled: Tests server generates request IDs when enabled', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/server_request_id_enabled`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/server_request_id_enabled/request`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual' });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ has_request_id: true });    expect(response.headers.get('x-request-id')).not.toBeNull();  });
 
   it('server_request_timeout_setting: Tests server respects request timeout configuration', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/server_request_timeout_setting`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/server_request_timeout_setting/timeout`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual' });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ timeout_ms: 30000 });  });
 
   it('server_shutdown_timeout_setting: Tests server shutdown timeout configuration', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/server_shutdown_timeout_setting`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/server_shutdown_timeout_setting/shutdown-timeout`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual' });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ shutdown_timeout_secs: 30 });  });
 
   it('server_static_files_configuration: Tests server serves static files from configured directory', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/server_static_files_configuration`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/server_static_files_configuration/static/index.html`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual' });
     expect(response.status).toBe(200);    expect(response.headers.get('content-type')).toBe('text/html');  });
 
   it('server_worker_count_configuration: Tests server with custom worker thread count', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/server_worker_count_configuration`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/server_worker_count_configuration/workers`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual' });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ workers: 4 });  });
 

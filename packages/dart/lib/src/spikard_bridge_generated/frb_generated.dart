@@ -125,7 +125,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => 911844349;
+  int get rustContentHash => -1466720877;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -414,8 +414,6 @@ abstract class RustLibApi extends BaseApi {
   Future<PlatformInt64> crateGraphQlErrorStatusCode({
     required GraphQLError that,
   });
-
-  Future<String> crateHandlerResultFromResponse({required Response outcome});
 
   Future<FullSchemaConfig> crateSchemaFull();
 
@@ -2801,37 +2799,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<String> crateHandlerResultFromResponse({required Response outcome}) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_box_autoadd_response(outcome, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 68,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_String,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateHandlerResultFromResponseConstMeta,
-        argValues: [outcome],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateHandlerResultFromResponseConstMeta =>
-      const TaskConstMeta(
-        debugName: "handler_result_from_response",
-        argNames: ["outcome"],
-      );
-
-  @override
   Future<FullSchemaConfig> crateSchemaFull() {
     return handler.executeNormal(
       NormalTask(
@@ -2840,7 +2807,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 69,
+            funcId: 68,
             port: port_,
           );
         },
@@ -2867,7 +2834,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 70,
+            funcId: 69,
             port: port_,
           );
         },
@@ -2894,7 +2861,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 71,
+            funcId: 70,
             port: port_,
           );
         },
@@ -3287,12 +3254,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RateLimitConfig dco_decode_box_autoadd_rate_limit_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_rate_limit_config(raw);
-  }
-
-  @protected
-  Response dco_decode_box_autoadd_response(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_response(raw);
   }
 
   @protected
@@ -4321,12 +4282,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_rate_limit_config(deserializer));
-  }
-
-  @protected
-  Response sse_decode_box_autoadd_response(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_response(deserializer));
   }
 
   @protected
@@ -5627,15 +5582,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_rate_limit_config(self, serializer);
-  }
-
-  @protected
-  void sse_encode_box_autoadd_response(
-    Response self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_response(self, serializer);
   }
 
   @protected

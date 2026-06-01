@@ -8,13 +8,15 @@ import { describe, expect, it } from 'vitest';
 
 
 describe('background', () => {  it('background_event_logging: Enqueues a background job that appends the posted event to shared state', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/background_event_logging`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', body: JSON.stringify({ event: "alpha" }) });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/background_event_logging/background/events`;
+    const response = await fetch(url, { method: 'POST', redirect: 'manual', body: JSON.stringify({ event: "alpha" }) });
     expect(response.status).toBe(202);    expect(response.headers.get('content-type')).toBe('application/json');  });
 
   it('background_event_logging_second_payload: Ensures background jobs handle different payloads', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/background_event_logging_second_payload`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', body: JSON.stringify({ event: "beta" }) });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/background_event_logging_second_payload/background/events`;
+    const response = await fetch(url, { method: 'POST', redirect: 'manual', body: JSON.stringify({ event: "beta" }) });
     expect(response.status).toBe(202);    expect(response.headers.get('content-type')).toBe('application/json');  });
 
 });

@@ -8,70 +8,79 @@ import { describe, expect, it } from 'vitest';
 
 
 describe('content_types', () => {  it('json_with_charset_utf16: JSON with UTF-16 charset should be rejected (UTF-8 only)', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/13_json_with_charset_utf16`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/13_json_with_charset_utf16/data`;
+    const response = await fetch(url, { method: 'POST', redirect: 'manual', headers: {
       "Content-Type": "application/json; charset=utf-16",
     }, body: JSON.stringify({ value: "test" }) });
     expect(response.status).toBe(415);    const data = await response.json();
     expect(data).toEqual({ detail: "Unsupported charset 'utf-16' for JSON. Only UTF-8 is supported.", status: 415, title: "Unsupported Charset", type: "https://spikard.dev/errors/unsupported-charset" });  });
 
   it('content_type_case_insensitive: Content-Type header should be case-insensitive', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/14_content_type_case_insensitive`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/14_content_type_case_insensitive/data`;
+    const response = await fetch(url, { method: 'POST', redirect: 'manual', headers: {
       "Content-Type": "APPLICATION/JSON",
     }, body: JSON.stringify({ name: "test" }) });
     expect(response.status).toBe(201);    const data = await response.json();
     expect(data).toEqual({ name: "test" });  });
 
   it('multipart_boundary_required: Multipart content-type without boundary parameter should fail', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/15_multipart_boundary_required`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/15_multipart_boundary_required/upload`;
+    const response = await fetch(url, { method: 'POST', redirect: 'manual', headers: {
       "Content-Type": "multipart/form-data",
     } });
     expect(response.status).toBe(400);    const data = await response.json();
     expect(data).toEqual({ error: "multipart/form-data requires 'boundary' parameter" });  });
 
   it('text_plain_not_accepted: text/plain content-type should be rejected when JSON is expected', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/16_text_plain_not_accepted`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/16_text_plain_not_accepted/data`;
+    const response = await fetch(url, { method: 'POST', redirect: 'manual', headers: {
       "Content-Type": "text/plain",
     }, body: JSON.stringify("{\"data\": \"value\"}") });
     expect(response.status).toBe(415);    const data = await response.json();
     expect(data).toEqual({ detail: "Unsupported media type", status: 415, title: "Unsupported Media Type", type: "https://spikard.dev/errors/unsupported-media-type" });  });
 
   it('vendor_json_accepted: Vendor-specific JSON content-type should be accepted', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/17_vendor_json_accepted`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/17_vendor_json_accepted/api/v1/resource`;
+    const response = await fetch(url, { method: 'POST', redirect: 'manual', headers: {
       "Content-Type": "application/vnd.api+json",
     }, body: JSON.stringify({ data: "value" }) });
     expect(response.status).toBe(201);    const data = await response.json();
     expect(data).toEqual({ data: "value" });  });
 
   it('content_type_with_multiple_params: Content-Type with multiple parameters should be parsed correctly', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/18_content_type_with_multiple_params`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/18_content_type_with_multiple_params/data`;
+    const response = await fetch(url, { method: 'POST', redirect: 'manual', headers: {
       "Content-Type": "application/json; charset=utf-8; boundary=something",
     }, body: JSON.stringify({ value: "test" }) });
     expect(response.status).toBe(201);    const data = await response.json();
     expect(data).toEqual({ value: "test" });  });
 
   it('missing_content_type_default_json: Missing Content-Type header should default to JSON when body is present', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/19_missing_content_type_default_json`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', body: JSON.stringify({ name: "test" }) });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/19_missing_content_type_default_json/data`;
+    const response = await fetch(url, { method: 'POST', redirect: 'manual', body: JSON.stringify({ name: "test" }) });
     expect(response.status).toBe(201);    const data = await response.json();
     expect(data).toEqual({ name: "test" });  });
 
   it('unsupported_media_type: Tests rejection of unsupported content type', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/415_unsupported_media_type`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/415_unsupported_media_type/items/`;
+    const response = await fetch(url, { method: 'POST', redirect: 'manual', headers: {
       "Content-Type": "application/xml",
     }, body: JSON.stringify("<?xml version=\"1.0\"?><item><name>Item</name></item>") });
     expect(response.status).toBe(415);    const data = await response.json();
     expect(data).toEqual({ detail: "Unsupported media type", status: 415, title: "Unsupported Media Type", type: "https://spikard.dev/errors/unsupported-media-type" });  });
 
   it('content_negotiation_accept_header: Tests content negotiation based on Accept header', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/content_negotiation_accept_header`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/content_negotiation_accept_header/accept-test/1`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual', headers: {
       "Accept": "application/json",
     } });
     expect(response.status).toBe(200);    const data = await response.json();

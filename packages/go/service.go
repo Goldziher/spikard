@@ -45,7 +45,7 @@ type HandlerFunc func([]byte) ([]byte, error)
 // handlerRegistry maps opaque context indices to Go handlers.
 var (
 	handlerRegistryMu sync.Mutex
-	handlerRegistry           = make(map[uintptr]HandlerFunc)
+	handlerRegistry   = make(map[uintptr]HandlerFunc)
 	handlerNextID     uintptr = 1
 )
 
@@ -136,7 +136,7 @@ func (s *App) Close() {
 // # Errors
 //
 // Returns an error if route construction fails or if the handler registration fails.
-func (s *App) RegisterRoute(handler HandlerFunc, builder RouteBuilder) error {
+func (s *App) RegisterRoute(handler HandlerFunc, builder RouteBuilder)  error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.owner == nil {
@@ -161,7 +161,7 @@ func (s *App) RegisterRoute(handler HandlerFunc, builder RouteBuilder) error {
 // Get() registers a handler via the get variant.
 //
 // Register a GET route at the given path.
-func (s *App) Get(handler HandlerFunc, path string) error {
+func (s *App) Get(handler HandlerFunc, path string)  error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.owner == nil {
@@ -169,7 +169,7 @@ func (s *App) Get(handler HandlerFunc, path string) error {
 	}
 
 	ctxID := registerHandler(handler)
-	ret := C.spikard_app_get(
+	ret := C.spikard_app_get (
 		(*C.SPIKARDAppOpaque)(s.owner),
 		(*[0]byte)(C.service_handler_trampoline),
 		unsafe.Pointer(ctxID),
@@ -186,7 +186,7 @@ func (s *App) Get(handler HandlerFunc, path string) error {
 // Post() registers a handler via the post variant.
 //
 // Register a POST route at the given path.
-func (s *App) Post(handler HandlerFunc, path string) error {
+func (s *App) Post(handler HandlerFunc, path string)  error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.owner == nil {
@@ -194,7 +194,7 @@ func (s *App) Post(handler HandlerFunc, path string) error {
 	}
 
 	ctxID := registerHandler(handler)
-	ret := C.spikard_app_post(
+	ret := C.spikard_app_post (
 		(*C.SPIKARDAppOpaque)(s.owner),
 		(*[0]byte)(C.service_handler_trampoline),
 		unsafe.Pointer(ctxID),
@@ -211,7 +211,7 @@ func (s *App) Post(handler HandlerFunc, path string) error {
 // Put() registers a handler via the put variant.
 //
 // Register a PUT route at the given path.
-func (s *App) Put(handler HandlerFunc, path string) error {
+func (s *App) Put(handler HandlerFunc, path string)  error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.owner == nil {
@@ -219,7 +219,7 @@ func (s *App) Put(handler HandlerFunc, path string) error {
 	}
 
 	ctxID := registerHandler(handler)
-	ret := C.spikard_app_put(
+	ret := C.spikard_app_put (
 		(*C.SPIKARDAppOpaque)(s.owner),
 		(*[0]byte)(C.service_handler_trampoline),
 		unsafe.Pointer(ctxID),
@@ -236,7 +236,7 @@ func (s *App) Put(handler HandlerFunc, path string) error {
 // Patch() registers a handler via the patch variant.
 //
 // Register a PATCH route at the given path.
-func (s *App) Patch(handler HandlerFunc, path string) error {
+func (s *App) Patch(handler HandlerFunc, path string)  error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.owner == nil {
@@ -244,7 +244,7 @@ func (s *App) Patch(handler HandlerFunc, path string) error {
 	}
 
 	ctxID := registerHandler(handler)
-	ret := C.spikard_app_patch(
+	ret := C.spikard_app_patch (
 		(*C.SPIKARDAppOpaque)(s.owner),
 		(*[0]byte)(C.service_handler_trampoline),
 		unsafe.Pointer(ctxID),
@@ -261,7 +261,7 @@ func (s *App) Patch(handler HandlerFunc, path string) error {
 // Delete() registers a handler via the delete variant.
 //
 // Register a DELETE route at the given path.
-func (s *App) Delete(handler HandlerFunc, path string) error {
+func (s *App) Delete(handler HandlerFunc, path string)  error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.owner == nil {
@@ -269,7 +269,7 @@ func (s *App) Delete(handler HandlerFunc, path string) error {
 	}
 
 	ctxID := registerHandler(handler)
-	ret := C.spikard_app_delete(
+	ret := C.spikard_app_delete (
 		(*C.SPIKARDAppOpaque)(s.owner),
 		(*[0]byte)(C.service_handler_trampoline),
 		unsafe.Pointer(ctxID),
@@ -286,7 +286,7 @@ func (s *App) Delete(handler HandlerFunc, path string) error {
 // Head() registers a handler via the head variant.
 //
 // Register a HEAD route at the given path.
-func (s *App) Head(handler HandlerFunc, path string) error {
+func (s *App) Head(handler HandlerFunc, path string)  error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.owner == nil {
@@ -294,7 +294,7 @@ func (s *App) Head(handler HandlerFunc, path string) error {
 	}
 
 	ctxID := registerHandler(handler)
-	ret := C.spikard_app_head(
+	ret := C.spikard_app_head (
 		(*C.SPIKARDAppOpaque)(s.owner),
 		(*[0]byte)(C.service_handler_trampoline),
 		unsafe.Pointer(ctxID),
@@ -311,7 +311,7 @@ func (s *App) Head(handler HandlerFunc, path string) error {
 // Options() registers a handler via the options variant.
 //
 // Register an OPTIONS route at the given path.
-func (s *App) Options(handler HandlerFunc, path string) error {
+func (s *App) Options(handler HandlerFunc, path string)  error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.owner == nil {
@@ -319,7 +319,7 @@ func (s *App) Options(handler HandlerFunc, path string) error {
 	}
 
 	ctxID := registerHandler(handler)
-	ret := C.spikard_app_options(
+	ret := C.spikard_app_options (
 		(*C.SPIKARDAppOpaque)(s.owner),
 		(*[0]byte)(C.service_handler_trampoline),
 		unsafe.Pointer(ctxID),
@@ -336,7 +336,7 @@ func (s *App) Options(handler HandlerFunc, path string) error {
 // Connect() registers a handler via the connect variant.
 //
 // Register a CONNECT route at the given path.
-func (s *App) Connect(handler HandlerFunc, path string) error {
+func (s *App) Connect(handler HandlerFunc, path string)  error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.owner == nil {
@@ -344,7 +344,7 @@ func (s *App) Connect(handler HandlerFunc, path string) error {
 	}
 
 	ctxID := registerHandler(handler)
-	ret := C.spikard_app_connect(
+	ret := C.spikard_app_connect (
 		(*C.SPIKARDAppOpaque)(s.owner),
 		(*[0]byte)(C.service_handler_trampoline),
 		unsafe.Pointer(ctxID),
@@ -361,7 +361,7 @@ func (s *App) Connect(handler HandlerFunc, path string) error {
 // Trace() registers a handler via the trace variant.
 //
 // Register a TRACE route at the given path.
-func (s *App) Trace(handler HandlerFunc, path string) error {
+func (s *App) Trace(handler HandlerFunc, path string)  error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.owner == nil {
@@ -369,7 +369,7 @@ func (s *App) Trace(handler HandlerFunc, path string) error {
 	}
 
 	ctxID := registerHandler(handler)
-	ret := C.spikard_app_trace(
+	ret := C.spikard_app_trace (
 		(*C.SPIKARDAppOpaque)(s.owner),
 		(*[0]byte)(C.service_handler_trampoline),
 		unsafe.Pointer(ctxID),

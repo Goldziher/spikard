@@ -8,13 +8,15 @@ import { describe, expect, it } from 'vitest';
 
 
 describe('body_limits', () => {  it('body_over_limit_returns_413: Requests that exceed the configured max body size should be rejected with Payload Too Large.', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/body_over_limit_returns_413`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', body: JSON.stringify({ note: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" }) });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/body_over_limit_returns_413/body-limit/over`;
+    const response = await fetch(url, { method: 'POST', redirect: 'manual', body: JSON.stringify({ note: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" }) });
     expect(response.status).toBe(413);  });
 
   it('body_under_limit_succeeds: Ensures requests smaller than the configured body limit are accepted.', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/body_under_limit_succeeds`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', body: JSON.stringify({ note: "small" }) });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/body_under_limit_succeeds/body-limit/under`;
+    const response = await fetch(url, { method: 'POST', redirect: 'manual', body: JSON.stringify({ note: "small" }) });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ accepted: true, note: "small" });  });
 

@@ -9,16 +9,7 @@ import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'lib.freezed.dart';
 
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `AppError`, `Method`, `ParseRequest`, `SchemaError`, `SnapshotError`, `TestingSseEvent`, `ValidateRequest`, `ValidationResponse`, `WebSocketMessage`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
-
-/// Convert a handler-bridge outcome into a `HandlerResult`.
-///
-/// Language bindings produce a `Response` wire DTO (or a boxed error) from the host callback;
-/// the `Handler` trait requires an `axum` response. This builds the `axum` response from the DTO's
-/// `content` (serialized as JSON), `status_code`, and `headers`, mapping any error to a `500`
-/// problem. It is the response adapter referenced by the generated handler bridges.
-Future<String> handlerResultFromResponse({required Response outcome}) =>
-    RustLib.instance.api.crateHandlerResultFromResponse(outcome: outcome);
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
 
 /// Create a simple schema configuration with only Query type.
 ///

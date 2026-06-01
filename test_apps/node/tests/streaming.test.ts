@@ -8,20 +8,23 @@ import { describe, expect, it } from 'vitest';
 
 
 describe('streaming', () => {  it('binary_log_download: Streams binary log segments with control bytes', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/binary_log_download`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/binary_log_download/stream/logfile`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual' });
     expect(response.status).toBe(200);    const text = await response.text();
     expect(text).toBe('LOG:\\u0000\\u0001\\u0002\\u0003|TAIL|\\u0007\\n');    expect(response.headers.get('content-type')).toBe('application/octet-stream');  });
 
   it('chunked_csv_export: Streams CSV header and rows as discrete chunks', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/chunked_csv_export`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/chunked_csv_export/stream/csv-report`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual' });
     expect(response.status).toBe(200);    const text = await response.text();
     expect(text).toBe('id,name,value\\n1,Alice,42\\n2,Bob,7\\n');    expect(response.headers.get('content-type')).toBe('text/csv');  });
 
   it('stream_json_lines: Streams newline-delimited JSON payload in small chunks', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/stream_json_lines`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual' });
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/stream_json_lines/stream/json-lines`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual' });
     expect(response.status).toBe(200);    const text = await response.text();
     expect(text).toBe('{\"index\":0,\"payload\":\"alpha\"}\\n{\"index\":1,\"payload\":\"beta\"}\\n{\"index\":2,\"payload\":\"gamma\"}\\n');    expect(response.headers.get('content-type')).toBe('application/x-ndjson');  });
 

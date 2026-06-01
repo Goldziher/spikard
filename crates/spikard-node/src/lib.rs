@@ -932,6 +932,100 @@ impl JsApp {
     }
 }
 
+/// Builder for defining a route.
+#[derive(Clone)]
+#[napi(js_name = "RouteBuilder")]
+pub struct JsRouteBuilder {
+    inner: Arc<spikard::RouteBuilder>,
+}
+
+#[napi]
+impl JsRouteBuilder {
+    /// Assign an explicit handler name.
+    #[napi(js_name = "handlerName")]
+    pub fn handler_name(&self, name: String) -> JsRouteBuilder {
+        Self {
+            inner: Arc::new((*self.inner).clone().handler_name(name)),
+        }
+    }
+
+    /// Provide a raw JSON schema for the request body.
+    #[napi(js_name = "requestSchemaJson")]
+    pub fn request_schema_json(&self, schema: serde_json::Value) -> JsRouteBuilder {
+        Self {
+            inner: Arc::new((*self.inner).clone().request_schema_json(schema)),
+        }
+    }
+
+    /// Provide a raw JSON schema for the response body.
+    #[napi(js_name = "responseSchemaJson")]
+    pub fn response_schema_json(&self, schema: serde_json::Value) -> JsRouteBuilder {
+        Self {
+            inner: Arc::new((*self.inner).clone().response_schema_json(schema)),
+        }
+    }
+
+    /// Provide a raw JSON schema for request parameters.
+    #[napi(js_name = "paramsSchemaJson")]
+    pub fn params_schema_json(&self, schema: serde_json::Value) -> JsRouteBuilder {
+        Self {
+            inner: Arc::new((*self.inner).clone().params_schema_json(schema)),
+        }
+    }
+
+    /// Provide multipart file parameter configuration.
+    #[napi(js_name = "fileParamsJson")]
+    pub fn file_params_json(&self, schema: serde_json::Value) -> JsRouteBuilder {
+        Self {
+            inner: Arc::new((*self.inner).clone().file_params_json(schema)),
+        }
+    }
+
+    /// Attach a CORS configuration for this route.
+    #[napi]
+    pub fn cors(&self, cors: JsCorsConfig) -> JsRouteBuilder {
+        let cors_core: spikard::CorsConfig = cors.into();
+
+        Self {
+            inner: Arc::new((*self.inner).clone().cors(cors_core)),
+        }
+    }
+
+    /// Mark the route as synchronous.
+    #[napi]
+    pub fn sync(&self) -> JsRouteBuilder {
+        Self {
+            inner: Arc::new((*self.inner).clone().sync()),
+        }
+    }
+
+    /// Declare the dependency keys that must be resolved before this handler runs.
+    #[napi(js_name = "handlerDependencies")]
+    pub fn handler_dependencies(&self, dependencies: Vec<String>) -> JsRouteBuilder {
+        Self {
+            inner: Arc::new((*self.inner).clone().handler_dependencies(dependencies)),
+        }
+    }
+
+    /// Create a new builder for the provided HTTP method and path.
+    #[napi]
+    pub fn new(method: JsMethod, path: String) -> JsRouteBuilder {
+        Self {
+            inner: Arc::new(spikard::RouteBuilder::new(method.into(), path)),
+        }
+    }
+}
+
+#[napi]
+impl JsRouteBuilder {
+    #[napi(constructor)]
+    pub fn new_constructor(method: JsMethod, path: String) -> Self {
+        Self {
+            inner: std::sync::Arc::new(spikard::RouteBuilder::new(method.into(), path)),
+        }
+    }
+}
+
 /// JSON-RPC method metadata for routes that support JSON-RPC
 ///
 /// This struct captures the metadata needed to expose HTTP routes as JSON-RPC methods,

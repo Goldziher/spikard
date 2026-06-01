@@ -8,40 +8,45 @@ import { describe, expect, it } from 'vitest';
 
 
 describe('compression', () => {  it('compression_brotli_only: Tests Brotli compression when enabled and client supports it', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/compression_brotli_only`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/compression_brotli_only/compression/brotli`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual', headers: {
       "Accept-Encoding": "br",
     } });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ data: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", message: "Brotli compressed payload" });    expect(response.headers.get('vary')).toBe('Accept-Encoding');  });
 
   it('compression_gzip_applied: Serves a JSON payload compressed with gzip when the client advertises support.', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/compression_gzip_applied`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/compression_gzip_applied/compression/gzip`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual', headers: {
       "Accept-Encoding": "gzip",
     } });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ message: "Compressed payload", payload: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" });    expect(response.headers.get('vary')).toBe('Accept-Encoding');  });
 
   it('compression_min_size_threshold_exact_boundary: Tests compression respects exact minimum size boundary', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/compression_min_size_threshold_exact_boundary`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/compression_min_size_threshold_exact_boundary/compression/boundary`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual', headers: {
       "Accept-Encoding": "gzip",
     } });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ message: "Exact size payload that is exactly 100 bytes or more to test boundary" });  });
 
   it('compression_payload_below_min_size_is_not_compressed: Ensures responses smaller than the configured min_size are sent uncompressed even when the client sends Accept-Encoding.', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/compression_payload_below_min_size_is_not_compressed`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/compression_payload_below_min_size_is_not_compressed/compression/skip`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual', headers: {
       "Accept-Encoding": "gzip",
     } });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ message: "Small payload", payload: "tiny" });  });
 
   it('compression_quality_level_9: Tests compression with high quality level setting', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/compression_quality_level_9`;
-    const response = await fetch(mockUrl, { method: 'GET', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/compression_quality_level_9/compression/high_quality`;
+    const response = await fetch(url, { method: 'GET', redirect: 'manual', headers: {
       "Accept-Encoding": "gzip",
     } });
     expect(response.status).toBe(200);    const data = await response.json();

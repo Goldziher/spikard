@@ -196,9 +196,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RateLimitConfig dco_decode_box_autoadd_rate_limit_config(dynamic raw);
 
   @protected
-  Response dco_decode_box_autoadd_response(dynamic raw);
-
-  @protected
   ServerConfig dco_decode_box_autoadd_server_config(dynamic raw);
 
   @protected
@@ -556,9 +553,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RateLimitConfig sse_decode_box_autoadd_rate_limit_config(
     SseDeserializer deserializer,
   );
-
-  @protected
-  Response sse_decode_box_autoadd_response(SseDeserializer deserializer);
 
   @protected
   ServerConfig sse_decode_box_autoadd_server_config(
@@ -1017,9 +1011,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     RateLimitConfig self,
     SseSerializer serializer,
   );
-
-  @protected
-  void sse_encode_box_autoadd_response(Response self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_server_config(

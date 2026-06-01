@@ -8,8 +8,9 @@ import { describe, expect, it } from 'vitest';
 
 
 describe('grpc', () => {  it('grpc_call_with_metadata: Tests gRPC call with request metadata headers', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/grpc_call_with_metadata`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/grpc_call_with_metadata/api.Service/GetData`;
+    const response = await fetch(url, { method: 'POST', redirect: 'manual', headers: {
       "Content-Type": "application/grpc",
       "authorization": "Bearer token123",
       "te": "trailers",
@@ -19,8 +20,9 @@ describe('grpc', () => {  it('grpc_call_with_metadata: Tests gRPC call with requ
     expect(data).toEqual({ data: "result", id: "resource-1" });    expect(response.headers.get('content-type')).toBe('application/grpc');    expect(response.headers.get('grpc-status')).toBe('0');    expect(response.headers.get('x-response-metadata')).toBe('processed');  });
 
   it('grpc_config_compression_enabled: Tests gRPC compression is enabled for responses', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/grpc_config_compression_enabled`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/grpc_config_compression_enabled/api.Service/GetCompressedData`;
+    const response = await fetch(url, { method: 'POST', redirect: 'manual', headers: {
       "Content-Type": "application/grpc",
       "grpc-encoding": "gzip",
       "te": "trailers",
@@ -28,16 +30,18 @@ describe('grpc', () => {  it('grpc_call_with_metadata: Tests gRPC call with requ
     expect(response.status).toBe(200);    expect(response.headers.get('content-type')).toBe('application/grpc');    expect(response.headers.get('grpc-encoding')).toBe('gzip');    expect(response.headers.get('grpc-status')).toBe('0');  });
 
   it('grpc_config_keepalive_settings: Tests gRPC keepalive ping configuration', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/grpc_config_keepalive_settings`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/grpc_config_keepalive_settings/api.Service/LongRunning`;
+    const response = await fetch(url, { method: 'POST', redirect: 'manual', headers: {
       "Content-Type": "application/grpc",
       "te": "trailers",
     }, body: JSON.stringify({ task: "background_job" }) });
     expect(response.status).toBe(200);    expect(response.headers.get('content-type')).toBe('application/grpc');    expect(response.headers.get('grpc-status')).toBe('0');  });
 
   it('grpc_config_max_message_size: Tests gRPC server respects maximum message size configuration', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/grpc_config_max_message_size`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/grpc_config_max_message_size/api.Service/SendLargeMessage`;
+    const response = await fetch(url, { method: 'POST', redirect: 'manual', headers: {
       "Content-Type": "application/grpc",
       "te": "trailers",
     }, body: JSON.stringify({ data: "large_payload_data" }) });
@@ -45,8 +49,9 @@ describe('grpc', () => {  it('grpc_call_with_metadata: Tests gRPC call with requ
     expect(data).toEqual({ received_size: 19 });    expect(response.headers.get('content-type')).toBe('application/grpc');    expect(response.headers.get('grpc-status')).toBe('0');  });
 
   it('grpc_config_request_timeout: Tests gRPC request timeout configuration', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/grpc_config_request_timeout`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/grpc_config_request_timeout/api.Service/TimedOperation`;
+    const response = await fetch(url, { method: 'POST', redirect: 'manual', headers: {
       "Content-Type": "application/grpc",
       "grpc-timeout": "5000m",
       "te": "trailers",
@@ -54,8 +59,9 @@ describe('grpc', () => {  it('grpc_call_with_metadata: Tests gRPC call with requ
     expect(response.status).toBe(200);    expect(response.headers.get('content-type')).toBe('application/grpc');    expect(response.headers.get('grpc-status')).toBe('0');  });
 
   it('grpc_deadline_exceeded: Tests gRPC DEADLINE_EXCEEDED error when timeout occurs', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/grpc_deadline_exceeded`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/grpc_deadline_exceeded/api.Service/SlowOperation`;
+    const response = await fetch(url, { method: 'POST', redirect: 'manual', headers: {
       "Content-Type": "application/grpc",
       "grpc-timeout": "100m",
       "te": "trailers",
@@ -64,8 +70,9 @@ describe('grpc', () => {  it('grpc_call_with_metadata: Tests gRPC call with requ
     expect(data).toEqual({ code: "DEADLINE_EXCEEDED", message: "Operation exceeded deadline" });    expect(response.headers.get('content-type')).toBe('application/grpc');    expect(response.headers.get('grpc-status')).toBe('4');  });
 
   it('grpc_error_invalid_argument: Tests gRPC INVALID_ARGUMENT error status response', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/grpc_error_invalid_argument`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/grpc_error_invalid_argument/api.Service/ValidateInput`;
+    const response = await fetch(url, { method: 'POST', redirect: 'manual', headers: {
       "Content-Type": "application/grpc",
       "te": "trailers",
     }, body: JSON.stringify({ value: -100 }) });
@@ -73,8 +80,9 @@ describe('grpc', () => {  it('grpc_call_with_metadata: Tests gRPC call with requ
     expect(data).toEqual({ code: "INVALID_ARGUMENT", message: "Value must be non-negative" });    expect(response.headers.get('content-type')).toBe('application/grpc');    expect(response.headers.get('grpc-status')).toBe('3');  });
 
   it('grpc_error_not_found: Tests gRPC NOT_FOUND error status response', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/grpc_error_not_found`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/grpc_error_not_found/api.Service/GetItem`;
+    const response = await fetch(url, { method: 'POST', redirect: 'manual', headers: {
       "Content-Type": "application/grpc",
       "te": "trailers",
     }, body: JSON.stringify({ item_id: "nonexistent" }) });
@@ -82,8 +90,9 @@ describe('grpc', () => {  it('grpc_call_with_metadata: Tests gRPC call with requ
     expect(data).toEqual({ code: "NOT_FOUND", message: "Item not found" });    expect(response.headers.get('content-type')).toBe('application/grpc');    expect(response.headers.get('grpc-status')).toBe('5');  });
 
   it('grpc_request_method_name_field: Tests gRPC request includes method_name field', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/grpc_request_method_name_field`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/grpc_request_method_name_field/api.Service/GetData`;
+    const response = await fetch(url, { method: 'POST', redirect: 'manual', headers: {
       "Content-Type": "application/grpc",
       "te": "trailers",
     }, body: JSON.stringify({ id: "resource-1" }) });
@@ -91,8 +100,9 @@ describe('grpc', () => {  it('grpc_call_with_metadata: Tests gRPC call with requ
     expect(data).toEqual({ data: "result", method: "GetData" });    expect(response.headers.get('content-type')).toBe('application/grpc');    expect(response.headers.get('grpc-status')).toBe('0');  });
 
   it('grpc_request_service_name_field: Tests gRPC request includes service_name field', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/grpc_request_service_name_field`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/grpc_request_service_name_field/helloworld.Greeter/SayHello`;
+    const response = await fetch(url, { method: 'POST', redirect: 'manual', headers: {
       "Content-Type": "application/grpc",
       "te": "trailers",
     }, body: JSON.stringify({ name: "World" }) });
@@ -100,8 +110,9 @@ describe('grpc', () => {  it('grpc_call_with_metadata: Tests gRPC call with requ
     expect(data).toEqual({ message: "Hello World", service: "helloworld.Greeter" });    expect(response.headers.get('content-type')).toBe('application/grpc');    expect(response.headers.get('grpc-status')).toBe('0');  });
 
   it('grpc_request_with_custom_metadata: Tests gRPC request includes custom metadata in trailers', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/grpc_request_with_custom_metadata`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/grpc_request_with_custom_metadata/api.Service/ProcessWithMetadata`;
+    const response = await fetch(url, { method: 'POST', redirect: 'manual', headers: {
       "Content-Type": "application/grpc",
       "te": "trailers",
       "x-request-id": "req-12345",
@@ -112,8 +123,9 @@ describe('grpc', () => {  it('grpc_call_with_metadata: Tests gRPC call with requ
     expect(data).toEqual({ processed: true, request_id: "req-12345" });    expect(response.headers.get('content-type')).toBe('application/grpc');    expect(response.headers.get('grpc-status')).toBe('0');    expect(response.headers.get('x-response-trace-id')).toBe('trace-abc123');  });
 
   it('grpc_response_with_metadata_trailers: Tests gRPC response includes metadata in trailers', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/grpc_response_with_metadata_trailers`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/grpc_response_with_metadata_trailers/api.Service/MetadataResponse`;
+    const response = await fetch(url, { method: 'POST', redirect: 'manual', headers: {
       "Content-Type": "application/grpc",
       "te": "trailers",
     }, body: JSON.stringify({ request: "test" }) });
@@ -121,8 +133,9 @@ describe('grpc', () => {  it('grpc_call_with_metadata: Tests gRPC call with requ
     expect(data).toEqual({ result: "success" });    expect(response.headers.get('content-type')).toBe('application/grpc');    expect(response.headers.get('grpc-status')).toBe('0');    expect(response.headers.get('x-metadata-key')).toBe('metadata-value');  });
 
   it('grpc_unary_call_success: Tests unary gRPC call with successful response', async () => {
-    const mockUrl = `${process.env.MOCK_SERVER_URL}/fixtures/grpc_unary_call_success`;
-    const response = await fetch(mockUrl, { method: 'POST', redirect: 'manual', headers: {
+    const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
+    const url = `${sutUrl}/fixtures/grpc_unary_call_success/helloworld.Greeter/SayHello`;
+    const response = await fetch(url, { method: 'POST', redirect: 'manual', headers: {
       "Content-Type": "application/grpc",
       "te": "trailers",
     }, body: JSON.stringify({ name: "World" }) });
