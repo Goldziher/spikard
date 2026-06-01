@@ -228,6 +228,19 @@ pub fn add_cors_headers(response: &mut Response<Body>, origin: &str, cors_config
         headers.insert("access-control-allow-origin", origin_value);
     }
 
+    // RFC 6454 §7.2: when the server echoes the request Origin, it MUST send Vary: Origin
+    // so that caches know the response varies by origin.
+    headers.insert("vary", HeaderValue::from_static("Origin"));
+
+    // Include allowed methods in simple (non-preflight) responses so clients know
+    // which methods are permitted without an extra preflight round-trip.
+    if !cors_config.allowed_methods.is_empty() {
+        let methods = cors_config.allowed_methods.join(",");
+        if let Ok(methods_value) = HeaderValue::from_str(&methods) {
+            headers.insert("access-control-allow-methods", methods_value);
+        }
+    }
+
     if let Some(ref expose_headers) = cors_config.expose_headers {
         let expose = expose_headers.join(", ");
         if let Ok(expose_value) = HeaderValue::from_str(&expose) {
@@ -1022,5 +1035,149 @@ mod tests {
         assert!(!is_origin_allowed("https://example.com", &config.allowed_origins));
 
         assert!(is_origin_allowed("*.example.com", &config.allowed_origins));
+    }
+
+    // -----------------------------------------------------------------------
+    // Fixture-mirroring tests — one per failing e2e fixture
+    // -----------------------------------------------------------------------
+
+    /// Fixture 08_cors_max_age: OPTIONS preflight with max_age=3600.
+    /// Expects 204 with Access-Control-Max-Age: 3600, correct origin/methods/headers echo.
+    #[test]
+    fn test_fixture_08_cors_max_age() {
+        let config = CorsConfig {
+            allowed_origins: vec!["https://example.com".to_string()],
+            allowed_methods: vec!["POST".to_string()],
+            allowed_headers: vec!["Content-Type".to_string()],
+            expose_headers: None,
+            max_age: Some(3600),
+            allow_credentials: None,
+            ..Default::default()
+        };
+
+        let mut headers = HeaderMap::new();
+        headers.insert("origin", HeaderValue::from_static("https://example.com"));
+        headers.insert("access-control-request-method", HeaderValue::from_static("POST"));
+        headers.insert(
+            "access-control-request-headers",
+            HeaderValue::from_static("Content-Type"),
+        );
+
+        let result = handle_preflight(&headers, &config);
+        assert!(result.is_ok(), "preflight should succeed");
+
+        let response = result.unwrap();
+        assert_eq!(response.status(), StatusCode::NO_CONTENT, "status should be 204");
+
+        let resp_headers = response.headers();
+        assert_eq!(
+            resp_headers.get("access-control-allow-origin").unwrap(),
+            "https://example.com",
+            "Access-Control-Allow-Origin should echo request origin"
+        );
+        assert_eq!(
+            resp_headers.get("access-control-allow-methods").unwrap(),
+            "POST",
+            "Access-Control-Allow-Methods should be POST"
+        );
+        assert_eq!(
+            resp_headers.get("access-control-allow-headers").unwrap(),
+            "Content-Type",
+            "Access-Control-Allow-Headers should be Content-Type"
+        );
+        assert_eq!(
+            resp_headers.get("access-control-max-age").unwrap(),
+            "3600",
+            "Access-Control-Max-Age should be 3600"
+        );
+    }
+
+    /// Fixture 10_cors_origin_null: GET with Origin: null must be rejected with 403
+    /// when CORS middleware is active with a specific-origin allowlist.
+    ///
+    /// Note: in the e2e scenario the fixture handler itself returns the expected 403
+    /// response body. This test verifies the middleware rejects "null" origin when
+    /// CORS config is wired with an explicit origin allowlist.
+    #[test]
+    fn test_fixture_10_cors_origin_null_is_rejected_by_middleware() {
+        let config = CorsConfig {
+            allowed_origins: vec!["https://example.com".to_string()],
+            allowed_methods: vec!["GET".to_string()],
+            allowed_headers: vec![],
+            expose_headers: None,
+            max_age: None,
+            allow_credentials: None,
+            ..Default::default()
+        };
+
+        let mut headers = HeaderMap::new();
+        headers.insert("origin", HeaderValue::from_static("null"));
+
+        // "null" is not in the allowlist, so validate_cors_request must return Err(403)
+        let result = validate_cors_request(&headers, &config);
+        assert!(result.is_err(), "null origin should be rejected by the middleware");
+
+        let response = *result.unwrap_err();
+        assert_eq!(response.status(), StatusCode::FORBIDDEN, "status must be 403");
+    }
+
+    /// Fixture cors_safelisted_headers_without_preflight: simple POST request with
+    /// safe-listed headers — response must include Vary: Origin.
+    #[test]
+    fn test_fixture_cors_safelisted_headers_without_preflight() {
+        let config = CorsConfig {
+            allowed_origins: vec!["*".to_string()],
+            allowed_methods: vec!["POST".to_string()],
+            allowed_headers: vec![],
+            expose_headers: None,
+            max_age: None,
+            allow_credentials: None,
+            ..Default::default()
+        };
+
+        let mut response = axum::http::Response::new(Body::from(r#"{"message":"Success"}"#));
+        let origin = "https://app.example.com";
+        add_cors_headers(&mut response, origin, &config);
+
+        let resp_headers = response.headers();
+        assert_eq!(
+            resp_headers.get("access-control-allow-origin").unwrap(),
+            origin,
+            "Access-Control-Allow-Origin should echo request origin"
+        );
+        assert_eq!(
+            resp_headers.get("vary").and_then(|v| v.to_str().ok()),
+            Some("Origin"),
+            "Vary: Origin must be set on simple CORS responses"
+        );
+    }
+
+    /// Fixture cors_restricted_methods_post_get_only: GET response must include
+    /// Access-Control-Allow-Methods header listing the route's allowed methods.
+    #[test]
+    fn test_fixture_cors_restricted_methods_post_get_only() {
+        let config = CorsConfig {
+            allowed_origins: vec!["https://example.com".to_string()],
+            allowed_methods: vec!["GET".to_string(), "POST".to_string()],
+            allowed_headers: vec![],
+            expose_headers: None,
+            max_age: None,
+            allow_credentials: None,
+            ..Default::default()
+        };
+
+        let mut response = axum::http::Response::new(Body::from(r#"{"message":"Success"}"#));
+        add_cors_headers(&mut response, "https://example.com", &config);
+
+        let resp_headers = response.headers();
+        let methods_header = resp_headers
+            .get("access-control-allow-methods")
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or("");
+        // Fixture expects "GET,POST" (comma, no space)
+        assert_eq!(
+            methods_header, "GET,POST",
+            "Access-Control-Allow-Methods should be GET,POST (no spaces)"
+        );
     }
 }

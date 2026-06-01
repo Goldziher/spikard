@@ -3,13 +3,128 @@
 use crate::handler_trait::{Handler, HandlerResult, RequestData};
 use axum::body::Body;
 use futures::FutureExt;
-use serde_json::Value;
+use serde_json::{Map, Value};
 use spikard_core::errors::StructuredError;
 use spikard_core::{ParameterValidator, ProblemDetails, SchemaValidator};
 use std::future::Future;
 use std::panic::AssertUnwindSafe;
 use std::pin::Pin;
 use std::sync::Arc;
+
+/// Default content type for file parts that declare none.
+const DEFAULT_FILE_CONTENT_TYPE: &str = "application/octet-stream";
+
+/// Extract the `boundary` parameter value from a `multipart/form-data` Content-Type string.
+///
+/// Returns `None` when the header is absent or malformed.
+fn extract_boundary(content_type: &str) -> Option<String> {
+    // Scan for `boundary=` (case-insensitive) and return the token following it.
+    let bytes = content_type.as_bytes();
+    let needle = b"boundary=";
+    let mut i = 0usize;
+    while i + needle.len() <= bytes.len() {
+        if bytes[i..i + needle.len()].eq_ignore_ascii_case(needle) {
+            let rest = &bytes[i + needle.len()..];
+            // Strip optional surrounding quotes.
+            let (start, end_fn): (usize, fn(&u8) -> bool) = if rest.first() == Some(&b'"') {
+                (1, |b: &u8| *b == b'"')
+            } else {
+                (0, |b: &u8| *b == b';' || *b == b' ' || *b == b'\t')
+            };
+            let end = rest[start..].iter().position(end_fn).unwrap_or(rest.len() - start) + start;
+            let boundary = std::str::from_utf8(&rest[start..end]).ok()?.trim().to_string();
+            if boundary.is_empty() {
+                return None;
+            }
+            return Some(boundary);
+        }
+        i += 1;
+    }
+    None
+}
+
+/// Parse a `multipart/form-data` body into a `serde_json::Value::Object`.
+///
+/// Field mapping:
+/// - Text fields (no `filename` in Content-Disposition): `Value::String(text)`
+/// - File fields: `Value::Object { filename, size, content, content_type }`
+///   where `content` is the raw bytes decoded as UTF-8 if valid, otherwise
+///   base64-encoded.
+///
+/// # Errors
+/// Returns a `(StatusCode::BAD_REQUEST, message)` tuple when the multipart
+/// stream is malformed or the boundary is missing.
+async fn parse_multipart_body(
+    raw_bytes: &bytes::Bytes,
+    content_type: &str,
+) -> Result<Value, (axum::http::StatusCode, String)> {
+    let boundary = extract_boundary(content_type).ok_or_else(|| {
+        (
+            axum::http::StatusCode::BAD_REQUEST,
+            "multipart/form-data missing boundary parameter".to_string(),
+        )
+    })?;
+
+    // Feed the already-buffered bytes into multer as a single-chunk stream.
+    let stream = futures::stream::once(async { Ok::<_, std::convert::Infallible>(raw_bytes.clone()) });
+    let mut multipart = multer::Multipart::new(stream, boundary);
+
+    let mut object: Map<String, Value> = Map::new();
+
+    loop {
+        match multipart.next_field().await {
+            Ok(Some(field)) => {
+                let name = field.name().unwrap_or("").to_string();
+                let filename = field.file_name().map(str::to_string);
+                let part_content_type = field
+                    .content_type()
+                    .map(|m| m.as_ref().to_string())
+                    .unwrap_or_else(|| DEFAULT_FILE_CONTENT_TYPE.to_string());
+
+                let data = field.bytes().await.map_err(|e| {
+                    (
+                        axum::http::StatusCode::BAD_REQUEST,
+                        format!("Invalid multipart body: {e}"),
+                    )
+                })?;
+
+                let value = if let Some(fname) = filename {
+                    let size = data.len();
+                    let content = match std::str::from_utf8(&data) {
+                        Ok(text) => text.to_string(),
+                        Err(_) => {
+                            use base64::Engine as _;
+                            base64::engine::general_purpose::STANDARD.encode(&data)
+                        }
+                    };
+                    Value::Object({
+                        let mut file_obj = Map::new();
+                        file_obj.insert("filename".to_string(), Value::String(fname));
+                        file_obj.insert("size".to_string(), Value::Number(size.into()));
+                        file_obj.insert("content".to_string(), Value::String(content));
+                        file_obj.insert("content_type".to_string(), Value::String(part_content_type));
+                        file_obj
+                    })
+                } else {
+                    // Text field: decode as UTF-8 (form data is always text here).
+                    let text = String::from_utf8_lossy(&data).into_owned();
+                    Value::String(text)
+                };
+
+                object.insert(name, value);
+            }
+            Ok(None) => break,
+            Err(e) => {
+                return Err((
+                    axum::http::StatusCode::BAD_REQUEST,
+                    format!("Invalid multipart body: {e}"),
+                ));
+            }
+        }
+    }
+
+    Ok(Value::Object(object))
+}
 
 /// Wrapper that runs request/parameter validation before calling the user handler.
 pub(crate) struct ValidatingHandler {
@@ -74,7 +189,9 @@ impl Handler for ValidatingHandler {
                     && let Some(raw_bytes) = request_data.raw_body.as_ref()
                 {
                     let content_type = request_data.headers.get("content-type").map(String::as_str);
-                    let parsed = if content_type.is_some_and(crate::middleware::validation::is_form_urlencoded_str) {
+                    let parsed = if content_type.is_some_and(crate::middleware::validation::is_multipart_str) {
+                        parse_multipart_body(raw_bytes, content_type.unwrap_or("")).await?
+                    } else if content_type.is_some_and(crate::middleware::validation::is_form_urlencoded_str) {
                         serde_qs::from_bytes::<Value>(raw_bytes)
                             .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid form body: {}", e)))?
                     } else {
@@ -1611,6 +1728,157 @@ mod tests {
         for handle in join_handles {
             handle.await.expect("Concurrent test should complete");
         }
+    }
+
+    /// Test for multipart body parsing - happy path with text and file fields
+    #[tokio::test]
+    async fn test_multipart_body_parsed_with_validator() {
+        let schema = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "title": {"type": "string"},
+                "doc": {
+                    "type": "object",
+                    "properties": {
+                        "filename": {"type": "string"},
+                        "size": {"type": "integer"},
+                        "content": {"type": "string"},
+                        "content_type": {"type": "string"}
+                    }
+                }
+            },
+            "required": ["title", "doc"]
+        });
+        let validator = Arc::new(SchemaValidator::new(schema).unwrap());
+
+        let route = spikard_core::Route {
+            method: spikard_core::http::Method::Post,
+            path: "/upload".to_string(),
+            handler_name: "upload_handler".to_string(),
+            request_validator: Some(validator),
+            response_validator: None,
+            parameter_validator: None,
+            file_params: None,
+            is_async: true,
+            cors: None,
+            expects_json_body: false,
+            #[cfg(feature = "di")]
+            handler_dependencies: vec![],
+            jsonrpc_method: None,
+        };
+
+        let boundary = "TestBoundary1234";
+        let body = format!(
+            "--{boundary}\r\nContent-Disposition: form-data; name=\"title\"\r\n\r\nhello\r\n\
+             --{boundary}\r\nContent-Disposition: form-data; name=\"doc\"; filename=\"doc.txt\"\r\nContent-Type: text/plain\r\n\r\nhi there\r\n\
+             --{boundary}--\r\n"
+        );
+
+        let mut headers = HashMap::new();
+        headers.insert(
+            "content-type".to_string(),
+            format!("multipart/form-data; boundary={boundary}"),
+        );
+
+        let request_data = RequestData {
+            path_params: Arc::new(HashMap::new()),
+            query_params: Arc::new(serde_json::json!({})),
+            validated_params: None,
+            raw_query_params: Arc::new(HashMap::new()),
+            body: Arc::new(Value::Null),
+            raw_body: Some(bytes::Bytes::from(body.into_bytes())),
+            headers: Arc::new(headers),
+            cookies: Arc::new(HashMap::new()),
+            method: "POST".to_string(),
+            path: "/upload".to_string(),
+            #[cfg(feature = "di")]
+            dependencies: None,
+        };
+
+        let inner = Arc::new(SuccessEchoHandler);
+        let validator_handler = ValidatingHandler::new(inner, &route);
+
+        let request = axum::http::Request::builder()
+            .method("POST")
+            .uri("/upload")
+            .body(Body::empty())
+            .unwrap();
+
+        let result = validator_handler.call(request, request_data).await;
+        assert!(
+            result.is_ok(),
+            "multipart upload should pass validation: {:?}",
+            result.err()
+        );
+
+        let response = result.unwrap();
+        assert_eq!(response.status(), StatusCode::OK);
+        let body_bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        let parsed: Value = serde_json::from_slice(&body_bytes).unwrap();
+
+        assert_eq!(parsed["title"], "hello", "text field should be bare string");
+        assert_eq!(parsed["doc"]["filename"], "doc.txt");
+        assert_eq!(parsed["doc"]["content"], "hi there");
+        assert_eq!(parsed["doc"]["content_type"], "text/plain");
+        assert_eq!(parsed["doc"]["size"], 8);
+    }
+
+    /// Test for malformed multipart body - returns 400
+    #[tokio::test]
+    async fn test_malformed_multipart_returns_400() {
+        let schema = serde_json::json!({"type": "object"});
+        let validator = Arc::new(SchemaValidator::new(schema).unwrap());
+
+        let route = spikard_core::Route {
+            method: spikard_core::http::Method::Post,
+            path: "/upload".to_string(),
+            handler_name: "upload_handler".to_string(),
+            request_validator: Some(validator),
+            response_validator: None,
+            parameter_validator: None,
+            file_params: None,
+            is_async: true,
+            cors: None,
+            expects_json_body: false,
+            #[cfg(feature = "di")]
+            handler_dependencies: vec![],
+            jsonrpc_method: None,
+        };
+
+        let mut headers = HashMap::new();
+        headers.insert(
+            "content-type".to_string(),
+            "multipart/form-data; boundary=boundary123".to_string(),
+        );
+
+        let request_data = RequestData {
+            path_params: Arc::new(HashMap::new()),
+            query_params: Arc::new(serde_json::json!({})),
+            validated_params: None,
+            raw_query_params: Arc::new(HashMap::new()),
+            body: Arc::new(Value::Null),
+            raw_body: Some(bytes::Bytes::from(b"this is not valid multipart data".to_vec())),
+            headers: Arc::new(headers),
+            cookies: Arc::new(HashMap::new()),
+            method: "POST".to_string(),
+            path: "/upload".to_string(),
+            #[cfg(feature = "di")]
+            dependencies: None,
+        };
+
+        let inner = Arc::new(SuccessEchoHandler);
+        let validator_handler = ValidatingHandler::new(inner, &route);
+
+        let request = axum::http::Request::builder()
+            .method("POST")
+            .uri("/upload")
+            .body(Body::empty())
+            .unwrap();
+
+        let result = validator_handler.call(request, request_data).await;
+        assert!(result.is_err(), "malformed multipart should fail");
+        let (status, _body) = result.unwrap_err();
+        assert_eq!(status, StatusCode::BAD_REQUEST);
     }
 
     /// Test 30: Problem details status code from validation error

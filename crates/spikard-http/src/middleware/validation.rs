@@ -105,6 +105,15 @@ pub fn is_form_urlencoded_str(content_type: &str) -> bool {
     is_form_urlencoded_token(token)
 }
 
+/// Fast classification for already-extracted header strings.
+///
+/// Returns true for `multipart/form-data`. Used by request body validation to
+/// dispatch multipart payloads through `multer` before JSON-schema validation.
+pub fn is_multipart_str(content_type: &str) -> bool {
+    let token = token_before_semicolon(content_type.as_bytes());
+    is_multipart_form_data_token(token)
+}
+
 /// Classify Content-Type header values after validation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum ContentTypeKind {
@@ -654,6 +663,38 @@ mod tests {
             result.unwrap_err().status(),
             StatusCode::UNSUPPORTED_MEDIA_TYPE,
             "Should return 415 Unsupported Media Type"
+        );
+    }
+
+    #[test]
+    fn test_is_multipart_str_plain() {
+        assert!(
+            is_multipart_str("multipart/form-data"),
+            "should match bare multipart/form-data"
+        );
+    }
+
+    #[test]
+    fn test_is_multipart_str_with_boundary() {
+        assert!(
+            is_multipart_str("multipart/form-data; boundary=----WebKitFormBoundary"),
+            "should match multipart/form-data with boundary"
+        );
+    }
+
+    #[test]
+    fn test_is_multipart_str_case_insensitive() {
+        assert!(
+            is_multipart_str("Multipart/Form-Data; boundary=abc"),
+            "should match case-insensitively"
+        );
+    }
+
+    #[test]
+    fn test_is_multipart_str_rejects_json() {
+        assert!(
+            !is_multipart_str("application/json"),
+            "should not match application/json"
         );
     }
 

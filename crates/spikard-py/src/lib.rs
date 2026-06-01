@@ -1422,8 +1422,8 @@ impl RouteBuilder {
 
     #[pyo3(signature = (schema))]
     pub fn request_schema_json(&self, schema: String) -> pyo3::PyResult<RouteBuilder> {
-        let value: serde_json::Value = serde_json::from_str(&schema)
-            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+        let value: serde_json::Value =
+            serde_json::from_str(&schema).map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
         Ok(Self {
             inner: Arc::new((*self.inner).clone().request_schema_json(value)),
         })
@@ -1431,8 +1431,8 @@ impl RouteBuilder {
 
     #[pyo3(signature = (schema))]
     pub fn response_schema_json(&self, schema: String) -> pyo3::PyResult<RouteBuilder> {
-        let value: serde_json::Value = serde_json::from_str(&schema)
-            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+        let value: serde_json::Value =
+            serde_json::from_str(&schema).map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
         Ok(Self {
             inner: Arc::new((*self.inner).clone().response_schema_json(value)),
         })
@@ -1440,8 +1440,8 @@ impl RouteBuilder {
 
     #[pyo3(signature = (schema))]
     pub fn params_schema_json(&self, schema: String) -> pyo3::PyResult<RouteBuilder> {
-        let value: serde_json::Value = serde_json::from_str(&schema)
-            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+        let value: serde_json::Value =
+            serde_json::from_str(&schema).map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
         Ok(Self {
             inner: Arc::new((*self.inner).clone().params_schema_json(value)),
         })
@@ -1449,8 +1449,8 @@ impl RouteBuilder {
 
     #[pyo3(signature = (schema))]
     pub fn file_params_json(&self, schema: String) -> pyo3::PyResult<RouteBuilder> {
-        let value: serde_json::Value = serde_json::from_str(&schema)
-            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
+        let value: serde_json::Value =
+            serde_json::from_str(&schema).map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))?;
         Ok(Self {
             inner: Arc::new((*self.inner).clone().file_params_json(value)),
         })

@@ -14,11 +14,11 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 
+use axum::Router as AxumRouter;
 pub use axum::body::Body;
 pub use axum::http::Request;
 use axum::http::StatusCode;
 use axum::routing::get as axum_get;
-use axum::Router as AxumRouter;
 use schemars::JsonSchema;
 use serde::de::DeserializeOwned;
 use serde_json::Value;
