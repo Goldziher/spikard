@@ -619,6 +619,7 @@ namespace Spikard
     {
         // Tests PATCH request with partial object update
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Patch, $"{baseUrl}/fixtures/patch_partial_update_2/items/{id}");

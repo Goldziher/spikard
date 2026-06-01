@@ -43,6 +43,7 @@ namespace Spikard
     {
         // Tests standard 200 OK response for successful GET request
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var code = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/200_ok_success/status-test/{code}");
@@ -90,6 +91,7 @@ namespace Spikard
     {
         // Tests 204 No Content response for successful DELETE
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var code = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Delete, $"{baseUrl}/fixtures/204_no_content_success_with_no_body/status-test/{code}");
@@ -159,6 +161,7 @@ namespace Spikard
     {
         // Tests 304 Not Modified for cached resources
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var code = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/304_not_modified_cached_content_valid/status-test/{code}");
@@ -204,6 +207,7 @@ namespace Spikard
     {
         // Tests 404 Not Found for non-existent resource
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var code = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/404_not_found_resource_not_found/status-test/{code}");

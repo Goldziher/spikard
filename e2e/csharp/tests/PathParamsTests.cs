@@ -27,6 +27,7 @@ namespace Spikard
     {
         // Path parameter with valid UUID v3 should be accepted
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/20_uuid_v3_path_param_success/items/{id}");
@@ -42,6 +43,7 @@ namespace Spikard
     {
         // Path parameter with valid UUID v5 should be accepted
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/21_uuid_v5_path_param_success/items/{id}");
@@ -57,6 +59,7 @@ namespace Spikard
     {
         // Path parameter with valid ISO date format should be accepted
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var date = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/24_date_format_path_param_success/events/{date}");
@@ -72,6 +75,7 @@ namespace Spikard
     {
         // Path parameter with invalid date format should fail validation
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var date = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/25_date_format_invalid_failure/events/{date}");
@@ -87,6 +91,7 @@ namespace Spikard
     {
         // Path parameter with valid ISO 8601 datetime should be accepted
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var timestamp = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/27_datetime_format_path_param_success/bookings/{timestamp}");
@@ -102,6 +107,7 @@ namespace Spikard
     {
         // Path parameter with valid ISO 8601 duration should be accepted
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var duration = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/28_duration_format_path_param_success/delays/{duration}");
@@ -117,6 +123,7 @@ namespace Spikard
     {
         // Path parameter with decimal/money value should be accepted
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var amount = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/29_decimal_path_param_success/prices/{amount}");
@@ -132,6 +139,7 @@ namespace Spikard
     {
         // Path parameter with string meeting minLength constraint should succeed
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var username = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/30_string_minlength_path_success/users/{username}");
@@ -147,6 +155,7 @@ namespace Spikard
     {
         // Path parameter with string below minLength constraint should fail
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var username = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/31_string_minlength_path_failure/users/{username}");
@@ -162,6 +171,7 @@ namespace Spikard
     {
         // Path parameter with string exceeding maxLength constraint should fail
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var username = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/32_string_maxlength_path_failure/users/{username}");
@@ -177,6 +187,8 @@ namespace Spikard
     {
         // Path parameter matching regex pattern should succeed
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var owner = "";
+        var repo = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/33_string_pattern_path_success/repos/{owner}/{repo}");
@@ -192,6 +204,7 @@ namespace Spikard
     {
         // Path parameter not matching regex pattern should fail
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var owner = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/34_string_pattern_path_failure/repos/{owner}");
@@ -207,6 +220,7 @@ namespace Spikard
     {
         // Path parameter with negative integer should be parsed correctly
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var value = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/35_negative_integer_path_param/offset/{value}");
@@ -222,6 +236,7 @@ namespace Spikard
     {
         // Tests boolean path parameter with '1' converts to true
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var item_id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/boolean_path_parameter_numeric_1/path/bool/{item_id}");
@@ -237,6 +252,7 @@ namespace Spikard
     {
         // Tests boolean path parameter with 'True' string value
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var item_id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/boolean_path_parameter_true/path/bool/{item_id}");
@@ -252,6 +268,7 @@ namespace Spikard
     {
         // Tests date path parameter with ISO format date
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var date_param = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/date_path_parameter_success/date/{date_param}");
@@ -267,6 +284,7 @@ namespace Spikard
     {
         // Tests enum path parameter with invalid enum value returns 422
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var model_name = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/enum_path_parameter_invalid_value/models/{model_name}");
@@ -282,6 +300,7 @@ namespace Spikard
     {
         // Tests enum path parameter with valid enum value
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var model_name = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/enum_path_parameter_success/models/{model_name}");
@@ -297,6 +316,7 @@ namespace Spikard
     {
         // Tests float path parameter with valid value
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var item_id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/float_path_parameter_success/path/float/{item_id}");
@@ -312,6 +332,7 @@ namespace Spikard
     {
         // Tests integer path parameter with non-numeric string returns 422
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var item_id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/integer_path_parameter_invalid_string/path/int/{item_id}");
@@ -327,6 +348,7 @@ namespace Spikard
     {
         // Tests integer path parameter with valid value
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var item_id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/integer_path_parameter_success/path/int/{item_id}");
@@ -342,6 +364,7 @@ namespace Spikard
     {
         // Tests integer path parameter with both lt and gt validation (range check)
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var item_id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/integer_path_parameter_with_combined_lt_and_gt_constraints_success/path/param-lt-gt/{item_id}");
@@ -357,6 +380,7 @@ namespace Spikard
     {
         // Tests integer path parameter with ge (greater than or equal) validation at boundary
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var item_id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/integer_path_parameter_with_ge_constraint_success/path/param-ge/{item_id}");
@@ -372,6 +396,7 @@ namespace Spikard
     {
         // Tests integer path parameter with gt validation fails when value too small
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var item_id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/integer_path_parameter_with_gt_constraint_failure/path/param-gt/{item_id}");
@@ -387,6 +412,7 @@ namespace Spikard
     {
         // Tests integer path parameter with gt (greater than) validation succeeds
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var item_id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/integer_path_parameter_with_gt_constraint_success/path/param-gt/{item_id}");
@@ -402,6 +428,7 @@ namespace Spikard
     {
         // Tests integer path parameter with le (less than or equal) validation at boundary
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var item_id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/integer_path_parameter_with_le_constraint_success/path/param-le/{item_id}");
@@ -417,6 +444,7 @@ namespace Spikard
     {
         // Tests integer path parameter with lt (less than) validation
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var item_id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/integer_path_parameter_with_lt_constraint_success/path/param-lt/{item_id}");
@@ -432,6 +460,10 @@ namespace Spikard
     {
         // Tests multiple path parameters in single route
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var version = "";
+        var service_id = "";
+        var user_id = "";
+        var order_id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/multiple_path_parameters_success/{version}/{service_id}/{user_id}/{order_id}");
@@ -447,6 +479,7 @@ namespace Spikard
     {
         // Tests that :uuid type syntax auto-generates validation that rejects invalid UUIDs
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var id:uuid = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/path_parameter_type_syntax_invalid_uuid/type-syntax/items/{id:uuid}");
@@ -462,6 +495,7 @@ namespace Spikard
     {
         // Tests that explicit parameter schema merges with auto-generated type syntax schema
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var count:int = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/path_parameter_type_syntax_with_override/type-syntax/items-count/{count:int}");
@@ -477,6 +511,7 @@ namespace Spikard
     {
         // Tests path parameter with :int type syntax auto-generates integer type
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var user_id:int = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/path_parameter_with_type_syntax_integer/type-syntax/users/{user_id:int}");
@@ -492,6 +527,7 @@ namespace Spikard
     {
         // Tests path parameter with :uuid type syntax auto-generates UUID validation
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var id:uuid = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/path_parameter_with_type_syntax_uuid/type-syntax/items/{id:uuid}");
@@ -507,6 +543,7 @@ namespace Spikard
     {
         // Tests path type parameter that captures remaining path segments
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var file_path:path = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/path_type_parameter_file_path/files/{file_path:path}");
@@ -522,6 +559,7 @@ namespace Spikard
     {
         // Tests string path parameter with valid value
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var item_id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/string_path_parameter_success/path/str/{item_id}");
@@ -537,6 +575,7 @@ namespace Spikard
     {
         // Tests string path parameter with max_length validation fails when too long
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var item_id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/string_path_parameter_with_max_length_failure/path/param-maxlength/{item_id}");
@@ -552,6 +591,7 @@ namespace Spikard
     {
         // Tests string path parameter with min_length validation fails
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var item_id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/string_path_parameter_with_min_length_failure/path/param-minlength/{item_id}");
@@ -567,6 +607,7 @@ namespace Spikard
     {
         // Tests UUID path parameter with valid UUID format
         var baseUrl = Environment.GetEnvironmentVariable("MOCK_SERVER_URL") ?? "http://localhost:8080";
+        var item_id = "";
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{baseUrl}/fixtures/uuid_path_parameter_success/items/{item_id}");
