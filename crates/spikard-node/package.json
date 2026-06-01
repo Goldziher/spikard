@@ -16,7 +16,7 @@
       "default": "./index.js"
     }
   },
-  "files": ["index.js", "index.d.ts", "*.node"],
+  "files": ["index.js", "index.d.ts", "service.ts", "*.node"],
   "optionalDependencies": {
     "@spikard/node-linux-x64-gnu": "0.15.6-rc.9",
     "@spikard/node-linux-arm64-gnu": "0.15.6-rc.9",
