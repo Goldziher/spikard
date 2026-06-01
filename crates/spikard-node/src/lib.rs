@@ -292,6 +292,16 @@ impl JsGraphQLRouteConfig {
     }
 }
 
+#[napi]
+impl JsGraphQLRouteConfig {
+    #[napi(constructor)]
+    pub fn new() -> Self {
+        Self {
+            inner: std::sync::Arc::new(spikard::GraphQLRouteConfig::new()),
+        }
+    }
+}
+
 /// Configuration for GraphQL schema building.
 ///
 /// Encapsulates all schema-level configuration options including
@@ -315,7 +325,9 @@ pub struct JsSchemaConfig {
 
 #[napi(js_name = "schemaConfigDefault")]
 pub fn schema_config_default() -> JsSchemaConfig {
-    spikard::SchemaConfig::default().into()
+    JsSchemaConfig {
+        inner: Arc::new(spikard::SchemaConfig::default()),
+    }
 }
 
 /// Configuration for schemas with only Query type
@@ -338,7 +350,9 @@ pub struct JsQueryOnlyConfig {
 
 #[napi(js_name = "queryOnlyConfigDefault")]
 pub fn query_only_config_default() -> JsQueryOnlyConfig {
-    spikard::QueryOnlyConfig::default().into()
+    JsQueryOnlyConfig {
+        inner: Arc::new(spikard::QueryOnlyConfig::default()),
+    }
 }
 
 /// Configuration for schemas with Query and Mutation types
@@ -361,7 +375,9 @@ pub struct JsQueryMutationConfig {
 
 #[napi(js_name = "queryMutationConfigDefault")]
 pub fn query_mutation_config_default() -> JsQueryMutationConfig {
-    spikard::QueryMutationConfig::default().into()
+    JsQueryMutationConfig {
+        inner: Arc::new(spikard::QueryMutationConfig::default()),
+    }
 }
 
 /// Configuration for fully-featured schemas with Query, Mutation, and Subscription types
@@ -384,7 +400,9 @@ pub struct JsFullSchemaConfig {
 
 #[napi(js_name = "fullSchemaConfigDefault")]
 pub fn full_schema_config_default() -> JsFullSchemaConfig {
-    spikard::FullSchemaConfig::default().into()
+    JsFullSchemaConfig {
+        inner: Arc::new(spikard::FullSchemaConfig::default()),
+    }
 }
 
 /// Configuration for in-process background task execution.
@@ -404,7 +422,9 @@ pub struct JsBackgroundTaskConfig {
 
 #[napi(js_name = "backgroundTaskConfigDefault")]
 pub fn background_task_config_default() -> JsBackgroundTaskConfig {
-    spikard::BackgroundTaskConfig::default().into()
+    JsBackgroundTaskConfig {
+        inner: Arc::new(spikard::BackgroundTaskConfig::default()),
+    }
 }
 
 #[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
@@ -418,7 +438,9 @@ pub struct JsBackgroundJobMetadata {
 
 #[napi(js_name = "backgroundJobMetadataDefault")]
 pub fn background_job_metadata_default() -> JsBackgroundJobMetadata {
-    spikard::BackgroundJobMetadata::default().into()
+    JsBackgroundJobMetadata {
+        inner: Arc::new(spikard::BackgroundJobMetadata::default()),
+    }
 }
 
 /// CORS configuration for a route
@@ -447,7 +469,9 @@ pub struct JsCorsConfig {
 
 #[napi(js_name = "corsConfigDefault")]
 pub fn cors_config_default() -> JsCorsConfig {
-    spikard::CorsConfig::default().into()
+    JsCorsConfig {
+        inner: Arc::new(spikard::CorsConfig::default()),
+    }
 }
 
 /// Compression configuration shared across runtimes
@@ -468,7 +492,9 @@ pub struct JsCompressionConfig {
 
 #[napi(js_name = "compressionConfigDefault")]
 pub fn compression_config_default() -> JsCompressionConfig {
-    spikard::CompressionConfig::default().into()
+    JsCompressionConfig {
+        inner: Arc::new(spikard::CompressionConfig::default()),
+    }
 }
 
 /// Rate limiting configuration shared across runtimes
@@ -489,7 +515,9 @@ pub struct JsRateLimitConfig {
 
 #[napi(js_name = "rateLimitConfigDefault")]
 pub fn rate_limit_config_default() -> JsRateLimitConfig {
-    spikard::RateLimitConfig::default().into()
+    JsRateLimitConfig {
+        inner: Arc::new(spikard::RateLimitConfig::default()),
+    }
 }
 
 /// Configuration for gRPC support
@@ -595,7 +623,9 @@ pub struct JsGrpcConfig {
 
 #[napi(js_name = "grpcConfigDefault")]
 pub fn grpc_config_default() -> JsGrpcConfig {
-    spikard::GrpcConfig::default().into()
+    JsGrpcConfig {
+        inner: Arc::new(spikard::GrpcConfig::default()),
+    }
 }
 
 /// JSON-RPC server configuration
@@ -620,7 +650,9 @@ pub struct JsJsonRpcConfig {
 
 #[napi(js_name = "jsonRpcConfigDefault")]
 pub fn json_rpc_config_default() -> JsJsonRpcConfig {
-    spikard::JsonRpcConfig::default().into()
+    JsJsonRpcConfig {
+        inner: Arc::new(spikard::JsonRpcConfig::default()),
+    }
 }
 
 /// OpenAPI configuration
@@ -661,7 +693,9 @@ pub struct JsOpenApiConfig {
 
 #[napi(js_name = "openApiConfigDefault")]
 pub fn open_api_config_default() -> JsOpenApiConfig {
-    spikard::OpenApiConfig::default().into()
+    JsOpenApiConfig {
+        inner: Arc::new(spikard::OpenApiConfig::default()),
+    }
 }
 
 /// HTTP Response with custom status code, headers, and content
@@ -680,7 +714,9 @@ pub struct JsResponse {
 
 #[napi(js_name = "responseDefault")]
 pub fn response_default() -> JsResponse {
-    spikard::Response::default().into()
+    JsResponse {
+        inner: Arc::new(spikard::Response::default()),
+    }
 }
 
 /// An individual SSE event
@@ -834,11 +870,13 @@ pub struct JsServerConfig {
     #[serde(rename = "requestTimeout")]
     pub request_timeout: Option<i64>,
     /// Enable compression middleware
-    pub compression: Option<JsCompressionConfig>,
+    #[serde(skip)]
+    pub compression: Option<napi::bindgen_prelude::Object<'static>>,
     /// Enable rate limiting
     #[napi(js_name = "rateLimit")]
     #[serde(rename = "rateLimit")]
-    pub rate_limit: Option<JsRateLimitConfig>,
+    #[serde(skip)]
+    pub rate_limit: Option<napi::bindgen_prelude::Object<'static>>,
     /// JWT authentication configuration
     #[napi(js_name = "jwtAuth")]
     #[serde(rename = "jwtAuth")]
@@ -860,19 +898,22 @@ pub struct JsServerConfig {
     #[serde(rename = "shutdownTimeout")]
     pub shutdown_timeout: Option<i64>,
     /// AsyncAPI HTTP endpoint configuration
-    pub asyncapi: Option<JsAsyncApiConfig>,
+    #[serde(skip)]
+    pub asyncapi: Option<napi::bindgen_prelude::Object<'static>>,
     /// OpenAPI documentation configuration
-    pub openapi: Option<JsOpenApiConfig>,
+    #[serde(skip)]
+    pub openapi: Option<napi::bindgen_prelude::Object<'static>>,
     /// JSON-RPC configuration
-    pub jsonrpc: Option<JsJsonRpcConfig>,
+    #[serde(skip)]
+    pub jsonrpc: Option<napi::bindgen_prelude::Object<'static>>,
     /// gRPC configuration
     #[serde(skip)]
-    pub grpc: Option<JsGrpcConfig>,
+    pub grpc: Option<napi::bindgen_prelude::Object<'static>>,
     /// Background task executor configuration
     #[napi(js_name = "backgroundTasks")]
     #[serde(rename = "backgroundTasks")]
     #[serde(skip)]
-    pub background_tasks: Option<JsBackgroundTaskConfig>,
+    pub background_tasks: Option<napi::bindgen_prelude::Object<'static>>,
     /// Enable per-request HTTP tracing (tower-http `TraceLayer`)
     #[napi(js_name = "enableHttpTrace")]
     #[serde(rename = "enableHttpTrace")]
@@ -882,7 +923,9 @@ pub struct JsServerConfig {
 
 #[napi(js_name = "serverConfigDefault")]
 pub fn server_config_default() -> JsServerConfig {
-    spikard::ServerConfig::default().into()
+    JsServerConfig {
+        inner: Arc::new(spikard::ServerConfig::default()),
+    }
 }
 
 /// Spikard application builder.
@@ -894,13 +937,6 @@ pub struct JsApp {
 
 #[napi]
 impl JsApp {
-    /// Set the server configuration.
-    #[napi]
-    pub fn config(&self, config: JsServerConfig) -> JsApp {
-        let _ = config;
-        todo!("Not implemented: App.config")
-    }
-
     /// Run the HTTP server using the configured routes.
     ///
     /// # Errors
@@ -928,6 +964,16 @@ impl JsApp {
     pub fn default() -> JsApp {
         Self {
             inner: Arc::new(std::sync::Mutex::new(spikard::App::default())),
+        }
+    }
+}
+
+#[napi]
+impl JsApp {
+    #[napi(constructor)]
+    pub fn new() -> Self {
+        Self {
+            inner: std::sync::Arc::new(spikard::App::new()),
         }
     }
 }
@@ -978,16 +1024,6 @@ impl JsRouteBuilder {
     pub fn file_params_json(&self, schema: serde_json::Value) -> JsRouteBuilder {
         Self {
             inner: Arc::new((*self.inner).clone().file_params_json(schema)),
-        }
-    }
-
-    /// Attach a CORS configuration for this route.
-    #[napi]
-    pub fn cors(&self, cors: JsCorsConfig) -> JsRouteBuilder {
-        let cors_core: spikard::CorsConfig = cors.into();
-
-        Self {
-            inner: Arc::new((*self.inner).clone().cors(cors_core)),
         }
     }
 
@@ -1505,7 +1541,9 @@ impl Default for JsWebSocketMessage {
 /// A `QueryOnlyConfig` with default settings
 #[napi(js_name = "schemaQueryOnly")]
 pub fn schema_query_only() -> JsQueryOnlyConfig {
-    spikard_graphql::schema_query_only().into()
+    JsQueryOnlyConfig {
+        inner: Arc::new(spikard_graphql::schema_query_only()),
+    }
 }
 
 /// Create a schema configuration with Query and Mutation types.
@@ -1517,7 +1555,9 @@ pub fn schema_query_only() -> JsQueryOnlyConfig {
 /// A `QueryMutationConfig` with default settings
 #[napi(js_name = "schemaQueryMutation")]
 pub fn schema_query_mutation() -> JsQueryMutationConfig {
-    spikard_graphql::schema_query_mutation().into()
+    JsQueryMutationConfig {
+        inner: Arc::new(spikard_graphql::schema_query_mutation()),
+    }
 }
 
 /// Create a schema configuration with all three root types.
@@ -1529,7 +1569,9 @@ pub fn schema_query_mutation() -> JsQueryMutationConfig {
 /// A `FullSchemaConfig` with default settings
 #[napi(js_name = "schemaFull")]
 pub fn schema_full() -> JsFullSchemaConfig {
-    spikard_graphql::schema_full().into()
+    JsFullSchemaConfig {
+        inner: Arc::new(spikard_graphql::schema_full()),
+    }
 }
 
 #[allow(clippy::redundant_closure, clippy::useless_conversion)]
@@ -2072,8 +2114,8 @@ impl From<JsServerConfig> for spikard::ServerConfig {
         }
         __result.max_body_size = val.max_body_size.map(|v| v as usize);
         __result.request_timeout = val.request_timeout.map(|v| v as u64);
-        __result.compression = val.compression.map(Into::into);
-        __result.rate_limit = val.rate_limit.map(Into::into);
+        __result.compression = Default::default();
+        __result.rate_limit = Default::default();
         __result.jwt_auth = val.jwt_auth.map(Into::into);
         __result.api_key_auth = val.api_key_auth.map(Into::into);
         if let Some(__v) = val.static_files {
@@ -2085,12 +2127,12 @@ impl From<JsServerConfig> for spikard::ServerConfig {
         if let Some(__v) = val.shutdown_timeout {
             __result.shutdown_timeout = __v as u64;
         }
-        __result.asyncapi = val.asyncapi.map(Into::into);
-        __result.openapi = val.openapi.map(Into::into);
-        __result.jsonrpc = val.jsonrpc.map(Into::into);
-        __result.grpc = val.grpc.map(Into::into);
+        __result.asyncapi = Default::default();
+        __result.openapi = Default::default();
+        __result.jsonrpc = Default::default();
+        __result.grpc = Default::default();
         if let Some(__v) = val.background_tasks {
-            __result.background_tasks = __v.into();
+            __result.background_tasks = Default::default();
         }
         if let Some(__v) = val.enable_http_trace {
             __result.enable_http_trace = __v;
@@ -2109,18 +2151,18 @@ impl From<spikard::ServerConfig> for JsServerConfig {
             enable_request_id: Some(val.enable_request_id),
             max_body_size: val.max_body_size.map(|v| v as i64),
             request_timeout: val.request_timeout.map(|v| v as i64),
-            compression: val.compression.map(Into::into),
-            rate_limit: val.rate_limit.map(Into::into),
+            compression: Default::default(),
+            rate_limit: Default::default(),
             jwt_auth: val.jwt_auth.map(Into::into),
             api_key_auth: val.api_key_auth.map(Into::into),
             static_files: Some(val.static_files.into_iter().map(Into::into).collect()),
             graceful_shutdown: Some(val.graceful_shutdown),
             shutdown_timeout: Some(val.shutdown_timeout as i64),
-            asyncapi: val.asyncapi.map(Into::into),
-            openapi: val.openapi.map(Into::into),
-            jsonrpc: val.jsonrpc.map(Into::into),
-            grpc: val.grpc.map(Into::into),
-            background_tasks: Some(val.background_tasks.into()),
+            asyncapi: Default::default(),
+            openapi: Default::default(),
+            jsonrpc: Default::default(),
+            grpc: Default::default(),
+            background_tasks: Default::default(),
             enable_http_trace: Some(val.enable_http_trace),
         }
     }
