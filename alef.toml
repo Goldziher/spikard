@@ -909,7 +909,7 @@ languages = [
 # handlers per fixture, returning canned expected responses.
 imports = ["spikard"]
 app_class = "App"
-register_method = "register_route"
+register_method = "route"
 run_method = "run"
 # spikard's Response struct names the body payload `content`, not `body`.
 response_body_field = "content"
@@ -918,6 +918,10 @@ port = 8000
 
 [crates.e2e.harness.overrides.csharp]
 # C# binding App has route() not register_route(), and config(string) not config(ServerConfig)
+register_method = "route"
+
+[crates.e2e.harness.overrides.elixir]
+# Elixir service.ex defines `route` not `register_route`
 register_method = "route"
 
 [crates.e2e.harness.overrides.node]
