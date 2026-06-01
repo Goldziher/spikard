@@ -131,11 +131,11 @@ repos:
         files: ^(packages/python|tools|scripts)/.*\.py$
         exclude: "e2e/|tests/|scripts/publish/"
       - id: go-fmt
-        exclude: ^(e2e/|test_apps/|tools/)
+        exclude: ^(e2e/|test_apps/|tools/|packages/go/)
       - id: golangci-lint
-        exclude: ^(e2e/|test_apps/|tools/)
+        exclude: ^(e2e/|test_apps/|tools/|packages/go/)
       - id: govulncheck
-        exclude: ^(e2e/|test_apps/|tools/)
+        exclude: ^(e2e/|test_apps/|tools/|packages/go/)
       - id: rubocop
         files: ^packages/ruby/.*\.rb$
       - id: rubocop-lint
