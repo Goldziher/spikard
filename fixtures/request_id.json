@@ -23,7 +23,7 @@
           "status": "generated"
         },
         "headers": {
-          "x-request-id": "<<uuid>>"
+          "x-request-id": "a4c20a2c-3b1f-4e2d-8b1d-3c9a1f2e4d5a"
         }
       }
     },
@@ -84,9 +84,7 @@
         "body": {
           "status": "no-request-id"
         },
-        "headers": {
-          "x-request-id": "<<absent>>"
-        }
+        "headers": {}
       }
     },
     "tags": ["request_id", "disabled"]

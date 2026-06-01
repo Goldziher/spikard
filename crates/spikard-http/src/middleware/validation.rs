@@ -49,6 +49,28 @@ fn is_form_urlencoded_token(token: &[u8]) -> bool {
     token.eq_ignore_ascii_case(b"application/x-www-form-urlencoded")
 }
 
+/// Returns `true` for any `application/grpc*` content-type token.
+///
+/// Matches:
+/// - `application/grpc`
+/// - `application/grpc+proto`
+/// - `application/grpc+json`
+/// - `application/grpc-web`
+/// - `application/grpc-web+proto`
+/// - `application/grpc-web+json`
+#[inline]
+fn is_grpc_token(token: &[u8]) -> bool {
+    const PREFIX: &[u8] = b"application/grpc";
+    if token.len() < PREFIX.len() {
+        return false;
+    }
+    if !token[..PREFIX.len()].eq_ignore_ascii_case(PREFIX) {
+        return false;
+    }
+    // Bare "application/grpc" or starts with "application/grpc+" or "application/grpc-"
+    token.len() == PREFIX.len() || token[PREFIX.len()] == b'+' || token[PREFIX.len()] == b'-'
+}
+
 fn is_valid_content_type_token(token: &[u8]) -> bool {
     // Minimal fast validation:
     // - exactly one '/' separating type and subtype
@@ -114,6 +136,16 @@ pub fn is_multipart_str(content_type: &str) -> bool {
     is_multipart_form_data_token(token)
 }
 
+/// Fast classification for already-extracted header strings.
+///
+/// Returns `true` for any `application/grpc*` content-type. Used at validation
+/// boundaries to pass gRPC requests through without triggering JSON-body checks
+/// or 415 Unsupported Media Type responses.
+pub fn is_grpc_str(content_type: &str) -> bool {
+    let token = token_before_semicolon(content_type.as_bytes());
+    is_grpc_token(token)
+}
+
 /// Classify Content-Type header values after validation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum ContentTypeKind {
@@ -156,7 +188,14 @@ fn json_charset_value(content_type: &HeaderValue) -> Option<&[u8]> {
     None
 }
 
-/// Validate that Content-Type is JSON-compatible when route expects JSON
+/// Validate that Content-Type is JSON-compatible when route expects JSON.
+///
+/// gRPC content-types (`application/grpc*`) are exempted: they bypass this
+/// check because gRPC uses HTTP/2 framing rather than JSON bodies, and the
+/// gRPC routing middleware handles them before the JSON validation layer runs.
+/// For non-gRPC routes that happen to receive a gRPC content-type, the body
+/// passes through as raw bytes — exactly the same treatment as any other
+/// non-JSON, non-form content-type that reaches a non-gRPC route.
 #[allow(clippy::result_large_err)]
 pub fn validate_json_content_type(headers: &HeaderMap) -> Result<(), Response> {
     if let Some(content_type_header) = headers.get(axum::http::header::CONTENT_TYPE) {
@@ -167,8 +206,11 @@ pub fn validate_json_content_type(headers: &HeaderMap) -> Result<(), Response> {
         let token = token_before_semicolon(content_type_header.as_bytes());
         let is_json = is_json_like_token(token);
         let is_form = is_form_urlencoded_token(token) || is_multipart_form_data_token(token);
+        // gRPC requests use binary framing — they are not subject to JSON content-type
+        // requirements even when a route declares expects_json_body.
+        let is_grpc = is_grpc_token(token);
 
-        if !is_json && !is_form {
+        if !is_json && !is_form && !is_grpc {
             let problem = ProblemDetails::new(
                 "https://spikard.dev/errors/unsupported-media-type",
                 "Unsupported Media Type",
@@ -732,5 +774,131 @@ mod tests {
 
         let result = validate_content_type_headers(&headers, 0);
         assert!(result.is_ok(), "Content-Type type/subtype should be case-insensitive");
+    }
+
+    // --- is_grpc_str / is_grpc_token tests ---
+
+    #[test]
+    fn test_is_grpc_str_bare() {
+        assert!(is_grpc_str("application/grpc"), "bare application/grpc must match");
+    }
+
+    #[test]
+    fn test_is_grpc_str_proto() {
+        assert!(
+            is_grpc_str("application/grpc+proto"),
+            "application/grpc+proto must match"
+        );
+    }
+
+    #[test]
+    fn test_is_grpc_str_json_subtype() {
+        assert!(is_grpc_str("application/grpc+json"), "application/grpc+json must match");
+    }
+
+    #[test]
+    fn test_is_grpc_str_web() {
+        assert!(is_grpc_str("application/grpc-web"), "application/grpc-web must match");
+    }
+
+    #[test]
+    fn test_is_grpc_str_web_proto() {
+        assert!(
+            is_grpc_str("application/grpc-web+proto"),
+            "application/grpc-web+proto must match"
+        );
+    }
+
+    #[test]
+    fn test_is_grpc_str_web_json() {
+        assert!(
+            is_grpc_str("application/grpc-web+json"),
+            "application/grpc-web+json must match"
+        );
+    }
+
+    #[test]
+    fn test_is_grpc_str_case_insensitive() {
+        assert!(is_grpc_str("Application/GRPC"), "matching must be case-insensitive");
+    }
+
+    #[test]
+    fn test_is_grpc_str_with_parameters() {
+        assert!(
+            is_grpc_str("application/grpc; charset=utf-8"),
+            "parameters after semicolon are stripped"
+        );
+    }
+
+    #[test]
+    fn test_is_grpc_str_rejects_json() {
+        assert!(!is_grpc_str("application/json"), "application/json must not match");
+    }
+
+    #[test]
+    fn test_is_grpc_str_rejects_xml() {
+        assert!(!is_grpc_str("application/xml"), "application/xml must not match");
+    }
+
+    #[test]
+    fn test_is_grpc_str_rejects_application_prefix_only() {
+        assert!(!is_grpc_str("application/"), "bare application/ must not match");
+    }
+
+    // --- validate_json_content_type: grpc exemption ---
+
+    #[test]
+    fn test_validate_json_content_type_accepts_grpc() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            axum::http::header::CONTENT_TYPE,
+            HeaderValue::from_static("application/grpc"),
+        );
+
+        let result = validate_json_content_type(&headers);
+        assert!(result.is_ok(), "application/grpc must not trigger 415 on JSON routes");
+    }
+
+    #[test]
+    fn test_validate_json_content_type_accepts_grpc_proto() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            axum::http::header::CONTENT_TYPE,
+            HeaderValue::from_static("application/grpc+proto"),
+        );
+
+        let result = validate_json_content_type(&headers);
+        assert!(
+            result.is_ok(),
+            "application/grpc+proto must not trigger 415 on JSON routes"
+        );
+    }
+
+    #[test]
+    fn test_validate_json_content_type_accepts_grpc_web() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            axum::http::header::CONTENT_TYPE,
+            HeaderValue::from_static("application/grpc-web"),
+        );
+
+        let result = validate_json_content_type(&headers);
+        assert!(
+            result.is_ok(),
+            "application/grpc-web must not trigger 415 on JSON routes"
+        );
+    }
+
+    #[test]
+    fn test_validate_json_content_type_still_rejects_xml() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            axum::http::header::CONTENT_TYPE,
+            HeaderValue::from_static("application/xml"),
+        );
+
+        let result = validate_json_content_type(&headers);
+        assert!(result.is_err(), "XML must still be rejected on JSON routes");
+        assert_eq!(result.unwrap_err().status(), StatusCode::UNSUPPORTED_MEDIA_TYPE);
     }
 }

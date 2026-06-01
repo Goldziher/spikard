@@ -9,7 +9,10 @@
         "method": "POST",
         "body_schema": {
           "type": "object",
-          "required": ["username", "password"],
+          "required": [
+            "username",
+            "password"
+          ],
           "properties": {
             "username": {
               "type": "string"
@@ -25,7 +28,8 @@
         "path": "/login/",
         "headers": {
           "Content-Type": "application/x-www-form-urlencoded"
-        }
+        },
+        "body": "username=johndoe&password=secret"
       },
       "expected_response": {
         "status_code": 200,
@@ -45,7 +49,10 @@
         "method": "POST",
         "body_schema": {
           "type": "object",
-          "required": ["username", "password"],
+          "required": [
+            "username",
+            "password"
+          ],
           "properties": {
             "username": {
               "type": "string"
@@ -61,7 +68,8 @@
         "path": "/login/",
         "headers": {
           "Content-Type": "application/x-www-form-urlencoded"
-        }
+        },
+        "body": "password=secret"
       },
       "expected_response": {
         "status_code": 422,
@@ -73,7 +81,10 @@
           "errors": [
             {
               "type": "missing",
-              "loc": ["body", "username"],
+              "loc": [
+                "body",
+                "username"
+              ],
               "msg": "Field required",
               "input": {
                 "password": "secret"
@@ -94,7 +105,10 @@
         "method": "POST",
         "body_schema": {
           "type": "object",
-          "required": ["username", "password"],
+          "required": [
+            "username",
+            "password"
+          ],
           "properties": {
             "username": {
               "type": "string"
@@ -103,7 +117,10 @@
               "type": "string"
             },
             "email": {
-              "type": ["string", "null"],
+              "type": [
+                "string",
+                "null"
+              ],
               "format": "email"
             }
           }
@@ -114,7 +131,8 @@
         "path": "/register/",
         "headers": {
           "Content-Type": "application/x-www-form-urlencoded"
-        }
+        },
+        "body": "username=johndoe&password=secret"
       },
       "expected_response": {
         "status_code": 200,
@@ -135,7 +153,9 @@
         "method": "POST",
         "body_schema": {
           "type": "object",
-          "required": ["name"],
+          "required": [
+            "name"
+          ],
           "properties": {
             "name": {
               "type": "string"
@@ -151,7 +171,8 @@
         "path": "/form/",
         "headers": {
           "Content-Type": "application/x-www-form-urlencoded"
-        }
+        },
+        "body": "name=John+Doe&description=Test+%26+Development"
       },
       "expected_response": {
         "status_code": 200,
@@ -172,7 +193,9 @@
         "method": "POST",
         "body_schema": {
           "type": "object",
-          "required": ["username"],
+          "required": [
+            "username"
+          ],
           "properties": {
             "username": {
               "type": "string",
@@ -186,7 +209,8 @@
         "path": "/form/validated",
         "headers": {
           "Content-Type": "application/x-www-form-urlencoded"
-        }
+        },
+        "body": "username=ab"
       },
       "expected_response": {
         "status_code": 422,
@@ -198,7 +222,10 @@
           "errors": [
             {
               "type": "string_too_short",
-              "loc": ["body", "username"],
+              "loc": [
+                "body",
+                "username"
+              ],
               "msg": "String should have at least 3 characters",
               "input": "ab",
               "ctx": {
@@ -220,7 +247,9 @@
         "method": "POST",
         "body_schema": {
           "type": "object",
-          "required": ["username"],
+          "required": [
+            "username"
+          ],
           "properties": {
             "username": {
               "type": "string",
@@ -234,7 +263,8 @@
         "path": "/form/validated",
         "headers": {
           "Content-Type": "application/x-www-form-urlencoded"
-        }
+        },
+        "body": "username=this_is_a_very_long_username_that_exceeds_limit"
       },
       "expected_response": {
         "status_code": 422,
@@ -246,7 +276,10 @@
           "errors": [
             {
               "type": "string_too_long",
-              "loc": ["body", "username"],
+              "loc": [
+                "body",
+                "username"
+              ],
               "msg": "String should have at most 20 characters",
               "input": "this_is_a_very_long_username_that_exceeds_limit",
               "ctx": {
@@ -268,7 +301,9 @@
         "method": "POST",
         "body_schema": {
           "type": "object",
-          "required": ["username"],
+          "required": [
+            "username"
+          ],
           "properties": {
             "username": {
               "type": "string",
@@ -282,7 +317,8 @@
         "path": "/form/validated",
         "headers": {
           "Content-Type": "application/x-www-form-urlencoded"
-        }
+        },
+        "body": "username=john+doe"
       },
       "expected_response": {
         "status_code": 422,
@@ -294,7 +330,10 @@
           "errors": [
             {
               "type": "string_pattern_mismatch",
-              "loc": ["body", "username"],
+              "loc": [
+                "body",
+                "username"
+              ],
               "msg": "String should match pattern '^[a-z0-9_]+$'",
               "input": "john doe",
               "ctx": {
@@ -316,7 +355,9 @@
         "method": "POST",
         "body_schema": {
           "type": "object",
-          "required": ["tags"],
+          "required": [
+            "tags"
+          ],
           "properties": {
             "tags": {
               "type": "array",
@@ -332,12 +373,17 @@
         "path": "/form/tags",
         "headers": {
           "Content-Type": "application/x-www-form-urlencoded"
-        }
+        },
+        "body": "tags=python&tags=fastapi&tags=web"
       },
       "expected_response": {
         "status_code": 200,
         "body": {
-          "tags": ["python", "fastapi", "web"]
+          "tags": [
+            "python",
+            "fastapi",
+            "web"
+          ]
         }
       }
     }
@@ -352,7 +398,9 @@
         "method": "POST",
         "body_schema": {
           "type": "object",
-          "required": ["username"],
+          "required": [
+            "username"
+          ],
           "properties": {
             "username": {
               "type": "string"
@@ -368,7 +416,8 @@
         "path": "/form/",
         "headers": {
           "Content-Type": "application/x-www-form-urlencoded"
-        }
+        },
+        "body": "username=johndoe&description="
       },
       "expected_response": {
         "status_code": 200,
@@ -389,7 +438,11 @@
         "method": "POST",
         "body_schema": {
           "type": "object",
-          "required": ["username", "password", "grant_type"],
+          "required": [
+            "username",
+            "password",
+            "grant_type"
+          ],
           "properties": {
             "username": {
               "type": "string"
@@ -411,7 +464,8 @@
         "path": "/token",
         "headers": {
           "Content-Type": "application/x-www-form-urlencoded"
-        }
+        },
+        "body": "username=johndoe&password=secret&grant_type=password"
       },
       "expected_response": {
         "status_code": 200,
@@ -432,7 +486,9 @@
         "method": "POST",
         "body_schema": {
           "type": "object",
-          "required": ["username"],
+          "required": [
+            "username"
+          ],
           "properties": {
             "username": {
               "type": "string"
@@ -448,7 +504,8 @@
         "path": "/form/",
         "headers": {
           "Content-Type": "application/x-www-form-urlencoded"
-        }
+        },
+        "body": "username=johndoe&age=30"
       },
       "expected_response": {
         "status_code": 200,
@@ -469,7 +526,9 @@
         "method": "POST",
         "body_schema": {
           "type": "object",
-          "required": ["username"],
+          "required": [
+            "username"
+          ],
           "properties": {
             "username": {
               "type": "string"
@@ -485,7 +544,8 @@
         "path": "/form/",
         "headers": {
           "Content-Type": "application/x-www-form-urlencoded"
-        }
+        },
+        "body": "username=johndoe&subscribe=true"
       },
       "expected_response": {
         "status_code": 200,
@@ -506,7 +566,9 @@
         "method": "POST",
         "body_schema": {
           "type": "object",
-          "required": ["tags"],
+          "required": [
+            "tags"
+          ],
           "properties": {
             "tags": {
               "type": "array",
@@ -529,11 +591,20 @@
       "expected_response": {
         "status_code": 201,
         "body": {
-          "tags": ["python", "rust", "typescript"]
+          "tags": [
+            "python",
+            "rust",
+            "typescript"
+          ]
         }
       }
     },
-    "tags": ["url_encoded", "arrays", "validation", "success"]
+    "tags": [
+      "url_encoded",
+      "arrays",
+      "validation",
+      "success"
+    ]
   },
   {
     "id": "14_nested_object_bracket_notation",
@@ -545,11 +616,16 @@
         "method": "POST",
         "body_schema": {
           "type": "object",
-          "required": ["user"],
+          "required": [
+            "user"
+          ],
           "properties": {
             "user": {
               "type": "object",
-              "required": ["name", "email"],
+              "required": [
+                "name",
+                "email"
+              ],
               "properties": {
                 "name": {
                   "type": "string",
@@ -587,7 +663,13 @@
         }
       }
     },
-    "tags": ["url_encoded", "nested", "objects", "validation", "success"]
+    "tags": [
+      "url_encoded",
+      "nested",
+      "objects",
+      "validation",
+      "success"
+    ]
   },
   {
     "id": "15_special_characters_field_names",
@@ -626,7 +708,12 @@
         }
       }
     },
-    "tags": ["url_encoded", "special_characters", "validation", "success"]
+    "tags": [
+      "url_encoded",
+      "special_characters",
+      "validation",
+      "success"
+    ]
   },
   {
     "id": "16_minlength_validation_failure",
@@ -638,7 +725,9 @@
         "method": "POST",
         "body_schema": {
           "type": "object",
-          "required": ["username"],
+          "required": [
+            "username"
+          ],
           "properties": {
             "username": {
               "type": "string",
@@ -665,7 +754,10 @@
           "errors": [
             {
               "type": "string_too_short",
-              "loc": ["body", "username"],
+              "loc": [
+                "body",
+                "username"
+              ],
               "msg": "String should have at least 3 characters",
               "input": "ab",
               "ctx": {
@@ -676,7 +768,12 @@
         }
       }
     },
-    "tags": ["url_encoded", "minLength", "validation", "error"]
+    "tags": [
+      "url_encoded",
+      "minLength",
+      "validation",
+      "error"
+    ]
   },
   {
     "id": "17_pattern_validation_failure",
@@ -688,7 +785,9 @@
         "method": "POST",
         "body_schema": {
           "type": "object",
-          "required": ["account_id"],
+          "required": [
+            "account_id"
+          ],
           "properties": {
             "account_id": {
               "type": "string",
@@ -715,7 +814,10 @@
           "errors": [
             {
               "type": "string_pattern_mismatch",
-              "loc": ["body", "account_id"],
+              "loc": [
+                "body",
+                "account_id"
+              ],
               "msg": "String should match pattern '^ACC-[0-9]{6}$'",
               "input": "INVALID123",
               "ctx": {
@@ -726,7 +828,12 @@
         }
       }
     },
-    "tags": ["url_encoded", "pattern", "validation", "error"]
+    "tags": [
+      "url_encoded",
+      "pattern",
+      "validation",
+      "error"
+    ]
   },
   {
     "id": "18_integer_minimum_validation_failure",
@@ -738,7 +845,9 @@
         "method": "POST",
         "body_schema": {
           "type": "object",
-          "required": ["quantity"],
+          "required": [
+            "quantity"
+          ],
           "properties": {
             "quantity": {
               "type": "integer",
@@ -765,7 +874,10 @@
           "errors": [
             {
               "type": "greater_than_equal",
-              "loc": ["body", "quantity"],
+              "loc": [
+                "body",
+                "quantity"
+              ],
               "msg": "Input should be greater than or equal to 1",
               "input": 0,
               "ctx": {
@@ -776,7 +888,12 @@
         }
       }
     },
-    "tags": ["url_encoded", "minimum", "validation", "error"]
+    "tags": [
+      "url_encoded",
+      "minimum",
+      "validation",
+      "error"
+    ]
   },
   {
     "id": "19_array_minitems_validation_failure",
@@ -788,7 +905,9 @@
         "method": "POST",
         "body_schema": {
           "type": "object",
-          "required": ["tags"],
+          "required": [
+            "tags"
+          ],
           "properties": {
             "tags": {
               "type": "array",
@@ -818,9 +937,14 @@
           "errors": [
             {
               "type": "too_short",
-              "loc": ["body", "tags"],
+              "loc": [
+                "body",
+                "tags"
+              ],
               "msg": "List should have at least 2 item after validation",
-              "input": ["single"],
+              "input": [
+                "single"
+              ],
               "ctx": {
                 "min_length": 2
               }
@@ -829,7 +953,13 @@
         }
       }
     },
-    "tags": ["url_encoded", "arrays", "minItems", "validation", "error"]
+    "tags": [
+      "url_encoded",
+      "arrays",
+      "minItems",
+      "validation",
+      "error"
+    ]
   },
   {
     "id": "20_format_email_validation_failure",
@@ -841,7 +971,9 @@
         "method": "POST",
         "body_schema": {
           "type": "object",
-          "required": ["email"],
+          "required": [
+            "email"
+          ],
           "properties": {
             "email": {
               "type": "string",
@@ -868,7 +1000,10 @@
           "errors": [
             {
               "type": "string_pattern_mismatch",
-              "loc": ["body", "email"],
+              "loc": [
+                "body",
+                "email"
+              ],
               "msg": "String should match pattern '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'",
               "input": "not-an-email",
               "ctx": {
@@ -879,7 +1014,13 @@
         }
       }
     },
-    "tags": ["url_encoded", "format", "email", "validation", "error"]
+    "tags": [
+      "url_encoded",
+      "format",
+      "email",
+      "validation",
+      "error"
+    ]
   },
   {
     "id": "21_integer_type_coercion_failure",
@@ -891,7 +1032,9 @@
         "method": "POST",
         "body_schema": {
           "type": "object",
-          "required": ["price"],
+          "required": [
+            "price"
+          ],
           "properties": {
             "price": {
               "type": "integer"
@@ -917,7 +1060,10 @@
           "errors": [
             {
               "type": "int_parsing",
-              "loc": ["body", "price"],
+              "loc": [
+                "body",
+                "price"
+              ],
               "msg": "Input should be a valid integer, unable to parse string as an integer",
               "input": "not-a-number"
             }
@@ -925,7 +1071,13 @@
         }
       }
     },
-    "tags": ["url_encoded", "type", "integer", "validation", "error"]
+    "tags": [
+      "url_encoded",
+      "type",
+      "integer",
+      "validation",
+      "error"
+    ]
   },
   {
     "id": "22_additional_properties_strict_failure",
@@ -937,11 +1089,16 @@
         "method": "POST",
         "body_schema": {
           "type": "object",
-          "required": ["theme"],
+          "required": [
+            "theme"
+          ],
           "properties": {
             "theme": {
               "type": "string",
-              "enum": ["light", "dark"]
+              "enum": [
+                "light",
+                "dark"
+              ]
             }
           },
           "additionalProperties": false
@@ -965,7 +1122,10 @@
           "errors": [
             {
               "type": "validation_error",
-              "loc": ["body", "unknown_field"],
+              "loc": [
+                "body",
+                "unknown_field"
+              ],
               "msg": "Additional properties are not allowed",
               "input": {
                 "theme": "dark",
@@ -980,6 +1140,11 @@
         }
       }
     },
-    "tags": ["url_encoded", "additionalProperties", "validation", "error"]
+    "tags": [
+      "url_encoded",
+      "additionalProperties",
+      "validation",
+      "error"
+    ]
   }
 ]

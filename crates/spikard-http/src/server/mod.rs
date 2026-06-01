@@ -784,6 +784,15 @@ fn build_router_with_handlers_inner(
             if !axum_path.starts_with('/') {
                 axum_path = format!("/{}", axum_path);
             }
+            // Also register the path with a trailing slash so that requests
+            // to e.g. GET /app/ are handled by the same route as GET /app.
+            // Axum does not perform trailing-slash normalization automatically.
+            // Skip catch-all paths (containing `{*`) — appending `/` to those
+            // creates an invalid route because catch-all parameters must be at
+            // the very end of a pattern.
+            if axum_path != "/" && !axum_path.ends_with('/') && !axum_path.contains("{*") {
+                app = app.route(&format!("{}/", axum_path), router.clone());
+            }
             app = app.route(&axum_path, router);
         }
     }

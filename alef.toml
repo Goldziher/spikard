@@ -840,7 +840,7 @@ e2e = "dotnet test e2e/csharp -p:NuGetAudit=false"
 precondition = "command -v gradle >/dev/null 2>&1"
 before = "cargo build --release -p spikard-ffi && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
 command = "cd packages/kotlin && gradle test --no-daemon"
-e2e = "cd e2e/kotlin && gradle test --no-daemon"
+e2e = "rm -f /tmp/alef_kotlin_ms.log; (tail -f /dev/null | e2e/rust/target/release/mock-server fixtures) >/tmp/alef_kotlin_ms.log 2>&1 </dev/null & MS=$!; for i in $(seq 1 200); do U=$(sed -n 's/^MOCK_SERVER_URL=//p' /tmp/alef_kotlin_ms.log | head -1); [ -n \"$U\" ] && break; sleep 0.1; done; echo \"MOCK_SERVER_URL=$U\"; if [ -z \"$U\" ]; then echo '--- mock-server log ---'; cat /tmp/alef_kotlin_ms.log; kill $MS 2>/dev/null || true; exit 1; fi; cd e2e/kotlin && SUT_URL=\"$U\" gradle test --no-daemon; RC=$?; if [ $RC -ne 0 ]; then echo '--- mock-server log ---'; cat /tmp/alef_kotlin_ms.log; fi; kill $MS 2>/dev/null || true; wait $MS 2>/dev/null || true; exit $RC"
 
 [crates.test.dart]
 precondition = "command -v dart >/dev/null 2>&1"

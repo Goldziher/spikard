@@ -190,7 +190,15 @@ impl Handler for ValidatingHandler {
                     && let Some(raw_bytes) = request_data.raw_body.as_ref()
                 {
                     let content_type = request_data.headers.get("content-type").map(String::as_str);
-                    let parsed = if content_type.is_some_and(crate::middleware::validation::is_multipart_str) {
+                    // gRPC bodies use binary framing — skip JSON parsing and leave body as null
+                    // so the schema validator receives an empty object rather than a parse error.
+                    let is_grpc = content_type.is_some_and(crate::middleware::validation::is_grpc_str);
+                    let parsed = if is_grpc {
+                        // gRPC requests carry binary protobuf payloads; the JSON schema validator
+                        // cannot meaningfully validate them. Pass an empty object through so the
+                        // handler receives request_data with body = {} rather than a 400 error.
+                        Value::Object(serde_json::Map::new())
+                    } else if content_type.is_some_and(crate::middleware::validation::is_multipart_str) {
                         parse_multipart_body(raw_bytes, content_type.unwrap_or("")).await?
                     } else if content_type.is_some_and(crate::middleware::validation::is_form_urlencoded_str) {
                         serde_qs::from_bytes::<Value>(raw_bytes)

@@ -65,9 +65,18 @@
         "status_code": 422,
         "body": {
           "type": "https://spikard.dev/errors/validation-error",
-          "title": "Validation Failed",
+          "title": "Request Validation Failed",
           "status": 422,
-          "detail": "Request validation failed"
+          "detail": "1 validation error in request",
+          "errors": [
+            {
+              "ctx": {"ge": 1},
+              "input": -5,
+              "loc": ["body", "value"],
+              "msg": "Input should be greater than or equal to 1",
+              "type": "greater_than_equal"
+            }
+          ]
         }
       }
     },
@@ -161,15 +170,7 @@
     "http": {
       "handler": {
         "route": "/parse",
-        "method": "POST",
-        "body_schema": {
-          "type": "object",
-          "properties": {
-            "json": {
-              "type": "object"
-            }
-          }
-        }
+        "method": "POST"
       },
       "request": {
         "method": "POST",
@@ -177,7 +178,9 @@
         "headers": {
           "Content-Type": "application/json"
         },
-        "body": "invalid json"
+        "body": {
+          "data": "example"
+        }
       },
       "expected_response": {
         "status_code": 400,
