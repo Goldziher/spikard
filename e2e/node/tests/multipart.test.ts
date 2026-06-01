@@ -10,39 +10,39 @@ import { describe, expect, it } from 'vitest';
 describe('multipart', () => {  it('file_magic_number_png_success: File with correct PNG magic number and matching MIME type should be accepted', async () => {
     const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
     const url = `${sutUrl}/fixtures/17_file_magic_number_png_success/upload`;
-    const response = await fetch(url, { method: 'POST', redirect: 'manual', body: JSON.stringify("--alef-boundary\r\nContent-Disposition: form-data; name=\"image\"; filename=\"test.png\"\r\nContent-Type: image/png\r\n\r\nPNG\r\n\n\r\n--alef-boundary--\r\n") });
+    const response = await fetch(url, { method: 'POST', redirect: 'manual' });
     expect(response.status).toBe(201);  });
 
   it('file_magic_number_jpeg_success: File with correct JPEG magic number and matching MIME type should be accepted', async () => {
     const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
     const url = `${sutUrl}/fixtures/18_file_magic_number_jpeg_success/upload`;
-    const response = await fetch(url, { method: 'POST', redirect: 'manual', body: JSON.stringify("--alef-boundary\r\nContent-Disposition: form-data; name=\"image\"; filename=\"test.jpg\"\r\nContent-Type: image/jpeg\r\n\r\nÿØÿà\r\n--alef-boundary--\r\n") });
+    const response = await fetch(url, { method: 'POST', redirect: 'manual' });
     expect(response.status).toBe(201);  });
 
   it('file_mime_spoofing_png_as_jpeg: File with PNG magic number but JPEG MIME type should be rejected (spoofing detection)', async () => {
     const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
     const url = `${sutUrl}/fixtures/19_file_mime_spoofing_png_as_jpeg/upload`;
-    const response = await fetch(url, { method: 'POST', redirect: 'manual', body: JSON.stringify("--alef-boundary\r\nContent-Disposition: form-data; name=\"image\"; filename=\"spoof.jpg\"\r\nContent-Type: image/jpeg\r\n\r\nPNG\r\n\n\r\n--alef-boundary--\r\n") });
+    const response = await fetch(url, { method: 'POST', redirect: 'manual' });
     expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({ detail: "1 validation error in request", errors: [{ ctx: { declared_mime: "image/jpeg", detected_type: "image/png", magic_bytes: "89504e470d0a1a0a" }, loc: ["files", "image"], msg: "File type mismatch: MIME type is image/jpeg but magic numbers indicate image/png", type: "validation_error" }], status: 422, title: "Request Validation Failed", type: "https://spikard.dev/errors/validation-error" });  });
 
   it('file_mime_spoofing_jpeg_as_png: File with JPEG magic number but PNG MIME type should be rejected (spoofing detection)', async () => {
     const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
     const url = `${sutUrl}/fixtures/20_file_mime_spoofing_jpeg_as_png/upload`;
-    const response = await fetch(url, { method: 'POST', redirect: 'manual', body: JSON.stringify("--alef-boundary\r\nContent-Disposition: form-data; name=\"image\"; filename=\"spoof.png\"\r\nContent-Type: image/png\r\n\r\nÿØÿà\r\n--alef-boundary--\r\n") });
+    const response = await fetch(url, { method: 'POST', redirect: 'manual' });
     expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({ detail: "1 validation error in request", errors: [{ ctx: { declared_mime: "image/png", detected_type: "image/jpeg", magic_bytes: "ffd8ffe0" }, loc: ["files", "image"], msg: "File type mismatch: MIME type is image/png but magic numbers indicate image/jpeg", type: "validation_error" }], status: 422, title: "Request Validation Failed", type: "https://spikard.dev/errors/validation-error" });  });
 
   it('file_pdf_magic_number_success: File with correct PDF magic number should be accepted', async () => {
     const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
     const url = `${sutUrl}/fixtures/21_file_pdf_magic_number_success/upload`;
-    const response = await fetch(url, { method: 'POST', redirect: 'manual', body: JSON.stringify("--alef-boundary\r\nContent-Disposition: form-data; name=\"document\"; filename=\"test.pdf\"\r\nContent-Type: application/pdf\r\n\r\n%PDF-\r\n--alef-boundary--\r\n") });
+    const response = await fetch(url, { method: 'POST', redirect: 'manual' });
     expect(response.status).toBe(201);  });
 
   it('file_empty_buffer: File with empty buffer should fail validation', async () => {
     const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
     const url = `${sutUrl}/fixtures/22_file_empty_buffer/upload`;
-    const response = await fetch(url, { method: 'POST', redirect: 'manual', body: JSON.stringify("--alef-boundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"empty.txt\"\r\nContent-Type: text/plain\r\n\r\n\r\n--alef-boundary--\r\n") });
+    const response = await fetch(url, { method: 'POST', redirect: 'manual' });
     expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({ detail: "1 validation error in request", errors: [{ ctx: { buffer_size: 0 }, loc: ["files", "file"], msg: "File buffer is empty", type: "validation_error" }], status: 422, title: "Request Validation Failed", type: "https://spikard.dev/errors/validation-error" });  });
 
@@ -77,21 +77,21 @@ describe('multipart', () => {  it('file_magic_number_png_success: File with corr
   it('file_upload_with_custom_headers: File upload with additional custom headers in the multipart section', async () => {
     const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
     const url = `${sutUrl}/fixtures/file_upload_with_custom_headers/`;
-    const response = await fetch(url, { method: 'POST', redirect: 'manual', body: JSON.stringify("--alef-boundary\r\nContent-Disposition: form-data; name=\"test2\"; filename=\"test2.txt\"\r\nContent-Type: text/plain\r\n\r\nplaceholder content\r\n--alef-boundary--\r\n") });
+    const response = await fetch(url, { method: 'POST', redirect: 'manual' });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ test2: { content: "<file2 content>", content_type: "text/plain", filename: "test2.txt", headers: [["content-disposition", "form-data; name=\"test2\"; filename=\"test2.txt\""], ["content-type", "text/plain"], ["x-custom", "f2"]], size: 15 } });  });
 
   it('file_upload_without_filename: Upload file content without providing a filename', async () => {
     const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
     const url = `${sutUrl}/fixtures/file_upload_without_filename/`;
-    const response = await fetch(url, { method: 'POST', redirect: 'manual', body: JSON.stringify("--alef-boundary\r\nContent-Disposition: form-data; name=\"test1\"; filename=\"test1.txt\"\r\nContent-Type: text/plain\r\n\r\nplaceholder content\r\n--alef-boundary--\r\n") });
+    const response = await fetch(url, { method: 'POST', redirect: 'manual' });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ test1: "<file1 content>" });  });
 
   it('form_data_without_files: Multipart form with only text fields, no file uploads', async () => {
     const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
     const url = `${sutUrl}/fixtures/form_data_without_files/`;
-    const response = await fetch(url, { method: 'POST', redirect: 'manual', body: JSON.stringify("--alef-boundary\r\nContent-Disposition: form-data; name=\"some\"\r\n\r\ndata\r\n--alef-boundary--\r\n") });
+    const response = await fetch(url, { method: 'POST', redirect: 'manual' });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ some: "data" });  });
 
@@ -105,14 +105,14 @@ describe('multipart', () => {  it('file_magic_number_png_success: File with corr
   it('mixed_files_and_form_data: Multipart request with both file uploads and regular form fields', async () => {
     const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
     const url = `${sutUrl}/fixtures/mixed_files_and_form_data/`;
-    const response = await fetch(url, { method: 'POST', redirect: 'manual', body: JSON.stringify("--alef-boundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"upload.txt\"\r\nContent-Type: text/plain\r\n\r\nfile data here\r\n--alef-boundary\r\nContent-Disposition: form-data; name=\"username\"\r\n\r\ntestuser\r\n--alef-boundary\r\nContent-Disposition: form-data; name=\"age\"\r\n\r\n25\r\n--alef-boundary\r\nContent-Disposition: form-data; name=\"active\"\r\n\r\ntrue\r\n--alef-boundary--\r\n") });
+    const response = await fetch(url, { method: 'POST', redirect: 'manual' });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ active: "true", age: "25", file: { content: "file data here", content_type: "text/plain", filename: "upload.txt", size: 14 }, username: "testuser" });  });
 
   it('multiple_file_uploads: Upload multiple files in a single multipart request', async () => {
     const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
     const url = `${sutUrl}/fixtures/multiple_file_uploads/`;
-    const response = await fetch(url, { method: 'POST', redirect: 'manual', body: JSON.stringify("--alef-boundary\r\nContent-Disposition: form-data; name=\"test1\"; filename=\"test1.txt\"\r\nContent-Type: text/plain\r\n\r\nfile1 content\r\n--alef-boundary\r\nContent-Disposition: form-data; name=\"test2\"; filename=\"test2.txt\"\r\nContent-Type: text/plain\r\n\r\nfile2 content\r\n--alef-boundary--\r\n") });
+    const response = await fetch(url, { method: 'POST', redirect: 'manual' });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ test1: { content: "<file1 content>", content_type: "text/plain", filename: "test1.txt", size: 15 }, test2: { content: "<file2 content>", content_type: "text/plain", filename: "test2.txt", size: 15 } });  });
 
@@ -154,7 +154,7 @@ describe('multipart', () => {  it('file_magic_number_png_success: File with corr
   it('simple_file_upload: Single file upload with text/plain content type', async () => {
     const sutUrl = process.env.SUT_URL || 'http://127.0.0.1:8001';
     const url = `${sutUrl}/fixtures/simple_file_upload/`;
-    const response = await fetch(url, { method: 'POST', redirect: 'manual', body: JSON.stringify("--alef-boundary\r\nContent-Disposition: form-data; name=\"test\"; filename=\"test.txt\"\r\nContent-Type: text/plain\r\n\r\nplaceholder content\r\n--alef-boundary--\r\n") });
+    const response = await fetch(url, { method: 'POST', redirect: 'manual' });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({ test: { content: "<file content>", content_type: "text/plain", filename: "test.txt", size: 14 } });  });
 

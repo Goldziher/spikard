@@ -96,7 +96,7 @@ describe('edge_cases', () => {  it('utf8_query_parameter: Query parameter with U
     const url = `${sutUrl}/fixtures/24_array_with_holes/items`;
     const response = await fetch(url, { method: 'POST', redirect: 'manual', headers: {
       "Content-Type": "application/x-www-form-urlencoded",
-    }, body: JSON.stringify("items[0]=first&items[2]=third&items[5]=sixth") });
+    }, body: "items[0]=first&items[2]=third&items[5]=sixth" });
     expect(response.status).toBe(400);    const data = await response.json();
     expect(data).toEqual({ error: "Failed to parse URL-encoded form data: missing index, expected: 1 got 2" });  });
 
