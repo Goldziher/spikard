@@ -8,7 +8,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'lib.freezed.dart';
 
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `AppError`, `Method`, `ParseRequest`, `SchemaError`, `SnapshotError`, `TestingSseEvent`, `ValidateRequest`, `ValidationResponse`, `WebSocketMessage`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ParseRequest`, `TestingSseEvent`, `ValidateRequest`, `ValidationResponse`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
 
 /// Create a simple schema configuration with only Query type.
@@ -140,6 +140,9 @@ Future<ResponseSnapshot> createResponseSnapshotFromJson({
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<GraphQLRouteConfig>>
 abstract class GraphQlRouteConfig implements RustOpaqueInterface {
+  static Future<GraphQlRouteConfig> default_() =>
+      RustLib.instance.api.crateGraphQlRouteConfigDefault();
+
   Future<GraphQlRouteConfig> description({required String description});
 
   Future<GraphQlRouteConfig> enablePlayground({required bool enable});
@@ -153,6 +156,10 @@ abstract class GraphQlRouteConfig implements RustOpaqueInterface {
   Future<bool> isPlaygroundEnabled();
 
   Future<GraphQlRouteConfig> method({required String method});
+
+  // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
+  static Future<GraphQlRouteConfig> newInstance() =>
+      RustLib.instance.api.crateGraphQlRouteConfigNew();
 
   Future<GraphQlRouteConfig> path({required String path});
 }
@@ -168,6 +175,12 @@ abstract class RouteBuilder implements RustOpaqueInterface {
   });
 
   Future<RouteBuilder> handlerName({required String name});
+
+  // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
+  static Future<RouteBuilder> newInstance({
+    required Method method,
+    required String path,
+  }) => RustLib.instance.api.crateRouteBuilderNew(method: method, path: path);
 
   Future<RouteBuilder> paramsSchemaJson({required String schema});
 
@@ -227,6 +240,20 @@ class ApiKeyConfig {
           runtimeType == other.runtimeType &&
           keys == other.keys &&
           headerName == other.headerName;
+}
+
+@freezed
+sealed class AppError with _$AppError {
+  const AppError._();
+
+  /// Route registration failed.
+  const factory AppError.route({required String field0}) = AppError_Route;
+
+  /// Server/router construction failed.
+  const factory AppError.server({required String field0}) = AppError_Server;
+
+  /// Failed to extract DTO from the request context.
+  const factory AppError.decode({required String field0}) = AppError_Decode;
 }
 
 /// AsyncAPI HTTP endpoint configuration
@@ -938,6 +965,9 @@ class LicenseInfo {
           url == other.url;
 }
 
+/// HTTP method
+enum Method { get_, post, put, patch, delete, head, options, connect, trace }
+
 /// OpenAPI configuration
 class OpenApiConfig {
   /// Enable OpenAPI generation (default: false for zero overhead)
@@ -1417,6 +1447,31 @@ class SchemaConfig {
 }
 
 @freezed
+sealed class SchemaError with _$SchemaError {
+  const SchemaError._();
+
+  /// Generic schema building error
+  const factory SchemaError.buildingFailed({required String field0}) =
+      SchemaError_BuildingFailed;
+
+  /// Configuration validation error
+  const factory SchemaError.validationError({required String field0}) =
+      SchemaError_ValidationError;
+
+  /// Complexity limit exceeded
+  const factory SchemaError.complexityLimitExceeded({
+    required PlatformInt64 limit,
+    required PlatformInt64 actual,
+  }) = SchemaError_ComplexityLimitExceeded;
+
+  /// Depth limit exceeded
+  const factory SchemaError.depthLimitExceeded({
+    required PlatformInt64 limit,
+    required PlatformInt64 actual,
+  }) = SchemaError_DepthLimitExceeded;
+}
+
+@freezed
 sealed class SecuritySchemeInfo with _$SecuritySchemeInfo {
   const SecuritySchemeInfo._();
 
@@ -1581,6 +1636,19 @@ class ServerInfo {
           description == other.description;
 }
 
+@freezed
+sealed class SnapshotError with _$SnapshotError {
+  const SnapshotError._();
+
+  /// Response header could not be decoded to UTF-8.
+  const factory SnapshotError.invalidHeader({required String field0}) =
+      SnapshotError_InvalidHeader;
+
+  /// Body decompression failed.
+  const factory SnapshotError.decompression({required String field0}) =
+      SnapshotError_Decompression;
+}
+
 /// An individual SSE event
 ///
 /// Represents a single Server-Sent Event to be sent to a connected client.
@@ -1735,4 +1803,37 @@ class UploadFile {
           size == other.size &&
           content == other.content &&
           contentEncoding == other.contentEncoding;
+}
+
+@freezed
+sealed class WebSocketMessage with _$WebSocketMessage {
+  const WebSocketMessage._();
+
+  /// A text message.
+  const factory WebSocketMessage.text({required String field0}) =
+      WebSocketMessage_Text;
+
+  /// A binary message.
+  const factory WebSocketMessage.binary({required Uint8List field0}) =
+      WebSocketMessage_Binary;
+
+  /// A close message with a numeric close code (RFC 6455) and optional reason text.
+  ///
+  /// Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received,
+  /// 1006 Abnormal Closure.
+  const factory WebSocketMessage.close({
+    /// RFC 6455 close code.
+    required PlatformInt64 code,
+
+    /// Optional human-readable reason string.
+    required String reason,
+  }) = WebSocketMessage_Close;
+
+  /// A ping message.
+  const factory WebSocketMessage.ping({required Uint8List field0}) =
+      WebSocketMessage_Ping;
+
+  /// A pong message.
+  const factory WebSocketMessage.pong({required Uint8List field0}) =
+      WebSocketMessage_Pong;
 }

@@ -142,6 +142,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ApiKeyConfig dco_decode_api_key_config(dynamic raw);
 
   @protected
+  AppError dco_decode_app_error(dynamic raw);
+
+  @protected
   AsyncApiConfig dco_decode_async_api_config(dynamic raw);
 
   @protected
@@ -271,6 +274,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<StaticFilesConfig> dco_decode_list_static_files_config(dynamic raw);
 
   @protected
+  Method dco_decode_method(dynamic raw);
+
+  @protected
   OpenApiConfig dco_decode_open_api_config(dynamic raw);
 
   @protected
@@ -357,6 +363,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SchemaConfig dco_decode_schema_config(dynamic raw);
 
   @protected
+  SchemaError dco_decode_schema_error(dynamic raw);
+
+  @protected
   SecuritySchemeInfo dco_decode_security_scheme_info(dynamic raw);
 
   @protected
@@ -364,6 +373,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ServerInfo dco_decode_server_info(dynamic raw);
+
+  @protected
+  SnapshotError dco_decode_snapshot_error(dynamic raw);
 
   @protected
   SseEvent dco_decode_sse_event(dynamic raw);
@@ -382,6 +394,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BigInt dco_decode_usize(dynamic raw);
+
+  @protected
+  WebSocketMessage dco_decode_web_socket_message(dynamic raw);
 
   @protected
   AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
@@ -481,6 +496,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ApiKeyConfig sse_decode_api_key_config(SseDeserializer deserializer);
+
+  @protected
+  AppError sse_decode_app_error(SseDeserializer deserializer);
 
   @protected
   AsyncApiConfig sse_decode_async_api_config(SseDeserializer deserializer);
@@ -646,6 +664,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  Method sse_decode_method(SseDeserializer deserializer);
+
+  @protected
   OpenApiConfig sse_decode_open_api_config(SseDeserializer deserializer);
 
   @protected
@@ -756,6 +777,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SchemaConfig sse_decode_schema_config(SseDeserializer deserializer);
 
   @protected
+  SchemaError sse_decode_schema_error(SseDeserializer deserializer);
+
+  @protected
   SecuritySchemeInfo sse_decode_security_scheme_info(
     SseDeserializer deserializer,
   );
@@ -765,6 +789,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ServerInfo sse_decode_server_info(SseDeserializer deserializer);
+
+  @protected
+  SnapshotError sse_decode_snapshot_error(SseDeserializer deserializer);
 
   @protected
   SseEvent sse_decode_sse_event(SseDeserializer deserializer);
@@ -785,6 +812,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   BigInt sse_decode_usize(SseDeserializer deserializer);
+
+  @protected
+  WebSocketMessage sse_decode_web_socket_message(SseDeserializer deserializer);
 
   @protected
   void sse_encode_AnyhowException(
@@ -909,6 +939,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_api_key_config(ApiKeyConfig self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_app_error(AppError self, SseSerializer serializer);
 
   @protected
   void sse_encode_async_api_config(
@@ -1124,6 +1157,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_method(Method self, SseSerializer serializer);
+
+  @protected
   void sse_encode_open_api_config(OpenApiConfig self, SseSerializer serializer);
 
   @protected
@@ -1265,6 +1301,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_schema_config(SchemaConfig self, SseSerializer serializer);
 
   @protected
+  void sse_encode_schema_error(SchemaError self, SseSerializer serializer);
+
+  @protected
   void sse_encode_security_scheme_info(
     SecuritySchemeInfo self,
     SseSerializer serializer,
@@ -1275,6 +1314,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_server_info(ServerInfo self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_snapshot_error(SnapshotError self, SseSerializer serializer);
 
   @protected
   void sse_encode_sse_event(SseEvent self, SseSerializer serializer);
@@ -1296,6 +1338,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_usize(BigInt self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_web_socket_message(
+    WebSocketMessage self,
+    SseSerializer serializer,
+  );
 }
 
 // Section: wire_class

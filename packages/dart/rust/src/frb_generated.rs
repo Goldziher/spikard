@@ -40,7 +40,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.12.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1466720877;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -301533701;
 
 // Section: executor
 
@@ -647,6 +647,33 @@ fn wire__crate__service_api__DartHandlerHandler_new_impl(
         },
     )
 }
+fn wire__crate__GraphQlRouteConfig_default_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "GraphQlRouteConfig_default",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_)
+            };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Result::<_, ()>::Ok(crate::GraphQLRouteConfig::default())?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
 fn wire__crate__GraphQlRouteConfig_description_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -713,7 +740,7 @@ fn wire__crate__GraphQlRouteConfig_get_description_impl(
     rust_vec_len_: i32,
     data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "GraphQlRouteConfig_get_description", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "GraphQlRouteConfig_get_description", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || {
             let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
             let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_that = <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<GraphQLRouteConfig>>>::sse_decode(&mut deserializer);deserializer.end(); move |context|  {
@@ -737,7 +764,7 @@ fn wire__crate__GraphQlRouteConfig_get_method_impl(
     rust_vec_len_: i32,
     data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "GraphQlRouteConfig_get_method", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "GraphQlRouteConfig_get_method", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || {
             let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
             let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_that = <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<GraphQLRouteConfig>>>::sse_decode(&mut deserializer);deserializer.end(); move |context|  {
@@ -761,7 +788,7 @@ fn wire__crate__GraphQlRouteConfig_get_path_impl(
     rust_vec_len_: i32,
     data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "GraphQlRouteConfig_get_path", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "GraphQlRouteConfig_get_path", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || {
             let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
             let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_that = <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<GraphQLRouteConfig>>>::sse_decode(&mut deserializer);deserializer.end(); move |context|  {
@@ -785,7 +812,7 @@ fn wire__crate__GraphQlRouteConfig_is_playground_enabled_impl(
     rust_vec_len_: i32,
     data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "GraphQlRouteConfig_is_playground_enabled", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "GraphQlRouteConfig_is_playground_enabled", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || {
             let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
             let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_that = <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<GraphQLRouteConfig>>>::sse_decode(&mut deserializer);deserializer.end(); move |context|  {
@@ -826,6 +853,33 @@ fn wire__crate__GraphQlRouteConfig_method_impl(
             move |context| {
                 transform_result_sse::<_, ()>((move || {
                     let output_ok = Result::<_, ()>::Ok(crate::GraphQLRouteConfig::method(api_that, api_method))?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__GraphQlRouteConfig_new_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "GraphQlRouteConfig_new",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_)
+            };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Result::<_, ()>::Ok(crate::GraphQLRouteConfig::new())?;
                     Ok(output_ok)
                 })())
             }
@@ -972,6 +1026,35 @@ fn wire__crate__RouteBuilder_handler_name_impl(
             move |context| {
                 transform_result_sse::<_, ()>((move || {
                     let output_ok = Result::<_, ()>::Ok(crate::RouteBuilder::handler_name(api_that, api_name))?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__RouteBuilder_new_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "RouteBuilder_new",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_)
+            };
+            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_method = <crate::Method>::sse_decode(&mut deserializer);
+            let api_path = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Result::<_, ()>::Ok(crate::RouteBuilder::new(api_method, api_path))?;
                     Ok(output_ok)
                 })())
             }
@@ -2326,6 +2409,17 @@ const _: fn() = || {
         let _: Vec<String> = ApiKeyConfig.keys;
         let _: String = ApiKeyConfig.header_name;
     }
+    match None::<crate::AppError>.unwrap() {
+        crate::AppError::Route { field0 } => {
+            let _: String = field0;
+        }
+        crate::AppError::Server { field0 } => {
+            let _: String = field0;
+        }
+        crate::AppError::Decode { field0 } => {
+            let _: String = field0;
+        }
+    }
     {
         let AsyncApiConfig = None::<crate::AsyncApiConfig>.unwrap();
         let _: bool = AsyncApiConfig.enabled;
@@ -2549,6 +2643,22 @@ const _: fn() = || {
         let _: Option<i64> = SchemaConfig.complexity_limit;
         let _: Option<i64> = SchemaConfig.depth_limit;
     }
+    match None::<crate::SchemaError>.unwrap() {
+        crate::SchemaError::BuildingFailed { field0 } => {
+            let _: String = field0;
+        }
+        crate::SchemaError::ValidationError { field0 } => {
+            let _: String = field0;
+        }
+        crate::SchemaError::ComplexityLimitExceeded { limit, actual } => {
+            let _: i64 = limit;
+            let _: i64 = actual;
+        }
+        crate::SchemaError::DepthLimitExceeded { limit, actual } => {
+            let _: i64 = limit;
+            let _: i64 = actual;
+        }
+    }
     match None::<crate::SecuritySchemeInfo>.unwrap() {
         crate::SecuritySchemeInfo::Http { scheme, bearer_format } => {
             let _: String = scheme;
@@ -2586,6 +2696,14 @@ const _: fn() = || {
         let _: String = ServerInfo.url;
         let _: Option<String> = ServerInfo.description;
     }
+    match None::<crate::SnapshotError>.unwrap() {
+        crate::SnapshotError::InvalidHeader { field0 } => {
+            let _: String = field0;
+        }
+        crate::SnapshotError::Decompression { field0 } => {
+            let _: String = field0;
+        }
+    }
     {
         let SseEvent = None::<crate::SseEvent>.unwrap();
         let _: Option<String> = SseEvent.event_type;
@@ -2607,6 +2725,24 @@ const _: fn() = || {
         let _: Option<i64> = UploadFile.size;
         let _: Vec<u8> = UploadFile.content;
         let _: Option<String> = UploadFile.content_encoding;
+    }
+    match None::<crate::WebSocketMessage>.unwrap() {
+        crate::WebSocketMessage::Text { field0 } => {
+            let _: String = field0;
+        }
+        crate::WebSocketMessage::Binary { field0 } => {
+            let _: Vec<u8> = field0;
+        }
+        crate::WebSocketMessage::Close { code, reason } => {
+            let _: i64 = code;
+            let _: String = reason;
+        }
+        crate::WebSocketMessage::Ping { field0 } => {
+            let _: Vec<u8> = field0;
+        }
+        crate::WebSocketMessage::Pong { field0 } => {
+            let _: Vec<u8> = field0;
+        }
     }
 };
 
@@ -2795,6 +2931,30 @@ impl SseDecode for crate::ApiKeyConfig {
             keys: var_keys,
             header_name: var_headerName,
         };
+    }
+}
+
+impl SseDecode for crate::AppError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::AppError::Route { field0: var_field0 };
+            }
+            1 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::AppError::Server { field0: var_field0 };
+            }
+            2 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::AppError::Decode { field0: var_field0 };
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
     }
 }
 
@@ -3220,6 +3380,25 @@ impl SseDecode for Vec<crate::StaticFilesConfig> {
     }
 }
 
+impl SseDecode for crate::Method {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::Method::Get,
+            1 => crate::Method::Post,
+            2 => crate::Method::Put,
+            3 => crate::Method::Patch,
+            4 => crate::Method::Delete,
+            5 => crate::Method::Head,
+            6 => crate::Method::Options,
+            7 => crate::Method::Connect,
+            8 => crate::Method::Trace,
+            _ => unreachable!("Invalid variant for Method: {}", inner),
+        };
+    }
+}
+
 impl SseDecode for crate::OpenApiConfig {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3589,6 +3768,42 @@ impl SseDecode for crate::SchemaConfig {
     }
 }
 
+impl SseDecode for crate::SchemaError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::SchemaError::BuildingFailed { field0: var_field0 };
+            }
+            1 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::SchemaError::ValidationError { field0: var_field0 };
+            }
+            2 => {
+                let mut var_limit = <i64>::sse_decode(deserializer);
+                let mut var_actual = <i64>::sse_decode(deserializer);
+                return crate::SchemaError::ComplexityLimitExceeded {
+                    limit: var_limit,
+                    actual: var_actual,
+                };
+            }
+            3 => {
+                let mut var_limit = <i64>::sse_decode(deserializer);
+                let mut var_actual = <i64>::sse_decode(deserializer);
+                return crate::SchemaError::DepthLimitExceeded {
+                    limit: var_limit,
+                    actual: var_actual,
+                };
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
 impl SseDecode for crate::SecuritySchemeInfo {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3675,6 +3890,26 @@ impl SseDecode for crate::ServerInfo {
     }
 }
 
+impl SseDecode for crate::SnapshotError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::SnapshotError::InvalidHeader { field0: var_field0 };
+            }
+            1 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::SnapshotError::Decompression { field0: var_field0 };
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
 impl SseDecode for crate::SseEvent {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3744,6 +3979,42 @@ impl SseDecode for usize {
     }
 }
 
+impl SseDecode for crate::WebSocketMessage {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::WebSocketMessage::Text { field0: var_field0 };
+            }
+            1 => {
+                let mut var_field0 = <Vec<u8>>::sse_decode(deserializer);
+                return crate::WebSocketMessage::Binary { field0: var_field0 };
+            }
+            2 => {
+                let mut var_code = <i64>::sse_decode(deserializer);
+                let mut var_reason = <String>::sse_decode(deserializer);
+                return crate::WebSocketMessage::Close {
+                    code: var_code,
+                    reason: var_reason,
+                };
+            }
+            3 => {
+                let mut var_field0 = <Vec<u8>>::sse_decode(deserializer);
+                return crate::WebSocketMessage::Ping { field0: var_field0 };
+            }
+            4 => {
+                let mut var_field0 = <Vec<u8>>::sse_decode(deserializer);
+                return crate::WebSocketMessage::Pong { field0: var_field0 };
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
 fn pde_ffi_dispatcher_primary_impl(
     func_id: i32,
     port: flutter_rust_bridge::for_generated::MessagePort,
@@ -3755,62 +4026,65 @@ fn pde_ffi_dispatcher_primary_impl(
     match func_id {
         12 => wire__crate__service_api__App_run_impl(port, ptr, rust_vec_len, data_len),
         14 => wire__crate__service_api__DartHandlerHandler_new_impl(port, ptr, rust_vec_len, data_len),
-        15 => wire__crate__GraphQlRouteConfig_description_impl(port, ptr, rust_vec_len, data_len),
-        16 => wire__crate__GraphQlRouteConfig_enable_playground_impl(port, ptr, rust_vec_len, data_len),
-        17 => wire__crate__GraphQlRouteConfig_get_description_impl(port, ptr, rust_vec_len, data_len),
-        18 => wire__crate__GraphQlRouteConfig_get_method_impl(port, ptr, rust_vec_len, data_len),
-        19 => wire__crate__GraphQlRouteConfig_get_path_impl(port, ptr, rust_vec_len, data_len),
-        20 => wire__crate__GraphQlRouteConfig_is_playground_enabled_impl(port, ptr, rust_vec_len, data_len),
-        21 => wire__crate__GraphQlRouteConfig_method_impl(port, ptr, rust_vec_len, data_len),
-        22 => wire__crate__GraphQlRouteConfig_path_impl(port, ptr, rust_vec_len, data_len),
-        23 => wire__crate__RouteBuilder_cors_impl(port, ptr, rust_vec_len, data_len),
-        24 => wire__crate__RouteBuilder_file_params_json_impl(port, ptr, rust_vec_len, data_len),
-        25 => wire__crate__RouteBuilder_handler_dependencies_impl(port, ptr, rust_vec_len, data_len),
-        26 => wire__crate__RouteBuilder_handler_name_impl(port, ptr, rust_vec_len, data_len),
-        27 => wire__crate__RouteBuilder_params_schema_json_impl(port, ptr, rust_vec_len, data_len),
-        28 => wire__crate__RouteBuilder_request_schema_json_impl(port, ptr, rust_vec_len, data_len),
-        29 => wire__crate__RouteBuilder_response_schema_json_impl(port, ptr, rust_vec_len, data_len),
-        30 => wire__crate__RouteBuilder_sync_impl(port, ptr, rust_vec_len, data_len),
-        31 => wire__crate__TestClient_graphql_impl(port, ptr, rust_vec_len, data_len),
-        32 => wire__crate__TestClient_graphql_at_impl(port, ptr, rust_vec_len, data_len),
-        33 => wire__crate__TestClient_graphql_subscription_impl(port, ptr, rust_vec_len, data_len),
-        34 => wire__crate__TestClient_graphql_subscription_at_impl(port, ptr, rust_vec_len, data_len),
-        35 => wire__crate__create_api_key_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        36 => wire__crate__create_async_api_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        37 => wire__crate__create_background_job_metadata_from_json_impl(port, ptr, rust_vec_len, data_len),
-        38 => wire__crate__create_background_task_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        39 => wire__crate__create_compression_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        40 => wire__crate__create_contact_info_from_json_impl(port, ptr, rust_vec_len, data_len),
-        41 => wire__crate__create_cors_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        42 => wire__crate__create_full_schema_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        43 => wire__crate__create_grpc_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        44 => wire__crate__create_json_rpc_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        45 => wire__crate__create_json_rpc_method_info_from_json_impl(port, ptr, rust_vec_len, data_len),
-        46 => wire__crate__create_jwt_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        47 => wire__crate__create_license_info_from_json_impl(port, ptr, rust_vec_len, data_len),
-        48 => wire__crate__create_open_api_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        49 => wire__crate__create_parse_result_from_json_impl(port, ptr, rust_vec_len, data_len),
-        50 => wire__crate__create_parsed_channel_from_json_impl(port, ptr, rust_vec_len, data_len),
-        51 => wire__crate__create_parsed_message_from_json_impl(port, ptr, rust_vec_len, data_len),
-        52 => wire__crate__create_parsed_operation_from_json_impl(port, ptr, rust_vec_len, data_len),
-        53 => wire__crate__create_problem_details_from_json_impl(port, ptr, rust_vec_len, data_len),
-        54 => wire__crate__create_query_mutation_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        55 => wire__crate__create_query_only_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        56 => wire__crate__create_rate_limit_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        57 => wire__crate__create_response_from_json_impl(port, ptr, rust_vec_len, data_len),
-        58 => wire__crate__create_response_snapshot_from_json_impl(port, ptr, rust_vec_len, data_len),
-        59 => wire__crate__create_schema_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        60 => wire__crate__create_server_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        61 => wire__crate__create_server_info_from_json_impl(port, ptr, rust_vec_len, data_len),
-        62 => wire__crate__create_sse_event_from_json_impl(port, ptr, rust_vec_len, data_len),
-        63 => wire__crate__create_static_files_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        64 => wire__crate__create_upload_file_from_json_impl(port, ptr, rust_vec_len, data_len),
-        65 => wire__crate__graph_ql_error_error_type_impl(port, ptr, rust_vec_len, data_len),
-        66 => wire__crate__graph_ql_error_is_transient_impl(port, ptr, rust_vec_len, data_len),
-        67 => wire__crate__graph_ql_error_status_code_impl(port, ptr, rust_vec_len, data_len),
-        68 => wire__crate__schema_full_impl(port, ptr, rust_vec_len, data_len),
-        69 => wire__crate__schema_query_mutation_impl(port, ptr, rust_vec_len, data_len),
-        70 => wire__crate__schema_query_only_impl(port, ptr, rust_vec_len, data_len),
+        15 => wire__crate__GraphQlRouteConfig_default_impl(port, ptr, rust_vec_len, data_len),
+        16 => wire__crate__GraphQlRouteConfig_description_impl(port, ptr, rust_vec_len, data_len),
+        17 => wire__crate__GraphQlRouteConfig_enable_playground_impl(port, ptr, rust_vec_len, data_len),
+        18 => wire__crate__GraphQlRouteConfig_get_description_impl(port, ptr, rust_vec_len, data_len),
+        19 => wire__crate__GraphQlRouteConfig_get_method_impl(port, ptr, rust_vec_len, data_len),
+        20 => wire__crate__GraphQlRouteConfig_get_path_impl(port, ptr, rust_vec_len, data_len),
+        21 => wire__crate__GraphQlRouteConfig_is_playground_enabled_impl(port, ptr, rust_vec_len, data_len),
+        22 => wire__crate__GraphQlRouteConfig_method_impl(port, ptr, rust_vec_len, data_len),
+        23 => wire__crate__GraphQlRouteConfig_new_impl(port, ptr, rust_vec_len, data_len),
+        24 => wire__crate__GraphQlRouteConfig_path_impl(port, ptr, rust_vec_len, data_len),
+        25 => wire__crate__RouteBuilder_cors_impl(port, ptr, rust_vec_len, data_len),
+        26 => wire__crate__RouteBuilder_file_params_json_impl(port, ptr, rust_vec_len, data_len),
+        27 => wire__crate__RouteBuilder_handler_dependencies_impl(port, ptr, rust_vec_len, data_len),
+        28 => wire__crate__RouteBuilder_handler_name_impl(port, ptr, rust_vec_len, data_len),
+        29 => wire__crate__RouteBuilder_new_impl(port, ptr, rust_vec_len, data_len),
+        30 => wire__crate__RouteBuilder_params_schema_json_impl(port, ptr, rust_vec_len, data_len),
+        31 => wire__crate__RouteBuilder_request_schema_json_impl(port, ptr, rust_vec_len, data_len),
+        32 => wire__crate__RouteBuilder_response_schema_json_impl(port, ptr, rust_vec_len, data_len),
+        33 => wire__crate__RouteBuilder_sync_impl(port, ptr, rust_vec_len, data_len),
+        34 => wire__crate__TestClient_graphql_impl(port, ptr, rust_vec_len, data_len),
+        35 => wire__crate__TestClient_graphql_at_impl(port, ptr, rust_vec_len, data_len),
+        36 => wire__crate__TestClient_graphql_subscription_impl(port, ptr, rust_vec_len, data_len),
+        37 => wire__crate__TestClient_graphql_subscription_at_impl(port, ptr, rust_vec_len, data_len),
+        38 => wire__crate__create_api_key_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        39 => wire__crate__create_async_api_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        40 => wire__crate__create_background_job_metadata_from_json_impl(port, ptr, rust_vec_len, data_len),
+        41 => wire__crate__create_background_task_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        42 => wire__crate__create_compression_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        43 => wire__crate__create_contact_info_from_json_impl(port, ptr, rust_vec_len, data_len),
+        44 => wire__crate__create_cors_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        45 => wire__crate__create_full_schema_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        46 => wire__crate__create_grpc_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        47 => wire__crate__create_json_rpc_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        48 => wire__crate__create_json_rpc_method_info_from_json_impl(port, ptr, rust_vec_len, data_len),
+        49 => wire__crate__create_jwt_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        50 => wire__crate__create_license_info_from_json_impl(port, ptr, rust_vec_len, data_len),
+        51 => wire__crate__create_open_api_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        52 => wire__crate__create_parse_result_from_json_impl(port, ptr, rust_vec_len, data_len),
+        53 => wire__crate__create_parsed_channel_from_json_impl(port, ptr, rust_vec_len, data_len),
+        54 => wire__crate__create_parsed_message_from_json_impl(port, ptr, rust_vec_len, data_len),
+        55 => wire__crate__create_parsed_operation_from_json_impl(port, ptr, rust_vec_len, data_len),
+        56 => wire__crate__create_problem_details_from_json_impl(port, ptr, rust_vec_len, data_len),
+        57 => wire__crate__create_query_mutation_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        58 => wire__crate__create_query_only_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        59 => wire__crate__create_rate_limit_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        60 => wire__crate__create_response_from_json_impl(port, ptr, rust_vec_len, data_len),
+        61 => wire__crate__create_response_snapshot_from_json_impl(port, ptr, rust_vec_len, data_len),
+        62 => wire__crate__create_schema_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        63 => wire__crate__create_server_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        64 => wire__crate__create_server_info_from_json_impl(port, ptr, rust_vec_len, data_len),
+        65 => wire__crate__create_sse_event_from_json_impl(port, ptr, rust_vec_len, data_len),
+        66 => wire__crate__create_static_files_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        67 => wire__crate__create_upload_file_from_json_impl(port, ptr, rust_vec_len, data_len),
+        68 => wire__crate__graph_ql_error_error_type_impl(port, ptr, rust_vec_len, data_len),
+        69 => wire__crate__graph_ql_error_is_transient_impl(port, ptr, rust_vec_len, data_len),
+        70 => wire__crate__graph_ql_error_status_code_impl(port, ptr, rust_vec_len, data_len),
+        71 => wire__crate__schema_full_impl(port, ptr, rust_vec_len, data_len),
+        72 => wire__crate__schema_query_mutation_impl(port, ptr, rust_vec_len, data_len),
+        73 => wire__crate__schema_query_only_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -3924,6 +4198,25 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::ApiKeyConfig> {
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<crate::ApiKeyConfig> {}
 impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::ApiKeyConfig>> for crate::ApiKeyConfig {
     fn into_into_dart(self) -> FrbWrapper<crate::ApiKeyConfig> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::AppError> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self.0 {
+            crate::AppError::Route { field0 } => [0.into_dart(), field0.into_into_dart().into_dart()].into_dart(),
+            crate::AppError::Server { field0 } => [1.into_dart(), field0.into_into_dart().into_dart()].into_dart(),
+            crate::AppError::Decode { field0 } => [2.into_dart(), field0.into_into_dart().into_dart()].into_dart(),
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<crate::AppError> {}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::AppError>> for crate::AppError {
+    fn into_into_dart(self) -> FrbWrapper<crate::AppError> {
         self.into()
     }
 }
@@ -4226,6 +4519,29 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::LicenseInfo>> for crate
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::Method> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self.0 {
+            crate::Method::Get => 0.into_dart(),
+            crate::Method::Post => 1.into_dart(),
+            crate::Method::Put => 2.into_dart(),
+            crate::Method::Patch => 3.into_dart(),
+            crate::Method::Delete => 4.into_dart(),
+            crate::Method::Head => 5.into_dart(),
+            crate::Method::Options => 6.into_dart(),
+            crate::Method::Connect => 7.into_dart(),
+            crate::Method::Trace => 8.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<crate::Method> {}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::Method>> for crate::Method {
+    fn into_into_dart(self) -> FrbWrapper<crate::Method> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::OpenApiConfig> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -4444,6 +4760,40 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::SchemaConfig>> for crat
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::SchemaError> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self.0 {
+            crate::SchemaError::BuildingFailed { field0 } => {
+                [0.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::SchemaError::ValidationError { field0 } => {
+                [1.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::SchemaError::ComplexityLimitExceeded { limit, actual } => [
+                2.into_dart(),
+                limit.into_into_dart().into_dart(),
+                actual.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::SchemaError::DepthLimitExceeded { limit, actual } => [
+                3.into_dart(),
+                limit.into_into_dart().into_dart(),
+                actual.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<crate::SchemaError> {}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::SchemaError>> for crate::SchemaError {
+    fn into_into_dart(self) -> FrbWrapper<crate::SchemaError> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::SecuritySchemeInfo> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self.0 {
@@ -4521,6 +4871,28 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::ServerInfo>> for crate:
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::SnapshotError> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self.0 {
+            crate::SnapshotError::InvalidHeader { field0 } => {
+                [0.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::SnapshotError::Decompression { field0 } => {
+                [1.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<crate::SnapshotError> {}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::SnapshotError>> for crate::SnapshotError {
+    fn into_into_dart(self) -> FrbWrapper<crate::SnapshotError> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::SseEvent> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -4572,6 +4944,40 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::UploadFile> {
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<crate::UploadFile> {}
 impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::UploadFile>> for crate::UploadFile {
     fn into_into_dart(self) -> FrbWrapper<crate::UploadFile> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::WebSocketMessage> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self.0 {
+            crate::WebSocketMessage::Text { field0 } => {
+                [0.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::WebSocketMessage::Binary { field0 } => {
+                [1.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::WebSocketMessage::Close { code, reason } => [
+                2.into_dart(),
+                code.into_into_dart().into_dart(),
+                reason.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::WebSocketMessage::Ping { field0 } => {
+                [3.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::WebSocketMessage::Pong { field0 } => {
+                [4.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<crate::WebSocketMessage> {}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::WebSocketMessage>> for crate::WebSocketMessage {
+    fn into_into_dart(self) -> FrbWrapper<crate::WebSocketMessage> {
         self.into()
     }
 }
@@ -4711,6 +5117,29 @@ impl SseEncode for crate::ApiKeyConfig {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <Vec<String>>::sse_encode(self.keys, serializer);
         <String>::sse_encode(self.header_name, serializer);
+    }
+}
+
+impl SseEncode for crate::AppError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::AppError::Route { field0 } => {
+                <i32>::sse_encode(0, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::AppError::Server { field0 } => {
+                <i32>::sse_encode(1, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::AppError::Decode { field0 } => {
+                <i32>::sse_encode(2, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
     }
 }
 
@@ -5034,6 +5463,29 @@ impl SseEncode for Vec<crate::StaticFilesConfig> {
     }
 }
 
+impl SseEncode for crate::Method {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::Method::Get => 0,
+                crate::Method::Post => 1,
+                crate::Method::Put => 2,
+                crate::Method::Patch => 3,
+                crate::Method::Delete => 4,
+                crate::Method::Head => 5,
+                crate::Method::Options => 6,
+                crate::Method::Connect => 7,
+                crate::Method::Trace => 8,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
+    }
+}
+
 impl SseEncode for crate::OpenApiConfig {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5312,6 +5764,35 @@ impl SseEncode for crate::SchemaConfig {
     }
 }
 
+impl SseEncode for crate::SchemaError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::SchemaError::BuildingFailed { field0 } => {
+                <i32>::sse_encode(0, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::SchemaError::ValidationError { field0 } => {
+                <i32>::sse_encode(1, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::SchemaError::ComplexityLimitExceeded { limit, actual } => {
+                <i32>::sse_encode(2, serializer);
+                <i64>::sse_encode(limit, serializer);
+                <i64>::sse_encode(actual, serializer);
+            }
+            crate::SchemaError::DepthLimitExceeded { limit, actual } => {
+                <i32>::sse_encode(3, serializer);
+                <i64>::sse_encode(limit, serializer);
+                <i64>::sse_encode(actual, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
 impl SseEncode for crate::SecuritySchemeInfo {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5366,6 +5847,25 @@ impl SseEncode for crate::ServerInfo {
     }
 }
 
+impl SseEncode for crate::SnapshotError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::SnapshotError::InvalidHeader { field0 } => {
+                <i32>::sse_encode(0, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::SnapshotError::Decompression { field0 } => {
+                <i32>::sse_encode(1, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
 impl SseEncode for crate::SseEvent {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5413,6 +5913,38 @@ impl SseEncode for usize {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         serializer.cursor.write_u64::<NativeEndian>(self as _).unwrap();
+    }
+}
+
+impl SseEncode for crate::WebSocketMessage {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::WebSocketMessage::Text { field0 } => {
+                <i32>::sse_encode(0, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::WebSocketMessage::Binary { field0 } => {
+                <i32>::sse_encode(1, serializer);
+                <Vec<u8>>::sse_encode(field0, serializer);
+            }
+            crate::WebSocketMessage::Close { code, reason } => {
+                <i32>::sse_encode(2, serializer);
+                <i64>::sse_encode(code, serializer);
+                <String>::sse_encode(reason, serializer);
+            }
+            crate::WebSocketMessage::Ping { field0 } => {
+                <i32>::sse_encode(3, serializer);
+                <Vec<u8>>::sse_encode(field0, serializer);
+            }
+            crate::WebSocketMessage::Pong { field0 } => {
+                <i32>::sse_encode(4, serializer);
+                <Vec<u8>>::sse_encode(field0, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
     }
 }
 

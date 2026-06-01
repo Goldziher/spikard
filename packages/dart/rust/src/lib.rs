@@ -709,7 +709,10 @@ impl From<TestClient> for spikard_http::testing::test_client::TestClient {
 }
 
 impl GraphQLRouteConfig {
-    // Method `new` is a static/associated function and is not yet bridged through FRB — skipped.
+    #[frb]
+    pub fn new() -> GraphQLRouteConfig {
+        (|v| GraphQLRouteConfig::from(v))(spikard::GraphQLRouteConfig::new())
+    }
     #[frb]
     pub fn path(self, path: String) -> GraphQLRouteConfig {
         (|v| GraphQLRouteConfig::from(v))(self.inner.path(path))
@@ -742,11 +745,20 @@ impl GraphQLRouteConfig {
     pub fn get_description(&self) -> Option<String> {
         (|v: Option<&str>| v.map(|s| s.to_string()))(self.inner.get_description())
     }
-    // Method `default` is a static/associated function and is not yet bridged through FRB — skipped.
+    #[frb]
+    pub fn default() -> GraphQLRouteConfig {
+        (|v| GraphQLRouteConfig::from(v))(spikard::GraphQLRouteConfig::default())
+    }
 }
 
 impl RouteBuilder {
-    // Method `new` is a static/associated function and is not yet bridged through FRB — skipped.
+    #[frb]
+    pub fn new(method: Method, path: String) -> RouteBuilder {
+        (|v| RouteBuilder::from(v))(spikard::RouteBuilder::new(
+            unsafe { ::std::mem::transmute::<Method, spikard::Method>(method) },
+            path,
+        ))
+    }
     #[frb]
     pub fn handler_name(self, name: String) -> RouteBuilder {
         (|v| RouteBuilder::from(v))(self.inner.handler_name(name))
@@ -879,7 +891,7 @@ impl TestClient {
 }
 
 /// HTTP method
-#[frb(mirror(Method))]
+#[frb(mirror(Method), unignore)]
 pub enum Method {
     Get,
     Post,
@@ -893,14 +905,14 @@ pub enum Method {
 }
 
 /// Security scheme types
-#[frb(mirror(SecuritySchemeInfo))]
+#[frb(mirror(SecuritySchemeInfo), unignore)]
 pub enum SecuritySchemeInfo {
     Http { scheme: String, bearer_format: String },
     ApiKey { location: String, name: String },
 }
 
 /// Possible errors while converting an Axum response into a snapshot.
-#[frb(mirror(SnapshotError))]
+#[frb(mirror(SnapshotError), unignore)]
 pub enum SnapshotError {
     /// Response header could not be decoded to UTF-8.
     InvalidHeader { field0: String },
@@ -909,7 +921,7 @@ pub enum SnapshotError {
 }
 
 /// A WebSocket message that can be text or binary.
-#[frb(mirror(WebSocketMessage))]
+#[frb(mirror(WebSocketMessage), unignore)]
 pub enum WebSocketMessage {
     /// A text message.
     Text { field0: String },
@@ -932,7 +944,7 @@ pub enum WebSocketMessage {
 }
 
 /// Error type for application builder operations.
-#[frb(mirror(AppError))]
+#[frb(mirror(AppError), unignore)]
 pub enum AppError {
     /// Route registration failed.
     Route { field0: String },
@@ -946,7 +958,7 @@ pub enum AppError {
 ///
 /// These errors are compatible with async-graphql error handling and can be
 /// converted to structured HTTP responses matching the project's error fixtures.
-#[frb(mirror(GraphQLError))]
+#[frb(mirror(GraphQLError), unignore)]
 pub enum GraphQLError {
     /// Error during schema execution
     ///
@@ -1085,7 +1097,7 @@ impl GraphQLError {
 }
 
 /// Error type for schema building operations
-#[frb(mirror(SchemaError))]
+#[frb(mirror(SchemaError), unignore)]
 pub enum SchemaError {
     /// Generic schema building error
     BuildingFailed { field0: String },
