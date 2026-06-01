@@ -258,7 +258,7 @@ RSpec.describe 'path_params' do
   end
 
   describe 'boolean_path_parameter_numeric_1' do
-    it 'Tests boolean path parameter with '1' converts to true.' do
+    it "Tests boolean path parameter with '1' converts to true." do
       require 'net/http'
       require 'uri'
       require 'json'
@@ -276,7 +276,7 @@ RSpec.describe 'path_params' do
   end
 
   describe 'boolean_path_parameter_true' do
-    it 'Tests boolean path parameter with 'True' string value.' do
+    it "Tests boolean path parameter with 'True' string value." do
       require 'net/http'
       require 'uri'
       require 'json'

@@ -391,10 +391,10 @@ RSpec.describe 'json_bodies' do
       response = http.request(_req)
       expect(response.code.to_i).to eq(422)
       _body = response.body && !response.body.empty? ? JSON.parse(response.body) : nil
-      expect(_body).to eq({ 'detail' => '1 validation error in request', 'errors' => [{ 'input' => { 'debug' => false, 'host' => 'localhost', 'port' => 8080, 'ssl' => true }, 'loc' => ['body'], 'msg' => '{"host":"localhost","port":8080,"ssl":true,"debug":false} has more than 3 properties', 'type' => 'validation_error' }], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error' })
+      expect(_body).to eq({ 'detail' => '1 validation error in request', 'errors' => [{ 'input' => { 'debug' => false, 'host' => 'localhost', 'port' => 8080, 'ssl' => true }, 'loc' => ['body'], 'msg' => '{"debug":false,"host":"localhost","port":8080,"ssl":true} has more than 3 properties', 'type' => 'validation_error' }], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error' })
       _body = JSON.parse(response.body)
       _errors = _body['errors'] || []
-      expect(_errors.any? { |e| e['loc'] == ['body'] && e['msg'].include?('{"host":"localhost","port":8080,"ssl":true,"debug":false} has more than 3 properties') }).to be true
+      expect(_errors.any? { |e| e['loc'] == ['body'] && e['msg'].include?('{"debug":false,"host":"localhost","port":8080,"ssl":true} has more than 3 properties') }).to be true
     end
   end
 

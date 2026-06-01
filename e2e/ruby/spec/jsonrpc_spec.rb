@@ -298,7 +298,7 @@ RSpec.describe 'jsonrpc' do
   end
 
   describe 'jsonrpc_notification_no_response' do
-    it 'Tests JSON-RPC notification (no id) doesn't return response.' do
+    it "Tests JSON-RPC notification (no id) doesn't return response." do
       require 'net/http'
       require 'uri'
       require 'json'

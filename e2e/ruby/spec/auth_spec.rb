@@ -169,7 +169,7 @@ RSpec.describe 'auth' do
   end
 
   describe 'bearer_token_without_prefix' do
-    it 'Tests JWT rejection when token is provided without 'Bearer ' prefix in Authorization header.' do
+    it "Tests JWT rejection when token is provided without 'Bearer ' prefix in Authorization header." do
       require 'net/http'
       require 'uri'
       require 'json'
@@ -367,7 +367,7 @@ RSpec.describe 'auth' do
   end
 
   describe 'jwt_invalid_issuer' do
-    it 'Tests JWT rejection when issuer claim doesn't match expected value.' do
+    it "Tests JWT rejection when issuer claim doesn't match expected value." do
       require 'net/http'
       require 'uri'
       require 'json'
@@ -407,7 +407,7 @@ RSpec.describe 'auth' do
   end
 
   describe 'jwt_malformed_token_format' do
-    it 'Tests JWT rejection when token doesn't have the required 3-part structure (header.payload.signature).' do
+    it "Tests JWT rejection when token doesn't have the required 3-part structure (header.payload.signature)." do
       require 'net/http'
       require 'uri'
       require 'json'

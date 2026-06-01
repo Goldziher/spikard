@@ -98,7 +98,7 @@ RSpec.describe 'cors' do
   end
 
   describe 'cors_origin_null' do
-    it 'CORS request with 'null' origin should be handled according to policy.' do
+    it "CORS request with 'null' origin should be handled according to policy." do
       require 'net/http'
       require 'uri'
       require 'json'
@@ -204,7 +204,7 @@ RSpec.describe 'cors' do
   end
 
   describe 'cors_safelisted_headers_without_preflight' do
-    it 'Tests that safelisted headers (Content-Type: text/plain, Accept, Accept-Language) don't require preflight.' do
+    it "Tests that safelisted headers (Content-Type: text/plain, Accept, Accept-Language) don't require preflight." do
       require 'net/http'
       require 'uri'
       require 'json'

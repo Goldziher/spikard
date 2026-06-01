@@ -510,7 +510,7 @@ RSpec.describe 'validation_errors' do
   end
 
   describe 'string_regex_pattern_mismatch' do
-    it 'Tests validation error when string doesn't match regex pattern.' do
+    it "Tests validation error when string doesn't match regex pattern." do
       require 'net/http'
       require 'uri'
       require 'json'

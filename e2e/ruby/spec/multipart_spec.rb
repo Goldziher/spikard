@@ -411,7 +411,7 @@ RSpec.describe 'multipart' do
       response = http.request(_req)
       expect(response.code.to_i).to eq(422)
       _body = response.body && !response.body.empty? ? JSON.parse(response.body) : nil
-      expect(_body).to eq({ 'detail' => '1 validation error in request', 'errors' => [{ 'input' => [], 'loc' => ['body', 'file'], 'msg' => 'Field required', 'type' => 'missing' }], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error' })
+      expect(_body).to eq({ 'detail' => '1 validation error in request', 'errors' => [{ 'input' => {  }, 'loc' => ['body', 'file'], 'msg' => 'Field required', 'type' => 'missing' }], 'status' => 422, 'title' => 'Request Validation Failed', 'type' => 'https://spikard.dev/errors/validation-error' })
       _body = JSON.parse(response.body)
       _errors = _body['errors'] || []
       expect(_errors.any? { |e| e['loc'] == [['body', 'file']] && e['msg'].include?('Field required') }).to be true

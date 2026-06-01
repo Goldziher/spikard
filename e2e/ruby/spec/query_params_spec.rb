@@ -642,7 +642,7 @@ RSpec.describe 'query_params' do
   end
 
   describe 'boolean_query_parameter_numeric_1' do
-    it 'Tests boolean query parameter with '1' converts to true.' do
+    it "Tests boolean query parameter with '1' converts to true." do
       require 'net/http'
       require 'uri'
       require 'json'
@@ -660,7 +660,7 @@ RSpec.describe 'query_params' do
   end
 
   describe 'boolean_query_parameter_true' do
-    it 'Tests boolean query parameter with 'true' string value.' do
+    it "Tests boolean query parameter with 'true' string value." do
       require 'net/http'
       require 'uri'
       require 'json'
