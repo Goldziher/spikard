@@ -202,3 +202,59 @@ async fn rate_limit_builder_covers_ip_and_global_key_extractors() {
         axum_test::TestServer::new(router_global.into_make_service_with_connect_info::<std::net::SocketAddr>());
     assert_eq!(server_global.get("/rl").await.status_code(), StatusCode::OK);
 }
+
+/// Verify that POST requests with application/grpc content-type are not rejected with 415
+/// even when the route has a request schema (`expects_json_body` = true).
+#[tokio::test]
+async fn grpc_content_type_is_not_rejected_on_json_route() {
+    // Route with a schema (expects_json_body = true) — this attaches the
+    // validate_content_type_middleware which previously returned 415 for gRPC.
+    let schema = serde_json::json!({
+        "type": "object",
+        "properties": { "name": { "type": "string" } },
+        "required": ["name"]
+    });
+    let route = Route {
+        method: Method::Post,
+        path: "/grpc/test".to_string(),
+        handler_name: "grpc_test".to_string(),
+        expects_json_body: true,
+        cors: None,
+        is_async: true,
+        file_params: None,
+        request_validator: Some(Arc::new(spikard_core::SchemaValidator::new(schema).unwrap())),
+        response_validator: None,
+        parameter_validator: None,
+        jsonrpc_method: None,
+        #[cfg(feature = "di")]
+        handler_dependencies: Vec::new(),
+    };
+
+    let handler: Arc<dyn Handler> = Arc::new(PlainTextHandler {
+        body: "grpc_ok".to_string(),
+    });
+    let router = build_router_with_handlers_and_config(vec![(route, handler)], ServerConfig::default(), Vec::new())
+        .expect("router");
+    let server = axum_test::TestServer::new(router);
+
+    // All standard gRPC content-types must pass through without 415.
+    for content_type in &[
+        "application/grpc",
+        "application/grpc+proto",
+        "application/grpc+json",
+        "application/grpc-web",
+        "application/grpc-web+proto",
+        "application/grpc-web+json",
+    ] {
+        let response = server
+            .post("/grpc/test")
+            .add_header("content-type", *content_type)
+            .bytes(bytes::Bytes::from_static(b"\x00\x00\x00\x00\x04test"))
+            .await;
+        assert_ne!(
+            response.status_code(),
+            StatusCode::UNSUPPORTED_MEDIA_TYPE,
+            "content-type {content_type} should not produce 415"
+        );
+    }
+}

@@ -186,37 +186,36 @@ impl Handler for ValidatingHandler {
             }
 
             if let Some(validator) = request_validator {
-                if request_data.body.is_null()
-                    && let Some(raw_bytes) = request_data.raw_body.as_ref()
-                {
-                    let content_type = request_data.headers.get("content-type").map(String::as_str);
-                    // gRPC bodies use binary framing — skip JSON parsing and leave body as null
-                    // so the schema validator receives an empty object rather than a parse error.
-                    let is_grpc = content_type.is_some_and(crate::middleware::validation::is_grpc_str);
-                    let parsed = if is_grpc {
-                        // gRPC requests carry binary protobuf payloads; the JSON schema validator
-                        // cannot meaningfully validate them. Pass an empty object through so the
-                        // handler receives request_data with body = {} rather than a 400 error.
-                        Value::Object(serde_json::Map::new())
-                    } else if content_type.is_some_and(crate::middleware::validation::is_multipart_str) {
-                        parse_multipart_body(raw_bytes, content_type.unwrap_or("")).await?
-                    } else if content_type.is_some_and(crate::middleware::validation::is_form_urlencoded_str) {
-                        serde_qs::from_bytes::<Value>(raw_bytes)
-                            .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid form body: {}", e)))?
-                    } else {
-                        serde_json::from_slice::<Value>(raw_bytes).map_err(|_| {
-                            let problem = ProblemDetails::bad_request("Invalid JSON in request body");
-                            let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
-                            (axum::http::StatusCode::BAD_REQUEST, body)
-                        })?
-                    };
-                    request_data.body = Arc::new(parsed);
-                }
+                let content_type = request_data.headers.get("content-type").map(String::as_str);
+                // gRPC requests carry binary protobuf payloads. JSON schema validation is
+                // inapplicable: the body is framed binary data, not JSON. Skip body parsing
+                // and schema validation entirely so the handler receives the raw bytes.
+                let is_grpc = content_type.is_some_and(crate::middleware::validation::is_grpc_str);
+                if !is_grpc {
+                    if request_data.body.is_null()
+                        && let Some(raw_bytes) = request_data.raw_body.as_ref()
+                    {
+                        let parsed = if content_type.is_some_and(crate::middleware::validation::is_multipart_str) {
+                            parse_multipart_body(raw_bytes, content_type.unwrap_or("")).await?
+                        } else if content_type.is_some_and(crate::middleware::validation::is_form_urlencoded_str) {
+                            serde_qs::from_bytes::<Value>(raw_bytes).map_err(|e| {
+                                (axum::http::StatusCode::BAD_REQUEST, format!("Invalid form body: {}", e))
+                            })?
+                        } else {
+                            serde_json::from_slice::<Value>(raw_bytes).map_err(|_| {
+                                let problem = ProblemDetails::bad_request("Invalid JSON in request body");
+                                let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
+                                (axum::http::StatusCode::BAD_REQUEST, body)
+                            })?
+                        };
+                        request_data.body = Arc::new(parsed);
+                    }
 
-                if let Err(errors) = validator.validate(&request_data.body) {
-                    let problem = ProblemDetails::from_validation_error(&errors);
-                    let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
-                    return Err((problem.status_code(), body));
+                    if let Err(errors) = validator.validate(&request_data.body) {
+                        let problem = ProblemDetails::from_validation_error(&errors);
+                        let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
+                        return Err((problem.status_code(), body));
+                    }
                 }
             }
 
