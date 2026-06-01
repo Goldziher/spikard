@@ -73,10 +73,15 @@ impl Handler for ValidatingHandler {
                 if request_data.body.is_null()
                     && let Some(raw_bytes) = request_data.raw_body.as_ref()
                 {
-                    request_data.body = Arc::new(
+                    let content_type = request_data.headers.get("content-type").map(String::as_str);
+                    let parsed = if content_type.is_some_and(crate::middleware::validation::is_form_urlencoded_str) {
+                        serde_qs::from_bytes::<Value>(raw_bytes)
+                            .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid form body: {}", e)))?
+                    } else {
                         serde_json::from_slice::<Value>(raw_bytes)
-                            .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?,
-                    );
+                            .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?
+                    };
+                    request_data.body = Arc::new(parsed);
                 }
 
                 if let Err(errors) = validator.validate(&request_data.body) {

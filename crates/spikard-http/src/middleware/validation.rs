@@ -95,6 +95,16 @@ pub fn is_json_like_str(content_type: &str) -> bool {
     is_json_like_token(token)
 }
 
+/// Fast classification for already-extracted header strings.
+///
+/// Returns true for `application/x-www-form-urlencoded`. Used by request body
+/// validation to dispatch form-encoded payloads through `serde_qs` (which
+/// supports bracket and dot notation) before JSON-schema validation.
+pub fn is_form_urlencoded_str(content_type: &str) -> bool {
+    let token = token_before_semicolon(content_type.as_bytes());
+    is_form_urlencoded_token(token)
+}
+
 /// Classify Content-Type header values after validation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum ContentTypeKind {
