@@ -8,20 +8,16 @@
 from typing import Any, TypeVar
 
 import spikard._spikard as _rust
-from .options import FullSchemaConfig, QueryMutationConfig, QueryOnlyConfig
+
+from ._spikard import FullSchemaConfig, QueryMutationConfig, QueryOnlyConfig
 
 _E = TypeVar("_E")
-
 
 def _pascal_to_snake(value: str) -> str:
     """Convert PascalCase/camelCase to snake_case (AtxClosed -> atx_closed)."""
     out_chars: list[str] = []
     for index, ch in enumerate(value):
-        if (
-            ch.isupper()
-            and index > 0
-            and (value[index - 1].islower() or (index + 1 < len(value) and value[index + 1].islower()))
-        ):
+        if ch.isupper() and index > 0 and (value[index - 1].islower() or (index + 1 < len(value) and value[index + 1].islower())):
             out_chars.append("_")
         out_chars.append(ch.lower())
     return "".join(out_chars)
@@ -53,16 +49,16 @@ def _coerce_enum(enum_cls: type[_E], value: object) -> _E:
     raise ValueError(msg)
 
 
-def schema_query_only() -> QueryOnlyConfig:
+def schema_query_only() -> _rust.QueryOnlyConfig:
     """Create a simple schema configuration with only Query type."""
     return _rust.schema_query_only()
 
 
-def schema_query_mutation() -> QueryMutationConfig:
+def schema_query_mutation() -> _rust.QueryMutationConfig:
     """Create a schema configuration with Query and Mutation types."""
     return _rust.schema_query_mutation()
 
 
-def schema_full() -> FullSchemaConfig:
+def schema_full() -> _rust.FullSchemaConfig:
     """Create a schema configuration with all three root types."""
     return _rust.schema_full()
