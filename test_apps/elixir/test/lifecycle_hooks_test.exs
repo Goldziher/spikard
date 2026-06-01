@@ -13,7 +13,7 @@ defmodule E2e.LifecycleHooksTest do
 
   describe "hook_execution_order" do
     test "Test that multiple hooks of the same type execute in registration order" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/hook_execution_order", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/hook_execution_order", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"execution_order" => ["first_hook", "second_hook", "third_hook"], "message" => "Hooks executed in order"}
@@ -22,7 +22,7 @@ defmodule E2e.LifecycleHooksTest do
 
   describe "multiple_hooks_all_phases" do
     test "Test multiple lifecycle hooks across all five phases for a complete request lifecycle" do
-      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/multiple_hooks_all_phases", connect_options: [protocols: [:http1]], json: %{"action" => "update_profile", "user_id" => "user-123"}, headers: [{"Authorization", "Bearer valid-token-12345"}, {"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/multiple_hooks_all_phases", connect_options: [protocols: [:http1]], json: %{"action" => "update_profile", "user_id" => "user-123"}, headers: [{"Authorization", "Bearer valid-token-12345"}, {"Content-Type", "application/json"}])
       assert response.status == 200
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-content-type-options", do: List.first(List.wrap(v)) end) == "nosniff"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-frame-options", do: List.first(List.wrap(v)) end) == "DENY"
@@ -35,7 +35,7 @@ defmodule E2e.LifecycleHooksTest do
 
   describe "onerror_error_logging" do
     test "Test onError hook that logs server errors and formats error responses" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/onerror_error_logging", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/onerror_error_logging", connect_options: [protocols: [:http1]])
       assert response.status == 500
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: List.first(List.wrap(v)) end) == "application/json"
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
@@ -45,7 +45,7 @@ defmodule E2e.LifecycleHooksTest do
 
   describe "onrequest_request_logging" do
     test "Test onRequest hook that logs incoming requests and adds a request ID" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/onrequest_request_logging", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/onrequest_request_logging", connect_options: [protocols: [:http1]])
       assert response.status == 200
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-request-id", do: List.first(List.wrap(v)) end) == ".*"
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
@@ -55,7 +55,7 @@ defmodule E2e.LifecycleHooksTest do
 
   describe "onresponse_response_timing" do
     test "Test onResponse hook that adds timing information to response headers" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/onresponse_response_timing", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/onresponse_response_timing", connect_options: [protocols: [:http1]])
       assert response.status == 200
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-response-time", do: List.first(List.wrap(v)) end) == ".*ms"
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
@@ -65,7 +65,7 @@ defmodule E2e.LifecycleHooksTest do
 
   describe "onresponse_security_headers" do
     test "Test onResponse hook that adds security headers to all responses" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/onresponse_security_headers", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/onresponse_security_headers", connect_options: [protocols: [:http1]])
       assert response.status == 200
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "strict-transport-security", do: List.first(List.wrap(v)) end) == "max-age=31536000; includeSubDomains"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-content-type-options", do: List.first(List.wrap(v)) end) == "nosniff"
@@ -78,7 +78,7 @@ defmodule E2e.LifecycleHooksTest do
 
   describe "prehandler_authentication_failed_short_circuit" do
     test "Test preHandler hook that short-circuits on invalid authentication" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/prehandler_authentication_failed_short_circuit", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer invalid-token"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/prehandler_authentication_failed_short_circuit", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer invalid-token"}])
       assert response.status == 401
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"error" => "Unauthorized", "message" => "Invalid or expired authentication token"}
@@ -87,7 +87,7 @@ defmodule E2e.LifecycleHooksTest do
 
   describe "prehandler_authentication_success" do
     test "Test preHandler hook that validates authentication tokens" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/prehandler_authentication_success", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer valid-token-12345"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/prehandler_authentication_success", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer valid-token-12345"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"authenticated" => true, "message" => "Access granted", "user_id" => "user-123"}
@@ -96,7 +96,7 @@ defmodule E2e.LifecycleHooksTest do
 
   describe "prehandler_authorization_check" do
     test "Test preHandler hook for role-based authorization after authentication" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/prehandler_authorization_check", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer admin-token-67890"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/prehandler_authorization_check", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer admin-token-67890"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"message" => "Admin access granted", "role" => "admin", "user_id" => "admin-456"}
@@ -105,7 +105,7 @@ defmodule E2e.LifecycleHooksTest do
 
   describe "prehandler_authorization_forbidden_short_circuit" do
     test "Test preHandler hook that denies access for insufficient permissions" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/prehandler_authorization_forbidden_short_circuit", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer user-token-11111"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/prehandler_authorization_forbidden_short_circuit", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer user-token-11111"}])
       assert response.status == 403
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"error" => "Forbidden", "message" => "Admin role required for this endpoint"}
@@ -114,7 +114,7 @@ defmodule E2e.LifecycleHooksTest do
 
   describe "prevalidation_rate_limit_exceeded_short_circuit" do
     test "Test preValidation hook that short-circuits when rate limit is exceeded" do
-      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/prevalidation_rate_limit_exceeded_short_circuit", connect_options: [protocols: [:http1]], json: %{"data" => "test"}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/prevalidation_rate_limit_exceeded_short_circuit", connect_options: [protocols: [:http1]], json: %{"data" => "test"}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 429
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "retry-after", do: List.first(List.wrap(v)) end) == "60"
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
@@ -124,7 +124,7 @@ defmodule E2e.LifecycleHooksTest do
 
   describe "prevalidation_rate_limiting" do
     test "Test preValidation hook that implements rate limiting before validation" do
-      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/prevalidation_rate_limiting", connect_options: [protocols: [:http1]], json: %{"data" => "test"}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/prevalidation_rate_limiting", connect_options: [protocols: [:http1]], json: %{"data" => "test"}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"message" => "Request accepted", "rate_limit_checked" => true}

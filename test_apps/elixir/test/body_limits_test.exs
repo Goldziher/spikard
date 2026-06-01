@@ -13,14 +13,14 @@ defmodule E2e.BodyLimitsTest do
 
   describe "body_over_limit_returns_413" do
     test "Requests that exceed the configured max body size should be rejected with Payload Too Large." do
-      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/body_over_limit_returns_413", connect_options: [protocols: [:http1]], json: %{"note" => "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"})
+      {:ok, response} = Req.post(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/body_over_limit_returns_413", connect_options: [protocols: [:http1]], json: %{"note" => "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"})
       assert response.status == 413
     end
   end
 
   describe "body_under_limit_succeeds" do
     test "Ensures requests smaller than the configured body limit are accepted." do
-      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/body_under_limit_succeeds", connect_options: [protocols: [:http1]], json: %{"note" => "small"})
+      {:ok, response} = Req.post(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/body_under_limit_succeeds", connect_options: [protocols: [:http1]], json: %{"note" => "small"})
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"accepted" => true, "note" => "small"}

@@ -13,7 +13,7 @@ defmodule E2e.BackgroundTasksTest do
 
   describe "background_task_cancellation" do
     test "Tests background task cancellation via request" do
-      {:ok, response} = Req.delete(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/background_task_cancellation", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.delete(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/background_task_cancellation", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"cancelled" => true, "task_id" => "task-001"}
@@ -22,7 +22,7 @@ defmodule E2e.BackgroundTasksTest do
 
   describe "background_task_custom_max_concurrent" do
     test "Tests background task with custom max_concurrent setting" do
-      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/background_task_custom_max_concurrent", connect_options: [protocols: [:http1]], json: %{"data" => "process this", "task_id" => "task-001"}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/background_task_custom_max_concurrent", connect_options: [protocols: [:http1]], json: %{"data" => "process this", "task_id" => "task-001"}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 202
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"status" => "queued", "task_id" => "task-001"}
@@ -31,7 +31,7 @@ defmodule E2e.BackgroundTasksTest do
 
   describe "background_task_custom_timeout" do
     test "Tests background task with custom timeout configuration" do
-      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/background_task_custom_timeout", connect_options: [protocols: [:http1]], json: %{"duration_ms" => 5000}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/background_task_custom_timeout", connect_options: [protocols: [:http1]], json: %{"duration_ms" => 5000}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 202
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: List.first(List.wrap(v)) end) == "application/json"
     end
@@ -39,7 +39,7 @@ defmodule E2e.BackgroundTasksTest do
 
   describe "background_task_error_handling" do
     test "Tests background task error handling and retry behavior" do
-      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/background_task_error_handling", connect_options: [protocols: [:http1]], json: %{"should_fail" => true}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/background_task_error_handling", connect_options: [protocols: [:http1]], json: %{"should_fail" => true}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 202
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"status" => "queued", "will_retry" => true}
@@ -48,7 +48,7 @@ defmodule E2e.BackgroundTasksTest do
 
   describe "background_task_multiple_concurrent" do
     test "Tests multiple concurrent background tasks are queued" do
-      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/background_task_multiple_concurrent", connect_options: [protocols: [:http1]], json: %{"tasks" => [%{"id" => "task-1", "payload" => "data1"}, %{"id" => "task-2", "payload" => "data2"}, %{"id" => "task-3", "payload" => "data3"}]}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/background_task_multiple_concurrent", connect_options: [protocols: [:http1]], json: %{"tasks" => [%{"id" => "task-1", "payload" => "data1"}, %{"id" => "task-2", "payload" => "data2"}, %{"id" => "task-3", "payload" => "data3"}]}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 202
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"queued" => 3, "status" => "all_queued"}

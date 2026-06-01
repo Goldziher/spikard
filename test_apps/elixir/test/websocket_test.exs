@@ -13,7 +13,7 @@ defmodule E2e.WebsocketTest do
 
   describe "ws_upgrade_handshake" do
     test "Tests WebSocket upgrade returns 101 Switching Protocols with correct Sec-WebSocket-Accept header" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/ws_upgrade_handshake", connect_options: [protocols: [:http1]], headers: [{"Connection", "Upgrade"}, {"Sec-WebSocket-Key", "dGhlIHNhbXBsZSBub25jZQ=="}, {"Sec-WebSocket-Version", "13"}, {"Upgrade", "websocket"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/ws_upgrade_handshake", connect_options: [protocols: [:http1]], headers: [{"Connection", "Upgrade"}, {"Sec-WebSocket-Key", "dGhlIHNhbXBsZSBub25jZQ=="}, {"Sec-WebSocket-Version", "13"}, {"Upgrade", "websocket"}])
       assert response.status == 101
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "sec-websocket-accept", do: List.first(List.wrap(v)) end) == "s3pPLMBiTxaQ9kYGzzhZRbK+xOo="
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "upgrade", do: List.first(List.wrap(v)) end) == "websocket"

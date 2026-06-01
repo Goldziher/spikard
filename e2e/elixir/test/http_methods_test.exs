@@ -13,7 +13,7 @@ defmodule E2e.HttpMethodsTest do
 
   describe "delete_remove_resource" do
     test "Tests DELETE method to remove a resource" do
-      {:ok, response} = Req.delete(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/delete_remove_resource", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.delete(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/delete_remove_resource", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{}
@@ -22,7 +22,7 @@ defmodule E2e.HttpMethodsTest do
 
   describe "delete_resource_not_found" do
     test "Tests DELETE on non-existent resource returns 404" do
-      {:ok, response} = Req.delete(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/delete_resource_not_found", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.delete(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/delete_resource_not_found", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{}
@@ -31,7 +31,7 @@ defmodule E2e.HttpMethodsTest do
 
   describe "delete_with_response_body" do
     test "Tests DELETE returning deleted resource data" do
-      {:ok, response} = Req.delete(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/delete_with_response_body", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.delete(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/delete_with_response_body", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"id" => 1, "message" => "Item deleted successfully", "name" => "Deleted Item"}
@@ -40,7 +40,7 @@ defmodule E2e.HttpMethodsTest do
 
   describe "head_get_metadata_without_body" do
     test "Tests HEAD method returns headers without response body" do
-      {:ok, response} = Req.head(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/head_get_metadata_without_body", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.head(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/head_get_metadata_without_body", connect_options: [protocols: [:http1]])
       assert response.status == 200
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-length", do: List.first(List.wrap(v)) end) == "85"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: List.first(List.wrap(v)) end) == "application/json"
@@ -49,7 +49,7 @@ defmodule E2e.HttpMethodsTest do
 
   describe "patch_partial_update" do
     test "Tests PATCH method for partial resource updates" do
-      {:ok, response} = Req.patch(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/patch_partial_update", connect_options: [protocols: [:http1]], json: %{"price" => 79.99}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.patch(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/patch_partial_update", connect_options: [protocols: [:http1]], json: %{"price" => 79.99}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"id" => 1, "in_stock" => true, "name" => "Existing Item", "price" => 79.99}
@@ -58,7 +58,7 @@ defmodule E2e.HttpMethodsTest do
 
   describe "patch_update_multiple_fields" do
     test "Tests PATCH updating multiple fields at once" do
-      {:ok, response} = Req.patch(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/patch_update_multiple_fields", connect_options: [protocols: [:http1]], json: %{"in_stock" => false, "name" => "Updated Name", "price" => 89.99}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.patch(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/patch_update_multiple_fields", connect_options: [protocols: [:http1]], json: %{"in_stock" => false, "name" => "Updated Name", "price" => 89.99}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"id" => 1, "in_stock" => false, "name" => "Updated Name", "price" => 89.99}
@@ -67,7 +67,7 @@ defmodule E2e.HttpMethodsTest do
 
   describe "put_complete_resource_replacement" do
     test "Tests PUT method for complete resource replacement" do
-      {:ok, response} = Req.put(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/put_complete_resource_replacement", connect_options: [protocols: [:http1]], json: %{"description" => "Completely replaced", "id" => 1, "in_stock" => true, "name" => "Updated Item", "price" => 99.99}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.put(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/put_complete_resource_replacement", connect_options: [protocols: [:http1]], json: %{"description" => "Completely replaced", "id" => 1, "in_stock" => true, "name" => "Updated Item", "price" => 99.99}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"description" => "Completely replaced", "id" => 1, "in_stock" => true, "name" => "Updated Item", "price" => 99.99}
@@ -76,7 +76,7 @@ defmodule E2e.HttpMethodsTest do
 
   describe "put_create_resource_if_doesn_t_exist" do
     test "Tests PUT creating new resource at specific URI" do
-      {:ok, response} = Req.put(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/put_create_resource_if_doesn_t_exist", connect_options: [protocols: [:http1]], json: %{"id" => 999, "name" => "New Item", "price" => 49.99}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.put(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/put_create_resource_if_doesn_t_exist", connect_options: [protocols: [:http1]], json: %{"id" => 999, "name" => "New Item", "price" => 49.99}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"id" => 999, "name" => "New Item", "price" => 49.99}
@@ -85,7 +85,7 @@ defmodule E2e.HttpMethodsTest do
 
   describe "put_idempotent_operation" do
     test "Tests PUT idempotency - repeated calls produce same result" do
-      {:ok, response} = Req.put(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/put_idempotent_operation", connect_options: [protocols: [:http1]], json: %{"id" => 1, "name" => "Fixed Name", "price" => 50.0}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.put(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/put_idempotent_operation", connect_options: [protocols: [:http1]], json: %{"id" => 1, "name" => "Fixed Name", "price" => 50.0}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"id" => 1, "name" => "Fixed Name", "price" => 50.0}
@@ -94,7 +94,7 @@ defmodule E2e.HttpMethodsTest do
 
   describe "put_missing_required_field" do
     test "Tests PUT with missing required fields returns 422" do
-      {:ok, response} = Req.put(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/put_missing_required_field", connect_options: [protocols: [:http1]], json: %{"id" => 1, "name" => "Item Name"}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.put(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/put_missing_required_field", connect_options: [protocols: [:http1]], json: %{"id" => 1, "name" => "Item Name"}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 422
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "1 validation error in request", "errors" => [%{"input" => %{"id" => 1, "name" => "Item Name"}, "loc" => ["body", "price"], "msg" => "Field required", "type" => "missing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}
@@ -103,7 +103,7 @@ defmodule E2e.HttpMethodsTest do
 
   describe "put_validation_error" do
     test "Tests PUT with invalid data returns 422" do
-      {:ok, response} = Req.put(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/put_validation_error", connect_options: [protocols: [:http1]], json: %{"id" => 1, "name" => "X", "price" => -10}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.put(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/put_validation_error", connect_options: [protocols: [:http1]], json: %{"id" => 1, "name" => "X", "price" => -10}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 422
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "2 validation errors in request", "errors" => [%{"ctx" => %{"min_length" => 3}, "input" => "X", "loc" => ["body", "name"], "msg" => "String should have at least 3 characters", "type" => "string_too_short"}, %{"ctx" => %{"gt" => 0}, "input" => -10, "loc" => ["body", "price"], "msg" => "Input should be greater than 0", "type" => "greater_than"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}

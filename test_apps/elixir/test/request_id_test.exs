@@ -13,7 +13,7 @@ defmodule E2e.RequestIdTest do
 
   describe "request_id_header_is_preserved" do
     test "When the client supplies X-Request-ID the same value should appear on the response." do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/request_id_header_is_preserved", connect_options: [protocols: [:http1]], headers: [{"X-Request-ID", "trace-123"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/request_id_header_is_preserved", connect_options: [protocols: [:http1]], headers: [{"X-Request-ID", "trace-123"}])
       assert response.status == 200
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-request-id", do: List.first(List.wrap(v)) end) == "trace-123"
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
@@ -23,7 +23,7 @@ defmodule E2e.RequestIdTest do
 
   describe "request_id_is_generated_when_not_provided" do
     test "Ensures the request ID middleware attaches a UUID to responses when the client does not send one." do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/request_id_is_generated_when_not_provided", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/request_id_is_generated_when_not_provided", connect_options: [protocols: [:http1]])
       assert response.status == 200
       header_val_x_request_id = Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-request-id", do: List.first(List.wrap(v)) end)
       assert Regex.match?(~r/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, to_string(header_val_x_request_id))
@@ -34,7 +34,7 @@ defmodule E2e.RequestIdTest do
 
   describe "request_id_middleware_can_be_disabled" do
     test "When request ID generation is disabled the response should not contain X-Request-ID even if the client sends a header." do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/request_id_middleware_can_be_disabled", connect_options: [protocols: [:http1]], headers: [{"X-Request-ID", "external-id"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/request_id_middleware_can_be_disabled", connect_options: [protocols: [:http1]], headers: [{"X-Request-ID", "external-id"}])
       assert response.status == 200
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-request-id", do: List.first(List.wrap(v)) end) == nil
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body

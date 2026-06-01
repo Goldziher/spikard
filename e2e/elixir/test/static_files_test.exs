@@ -13,7 +13,7 @@ defmodule E2e.StaticFilesTest do
 
   describe "static_file_server_returns_text_file" do
     test "Tests serving a plain text file with Cache-Control headers." do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/static_file_server_returns_text_file", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/static_file_server_returns_text_file", connect_options: [protocols: [:http1]])
       assert response.status == 200
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "cache-control", do: List.first(List.wrap(v)) end) == "public, max-age=60"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: List.first(List.wrap(v)) end) == "text/plain"
@@ -23,7 +23,7 @@ defmodule E2e.StaticFilesTest do
 
   describe "static_server_returns_index_html_for_directory" do
     test "When index files are enabled the server should serve index.html when the directory root is requested." do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/static_server_returns_index_html_for_directory", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/static_server_returns_index_html_for_directory", connect_options: [protocols: [:http1]])
       assert response.status == 200
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: List.first(List.wrap(v)) end) == "text/html"
       assert response.body == "<!doctype html><h1>Welcome</h1>"

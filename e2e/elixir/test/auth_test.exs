@@ -13,7 +13,7 @@ defmodule E2e.AuthTest do
 
   describe "api_key_authentication_invalid_key" do
     test "Tests API key authentication failure when provided key is not in the valid keys list" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/api_key_authentication_invalid_key", connect_options: [protocols: [:http1]], headers: [{"X-API-Key", "invalid_key_12345"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/api_key_authentication_invalid_key", connect_options: [protocols: [:http1]], headers: [{"X-API-Key", "invalid_key_12345"}])
       assert response.status == 401
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "The provided API key is not valid", "status" => 401, "title" => "Invalid API key", "type" => "https://spikard.dev/errors/unauthorized"}
@@ -22,7 +22,7 @@ defmodule E2e.AuthTest do
 
   describe "api_key_authentication_missing_header" do
     test "Tests API key authentication failure when required header is not provided" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/api_key_authentication_missing_header", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/api_key_authentication_missing_header", connect_options: [protocols: [:http1]])
       assert response.status == 401
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "Expected 'X-API-Key' header or 'api_key' query parameter with valid API key", "status" => 401, "title" => "Missing API key", "type" => "https://spikard.dev/errors/unauthorized"}
@@ -31,7 +31,7 @@ defmodule E2e.AuthTest do
 
   describe "api_key_authentication_valid_key" do
     test "Tests API key authentication with a valid API key in custom header" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/api_key_authentication_valid_key", connect_options: [protocols: [:http1]], headers: [{"X-API-Key", "sk_test_123456"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/api_key_authentication_valid_key", connect_options: [protocols: [:http1]], headers: [{"X-API-Key", "sk_test_123456"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"data" => "sensitive information", "message" => "Access granted"}
@@ -40,7 +40,7 @@ defmodule E2e.AuthTest do
 
   describe "api_key_custom_header_x_api_token" do
     test "Tests API key authentication with custom X-API-Token header" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/api_key_custom_header_x_api_token", connect_options: [protocols: [:http1]], headers: [{"X-API-Token", "token_xyz789"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/api_key_custom_header_x_api_token", connect_options: [protocols: [:http1]], headers: [{"X-API-Token", "token_xyz789"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"resource" => "data"}
@@ -49,7 +49,7 @@ defmodule E2e.AuthTest do
 
   describe "api_key_in_query_parameter" do
     test "Tests API key authentication when key is provided as query parameter instead of header" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/api_key_in_query_parameter", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/api_key_in_query_parameter", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"data" => "sensitive information", "message" => "Access granted"}
@@ -58,7 +58,7 @@ defmodule E2e.AuthTest do
 
   describe "api_key_multiple_valid_keys" do
     test "Tests API key authentication accepts multiple valid keys" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/api_key_multiple_valid_keys", connect_options: [protocols: [:http1]], headers: [{"X-API-Key", "key_staging_001"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/api_key_multiple_valid_keys", connect_options: [protocols: [:http1]], headers: [{"X-API-Key", "key_staging_001"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"message" => "Authenticated with staging key"}
@@ -67,7 +67,7 @@ defmodule E2e.AuthTest do
 
   describe "api_key_rotation_old_key_still_valid" do
     test "Tests API key authentication during rotation period when old key remains valid alongside new key" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/api_key_rotation_old_key_still_valid", connect_options: [protocols: [:http1]], headers: [{"X-API-Key", "sk_test_old_123456"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/api_key_rotation_old_key_still_valid", connect_options: [protocols: [:http1]], headers: [{"X-API-Key", "sk_test_old_123456"}])
       assert response.status == 200
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "x-api-key-deprecated", do: List.first(List.wrap(v)) end) == "true"
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
@@ -77,7 +77,7 @@ defmodule E2e.AuthTest do
 
   describe "api_key_with_custom_header_name" do
     test "Tests API key authentication with a custom header name (X-API-Token instead of X-API-Key)" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/api_key_with_custom_header_name", connect_options: [protocols: [:http1]], headers: [{"X-API-Token", "sk_test_123456"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/api_key_with_custom_header_name", connect_options: [protocols: [:http1]], headers: [{"X-API-Token", "sk_test_123456"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"data" => "sensitive information", "message" => "Access granted"}
@@ -86,7 +86,7 @@ defmodule E2e.AuthTest do
 
   describe "bearer_token_without_prefix" do
     test "Tests JWT rejection when token is provided without 'Bearer ' prefix in Authorization header" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/bearer_token_without_prefix", connect_options: [protocols: [:http1]], headers: [{"Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDZ9.8yXqZ9jKCR0BwqJc7pN_QvD3mYLxHfWzUeIaGkTnOsA"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/bearer_token_without_prefix", connect_options: [protocols: [:http1]], headers: [{"Authorization", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDZ9.8yXqZ9jKCR0BwqJc7pN_QvD3mYLxHfWzUeIaGkTnOsA"}])
       assert response.status == 401
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "Authorization header must use Bearer scheme: 'Bearer <token>'", "status" => 401, "title" => "Invalid Authorization header format", "type" => "https://spikard.dev/errors/unauthorized"}
@@ -95,7 +95,7 @@ defmodule E2e.AuthTest do
 
   describe "jwt_audience_claim_aud_field" do
     test "Tests JWT validation of audience (aud) claim" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jwt_audience_claim_aud_field", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdfQ.test"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/jwt_audience_claim_aud_field", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdfQ.test"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"message" => "Access granted"}
@@ -104,7 +104,7 @@ defmodule E2e.AuthTest do
 
   describe "jwt_authentication_expired_token" do
     test "Tests JWT authentication failure when token has expired (exp claim in the past)" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jwt_authentication_expired_token", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoxNjAwMDAwMDAwLCJpYXQiOjE1OTAwMDAwMDB9.n4oBw9XuO2aAJWi1e4Bz9Y_m2iEyJHGAODcetNuwYFo"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/jwt_authentication_expired_token", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoxNjAwMDAwMDAwLCJpYXQiOjE1OTAwMDAwMDB9.n4oBw9XuO2aAJWi1e4Bz9Y_m2iEyJHGAODcetNuwYFo"}])
       assert response.status == 401
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "Token has expired", "status" => 401, "title" => "JWT validation failed", "type" => "https://spikard.dev/errors/unauthorized"}
@@ -113,7 +113,7 @@ defmodule E2e.AuthTest do
 
   describe "jwt_authentication_invalid_audience" do
     test "Tests JWT authentication failure when token audience claim does not match required audience" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jwt_authentication_invalid_audience", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNTM0MDIzMDA3OTk5LCJpYXQiOjE3MzEyNTIwMDAsImF1ZCI6WyJodHRwczovL3dyb25nLXNlcnZpY2UuY29tIl19.YR2a9fSJjhen7ksYFI2djSBSC7Pc29FDCloBGhkj3kU"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/jwt_authentication_invalid_audience", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNTM0MDIzMDA3OTk5LCJpYXQiOjE3MzEyNTIwMDAsImF1ZCI6WyJodHRwczovL3dyb25nLXNlcnZpY2UuY29tIl19.YR2a9fSJjhen7ksYFI2djSBSC7Pc29FDCloBGhkj3kU"}])
       assert response.status == 401
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "Token audience is invalid", "status" => 401, "title" => "JWT validation failed", "type" => "https://spikard.dev/errors/unauthorized"}
@@ -122,7 +122,7 @@ defmodule E2e.AuthTest do
 
   describe "jwt_authentication_invalid_signature" do
     test "Tests JWT authentication failure when token signature does not match the secret" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jwt_authentication_invalid_signature", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNTM0MDIzMDA3OTksImlhdCI6MTczMTI1MjAwMH0.invalid_signature_here"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/jwt_authentication_invalid_signature", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNTM0MDIzMDA3OTksImlhdCI6MTczMTI1MjAwMH0.invalid_signature_here"}])
       assert response.status == 401
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "Token signature is invalid", "status" => 401, "title" => "JWT validation failed", "type" => "https://spikard.dev/errors/unauthorized"}
@@ -131,7 +131,7 @@ defmodule E2e.AuthTest do
 
   describe "jwt_authentication_missing_authorization_header" do
     test "Tests JWT authentication failure when Authorization header is not provided" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jwt_authentication_missing_authorization_header", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/jwt_authentication_missing_authorization_header", connect_options: [protocols: [:http1]])
       assert response.status == 401
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "Expected 'Authorization: Bearer <token>'", "status" => 401, "title" => "Missing or invalid Authorization header", "type" => "https://spikard.dev/errors/unauthorized"}
@@ -140,7 +140,7 @@ defmodule E2e.AuthTest do
 
   describe "jwt_authentication_valid_token" do
     test "Tests JWT authentication with a valid token containing correct signature and claims" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jwt_authentication_valid_token", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/jwt_authentication_valid_token", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"message" => "Access granted", "user_id" => "user123"}
@@ -149,7 +149,7 @@ defmodule E2e.AuthTest do
 
   describe "jwt_config_algorithm_rs256" do
     test "Tests JWT validation with RS256 asymmetric algorithm" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jwt_config_algorithm_rs256", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDZ9.test_signature"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/jwt_config_algorithm_rs256", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDZ9.test_signature"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"message" => "Access granted"}
@@ -158,7 +158,7 @@ defmodule E2e.AuthTest do
 
   describe "jwt_config_leeway_seconds" do
     test "Tests JWT validation with leeway for clock skew" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jwt_config_leeway_seconds", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoxNzYyNzgzOTQ2LCJpYXQiOjE2MDAwMDAwMDB9.test"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/jwt_config_leeway_seconds", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoxNzYyNzgzOTQ2LCJpYXQiOjE2MDAwMDAwMDB9.test"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"message" => "Access granted with leeway"}
@@ -167,7 +167,7 @@ defmodule E2e.AuthTest do
 
   describe "jwt_expiration_claim_exp_field" do
     test "Tests JWT validation of expiration (exp) claim" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jwt_expiration_claim_exp_field", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDZ9.test"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/jwt_expiration_claim_exp_field", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDZ9.test"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"message" => "Access granted"}
@@ -176,7 +176,7 @@ defmodule E2e.AuthTest do
 
   describe "jwt_invalid_issuer" do
     test "Tests JWT rejection when issuer claim doesn't match expected value" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jwt_invalid_issuer", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE2MDAwMDAwMDAsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2V2aWwuY29tIn0.mbL5L04_hpaaiz0SPABap6ZWfBLu18aiexBjzwQ1nnA"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/jwt_invalid_issuer", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE2MDAwMDAwMDAsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2V2aWwuY29tIn0.mbL5L04_hpaaiz0SPABap6ZWfBLu18aiexBjzwQ1nnA"}])
       assert response.status == 401
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "Token issuer is invalid, expected 'https://auth.example.com'", "status" => 401, "title" => "JWT validation failed", "type" => "https://spikard.dev/errors/unauthorized"}
@@ -185,7 +185,7 @@ defmodule E2e.AuthTest do
 
   describe "jwt_issuer_claim_iss_field" do
     test "Tests JWT validation of issuer (iss) claim" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jwt_issuer_claim_iss_field", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImlzcyI6Imh0dHBzOi8vYXV0aC5leGFtcGxlLmNvbSJ9.test"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/jwt_issuer_claim_iss_field", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImlzcyI6Imh0dHBzOi8vYXV0aC5leGFtcGxlLmNvbSJ9.test"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"message" => "Access granted"}
@@ -194,7 +194,7 @@ defmodule E2e.AuthTest do
 
   describe "jwt_malformed_token_format" do
     test "Tests JWT rejection when token doesn't have the required 3-part structure (header.payload.signature)" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jwt_malformed_token_format", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer invalid.token"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/jwt_malformed_token_format", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer invalid.token"}])
       assert response.status == 401
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "Malformed JWT token: expected 3 parts separated by dots, found 2", "status" => 401, "title" => "Malformed JWT token", "type" => "https://spikard.dev/errors/unauthorized"}
@@ -203,7 +203,7 @@ defmodule E2e.AuthTest do
 
   describe "jwt_missing_required_custom_claims" do
     test "Tests JWT rejection when required custom claims (role, permissions) are missing" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jwt_missing_required_custom_claims", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/jwt_missing_required_custom_claims", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg"}])
       assert response.status == 403
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "Required claims 'role' and 'permissions' missing from JWT", "status" => 403, "title" => "Forbidden", "type" => "https://spikard.dev/errors/forbidden"}
@@ -212,7 +212,7 @@ defmodule E2e.AuthTest do
 
   describe "jwt_not_before_claim_in_future" do
     test "Tests JWT rejection when nbf (not before) claim is in the future" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jwt_not_before_claim_in_future", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE2MDAwMDAwMDAsIm5iZiI6MjYyNjc4Mzk0NiwiYXVkIjpbImh0dHBzOi8vYXBpLmV4YW1wbGUuY29tIl0sImlzcyI6Imh0dHBzOi8vYXV0aC5leGFtcGxlLmNvbSJ9.hG4I76_3kJfsbJ_jmxoP1NSYnkcqdyBFcPpdo-jYU4E"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/jwt_not_before_claim_in_future", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE2MDAwMDAwMDAsIm5iZiI6MjYyNjc4Mzk0NiwiYXVkIjpbImh0dHBzOi8vYXBpLmV4YW1wbGUuY29tIl0sImlzcyI6Imh0dHBzOi8vYXV0aC5leGFtcGxlLmNvbSJ9.hG4I76_3kJfsbJ_jmxoP1NSYnkcqdyBFcPpdo-jYU4E"}])
       assert response.status == 401
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "JWT not valid yet, not before claim is in the future", "status" => 401, "title" => "JWT validation failed", "type" => "https://spikard.dev/errors/unauthorized"}
@@ -221,7 +221,7 @@ defmodule E2e.AuthTest do
 
   describe "jwt_subject_claim_sub_field" do
     test "Tests JWT validation with subject (sub) claim" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jwt_subject_claim_sub_field", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLWFiYzEyMyIsImV4cCI6MjYyNjc4Mzk0NiwiaWF0IjoxNzYyNzgzOTQ2fQ.xYz9QaJkL5M2NpQ8RsT1UvW3XyZ4AaBbCcDdEeFfGgHhIiJ"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/jwt_subject_claim_sub_field", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLWFiYzEyMyIsImV4cCI6MjYyNjc4Mzk0NiwiaWF0IjoxNzYyNzgzOTQ2fQ.xYz9QaJkL5M2NpQ8RsT1UvW3XyZ4AaBbCcDdEeFfGgHhIiJ"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"user_id" => "user-abc123"}
@@ -230,7 +230,7 @@ defmodule E2e.AuthTest do
 
   describe "jwt_with_multiple_audiences" do
     test "Tests JWT validation when token has multiple audiences and one must match" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jwt_with_multiple_audiences", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE2MDAwMDAwMDAsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSIsImh0dHBzOi8vYWRtaW4uZXhhbXBsZS5jb20iXSwiaXNzIjoiaHR0cHM6Ly9hdXRoLmV4YW1wbGUuY29tIn0.9MBL_XccGXfu9cDUnCpQruDMOl2hHYydzeGn-20dQOs"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/jwt_with_multiple_audiences", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE2MDAwMDAwMDAsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSIsImh0dHBzOi8vYWRtaW4uZXhhbXBsZS5jb20iXSwiaXNzIjoiaHR0cHM6Ly9hdXRoLmV4YW1wbGUuY29tIn0.9MBL_XccGXfu9cDUnCpQruDMOl2hHYydzeGn-20dQOs"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"message" => "Access granted", "user_id" => "user123"}
@@ -239,7 +239,7 @@ defmodule E2e.AuthTest do
 
   describe "multiple_authentication_schemes_jwt_precedence" do
     test "Tests authentication when both JWT and API key are provided, JWT takes precedence" do
-      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/multiple_authentication_schemes_jwt_precedence", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg"}, {"X-API-Key", "sk_test_123456"}])
+      {:ok, response} = Req.get(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/multiple_authentication_schemes_jwt_precedence", connect_options: [protocols: [:http1]], headers: [{"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiZXhwIjoyNjI2NzgzOTQ2LCJpYXQiOjE3NjI3ODM5NDYsImF1ZCI6WyJodHRwczovL2FwaS5leGFtcGxlLmNvbSJdLCJpc3MiOiJodHRwczovL2F1dGguZXhhbXBsZS5jb20ifQ.TpRpCJeXROQ12-ehRCVZm6EgN7Dn6QpfoekxJvnzgQg"}, {"X-API-Key", "sk_test_123456"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"auth_method" => "jwt", "message" => "Access granted", "user_id" => "user123"}
