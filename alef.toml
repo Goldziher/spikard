@@ -923,6 +923,8 @@ register_method = "route"
 [crates.e2e.harness.overrides.node]
 # Node binding ships as @spikard/node, not bare spikard.
 imports = ["@spikard/node"]
+# Service API codegen emits "route" method, not "register_route"
+register_method = "route"
 
 [crates.e2e.call]
 result_var = "response"
