@@ -245,6 +245,51 @@ async fn request_timeout_returns_408() {
 }
 
 #[tokio::test]
+async fn trailing_slash_on_registered_route_returns_200() {
+    // A handler registered at /app must also respond to GET /app/ so that
+    // directory-style URLs (e.g. for SPA routing) work without an explicit
+    // trailing-slash route declaration.
+    struct OkHandler;
+    impl Handler for OkHandler {
+        fn call(
+            &self,
+            _request: Request<Body>,
+            _request_data: RequestData,
+        ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
+            Box::pin(async {
+                Ok(axum::http::Response::builder()
+                    .status(StatusCode::OK)
+                    .body(Body::from("ok"))
+                    .expect("response"))
+            })
+        }
+    }
+
+    let router = build_router_with_handlers_and_config(
+        vec![(
+            route(Method::Get, "/app", "ok_handler"),
+            Arc::new(OkHandler) as Arc<dyn Handler>,
+        )],
+        ServerConfig::default(),
+        Vec::new(),
+    )
+    .expect("router");
+
+    let response = router
+        .oneshot(
+            Request::builder()
+                .method("GET")
+                .uri("/app/")
+                .body(Body::empty())
+                .expect("request"),
+        )
+        .await
+        .expect("response");
+
+    assert_eq!(response.status(), StatusCode::OK);
+}
+
+#[tokio::test]
 async fn static_files_cache_control_header_is_set_when_configured() {
     let dir = tempdir().expect("temp dir");
     let file_path = dir.path().join("hello.txt");
