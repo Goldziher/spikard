@@ -46,7 +46,6 @@ for fixture_id, fixture in _FIXTURES.items():
             # SUT's Response deserialization layout. Args are path parameters
             # (e.g., id={id}), which we ignore.
             return {"status_code": status, "content": body, "headers": dict(headers)}
-
         return handler_fn
 
     # Register the handler at /fixtures/<fixture_id>{route}
@@ -69,6 +68,6 @@ for fixture_id, fixture in _FIXTURES.items():
 # Configure and start the server.
 _config = ServerConfig(host="127.0.0.1", port=8000)
 app.config(_config)
-print("Harness listening on 127.0.0.1:8000")
+print(f"Harness listening on 127.0.0.1:8000")
 sys.stdout.flush()
 app.run()
