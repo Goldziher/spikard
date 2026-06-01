@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":"foo bar baz","headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/query"},"request":{"path":"/query"}}}

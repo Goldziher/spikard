@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.AfterAll;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.URI;
 import java.time.Instant;
 /** E2e tests for category: openrpc. */
 class OpenrpcTest {
@@ -39,23 +40,40 @@ class OpenrpcTest {
         pb.redirectErrorStream(false);
         harnessProcess = pb.start();
 
-        String host = "127.0.0.1";
-        int port = 8005;
-        sutUrl = "http://" + host + ":" + port;
-
-        // Poll until the harness accepts TCP connections
+        // Read SUT_URL from harness stdout
+        java.io.BufferedReader reader = new java.io.BufferedReader(
+            new java.io.InputStreamReader(harnessProcess.getInputStream(), "UTF-8")
+        );
+        String line;
         long deadline = System.currentTimeMillis() + 15_000;
+        while (System.currentTimeMillis() < deadline && (line = reader.readLine()) != null) {
+            if (line.startsWith("SUT_URL=")) {
+                sutUrl = line.substring("SUT_URL=".length()).trim();
+                break;
+            }
+        }
+
+        if (sutUrl == null || sutUrl.isEmpty()) {
+            if (harnessProcess != null) {
+                harnessProcess.destroyForcibly();
+            }
+            throw new RuntimeException("Harness did not emit SUT_URL within 15s");
+        }
+
+        // TCP-readiness probe: ensure harness is accepting connections
+        java.net.URI uri = new java.net.URI(sutUrl);
+        String host = uri.getHost();
+        int port = uri.getPort() > 0 ? uri.getPort() : 8000;
+        deadline = System.currentTimeMillis() + 15_000;
         boolean ready = false;
         while (System.currentTimeMillis() < deadline) {
             if (harnessProcess.isAlive() == false) {
-                // Process died early
                 break;
             }
             try (Socket socket = new Socket(host, port)) {
                 ready = true;
                 break;
             } catch (IOException e) {
-                // Not ready yet, sleep and retry
                 Thread.sleep(100);
             }
         }
@@ -64,7 +82,7 @@ class OpenrpcTest {
             if (harnessProcess != null) {
                 harnessProcess.destroyForcibly();
             }
-            throw new RuntimeException("Harness did not become reachable on " + host + ":" + port + " within 15s");
+            throw new RuntimeException("Harness did not become reachable at " + sutUrl + " within 15s");
         }
 
         System.setProperty("SUT_URL", sutUrl);
@@ -82,7 +100,7 @@ class OpenrpcTest {
     @Test    void testOpenrpcBatchMixedValidInvalid() throws Exception {
         // Tests batch request where some calls are valid and some reference undefined methods
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/openrpc_batch_mixed_valid_invalid/rpc");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/openrpc_batch_mixed_valid_invalid/rpc");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("[{\"id\":1,\"jsonrpc\":\"2.0\",\"method\":\"add\",\"params\":{\"a\":5,\"b\":5}},{\"id\":2,\"jsonrpc\":\"2.0\",\"method\":\"nonexistent\",\"params\":{}}]"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -93,7 +111,7 @@ class OpenrpcTest {
     @Test    void testOpenrpcBatchRequestAllValid() throws Exception {
         // Tests batch request against OpenRPC-defined methods where all calls are valid
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/openrpc_batch_request_all_valid/rpc");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/openrpc_batch_request_all_valid/rpc");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("[{\"id\":1,\"jsonrpc\":\"2.0\",\"method\":\"add\",\"params\":{\"a\":1,\"b\":2}},{\"id\":2,\"jsonrpc\":\"2.0\",\"method\":\"add\",\"params\":{\"a\":10,\"b\":20}}]"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -104,7 +122,7 @@ class OpenrpcTest {
     @Test    void testOpenrpcErrorMappingPerSpec() throws Exception {
         // Tests that application errors are mapped to the error codes defined in the OpenRPC spec errors array
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/openrpc_error_mapping_per_spec/rpc");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/openrpc_error_mapping_per_spec/rpc");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"id\":7,\"jsonrpc\":\"2.0\",\"method\":\"resource.get\",\"params\":{\"id\":99999}}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -115,7 +133,7 @@ class OpenrpcTest {
     @Test    void testOpenrpcMethodHandlerBasic() throws Exception {
         // Tests calling a method defined in an OpenRPC spec that takes typed params and returns a typed result
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/openrpc_method_handler_basic/rpc");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/openrpc_method_handler_basic/rpc");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"id\":1,\"jsonrpc\":\"2.0\",\"method\":\"add\",\"params\":{\"a\":10,\"b\":5}}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -126,7 +144,7 @@ class OpenrpcTest {
     @Test    void testOpenrpcMethodNamespacing() throws Exception {
         // Tests method with dot-namespaced name such as account.create is dispatched correctly
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/openrpc_method_namespacing/rpc");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/openrpc_method_namespacing/rpc");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"id\":1,\"jsonrpc\":\"2.0\",\"method\":\"account.create\",\"params\":{\"email\":\"alice@example.com\",\"username\":\"alice\"}}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -137,7 +155,7 @@ class OpenrpcTest {
     @Test    void testOpenrpcMultiMethodSpec() throws Exception {
         // Tests that a spec with multiple methods routes correctly to each registered handler
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/openrpc_multi_method_spec/rpc");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/openrpc_multi_method_spec/rpc");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"id\":10,\"jsonrpc\":\"2.0\",\"method\":\"echo\",\"params\":{\"message\":\"hello world\"}}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -148,7 +166,7 @@ class OpenrpcTest {
     @Test    void testOpenrpcOptionalParamOmitted() throws Exception {
         // Tests that a method call omitting an optional parameter succeeds using its default behaviour
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/openrpc_optional_param_omitted/rpc");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/openrpc_optional_param_omitted/rpc");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"id\":5,\"jsonrpc\":\"2.0\",\"method\":\"search\",\"params\":{\"query\":\"spikard\"}}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -159,7 +177,7 @@ class OpenrpcTest {
     @Test    void testOpenrpcParamSchemaRefResolution() throws Exception {
         // Tests that parameter schemas referenced via $ref in OpenRPC components/schemas are resolved
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/openrpc_param_schema_ref_resolution/rpc");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/openrpc_param_schema_ref_resolution/rpc");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"id\":8,\"jsonrpc\":\"2.0\",\"method\":\"address.validate\",\"params\":{\"address\":{\"city\":\"Springfield\",\"country\":\"US\",\"street\":\"123 Main St\"}}}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -170,7 +188,7 @@ class OpenrpcTest {
     @Test    void testOpenrpcParamValidationMissingRequired() throws Exception {
         // Tests that a missing required parameter is rejected per the OpenRPC method param schema
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/openrpc_param_validation_missing_required/rpc");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/openrpc_param_validation_missing_required/rpc");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"id\":3,\"jsonrpc\":\"2.0\",\"method\":\"user.create\",\"params\":{\"name\":\"Alice\"}}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -181,7 +199,7 @@ class OpenrpcTest {
     @Test    void testOpenrpcParamValidationWrongType() throws Exception {
         // Tests that a parameter with wrong type is rejected per the OpenRPC method param schema
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/openrpc_param_validation_wrong_type/rpc");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/openrpc_param_validation_wrong_type/rpc");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"id\":2,\"jsonrpc\":\"2.0\",\"method\":\"multiply\",\"params\":{\"factor\":\"not_a_number\"}}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());

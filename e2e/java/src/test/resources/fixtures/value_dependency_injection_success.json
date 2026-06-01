@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"app_name":"SpikardApp","max_connections":100,"version":"1.0.0"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/api/config"},"request":{"path":"/api/config"}}}

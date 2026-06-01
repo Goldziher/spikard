@@ -51,7 +51,7 @@ app = Enum.reduce(fixtures, app, fn {fixture_id, fixture}, app_acc ->
       end
 
     # Register the route with the handler
-    App.register_route(app_acc, builder, handler_fn)
+    App.route(app_acc, builder, handler_fn)
   end
 end)
 

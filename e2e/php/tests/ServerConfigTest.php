@@ -94,7 +94,7 @@ final class ServerConfigTest extends TestCase
 
     /** Tests server serves static files from configured directory */
     public function test_server_static_files_configuration(): void
-    {        $response = $this->httpClient->request('GET', "/fixtures/server_static_files_configuration/static/{file}");        $this->assertEquals(200, $response->getStatusCode());        $this->assertEquals("text/html", $response->getHeaderLine("content-type"));    }
+    {        $response = $this->httpClient->request('GET', "/fixtures/server_static_files_configuration/static/index.html");        $this->assertEquals(200, $response->getStatusCode());        $this->assertEquals("text/html", $response->getHeaderLine("content-type"));    }
 
     /** Tests server with custom worker thread count */
     public function test_server_worker_count_configuration(): void

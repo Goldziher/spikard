@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"detail":"An unexpected error occurred","status":500,"title":"Internal Server Error","type":"https://spikard.dev/errors/internal-error"},"headers":{},"status_code":500},"handler":{"body_schema":null,"method":"GET","route":"/error"},"request":{"path":"/error"}}}

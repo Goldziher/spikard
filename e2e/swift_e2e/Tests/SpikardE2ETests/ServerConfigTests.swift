@@ -382,7 +382,7 @@ final class ServerConfigTests: XCTestCase {
     /// Tests server serves static files from configured directory
     func testServerStaticFilesConfiguration() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/server_static_files_configuration/static/{file}")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/server_static_files_configuration/static/index.html")!)
         _req.httpMethod = "GET"
         var response: HTTPURLResponse?
         var _responseData: Data?

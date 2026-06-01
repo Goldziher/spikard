@@ -1200,7 +1200,7 @@ func Test_70ArraySeparatorPipe(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/70_array_separator_pipe/items", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/70_array_separator_pipe/items?tags=python|rust|typescript", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -1242,7 +1242,7 @@ func Test_71ArraySeparatorSemicolon(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/71_array_separator_semicolon/items", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/71_array_separator_semicolon/items?colors=red;green;blue", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -1284,7 +1284,7 @@ func Test_72ArraySeparatorSpace(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/72_array_separator_space/search", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/72_array_separator_space/search?keywords=rust%20web%20framework", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}

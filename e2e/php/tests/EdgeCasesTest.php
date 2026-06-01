@@ -30,12 +30,12 @@ final class EdgeCasesTest extends TestCase
 
     /** Percent-encoded special characters should be decoded correctly */
     public function test_12_percent_encoded_special_chars(): void
-    {        $response = $this->httpClient->request('GET', "/fixtures/12_percent_encoded_special_chars/search", [            'query' => ["term" => "hi there"],        ]);        $this->assertEquals(200, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+    {        $response = $this->httpClient->request('GET', "/fixtures/12_percent_encoded_special_chars/search?term=hi%20there", [            'query' => ["term" => "hi there"],        ]);        $this->assertEquals(200, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(["term" => "hi there"], $body);    }
 
     /** Empty string query parameter should be preserved, not treated as missing */
     public function test_13_empty_string_query_param_preserved(): void
-    {        $response = $this->httpClient->request('GET', "/fixtures/13_empty_string_query_param_preserved/items", [            'query' => ["filter" => ""],        ]);        $this->assertEquals(200, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+    {        $response = $this->httpClient->request('GET', "/fixtures/13_empty_string_query_param_preserved/items?filter=", [            'query' => ["filter" => ""],        ]);        $this->assertEquals(200, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(["filter" => ""], $body);    }
 
     /** Very large integer at JavaScript MAX_SAFE_INTEGER boundary should be handled */

@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.AfterAll;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.URI;
 import java.time.Instant;
 /** E2e tests for category: rate_limit. */
 class RateLimitTest {
@@ -39,23 +40,40 @@ class RateLimitTest {
         pb.redirectErrorStream(false);
         harnessProcess = pb.start();
 
-        String host = "127.0.0.1";
-        int port = 8005;
-        sutUrl = "http://" + host + ":" + port;
-
-        // Poll until the harness accepts TCP connections
+        // Read SUT_URL from harness stdout
+        java.io.BufferedReader reader = new java.io.BufferedReader(
+            new java.io.InputStreamReader(harnessProcess.getInputStream(), "UTF-8")
+        );
+        String line;
         long deadline = System.currentTimeMillis() + 15_000;
+        while (System.currentTimeMillis() < deadline && (line = reader.readLine()) != null) {
+            if (line.startsWith("SUT_URL=")) {
+                sutUrl = line.substring("SUT_URL=".length()).trim();
+                break;
+            }
+        }
+
+        if (sutUrl == null || sutUrl.isEmpty()) {
+            if (harnessProcess != null) {
+                harnessProcess.destroyForcibly();
+            }
+            throw new RuntimeException("Harness did not emit SUT_URL within 15s");
+        }
+
+        // TCP-readiness probe: ensure harness is accepting connections
+        java.net.URI uri = new java.net.URI(sutUrl);
+        String host = uri.getHost();
+        int port = uri.getPort() > 0 ? uri.getPort() : 8000;
+        deadline = System.currentTimeMillis() + 15_000;
         boolean ready = false;
         while (System.currentTimeMillis() < deadline) {
             if (harnessProcess.isAlive() == false) {
-                // Process died early
                 break;
             }
             try (Socket socket = new Socket(host, port)) {
                 ready = true;
                 break;
             } catch (IOException e) {
-                // Not ready yet, sleep and retry
                 Thread.sleep(100);
             }
         }
@@ -64,7 +82,7 @@ class RateLimitTest {
             if (harnessProcess != null) {
                 harnessProcess.destroyForcibly();
             }
-            throw new RuntimeException("Harness did not become reachable on " + host + ":" + port + " within 15s");
+            throw new RuntimeException("Harness did not become reachable at " + sutUrl + " within 15s");
         }
 
         System.setProperty("SUT_URL", sutUrl);
@@ -82,7 +100,7 @@ class RateLimitTest {
     @Test    void testRateLimitBelowThresholdSucceeds() throws Exception {
         // Verifies that requests below the configured rate limit are served normally.
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/rate_limit_below_threshold_succeeds/rate-limit/basic");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/rate_limit_below_threshold_succeeds/rate-limit/basic");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -93,7 +111,7 @@ class RateLimitTest {
     @Test    void testRateLimitBurstSettingAllowsSpike() throws Exception {
         // Tests burst setting allows request spike beyond per_second rate
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/rate_limit_burst_setting_allows_spike/rate-limit/burst");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/rate_limit_burst_setting_allows_spike/rate-limit/burst");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -104,7 +122,7 @@ class RateLimitTest {
     @Test    void testRateLimitExceededReturns429() throws Exception {
         // Sends sequential requests until the configured limit is exceeded and validates the 429 response.
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/rate_limit_exceeded_returns_429/rate-limit/exceeded");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/rate_limit_exceeded_returns_429/rate-limit/exceeded");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -113,7 +131,7 @@ class RateLimitTest {
     @Test    void testRateLimitIpBasedTracking() throws Exception {
         // Tests rate limiting is applied per IP address
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/rate_limit_ip_based_tracking/rate-limit/ip-based");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/rate_limit_ip_based_tracking/rate-limit/ip-based");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        builder = builder.header("X-Forwarded-For", "192.168.1.100");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -124,7 +142,7 @@ class RateLimitTest {
     @Test    void testRateLimitPerSecondSetting10Requests() throws Exception {
         // Tests rate limit allows up to 10 requests per second
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/rate_limit_per_second_setting_10_requests/rate-limit/per-second");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/rate_limit_per_second_setting_10_requests/rate-limit/per-second");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());

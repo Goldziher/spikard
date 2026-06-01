@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"name":"café"},"headers":{},"status_code":201},"handler":{"body_schema":{"properties":{"name":{"minLength":1,"type":"string"}},"required":["name"],"type":"object"},"method":"POST","route":"/users"},"request":{"path":"/users"}}}

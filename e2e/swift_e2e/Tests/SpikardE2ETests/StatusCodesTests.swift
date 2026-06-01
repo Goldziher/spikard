@@ -88,7 +88,7 @@ final class StatusCodesTests: XCTestCase {
     /// Tests standard 200 OK response for successful GET request
     func testOkSuccess() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/200_ok_success/status-test/{code}")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/200_ok_success/status-test/200")!)
         _req.httpMethod = "GET"
         var response: HTTPURLResponse?
         var _responseData: Data?
@@ -160,7 +160,7 @@ final class StatusCodesTests: XCTestCase {
     /// Tests 204 No Content response for successful DELETE
     func testNoContentSuccessWithNoBody() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/204_no_content_success_with_no_body/status-test/{code}")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/204_no_content_success_with_no_body/status-test/204")!)
         _req.httpMethod = "DELETE"
         var response: HTTPURLResponse?
         var _responseData: Data?
@@ -179,7 +179,7 @@ final class StatusCodesTests: XCTestCase {
     /// Request with excessively long URI should return 414
     func test414UriTooLong() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/20_414_uri_too_long/data")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/20_414_uri_too_long/data?skip_template_expansion=true")!)
         _req.httpMethod = "GET"
         var response: HTTPURLResponse?
         var _responseData: Data?
@@ -266,7 +266,7 @@ final class StatusCodesTests: XCTestCase {
     /// Tests 304 Not Modified for cached resources
     func testNotModifiedCachedContentValid() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/304_not_modified_cached_content_valid/status-test/{code}")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/304_not_modified_cached_content_valid/status-test/304")!)
         _req.httpMethod = "GET"
         _req.setValue("\"abc123\"", forHTTPHeaderField: "If-None-Match")
         var response: HTTPURLResponse?
@@ -337,7 +337,7 @@ final class StatusCodesTests: XCTestCase {
     /// Tests 404 Not Found for non-existent resource
     func testNotFoundResourceNotFound() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/404_not_found_resource_not_found/status-test/{code}")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/404_not_found_resource_not_found/status-test/404")!)
         _req.httpMethod = "GET"
         var response: HTTPURLResponse?
         var _responseData: Data?

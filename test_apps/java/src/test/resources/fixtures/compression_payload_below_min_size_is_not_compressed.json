@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"message":"Small payload","payload":"tiny"},"headers":{"content-encoding":"<<absent>>"},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/compression/skip"},"request":{"path":"/compression/skip"}}}

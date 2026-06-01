@@ -617,7 +617,7 @@ func Test_ServerStaticFilesConfiguration(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/server_static_files_configuration/static/{file}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/server_static_files_configuration/static/index.html", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}

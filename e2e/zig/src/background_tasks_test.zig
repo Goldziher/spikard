@@ -26,7 +26,7 @@ test "background_task_cancellation" {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
     var url_buf: [512]u8 = undefined;
-    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/background_task_cancellation/background/cancel/{{task_id}}", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
+    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/background_task_cancellation/background/cancel/task-001", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
     var threaded = std.Io.Threaded.init(allocator, .{});
     defer threaded.deinit();
     const io = threaded.io();

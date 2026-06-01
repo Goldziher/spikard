@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":"Hello from static storage","headers":{"cache-control":"public, max-age=60","content-type":"text/plain"},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/public/hello.txt"},"request":{"path":"/public/hello.txt"}}}

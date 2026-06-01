@@ -96,7 +96,7 @@ foreach ($_FIXTURES as $fixture_id => $fixture) {
     }
 
     // Register the route with the handler.
-    $app = $app->register_route($builder, $handler_fn);
+    $app = $app->route($builder, $handler_fn);
 }
 
 // Configure and start the server.

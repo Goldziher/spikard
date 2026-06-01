@@ -66,7 +66,7 @@ func Test_12PercentEncodedSpecialChars(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/12_percent_encoded_special_chars/search", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/12_percent_encoded_special_chars/search?term=hi%20there", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -108,7 +108,7 @@ func Test_13EmptyStringQueryParamPreserved(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/13_empty_string_query_param_preserved/items", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/13_empty_string_query_param_preserved/items?filter=", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}

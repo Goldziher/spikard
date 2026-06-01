@@ -155,7 +155,7 @@ final class AuthTests: XCTestCase {
     /// Tests API key authentication when key is provided as query parameter instead of header
     func testApiKeyInQueryParameter() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/api_key_in_query_parameter/api/data")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/api_key_in_query_parameter/api/data?api_key=sk_test_123456")!)
         _req.httpMethod = "GET"
         var response: HTTPURLResponse?
         var _responseData: Data?

@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.AfterAll;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.URI;
 import java.time.Instant;
 /** E2e tests for category: jsonrpc. */
 class JsonrpcTest {
@@ -39,23 +40,40 @@ class JsonrpcTest {
         pb.redirectErrorStream(false);
         harnessProcess = pb.start();
 
-        String host = "127.0.0.1";
-        int port = 8005;
-        sutUrl = "http://" + host + ":" + port;
-
-        // Poll until the harness accepts TCP connections
+        // Read SUT_URL from harness stdout
+        java.io.BufferedReader reader = new java.io.BufferedReader(
+            new java.io.InputStreamReader(harnessProcess.getInputStream(), "UTF-8")
+        );
+        String line;
         long deadline = System.currentTimeMillis() + 15_000;
+        while (System.currentTimeMillis() < deadline && (line = reader.readLine()) != null) {
+            if (line.startsWith("SUT_URL=")) {
+                sutUrl = line.substring("SUT_URL=".length()).trim();
+                break;
+            }
+        }
+
+        if (sutUrl == null || sutUrl.isEmpty()) {
+            if (harnessProcess != null) {
+                harnessProcess.destroyForcibly();
+            }
+            throw new RuntimeException("Harness did not emit SUT_URL within 15s");
+        }
+
+        // TCP-readiness probe: ensure harness is accepting connections
+        java.net.URI uri = new java.net.URI(sutUrl);
+        String host = uri.getHost();
+        int port = uri.getPort() > 0 ? uri.getPort() : 8000;
+        deadline = System.currentTimeMillis() + 15_000;
         boolean ready = false;
         while (System.currentTimeMillis() < deadline) {
             if (harnessProcess.isAlive() == false) {
-                // Process died early
                 break;
             }
             try (Socket socket = new Socket(host, port)) {
                 ready = true;
                 break;
             } catch (IOException e) {
-                // Not ready yet, sleep and retry
                 Thread.sleep(100);
             }
         }
@@ -64,7 +82,7 @@ class JsonrpcTest {
             if (harnessProcess != null) {
                 harnessProcess.destroyForcibly();
             }
-            throw new RuntimeException("Harness did not become reachable on " + host + ":" + port + " within 15s");
+            throw new RuntimeException("Harness did not become reachable at " + sutUrl + " within 15s");
         }
 
         System.setProperty("SUT_URL", sutUrl);
@@ -82,7 +100,7 @@ class JsonrpcTest {
     @Test    void testJsonrpcBatchRequest() throws Exception {
         // Tests JSON-RPC batch request with multiple calls
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_batch_request/rpc");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_batch_request/rpc");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("[{\"id\":1,\"jsonrpc\":\"2.0\",\"method\":\"add\",\"params\":[1,2]},{\"id\":2,\"jsonrpc\":\"2.0\",\"method\":\"subtract\",\"params\":[5,3]}]"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -93,7 +111,7 @@ class JsonrpcTest {
     @Test    void testJsonrpcCallWithPositionalParams() throws Exception {
         // Tests JSON-RPC call with positional array parameters
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_call_with_positional_params/rpc");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_call_with_positional_params/rpc");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"id\":2,\"jsonrpc\":\"2.0\",\"method\":\"multiply\",\"params\":[4,7]}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -104,7 +122,7 @@ class JsonrpcTest {
     @Test    void testJsonrpcConfigBatchDisabled() throws Exception {
         // Tests JSON-RPC batch requests disabled returns error
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_config_batch_disabled/rpc");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_config_batch_disabled/rpc");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("[{\"id\":1,\"jsonrpc\":\"2.0\",\"method\":\"add\",\"params\":[1,2]},{\"id\":2,\"jsonrpc\":\"2.0\",\"method\":\"subtract\",\"params\":[5,3]}]"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -115,7 +133,7 @@ class JsonrpcTest {
     @Test    void testJsonrpcConfigCustomEndpointPath() throws Exception {
         // Tests JSON-RPC server at custom endpoint path
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_config_custom_endpoint_path/api/rpc");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_config_custom_endpoint_path/api/rpc");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"id\":1,\"jsonrpc\":\"2.0\",\"method\":\"test\",\"params\":{}}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -126,7 +144,7 @@ class JsonrpcTest {
     @Test    void testJsonrpcConfigMaxBatchSize() throws Exception {
         // Tests JSON-RPC batch request respects maximum batch size
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_config_max_batch_size/rpc");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_config_max_batch_size/rpc");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("[{\"id\":1,\"jsonrpc\":\"2.0\",\"method\":\"method1\"},{\"id\":2,\"jsonrpc\":\"2.0\",\"method\":\"method2\"},{\"id\":3,\"jsonrpc\":\"2.0\",\"method\":\"method3\"}]"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -137,7 +155,7 @@ class JsonrpcTest {
     @Test    void testJsonrpcDeprecatedMethodFlag() throws Exception {
         // Tests JSON-RPC method marked as deprecated
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_deprecated_method_flag/rpc");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_deprecated_method_flag/rpc");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"id\":1,\"jsonrpc\":\"2.0\",\"method\":\"oldMethod\",\"params\":{}}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -148,7 +166,7 @@ class JsonrpcTest {
     @Test    void testJsonrpcErrorResponse() throws Exception {
         // Tests JSON-RPC error response with error object
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_error_response/rpc");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_error_response/rpc");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"id\":3,\"jsonrpc\":\"2.0\",\"method\":\"divide\",\"params\":{\"denominator\":0,\"numerator\":10}}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -159,7 +177,7 @@ class JsonrpcTest {
     @Test    void testJsonrpcInvalidParams() throws Exception {
         // Tests JSON-RPC error for invalid parameters
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_invalid_params/rpc");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_invalid_params/rpc");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"id\":5,\"jsonrpc\":\"2.0\",\"method\":\"subtract\",\"params\":{\"wrong_field\":42}}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -170,7 +188,7 @@ class JsonrpcTest {
     @Test    void testJsonrpcMethodNotFound() throws Exception {
         // Tests JSON-RPC error when method does not exist
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_method_not_found/rpc");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_method_not_found/rpc");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"id\":4,\"jsonrpc\":\"2.0\",\"method\":\"nonexistent_method\"}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -181,7 +199,7 @@ class JsonrpcTest {
     @Test    void testJsonrpcMethodParameterValidation() throws Exception {
         // Tests JSON-RPC validates parameter types and values
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_method_parameter_validation/rpc");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_method_parameter_validation/rpc");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"id\":6,\"jsonrpc\":\"2.0\",\"method\":\"update_user\",\"params\":{\"email\":\"john@example.com\",\"id\":123,\"name\":\"John Doe\"}}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -192,7 +210,7 @@ class JsonrpcTest {
     @Test    void testJsonrpcMethodWithParamsSchema() throws Exception {
         // Tests JSON-RPC method params validated against schema
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_method_with_params_schema/rpc");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_method_with_params_schema/rpc");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"id\":1,\"jsonrpc\":\"2.0\",\"method\":\"createUser\",\"params\":{\"age\":30,\"name\":\"Alice\"}}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -203,7 +221,7 @@ class JsonrpcTest {
     @Test    void testJsonrpcMethodWithResultSchema() throws Exception {
         // Tests JSON-RPC method result schema validation
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_method_with_result_schema/rpc");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_method_with_result_schema/rpc");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"id\":1,\"jsonrpc\":\"2.0\",\"method\":\"getUser\",\"params\":{\"id\":1}}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -214,7 +232,7 @@ class JsonrpcTest {
     @Test    void testJsonrpcNotificationNoId() throws Exception {
         // Tests JSON-RPC notification (no response expected)
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_notification_no_id/rpc");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_notification_no_id/rpc");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"jsonrpc\":\"2.0\",\"method\":\"notify_event\",\"params\":{\"event\":\"user_login\"}}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -223,7 +241,7 @@ class JsonrpcTest {
     @Test    void testJsonrpcNotificationNoResponse() throws Exception {
         // Tests JSON-RPC notification (no id) doesn't return response
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_notification_no_response/rpc");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_notification_no_response/rpc");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"jsonrpc\":\"2.0\",\"method\":\"notify\",\"params\":{\"message\":\"hello\"}}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -232,7 +250,7 @@ class JsonrpcTest {
     @Test    void testJsonrpcSingleCallSuccess() throws Exception {
         // Tests single JSON-RPC 2.0 call with successful response
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_single_call_success/rpc");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/jsonrpc_single_call_success/rpc");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"id\":1,\"jsonrpc\":\"2.0\",\"method\":\"add\",\"params\":{\"a\":5,\"b\":3}}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());

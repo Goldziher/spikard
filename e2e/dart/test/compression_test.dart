@@ -108,6 +108,7 @@ void main() {
   });
 
   tearDownAll(() async {
+    RustLib.dispose();
     _httpClient.close(force: true);
     final proc = _sutProcess;
     if (proc != null) {

@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":null,"headers":{},"status_code":201},"handler":{"body_schema":{"anyOf":[{"required":["email"]},{"required":["phone"]}],"properties":{"email":{"format":"email","type":"string"},"name":{"type":"string"},"phone":{"type":"string"}},"required":["name"],"type":"object"},"method":"POST","route":"/contact"},"request":{"path":"/contact"}}}

@@ -47,7 +47,7 @@ test "static_server_returns_index_html_for_directory" {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
     var url_buf: [512]u8 = undefined;
-    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/static_server_returns_index_html_for_directory/app", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
+    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/static_server_returns_index_html_for_directory/app/", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
     var threaded = std.Io.Threaded.init(allocator, .{});
     defer threaded.deinit();
     const io = threaded.io();

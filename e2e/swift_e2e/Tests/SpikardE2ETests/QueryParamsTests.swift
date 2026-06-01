@@ -680,7 +680,7 @@ final class QueryParamsTests: XCTestCase {
     /// Array query parameter with pipe separator should parse correctly
     func testArraySeparatorPipe() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/70_array_separator_pipe/items")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/70_array_separator_pipe/items?tags=python|rust|typescript")!)
         _req.httpMethod = "GET"
         var response: HTTPURLResponse?
         var _responseData: Data?
@@ -702,7 +702,7 @@ final class QueryParamsTests: XCTestCase {
     /// Array query parameter with semicolon separator should parse correctly
     func testArraySeparatorSemicolon() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/71_array_separator_semicolon/items")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/71_array_separator_semicolon/items?colors=red;green;blue")!)
         _req.httpMethod = "GET"
         var response: HTTPURLResponse?
         var _responseData: Data?
@@ -724,7 +724,7 @@ final class QueryParamsTests: XCTestCase {
     /// Array query parameter with space separator should parse correctly
     func testArraySeparatorSpace() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/72_array_separator_space/search")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/72_array_separator_space/search?keywords=rust%20web%20framework")!)
         _req.httpMethod = "GET"
         var response: HTTPURLResponse?
         var _responseData: Data?

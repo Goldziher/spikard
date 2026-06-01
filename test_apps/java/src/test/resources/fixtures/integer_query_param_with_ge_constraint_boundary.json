@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"value":10},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/query/int-ge"},"request":{"path":"/query/int-ge"}}}

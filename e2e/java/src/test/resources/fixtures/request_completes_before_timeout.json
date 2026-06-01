@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"duration":"fast","status":"ok"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/timeouts/fast"},"request":{"path":"/timeouts/fast"}}}

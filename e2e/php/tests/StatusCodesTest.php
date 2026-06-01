@@ -30,7 +30,7 @@ final class StatusCodesTest extends TestCase
 
     /** Tests standard 200 OK response for successful GET request */
     public function test_200_ok_success(): void
-    {        $response = $this->httpClient->request('GET', "/fixtures/200_ok_success/status-test/{code}");        $this->assertEquals(200, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+    {        $response = $this->httpClient->request('GET', "/fixtures/200_ok_success/status-test/200");        $this->assertEquals(200, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(["id" => 1, "name" => "Item 1"], $body);    }
 
     /** Tests 201 Created response for successful POST request */
@@ -45,11 +45,11 @@ final class StatusCodesTest extends TestCase
 
     /** Tests 204 No Content response for successful DELETE */
     public function test_204_no_content_success_with_no_body(): void
-    {        $response = $this->httpClient->request('DELETE', "/fixtures/204_no_content_success_with_no_body/status-test/{code}");        $this->assertEquals(204, $response->getStatusCode());    }
+    {        $response = $this->httpClient->request('DELETE', "/fixtures/204_no_content_success_with_no_body/status-test/204");        $this->assertEquals(204, $response->getStatusCode());    }
 
     /** Request with excessively long URI should return 414 */
     public function test_20_414_uri_too_long(): void
-    {        $response = $this->httpClient->request('GET', "/fixtures/20_414_uri_too_long/data");        $this->assertEquals(200, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+    {        $response = $this->httpClient->request('GET', "/fixtures/20_414_uri_too_long/data?skip_template_expansion=true");        $this->assertEquals(200, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals([], $body);    }
 
     /** Request with excessively large headers should return 431 */
@@ -68,7 +68,7 @@ final class StatusCodesTest extends TestCase
 
     /** Tests 304 Not Modified for cached resources */
     public function test_304_not_modified_cached_content_valid(): void
-    {        $response = $this->httpClient->request('GET', "/fixtures/304_not_modified_cached_content_valid/status-test/{code}", [            'headers' => ["If-None-Match" => "\"abc123\""],        ]);        $this->assertEquals(304, $response->getStatusCode());    }
+    {        $response = $this->httpClient->request('GET', "/fixtures/304_not_modified_cached_content_valid/status-test/304", [            'headers' => ["If-None-Match" => "\"abc123\""],        ]);        $this->assertEquals(304, $response->getStatusCode());    }
 
     /** Tests 307 temporary redirect with method preservation */
     public function test_307_temporary_redirect_method_preserved(): void
@@ -82,7 +82,7 @@ final class StatusCodesTest extends TestCase
 
     /** Tests 404 Not Found for non-existent resource */
     public function test_404_not_found_resource_not_found(): void
-    {        $response = $this->httpClient->request('GET', "/fixtures/404_not_found_resource_not_found/status-test/{code}");        $this->assertEquals(404, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+    {        $response = $this->httpClient->request('GET', "/fixtures/404_not_found_resource_not_found/status-test/404");        $this->assertEquals(404, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(["detail" => "Item not found"], $body);    }
 
     /** Tests 408 status code when request takes too long */

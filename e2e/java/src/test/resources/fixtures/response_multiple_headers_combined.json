@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"message":"Complex response"},"headers":{"Content-Type":"application/json","X-Another-Header":"value2","X-Custom-Header":"value1","X-Third-Header":"value3"},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/complex"},"request":{"path":"/complex"}}}

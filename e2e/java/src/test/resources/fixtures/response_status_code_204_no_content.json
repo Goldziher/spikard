@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":"","headers":{},"status_code":204},"handler":{"body_schema":null,"method":"DELETE","route":"/items/1"},"request":{"path":"/items/1"}}}

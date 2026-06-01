@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"timestamp":"2024-01-15T10:30:00Z"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/query/datetime"},"request":{"path":"/query/datetime"}}}

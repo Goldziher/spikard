@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":[{"id":1,"jsonrpc":"2.0","result":10},{"error":{"code":-32601,"message":"Method not found"},"id":2,"jsonrpc":"2.0"}],"headers":{},"status_code":200},"handler":{"body_schema":{"type":"array"},"method":"POST","route":"/rpc"},"request":{"path":"/rpc"}}}

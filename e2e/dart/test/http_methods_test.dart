@@ -108,6 +108,7 @@ void main() {
   });
 
   tearDownAll(() async {
+    RustLib.dispose();
     _httpClient.close(force: true);
     final proc = _sutProcess;
     if (proc != null) {
@@ -118,7 +119,7 @@ void main() {
 
   test('Tests DELETE method to remove a resource', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/delete_remove_resource/items/{id}');
+    final uri = Uri.parse('$baseUrl/fixtures/delete_remove_resource/items/1');
     final ioReq = await _httpClient.openUrl('DELETE', uri);
     ioReq.persistentConnection = false;
     final ioResp = await ioReq.close();
@@ -131,7 +132,7 @@ void main() {
 
   test('Tests DELETE on non-existent resource returns 404', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/delete_resource_not_found/items/{id}');
+    final uri = Uri.parse('$baseUrl/fixtures/delete_resource_not_found/items/999');
     final ioReq = await _httpClient.openUrl('DELETE', uri);
     ioReq.persistentConnection = false;
     final ioResp = await ioReq.close();
@@ -144,7 +145,7 @@ void main() {
 
   test('Tests DELETE returning deleted resource data', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/delete_with_response_body/items/{id}');
+    final uri = Uri.parse('$baseUrl/fixtures/delete_with_response_body/items/1');
     final ioReq = await _httpClient.openUrl('DELETE', uri);
     ioReq.persistentConnection = false;
     final ioResp = await ioReq.close();
@@ -157,7 +158,7 @@ void main() {
 
   test('Tests HEAD method returns headers without response body', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/head_get_metadata_without_body/items/{id}');
+    final uri = Uri.parse('$baseUrl/fixtures/head_get_metadata_without_body/items/1');
     final ioReq = await _httpClient.openUrl('HEAD', uri);
     ioReq.persistentConnection = false;
     final ioResp = await ioReq.close();
@@ -169,7 +170,7 @@ void main() {
 
   test('Tests PATCH method for partial resource updates', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/patch_partial_update/items/{id}');
+    final uri = Uri.parse('$baseUrl/fixtures/patch_partial_update/items/1');
     final ioReq = await _httpClient.openUrl('PATCH', uri);
     ioReq.persistentConnection = false;
     ioReq.headers.set('content-type', 'application/json');
@@ -186,7 +187,7 @@ void main() {
 
   test('Tests PATCH updating multiple fields at once', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/patch_update_multiple_fields/items/{id}');
+    final uri = Uri.parse('$baseUrl/fixtures/patch_update_multiple_fields/items/1');
     final ioReq = await _httpClient.openUrl('PATCH', uri);
     ioReq.persistentConnection = false;
     ioReq.headers.set('content-type', 'application/json');
@@ -203,7 +204,7 @@ void main() {
 
   test('Tests PUT method for complete resource replacement', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/put_complete_resource_replacement/items/{id}');
+    final uri = Uri.parse('$baseUrl/fixtures/put_complete_resource_replacement/items/1');
     final ioReq = await _httpClient.openUrl('PUT', uri);
     ioReq.persistentConnection = false;
     ioReq.headers.set('content-type', 'application/json');
@@ -220,7 +221,7 @@ void main() {
 
   test('Tests PUT creating new resource at specific URI', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/put_create_resource_if_doesn_t_exist/items/{id}');
+    final uri = Uri.parse('$baseUrl/fixtures/put_create_resource_if_doesn_t_exist/items/999');
     final ioReq = await _httpClient.openUrl('PUT', uri);
     ioReq.persistentConnection = false;
     ioReq.headers.set('content-type', 'application/json');
@@ -237,7 +238,7 @@ void main() {
 
   test('Tests PUT idempotency - repeated calls produce same result', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/put_idempotent_operation/items/{id}');
+    final uri = Uri.parse('$baseUrl/fixtures/put_idempotent_operation/items/1');
     final ioReq = await _httpClient.openUrl('PUT', uri);
     ioReq.persistentConnection = false;
     ioReq.headers.set('content-type', 'application/json');
@@ -254,7 +255,7 @@ void main() {
 
   test('Tests PUT with missing required fields returns 422', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/put_missing_required_field/items/{id}');
+    final uri = Uri.parse('$baseUrl/fixtures/put_missing_required_field/items/1');
     final ioReq = await _httpClient.openUrl('PUT', uri);
     ioReq.persistentConnection = false;
     ioReq.headers.set('content-type', 'application/json');
@@ -271,7 +272,7 @@ void main() {
 
   test('Tests PUT with invalid data returns 422', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/put_validation_error/items/{id}');
+    final uri = Uri.parse('$baseUrl/fixtures/put_validation_error/items/1');
     final ioReq = await _httpClient.openUrl('PUT', uri);
     ioReq.persistentConnection = false;
     ioReq.headers.set('content-type', 'application/json');

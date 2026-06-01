@@ -108,6 +108,7 @@ void main() {
   });
 
   tearDownAll(() async {
+    RustLib.dispose();
     _httpClient.close(force: true);
     final proc = _sutProcess;
     if (proc != null) {
@@ -131,7 +132,7 @@ void main() {
 
   test('Percent-encoded special characters should be decoded correctly', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/12_percent_encoded_special_chars/search');
+    final uri = Uri.parse('$baseUrl/fixtures/12_percent_encoded_special_chars/search?term=hi%20there');
     final ioReq = await _httpClient.openUrl('GET', uri);
     ioReq.persistentConnection = false;
     final ioResp = await ioReq.close();
@@ -144,7 +145,7 @@ void main() {
 
   test('Empty string query parameter should be preserved, not treated as missing', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/13_empty_string_query_param_preserved/items');
+    final uri = Uri.parse('$baseUrl/fixtures/13_empty_string_query_param_preserved/items?filter=');
     final ioReq = await _httpClient.openUrl('GET', uri);
     ioReq.persistentConnection = false;
     final ioResp = await ioReq.close();

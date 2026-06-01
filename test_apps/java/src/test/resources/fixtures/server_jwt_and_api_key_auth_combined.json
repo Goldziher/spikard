@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"authenticated":true},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/secure"},"request":{"path":"/secure"}}}

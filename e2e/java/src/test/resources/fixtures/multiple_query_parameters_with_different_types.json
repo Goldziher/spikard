@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"active":true,"age":30,"name":"john","score":95.5},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/query/multi-type"},"request":{"path":"/query/multi-type"}}}

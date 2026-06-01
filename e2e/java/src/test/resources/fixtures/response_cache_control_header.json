@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"resource":"data"},"headers":{"Cache-Control":"public, max-age=3600"},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/static-resource"},"request":{"path":"/static-resource"}}}

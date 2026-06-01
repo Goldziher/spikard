@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"price":0.01},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/query/float-ge"},"request":{"path":"/query/float-ge"}}}

@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.AfterAll;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.URI;
 import java.time.Instant;
 /** E2e tests for category: graphql_operations. */
 class GraphqlOperationsTest {
@@ -39,23 +40,40 @@ class GraphqlOperationsTest {
         pb.redirectErrorStream(false);
         harnessProcess = pb.start();
 
-        String host = "127.0.0.1";
-        int port = 8005;
-        sutUrl = "http://" + host + ":" + port;
-
-        // Poll until the harness accepts TCP connections
+        // Read SUT_URL from harness stdout
+        java.io.BufferedReader reader = new java.io.BufferedReader(
+            new java.io.InputStreamReader(harnessProcess.getInputStream(), "UTF-8")
+        );
+        String line;
         long deadline = System.currentTimeMillis() + 15_000;
+        while (System.currentTimeMillis() < deadline && (line = reader.readLine()) != null) {
+            if (line.startsWith("SUT_URL=")) {
+                sutUrl = line.substring("SUT_URL=".length()).trim();
+                break;
+            }
+        }
+
+        if (sutUrl == null || sutUrl.isEmpty()) {
+            if (harnessProcess != null) {
+                harnessProcess.destroyForcibly();
+            }
+            throw new RuntimeException("Harness did not emit SUT_URL within 15s");
+        }
+
+        // TCP-readiness probe: ensure harness is accepting connections
+        java.net.URI uri = new java.net.URI(sutUrl);
+        String host = uri.getHost();
+        int port = uri.getPort() > 0 ? uri.getPort() : 8000;
+        deadline = System.currentTimeMillis() + 15_000;
         boolean ready = false;
         while (System.currentTimeMillis() < deadline) {
             if (harnessProcess.isAlive() == false) {
-                // Process died early
                 break;
             }
             try (Socket socket = new Socket(host, port)) {
                 ready = true;
                 break;
             } catch (IOException e) {
-                // Not ready yet, sleep and retry
                 Thread.sleep(100);
             }
         }
@@ -64,7 +82,7 @@ class GraphqlOperationsTest {
             if (harnessProcess != null) {
                 harnessProcess.destroyForcibly();
             }
-            throw new RuntimeException("Harness did not become reachable on " + host + ":" + port + " within 15s");
+            throw new RuntimeException("Harness did not become reachable at " + sutUrl + " within 15s");
         }
 
         System.setProperty("SUT_URL", sutUrl);
@@ -82,7 +100,7 @@ class GraphqlOperationsTest {
     @Test    void testGraphqlFieldLevelErrorPartialData() throws Exception {
         // Tests that a field-level resolver error returns partial data alongside an errors array
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/graphql_field_level_error_partial_data/graphql");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/graphql_field_level_error_partial_data/graphql");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"query\":\"{ user(id: \\\"missing-user\\\") { id name avatar } status }\"}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -93,7 +111,7 @@ class GraphqlOperationsTest {
     @Test    void testGraphqlIntrospectionQuery() throws Exception {
         // Tests that the __schema introspection query returns the schema type list
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/graphql_introspection_query/graphql");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/graphql_introspection_query/graphql");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"query\":\"{ __schema { queryType { name } types { name kind } } }\"}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -104,7 +122,7 @@ class GraphqlOperationsTest {
     @Test    void testGraphqlInvalidSyntaxRejected() throws Exception {
         // Tests that a query with invalid GraphQL syntax returns a syntax error in the errors array
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/graphql_invalid_syntax_rejected/graphql");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/graphql_invalid_syntax_rejected/graphql");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"query\":\"{ hello { this is not valid syntax {{{\"}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -115,7 +133,7 @@ class GraphqlOperationsTest {
     @Test    void testGraphqlMultiOperationWithOperationName() throws Exception {
         // Tests executing a specific named operation from a document containing multiple operations
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/graphql_multi_operation_with_operation_name/graphql");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/graphql_multi_operation_with_operation_name/graphql");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"operationName\":\"Version\",\"query\":\"query Ping { ping } query Version { version }\"}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -126,7 +144,7 @@ class GraphqlOperationsTest {
     @Test    void testGraphqlMutationCreateObject() throws Exception {
         // Tests GraphQL mutation with an input type that returns the newly created object
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/graphql_mutation_create_object/graphql");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/graphql_mutation_create_object/graphql");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"query\":\"mutation CreateUser($input: CreateUserInput!) { createUser(input: $input) { id name email } }\",\"variables\":{\"input\":{\"email\":\"carol@example.com\",\"name\":\"Carol\"}}}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -137,7 +155,7 @@ class GraphqlOperationsTest {
     @Test    void testGraphqlOpsComplexityLimitExceeded() throws Exception {
         // Tests that a query exceeding the configured complexity limit returns an error
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/graphql_ops_complexity_limit_exceeded/graphql");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/graphql_ops_complexity_limit_exceeded/graphql");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"query\":\"{ users { id friends { id friends { id friends { id friends { id } } } } } }\"}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -148,7 +166,7 @@ class GraphqlOperationsTest {
     @Test    void testGraphqlOpsDepthLimitExceeded() throws Exception {
         // Tests that a query exceeding the configured depth limit returns an error
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/graphql_ops_depth_limit_exceeded/graphql");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/graphql_ops_depth_limit_exceeded/graphql");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"query\":\"{ a { b { c { d { e } } } } }\"}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -159,7 +177,7 @@ class GraphqlOperationsTest {
     @Test    void testGraphqlQueryNestedFields() throws Exception {
         // Tests GraphQL query selecting nested fields at depth 2-3
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/graphql_query_nested_fields/graphql");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/graphql_query_nested_fields/graphql");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"query\":\"{ order(id: \\\"ORD-1\\\") { id customer { name address { city } } items { sku quantity } } }\"}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -170,7 +188,7 @@ class GraphqlOperationsTest {
     @Test    void testGraphqlQueryWithVariables() throws Exception {
         // Tests GraphQL query that uses variables passed in the request body
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/graphql_query_with_variables/graphql");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/graphql_query_with_variables/graphql");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"query\":\"query GetUser($id: ID!) { user(id: $id) { id name } }\",\"variables\":{\"id\":\"user-42\"}}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -181,7 +199,7 @@ class GraphqlOperationsTest {
     @Test    void testGraphqlSimpleQuery() throws Exception {
         // Tests simple GraphQL query execution returning data from the root query type
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/graphql_simple_query/graphql");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/graphql_simple_query/graphql");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"query\":\"{ hello }\"}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -192,7 +210,7 @@ class GraphqlOperationsTest {
     @Test    void testGraphqlSubscriptionDeclaration() throws Exception {
         // Tests that a subscription operation type is declared and the initial response shape matches
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/graphql_subscription_declaration/graphql");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/graphql_subscription_declaration/graphql");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"query\":\"subscription OnMessageAdded($roomId: ID!) { messageAdded(roomId: $roomId) { id text authorId } }\",\"variables\":{\"roomId\":\"room-1\"}}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -203,7 +221,7 @@ class GraphqlOperationsTest {
     @Test    void testGraphqlUndefinedFieldError() throws Exception {
         // Tests that querying a field that does not exist in the schema returns a validation error
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/graphql_undefined_field_error/graphql");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/graphql_undefined_field_error/graphql");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"query\":\"{ hello nonExistentField }\"}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());

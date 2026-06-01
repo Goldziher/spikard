@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"error":{"code":-32600,"message":"Batch requests not enabled"},"jsonrpc":"2.0"},"headers":{},"status_code":400},"handler":{"body_schema":{"type":"array"},"method":"POST","route":"/rpc"},"request":{"path":"/rpc"}}}

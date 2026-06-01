@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.AfterAll;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.URI;
 import java.time.Instant;
 /** E2e tests for category: multipart. */
 class MultipartTest {
@@ -39,23 +40,40 @@ class MultipartTest {
         pb.redirectErrorStream(false);
         harnessProcess = pb.start();
 
-        String host = "127.0.0.1";
-        int port = 8005;
-        sutUrl = "http://" + host + ":" + port;
-
-        // Poll until the harness accepts TCP connections
+        // Read SUT_URL from harness stdout
+        java.io.BufferedReader reader = new java.io.BufferedReader(
+            new java.io.InputStreamReader(harnessProcess.getInputStream(), "UTF-8")
+        );
+        String line;
         long deadline = System.currentTimeMillis() + 15_000;
+        while (System.currentTimeMillis() < deadline && (line = reader.readLine()) != null) {
+            if (line.startsWith("SUT_URL=")) {
+                sutUrl = line.substring("SUT_URL=".length()).trim();
+                break;
+            }
+        }
+
+        if (sutUrl == null || sutUrl.isEmpty()) {
+            if (harnessProcess != null) {
+                harnessProcess.destroyForcibly();
+            }
+            throw new RuntimeException("Harness did not emit SUT_URL within 15s");
+        }
+
+        // TCP-readiness probe: ensure harness is accepting connections
+        java.net.URI uri = new java.net.URI(sutUrl);
+        String host = uri.getHost();
+        int port = uri.getPort() > 0 ? uri.getPort() : 8000;
+        deadline = System.currentTimeMillis() + 15_000;
         boolean ready = false;
         while (System.currentTimeMillis() < deadline) {
             if (harnessProcess.isAlive() == false) {
-                // Process died early
                 break;
             }
             try (Socket socket = new Socket(host, port)) {
                 ready = true;
                 break;
             } catch (IOException e) {
-                // Not ready yet, sleep and retry
                 Thread.sleep(100);
             }
         }
@@ -64,7 +82,7 @@ class MultipartTest {
             if (harnessProcess != null) {
                 harnessProcess.destroyForcibly();
             }
-            throw new RuntimeException("Harness did not become reachable on " + host + ":" + port + " within 15s");
+            throw new RuntimeException("Harness did not become reachable at " + sutUrl + " within 15s");
         }
 
         System.setProperty("SUT_URL", sutUrl);
@@ -82,7 +100,7 @@ class MultipartTest {
     @Test    void test17FileMagicNumberPngSuccess() throws Exception {
         // File with correct PNG magic number and matching MIME type should be accepted
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/17_file_magic_number_png_success/upload");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/17_file_magic_number_png_success/upload");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -91,7 +109,7 @@ class MultipartTest {
     @Test    void test18FileMagicNumberJpegSuccess() throws Exception {
         // File with correct JPEG magic number and matching MIME type should be accepted
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/18_file_magic_number_jpeg_success/upload");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/18_file_magic_number_jpeg_success/upload");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -100,7 +118,7 @@ class MultipartTest {
     @Test    void test19FileMimeSpoofingPngAsJpeg() throws Exception {
         // File with PNG magic number but JPEG MIME type should be rejected (spoofing detection)
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/19_file_mime_spoofing_png_as_jpeg/upload");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/19_file_mime_spoofing_png_as_jpeg/upload");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -111,7 +129,7 @@ class MultipartTest {
     @Test    void test20FileMimeSpoofingJpegAsPng() throws Exception {
         // File with JPEG magic number but PNG MIME type should be rejected (spoofing detection)
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/20_file_mime_spoofing_jpeg_as_png/upload");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/20_file_mime_spoofing_jpeg_as_png/upload");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -122,7 +140,7 @@ class MultipartTest {
     @Test    void test21FilePdfMagicNumberSuccess() throws Exception {
         // File with correct PDF magic number should be accepted
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/21_file_pdf_magic_number_success/upload");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/21_file_pdf_magic_number_success/upload");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -131,7 +149,7 @@ class MultipartTest {
     @Test    void test22FileEmptyBuffer() throws Exception {
         // File with empty buffer should fail validation
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/22_file_empty_buffer/upload");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/22_file_empty_buffer/upload");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -142,7 +160,7 @@ class MultipartTest {
     @Test    void testContentTypeValidationInvalidType() throws Exception {
         // Tests file upload with disallowed content type
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/content_type_validation_invalid_type/files/images-only");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/content_type_validation_invalid_type/files/images-only");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("\"--alef-boundary\\r\\nContent-Disposition: form-data; name=\\\"file\\\"; filename=\\\"script.sh\\\"\\r\\nContent-Type: application/x-sh\\r\\n\\r\\n#!/bin/bash\\necho hello\\r\\n--alef-boundary--\\r\\n\""));        builder = builder.header("Content-Type", "multipart/form-data; boundary=alef-boundary");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -153,7 +171,7 @@ class MultipartTest {
     @Test    void testEmptyFileUpload() throws Exception {
         // Tests uploading a file with zero bytes
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/empty_file_upload/files/upload");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/empty_file_upload/files/upload");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("\"--alef-boundary\\r\\nContent-Disposition: form-data; name=\\\"file\\\"; filename=\\\"empty.txt\\\"\\r\\nContent-Type: text/plain\\r\\n\\r\\n\\r\\n--alef-boundary--\\r\\n\""));        builder = builder.header("Content-Type", "multipart/form-data; boundary=alef-boundary");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -164,7 +182,7 @@ class MultipartTest {
     @Test    void testFileListUploadArrayOfFiles() throws Exception {
         // Tests uploading multiple files as a list parameter
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/file_list_upload_array_of_files/files/list");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/file_list_upload_array_of_files/files/list");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("\"--alef-boundary\\r\\nContent-Disposition: form-data; name=\\\"files\\\"; filename=\\\"file1.txt\\\"\\r\\nContent-Type: text/plain\\r\\n\\r\\nfirst file here\\r\\n--alef-boundary\\r\\nContent-Disposition: form-data; name=\\\"files\\\"; filename=\\\"file2.txt\\\"\\r\\nContent-Type: text/plain\\r\\n\\r\\nsecond file content here\\r\\n--alef-boundary--\\r\\n\""));        builder = builder.header("Content-Type", "multipart/form-data; boundary=alef-boundary");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -175,7 +193,7 @@ class MultipartTest {
     @Test    void testFileSizeValidationTooLarge() throws Exception {
         // Tests file upload exceeding max size limit
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/file_size_validation_too_large/files/validated");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/file_size_validation_too_large/files/validated");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("\"--alef-boundary\\r\\nContent-Disposition: form-data; name=\\\"file\\\"; filename=\\\"large.txt\\\"\\r\\nContent-Type: text/plain\\r\\n\\r\\nplaceholder content\\r\\n--alef-boundary--\\r\\n\""));        builder = builder.header("Content-Type", "multipart/form-data; boundary=alef-boundary");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -186,7 +204,7 @@ class MultipartTest {
     @Test    void testFileUploadWithCustomHeaders() throws Exception {
         // File upload with additional custom headers in the multipart section
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/file_upload_with_custom_headers/");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/file_upload_with_custom_headers/");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -197,7 +215,7 @@ class MultipartTest {
     @Test    void testFileUploadWithoutFilename() throws Exception {
         // Upload file content without providing a filename
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/file_upload_without_filename/");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/file_upload_without_filename/");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -208,7 +226,7 @@ class MultipartTest {
     @Test    void testFormDataWithoutFiles() throws Exception {
         // Multipart form with only text fields, no file uploads
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/form_data_without_files/");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/form_data_without_files/");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -219,7 +237,7 @@ class MultipartTest {
     @Test    void testImageFileUpload() throws Exception {
         // Tests uploading an image file (JPEG)
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/image_file_upload/files/image");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/image_file_upload/files/image");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("\"--alef-boundary\\r\\nContent-Disposition: form-data; name=\\\"image\\\"; filename=\\\"photo.jpg\\\"\\r\\nContent-Type: image/jpeg\\r\\n\\r\\nJPEG placeholder content here\\r\\n--alef-boundary--\\r\\n\""));        builder = builder.header("Content-Type", "multipart/form-data; boundary=alef-boundary");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -230,7 +248,7 @@ class MultipartTest {
     @Test    void testMixedFilesAndFormData() throws Exception {
         // Multipart request with both file uploads and regular form fields
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/mixed_files_and_form_data/");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/mixed_files_and_form_data/");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -241,7 +259,7 @@ class MultipartTest {
     @Test    void testMultipleFileUploads() throws Exception {
         // Upload multiple files in a single multipart request
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/multiple_file_uploads/");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/multiple_file_uploads/");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -252,7 +270,7 @@ class MultipartTest {
     @Test    void testMultipleValuesForSameFieldName() throws Exception {
         // Multiple files uploaded with the same field name (array-like behavior)
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/multiple_values_for_same_field_name/");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/multiple_values_for_same_field_name/");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("\"--alef-boundary\\r\\nContent-Disposition: form-data; name=\\\"files\\\"; filename=\\\"file1.txt\\\"\\r\\nContent-Type: text/plain\\r\\n\\r\\nfirst file\\r\\n--alef-boundary\\r\\nContent-Disposition: form-data; name=\\\"files\\\"; filename=\\\"file2.txt\\\"\\r\\nContent-Type: text/plain\\r\\n\\r\\nsecond file\\r\\n--alef-boundary\\r\\nContent-Disposition: form-data; name=\\\"tags\\\"\\r\\n\\r\\npython\\r\\n--alef-boundary\\r\\nContent-Disposition: form-data; name=\\\"tags\\\"\\r\\n\\r\\nrust\\r\\n--alef-boundary\\r\\nContent-Disposition: form-data; name=\\\"tags\\\"\\r\\n\\r\\nweb\\r\\n--alef-boundary--\\r\\n\""));        builder = builder.header("Content-Type", "multipart/form-data");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -263,7 +281,7 @@ class MultipartTest {
     @Test    void testOptionalFileUploadMissing() throws Exception {
         // Tests optional file parameter when no file is provided
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/optional_file_upload_missing/files/optional");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/optional_file_upload_missing/files/optional");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("\"--alef-boundary--\\r\\n\""));        builder = builder.header("Content-Type", "multipart/form-data; boundary=alef-boundary");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -274,7 +292,7 @@ class MultipartTest {
     @Test    void testOptionalFileUploadProvided() throws Exception {
         // Tests optional file parameter when file is provided
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/optional_file_upload_provided/files/optional");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/optional_file_upload_provided/files/optional");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("\"--alef-boundary\\r\\nContent-Disposition: form-data; name=\\\"file\\\"; filename=\\\"optional.txt\\\"\\r\\nContent-Type: text/plain\\r\\n\\r\\noptional file content here\\r\\n--alef-boundary--\\r\\n\""));        builder = builder.header("Content-Type", "multipart/form-data; boundary=alef-boundary");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -285,7 +303,7 @@ class MultipartTest {
     @Test    void testPdfFileUpload() throws Exception {
         // Tests uploading a PDF document
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/pdf_file_upload/files/document");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/pdf_file_upload/files/document");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("\"--alef-boundary\\r\\nContent-Disposition: form-data; name=\\\"document\\\"; filename=\\\"report.pdf\\\"\\r\\nContent-Type: application/pdf\\r\\n\\r\\nPDF placeholder here\\r\\n--alef-boundary--\\r\\n\""));        builder = builder.header("Content-Type", "multipart/form-data; boundary=alef-boundary");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -296,7 +314,7 @@ class MultipartTest {
     @Test    void testRequiredFileUploadMissing() throws Exception {
         // Tests required file parameter when no file is provided
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/required_file_upload_missing/files/required");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/required_file_upload_missing/files/required");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("\"--alef-boundary--\\r\\n\""));        builder = builder.header("Content-Type", "multipart/form-data; boundary=alef-boundary");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -307,7 +325,7 @@ class MultipartTest {
     @Test    void testSimpleFileUpload() throws Exception {
         // Single file upload with text/plain content type
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/simple_file_upload/");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/simple_file_upload/");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());

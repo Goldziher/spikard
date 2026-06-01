@@ -133,7 +133,7 @@ final class JsonBodiesTest extends TestCase
 
     /** Tests JSON body combined with query parameters */
     public function test_body_with_query_parameters(): void
-    {        $response = $this->httpClient->request('POST', "/fixtures/body_with_query_parameters/items/", [            'json' => ["name" => "Item", "price" => 42.0],            'headers' => ["Content-Type" => "application/json"],            'query' => ["limit" => "10"],        ]);        $this->assertEquals(200, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+    {        $response = $this->httpClient->request('POST', "/fixtures/body_with_query_parameters/items/?limit=10", [            'json' => ["name" => "Item", "price" => 42.0],            'headers' => ["Content-Type" => "application/json"],            'query' => ["limit" => "10"],        ]);        $this->assertEquals(200, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(["item" => ["name" => "Item", "price" => 42.0], "limit" => 10], $body);    }
 
     /** Tests JSON object with boolean field */
@@ -213,7 +213,7 @@ final class JsonBodiesTest extends TestCase
 
     /** Tests PATCH request with partial object update */
     public function test_patch_partial_update_2(): void
-    {        $response = $this->httpClient->request('PATCH', "/fixtures/patch_partial_update_2/items/{id}", [            'json' => ["price" => 45.0],            'headers' => ["Content-Type" => "application/json"],        ]);        $this->assertEquals(200, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+    {        $response = $this->httpClient->request('PATCH', "/fixtures/patch_partial_update_2/items/1", [            'json' => ["price" => 45.0],            'headers' => ["Content-Type" => "application/json"],        ]);        $this->assertEquals(200, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(["description" => "Original description", "name" => "Original Item", "price" => 45.0], $body);    }
 
     /** Tests validation error when required field is missing */

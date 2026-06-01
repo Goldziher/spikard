@@ -25,7 +25,7 @@ final class BackgroundTasksTest extends TestCase
     }
     /** Tests background task cancellation via request */
     public function test_background_task_cancellation(): void
-    {        $response = $this->httpClient->request('DELETE', "/fixtures/background_task_cancellation/background/cancel/{task_id}");        $this->assertEquals(200, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+    {        $response = $this->httpClient->request('DELETE', "/fixtures/background_task_cancellation/background/cancel/task-001");        $this->assertEquals(200, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(["cancelled" => true, "task_id" => "task-001"], $body);    }
 
     /** Tests background task with custom max_concurrent setting */

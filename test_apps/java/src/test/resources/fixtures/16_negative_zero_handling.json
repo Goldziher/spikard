@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"offset":0},"headers":{},"status_code":201},"handler":{"body_schema":{"properties":{"offset":{"type":"number"}},"required":["offset"],"type":"object"},"method":"POST","route":"/data"},"request":{"path":"/data"}}}

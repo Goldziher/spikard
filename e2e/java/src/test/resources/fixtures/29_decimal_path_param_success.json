@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"amount":"19.99"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/prices/{amount}"},"request":{"path":"/prices/19.99"}}}

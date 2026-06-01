@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"content_encoding":"gzip","filename":"data.gz"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"POST","route":"/upload/compressed"},"request":{"path":"/upload/compressed"}}}

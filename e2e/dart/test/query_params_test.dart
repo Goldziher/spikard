@@ -108,6 +108,7 @@ void main() {
   });
 
   tearDownAll(() async {
+    RustLib.dispose();
     _httpClient.close(force: true);
     final proc = _sutProcess;
     if (proc != null) {
@@ -482,7 +483,7 @@ void main() {
 
   test('Array query parameter with pipe separator should parse correctly', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/70_array_separator_pipe/items');
+    final uri = Uri.parse('$baseUrl/fixtures/70_array_separator_pipe/items?tags=python|rust|typescript');
     final ioReq = await _httpClient.openUrl('GET', uri);
     ioReq.persistentConnection = false;
     final ioResp = await ioReq.close();
@@ -495,7 +496,7 @@ void main() {
 
   test('Array query parameter with semicolon separator should parse correctly', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/71_array_separator_semicolon/items');
+    final uri = Uri.parse('$baseUrl/fixtures/71_array_separator_semicolon/items?colors=red;green;blue');
     final ioReq = await _httpClient.openUrl('GET', uri);
     ioReq.persistentConnection = false;
     final ioResp = await ioReq.close();
@@ -508,7 +509,7 @@ void main() {
 
   test('Array query parameter with space separator should parse correctly', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/72_array_separator_space/search');
+    final uri = Uri.parse('$baseUrl/fixtures/72_array_separator_space/search?keywords=rust%20web%20framework');
     final ioReq = await _httpClient.openUrl('GET', uri);
     ioReq.persistentConnection = false;
     final ioResp = await ioReq.close();

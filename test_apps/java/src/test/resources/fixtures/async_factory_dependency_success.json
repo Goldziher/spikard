@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"max_size":10,"pool_status":"connected"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/api/db-status"},"request":{"path":"/api/db-status"}}}

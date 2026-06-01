@@ -500,7 +500,7 @@ test "body_with_query_parameters" {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
     var url_buf: [512]u8 = undefined;
-    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/body_with_query_parameters/items/", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
+    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/body_with_query_parameters/items/?limit=10", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
     const headers = [_]std.http.Header{
         .{ .name = "Content-Type", .value = "application/json" },
     };
@@ -868,7 +868,7 @@ test "patch_partial_update_2" {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
     var url_buf: [512]u8 = undefined;
-    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/patch_partial_update_2/items/{{id}}", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
+    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/patch_partial_update_2/items/1", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
     const headers = [_]std.http.Header{
         .{ .name = "Content-Type", .value = "application/json" },
     };

@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"detail":"Malformed JWT token: expected 3 parts separated by dots, found 2","status":401,"title":"Malformed JWT token","type":"https://spikard.dev/errors/unauthorized"},"headers":{},"status_code":401},"handler":{"body_schema":null,"method":"GET","route":"/api/protected"},"request":{"path":"/api/protected"}}}

@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"host":"example.com:8080"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/headers/host"},"request":{"path":"/headers/host"}}}

@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":null,"headers":{"Location":"https://example.com/new-path"},"status_code":301},"handler":{"body_schema":null,"method":"GET","route":"/old-path"},"request":{"path":"/old-path"}}}

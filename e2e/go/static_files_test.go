@@ -63,7 +63,7 @@ func Test_StaticServerReturnsIndexHtmlForDirectory(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/static_server_returns_index_html_for_directory/app", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/static_server_returns_index_html_for_directory/app/", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}

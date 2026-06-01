@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.AfterAll;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.URI;
 import java.time.Instant;
 /** E2e tests for category: query_params. */
 class QueryParamsTest {
@@ -39,23 +40,40 @@ class QueryParamsTest {
         pb.redirectErrorStream(false);
         harnessProcess = pb.start();
 
-        String host = "127.0.0.1";
-        int port = 8005;
-        sutUrl = "http://" + host + ":" + port;
-
-        // Poll until the harness accepts TCP connections
+        // Read SUT_URL from harness stdout
+        java.io.BufferedReader reader = new java.io.BufferedReader(
+            new java.io.InputStreamReader(harnessProcess.getInputStream(), "UTF-8")
+        );
+        String line;
         long deadline = System.currentTimeMillis() + 15_000;
+        while (System.currentTimeMillis() < deadline && (line = reader.readLine()) != null) {
+            if (line.startsWith("SUT_URL=")) {
+                sutUrl = line.substring("SUT_URL=".length()).trim();
+                break;
+            }
+        }
+
+        if (sutUrl == null || sutUrl.isEmpty()) {
+            if (harnessProcess != null) {
+                harnessProcess.destroyForcibly();
+            }
+            throw new RuntimeException("Harness did not emit SUT_URL within 15s");
+        }
+
+        // TCP-readiness probe: ensure harness is accepting connections
+        java.net.URI uri = new java.net.URI(sutUrl);
+        String host = uri.getHost();
+        int port = uri.getPort() > 0 ? uri.getPort() : 8000;
+        deadline = System.currentTimeMillis() + 15_000;
         boolean ready = false;
         while (System.currentTimeMillis() < deadline) {
             if (harnessProcess.isAlive() == false) {
-                // Process died early
                 break;
             }
             try (Socket socket = new Socket(host, port)) {
                 ready = true;
                 break;
             } catch (IOException e) {
-                // Not ready yet, sleep and retry
                 Thread.sleep(100);
             }
         }
@@ -64,7 +82,7 @@ class QueryParamsTest {
             if (harnessProcess != null) {
                 harnessProcess.destroyForcibly();
             }
-            throw new RuntimeException("Harness did not become reachable on " + host + ":" + port + " within 15s");
+            throw new RuntimeException("Harness did not become reachable at " + sutUrl + " within 15s");
         }
 
         System.setProperty("SUT_URL", sutUrl);
@@ -82,7 +100,7 @@ class QueryParamsTest {
     @Test    void test42NegativeIntegerQueryParam() throws Exception {
         // Query parameter with negative integer value should be parsed correctly
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/42_negative_integer_query_param/items/negative?offset=-10");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/42_negative_integer_query_param/items/negative?offset=-10");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -93,7 +111,7 @@ class QueryParamsTest {
     @Test    void test43ScientificNotationFloat() throws Exception {
         // Query parameter with scientific notation float should parse correctly
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/43_scientific_notation_float/stats?threshold=1.5e-3");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/43_scientific_notation_float/stats?threshold=1.5e-3");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -104,7 +122,7 @@ class QueryParamsTest {
     @Test    void test44StringMinlengthValidationSuccess() throws Exception {
         // String query parameter meeting minLength constraint should succeed
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/44_string_minlength_validation_success/search?term=foo");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/44_string_minlength_validation_success/search?term=foo");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -115,7 +133,7 @@ class QueryParamsTest {
     @Test    void test45StringMinlengthValidationFailure() throws Exception {
         // String query parameter below minLength constraint should fail validation
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/45_string_minlength_validation_failure/search?term=ab");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/45_string_minlength_validation_failure/search?term=ab");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -126,7 +144,7 @@ class QueryParamsTest {
     @Test    void test46StringMaxlengthValidationFailure() throws Exception {
         // String query parameter exceeding maxLength constraint should fail validation
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/46_string_maxlength_validation_failure/search?term=this_is_way_too_long");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/46_string_maxlength_validation_failure/search?term=this_is_way_too_long");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -137,7 +155,7 @@ class QueryParamsTest {
     @Test    void test47PatternValidationEmailSuccess() throws Exception {
         // String query parameter matching regex pattern should succeed
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/47_pattern_validation_email_success/subscribe?email=user%40example.com");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/47_pattern_validation_email_success/subscribe?email=user%40example.com");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -148,7 +166,7 @@ class QueryParamsTest {
     @Test    void test48PatternValidationEmailFailure() throws Exception {
         // String query parameter not matching regex pattern should fail validation
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/48_pattern_validation_email_failure/subscribe?email=invalid-email");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/48_pattern_validation_email_failure/subscribe?email=invalid-email");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -159,7 +177,7 @@ class QueryParamsTest {
     @Test    void test49IntegerGtConstraintSuccess() throws Exception {
         // Integer query parameter greater than exclusive minimum should succeed
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/49_integer_gt_constraint_success/items?limit=5");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/49_integer_gt_constraint_success/items?limit=5");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -170,7 +188,7 @@ class QueryParamsTest {
     @Test    void test50IntegerGtConstraintFailure() throws Exception {
         // Integer query parameter equal to exclusive minimum should fail validation
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/50_integer_gt_constraint_failure/items?limit=0");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/50_integer_gt_constraint_failure/items?limit=0");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -181,7 +199,7 @@ class QueryParamsTest {
     @Test    void test51IntegerGeConstraintBoundary() throws Exception {
         // Integer query parameter equal to minimum should succeed with ge constraint
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/51_integer_ge_constraint_boundary/items?offset=0");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/51_integer_ge_constraint_boundary/items?offset=0");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -192,7 +210,7 @@ class QueryParamsTest {
     @Test    void test52IntegerLeConstraintBoundary() throws Exception {
         // Integer query parameter equal to maximum should succeed with le constraint
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/52_integer_le_constraint_boundary/items?limit=100");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/52_integer_le_constraint_boundary/items?limit=100");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -203,7 +221,7 @@ class QueryParamsTest {
     @Test    void test53IntegerLeConstraintFailure() throws Exception {
         // Integer query parameter exceeding maximum should fail validation
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/53_integer_le_constraint_failure/items?limit=101");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/53_integer_le_constraint_failure/items?limit=101");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -214,7 +232,7 @@ class QueryParamsTest {
     @Test    void test54ArrayMinitemsConstraintSuccess() throws Exception {
         // Array query parameter meeting minItems constraint should succeed
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/54_array_minitems_constraint_success/items?ids=%5B%221%22%2C%222%22%2C%223%22%5D");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/54_array_minitems_constraint_success/items?ids=%5B%221%22%2C%222%22%2C%223%22%5D");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -225,7 +243,7 @@ class QueryParamsTest {
     @Test    void test55ArrayMinitemsConstraintFailure() throws Exception {
         // Array query parameter below minItems constraint should fail validation
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/55_array_minitems_constraint_failure/items?ids=%5B%221%22%5D");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/55_array_minitems_constraint_failure/items?ids=%5B%221%22%5D");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -236,7 +254,7 @@ class QueryParamsTest {
     @Test    void test56ArrayMaxitemsConstraintFailure() throws Exception {
         // Array query parameter exceeding maxItems constraint should fail validation
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/56_array_maxitems_constraint_failure/items?tags=%5B%22a%22%2C%22b%22%2C%22c%22%2C%22d%22%2C%22e%22%2C%22f%22%5D");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/56_array_maxitems_constraint_failure/items?tags=%5B%22a%22%2C%22b%22%2C%22c%22%2C%22d%22%2C%22e%22%2C%22f%22%5D");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -247,7 +265,7 @@ class QueryParamsTest {
     @Test    void test57BooleanEmptyStringCoercion() throws Exception {
         // Boolean query parameter with empty string should coerce to false
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/57_boolean_empty_string_coercion/items?active=");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/57_boolean_empty_string_coercion/items?active=");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -258,7 +276,7 @@ class QueryParamsTest {
     @Test    void test58FormatEmailSuccess() throws Exception {
         // Query parameter with valid email format should be accepted
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/58_format_email_success/subscribe?email=user%40example.com");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/58_format_email_success/subscribe?email=user%40example.com");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -269,7 +287,7 @@ class QueryParamsTest {
     @Test    void test59FormatEmailFailure() throws Exception {
         // Query parameter with invalid email format should fail validation
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/59_format_email_failure/subscribe?email=not-an-email");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/59_format_email_failure/subscribe?email=not-an-email");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -280,7 +298,7 @@ class QueryParamsTest {
     @Test    void test60FormatIpv4Success() throws Exception {
         // Query parameter with valid IPv4 address should be accepted
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/60_format_ipv4_success/network?ip=192.168.1.1");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/60_format_ipv4_success/network?ip=192.168.1.1");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -291,7 +309,7 @@ class QueryParamsTest {
     @Test    void test61FormatIpv4Failure() throws Exception {
         // Query parameter with invalid IPv4 address should fail validation
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/61_format_ipv4_failure/network?ip=999.999.999.999");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/61_format_ipv4_failure/network?ip=999.999.999.999");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -302,7 +320,7 @@ class QueryParamsTest {
     @Test    void test62FormatIpv6Success() throws Exception {
         // Query parameter with valid IPv6 address should be accepted
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/62_format_ipv6_success/network/ipv6?ip=2001%3A0db8%3A85a3%3A0000%3A0000%3A8a2e%3A0370%3A7334");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/62_format_ipv6_success/network/ipv6?ip=2001%3A0db8%3A85a3%3A0000%3A0000%3A8a2e%3A0370%3A7334");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -313,7 +331,7 @@ class QueryParamsTest {
     @Test    void test63FormatUriSuccess() throws Exception {
         // Query parameter with valid URI should be accepted
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/63_format_uri_success/redirect?url=https%3A%2F%2Fexample.com%2Fpath%3Fquery%3Dvalue");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/63_format_uri_success/redirect?url=https%3A%2F%2Fexample.com%2Fpath%3Fquery%3Dvalue");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -324,7 +342,7 @@ class QueryParamsTest {
     @Test    void test64FormatUriFailure() throws Exception {
         // Query parameter with invalid URI should fail validation
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/64_format_uri_failure/redirect?url=not%20a%20uri");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/64_format_uri_failure/redirect?url=not%20a%20uri");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -335,7 +353,7 @@ class QueryParamsTest {
     @Test    void test65FormatHostnameSuccess() throws Exception {
         // Query parameter with valid hostname should be accepted
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/65_format_hostname_success/dns?host=api.example.com");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/65_format_hostname_success/dns?host=api.example.com");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -346,7 +364,7 @@ class QueryParamsTest {
     @Test    void test66MultipleofConstraintSuccess() throws Exception {
         // Integer query parameter that is multiple of constraint should succeed
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/66_multipleof_constraint_success/items?quantity=15");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/66_multipleof_constraint_success/items?quantity=15");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -357,7 +375,7 @@ class QueryParamsTest {
     @Test    void test67MultipleofConstraintFailure() throws Exception {
         // Integer query parameter that is not multiple of constraint should fail
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/67_multipleof_constraint_failure/items?quantity=17");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/67_multipleof_constraint_failure/items?quantity=17");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -368,7 +386,7 @@ class QueryParamsTest {
     @Test    void test68ArrayUniqueitemsSuccess() throws Exception {
         // Array query parameter with unique items should succeed
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/68_array_uniqueitems_success/items?ids=%5B%221%22%2C%222%22%2C%223%22%2C%224%22%5D");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/68_array_uniqueitems_success/items?ids=%5B%221%22%2C%222%22%2C%223%22%2C%224%22%5D");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -379,7 +397,7 @@ class QueryParamsTest {
     @Test    void test69ArrayUniqueitemsFailure() throws Exception {
         // Array query parameter with duplicate items should fail when uniqueItems is true
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/69_array_uniqueitems_failure/items?ids=%5B%221%22%2C%222%22%2C%222%22%2C%223%22%5D");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/69_array_uniqueitems_failure/items?ids=%5B%221%22%2C%222%22%2C%222%22%2C%223%22%5D");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -390,7 +408,7 @@ class QueryParamsTest {
     @Test    void test70ArraySeparatorPipe() throws Exception {
         // Array query parameter with pipe separator should parse correctly
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/70_array_separator_pipe/items?tags=python%7Crust%7Ctypescript");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/70_array_separator_pipe/items?tags=python|rust|typescript?tags=python%7Crust%7Ctypescript");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -401,7 +419,7 @@ class QueryParamsTest {
     @Test    void test71ArraySeparatorSemicolon() throws Exception {
         // Array query parameter with semicolon separator should parse correctly
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/71_array_separator_semicolon/items?colors=red%3Bgreen%3Bblue");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/71_array_separator_semicolon/items?colors=red;green;blue?colors=red%3Bgreen%3Bblue");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -412,7 +430,7 @@ class QueryParamsTest {
     @Test    void test72ArraySeparatorSpace() throws Exception {
         // Array query parameter with space separator should parse correctly
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/72_array_separator_space/search?keywords=rust%20web%20framework");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/72_array_separator_space/search?keywords=rust%20web%20framework?keywords=rust%20web%20framework");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -423,7 +441,7 @@ class QueryParamsTest {
     @Test    void testArrayQueryParameterEmptyArray() throws Exception {
         // Tests array query parameter when no values are provided
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/array_query_parameter_empty_array/query/list-default");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/array_query_parameter_empty_array/query/list-default");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -434,7 +452,7 @@ class QueryParamsTest {
     @Test    void testArrayQueryParameterSingleValue() throws Exception {
         // Tests array query parameter with single value
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/array_query_parameter_single_value/query/list-default?tags=apple");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/array_query_parameter_single_value/query/list-default?tags=apple");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -445,7 +463,7 @@ class QueryParamsTest {
     @Test    void testBooleanQueryParameterNumeric1() throws Exception {
         // Tests boolean query parameter with '1' converts to true
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/boolean_query_parameter_numeric_1/query/bool?flag=1");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/boolean_query_parameter_numeric_1/query/bool?flag=1");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -456,7 +474,7 @@ class QueryParamsTest {
     @Test    void testBooleanQueryParameterTrue() throws Exception {
         // Tests boolean query parameter with 'true' string value
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/boolean_query_parameter_true/query/bool?flag=true");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/boolean_query_parameter_true/query/bool?flag=true");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -467,7 +485,7 @@ class QueryParamsTest {
     @Test    void testDateQueryParameterSuccess() throws Exception {
         // Tests date query parameter with valid ISO date format
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/date_query_parameter_success/query/date?event_date=2024-01-15");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/date_query_parameter_success/query/date?event_date=2024-01-15");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -478,7 +496,7 @@ class QueryParamsTest {
     @Test    void testDatetimeQueryParameterSuccess() throws Exception {
         // Tests datetime query parameter with valid ISO datetime format
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/datetime_query_parameter_success/query/datetime?timestamp=2024-01-15T10%3A30%3A00Z");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/datetime_query_parameter_success/query/datetime?timestamp=2024-01-15T10%3A30%3A00Z");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -489,7 +507,7 @@ class QueryParamsTest {
     @Test    void testEnumQueryParameterInvalidValue() throws Exception {
         // Tests enum query parameter with value not in enum
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/enum_query_parameter_invalid_value/query/enum?model=vgg16");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/enum_query_parameter_invalid_value/query/enum?model=vgg16");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -500,7 +518,7 @@ class QueryParamsTest {
     @Test    void testEnumQueryParameterSuccess() throws Exception {
         // Tests enum query parameter with valid enum value
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/enum_query_parameter_success/query/enum?model=alexnet");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/enum_query_parameter_success/query/enum?model=alexnet");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -511,7 +529,7 @@ class QueryParamsTest {
     @Test    void testFloatQueryParamWithGeConstraintSuccess() throws Exception {
         // Tests float query parameter with ge validation at boundary
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/float_query_param_with_ge_constraint_success/query/float-ge?price=0.01");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/float_query_param_with_ge_constraint_success/query/float-ge?price=0.01");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -522,7 +540,7 @@ class QueryParamsTest {
     @Test    void testIntegerQueryParamWithGeConstraintBoundary() throws Exception {
         // Tests integer query parameter with ge validation at boundary value
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/integer_query_param_with_ge_constraint_boundary/query/int-ge?value=10");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/integer_query_param_with_ge_constraint_boundary/query/int-ge?value=10");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -533,7 +551,7 @@ class QueryParamsTest {
     @Test    void testIntegerQueryParamWithGtConstraintValid() throws Exception {
         // Tests integer query parameter with gt validation, value above limit
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/integer_query_param_with_gt_constraint_valid/query/int-gt?value=1");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/integer_query_param_with_gt_constraint_valid/query/int-gt?value=1");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -544,7 +562,7 @@ class QueryParamsTest {
     @Test    void testIntegerQueryParamWithLeConstraintBoundary() throws Exception {
         // Tests integer query parameter with le validation at boundary value
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/integer_query_param_with_le_constraint_boundary/query/int-le?value=100");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/integer_query_param_with_le_constraint_boundary/query/int-le?value=100");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -555,7 +573,7 @@ class QueryParamsTest {
     @Test    void testIntegerQueryParamWithLtConstraintValid() throws Exception {
         // Tests integer query parameter with lt validation, value below limit
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/integer_query_param_with_lt_constraint_valid/query/int-lt?value=49");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/integer_query_param_with_lt_constraint_valid/query/int-lt?value=49");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -566,7 +584,7 @@ class QueryParamsTest {
     @Test    void testIntegerWithDefaultValueNotProvided() throws Exception {
         // Tests integer parameter with default value when not provided
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/integer_with_default_value_not_provided/query/int/default");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/integer_with_default_value_not_provided/query/int/default");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -575,7 +593,7 @@ class QueryParamsTest {
     @Test    void testIntegerWithDefaultValueOverride() throws Exception {
         // Tests integer parameter with default value when overridden with custom value
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/integer_with_default_value_override/query/int/default?query=50");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/integer_with_default_value_override/query/int/default?query=50");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -584,7 +602,7 @@ class QueryParamsTest {
     @Test    void testListOfIntegersMultipleValues() throws Exception {
         // Tests list query parameter with multiple integer values using same key
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/list_of_integers_multiple_values/query/list?device_ids=%5B1%2C2%5D");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/list_of_integers_multiple_values/query/list?device_ids=%5B1%2C2%5D");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -595,7 +613,7 @@ class QueryParamsTest {
     @Test    void testListOfStringsMultipleValues() throws Exception {
         // Tests list of string query parameters with multiple values
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/list_of_strings_multiple_values/items/?q=%5B%22foo%22%2C%22bar%22%5D");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/list_of_strings_multiple_values/items/?q=%5B%22foo%22%2C%22bar%22%5D");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -606,7 +624,7 @@ class QueryParamsTest {
     @Test    void testListQueryParameterRequiredButMissing() throws Exception {
         // Tests required list parameter without any values, should return 422
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/list_query_parameter_required_but_missing/query/list");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/list_query_parameter_required_but_missing/query/list");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -617,7 +635,7 @@ class QueryParamsTest {
     @Test    void testListWithDefaultEmptyArrayNoValuesProvided() throws Exception {
         // Tests list parameter with default=[] when no values provided, should return empty list
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/list_with_default_empty_array_no_values_provided/query/list-default");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/list_with_default_empty_array_no_values_provided/query/list-default");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -628,7 +646,7 @@ class QueryParamsTest {
     @Test    void testMultipleQueryParametersWithDifferentTypes() throws Exception {
         // Tests multiple query parameters of different types in single request
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/multiple_query_parameters_with_different_types/query/multi-type?active=true&age=30&name=john&score=95.5");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/multiple_query_parameters_with_different_types/query/multi-type?active=true&age=30&name=john&score=95.5");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -639,7 +657,7 @@ class QueryParamsTest {
     @Test    void testOptionalIntegerQueryParameterMissing() throws Exception {
         // Tests optional integer parameter without value, should not error
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/optional_integer_query_parameter_missing/query/int/optional");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/optional_integer_query_parameter_missing/query/int/optional");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -648,7 +666,7 @@ class QueryParamsTest {
     @Test    void testOptionalQueryParameterWithDefaultValue() throws Exception {
         // Tests optional query parameter that uses default when not provided
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/optional_query_parameter_with_default_value/query/optional-default");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/optional_query_parameter_with_default_value/query/optional-default");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -659,7 +677,7 @@ class QueryParamsTest {
     @Test    void testOptionalStringQueryParameterMissing() throws Exception {
         // Tests optional string parameter without value, should return None/null
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/optional_string_query_parameter_missing/query/optional");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/optional_string_query_parameter_missing/query/optional");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -668,7 +686,7 @@ class QueryParamsTest {
     @Test    void testOptionalStringQueryParameterProvided() throws Exception {
         // Tests optional string parameter with value provided
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/optional_string_query_parameter_provided/query/optional?query=baz");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/optional_string_query_parameter_provided/query/optional?query=baz");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -677,7 +695,7 @@ class QueryParamsTest {
     @Test    void testQueryParameterWithSpecialCharactersUrlEncoding() throws Exception {
         // Tests query parameters with special characters that need URL encoding
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/query_parameter_with_special_characters_url_encoding/test?email=x%40test.com&special=%26%40A.ac");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/query_parameter_with_special_characters_url_encoding/test?email=x%40test.com&special=%26%40A.ac");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -688,7 +706,7 @@ class QueryParamsTest {
     @Test    void testQueryParameterWithUrlEncodedSpace() throws Exception {
         // Tests query parameter with URL encoded space character
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/query_parameter_with_url_encoded_space/query/basic?name=hello%20world");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/query_parameter_with_url_encoded_space/query/basic?name=hello%20world");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -699,7 +717,7 @@ class QueryParamsTest {
     @Test    void testQueryParameterWithUrlEncodedSpecialCharacters() throws Exception {
         // Tests query parameter with URL encoded special characters
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/query_parameter_with_url_encoded_special_characters/query/basic?name=test%26value%3D123");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/query_parameter_with_url_encoded_special_characters/query/basic?name=test%26value%3D123");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -710,7 +728,7 @@ class QueryParamsTest {
     @Test    void testRequiredIntegerQueryParameterFloatValue() throws Exception {
         // Tests integer query parameter with float string value, should return 422
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/required_integer_query_parameter_float_value/query/int?query=42.5");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/required_integer_query_parameter_float_value/query/int?query=42.5");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -721,7 +739,7 @@ class QueryParamsTest {
     @Test    void testRequiredIntegerQueryParameterInvalidType() throws Exception {
         // Tests integer query parameter with non-numeric string, should return 422
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/required_integer_query_parameter_invalid_type/query/int?query=baz");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/required_integer_query_parameter_invalid_type/query/int?query=baz");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -732,7 +750,7 @@ class QueryParamsTest {
     @Test    void testRequiredIntegerQueryParameterMissing() throws Exception {
         // Tests a required integer query parameter without providing value, should return 422
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/required_integer_query_parameter_missing/query/int");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/required_integer_query_parameter_missing/query/int");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -743,7 +761,7 @@ class QueryParamsTest {
     @Test    void testRequiredIntegerQueryParameterSuccess() throws Exception {
         // Tests a required integer query parameter with valid value
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/required_integer_query_parameter_success/query/int?query=42");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/required_integer_query_parameter_success/query/int?query=42");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -752,7 +770,7 @@ class QueryParamsTest {
     @Test    void testRequiredStringQueryParameterMissing() throws Exception {
         // Tests a required string query parameter without providing value, should return 422
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/required_string_query_parameter_missing/query");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/required_string_query_parameter_missing/query");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -763,7 +781,7 @@ class QueryParamsTest {
     @Test    void testRequiredStringQueryParameterSuccess() throws Exception {
         // Tests a required string query parameter with valid value
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/required_string_query_parameter_success/query?query=baz");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/required_string_query_parameter_success/query?query=baz");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -772,7 +790,7 @@ class QueryParamsTest {
     @Test    void testStringQueryParamWithMaxLengthConstraintFail() throws Exception {
         // Tests string query parameter with max_length validation failure
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/string_query_param_with_max_length_constraint_fail/query/str-max-length?name=this_is_way_too_long");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/string_query_param_with_max_length_constraint_fail/query/str-max-length?name=this_is_way_too_long");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -783,7 +801,7 @@ class QueryParamsTest {
     @Test    void testStringQueryParamWithMinLengthConstraintFail() throws Exception {
         // Tests string query parameter with min_length validation failure
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/string_query_param_with_min_length_constraint_fail/query/str-min-length?name=ab");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/string_query_param_with_min_length_constraint_fail/query/str-min-length?name=ab");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -794,7 +812,7 @@ class QueryParamsTest {
     @Test    void testStringQueryParamWithRegexPatternFail() throws Exception {
         // Tests string query parameter with regex pattern validation failure
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/string_query_param_with_regex_pattern_fail/query/pattern?code=abc123");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/string_query_param_with_regex_pattern_fail/query/pattern?code=abc123");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -805,7 +823,7 @@ class QueryParamsTest {
     @Test    void testStringValidationWithRegexFailure() throws Exception {
         // Tests string parameter with regex pattern validation - non-matching pattern returns 422
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/string_validation_with_regex_failure/items/?item_query=nonregexquery");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/string_validation_with_regex_failure/items/?item_query=nonregexquery");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -816,7 +834,7 @@ class QueryParamsTest {
     @Test    void testStringValidationWithRegexSuccess() throws Exception {
         // Tests string parameter with regex pattern validation - matching pattern
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/string_validation_with_regex_success/items/?item_query=fixedquery");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/string_validation_with_regex_success/items/?item_query=fixedquery");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -827,7 +845,7 @@ class QueryParamsTest {
     @Test    void testUuidQueryParameterInvalidFormat() throws Exception {
         // Tests UUID query parameter with invalid UUID format
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/uuid_query_parameter_invalid_format/query/uuid?item_id=not-a-uuid");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/uuid_query_parameter_invalid_format/query/uuid?item_id=not-a-uuid");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -838,7 +856,7 @@ class QueryParamsTest {
     @Test    void testUuidQueryParameterSuccess() throws Exception {
         // Tests UUID query parameter with valid UUID format
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/uuid_query_parameter_success/query/uuid?item_id=c892496f-b1fd-4b91-bdb8-b46f92df1716");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/uuid_query_parameter_success/query/uuid?item_id=c892496f-b1fd-4b91-bdb8-b46f92df1716");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());

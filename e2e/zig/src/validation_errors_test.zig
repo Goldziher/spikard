@@ -158,7 +158,7 @@ test "header_validation_error" {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
     var url_buf: [512]u8 = undefined;
-    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/header_validation_error/items/", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
+    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/header_validation_error/items/?q=test", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
     var threaded = std.Io.Threaded.init(allocator, .{});
     defer threaded.deinit();
     const io = threaded.io();
@@ -177,7 +177,7 @@ test "invalid_boolean_value" {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
     var url_buf: [512]u8 = undefined;
-    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/invalid_boolean_value/items/", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
+    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/invalid_boolean_value/items/?q=test&is_active=maybe", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
     const headers = [_]std.http.Header{
         .{ .name = "x-token", .value = "test-token" },
     };
@@ -222,7 +222,7 @@ test "invalid_enum_value" {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
     var url_buf: [512]u8 = undefined;
-    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/invalid_enum_value/models/{{model_name}}", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
+    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/invalid_enum_value/models/invalid_model", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
     var threaded = std.Io.Threaded.init(allocator, .{});
     defer threaded.deinit();
     const io = threaded.io();
@@ -241,7 +241,7 @@ test "invalid_uuid_format" {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
     var url_buf: [512]u8 = undefined;
-    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/invalid_uuid_format/items/{{item_id}}", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
+    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/invalid_uuid_format/items/not-a-uuid", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
     var threaded = std.Io.Threaded.init(allocator, .{});
     defer threaded.deinit();
     const io = threaded.io();
@@ -374,7 +374,7 @@ test "numeric_constraint_violation_gt_greater_than" {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
     var url_buf: [512]u8 = undefined;
-    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/numeric_constraint_violation_gt_greater_than/items/", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
+    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/numeric_constraint_violation_gt_greater_than/items/?q=test&price=0", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
     const headers = [_]std.http.Header{
         .{ .name = "x-token", .value = "test-token" },
     };
@@ -396,7 +396,7 @@ test "numeric_constraint_violation_le_less_than_or_equal" {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
     var url_buf: [512]u8 = undefined;
-    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/numeric_constraint_violation_le_less_than_or_equal/items/", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
+    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/numeric_constraint_violation_le_less_than_or_equal/items/?q=test&limit=101", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
     const headers = [_]std.http.Header{
         .{ .name = "x-token", .value = "test-token" },
     };
@@ -418,7 +418,7 @@ test "query_param_type_error_string_provided_for_int" {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
     var url_buf: [512]u8 = undefined;
-    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/query_param_type_error_string_provided_for_int/items/", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
+    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/query_param_type_error_string_provided_for_int/items/?q=test&skip=not_a_number", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
     const headers = [_]std.http.Header{
         .{ .name = "x-token", .value = "test-token" },
     };
@@ -440,7 +440,7 @@ test "string_max_length_constraint_violation" {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
     var url_buf: [512]u8 = undefined;
-    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/string_max_length_constraint_violation/items/", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
+    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/string_max_length_constraint_violation/items/?q=this_is_a_very_long_query_string_that_exceeds_maximum_length_limit_for_this_parameter", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
     const headers = [_]std.http.Header{
         .{ .name = "x-token", .value = "test-token" },
     };
@@ -462,7 +462,7 @@ test "string_min_length_constraint_violation" {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
     var url_buf: [512]u8 = undefined;
-    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/string_min_length_constraint_violation/items/", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
+    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/string_min_length_constraint_violation/items/?q=ab", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
     const headers = [_]std.http.Header{
         .{ .name = "x-token", .value = "test-token" },
     };
@@ -484,7 +484,7 @@ test "string_regex_pattern_mismatch" {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
     var url_buf: [512]u8 = undefined;
-    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/string_regex_pattern_mismatch/items/", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
+    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/string_regex_pattern_mismatch/items/?q=invalid!", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
     const headers = [_]std.http.Header{
         .{ .name = "x-token", .value = "test-token" },
     };

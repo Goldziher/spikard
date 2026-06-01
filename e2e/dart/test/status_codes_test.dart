@@ -108,6 +108,7 @@ void main() {
   });
 
   tearDownAll(() async {
+    RustLib.dispose();
     _httpClient.close(force: true);
     final proc = _sutProcess;
     if (proc != null) {
@@ -135,7 +136,7 @@ void main() {
 
   test('Tests standard 200 OK response for successful GET request', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/200_ok_success/status-test/{code}');
+    final uri = Uri.parse('$baseUrl/fixtures/200_ok_success/status-test/200');
     final ioReq = await _httpClient.openUrl('GET', uri);
     ioReq.persistentConnection = false;
     final ioResp = await ioReq.close();
@@ -182,7 +183,7 @@ void main() {
 
   test('Tests 204 No Content response for successful DELETE', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/204_no_content_success_with_no_body/status-test/{code}');
+    final uri = Uri.parse('$baseUrl/fixtures/204_no_content_success_with_no_body/status-test/204');
     final ioReq = await _httpClient.openUrl('DELETE', uri);
     ioReq.persistentConnection = false;
     final ioResp = await ioReq.close();
@@ -192,7 +193,7 @@ void main() {
 
   test('Request with excessively long URI should return 414', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/20_414_uri_too_long/data');
+    final uri = Uri.parse('$baseUrl/fixtures/20_414_uri_too_long/data?skip_template_expansion=true');
     final ioReq = await _httpClient.openUrl('GET', uri);
     ioReq.persistentConnection = false;
     final ioResp = await ioReq.close();
@@ -243,7 +244,7 @@ void main() {
 
   test('Tests 304 Not Modified for cached resources', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/304_not_modified_cached_content_valid/status-test/{code}');
+    final uri = Uri.parse('$baseUrl/fixtures/304_not_modified_cached_content_valid/status-test/304');
     final ioReq = await _httpClient.openUrl('GET', uri);
     ioReq.persistentConnection = false;
     ioReq.followRedirects = false;
@@ -291,7 +292,7 @@ void main() {
 
   test('Tests 404 Not Found for non-existent resource', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/404_not_found_resource_not_found/status-test/{code}');
+    final uri = Uri.parse('$baseUrl/fixtures/404_not_found_resource_not_found/status-test/404');
     final ioReq = await _httpClient.openUrl('GET', uri);
     ioReq.persistentConnection = false;
     final ioResp = await ioReq.close();

@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"detail":"Required claims 'role' and 'permissions' missing from JWT","status":403,"title":"Forbidden","type":"https://spikard.dev/errors/forbidden"},"headers":{},"status_code":403},"handler":{"body_schema":null,"method":"GET","route":"/api/admin"},"request":{"path":"/api/admin"}}}

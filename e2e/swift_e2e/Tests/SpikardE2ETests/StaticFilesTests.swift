@@ -87,7 +87,7 @@ final class StaticFilesTests: XCTestCase {
     /// When index files are enabled the server should serve index.html when the directory root is requested.
     func testStaticServerReturnsIndexHtmlForDirectory() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/static_server_returns_index_html_for_directory/app")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/static_server_returns_index_html_for_directory/app/")!)
         _req.httpMethod = "GET"
         var response: HTTPURLResponse?
         var _responseData: Data?

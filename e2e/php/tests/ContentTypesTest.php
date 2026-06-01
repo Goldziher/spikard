@@ -70,7 +70,7 @@ final class ContentTypesTest extends TestCase
 
     /** Tests content negotiation based on Accept header */
     public function test_content_negotiation_accept_header(): void
-    {        $response = $this->httpClient->request('GET', "/fixtures/content_negotiation_accept_header/accept-test/{id}", [            'headers' => ["Accept" => "application/json"],        ]);        $this->assertEquals(200, $response->getStatusCode());        $this->assertEquals("application/json", $response->getHeaderLine("content-type"));        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+    {        $response = $this->httpClient->request('GET', "/fixtures/content_negotiation_accept_header/accept-test/1", [            'headers' => ["Accept" => "application/json"],        ]);        $this->assertEquals(200, $response->getStatusCode());        $this->assertEquals("application/json", $response->getHeaderLine("content-type"));        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(["id" => 1, "name" => "Item"], $body);    }
 
 }

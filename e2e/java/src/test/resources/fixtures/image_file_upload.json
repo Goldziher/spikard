@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"content_type":"image/jpeg","filename":"photo.jpg","size":22},"headers":{},"status_code":200},"handler":{"body_schema":{"additionalProperties":false,"properties":{"image":{"format":"binary","type":"string"}},"required":["image"],"type":"object"},"method":"POST","route":"/files/image"},"request":{"path":"/files/image"}}}

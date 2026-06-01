@@ -606,7 +606,7 @@ final class JsonBodiesTests: XCTestCase {
     /// Tests JSON body combined with query parameters
     func testBodyWithQueryParameters() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/body_with_query_parameters/items/")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/body_with_query_parameters/items/?limit=10")!)
         _req.httpMethod = "POST"
         _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         _req.httpBody = "{\"name\":\"Item\",\"price\":42.0}".data(using: .utf8)
@@ -1006,7 +1006,7 @@ final class JsonBodiesTests: XCTestCase {
     /// Tests PATCH request with partial object update
     func testPatchPartialUpdate2() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/patch_partial_update_2/items/{id}")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/patch_partial_update_2/items/1")!)
         _req.httpMethod = "PATCH"
         _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         _req.httpBody = "{\"price\":45.0}".data(using: .utf8)

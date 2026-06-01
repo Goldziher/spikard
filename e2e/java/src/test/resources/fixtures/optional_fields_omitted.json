@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"description":null,"name":"Foo","price":35.4,"tax":null},"headers":{},"status_code":200},"handler":{"body_schema":{"additionalProperties":false,"properties":{"name":{"type":"string"},"price":{"type":"number"}},"required":["name","price"],"type":"object"},"method":"POST","route":"/items/"},"request":{"path":"/items/"}}}

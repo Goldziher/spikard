@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"detail":"Token issuer is invalid, expected 'https://auth.example.com'","status":401,"title":"JWT validation failed","type":"https://spikard.dev/errors/unauthorized"},"headers":{},"status_code":401},"handler":{"body_schema":null,"method":"GET","route":"/api/protected"},"request":{"path":"/api/protected"}}}

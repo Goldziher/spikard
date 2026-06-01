@@ -108,6 +108,7 @@ void main() {
   });
 
   tearDownAll(() async {
+    RustLib.dispose();
     _httpClient.close(force: true);
     final proc = _sutProcess;
     if (proc != null) {
@@ -173,7 +174,7 @@ void main() {
 
   test('Tests API key authentication when key is provided as query parameter instead of header', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/api_key_in_query_parameter/api/data');
+    final uri = Uri.parse('$baseUrl/fixtures/api_key_in_query_parameter/api/data?api_key=sk_test_123456');
     final ioReq = await _httpClient.openUrl('GET', uri);
     ioReq.persistentConnection = false;
     final ioResp = await ioReq.close();

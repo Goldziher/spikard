@@ -55,7 +55,7 @@ module AppHarness
     end
 
     # Register the route with the handler.
-    APP.register_route(builder, handler_fn)
+    APP.route(builder, handler_fn)
   end
 
   # Configure and start the server.

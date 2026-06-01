@@ -108,6 +108,7 @@ void main() {
   });
 
   tearDownAll(() async {
+    RustLib.dispose();
     _httpClient.close(force: true);
     final proc = _sutProcess;
     if (proc != null) {
@@ -131,7 +132,7 @@ void main() {
 
   test('When index files are enabled the server should serve index.html when the directory root is requested.', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/static_server_returns_index_html_for_directory/app');
+    final uri = Uri.parse('$baseUrl/fixtures/static_server_returns_index_html_for_directory/app/');
     final ioReq = await _httpClient.openUrl('GET', uri);
     ioReq.persistentConnection = false;
     final ioResp = await ioReq.close();

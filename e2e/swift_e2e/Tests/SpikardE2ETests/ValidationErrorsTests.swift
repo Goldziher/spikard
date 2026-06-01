@@ -212,7 +212,7 @@ final class ValidationErrorsTests: XCTestCase {
     /// Tests validation error when required header is missing
     func testHeaderValidationError() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/header_validation_error/items/")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/header_validation_error/items/?q=test")!)
         _req.httpMethod = "GET"
         var response: HTTPURLResponse?
         var _responseData: Data?
@@ -234,7 +234,7 @@ final class ValidationErrorsTests: XCTestCase {
     /// Tests validation error when boolean value is invalid
     func testInvalidBooleanValue() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/invalid_boolean_value/items/")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/invalid_boolean_value/items/?q=test&is_active=maybe")!)
         _req.httpMethod = "GET"
         _req.setValue("test-token", forHTTPHeaderField: "x-token")
         var response: HTTPURLResponse?
@@ -282,7 +282,7 @@ final class ValidationErrorsTests: XCTestCase {
     /// Tests validation error when value is not in allowed enum values
     func testInvalidEnumValue() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/invalid_enum_value/models/{model_name}")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/invalid_enum_value/models/invalid_model")!)
         _req.httpMethod = "GET"
         var response: HTTPURLResponse?
         var _responseData: Data?
@@ -304,7 +304,7 @@ final class ValidationErrorsTests: XCTestCase {
     /// Tests validation error when UUID format is invalid
     func testInvalidUuidFormat() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/invalid_uuid_format/items/{item_id}")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/invalid_uuid_format/items/not-a-uuid")!)
         _req.httpMethod = "GET"
         var response: HTTPURLResponse?
         var _responseData: Data?
@@ -449,7 +449,7 @@ final class ValidationErrorsTests: XCTestCase {
     /// Tests validation error when value violates gt constraint
     func testNumericConstraintViolationGtGreaterThan() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/numeric_constraint_violation_gt_greater_than/items/")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/numeric_constraint_violation_gt_greater_than/items/?q=test&price=0")!)
         _req.httpMethod = "GET"
         _req.setValue("test-token", forHTTPHeaderField: "x-token")
         var response: HTTPURLResponse?
@@ -472,7 +472,7 @@ final class ValidationErrorsTests: XCTestCase {
     /// Tests validation error when value violates le constraint
     func testNumericConstraintViolationLeLessThanOrEqual() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/numeric_constraint_violation_le_less_than_or_equal/items/")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/numeric_constraint_violation_le_less_than_or_equal/items/?q=test&limit=101")!)
         _req.httpMethod = "GET"
         _req.setValue("test-token", forHTTPHeaderField: "x-token")
         var response: HTTPURLResponse?
@@ -495,7 +495,7 @@ final class ValidationErrorsTests: XCTestCase {
     /// Tests validation error when string is provided for integer query param
     func testQueryParamTypeErrorStringProvidedForInt() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/query_param_type_error_string_provided_for_int/items/")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/query_param_type_error_string_provided_for_int/items/?q=test&skip=not_a_number")!)
         _req.httpMethod = "GET"
         _req.setValue("test-token", forHTTPHeaderField: "x-token")
         var response: HTTPURLResponse?
@@ -518,7 +518,7 @@ final class ValidationErrorsTests: XCTestCase {
     /// Tests validation error when string exceeds max_length
     func testStringMaxLengthConstraintViolation() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/string_max_length_constraint_violation/items/")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/string_max_length_constraint_violation/items/?q=this_is_a_very_long_query_string_that_exceeds_maximum_length_limit_for_this_parameter")!)
         _req.httpMethod = "GET"
         _req.setValue("test-token", forHTTPHeaderField: "x-token")
         var response: HTTPURLResponse?
@@ -541,7 +541,7 @@ final class ValidationErrorsTests: XCTestCase {
     /// Tests validation error when string is shorter than min_length
     func testStringMinLengthConstraintViolation() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/string_min_length_constraint_violation/items/")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/string_min_length_constraint_violation/items/?q=ab")!)
         _req.httpMethod = "GET"
         _req.setValue("test-token", forHTTPHeaderField: "x-token")
         var response: HTTPURLResponse?
@@ -564,7 +564,7 @@ final class ValidationErrorsTests: XCTestCase {
     /// Tests validation error when string doesn't match regex pattern
     func testStringRegexPatternMismatch() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/string_regex_pattern_mismatch/items/")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/string_regex_pattern_mismatch/items/?q=invalid!")!)
         _req.httpMethod = "GET"
         _req.setValue("test-token", forHTTPHeaderField: "x-token")
         var response: HTTPURLResponse?

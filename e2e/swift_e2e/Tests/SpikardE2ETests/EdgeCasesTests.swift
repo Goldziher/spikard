@@ -86,7 +86,7 @@ final class EdgeCasesTests: XCTestCase {
     /// Percent-encoded special characters should be decoded correctly
     func testPercentEncodedSpecialChars() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/12_percent_encoded_special_chars/search")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/12_percent_encoded_special_chars/search?term=hi%20there")!)
         _req.httpMethod = "GET"
         var response: HTTPURLResponse?
         var _responseData: Data?
@@ -108,7 +108,7 @@ final class EdgeCasesTests: XCTestCase {
     /// Empty string query parameter should be preserved, not treated as missing
     func testEmptyStringQueryParamPreserved() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/13_empty_string_query_param_preserved/items")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/13_empty_string_query_param_preserved/items?filter=")!)
         _req.httpMethod = "GET"
         var response: HTTPURLResponse?
         var _responseData: Data?

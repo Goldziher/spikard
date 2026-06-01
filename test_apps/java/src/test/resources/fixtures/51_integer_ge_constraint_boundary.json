@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"offset":0},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/items"},"request":{"path":"/items"}}}

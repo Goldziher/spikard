@@ -108,6 +108,7 @@ void main() {
   });
 
   tearDownAll(() async {
+    RustLib.dispose();
     _httpClient.close(force: true);
     final proc = _sutProcess;
     if (proc != null) {
@@ -118,7 +119,7 @@ void main() {
 
   test('Tests background task cancellation via request', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/background_task_cancellation/background/cancel/{task_id}');
+    final uri = Uri.parse('$baseUrl/fixtures/background_task_cancellation/background/cancel/task-001');
     final ioReq = await _httpClient.openUrl('DELETE', uri);
     ioReq.persistentConnection = false;
     final ioResp = await ioReq.close();

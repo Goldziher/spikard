@@ -419,7 +419,7 @@ func Test_ContentNegotiationAcceptHeader(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/content_negotiation_accept_header/accept-test/{id}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/content_negotiation_accept_header/accept-test/1", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}

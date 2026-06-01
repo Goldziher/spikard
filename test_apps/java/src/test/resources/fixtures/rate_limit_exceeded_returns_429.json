@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":null,"headers":{},"status_code":429},"handler":{"body_schema":null,"method":"GET","route":"/rate-limit/exceeded"},"request":{"path":"/rate-limit/exceeded"}}}

@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"item":{"name":"Item","price":42.0},"limit":10},"headers":{},"status_code":200},"handler":{"body_schema":{"additionalProperties":false,"properties":{"name":{"type":"string"},"price":{"type":"number"}},"required":["name","price"],"type":"object"},"method":"POST","route":"/items/"},"request":{"path":"/items/?limit=10"}}}

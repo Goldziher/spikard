@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"data":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","message":"Brotli compressed payload"},"headers":{"content-encoding":"br","vary":"Accept-Encoding"},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/compression/brotli"},"request":{"path":"/compression/brotli"}}}

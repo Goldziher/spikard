@@ -108,6 +108,7 @@ void main() {
   });
 
   tearDownAll(() async {
+    RustLib.dispose();
     _httpClient.close(force: true);
     final proc = _sutProcess;
     if (proc != null) {
@@ -490,7 +491,7 @@ void main() {
 
   test('Tests JSON body combined with query parameters', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/body_with_query_parameters/items/');
+    final uri = Uri.parse('$baseUrl/fixtures/body_with_query_parameters/items/?limit=10');
     final ioReq = await _httpClient.openUrl('POST', uri);
     ioReq.persistentConnection = false;
     ioReq.headers.set('content-type', 'application/json');
@@ -762,7 +763,7 @@ void main() {
 
   test('Tests PATCH request with partial object update', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/patch_partial_update_2/items/{id}');
+    final uri = Uri.parse('$baseUrl/fixtures/patch_partial_update_2/items/1');
     final ioReq = await _httpClient.openUrl('PATCH', uri);
     ioReq.persistentConnection = false;
     ioReq.headers.set('content-type', 'application/json');

@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"trace_enabled":true},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/trace"},"request":{"path":"/trace"}}}

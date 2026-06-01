@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"message":"Access granted","user_id":"user123"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/protected/user"},"request":{"path":"/protected/user"}}}

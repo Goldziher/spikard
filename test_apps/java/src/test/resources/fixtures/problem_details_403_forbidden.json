@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"detail":"Insufficient permissions to access this resource","status":403,"title":"Forbidden","type":"https://spikard.dev/errors/forbidden"},"headers":{},"status_code":403},"handler":{"body_schema":null,"method":"GET","route":"/admin/config"},"request":{"path":"/admin/config"}}}

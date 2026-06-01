@@ -108,6 +108,7 @@ void main() {
   });
 
   tearDownAll(() async {
+    RustLib.dispose();
     _httpClient.close(force: true);
     final proc = _sutProcess;
     if (proc != null) {
@@ -268,7 +269,7 @@ void main() {
 
   test('Tests content negotiation based on Accept header', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/content_negotiation_accept_header/accept-test/{id}');
+    final uri = Uri.parse('$baseUrl/fixtures/content_negotiation_accept_header/accept-test/1');
     final ioReq = await _httpClient.openUrl('GET', uri);
     ioReq.persistentConnection = false;
     ioReq.headers.set('accept', 'application/json');

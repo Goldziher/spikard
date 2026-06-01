@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"description":"Original description","name":"Original Item","price":45.0},"headers":{},"status_code":200},"handler":{"body_schema":{"properties":{"price":{"type":"number"}},"required":["price"],"type":"object"},"method":"PATCH","route":"/items/{id}"},"request":{"path":"/items/1"}}}

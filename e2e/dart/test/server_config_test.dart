@@ -108,6 +108,7 @@ void main() {
   });
 
   tearDownAll(() async {
+    RustLib.dispose();
     _httpClient.close(force: true);
     final proc = _sutProcess;
     if (proc != null) {
@@ -312,7 +313,7 @@ void main() {
 
   test('Tests server serves static files from configured directory', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/server_static_files_configuration/static/{file}');
+    final uri = Uri.parse('$baseUrl/fixtures/server_static_files_configuration/static/index.html');
     final ioReq = await _httpClient.openUrl('GET', uri);
     ioReq.persistentConnection = false;
     final ioResp = await ioReq.close();

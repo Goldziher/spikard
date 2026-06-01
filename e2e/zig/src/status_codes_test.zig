@@ -46,7 +46,7 @@ test "ok_success" {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
     var url_buf: [512]u8 = undefined;
-    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/200_ok_success/status-test/{{code}}", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
+    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/200_ok_success/status-test/200", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
     var threaded = std.Io.Threaded.init(allocator, .{});
     defer threaded.deinit();
     const io = threaded.io();
@@ -111,7 +111,7 @@ test "no_content_success_with_no_body" {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
     var url_buf: [512]u8 = undefined;
-    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/204_no_content_success_with_no_body/status-test/{{code}}", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
+    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/204_no_content_success_with_no_body/status-test/204", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
     var threaded = std.Io.Threaded.init(allocator, .{});
     defer threaded.deinit();
     const io = threaded.io();
@@ -129,7 +129,7 @@ test "414_uri_too_long" {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
     var url_buf: [512]u8 = undefined;
-    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/20_414_uri_too_long/data", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
+    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/20_414_uri_too_long/data?skip_template_expansion=true", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
     var threaded = std.Io.Threaded.init(allocator, .{});
     defer threaded.deinit();
     const io = threaded.io();
@@ -208,7 +208,7 @@ test "not_modified_cached_content_valid" {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
     var url_buf: [512]u8 = undefined;
-    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/304_not_modified_cached_content_valid/status-test/{{code}}", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
+    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/304_not_modified_cached_content_valid/status-test/304", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
     const headers = [_]std.http.Header{
         .{ .name = "If-None-Match", .value = "\"abc123\"" },
     };
@@ -276,7 +276,7 @@ test "not_found_resource_not_found" {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
     var url_buf: [512]u8 = undefined;
-    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/404_not_found_resource_not_found/status-test/{{code}}", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
+    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/404_not_found_resource_not_found/status-test/404", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
     var threaded = std.Io.Threaded.init(allocator, .{});
     defer threaded.deinit();
     const io = threaded.io();

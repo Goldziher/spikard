@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":null,"headers":{"content-type":"application/grpc","grpc-status":"0"},"status_code":200},"handler":{"body_schema":{"properties":{"operation":{"type":"string"}},"required":["operation"],"type":"object"},"method":"POST","route":"/api.Service/TimedOperation"},"request":{"path":"/api.Service/TimedOperation"}}}

@@ -12,7 +12,8 @@ defmodule Spikard.Native do
     base_url:
       "https://github.com/Goldziher/spikard/releases/download/v#{Mix.Project.config()[:version]}",
     version: Mix.Project.config()[:version],
-    targets: ~w(aarch64-apple-darwin aarch64-unknown-linux-gnu x86_64-unknown-linux-gnu x86_64-pc-windows-gnu),
+    targets:
+      ~w(aarch64-apple-darwin aarch64-unknown-linux-gnu x86_64-unknown-linux-gnu x86_64-pc-windows-gnu),
     nif_versions: ["2.16", "2.17"],
     force_build: System.get_env("SPIKARD_BUILD") in ["1", "true"] or Mix.env() in [:dev]
 

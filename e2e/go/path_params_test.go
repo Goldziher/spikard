@@ -24,7 +24,7 @@ func Test_20UuidV3PathParamSuccess(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/20_uuid_v3_path_param_success/items/{id}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/20_uuid_v3_path_param_success/items/e8b5a51d-11c8-3310-a6ab-367563f20686", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -66,7 +66,7 @@ func Test_21UuidV5PathParamSuccess(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/21_uuid_v5_path_param_success/items/{id}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/21_uuid_v5_path_param_success/items/630eb68f-e0fa-5ecc-887a-7c7a62614681", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -108,7 +108,7 @@ func Test_24DateFormatPathParamSuccess(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/24_date_format_path_param_success/events/{date}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/24_date_format_path_param_success/events/2025-10-30", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -150,7 +150,7 @@ func Test_25DateFormatInvalidFailure(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/25_date_format_invalid_failure/events/{date}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/25_date_format_invalid_failure/events/2025-13-45", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -192,7 +192,7 @@ func Test_27DatetimeFormatPathParamSuccess(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/27_datetime_format_path_param_success/bookings/{timestamp}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/27_datetime_format_path_param_success/bookings/2025-10-30T14:30:00Z", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -234,7 +234,7 @@ func Test_28DurationFormatPathParamSuccess(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/28_duration_format_path_param_success/delays/{duration}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/28_duration_format_path_param_success/delays/P1DT2H30M", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -276,7 +276,7 @@ func Test_29DecimalPathParamSuccess(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/29_decimal_path_param_success/prices/{amount}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/29_decimal_path_param_success/prices/19.99", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -318,7 +318,7 @@ func Test_30StringMinlengthPathSuccess(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/30_string_minlength_path_success/users/{username}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/30_string_minlength_path_success/users/alice", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -360,7 +360,7 @@ func Test_31StringMinlengthPathFailure(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/31_string_minlength_path_failure/users/{username}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/31_string_minlength_path_failure/users/ab", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -402,7 +402,7 @@ func Test_32StringMaxlengthPathFailure(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/32_string_maxlength_path_failure/users/{username}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/32_string_maxlength_path_failure/users/this_username_is_way_too_long_to_be_valid", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -444,7 +444,7 @@ func Test_33StringPatternPathSuccess(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/33_string_pattern_path_success/repos/{owner}/{repo}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/33_string_pattern_path_success/repos/spikard-labs/spikard-http", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -486,7 +486,7 @@ func Test_34StringPatternPathFailure(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/34_string_pattern_path_failure/repos/{owner}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/34_string_pattern_path_failure/repos/invalid@owner", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -528,7 +528,7 @@ func Test_35NegativeIntegerPathParam(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/35_negative_integer_path_param/offset/{value}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/35_negative_integer_path_param/offset/-100", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -570,7 +570,7 @@ func Test_BooleanPathParameterNumeric1(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/boolean_path_parameter_numeric_1/path/bool/{item_id}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/boolean_path_parameter_numeric_1/path/bool/1", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -612,7 +612,7 @@ func Test_BooleanPathParameterTrue(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/boolean_path_parameter_true/path/bool/{item_id}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/boolean_path_parameter_true/path/bool/True", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -654,7 +654,7 @@ func Test_DatePathParameterSuccess(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/date_path_parameter_success/date/{date_param}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/date_path_parameter_success/date/2023-07-15", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -696,7 +696,7 @@ func Test_EnumPathParameterInvalidValue(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/enum_path_parameter_invalid_value/models/{model_name}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/enum_path_parameter_invalid_value/models/foo", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -738,7 +738,7 @@ func Test_EnumPathParameterSuccess(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/enum_path_parameter_success/models/{model_name}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/enum_path_parameter_success/models/alexnet", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -780,7 +780,7 @@ func Test_FloatPathParameterSuccess(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/float_path_parameter_success/path/float/{item_id}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/float_path_parameter_success/path/float/42.5", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -822,7 +822,7 @@ func Test_IntegerPathParameterInvalidString(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/integer_path_parameter_invalid_string/path/int/{item_id}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/integer_path_parameter_invalid_string/path/int/foobar", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -864,7 +864,7 @@ func Test_IntegerPathParameterSuccess(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/integer_path_parameter_success/path/int/{item_id}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/integer_path_parameter_success/path/int/42", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -906,7 +906,7 @@ func Test_IntegerPathParameterWithCombinedLtAndGtConstraintsSuccess(t *testing.T
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/integer_path_parameter_with_combined_lt_and_gt_constraints_success/path/param-lt-gt/{item_id}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/integer_path_parameter_with_combined_lt_and_gt_constraints_success/path/param-lt-gt/2", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -948,7 +948,7 @@ func Test_IntegerPathParameterWithGeConstraintSuccess(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/integer_path_parameter_with_ge_constraint_success/path/param-ge/{item_id}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/integer_path_parameter_with_ge_constraint_success/path/param-ge/3", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -990,7 +990,7 @@ func Test_IntegerPathParameterWithGtConstraintFailure(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/integer_path_parameter_with_gt_constraint_failure/path/param-gt/{item_id}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/integer_path_parameter_with_gt_constraint_failure/path/param-gt/2", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -1032,7 +1032,7 @@ func Test_IntegerPathParameterWithGtConstraintSuccess(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/integer_path_parameter_with_gt_constraint_success/path/param-gt/{item_id}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/integer_path_parameter_with_gt_constraint_success/path/param-gt/42", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -1074,7 +1074,7 @@ func Test_IntegerPathParameterWithLeConstraintSuccess(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/integer_path_parameter_with_le_constraint_success/path/param-le/{item_id}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/integer_path_parameter_with_le_constraint_success/path/param-le/3", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -1116,7 +1116,7 @@ func Test_IntegerPathParameterWithLtConstraintSuccess(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/integer_path_parameter_with_lt_constraint_success/path/param-lt/{item_id}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/integer_path_parameter_with_lt_constraint_success/path/param-lt/2", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -1158,7 +1158,7 @@ func Test_MultiplePathParametersSuccess(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/multiple_path_parameters_success/{version}/{service_id}/{user_id}/{order_id}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/multiple_path_parameters_success/1.0/1/abc/c892496f-b1fd-4b91-bdb8-b46f92df1716", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -1200,7 +1200,7 @@ func Test_PathParameterTypeSyntaxInvalidUuid(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/path_parameter_type_syntax_invalid_uuid/type-syntax/items/{id:uuid}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/path_parameter_type_syntax_invalid_uuid/type-syntax/items/not-a-uuid", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -1242,7 +1242,7 @@ func Test_PathParameterTypeSyntaxWithOverride(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/path_parameter_type_syntax_with_override/type-syntax/items-count/{count:int}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/path_parameter_type_syntax_with_override/type-syntax/items-count/50", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -1284,7 +1284,7 @@ func Test_PathParameterWithTypeSyntaxInteger(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/path_parameter_with_type_syntax_integer/type-syntax/users/{user_id:int}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/path_parameter_with_type_syntax_integer/type-syntax/users/42", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -1326,7 +1326,7 @@ func Test_PathParameterWithTypeSyntaxUuid(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/path_parameter_with_type_syntax_uuid/type-syntax/items/{id:uuid}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/path_parameter_with_type_syntax_uuid/type-syntax/items/550e8400-e29b-41d4-a716-446655440000", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -1368,7 +1368,7 @@ func Test_PathTypeParameterFilePath(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/path_type_parameter_file_path/files/{file_path:path}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/path_type_parameter_file_path/files/home/johndoe/myfile.txt", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -1410,7 +1410,7 @@ func Test_StringPathParameterSuccess(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/string_path_parameter_success/path/str/{item_id}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/string_path_parameter_success/path/str/foobar", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -1452,7 +1452,7 @@ func Test_StringPathParameterWithMaxLengthFailure(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/string_path_parameter_with_max_length_failure/path/param-maxlength/{item_id}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/string_path_parameter_with_max_length_failure/path/param-maxlength/foobar", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -1494,7 +1494,7 @@ func Test_StringPathParameterWithMinLengthFailure(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/string_path_parameter_with_min_length_failure/path/param-minlength/{item_id}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/string_path_parameter_with_min_length_failure/path/param-minlength/fo", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -1536,7 +1536,7 @@ func Test_UuidPathParameterSuccess(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/uuid_path_parameter_success/items/{item_id}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/uuid_path_parameter_success/items/ec38df32-ceda-4cfa-9b4a-1aeb94ad551a", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}

@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"data":{"hello":"world"}},"headers":{},"status_code":200},"handler":{"body_schema":{"properties":{"operationName":{"type":"string"},"query":{"type":"string"},"variables":{"type":"object"}},"required":["query"],"type":"object"},"method":"POST","route":"/graphql"},"request":{"path":"/graphql"}}}

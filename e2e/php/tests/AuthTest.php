@@ -45,7 +45,7 @@ final class AuthTest extends TestCase
 
     /** Tests API key authentication when key is provided as query parameter instead of header */
     public function test_api_key_in_query_parameter(): void
-    {        $response = $this->httpClient->request('GET', "/fixtures/api_key_in_query_parameter/api/data");        $this->assertEquals(200, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+    {        $response = $this->httpClient->request('GET', "/fixtures/api_key_in_query_parameter/api/data?api_key=sk_test_123456");        $this->assertEquals(200, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(["data" => "sensitive information", "message" => "Access granted"], $body);    }
 
     /** Tests API key authentication accepts multiple valid keys */

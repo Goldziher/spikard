@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":"id,name,value\\n1,Alice,42\\n2,Bob,7\\n","headers":{"content-type":"text/csv"},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/stream/csv-report"},"request":{"path":"/stream/csv-report"}}}

@@ -108,6 +108,7 @@ void main() {
   });
 
   tearDownAll(() async {
+    RustLib.dispose();
     _httpClient.close(force: true);
     final proc = _sutProcess;
     if (proc != null) {
@@ -174,7 +175,7 @@ void main() {
 
   test('Tests RFC 9457 ProblemDetails response with all standard fields', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/problem_details_standard_all_fields/items/{id}');
+    final uri = Uri.parse('$baseUrl/fixtures/problem_details_standard_all_fields/items/999');
     final ioReq = await _httpClient.openUrl('GET', uri);
     ioReq.persistentConnection = false;
     final ioResp = await ioReq.close();
@@ -204,7 +205,7 @@ void main() {
 
   test('Tests ProblemDetails includes instance URI for context', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/problem_details_with_instance/users/{user_id}/posts/{post_id}');
+    final uri = Uri.parse('$baseUrl/fixtures/problem_details_with_instance/users/123/posts/456');
     final ioReq = await _httpClient.openUrl('GET', uri);
     ioReq.persistentConnection = false;
     final ioResp = await ioReq.close();

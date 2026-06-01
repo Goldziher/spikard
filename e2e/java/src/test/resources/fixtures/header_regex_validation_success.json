@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"x_request_id":"12345"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/headers/pattern"},"request":{"path":"/headers/pattern"}}}

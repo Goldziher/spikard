@@ -287,7 +287,7 @@ final class ContentTypesTests: XCTestCase {
     /// Tests content negotiation based on Accept header
     func testContentNegotiationAcceptHeader() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/content_negotiation_accept_header/accept-test/{id}")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/content_negotiation_accept_header/accept-test/1")!)
         _req.httpMethod = "GET"
         _req.setValue("application/json", forHTTPHeaderField: "Accept")
         var response: HTTPURLResponse?

@@ -926,7 +926,7 @@ func Test_BodyWithQueryParameters(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader(`{"name":"Item","price":42.0}`)
-	req, err := http.NewRequest("POST", baseURL+"/fixtures/body_with_query_parameters/items/", body)
+	req, err := http.NewRequest("POST", baseURL+"/fixtures/body_with_query_parameters/items/?limit=10", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -1630,7 +1630,7 @@ func Test_PatchPartialUpdate2(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader(`{"price":45.0}`)
-	req, err := http.NewRequest("PATCH", baseURL+"/fixtures/patch_partial_update_2/items/{id}", body)
+	req, err := http.NewRequest("PATCH", baseURL+"/fixtures/patch_partial_update_2/items/1", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}

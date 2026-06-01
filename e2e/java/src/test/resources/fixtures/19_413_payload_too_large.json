@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"error":"Payload Too Large","message":"Request body size exceeds maximum allowed size of 1024 bytes"},"headers":{},"status_code":413},"handler":{"body_schema":{"properties":{"data":{"type":"string"}},"type":"object"},"method":"POST","route":"/upload"},"request":{"path":"/upload"}}}

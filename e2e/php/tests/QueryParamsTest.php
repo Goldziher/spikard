@@ -165,17 +165,17 @@ final class QueryParamsTest extends TestCase
 
     /** Array query parameter with pipe separator should parse correctly */
     public function test_70_array_separator_pipe(): void
-    {        $response = $this->httpClient->request('GET', "/fixtures/70_array_separator_pipe/items", [            'query' => ["tags" => "python|rust|typescript"],        ]);        $this->assertEquals(200, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+    {        $response = $this->httpClient->request('GET', "/fixtures/70_array_separator_pipe/items?tags=python|rust|typescript", [            'query' => ["tags" => "python|rust|typescript"],        ]);        $this->assertEquals(200, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(["tags" => ["python", "rust", "typescript"]], $body);    }
 
     /** Array query parameter with semicolon separator should parse correctly */
     public function test_71_array_separator_semicolon(): void
-    {        $response = $this->httpClient->request('GET', "/fixtures/71_array_separator_semicolon/items", [            'query' => ["colors" => "red;green;blue"],        ]);        $this->assertEquals(200, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+    {        $response = $this->httpClient->request('GET', "/fixtures/71_array_separator_semicolon/items?colors=red;green;blue", [            'query' => ["colors" => "red;green;blue"],        ]);        $this->assertEquals(200, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(["colors" => ["red", "green", "blue"]], $body);    }
 
     /** Array query parameter with space separator should parse correctly */
     public function test_72_array_separator_space(): void
-    {        $response = $this->httpClient->request('GET', "/fixtures/72_array_separator_space/search", [            'query' => ["keywords" => "rust web framework"],        ]);        $this->assertEquals(200, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+    {        $response = $this->httpClient->request('GET', "/fixtures/72_array_separator_space/search?keywords=rust%20web%20framework", [            'query' => ["keywords" => "rust web framework"],        ]);        $this->assertEquals(200, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(["keywords" => ["rust", "web", "framework"]], $body);    }
 
     /** Tests array query parameter when no values are provided */

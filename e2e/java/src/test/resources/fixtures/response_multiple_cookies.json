@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"message":"Multiple cookies set"},"headers":{},"status_code":200},"handler":{"body_schema":{"additionalProperties":false,"properties":{"session":{"type":"string"},"user":{"type":"string"}},"required":["user","session"],"type":"object"},"method":"POST","route":"/cookies/multiple"},"request":{"path":"/cookies/multiple"}}}

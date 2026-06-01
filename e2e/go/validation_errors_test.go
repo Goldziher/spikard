@@ -286,7 +286,7 @@ func Test_HeaderValidationError(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/header_validation_error/items/", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/header_validation_error/items/?q=test", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -328,7 +328,7 @@ func Test_InvalidBooleanValue(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/invalid_boolean_value/items/", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/invalid_boolean_value/items/?q=test&is_active=maybe", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -415,7 +415,7 @@ func Test_InvalidEnumValue(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/invalid_enum_value/models/{model_name}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/invalid_enum_value/models/invalid_model", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -457,7 +457,7 @@ func Test_InvalidUuidFormat(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/invalid_uuid_format/items/{item_id}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/invalid_uuid_format/items/not-a-uuid", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -718,7 +718,7 @@ func Test_NumericConstraintViolationGtGreaterThan(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/numeric_constraint_violation_gt_greater_than/items/", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/numeric_constraint_violation_gt_greater_than/items/?q=test&price=0", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -761,7 +761,7 @@ func Test_NumericConstraintViolationLeLessThanOrEqual(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/numeric_constraint_violation_le_less_than_or_equal/items/", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/numeric_constraint_violation_le_less_than_or_equal/items/?q=test&limit=101", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -804,7 +804,7 @@ func Test_QueryParamTypeErrorStringProvidedForInt(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/query_param_type_error_string_provided_for_int/items/", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/query_param_type_error_string_provided_for_int/items/?q=test&skip=not_a_number", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -847,7 +847,7 @@ func Test_StringMaxLengthConstraintViolation(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/string_max_length_constraint_violation/items/", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/string_max_length_constraint_violation/items/?q=this_is_a_very_long_query_string_that_exceeds_maximum_length_limit_for_this_parameter", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -890,7 +890,7 @@ func Test_StringMinLengthConstraintViolation(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/string_min_length_constraint_violation/items/", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/string_min_length_constraint_violation/items/?q=ab", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -933,7 +933,7 @@ func Test_StringRegexPatternMismatch(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/string_regex_pattern_mismatch/items/", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/string_regex_pattern_mismatch/items/?q=invalid!", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}

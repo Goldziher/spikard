@@ -108,6 +108,7 @@ void main() {
   });
 
   tearDownAll(() async {
+    RustLib.dispose();
     _httpClient.close(force: true);
     final proc = _sutProcess;
     if (proc != null) {
@@ -220,7 +221,7 @@ void main() {
 
   test('Tests validation error when required header is missing', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/header_validation_error/items/');
+    final uri = Uri.parse('$baseUrl/fixtures/header_validation_error/items/?q=test');
     final ioReq = await _httpClient.openUrl('GET', uri);
     ioReq.persistentConnection = false;
     final ioResp = await ioReq.close();
@@ -233,7 +234,7 @@ void main() {
 
   test('Tests validation error when boolean value is invalid', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/invalid_boolean_value/items/');
+    final uri = Uri.parse('$baseUrl/fixtures/invalid_boolean_value/items/?q=test&is_active=maybe');
     final ioReq = await _httpClient.openUrl('GET', uri);
     ioReq.persistentConnection = false;
     ioReq.headers.set('x-token', 'test-token');
@@ -264,7 +265,7 @@ void main() {
 
   test('Tests validation error when value is not in allowed enum values', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/invalid_enum_value/models/{model_name}');
+    final uri = Uri.parse('$baseUrl/fixtures/invalid_enum_value/models/invalid_model');
     final ioReq = await _httpClient.openUrl('GET', uri);
     ioReq.persistentConnection = false;
     final ioResp = await ioReq.close();
@@ -277,7 +278,7 @@ void main() {
 
   test('Tests validation error when UUID format is invalid', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/invalid_uuid_format/items/{item_id}');
+    final uri = Uri.parse('$baseUrl/fixtures/invalid_uuid_format/items/not-a-uuid');
     final ioReq = await _httpClient.openUrl('GET', uri);
     ioReq.persistentConnection = false;
     final ioResp = await ioReq.close();
@@ -372,7 +373,7 @@ void main() {
 
   test('Tests validation error when value violates gt constraint', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/numeric_constraint_violation_gt_greater_than/items/');
+    final uri = Uri.parse('$baseUrl/fixtures/numeric_constraint_violation_gt_greater_than/items/?q=test&price=0');
     final ioReq = await _httpClient.openUrl('GET', uri);
     ioReq.persistentConnection = false;
     ioReq.headers.set('x-token', 'test-token');
@@ -386,7 +387,7 @@ void main() {
 
   test('Tests validation error when value violates le constraint', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/numeric_constraint_violation_le_less_than_or_equal/items/');
+    final uri = Uri.parse('$baseUrl/fixtures/numeric_constraint_violation_le_less_than_or_equal/items/?q=test&limit=101');
     final ioReq = await _httpClient.openUrl('GET', uri);
     ioReq.persistentConnection = false;
     ioReq.headers.set('x-token', 'test-token');
@@ -400,7 +401,7 @@ void main() {
 
   test('Tests validation error when string is provided for integer query param', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/query_param_type_error_string_provided_for_int/items/');
+    final uri = Uri.parse('$baseUrl/fixtures/query_param_type_error_string_provided_for_int/items/?q=test&skip=not_a_number');
     final ioReq = await _httpClient.openUrl('GET', uri);
     ioReq.persistentConnection = false;
     ioReq.headers.set('x-token', 'test-token');
@@ -414,7 +415,7 @@ void main() {
 
   test('Tests validation error when string exceeds max_length', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/string_max_length_constraint_violation/items/');
+    final uri = Uri.parse('$baseUrl/fixtures/string_max_length_constraint_violation/items/?q=this_is_a_very_long_query_string_that_exceeds_maximum_length_limit_for_this_parameter');
     final ioReq = await _httpClient.openUrl('GET', uri);
     ioReq.persistentConnection = false;
     ioReq.headers.set('x-token', 'test-token');
@@ -428,7 +429,7 @@ void main() {
 
   test('Tests validation error when string is shorter than min_length', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/string_min_length_constraint_violation/items/');
+    final uri = Uri.parse('$baseUrl/fixtures/string_min_length_constraint_violation/items/?q=ab');
     final ioReq = await _httpClient.openUrl('GET', uri);
     ioReq.persistentConnection = false;
     ioReq.headers.set('x-token', 'test-token');
@@ -442,7 +443,7 @@ void main() {
 
   test('Tests validation error when string doesn\'t match regex pattern', () => _serialized(() => _withRetry(() async {
     final baseUrl = _sutUrl();
-    final uri = Uri.parse('$baseUrl/fixtures/string_regex_pattern_mismatch/items/');
+    final uri = Uri.parse('$baseUrl/fixtures/string_regex_pattern_mismatch/items/?q=invalid!');
     final ioReq = await _httpClient.openUrl('GET', uri);
     ioReq.persistentConnection = false;
     ioReq.headers.set('x-token', 'test-token');

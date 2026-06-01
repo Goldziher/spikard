@@ -24,7 +24,7 @@ func Test_BackgroundTaskCancellation(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("DELETE", baseURL+"/fixtures/background_task_cancellation/background/cancel/{task_id}", body)
+	req, err := http.NewRequest("DELETE", baseURL+"/fixtures/background_task_cancellation/background/cancel/task-001", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}

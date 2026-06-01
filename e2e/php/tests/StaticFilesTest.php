@@ -29,6 +29,6 @@ final class StaticFilesTest extends TestCase
 
     /** When index files are enabled the server should serve index.html when the directory root is requested. */
     public function test_static_server_returns_index_html_for_directory(): void
-    {        $response = $this->httpClient->request('GET', "/fixtures/static_server_returns_index_html_for_directory/app");        $this->assertEquals(200, $response->getStatusCode());        $this->assertEquals("text/html", $response->getHeaderLine("content-type"));        $this->assertEquals("<!doctype html><h1>Welcome</h1>", (string) $response->getBody());    }
+    {        $response = $this->httpClient->request('GET', "/fixtures/static_server_returns_index_html_for_directory/app/");        $this->assertEquals(200, $response->getStatusCode());        $this->assertEquals("text/html", $response->getHeaderLine("content-type"));        $this->assertEquals("<!doctype html><h1>Welcome</h1>", (string) $response->getBody());    }
 
 }

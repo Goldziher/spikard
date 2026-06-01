@@ -207,7 +207,7 @@ test "content_negotiation_accept_header" {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
     var url_buf: [512]u8 = undefined;
-    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/content_negotiation_accept_header/accept-test/{{id}}", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
+    const url = try std.fmt.bufPrint(&url_buf, "{s}/fixtures/content_negotiation_accept_header/accept-test/1", .{if (std.c.getenv("MOCK_SERVER_URL")) |v| std.mem.span(v) else "http://localhost:8080"});
     const headers = [_]std.http.Header{
         .{ .name = "Accept", .value = "application/json" },
     };

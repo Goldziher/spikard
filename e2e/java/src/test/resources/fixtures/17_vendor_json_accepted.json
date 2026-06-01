@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"data":"value"},"headers":{},"status_code":201},"handler":{"body_schema":{"properties":{"data":{"type":"string"}},"required":["data"],"type":"object"},"method":"POST","route":"/api/v1/resource"},"request":{"path":"/api/v1/resource"}}}

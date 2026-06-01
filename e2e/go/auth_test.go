@@ -195,7 +195,7 @@ func Test_ApiKeyInQueryParameter(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/api_key_in_query_parameter/api/data", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/api_key_in_query_parameter/api/data?api_key=sk_test_123456", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}

@@ -24,7 +24,7 @@ func Test_DeleteRemoveResource(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("DELETE", baseURL+"/fixtures/delete_remove_resource/items/{id}", body)
+	req, err := http.NewRequest("DELETE", baseURL+"/fixtures/delete_remove_resource/items/1", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -66,7 +66,7 @@ func Test_DeleteResourceNotFound(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("DELETE", baseURL+"/fixtures/delete_resource_not_found/items/{id}", body)
+	req, err := http.NewRequest("DELETE", baseURL+"/fixtures/delete_resource_not_found/items/999", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -108,7 +108,7 @@ func Test_DeleteWithResponseBody(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("DELETE", baseURL+"/fixtures/delete_with_response_body/items/{id}", body)
+	req, err := http.NewRequest("DELETE", baseURL+"/fixtures/delete_with_response_body/items/1", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -150,7 +150,7 @@ func Test_HeadGetMetadataWithoutBody(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("HEAD", baseURL+"/fixtures/head_get_metadata_without_body/items/{id}", body)
+	req, err := http.NewRequest("HEAD", baseURL+"/fixtures/head_get_metadata_without_body/items/1", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -187,7 +187,7 @@ func Test_PatchPartialUpdate(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader(`{"price":79.99}`)
-	req, err := http.NewRequest("PATCH", baseURL+"/fixtures/patch_partial_update/items/{id}", body)
+	req, err := http.NewRequest("PATCH", baseURL+"/fixtures/patch_partial_update/items/1", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -231,7 +231,7 @@ func Test_PatchUpdateMultipleFields(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader(`{"in_stock":false,"name":"Updated Name","price":89.99}`)
-	req, err := http.NewRequest("PATCH", baseURL+"/fixtures/patch_update_multiple_fields/items/{id}", body)
+	req, err := http.NewRequest("PATCH", baseURL+"/fixtures/patch_update_multiple_fields/items/1", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -275,7 +275,7 @@ func Test_PutCompleteResourceReplacement(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader(`{"description":"Completely replaced","id":1,"in_stock":true,"name":"Updated Item","price":99.99}`)
-	req, err := http.NewRequest("PUT", baseURL+"/fixtures/put_complete_resource_replacement/items/{id}", body)
+	req, err := http.NewRequest("PUT", baseURL+"/fixtures/put_complete_resource_replacement/items/1", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -319,7 +319,7 @@ func Test_PutCreateResourceIfDoesnTExist(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader(`{"id":999,"name":"New Item","price":49.99}`)
-	req, err := http.NewRequest("PUT", baseURL+"/fixtures/put_create_resource_if_doesn_t_exist/items/{id}", body)
+	req, err := http.NewRequest("PUT", baseURL+"/fixtures/put_create_resource_if_doesn_t_exist/items/999", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -363,7 +363,7 @@ func Test_PutIdempotentOperation(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader(`{"id":1,"name":"Fixed Name","price":50.0}`)
-	req, err := http.NewRequest("PUT", baseURL+"/fixtures/put_idempotent_operation/items/{id}", body)
+	req, err := http.NewRequest("PUT", baseURL+"/fixtures/put_idempotent_operation/items/1", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -407,7 +407,7 @@ func Test_PutMissingRequiredField(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader(`{"id":1,"name":"Item Name"}`)
-	req, err := http.NewRequest("PUT", baseURL+"/fixtures/put_missing_required_field/items/{id}", body)
+	req, err := http.NewRequest("PUT", baseURL+"/fixtures/put_missing_required_field/items/1", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -451,7 +451,7 @@ func Test_PutValidationError(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader(`{"id":1,"name":"X","price":-10}`)
-	req, err := http.NewRequest("PUT", baseURL+"/fixtures/put_validation_error/items/{id}", body)
+	req, err := http.NewRequest("PUT", baseURL+"/fixtures/put_validation_error/items/1", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}

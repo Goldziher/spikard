@@ -155,7 +155,7 @@ final class ProblemDetailsTests: XCTestCase {
     /// Tests RFC 9457 ProblemDetails response with all standard fields
     func testProblemDetailsStandardAllFields() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/problem_details_standard_all_fields/items/{id}")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/problem_details_standard_all_fields/items/999")!)
         _req.httpMethod = "GET"
         var response: HTTPURLResponse?
         var _responseData: Data?
@@ -202,7 +202,7 @@ final class ProblemDetailsTests: XCTestCase {
     /// Tests ProblemDetails includes instance URI for context
     func testProblemDetailsWithInstance() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/problem_details_with_instance/users/{user_id}/posts/{post_id}")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/problem_details_with_instance/users/123/posts/456")!)
         _req.httpMethod = "GET"
         var response: HTTPURLResponse?
         var _responseData: Data?

@@ -51,7 +51,7 @@ final class App
     /**
      * Register a route using the provided builder and handler function.
      */
-    public function route(RouteBuilder $builder, Handler $handler): App
+    public function route(RouteBuilder $builder, callable $handler): App
     {
         throw new \RuntimeException('Not implemented — provided by the native extension.');
     }

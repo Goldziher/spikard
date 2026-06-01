@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"message":"Response with timing info"},"headers":{"X-Response-Time":".*ms"},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/api/test-timing"},"request":{"path":"/api/test-timing"}}}

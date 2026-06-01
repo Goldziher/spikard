@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"id":1,"name":"Item"},"headers":{"content-type":"application/json"},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/accept-test/{id}"},"request":{"path":"/accept-test/1"}}}

@@ -64,7 +64,7 @@ final class BackgroundTasksTests: XCTestCase {
     /// Tests background task cancellation via request
     func testBackgroundTaskCancellation() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/background_task_cancellation/background/cancel/{task_id}")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/background_task_cancellation/background/cancel/task-001")!)
         _req.httpMethod = "DELETE"
         var response: HTTPURLResponse?
         var _responseData: Data?

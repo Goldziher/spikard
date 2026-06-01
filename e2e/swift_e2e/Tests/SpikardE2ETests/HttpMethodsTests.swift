@@ -64,7 +64,7 @@ final class HttpMethodsTests: XCTestCase {
     /// Tests DELETE method to remove a resource
     func testDeleteRemoveResource() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/delete_remove_resource/items/{id}")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/delete_remove_resource/items/1")!)
         _req.httpMethod = "DELETE"
         var response: HTTPURLResponse?
         var _responseData: Data?
@@ -86,7 +86,7 @@ final class HttpMethodsTests: XCTestCase {
     /// Tests DELETE on non-existent resource returns 404
     func testDeleteResourceNotFound() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/delete_resource_not_found/items/{id}")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/delete_resource_not_found/items/999")!)
         _req.httpMethod = "DELETE"
         var response: HTTPURLResponse?
         var _responseData: Data?
@@ -108,7 +108,7 @@ final class HttpMethodsTests: XCTestCase {
     /// Tests DELETE returning deleted resource data
     func testDeleteWithResponseBody() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/delete_with_response_body/items/{id}")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/delete_with_response_body/items/1")!)
         _req.httpMethod = "DELETE"
         var response: HTTPURLResponse?
         var _responseData: Data?
@@ -130,7 +130,7 @@ final class HttpMethodsTests: XCTestCase {
     /// Tests HEAD method returns headers without response body
     func testHeadGetMetadataWithoutBody() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/head_get_metadata_without_body/items/{id}")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/head_get_metadata_without_body/items/1")!)
         _req.httpMethod = "HEAD"
         var response: HTTPURLResponse?
         var _responseData: Data?
@@ -151,7 +151,7 @@ final class HttpMethodsTests: XCTestCase {
     /// Tests PATCH method for partial resource updates
     func testPatchPartialUpdate() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/patch_partial_update/items/{id}")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/patch_partial_update/items/1")!)
         _req.httpMethod = "PATCH"
         _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         _req.httpBody = "{\"price\":79.99}".data(using: .utf8)
@@ -176,7 +176,7 @@ final class HttpMethodsTests: XCTestCase {
     /// Tests PATCH updating multiple fields at once
     func testPatchUpdateMultipleFields() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/patch_update_multiple_fields/items/{id}")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/patch_update_multiple_fields/items/1")!)
         _req.httpMethod = "PATCH"
         _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         _req.httpBody = "{\"in_stock\":false,\"name\":\"Updated Name\",\"price\":89.99}".data(using: .utf8)
@@ -201,7 +201,7 @@ final class HttpMethodsTests: XCTestCase {
     /// Tests PUT method for complete resource replacement
     func testPutCompleteResourceReplacement() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/put_complete_resource_replacement/items/{id}")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/put_complete_resource_replacement/items/1")!)
         _req.httpMethod = "PUT"
         _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         _req.httpBody = "{\"description\":\"Completely replaced\",\"id\":1,\"in_stock\":true,\"name\":\"Updated Item\",\"price\":99.99}".data(using: .utf8)
@@ -226,7 +226,7 @@ final class HttpMethodsTests: XCTestCase {
     /// Tests PUT creating new resource at specific URI
     func testPutCreateResourceIfDoesnTExist() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/put_create_resource_if_doesn_t_exist/items/{id}")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/put_create_resource_if_doesn_t_exist/items/999")!)
         _req.httpMethod = "PUT"
         _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         _req.httpBody = "{\"id\":999,\"name\":\"New Item\",\"price\":49.99}".data(using: .utf8)
@@ -251,7 +251,7 @@ final class HttpMethodsTests: XCTestCase {
     /// Tests PUT idempotency - repeated calls produce same result
     func testPutIdempotentOperation() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/put_idempotent_operation/items/{id}")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/put_idempotent_operation/items/1")!)
         _req.httpMethod = "PUT"
         _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         _req.httpBody = "{\"id\":1,\"name\":\"Fixed Name\",\"price\":50.0}".data(using: .utf8)
@@ -276,7 +276,7 @@ final class HttpMethodsTests: XCTestCase {
     /// Tests PUT with missing required fields returns 422
     func testPutMissingRequiredField() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/put_missing_required_field/items/{id}")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/put_missing_required_field/items/1")!)
         _req.httpMethod = "PUT"
         _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         _req.httpBody = "{\"id\":1,\"name\":\"Item Name\"}".data(using: .utf8)
@@ -301,7 +301,7 @@ final class HttpMethodsTests: XCTestCase {
     /// Tests PUT with invalid data returns 422
     func testPutValidationError() throws {
         let _baseURL = ProcessInfo.processInfo.environment["SUT_URL"] ?? "http://127.0.0.1:8009"
-        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/put_validation_error/items/{id}")!)
+        var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/put_validation_error/items/1")!)
         _req.httpMethod = "PUT"
         _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         _req.httpBody = "{\"id\":1,\"name\":\"X\",\"price\":-10}".data(using: .utf8)

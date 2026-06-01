@@ -45,7 +45,7 @@ final class ProblemDetailsTest extends TestCase
 
     /** Tests RFC 9457 ProblemDetails response with all standard fields */
     public function test_problem_details_standard_all_fields(): void
-    {        $response = $this->httpClient->request('GET', "/fixtures/problem_details_standard_all_fields/items/{id}");        $this->assertEquals(404, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+    {        $response = $this->httpClient->request('GET', "/fixtures/problem_details_standard_all_fields/items/999");        $this->assertEquals(404, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(["detail" => "Item with ID 999 was not found", "instance" => "/items/999", "status" => 404, "title" => "Resource Not Found", "type" => "https://spikard.dev/errors/not-found"], $body);    }
 
     /** Tests ProblemDetails includes custom extensions for additional context */
@@ -55,7 +55,7 @@ final class ProblemDetailsTest extends TestCase
 
     /** Tests ProblemDetails includes instance URI for context */
     public function test_problem_details_with_instance(): void
-    {        $response = $this->httpClient->request('GET', "/fixtures/problem_details_with_instance/users/{user_id}/posts/{post_id}");        $this->assertEquals(404, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+    {        $response = $this->httpClient->request('GET', "/fixtures/problem_details_with_instance/users/123/posts/456");        $this->assertEquals(404, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
         $this->assertEquals(["detail" => "Post 456 not found for user 123", "instance" => "/users/123/posts/456", "status" => 404, "title" => "Post Not Found", "type" => "https://spikard.dev/errors/not-found"], $body);    }
 
     /** Tests ProblemDetails includes type URI for error classification */

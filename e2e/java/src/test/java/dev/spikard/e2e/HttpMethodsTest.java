@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.AfterAll;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.URI;
 import java.time.Instant;
 /** E2e tests for category: http_methods. */
 class HttpMethodsTest {
@@ -39,23 +40,40 @@ class HttpMethodsTest {
         pb.redirectErrorStream(false);
         harnessProcess = pb.start();
 
-        String host = "127.0.0.1";
-        int port = 8005;
-        sutUrl = "http://" + host + ":" + port;
-
-        // Poll until the harness accepts TCP connections
+        // Read SUT_URL from harness stdout
+        java.io.BufferedReader reader = new java.io.BufferedReader(
+            new java.io.InputStreamReader(harnessProcess.getInputStream(), "UTF-8")
+        );
+        String line;
         long deadline = System.currentTimeMillis() + 15_000;
+        while (System.currentTimeMillis() < deadline && (line = reader.readLine()) != null) {
+            if (line.startsWith("SUT_URL=")) {
+                sutUrl = line.substring("SUT_URL=".length()).trim();
+                break;
+            }
+        }
+
+        if (sutUrl == null || sutUrl.isEmpty()) {
+            if (harnessProcess != null) {
+                harnessProcess.destroyForcibly();
+            }
+            throw new RuntimeException("Harness did not emit SUT_URL within 15s");
+        }
+
+        // TCP-readiness probe: ensure harness is accepting connections
+        java.net.URI uri = new java.net.URI(sutUrl);
+        String host = uri.getHost();
+        int port = uri.getPort() > 0 ? uri.getPort() : 8000;
+        deadline = System.currentTimeMillis() + 15_000;
         boolean ready = false;
         while (System.currentTimeMillis() < deadline) {
             if (harnessProcess.isAlive() == false) {
-                // Process died early
                 break;
             }
             try (Socket socket = new Socket(host, port)) {
                 ready = true;
                 break;
             } catch (IOException e) {
-                // Not ready yet, sleep and retry
                 Thread.sleep(100);
             }
         }
@@ -64,7 +82,7 @@ class HttpMethodsTest {
             if (harnessProcess != null) {
                 harnessProcess.destroyForcibly();
             }
-            throw new RuntimeException("Harness did not become reachable on " + host + ":" + port + " within 15s");
+            throw new RuntimeException("Harness did not become reachable at " + sutUrl + " within 15s");
         }
 
         System.setProperty("SUT_URL", sutUrl);
@@ -82,7 +100,7 @@ class HttpMethodsTest {
     @Test    void testDeleteRemoveResource() throws Exception {
         // Tests DELETE method to remove a resource
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/delete_remove_resource/items/{id}");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/delete_remove_resource/items/1");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("DELETE", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -93,7 +111,7 @@ class HttpMethodsTest {
     @Test    void testDeleteResourceNotFound() throws Exception {
         // Tests DELETE on non-existent resource returns 404
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/delete_resource_not_found/items/{id}");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/delete_resource_not_found/items/999");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("DELETE", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -104,7 +122,7 @@ class HttpMethodsTest {
     @Test    void testDeleteWithResponseBody() throws Exception {
         // Tests DELETE returning deleted resource data
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/delete_with_response_body/items/{id}");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/delete_with_response_body/items/1");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("DELETE", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -115,7 +133,7 @@ class HttpMethodsTest {
     @Test    void testHeadGetMetadataWithoutBody() throws Exception {
         // Tests HEAD method returns headers without response body
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/head_get_metadata_without_body/items/{id}");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/head_get_metadata_without_body/items/1");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("HEAD", java.net.http.HttpRequest.BodyPublishers.noBody());        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -124,7 +142,7 @@ class HttpMethodsTest {
     @Test    void testPatchPartialUpdate() throws Exception {
         // Tests PATCH method for partial resource updates
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/patch_partial_update/items/{id}");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/patch_partial_update/items/1");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("PATCH", java.net.http.HttpRequest.BodyPublishers.ofString("{\"price\":79.99}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -135,7 +153,7 @@ class HttpMethodsTest {
     @Test    void testPatchUpdateMultipleFields() throws Exception {
         // Tests PATCH updating multiple fields at once
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/patch_update_multiple_fields/items/{id}");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/patch_update_multiple_fields/items/1");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("PATCH", java.net.http.HttpRequest.BodyPublishers.ofString("{\"in_stock\":false,\"name\":\"Updated Name\",\"price\":89.99}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -146,7 +164,7 @@ class HttpMethodsTest {
     @Test    void testPutCompleteResourceReplacement() throws Exception {
         // Tests PUT method for complete resource replacement
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/put_complete_resource_replacement/items/{id}");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/put_complete_resource_replacement/items/1");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("PUT", java.net.http.HttpRequest.BodyPublishers.ofString("{\"description\":\"Completely replaced\",\"id\":1,\"in_stock\":true,\"name\":\"Updated Item\",\"price\":99.99}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -157,7 +175,7 @@ class HttpMethodsTest {
     @Test    void testPutCreateResourceIfDoesnTExist() throws Exception {
         // Tests PUT creating new resource at specific URI
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/put_create_resource_if_doesn_t_exist/items/{id}");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/put_create_resource_if_doesn_t_exist/items/999");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("PUT", java.net.http.HttpRequest.BodyPublishers.ofString("{\"id\":999,\"name\":\"New Item\",\"price\":49.99}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -168,7 +186,7 @@ class HttpMethodsTest {
     @Test    void testPutIdempotentOperation() throws Exception {
         // Tests PUT idempotency - repeated calls produce same result
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/put_idempotent_operation/items/{id}");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/put_idempotent_operation/items/1");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("PUT", java.net.http.HttpRequest.BodyPublishers.ofString("{\"id\":1,\"name\":\"Fixed Name\",\"price\":50.0}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -179,7 +197,7 @@ class HttpMethodsTest {
     @Test    void testPutMissingRequiredField() throws Exception {
         // Tests PUT with missing required fields returns 422
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/put_missing_required_field/items/{id}");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/put_missing_required_field/items/1");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("PUT", java.net.http.HttpRequest.BodyPublishers.ofString("{\"id\":1,\"name\":\"Item Name\"}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
@@ -190,7 +208,7 @@ class HttpMethodsTest {
     @Test    void testPutValidationError() throws Exception {
         // Tests PUT with invalid data returns 422
         String baseUrl = System.getenv("SUT_URL");
-        if (baseUrl == null) baseUrl = "http://localhost:8005";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/put_validation_error/items/{id}");
+        if (baseUrl == null) baseUrl = "http://localhost:8000";        java.net.URI uri = java.net.URI.create(baseUrl + "/fixtures/put_validation_error/items/1");
         var builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("PUT", java.net.http.HttpRequest.BodyPublishers.ofString("{\"id\":1,\"name\":\"X\",\"price\":-10}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());

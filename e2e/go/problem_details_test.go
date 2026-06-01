@@ -194,7 +194,7 @@ func Test_ProblemDetailsStandardAllFields(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/problem_details_standard_all_fields/items/{id}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/problem_details_standard_all_fields/items/999", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
@@ -280,7 +280,7 @@ func Test_ProblemDetailsWithInstance(t *testing.T) {
 		baseURL = "http://127.0.0.1:8012"
 	}
 	body := strings.NewReader("")
-	req, err := http.NewRequest("GET", baseURL+"/fixtures/problem_details_with_instance/users/{user_id}/posts/{post_id}", body)
+	req, err := http.NewRequest("GET", baseURL+"/fixtures/problem_details_with_instance/users/123/posts/456", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}

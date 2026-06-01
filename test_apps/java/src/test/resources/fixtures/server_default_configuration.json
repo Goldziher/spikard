@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"message":"Server is running with default config","status":"ok"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/status"},"request":{"path":"/status"}}}

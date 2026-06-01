@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"cache_type":"Redis","pool_type":"PostgreSQL"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/api/python-type-inject"},"request":{"path":"/api/python-type-inject"}}}

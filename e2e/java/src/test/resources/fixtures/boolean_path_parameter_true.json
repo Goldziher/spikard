@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"item_id":true},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/path/bool/{item_id}"},"request":{"path":"/path/bool/True"}}}

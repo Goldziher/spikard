@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"auth_enabled":true,"has_cache":true,"has_db":true},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/api/auth-status"},"request":{"path":"/api/auth-status"}}}

@@ -43,7 +43,7 @@ class App {
    * Register a GET route at the given path.
    */
   get(path, handler) {
-    const { RouteBuilder, Method } = require('./index');
+    const { RouteBuilder, Method } = require("./index");
     const builder = new RouteBuilder(Method.Get, path);
     this._registrations.push(["route", [builder], handler]);
     return this;
@@ -53,7 +53,7 @@ class App {
    * Register a POST route at the given path.
    */
   post(path, handler) {
-    const { RouteBuilder, Method } = require('./index');
+    const { RouteBuilder, Method } = require("./index");
     const builder = new RouteBuilder(Method.Post, path);
     this._registrations.push(["route", [builder], handler]);
     return this;
@@ -63,7 +63,7 @@ class App {
    * Register a PUT route at the given path.
    */
   put(path, handler) {
-    const { RouteBuilder, Method } = require('./index');
+    const { RouteBuilder, Method } = require("./index");
     const builder = new RouteBuilder(Method.Put, path);
     this._registrations.push(["route", [builder], handler]);
     return this;
@@ -73,7 +73,7 @@ class App {
    * Register a PATCH route at the given path.
    */
   patch(path, handler) {
-    const { RouteBuilder, Method } = require('./index');
+    const { RouteBuilder, Method } = require("./index");
     const builder = new RouteBuilder(Method.Patch, path);
     this._registrations.push(["route", [builder], handler]);
     return this;
@@ -83,7 +83,7 @@ class App {
    * Register a DELETE route at the given path.
    */
   delete(path, handler) {
-    const { RouteBuilder, Method } = require('./index');
+    const { RouteBuilder, Method } = require("./index");
     const builder = new RouteBuilder(Method.Delete, path);
     this._registrations.push(["route", [builder], handler]);
     return this;
@@ -93,7 +93,7 @@ class App {
    * Register a HEAD route at the given path.
    */
   head(path, handler) {
-    const { RouteBuilder, Method } = require('./index');
+    const { RouteBuilder, Method } = require("./index");
     const builder = new RouteBuilder(Method.Head, path);
     this._registrations.push(["route", [builder], handler]);
     return this;
@@ -103,7 +103,7 @@ class App {
    * Register an OPTIONS route at the given path.
    */
   options(path, handler) {
-    const { RouteBuilder, Method } = require('./index');
+    const { RouteBuilder, Method } = require("./index");
     const builder = new RouteBuilder(Method.Options, path);
     this._registrations.push(["route", [builder], handler]);
     return this;
@@ -113,7 +113,7 @@ class App {
    * Register a CONNECT route at the given path.
    */
   connect(path, handler) {
-    const { RouteBuilder, Method } = require('./index');
+    const { RouteBuilder, Method } = require("./index");
     const builder = new RouteBuilder(Method.Connect, path);
     this._registrations.push(["route", [builder], handler]);
     return this;
@@ -123,7 +123,7 @@ class App {
    * Register a TRACE route at the given path.
    */
   trace(path, handler) {
-    const { RouteBuilder, Method } = require('./index');
+    const { RouteBuilder, Method } = require("./index");
     const builder = new RouteBuilder(Method.Trace, path);
     this._registrations.push(["route", [builder], handler]);
     return this;
@@ -137,7 +137,7 @@ class App {
    * Returns an error if server construction or execution fails.
    */
   async run() {
-    const { app_run } = require('./index');
+    const { app_run } = require("./index");
     return await app_run(this._registrations);
   }
 
@@ -149,7 +149,7 @@ class App {
    * Returns an error if server or router construction fails.
    */
   into_router() {
-    const { app_into_router } = require('./index');
+    const { app_into_router } = require("./index");
     return app_into_router(this._registrations);
   }
 }

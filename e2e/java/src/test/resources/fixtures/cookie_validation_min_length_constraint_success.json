@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"token":"abc"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/cookies/min-length"},"request":{"path":"/cookies/min-length"}}}

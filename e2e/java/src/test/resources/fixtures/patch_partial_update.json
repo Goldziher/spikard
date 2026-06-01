@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"id":1,"in_stock":true,"name":"Existing Item","price":79.99},"headers":{},"status_code":200},"handler":{"body_schema":{"properties":{"price":{"type":"number"}},"required":["price"],"type":"object"},"method":"PATCH","route":"/items/{id}"},"request":{"path":"/items/1"}}}

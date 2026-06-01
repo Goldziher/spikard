@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"echo":"trace-123","status":"preserved"},"headers":{"x-request-id":"trace-123"},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/request-id/preserved"},"request":{"path":"/request-id/preserved"}}}

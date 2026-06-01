@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"detail":"CORS request from origin 'https://malicious-site.com' not allowed"},"headers":{},"status_code":403},"handler":{"body_schema":null,"method":"GET","route":"/items/"},"request":{"path":"/items/"}}}

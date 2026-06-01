@@ -1,0 +1,1 @@
+{"http":{"expected_response":{"body":{"user_id":"user-abc123"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/api/user"},"request":{"path":"/api/user"}}}
