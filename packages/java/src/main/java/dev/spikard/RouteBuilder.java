@@ -62,7 +62,8 @@ public class RouteBuilder implements AutoCloseable {
     public RouteBuilder requestSchemaJson(final JsonNode schema) throws SpikardRsException {
         java.util.Objects.requireNonNull(schema, "schema must not be null");
         try (var arena = Arena.ofShared()) {
-            var cSchema = arena.allocateFrom(schema);
+            var cSchemaJson = STREAM_MAPPER.writeValueAsString(schema);
+            var cSchema = arena.allocateFrom(cSchemaJson);
             // CPD-OFF — FFI JSON-roundtrip body, structurally identical for every named-result method.
             MemorySegment resultPtr = (MemorySegment) NativeLib.SPIKARD_ROUTE_BUILDER_REQUEST_SCHEMA_JSON.invoke(this.handle, cSchema);
             if (resultPtr.equals(MemorySegment.NULL)) {
@@ -93,7 +94,8 @@ public class RouteBuilder implements AutoCloseable {
     public RouteBuilder responseSchemaJson(final JsonNode schema) throws SpikardRsException {
         java.util.Objects.requireNonNull(schema, "schema must not be null");
         try (var arena = Arena.ofShared()) {
-            var cSchema = arena.allocateFrom(schema);
+            var cSchemaJson = STREAM_MAPPER.writeValueAsString(schema);
+            var cSchema = arena.allocateFrom(cSchemaJson);
             // CPD-OFF — FFI JSON-roundtrip body, structurally identical for every named-result method.
             MemorySegment resultPtr = (MemorySegment) NativeLib.SPIKARD_ROUTE_BUILDER_RESPONSE_SCHEMA_JSON.invoke(this.handle, cSchema);
             if (resultPtr.equals(MemorySegment.NULL)) {
@@ -124,7 +126,8 @@ public class RouteBuilder implements AutoCloseable {
     public RouteBuilder paramsSchemaJson(final JsonNode schema) throws SpikardRsException {
         java.util.Objects.requireNonNull(schema, "schema must not be null");
         try (var arena = Arena.ofShared()) {
-            var cSchema = arena.allocateFrom(schema);
+            var cSchemaJson = STREAM_MAPPER.writeValueAsString(schema);
+            var cSchema = arena.allocateFrom(cSchemaJson);
             // CPD-OFF — FFI JSON-roundtrip body, structurally identical for every named-result method.
             MemorySegment resultPtr = (MemorySegment) NativeLib.SPIKARD_ROUTE_BUILDER_PARAMS_SCHEMA_JSON.invoke(this.handle, cSchema);
             if (resultPtr.equals(MemorySegment.NULL)) {
@@ -155,7 +158,8 @@ public class RouteBuilder implements AutoCloseable {
     public RouteBuilder fileParamsJson(final JsonNode schema) throws SpikardRsException {
         java.util.Objects.requireNonNull(schema, "schema must not be null");
         try (var arena = Arena.ofShared()) {
-            var cSchema = arena.allocateFrom(schema);
+            var cSchemaJson = STREAM_MAPPER.writeValueAsString(schema);
+            var cSchema = arena.allocateFrom(cSchemaJson);
             // CPD-OFF — FFI JSON-roundtrip body, structurally identical for every named-result method.
             MemorySegment resultPtr = (MemorySegment) NativeLib.SPIKARD_ROUTE_BUILDER_FILE_PARAMS_JSON.invoke(this.handle, cSchema);
             if (resultPtr.equals(MemorySegment.NULL)) {
