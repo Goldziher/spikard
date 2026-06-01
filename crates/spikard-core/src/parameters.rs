@@ -302,7 +302,7 @@ impl ParameterValidator {
                                             "Input should be a valid boolean, unable to interpret input".to_string()
                                         }
                                         Some("string") => match item_format {
-                                            Some("uuid") => format!("Input should be a valid UUID, {e}"),
+                                            Some("uuid") => "Input should be a valid UUID".to_string(),
                                             Some("date") => format!("Input should be a valid date, {e}"),
                                             Some("date-time") => format!("Input should be a valid datetime, {e}"),
                                             Some("time") => format!("Input should be a valid time, {e}"),
@@ -434,7 +434,7 @@ impl ParameterValidator {
                                     "Input should be a valid boolean, unable to interpret input".to_string(),
                                 ),
                                 (Some("string"), Some("uuid")) => {
-                                    ("uuid_parsing", format!("Input should be a valid UUID, {e}"))
+                                    ("uuid_parsing", "Input should be a valid UUID".to_string())
                                 }
                                 (Some("string"), Some("date")) => {
                                     ("date_parsing", format!("Input should be a valid date, {e}"))

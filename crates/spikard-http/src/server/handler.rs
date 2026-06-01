@@ -178,10 +178,11 @@ impl Handler for ValidatingHandler {
                 && !inner.prefers_raw_json_body()
                 && let Some(raw_bytes) = request_data.raw_body.as_ref()
             {
-                request_data.body = Arc::new(
-                    serde_json::from_slice::<Value>(raw_bytes)
-                        .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?,
-                );
+                request_data.body = Arc::new(serde_json::from_slice::<Value>(raw_bytes).map_err(|_| {
+                    let problem = ProblemDetails::bad_request("Invalid JSON in request body");
+                    let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
+                    (axum::http::StatusCode::BAD_REQUEST, body)
+                })?);
             }
 
             if let Some(validator) = request_validator {
@@ -195,8 +196,11 @@ impl Handler for ValidatingHandler {
                         serde_qs::from_bytes::<Value>(raw_bytes)
                             .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid form body: {}", e)))?
                     } else {
-                        serde_json::from_slice::<Value>(raw_bytes)
-                            .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid JSON: {}", e)))?
+                        serde_json::from_slice::<Value>(raw_bytes).map_err(|_| {
+                            let problem = ProblemDetails::bad_request("Invalid JSON in request body");
+                            let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
+                            (axum::http::StatusCode::BAD_REQUEST, body)
+                        })?
                     };
                     request_data.body = Arc::new(parsed);
                 }
@@ -1879,6 +1883,203 @@ mod tests {
         assert!(result.is_err(), "malformed multipart should fail");
         let (status, _body) = result.unwrap_err();
         assert_eq!(status, StatusCode::BAD_REQUEST);
+    }
+
+    /// Fixture: path_parameter_type_syntax_invalid_uuid
+    /// Route /type-syntax/items/{id:uuid}, GET /type-syntax/items/not-a-uuid → 422
+    /// Asserts UUID error type is "uuid_parsing" and message is exactly
+    /// "Input should be a valid UUID" (no appended verbose detail).
+    #[tokio::test]
+    async fn test_path_parameter_type_syntax_invalid_uuid() {
+        use spikard_core::type_hints::auto_generate_parameter_schema;
+
+        let path = "/type-syntax/items/{id:uuid}";
+        let schema = auto_generate_parameter_schema(path).expect("schema from type hint");
+        let param_validator = ParameterValidator::new(schema).expect("build param validator");
+
+        let route = spikard_core::Route {
+            method: spikard_core::http::Method::Get,
+            path: path.to_string(),
+            handler_name: "handler".to_string(),
+            request_validator: None,
+            response_validator: None,
+            parameter_validator: Some(param_validator),
+            file_params: None,
+            is_async: true,
+            cors: None,
+            expects_json_body: false,
+            #[cfg(feature = "di")]
+            handler_dependencies: vec![],
+            jsonrpc_method: None,
+        };
+
+        let inner = Arc::new(SuccessEchoHandler);
+        let handler = ValidatingHandler::new(inner, &route);
+
+        let request = Request::builder()
+            .method("GET")
+            .uri("/type-syntax/items/not-a-uuid")
+            .body(Body::empty())
+            .unwrap();
+
+        let mut path_params = HashMap::new();
+        path_params.insert("id".to_string(), "not-a-uuid".to_string());
+
+        let request_data = RequestData {
+            path_params: Arc::new(path_params),
+            query_params: Arc::new(json!({})),
+            validated_params: None,
+            raw_query_params: Arc::new(HashMap::new()),
+            body: Arc::new(Value::Null),
+            raw_body: None,
+            headers: Arc::new(HashMap::new()),
+            cookies: Arc::new(HashMap::new()),
+            method: "GET".to_string(),
+            path: "/type-syntax/items/not-a-uuid".to_string(),
+            #[cfg(feature = "di")]
+            dependencies: None,
+        };
+
+        let result = handler.call(request, request_data).await;
+        assert!(result.is_err(), "invalid UUID path param should be rejected");
+        let (status, body) = result.unwrap_err();
+        assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
+
+        let problem: serde_json::Value = serde_json::from_str(&body).expect("body is JSON");
+        assert_eq!(problem["status"], 422);
+        assert_eq!(problem["type"], "https://spikard.dev/errors/validation-error");
+        let errors = problem["errors"].as_array().expect("errors array");
+        assert_eq!(errors.len(), 1);
+        assert_eq!(errors[0]["type"], "uuid_parsing");
+        assert_eq!(errors[0]["loc"][0], "path");
+        assert_eq!(errors[0]["loc"][1], "id");
+        assert_eq!(errors[0]["msg"], "Input should be a valid UUID");
+        assert_eq!(errors[0]["input"], "not-a-uuid");
+    }
+
+    /// Fixture: problem_details_400_bad_request
+    /// POST /parse with body_schema {type: object}, raw body that is syntactically invalid JSON
+    /// (not a valid JSON object — bare text bytes) → 400 ProblemDetails
+    /// Asserts the response is RFC 9457 ProblemDetails with type bad-request.
+    #[tokio::test]
+    async fn test_problem_details_400_bad_request_problem_format() {
+        let schema = json!({"type": "object"});
+        let validator = Arc::new(SchemaValidator::new(schema).unwrap());
+
+        let route = spikard_core::Route {
+            method: spikard_core::http::Method::Post,
+            path: "/parse".to_string(),
+            handler_name: "handler".to_string(),
+            request_validator: Some(validator),
+            response_validator: None,
+            parameter_validator: None,
+            file_params: None,
+            is_async: true,
+            cors: None,
+            expects_json_body: true,
+            #[cfg(feature = "di")]
+            handler_dependencies: vec![],
+            jsonrpc_method: None,
+        };
+
+        let inner = Arc::new(SuccessEchoHandler);
+        let handler = ValidatingHandler::new(inner, &route);
+
+        let request = Request::builder()
+            .method("POST")
+            .uri("/parse")
+            .header("content-type", "application/json")
+            .body(Body::empty())
+            .unwrap();
+
+        // Truly invalid JSON bytes (not parseable as any JSON value)
+        let mut headers = HashMap::new();
+        headers.insert("content-type".to_string(), "application/json".to_string());
+        let request_data = RequestData {
+            path_params: Arc::new(HashMap::new()),
+            query_params: Arc::new(json!({})),
+            validated_params: None,
+            raw_query_params: Arc::new(HashMap::new()),
+            body: Arc::new(Value::Null),
+            raw_body: Some(bytes::Bytes::from(b"invalid json".to_vec())),
+            headers: Arc::new(headers),
+            cookies: Arc::new(HashMap::new()),
+            method: "POST".to_string(),
+            path: "/parse".to_string(),
+            #[cfg(feature = "di")]
+            dependencies: None,
+        };
+
+        let result = handler.call(request, request_data).await;
+        assert!(result.is_err(), "invalid JSON body should fail");
+        let (status, body) = result.unwrap_err();
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+
+        let problem: serde_json::Value = serde_json::from_str(&body).expect("body is JSON");
+        assert_eq!(problem["type"], "https://spikard.dev/errors/bad-request");
+        assert_eq!(problem["title"], "Bad Request");
+        assert_eq!(problem["status"], 400);
+        assert_eq!(problem["detail"], "Invalid JSON in request body");
+    }
+
+    /// Fixture: problem_details_400_bad_request (no-validator path)
+    /// POST with content-type application/json, no request_validator, raw body = invalid JSON
+    /// → 400 ProblemDetails (the no-validator JSON parse path in ValidatingHandler)
+    #[tokio::test]
+    async fn test_problem_details_400_no_validator_path() {
+        let route = spikard_core::Route {
+            method: spikard_core::http::Method::Post,
+            path: "/parse".to_string(),
+            handler_name: "handler".to_string(),
+            request_validator: None,
+            response_validator: None,
+            parameter_validator: None,
+            file_params: None,
+            is_async: true,
+            cors: None,
+            expects_json_body: false,
+            #[cfg(feature = "di")]
+            handler_dependencies: vec![],
+            jsonrpc_method: None,
+        };
+
+        let inner = Arc::new(SuccessEchoHandler);
+        let handler = ValidatingHandler::new(inner, &route);
+
+        let request = Request::builder()
+            .method("POST")
+            .uri("/parse")
+            .header("content-type", "application/json")
+            .body(Body::empty())
+            .unwrap();
+
+        let mut headers = HashMap::new();
+        headers.insert("content-type".to_string(), "application/json".to_string());
+        let request_data = RequestData {
+            path_params: Arc::new(HashMap::new()),
+            query_params: Arc::new(json!({})),
+            validated_params: None,
+            raw_query_params: Arc::new(HashMap::new()),
+            body: Arc::new(Value::Null),
+            raw_body: Some(bytes::Bytes::from(b"not json at all".to_vec())),
+            headers: Arc::new(headers),
+            cookies: Arc::new(HashMap::new()),
+            method: "POST".to_string(),
+            path: "/parse".to_string(),
+            #[cfg(feature = "di")]
+            dependencies: None,
+        };
+
+        let result = handler.call(request, request_data).await;
+        assert!(result.is_err(), "invalid JSON body without validator should fail");
+        let (status, body) = result.unwrap_err();
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+
+        let problem: serde_json::Value = serde_json::from_str(&body).expect("body is JSON");
+        assert_eq!(problem["type"], "https://spikard.dev/errors/bad-request");
+        assert_eq!(problem["title"], "Bad Request");
+        assert_eq!(problem["status"], 400);
+        assert_eq!(problem["detail"], "Invalid JSON in request body");
     }
 
     /// Test 30: Problem details status code from validation error
