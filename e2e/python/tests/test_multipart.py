@@ -286,7 +286,7 @@ def test_file_upload_with_custom_headers() -> None:
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/file_upload_with_custom_headers/"
     _headers = {}
-    _body = b"----alef-boundary--\r\nContent-Disposition: form-data; name=\"test2\"; filename=\"test2.txt\"\r\nContent-Type: text/plain\r\n\r\nplaceholder content\r\n----alef-boundary--\r\n"
+    _body = b"----alef-boundary\r\nContent-Disposition: form-data; name=\"test2\"; filename=\"test2.txt\"\r\nContent-Type: text/plain\r\n\r\nplaceholder content\r\n----alef-boundary--\r\n"
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
@@ -313,7 +313,7 @@ def test_file_upload_without_filename() -> None:
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/file_upload_without_filename/"
     _headers = {}
-    _body = b"----alef-boundary--\r\nContent-Disposition: form-data; name=\"test1\"; filename=\"test1.txt\"\r\nContent-Type: text/plain\r\n\r\nplaceholder content\r\n----alef-boundary--\r\n"
+    _body = b"----alef-boundary\r\nContent-Disposition: form-data; name=\"test1\"; filename=\"test1.txt\"\r\nContent-Type: text/plain\r\n\r\nplaceholder content\r\n----alef-boundary--\r\n"
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
@@ -340,7 +340,7 @@ def test_form_data_without_files() -> None:
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/form_data_without_files/"
     _headers = {}
-    _body = b"----alef-boundary--\r\nContent-Disposition: form-data; name=\"some\"\r\n\r\nsample\r\n----alef-boundary--\r\n"
+    _body = b"----alef-boundary\r\nContent-Disposition: form-data; name=\"some\"\r\n\r\nsample\r\n----alef-boundary--\r\n"
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
@@ -393,7 +393,7 @@ def test_mixed_files_and_form_data() -> None:
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/mixed_files_and_form_data/"
     _headers = {}
-    _body = b"----alef-boundary--\r\nContent-Disposition: form-data; name=\"active\"\r\n\r\nsample\r\n----alef-boundary--\r\nContent-Disposition: form-data; name=\"age\"\r\n\r\nsample\r\n----alef-boundary--\r\nContent-Disposition: form-data; name=\"file\"; filename=\"file.txt\"\r\nContent-Type: text/plain\r\n\r\nplaceholder content\r\n----alef-boundary--\r\nContent-Disposition: form-data; name=\"username\"\r\n\r\nsample\r\n----alef-boundary--\r\n"
+    _body = b"----alef-boundary\r\nContent-Disposition: form-data; name=\"active\"\r\n\r\nsample\r\n----alef-boundary\r\nContent-Disposition: form-data; name=\"age\"\r\n\r\nsample\r\n----alef-boundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"file.txt\"\r\nContent-Type: text/plain\r\n\r\nplaceholder content\r\n----alef-boundary\r\nContent-Disposition: form-data; name=\"username\"\r\n\r\nsample\r\n----alef-boundary--\r\n"
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
@@ -420,7 +420,7 @@ def test_multiple_file_uploads() -> None:
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/multiple_file_uploads/"
     _headers = {}
-    _body = b"----alef-boundary--\r\nContent-Disposition: form-data; name=\"test1\"; filename=\"test1.txt\"\r\nContent-Type: text/plain\r\n\r\nplaceholder content\r\n----alef-boundary--\r\nContent-Disposition: form-data; name=\"test2\"; filename=\"test2.txt\"\r\nContent-Type: text/plain\r\n\r\nplaceholder content\r\n----alef-boundary--\r\n"
+    _body = b"----alef-boundary\r\nContent-Disposition: form-data; name=\"test1\"; filename=\"test1.txt\"\r\nContent-Type: text/plain\r\n\r\nplaceholder content\r\n----alef-boundary\r\nContent-Disposition: form-data; name=\"test2\"; filename=\"test2.txt\"\r\nContent-Type: text/plain\r\n\r\nplaceholder content\r\n----alef-boundary--\r\n"
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
@@ -447,7 +447,7 @@ def test_multiple_values_for_same_field_name() -> None:
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/multiple_values_for_same_field_name/"
     _headers = {}
-    _body = b"----alef-boundary--\r\nContent-Disposition: form-data; name=\"files\"\r\n\r\nsample\r\n----alef-boundary--\r\nContent-Disposition: form-data; name=\"tags\"\r\n\r\nsample\r\n----alef-boundary--\r\n"
+    _body = b"----alef-boundary\r\nContent-Disposition: form-data; name=\"files\"\r\n\r\nsample\r\n----alef-boundary\r\nContent-Disposition: form-data; name=\"tags\"\r\n\r\nsample\r\n----alef-boundary--\r\n"
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
@@ -578,7 +578,7 @@ def test_simple_file_upload() -> None:
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/simple_file_upload/"
     _headers = {}
-    _body = b"----alef-boundary--\r\nContent-Disposition: form-data; name=\"test\"; filename=\"test.txt\"\r\nContent-Type: text/plain\r\n\r\nplaceholder content\r\n----alef-boundary--\r\n"
+    _body = b"----alef-boundary\r\nContent-Disposition: form-data; name=\"test\"; filename=\"test.txt\"\r\nContent-Type: text/plain\r\n\r\nplaceholder content\r\n----alef-boundary--\r\n"
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
