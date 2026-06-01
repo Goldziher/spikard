@@ -691,7 +691,7 @@
                 "file"
               ],
               "msg": "Field required",
-              "input": []
+              "input": {}
             }
           ]
         }
