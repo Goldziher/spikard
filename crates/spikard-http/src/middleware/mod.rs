@@ -16,8 +16,11 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use serde_json::json;
+use spikard_core::ProblemDetails;
 use std::cell::RefCell;
 use std::num::NonZeroUsize;
+use std::time::Duration;
+use tokio::time::timeout;
 
 thread_local! {
     static URLENCODED_JSON_CACHE: RefCell<lru::LruCache<bytes::Bytes, bytes::Bytes>> =
@@ -112,16 +115,37 @@ pub async fn validate_content_type_middleware(
 
         let content_kind = validation::validate_content_type_headers_and_classify(headers, 0)?;
 
+        // Extract Content-Length limit if present. Use this as the limit for to_bytes.
+        let body_limit = if let Some(cl_header) = headers.get(axum::http::header::CONTENT_LENGTH) {
+            if let Ok(cl_str) = cl_header.to_str() {
+                cl_str.parse::<usize>().unwrap_or(usize::MAX)
+            } else {
+                usize::MAX
+            }
+        } else {
+            usize::MAX
+        };
+
         let mut parsed_json: Option<serde_json::Value> = None;
         let out_bytes: bytes::Bytes = match content_kind {
             Some(validation::ContentTypeKind::Multipart) => {
-                let body_bytes = match to_bytes(body, usize::MAX).await {
-                    Ok(bytes) => bytes,
-                    Err(_) => {
+                let body_bytes = match timeout(Duration::from_secs(1), to_bytes(body, body_limit)).await {
+                    Ok(Ok(bytes)) => bytes,
+                    Ok(Err(_)) => {
                         let error_body = json!({
                             "error": "Failed to read request body"
                         });
                         return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
+                    }
+                    Err(_) => {
+                        let problem = ProblemDetails::new(
+                            "https://spikard.dev/errors/content-length-mismatch",
+                            "Content-Length header mismatch",
+                            StatusCode::BAD_REQUEST,
+                        )
+                        .with_detail("Content-Length header does not match actual body size");
+                        let body = serde_json::to_string(&problem).unwrap_or_else(|_| "{}".to_string());
+                        return Err((StatusCode::BAD_REQUEST, body).into_response());
                     }
                 };
 
@@ -173,13 +197,23 @@ pub async fn validate_content_type_middleware(
                 bytes::Bytes::from(json_bytes)
             }
             Some(validation::ContentTypeKind::FormUrlencoded) => {
-                let body_bytes = match to_bytes(body, usize::MAX).await {
-                    Ok(bytes) => bytes,
-                    Err(_) => {
+                let body_bytes = match timeout(Duration::from_secs(1), to_bytes(body, body_limit)).await {
+                    Ok(Ok(bytes)) => bytes,
+                    Ok(Err(_)) => {
                         let error_body = json!({
                             "error": "Failed to read request body"
                         });
                         return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
+                    }
+                    Err(_) => {
+                        let problem = ProblemDetails::new(
+                            "https://spikard.dev/errors/content-length-mismatch",
+                            "Content-Length header mismatch",
+                            StatusCode::BAD_REQUEST,
+                        )
+                        .with_detail("Content-Length header does not match actual body size");
+                        let body = serde_json::to_string(&problem).unwrap_or_else(|_| "{}".to_string());
+                        return Err((StatusCode::BAD_REQUEST, body).into_response());
                     }
                 };
 
@@ -227,13 +261,23 @@ pub async fn validate_content_type_middleware(
                 }
             }
             Some(validation::ContentTypeKind::Json) | Some(validation::ContentTypeKind::Other) => {
-                let body_bytes = match to_bytes(body, usize::MAX).await {
-                    Ok(bytes) => bytes,
-                    Err(_) => {
+                let body_bytes = match timeout(Duration::from_secs(1), to_bytes(body, body_limit)).await {
+                    Ok(Ok(bytes)) => bytes,
+                    Ok(Err(_)) => {
                         let error_body = json!({
                             "error": "Failed to read request body"
                         });
                         return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
+                    }
+                    Err(_) => {
+                        let problem = ProblemDetails::new(
+                            "https://spikard.dev/errors/content-length-mismatch",
+                            "Content-Length header mismatch",
+                            StatusCode::BAD_REQUEST,
+                        )
+                        .with_detail("Content-Length header does not match actual body size");
+                        let body = serde_json::to_string(&problem).unwrap_or_else(|_| "{}".to_string());
+                        return Err((StatusCode::BAD_REQUEST, body).into_response());
                     }
                 };
 
@@ -258,13 +302,23 @@ pub async fn validate_content_type_middleware(
                 body_bytes
             }
             None => {
-                let body_bytes = match to_bytes(body, usize::MAX).await {
-                    Ok(bytes) => bytes,
-                    Err(_) => {
+                let body_bytes = match timeout(Duration::from_secs(1), to_bytes(body, body_limit)).await {
+                    Ok(Ok(bytes)) => bytes,
+                    Ok(Err(_)) => {
                         let error_body = json!({
                             "error": "Failed to read request body"
                         });
                         return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
+                    }
+                    Err(_) => {
+                        let problem = ProblemDetails::new(
+                            "https://spikard.dev/errors/content-length-mismatch",
+                            "Content-Length header mismatch",
+                            StatusCode::BAD_REQUEST,
+                        )
+                        .with_detail("Content-Length header does not match actual body size");
+                        let body = serde_json::to_string(&problem).unwrap_or_else(|_| "{}".to_string());
+                        return Err((StatusCode::BAD_REQUEST, body).into_response());
                     }
                 };
 

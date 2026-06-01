@@ -532,7 +532,7 @@ final class MultipartTests: XCTestCase {
         _sema.wait()
         let _resp = try XCTUnwrap(response)
         XCTAssertEqual(_resp.statusCode, 422)
-        let _expected = try JSONSerialization.jsonObject(with: "{\"detail\":\"1 validation error in request\",\"errors\":[{\"input\":[],\"loc\":[\"body\",\"file\"],\"msg\":\"Field required\",\"type\":\"missing\"}],\"status\":422,\"title\":\"Request Validation Failed\",\"type\":\"https://spikard.dev/errors/validation-error\"}".data(using: .utf8)!)
+        let _expected = try JSONSerialization.jsonObject(with: "{\"detail\":\"1 validation error in request\",\"errors\":[{\"input\":{},\"loc\":[\"body\",\"file\"],\"msg\":\"Field required\",\"type\":\"missing\"}],\"status\":422,\"title\":\"Request Validation Failed\",\"type\":\"https://spikard.dev/errors/validation-error\"}".data(using: .utf8)!)
         let _actual = try JSONSerialization.jsonObject(with: XCTUnwrap(_responseData))
         XCTAssertEqual(NSDictionary(dictionary: _expected as? [String: AnyHashable] ?? [:]), NSDictionary(dictionary: _actual as? [String: AnyHashable] ?? [:]))
     }

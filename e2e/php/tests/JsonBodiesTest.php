@@ -106,7 +106,7 @@ final class JsonBodiesTest extends TestCase
     /** Object with more properties than maxProperties should fail */
     public function test_47_maxproperties_validation_failure(): void
     {        $response = $this->httpClient->request('POST', "/fixtures/47_maxproperties_validation_failure/config", [            'json' => ["debug" => false, "host" => "localhost", "port" => 8080, "ssl" => true],        ]);        $this->assertEquals(422, $response->getStatusCode());        $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
-        $this->assertEquals(["detail" => "1 validation error in request", "errors" => [["input" => ["debug" => false, "host" => "localhost", "port" => 8080, "ssl" => true], "loc" => ["body"], "msg" => "{\"host\":\"localhost\",\"port\":8080,\"ssl\":true,\"debug\":false} has more than 3 properties", "type" => "validation_error"]], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"], $body);    }
+        $this->assertEquals(["detail" => "1 validation error in request", "errors" => [["input" => ["debug" => false, "host" => "localhost", "port" => 8080, "ssl" => true], "loc" => ["body"], "msg" => "{\"debug\":false,\"host\":\"localhost\",\"port\":8080,\"ssl\":true} has more than 3 properties", "type" => "validation_error"]], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"], $body);    }
 
     /** Dependencies constraint - when A present, B is required and provided */
     public function test_48_dependencies_validation_success(): void

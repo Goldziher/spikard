@@ -435,7 +435,7 @@ test "required_file_upload_missing" {
     defer response_body.deinit();
     const response = try http_client.fetch(.{ .location = .{ .url = url }, .method = .POST, .extra_headers = &.{}, .payload = body_bytes, .keep_alive = false, .redirect_behavior = .unhandled, .response_writer = &response_body.writer });
     try testing.expectEqual(@as(u10, 422), @intFromEnum(response.status));
-    try testing.expectEqualStrings("{\"detail\":\"1 validation error in request\",\"errors\":[{\"input\":[],\"loc\":[\"body\",\"file\"],\"msg\":\"Field required\",\"type\":\"missing\"}],\"status\":422,\"title\":\"Request Validation Failed\",\"type\":\"https://spikard.dev/errors/validation-error\"}", response_body.written());
+    try testing.expectEqualStrings("{\"detail\":\"1 validation error in request\",\"errors\":[{\"input\":{},\"loc\":[\"body\",\"file\"],\"msg\":\"Field required\",\"type\":\"missing\"}],\"status\":422,\"title\":\"Request Validation Failed\",\"type\":\"https://spikard.dev/errors/validation-error\"}", response_body.written());
 }
 
 test "simple_file_upload" {

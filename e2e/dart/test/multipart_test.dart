@@ -419,7 +419,7 @@ void main() {
     final bodyStr = await ioResp.transform(utf8.decoder).join();
     expect(ioResp.statusCode, equals(422), reason: 'status code mismatch');
     final bodyJson = jsonDecode(bodyStr);
-    final expectedJson = jsonDecode('{"detail":"1 validation error in request","errors":[{"input":[],"loc":["body","file"],"msg":"Field required","type":"missing"}],"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"}');
+    final expectedJson = jsonDecode('{"detail":"1 validation error in request","errors":[{"input":{},"loc":["body","file"],"msg":"Field required","type":"missing"}],"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"}');
     expect(bodyJson, equals(expectedJson), reason: 'body mismatch');
   })));
 

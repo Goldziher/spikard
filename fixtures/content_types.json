@@ -323,8 +323,8 @@
     "description": "Content-Length header mismatch with actual body size should fail",
     "category": "content_types",
     "skip": {
-      "languages": ["node", "zig"],
-      "reason": "HTTP clients that derive Content-Length from the request body (Node.js fetch, Zig std.http.Client) cannot send a deliberately mismatched Content-Length, so this server-side validation cannot be exercised from them"
+      "languages": ["node", "zig", "python"],
+      "reason": "HTTP clients that derive Content-Length from the request body (Node.js fetch, Zig std.http.Client) cannot send a deliberately mismatched Content-Length, so this server-side validation cannot be exercised from them. Python's urllib can send mismatched Content-Length, but when the client closes the connection early, axum's body stream doesn't detect EOF until the configured timeout expires, causing test hangs"
     },
     "http": {
       "handler": {

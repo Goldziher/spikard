@@ -887,7 +887,7 @@ func Test_RequiredFileUploadMissing(t *testing.T) {
 	if err := json.Unmarshal(bodyBytes, &got); err != nil {
 		t.Fatalf("json unmarshal got: %v", err)
 	}
-	if err := json.Unmarshal([]byte(`{"detail":"1 validation error in request","errors":[{"input":[],"loc":["body","file"],"msg":"Field required","type":"missing"}],"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"}`), &want); err != nil {
+	if err := json.Unmarshal([]byte(`{"detail":"1 validation error in request","errors":[{"input":{},"loc":["body","file"],"msg":"Field required","type":"missing"}],"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"}`), &want); err != nil {
 		t.Fatalf("json unmarshal want: %v", err)
 	}
 	if !reflect.DeepEqual(got, want) {

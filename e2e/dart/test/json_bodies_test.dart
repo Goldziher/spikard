@@ -405,7 +405,7 @@ void main() {
     final bodyStr = await ioResp.transform(utf8.decoder).join();
     expect(ioResp.statusCode, equals(422), reason: 'status code mismatch');
     final bodyJson = jsonDecode(bodyStr);
-    final expectedJson = jsonDecode('{"detail":"1 validation error in request","errors":[{"input":{"debug":false,"host":"localhost","port":8080,"ssl":true},"loc":["body"],"msg":"{\\"host\\":\\"localhost\\",\\"port\\":8080,\\"ssl\\":true,\\"debug\\":false} has more than 3 properties","type":"validation_error"}],"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"}');
+    final expectedJson = jsonDecode('{"detail":"1 validation error in request","errors":[{"input":{"debug":false,"host":"localhost","port":8080,"ssl":true},"loc":["body"],"msg":"{\\"debug\\":false,\\"host\\":\\"localhost\\",\\"port\\":8080,\\"ssl\\":true} has more than 3 properties","type":"validation_error"}],"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"}');
     expect(bodyJson, equals(expectedJson), reason: 'body mismatch');
   })));
 

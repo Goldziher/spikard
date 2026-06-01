@@ -191,7 +191,7 @@ defmodule E2e.MultipartTest do
       {:ok, response} = Req.post(url: (System.get_env("SUT_URL") || mock_server_url()) <> "/fixtures/required_file_upload_missing", connect_options: [protocols: [:http1]], json: "--alef-boundary--\r\n")
       assert response.status == 422
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
-      assert body_decoded == %{"detail" => "1 validation error in request", "errors" => [%{"input" => [], "loc" => ["body", "file"], "msg" => "Field required", "type" => "missing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}
+      assert body_decoded == %{"detail" => "1 validation error in request", "errors" => [%{"input" => %{}, "loc" => ["body", "file"], "msg" => "Field required", "type" => "missing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}
     end
   end
 

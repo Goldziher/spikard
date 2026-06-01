@@ -334,7 +334,7 @@ class MultipartTest {
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString())
         assertEquals(422, response.statusCode(), "status code mismatch")
         val bodyJson = MAPPER.readTree(response.body())
-        val expectedJson = MAPPER.readTree("{\"detail\":\"1 validation error in request\",\"errors\":[{\"input\":[],\"loc\":[\"body\",\"file\"],\"msg\":\"Field required\",\"type\":\"missing\"}],\"status\":422,\"title\":\"Request Validation Failed\",\"type\":\"https://spikard.dev/errors/validation-error\"}")
+        val expectedJson = MAPPER.readTree("{\"detail\":\"1 validation error in request\",\"errors\":[{\"input\":{},\"loc\":[\"body\",\"file\"],\"msg\":\"Field required\",\"type\":\"missing\"}],\"status\":422,\"title\":\"Request Validation Failed\",\"type\":\"https://spikard.dev/errors/validation-error\"}")
         assertEquals(expectedJson, bodyJson, "body mismatch")
     }
 

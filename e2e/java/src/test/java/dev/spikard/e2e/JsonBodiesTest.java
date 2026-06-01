@@ -265,7 +265,7 @@ class JsonBodiesTest {
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"debug\":false,\"host\":\"localhost\",\"port\":8080,\"ssl\":true}"));        builder = builder.header("Content-Type", "application/json");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
         assertEquals(422, response.statusCode(), "status code mismatch");        var bodyJson = MAPPER.readTree(response.body());
-        var expectedJson = MAPPER.readTree("{\"detail\":\"1 validation error in request\",\"errors\":[{\"input\":{\"debug\":false,\"host\":\"localhost\",\"port\":8080,\"ssl\":true},\"loc\":[\"body\"],\"msg\":\"{\\\"host\\\":\\\"localhost\\\",\\\"port\\\":8080,\\\"ssl\\\":true,\\\"debug\\\":false} has more than 3 properties\",\"type\":\"validation_error\"}],\"status\":422,\"title\":\"Request Validation Failed\",\"type\":\"https://spikard.dev/errors/validation-error\"}");
+        var expectedJson = MAPPER.readTree("{\"detail\":\"1 validation error in request\",\"errors\":[{\"input\":{\"debug\":false,\"host\":\"localhost\",\"port\":8080,\"ssl\":true},\"loc\":[\"body\"],\"msg\":\"{\\\"debug\\\":false,\\\"host\\\":\\\"localhost\\\",\\\"port\\\":8080,\\\"ssl\\\":true} has more than 3 properties\",\"type\":\"validation_error\"}],\"status\":422,\"title\":\"Request Validation Failed\",\"type\":\"https://spikard.dev/errors/validation-error\"}");
         assertEquals(expectedJson, bodyJson, "body mismatch");    }
 
     @Test    void test48DependenciesValidationSuccess() throws Exception {

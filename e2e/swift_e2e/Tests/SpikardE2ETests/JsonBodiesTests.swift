@@ -482,7 +482,7 @@ final class JsonBodiesTests: XCTestCase {
         _sema.wait()
         let _resp = try XCTUnwrap(response)
         XCTAssertEqual(_resp.statusCode, 422)
-        let _expected = try JSONSerialization.jsonObject(with: "{\"detail\":\"1 validation error in request\",\"errors\":[{\"input\":{\"debug\":false,\"host\":\"localhost\",\"port\":8080,\"ssl\":true},\"loc\":[\"body\"],\"msg\":\"{\\\"host\\\":\\\"localhost\\\",\\\"port\\\":8080,\\\"ssl\\\":true,\\\"debug\\\":false} has more than 3 properties\",\"type\":\"validation_error\"}],\"status\":422,\"title\":\"Request Validation Failed\",\"type\":\"https://spikard.dev/errors/validation-error\"}".data(using: .utf8)!)
+        let _expected = try JSONSerialization.jsonObject(with: "{\"detail\":\"1 validation error in request\",\"errors\":[{\"input\":{\"debug\":false,\"host\":\"localhost\",\"port\":8080,\"ssl\":true},\"loc\":[\"body\"],\"msg\":\"{\\\"debug\\\":false,\\\"host\\\":\\\"localhost\\\",\\\"port\\\":8080,\\\"ssl\\\":true} has more than 3 properties\",\"type\":\"validation_error\"}],\"status\":422,\"title\":\"Request Validation Failed\",\"type\":\"https://spikard.dev/errors/validation-error\"}".data(using: .utf8)!)
         let _actual = try JSONSerialization.jsonObject(with: XCTUnwrap(_responseData))
         XCTAssertEqual(NSDictionary(dictionary: _expected as? [String: AnyHashable] ?? [:]), NSDictionary(dictionary: _actual as? [String: AnyHashable] ?? [:]))
     }

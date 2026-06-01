@@ -487,7 +487,7 @@ async fn test_pdf_file_upload() {
 #[tokio::test]
 async fn test_required_file_upload_missing() {
     // Tests required file parameter when no file is provided
-    let expected_body = r#"{"detail":"1 validation error in request","errors":[{"input":[],"loc":["body","file"],"msg":"Field required","type":"missing"}],"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"}"#.to_string();
+    let expected_body = r#"{"detail":"1 validation error in request","errors":[{"input":{},"loc":["body","file"],"msg":"Field required","type":"missing"}],"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"}"#.to_string();
     let mut app = spikard::App::new();
     app.route(
         spikard::post("/files/required"),

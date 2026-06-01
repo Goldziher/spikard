@@ -301,7 +301,7 @@ class MultipartTest {
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("\"--alef-boundary--\\r\\n\""));        builder = builder.header("Content-Type", "multipart/form-data; boundary=alef-boundary");        var response = java.net.http.HttpClient.newHttpClient()
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
         assertEquals(422, response.statusCode(), "status code mismatch");        var bodyJson = MAPPER.readTree(response.body());
-        var expectedJson = MAPPER.readTree("{\"detail\":\"1 validation error in request\",\"errors\":[{\"input\":[],\"loc\":[\"body\",\"file\"],\"msg\":\"Field required\",\"type\":\"missing\"}],\"status\":422,\"title\":\"Request Validation Failed\",\"type\":\"https://spikard.dev/errors/validation-error\"}");
+        var expectedJson = MAPPER.readTree("{\"detail\":\"1 validation error in request\",\"errors\":[{\"input\":{},\"loc\":[\"body\",\"file\"],\"msg\":\"Field required\",\"type\":\"missing\"}],\"status\":422,\"title\":\"Request Validation Failed\",\"type\":\"https://spikard.dev/errors/validation-error\"}");
         assertEquals(expectedJson, bodyJson, "body mismatch");    }
 
     @Test    void testSimpleFileUpload() throws Exception {

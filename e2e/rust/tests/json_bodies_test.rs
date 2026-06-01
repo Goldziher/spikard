@@ -491,7 +491,7 @@ async fn test_minproperties_validation_failure() {
 #[tokio::test]
 async fn test_maxproperties_validation_failure() {
     // Object with more properties than maxProperties should fail
-    let expected_body = r#"{"detail":"1 validation error in request","errors":[{"input":{"debug":false,"host":"localhost","port":8080,"ssl":true},"loc":["body"],"msg":"{\"host\":\"localhost\",\"port\":8080,\"ssl\":true,\"debug\":false} has more than 3 properties","type":"validation_error"}],"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"}"#.to_string();
+    let expected_body = r#"{"detail":"1 validation error in request","errors":[{"input":{"debug":false,"host":"localhost","port":8080,"ssl":true},"loc":["body"],"msg":"{\"debug\":false,\"host\":\"localhost\",\"port\":8080,\"ssl\":true} has more than 3 properties","type":"validation_error"}],"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"}"#.to_string();
     let mut app = spikard::App::new();
     app.route(spikard::post("/config"), move |_ctx: spikard::RequestContext| {
         let body = expected_body.clone();

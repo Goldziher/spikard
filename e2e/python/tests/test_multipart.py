@@ -593,7 +593,7 @@ def test_required_file_upload_missing() -> None:
     assert status_code == 422  # noqa: S101
     import json as _json  # noqa: PLC0415
     data = _json.loads(resp_body)
-    assert data == {"detail": "1 validation error in request", "errors": [{"input": [], "loc": ["body", "file"], "msg": "Field required", "type": "missing"}], "status": 422, "title": "Request Validation Failed", "type": "https://spikard.dev/errors/validation-error"}  # noqa: S101
+    assert data == {"detail": "1 validation error in request", "errors": [{"input": {}, "loc": ["body", "file"], "msg": "Field required", "type": "missing"}], "status": 422, "title": "Request Validation Failed", "type": "https://spikard.dev/errors/validation-error"}  # noqa: S101
 
 def test_simple_file_upload() -> None:
     """Single file upload with text/plain content type."""

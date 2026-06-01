@@ -289,7 +289,7 @@ class JsonBodiesTest {
             .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString())
         assertEquals(422, response.statusCode(), "status code mismatch")
         val bodyJson = MAPPER.readTree(response.body())
-        val expectedJson = MAPPER.readTree("{\"detail\":\"1 validation error in request\",\"errors\":[{\"input\":{\"debug\":false,\"host\":\"localhost\",\"port\":8080,\"ssl\":true},\"loc\":[\"body\"],\"msg\":\"{\\\"host\\\":\\\"localhost\\\",\\\"port\\\":8080,\\\"ssl\\\":true,\\\"debug\\\":false} has more than 3 properties\",\"type\":\"validation_error\"}],\"status\":422,\"title\":\"Request Validation Failed\",\"type\":\"https://spikard.dev/errors/validation-error\"}")
+        val expectedJson = MAPPER.readTree("{\"detail\":\"1 validation error in request\",\"errors\":[{\"input\":{\"debug\":false,\"host\":\"localhost\",\"port\":8080,\"ssl\":true},\"loc\":[\"body\"],\"msg\":\"{\\\"debug\\\":false,\\\"host\\\":\\\"localhost\\\",\\\"port\\\":8080,\\\"ssl\\\":true} has more than 3 properties\",\"type\":\"validation_error\"}],\"status\":422,\"title\":\"Request Validation Failed\",\"type\":\"https://spikard.dev/errors/validation-error\"}")
         assertEquals(expectedJson, bodyJson, "body mismatch")
     }
 
