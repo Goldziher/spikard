@@ -1,4 +1,6 @@
+// swift-format-ignore-file
 import RustBridgeC
+
 import Foundation
 
 extension RustString {
@@ -21,12 +23,12 @@ extension RustStr {
         return String(bytes: bytes, encoding: .utf8)!
     }
 }
-extension RustStr: @retroactive Identifiable {
+extension RustStr: Identifiable {
     public var id: String {
         self.toString()
     }
 }
-extension RustStr: @retroactive Equatable {
+extension RustStr: Equatable {
     public static func == (lhs: RustStr, rhs: RustStr) -> Bool {
         return __swift_bridge__$RustStr$partial_eq(lhs, rhs);
     }
@@ -111,8 +113,8 @@ func optionalRustStrToRustStr<S: ToRustStr, T>(_ str: Optional<S>, _ withUnsafeR
     }
 }
 public class RustVec<T: Vectorizable> {
-    var ptr: UnsafeMutableRawPointer
-    var isOwned: Bool = true
+    public var ptr: UnsafeMutableRawPointer
+    public var isOwned: Bool = true
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -871,7 +873,7 @@ public struct __private__UncheckedSendable<T>: @unchecked Sendable {
 }
 
 public class RustString: RustStringRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -919,7 +921,7 @@ public class RustStringRefMut: RustStringRef {
     }
 }
 public class RustStringRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -989,7 +991,7 @@ extension RustString: Vectorizable {
 
 
 public class __private__RustFnOnceCallbackNoArgsNoRet {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
     var called = false
 
     init(ptr: UnsafeMutableRawPointer) {

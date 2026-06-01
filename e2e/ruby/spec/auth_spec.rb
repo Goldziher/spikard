@@ -169,7 +169,7 @@ RSpec.describe 'auth' do
   end
 
   describe 'bearer_token_without_prefix' do
-    it 'Tests JWT rejection when token is provided without 'Bearer ' prefix in Authorization header.' do
+    it "Tests JWT rejection when token is provided without 'Bearer ' prefix in Authorization header." do
       require 'net/http'
       require 'uri'
       require 'json'

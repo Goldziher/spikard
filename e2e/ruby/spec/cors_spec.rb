@@ -98,7 +98,7 @@ RSpec.describe 'cors' do
   end
 
   describe 'cors_origin_null' do
-    it 'CORS request with 'null' origin should be handled according to policy.' do
+    it "CORS request with 'null' origin should be handled according to policy." do
       require 'net/http'
       require 'uri'
       require 'json'
