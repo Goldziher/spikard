@@ -13,7 +13,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"github.com/Goldziher/spikard"
+	spikard "github.com/Goldziher/spikard"
 )
 
 // Fixture describes an HTTP test fixture with its handler route and expected response.
@@ -54,7 +54,7 @@ func main() {
 		log.Fatalf("unmarshal fixtures: %v", err)
 	}
 
-	app, err := github.com/Goldziher/spikard.NewApp()
+	app, err := spikard.NewApp()
 	if err != nil {
 		log.Fatalf("new app: %v", err)
 	}
@@ -81,7 +81,7 @@ func main() {
 		fullRoute := fmt.Sprintf("/fixtures/%s%s", fixtureID, route)
 
 		// Convert method string (GET, POST, etc.) to the framework's method enum.
-		builder, err := github.com/Goldziher/spikard.RouteBuilderNew(github.com/Goldziher/spikard.Method(method), fullRoute)
+		builder, err := spikard.RouteBuilderNew(spikard.Method(method), fullRoute)
 		if err != nil {
 			log.Fatalf("create route builder: %v", err)
 		}
