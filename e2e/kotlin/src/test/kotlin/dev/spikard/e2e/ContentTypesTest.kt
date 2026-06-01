@@ -174,7 +174,7 @@ class ContentTypesTest {
     fun testContentNegotiationAcceptHeader() {
         // Tests content negotiation based on Accept header
         val baseUrl = System.getenv("SUT_URL") ?: "http://127.0.0.1:8007"
-        val uri = java.net.URI.create("$baseUrl/fixtures/content_negotiation_accept_header/accept-test/{id}")
+        val uri = java.net.URI.create("$baseUrl/fixtures/content_negotiation_accept_header/accept-test/1")
         val builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody())
             .header("Accept", "application/json")

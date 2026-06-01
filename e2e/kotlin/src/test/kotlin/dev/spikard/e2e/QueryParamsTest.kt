@@ -443,7 +443,7 @@ class QueryParamsTest {
     fun testArraySeparatorPipe() {
         // Array query parameter with pipe separator should parse correctly
         val baseUrl = System.getenv("SUT_URL") ?: "http://127.0.0.1:8007"
-        val uri = java.net.URI.create("$baseUrl/fixtures/70_array_separator_pipe/items")
+        val uri = java.net.URI.create("$baseUrl/fixtures/70_array_separator_pipe/items?tags=python%7Crust%7Ctypescript")
         val builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody())
         val response = java.net.http.HttpClient.newHttpClient()
@@ -458,7 +458,7 @@ class QueryParamsTest {
     fun testArraySeparatorSemicolon() {
         // Array query parameter with semicolon separator should parse correctly
         val baseUrl = System.getenv("SUT_URL") ?: "http://127.0.0.1:8007"
-        val uri = java.net.URI.create("$baseUrl/fixtures/71_array_separator_semicolon/items")
+        val uri = java.net.URI.create("$baseUrl/fixtures/71_array_separator_semicolon/items?colors=red;green;blue")
         val builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody())
         val response = java.net.http.HttpClient.newHttpClient()
@@ -473,7 +473,7 @@ class QueryParamsTest {
     fun testArraySeparatorSpace() {
         // Array query parameter with space separator should parse correctly
         val baseUrl = System.getenv("SUT_URL") ?: "http://127.0.0.1:8007"
-        val uri = java.net.URI.create("$baseUrl/fixtures/72_array_separator_space/search")
+        val uri = java.net.URI.create("$baseUrl/fixtures/72_array_separator_space/search?keywords=rust%20web%20framework")
         val builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody())
         val response = java.net.http.HttpClient.newHttpClient()

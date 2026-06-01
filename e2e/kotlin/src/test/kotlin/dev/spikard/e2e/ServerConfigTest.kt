@@ -241,7 +241,7 @@ class ServerConfigTest {
     fun testServerStaticFilesConfiguration() {
         // Tests server serves static files from configured directory
         val baseUrl = System.getenv("SUT_URL") ?: "http://127.0.0.1:8007"
-        val uri = java.net.URI.create("$baseUrl/fixtures/server_static_files_configuration/static/{file}")
+        val uri = java.net.URI.create("$baseUrl/fixtures/server_static_files_configuration/static/index.html")
         val builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody())
         val response = java.net.http.HttpClient.newHttpClient()

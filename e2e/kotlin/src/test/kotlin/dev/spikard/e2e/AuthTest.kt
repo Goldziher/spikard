@@ -86,7 +86,7 @@ class AuthTest {
     fun testApiKeyInQueryParameter() {
         // Tests API key authentication when key is provided as query parameter instead of header
         val baseUrl = System.getenv("SUT_URL") ?: "http://127.0.0.1:8007"
-        val uri = java.net.URI.create("$baseUrl/fixtures/api_key_in_query_parameter/api/data")
+        val uri = java.net.URI.create("$baseUrl/fixtures/api_key_in_query_parameter/api/data?api_key=sk_test_123456")
         val builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody())
         val response = java.net.http.HttpClient.newHttpClient()

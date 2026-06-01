@@ -85,7 +85,7 @@ class ProblemDetailsTest {
     fun testProblemDetailsStandardAllFields() {
         // Tests RFC 9457 ProblemDetails response with all standard fields
         val baseUrl = System.getenv("SUT_URL") ?: "http://127.0.0.1:8007"
-        val uri = java.net.URI.create("$baseUrl/fixtures/problem_details_standard_all_fields/items/{id}")
+        val uri = java.net.URI.create("$baseUrl/fixtures/problem_details_standard_all_fields/items/999")
         val builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody())
         val response = java.net.http.HttpClient.newHttpClient()
@@ -117,7 +117,7 @@ class ProblemDetailsTest {
     fun testProblemDetailsWithInstance() {
         // Tests ProblemDetails includes instance URI for context
         val baseUrl = System.getenv("SUT_URL") ?: "http://127.0.0.1:8007"
-        val uri = java.net.URI.create("$baseUrl/fixtures/problem_details_with_instance/users/{user_id}/posts/{post_id}")
+        val uri = java.net.URI.create("$baseUrl/fixtures/problem_details_with_instance/users/123/posts/456")
         val builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody())
         val response = java.net.http.HttpClient.newHttpClient()

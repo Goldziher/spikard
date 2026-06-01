@@ -373,7 +373,7 @@ class JsonBodiesTest {
     fun testBodyWithQueryParameters() {
         // Tests JSON body combined with query parameters
         val baseUrl = System.getenv("SUT_URL") ?: "http://127.0.0.1:8007"
-        val uri = java.net.URI.create("$baseUrl/fixtures/body_with_query_parameters/items/")
+        val uri = java.net.URI.create("$baseUrl/fixtures/body_with_query_parameters/items/?limit=10")
         val builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"name\":\"Item\",\"price\":42.0}"))
             .header("Content-Type", "application/json")
@@ -645,7 +645,7 @@ class JsonBodiesTest {
     fun testPatchPartialUpdate2() {
         // Tests PATCH request with partial object update
         val baseUrl = System.getenv("SUT_URL") ?: "http://127.0.0.1:8007"
-        val uri = java.net.URI.create("$baseUrl/fixtures/patch_partial_update_2/items/{id}")
+        val uri = java.net.URI.create("$baseUrl/fixtures/patch_partial_update_2/items/1")
         val builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("PATCH", java.net.http.HttpRequest.BodyPublishers.ofString("{\"price\":45.0}"))
             .header("Content-Type", "application/json")

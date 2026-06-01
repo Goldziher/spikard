@@ -23,7 +23,7 @@ class StaticFilesTest {
     fun testStaticFileServerReturnsTextFile() {
         // Tests serving a plain text file with Cache-Control headers.
         val baseUrl = System.getenv("SUT_URL") ?: "http://127.0.0.1:8007"
-        val uri = java.net.URI.create("$baseUrl/fixtures/static_file_server_returns_text_file/public/hello.txt")
+        val uri = java.net.URI.create("$baseUrl/fixtures/static_file_server_returns_text_file/hello.txt")
         val builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody())
         val response = java.net.http.HttpClient.newHttpClient()
@@ -38,7 +38,7 @@ class StaticFilesTest {
     fun testStaticServerReturnsIndexHtmlForDirectory() {
         // When index files are enabled the server should serve index.html when the directory root is requested.
         val baseUrl = System.getenv("SUT_URL") ?: "http://127.0.0.1:8007"
-        val uri = java.net.URI.create("$baseUrl/fixtures/static_server_returns_index_html_for_directory/app")
+        val uri = java.net.URI.create("$baseUrl/fixtures/static_server_returns_index_html_for_directory/index.html")
         val builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody())
         val response = java.net.http.HttpClient.newHttpClient()

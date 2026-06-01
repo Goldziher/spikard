@@ -38,7 +38,7 @@ class EdgeCasesTest {
     fun testPercentEncodedSpecialChars() {
         // Percent-encoded special characters should be decoded correctly
         val baseUrl = System.getenv("SUT_URL") ?: "http://127.0.0.1:8007"
-        val uri = java.net.URI.create("$baseUrl/fixtures/12_percent_encoded_special_chars/search")
+        val uri = java.net.URI.create("$baseUrl/fixtures/12_percent_encoded_special_chars/search?term=hi%20there")
         val builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody())
         val response = java.net.http.HttpClient.newHttpClient()
@@ -53,7 +53,7 @@ class EdgeCasesTest {
     fun testEmptyStringQueryParamPreserved() {
         // Empty string query parameter should be preserved, not treated as missing
         val baseUrl = System.getenv("SUT_URL") ?: "http://127.0.0.1:8007"
-        val uri = java.net.URI.create("$baseUrl/fixtures/13_empty_string_query_param_preserved/items")
+        val uri = java.net.URI.create("$baseUrl/fixtures/13_empty_string_query_param_preserved/items?filter=")
         val builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("GET", java.net.http.HttpRequest.BodyPublishers.noBody())
         val response = java.net.http.HttpClient.newHttpClient()

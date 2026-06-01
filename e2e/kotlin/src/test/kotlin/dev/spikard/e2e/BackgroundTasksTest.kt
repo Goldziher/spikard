@@ -23,7 +23,7 @@ class BackgroundTasksTest {
     fun testBackgroundTaskCancellation() {
         // Tests background task cancellation via request
         val baseUrl = System.getenv("SUT_URL") ?: "http://127.0.0.1:8007"
-        val uri = java.net.URI.create("$baseUrl/fixtures/background_task_cancellation/background/cancel/{task_id}")
+        val uri = java.net.URI.create("$baseUrl/fixtures/background_task_cancellation/background/cancel/task-001")
         val builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("DELETE", java.net.http.HttpRequest.BodyPublishers.noBody())
         val response = java.net.http.HttpClient.newHttpClient()
