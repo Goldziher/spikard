@@ -13,7 +13,7 @@ defmodule E2e.RequestTimeoutTest do
 
   describe "request_completes_before_timeout" do
     test "Simulated handler sleeps briefly and should complete before the timeout middleware fires." do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/request_completes_before_timeout", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/request_completes_before_timeout", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"duration" => "fast", "status" => "ok"}
@@ -22,7 +22,7 @@ defmodule E2e.RequestTimeoutTest do
 
   describe "request_exceeds_timeout" do
     test "Simulates a handler that sleeps longer than the configured timeout to ensure a 408 response." do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/request_exceeds_timeout", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/request_exceeds_timeout", connect_options: [protocols: [:http1]])
       assert response.status == 408
     end
   end

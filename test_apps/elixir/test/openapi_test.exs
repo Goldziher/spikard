@@ -13,7 +13,7 @@ defmodule E2e.OpenapiTest do
 
   describe "openapi_basic_spec_generation" do
     test "Tests OpenAPI specification is generated from route definitions" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/openapi_basic_spec_generation", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/openapi_basic_spec_generation", connect_options: [protocols: [:http1]])
       assert response.status == 200
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: List.first(List.wrap(v)) end) == "application/json"
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
@@ -23,7 +23,7 @@ defmodule E2e.OpenapiTest do
 
   describe "openapi_contact_information" do
     test "Tests OpenAPI spec includes contact information" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/openapi_contact_information", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/openapi_contact_information", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"info" => %{"contact" => %{"name" => "API Support", "url" => "https://example.com/support"}}}
@@ -32,14 +32,14 @@ defmodule E2e.OpenapiTest do
 
   describe "openapi_disabled_returns_404" do
     test "Tests OpenAPI returns 404 when explicitly disabled" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/openapi_disabled_returns_404", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/openapi_disabled_returns_404", connect_options: [protocols: [:http1]])
       assert response.status == 404
     end
   end
 
   describe "openapi_enabled_flag_true" do
     test "Tests OpenAPI can be explicitly enabled" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/openapi_enabled_flag_true", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/openapi_enabled_flag_true", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"openapi" => "3.0.0"}
@@ -48,7 +48,7 @@ defmodule E2e.OpenapiTest do
 
   describe "openapi_json_endpoint_path" do
     test "Tests OpenAPI JSON is served at configured endpoint" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/openapi_json_endpoint_path", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/openapi_json_endpoint_path", connect_options: [protocols: [:http1]])
       assert response.status == 200
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: List.first(List.wrap(v)) end) == "application/json"
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
@@ -58,7 +58,7 @@ defmodule E2e.OpenapiTest do
 
   describe "openapi_license_information" do
     test "Tests OpenAPI spec includes license information" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/openapi_license_information", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/openapi_license_information", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"info" => %{"license" => %{"name" => "MIT"}}}
@@ -67,7 +67,7 @@ defmodule E2e.OpenapiTest do
 
   describe "openapi_redoc_path" do
     test "Tests ReDoc UI is served at configured path" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/openapi_redoc_path", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/openapi_redoc_path", connect_options: [protocols: [:http1]])
       assert response.status == 200
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: List.first(List.wrap(v)) end) == "text/html"
     end
@@ -75,7 +75,7 @@ defmodule E2e.OpenapiTest do
 
   describe "openapi_security_schemes_definition" do
     test "Tests OpenAPI spec includes security schemes" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/openapi_security_schemes_definition", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/openapi_security_schemes_definition", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"components" => %{"securitySchemes" => %{"bearerAuth" => %{"scheme" => "bearer", "type" => "http"}}}}
@@ -84,7 +84,7 @@ defmodule E2e.OpenapiTest do
 
   describe "openapi_servers_configuration" do
     test "Tests OpenAPI spec includes configured servers" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/openapi_servers_configuration", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/openapi_servers_configuration", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"servers" => [%{"url" => "https://api.example.com"}, %{"url" => "https://staging-api.example.com"}]}
@@ -93,7 +93,7 @@ defmodule E2e.OpenapiTest do
 
   describe "openapi_swagger_ui_path" do
     test "Tests Swagger UI is served at configured path" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/openapi_swagger_ui_path", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/openapi_swagger_ui_path", connect_options: [protocols: [:http1]])
       assert response.status == 200
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: List.first(List.wrap(v)) end) == "text/html"
     end

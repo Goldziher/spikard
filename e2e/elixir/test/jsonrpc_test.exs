@@ -13,7 +13,7 @@ defmodule E2e.JsonrpcTest do
 
   describe "jsonrpc_batch_request" do
     test "Tests JSON-RPC batch request with multiple calls" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/jsonrpc_batch_request", connect_options: [protocols: [:http1]], json: [%{"id" => 1, "jsonrpc" => "2.0", "method" => "add", "params" => [1, 2]}, %{"id" => 2, "jsonrpc" => "2.0", "method" => "subtract", "params" => [5, 3]}], headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jsonrpc_batch_request", connect_options: [protocols: [:http1]], json: [%{"id" => 1, "jsonrpc" => "2.0", "method" => "add", "params" => [1, 2]}, %{"id" => 2, "jsonrpc" => "2.0", "method" => "subtract", "params" => [5, 3]}], headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == [%{"id" => 1, "jsonrpc" => "2.0", "result" => 3}, %{"id" => 2, "jsonrpc" => "2.0", "result" => 2}]
@@ -22,7 +22,7 @@ defmodule E2e.JsonrpcTest do
 
   describe "jsonrpc_call_with_positional_params" do
     test "Tests JSON-RPC call with positional array parameters" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/jsonrpc_call_with_positional_params", connect_options: [protocols: [:http1]], json: %{"id" => 2, "jsonrpc" => "2.0", "method" => "multiply", "params" => [4, 7]}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jsonrpc_call_with_positional_params", connect_options: [protocols: [:http1]], json: %{"id" => 2, "jsonrpc" => "2.0", "method" => "multiply", "params" => [4, 7]}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"id" => 2, "jsonrpc" => "2.0", "result" => 28}
@@ -31,7 +31,7 @@ defmodule E2e.JsonrpcTest do
 
   describe "jsonrpc_config_batch_disabled" do
     test "Tests JSON-RPC batch requests disabled returns error" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/jsonrpc_config_batch_disabled", connect_options: [protocols: [:http1]], json: [%{"id" => 1, "jsonrpc" => "2.0", "method" => "add", "params" => [1, 2]}, %{"id" => 2, "jsonrpc" => "2.0", "method" => "subtract", "params" => [5, 3]}], headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jsonrpc_config_batch_disabled", connect_options: [protocols: [:http1]], json: [%{"id" => 1, "jsonrpc" => "2.0", "method" => "add", "params" => [1, 2]}, %{"id" => 2, "jsonrpc" => "2.0", "method" => "subtract", "params" => [5, 3]}], headers: [{"Content-Type", "application/json"}])
       assert response.status == 400
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"error" => %{"code" => -32600, "message" => "Batch requests not enabled"}, "jsonrpc" => "2.0"}
@@ -40,7 +40,7 @@ defmodule E2e.JsonrpcTest do
 
   describe "jsonrpc_config_custom_endpoint_path" do
     test "Tests JSON-RPC server at custom endpoint path" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/jsonrpc_config_custom_endpoint_path", connect_options: [protocols: [:http1]], json: %{"id" => 1, "jsonrpc" => "2.0", "method" => "test", "params" => %{}}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jsonrpc_config_custom_endpoint_path", connect_options: [protocols: [:http1]], json: %{"id" => 1, "jsonrpc" => "2.0", "method" => "test", "params" => %{}}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"id" => 1, "jsonrpc" => "2.0", "result" => "ok"}
@@ -49,7 +49,7 @@ defmodule E2e.JsonrpcTest do
 
   describe "jsonrpc_config_max_batch_size" do
     test "Tests JSON-RPC batch request respects maximum batch size" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/jsonrpc_config_max_batch_size", connect_options: [protocols: [:http1]], json: [%{"id" => 1, "jsonrpc" => "2.0", "method" => "method1"}, %{"id" => 2, "jsonrpc" => "2.0", "method" => "method2"}, %{"id" => 3, "jsonrpc" => "2.0", "method" => "method3"}], headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jsonrpc_config_max_batch_size", connect_options: [protocols: [:http1]], json: [%{"id" => 1, "jsonrpc" => "2.0", "method" => "method1"}, %{"id" => 2, "jsonrpc" => "2.0", "method" => "method2"}, %{"id" => 3, "jsonrpc" => "2.0", "method" => "method3"}], headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == [%{"id" => 1, "jsonrpc" => "2.0", "result" => "result1"}, %{"id" => 2, "jsonrpc" => "2.0", "result" => "result2"}, %{"id" => 3, "jsonrpc" => "2.0", "result" => "result3"}]
@@ -58,7 +58,7 @@ defmodule E2e.JsonrpcTest do
 
   describe "jsonrpc_deprecated_method_flag" do
     test "Tests JSON-RPC method marked as deprecated" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/jsonrpc_deprecated_method_flag", connect_options: [protocols: [:http1]], json: %{"id" => 1, "jsonrpc" => "2.0", "method" => "oldMethod", "params" => %{}}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jsonrpc_deprecated_method_flag", connect_options: [protocols: [:http1]], json: %{"id" => 1, "jsonrpc" => "2.0", "method" => "oldMethod", "params" => %{}}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "deprecation", do: List.first(List.wrap(v)) end) == "true"
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "sunset", do: List.first(List.wrap(v)) end) != nil
@@ -69,7 +69,7 @@ defmodule E2e.JsonrpcTest do
 
   describe "jsonrpc_error_response" do
     test "Tests JSON-RPC error response with error object" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/jsonrpc_error_response", connect_options: [protocols: [:http1]], json: %{"id" => 3, "jsonrpc" => "2.0", "method" => "divide", "params" => %{"denominator" => 0, "numerator" => 10}}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jsonrpc_error_response", connect_options: [protocols: [:http1]], json: %{"id" => 3, "jsonrpc" => "2.0", "method" => "divide", "params" => %{"denominator" => 0, "numerator" => 10}}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"error" => %{"code" => -32600, "data" => "Division by zero", "message" => "Invalid Request"}, "id" => 3, "jsonrpc" => "2.0"}
@@ -78,7 +78,7 @@ defmodule E2e.JsonrpcTest do
 
   describe "jsonrpc_invalid_params" do
     test "Tests JSON-RPC error for invalid parameters" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/jsonrpc_invalid_params", connect_options: [protocols: [:http1]], json: %{"id" => 5, "jsonrpc" => "2.0", "method" => "subtract", "params" => %{"wrong_field" => 42}}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jsonrpc_invalid_params", connect_options: [protocols: [:http1]], json: %{"id" => 5, "jsonrpc" => "2.0", "method" => "subtract", "params" => %{"wrong_field" => 42}}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"error" => %{"code" => -32602, "message" => "Invalid params"}, "id" => 5, "jsonrpc" => "2.0"}
@@ -87,7 +87,7 @@ defmodule E2e.JsonrpcTest do
 
   describe "jsonrpc_method_not_found" do
     test "Tests JSON-RPC error when method does not exist" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/jsonrpc_method_not_found", connect_options: [protocols: [:http1]], json: %{"id" => 4, "jsonrpc" => "2.0", "method" => "nonexistent_method"}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jsonrpc_method_not_found", connect_options: [protocols: [:http1]], json: %{"id" => 4, "jsonrpc" => "2.0", "method" => "nonexistent_method"}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"error" => %{"code" => -32601, "message" => "Method not found"}, "id" => 4, "jsonrpc" => "2.0"}
@@ -96,7 +96,7 @@ defmodule E2e.JsonrpcTest do
 
   describe "jsonrpc_method_parameter_validation" do
     test "Tests JSON-RPC validates parameter types and values" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/jsonrpc_method_parameter_validation", connect_options: [protocols: [:http1]], json: %{"id" => 6, "jsonrpc" => "2.0", "method" => "update_user", "params" => %{"email" => "john@example.com", "id" => 123, "name" => "John Doe"}}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jsonrpc_method_parameter_validation", connect_options: [protocols: [:http1]], json: %{"id" => 6, "jsonrpc" => "2.0", "method" => "update_user", "params" => %{"email" => "john@example.com", "id" => 123, "name" => "John Doe"}}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"id" => 6, "jsonrpc" => "2.0", "result" => %{"email" => "john@example.com", "id" => 123, "name" => "John Doe", "updated" => true}}
@@ -105,7 +105,7 @@ defmodule E2e.JsonrpcTest do
 
   describe "jsonrpc_method_with_params_schema" do
     test "Tests JSON-RPC method params validated against schema" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/jsonrpc_method_with_params_schema", connect_options: [protocols: [:http1]], json: %{"id" => 1, "jsonrpc" => "2.0", "method" => "createUser", "params" => %{"age" => 30, "name" => "Alice"}}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jsonrpc_method_with_params_schema", connect_options: [protocols: [:http1]], json: %{"id" => 1, "jsonrpc" => "2.0", "method" => "createUser", "params" => %{"age" => 30, "name" => "Alice"}}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"id" => 1, "jsonrpc" => "2.0", "result" => %{"age" => 30, "id" => 1, "name" => "Alice"}}
@@ -114,7 +114,7 @@ defmodule E2e.JsonrpcTest do
 
   describe "jsonrpc_method_with_result_schema" do
     test "Tests JSON-RPC method result schema validation" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/jsonrpc_method_with_result_schema", connect_options: [protocols: [:http1]], json: %{"id" => 1, "jsonrpc" => "2.0", "method" => "getUser", "params" => %{"id" => 1}}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jsonrpc_method_with_result_schema", connect_options: [protocols: [:http1]], json: %{"id" => 1, "jsonrpc" => "2.0", "method" => "getUser", "params" => %{"id" => 1}}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"id" => 1, "jsonrpc" => "2.0", "result" => %{"email" => "john@example.com", "id" => 1, "name" => "John"}}
@@ -123,21 +123,21 @@ defmodule E2e.JsonrpcTest do
 
   describe "jsonrpc_notification_no_id" do
     test "Tests JSON-RPC notification (no response expected)" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/jsonrpc_notification_no_id", connect_options: [protocols: [:http1]], json: %{"jsonrpc" => "2.0", "method" => "notify_event", "params" => %{"event" => "user_login"}}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jsonrpc_notification_no_id", connect_options: [protocols: [:http1]], json: %{"jsonrpc" => "2.0", "method" => "notify_event", "params" => %{"event" => "user_login"}}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 204
     end
   end
 
   describe "jsonrpc_notification_no_response" do
     test "Tests JSON-RPC notification (no id) doesn't return response" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/jsonrpc_notification_no_response", connect_options: [protocols: [:http1]], json: %{"jsonrpc" => "2.0", "method" => "notify", "params" => %{"message" => "hello"}}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jsonrpc_notification_no_response", connect_options: [protocols: [:http1]], json: %{"jsonrpc" => "2.0", "method" => "notify", "params" => %{"message" => "hello"}}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 204
     end
   end
 
   describe "jsonrpc_single_call_success" do
     test "Tests single JSON-RPC 2.0 call with successful response" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/jsonrpc_single_call_success", connect_options: [protocols: [:http1]], json: %{"id" => 1, "jsonrpc" => "2.0", "method" => "add", "params" => %{"a" => 5, "b" => 3}}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/jsonrpc_single_call_success", connect_options: [protocols: [:http1]], json: %{"id" => 1, "jsonrpc" => "2.0", "method" => "add", "params" => %{"a" => 5, "b" => 3}}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"id" => 1, "jsonrpc" => "2.0", "result" => 8}

@@ -13,7 +13,7 @@ defmodule E2e.ProblemDetailsTest do
 
   describe "problem_details_400_bad_request" do
     test "Tests ProblemDetails for 400 Bad Request status" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/problem_details_400_bad_request", connect_options: [protocols: [:http1]], json: "invalid json", headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/problem_details_400_bad_request", connect_options: [protocols: [:http1]], json: "invalid json", headers: [{"Content-Type", "application/json"}])
       assert response.status == 400
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "Invalid JSON in request body", "status" => 400, "title" => "Bad Request", "type" => "https://spikard.dev/errors/bad-request"}
@@ -22,7 +22,7 @@ defmodule E2e.ProblemDetailsTest do
 
   describe "problem_details_401_unauthorized" do
     test "Tests ProblemDetails for 401 Unauthorized status" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/problem_details_401_unauthorized", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/problem_details_401_unauthorized", connect_options: [protocols: [:http1]])
       assert response.status == 401
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "Authentication required", "status" => 401, "title" => "Unauthorized", "type" => "https://spikard.dev/errors/unauthorized"}
@@ -31,7 +31,7 @@ defmodule E2e.ProblemDetailsTest do
 
   describe "problem_details_403_forbidden" do
     test "Tests ProblemDetails for 403 Forbidden status" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/problem_details_403_forbidden", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/problem_details_403_forbidden", connect_options: [protocols: [:http1]])
       assert response.status == 403
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "Insufficient permissions to access this resource", "status" => 403, "title" => "Forbidden", "type" => "https://spikard.dev/errors/forbidden"}
@@ -40,7 +40,7 @@ defmodule E2e.ProblemDetailsTest do
 
   describe "problem_details_500_internal_error" do
     test "Tests ProblemDetails for 500 Internal Server Error status" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/problem_details_500_internal_error", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/problem_details_500_internal_error", connect_options: [protocols: [:http1]])
       assert response.status == 500
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "An unexpected error occurred", "status" => 500, "title" => "Internal Server Error", "type" => "https://spikard.dev/errors/internal-error"}
@@ -49,7 +49,7 @@ defmodule E2e.ProblemDetailsTest do
 
   describe "problem_details_standard_all_fields" do
     test "Tests RFC 9457 ProblemDetails response with all standard fields" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/problem_details_standard_all_fields", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/problem_details_standard_all_fields", connect_options: [protocols: [:http1]])
       assert response.status == 404
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "Item with ID 999 was not found", "instance" => "/items/999", "status" => 404, "title" => "Resource Not Found", "type" => "https://spikard.dev/errors/not-found"}
@@ -58,7 +58,7 @@ defmodule E2e.ProblemDetailsTest do
 
   describe "problem_details_with_extensions" do
     test "Tests ProblemDetails includes custom extensions for additional context" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/problem_details_with_extensions", connect_options: [protocols: [:http1]], json: %{"data" => "invalid"}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/problem_details_with_extensions", connect_options: [protocols: [:http1]], json: %{"data" => "invalid"}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 422
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "Validation failed", "extensions" => %{"error_code" => "VALIDATION_001", "timestamp" => nil, "trace_id" => nil}, "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}
@@ -67,7 +67,7 @@ defmodule E2e.ProblemDetailsTest do
 
   describe "problem_details_with_instance" do
     test "Tests ProblemDetails includes instance URI for context" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/problem_details_with_instance", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/problem_details_with_instance", connect_options: [protocols: [:http1]])
       assert response.status == 404
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "Post 456 not found for user 123", "instance" => "/users/123/posts/456", "status" => 404, "title" => "Post Not Found", "type" => "https://spikard.dev/errors/not-found"}
@@ -76,7 +76,7 @@ defmodule E2e.ProblemDetailsTest do
 
   describe "problem_details_with_type_uri" do
     test "Tests ProblemDetails includes type URI for error classification" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/problem_details_with_type_uri", connect_options: [protocols: [:http1]], json: %{"value" => -5}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/problem_details_with_type_uri", connect_options: [protocols: [:http1]], json: %{"value" => -5}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 422
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "Request validation failed", "status" => 422, "title" => "Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}

@@ -5,7 +5,7 @@ ExUnit.start()
 # Use it as-is and do NOT spawn our own.
 
 unless System.get_env("SUT_URL") do
-  app_harness_bin = Path.expand("app_harness.exs", __DIR__)
+  app_harness_bin = Path.expand("../app_harness.exs", __DIR__)
 
   port = Port.open({:spawn_executable, System.find_executable("elixir")}, [
     :binary,

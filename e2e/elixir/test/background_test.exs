@@ -13,7 +13,7 @@ defmodule E2e.BackgroundTest do
 
   describe "background_event_logging" do
     test "Enqueues a background job that appends the posted event to shared state" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/background_event_logging", connect_options: [protocols: [:http1]], json: %{"event" => "alpha"})
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/background_event_logging", connect_options: [protocols: [:http1]], json: %{"event" => "alpha"})
       assert response.status == 202
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: List.first(List.wrap(v)) end) == "application/json"
     end
@@ -21,7 +21,7 @@ defmodule E2e.BackgroundTest do
 
   describe "background_event_logging_second_payload" do
     test "Ensures background jobs handle different payloads" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/background_event_logging_second_payload", connect_options: [protocols: [:http1]], json: %{"event" => "beta"})
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/background_event_logging_second_payload", connect_options: [protocols: [:http1]], json: %{"event" => "beta"})
       assert response.status == 202
       assert Enum.find_value(response.headers, fn {k, v} -> if String.downcase(k) == "content-type", do: List.first(List.wrap(v)) end) == "application/json"
     end

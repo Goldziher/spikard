@@ -13,7 +13,7 @@ defmodule E2e.PathParamsTest do
 
   describe "uuid_v3_path_param_success" do
     test "Path parameter with valid UUID v3 should be accepted" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/20_uuid_v3_path_param_success", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/20_uuid_v3_path_param_success", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"id" => "e8b5a51d-11c8-3310-a6ab-367563f20686"}
@@ -22,7 +22,7 @@ defmodule E2e.PathParamsTest do
 
   describe "uuid_v5_path_param_success" do
     test "Path parameter with valid UUID v5 should be accepted" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/21_uuid_v5_path_param_success", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/21_uuid_v5_path_param_success", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"id" => "630eb68f-e0fa-5ecc-887a-7c7a62614681"}
@@ -31,7 +31,7 @@ defmodule E2e.PathParamsTest do
 
   describe "date_format_path_param_success" do
     test "Path parameter with valid ISO date format should be accepted" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/24_date_format_path_param_success", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/24_date_format_path_param_success", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"date" => "2025-10-30"}
@@ -40,7 +40,7 @@ defmodule E2e.PathParamsTest do
 
   describe "date_format_invalid_failure" do
     test "Path parameter with invalid date format should fail validation" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/25_date_format_invalid_failure", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/25_date_format_invalid_failure", connect_options: [protocols: [:http1]])
       assert response.status == 422
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "1 validation error in request", "errors" => [%{"ctx" => %{"format" => "date", "value" => "2025-13-45"}, "loc" => ["path", "date"], "msg" => "Invalid date format", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}
@@ -49,7 +49,7 @@ defmodule E2e.PathParamsTest do
 
   describe "datetime_format_path_param_success" do
     test "Path parameter with valid ISO 8601 datetime should be accepted" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/27_datetime_format_path_param_success", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/27_datetime_format_path_param_success", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"timestamp" => "2025-10-30T14:30:00Z"}
@@ -58,7 +58,7 @@ defmodule E2e.PathParamsTest do
 
   describe "duration_format_path_param_success" do
     test "Path parameter with valid ISO 8601 duration should be accepted" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/28_duration_format_path_param_success", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/28_duration_format_path_param_success", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"duration" => "P1DT2H30M"}
@@ -67,7 +67,7 @@ defmodule E2e.PathParamsTest do
 
   describe "decimal_path_param_success" do
     test "Path parameter with decimal/money value should be accepted" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/29_decimal_path_param_success", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/29_decimal_path_param_success", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"amount" => "19.99"}
@@ -76,7 +76,7 @@ defmodule E2e.PathParamsTest do
 
   describe "string_minlength_path_success" do
     test "Path parameter with string meeting minLength constraint should succeed" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/30_string_minlength_path_success", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/30_string_minlength_path_success", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"username" => "alice"}
@@ -85,7 +85,7 @@ defmodule E2e.PathParamsTest do
 
   describe "string_minlength_path_failure" do
     test "Path parameter with string below minLength constraint should fail" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/31_string_minlength_path_failure", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/31_string_minlength_path_failure", connect_options: [protocols: [:http1]])
       assert response.status == 422
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "1 validation error in request", "errors" => [%{"ctx" => %{"actual_length" => 2, "min_length" => 3}, "loc" => ["path", "username"], "msg" => "String length must be at least 3", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}
@@ -94,7 +94,7 @@ defmodule E2e.PathParamsTest do
 
   describe "string_maxlength_path_failure" do
     test "Path parameter with string exceeding maxLength constraint should fail" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/32_string_maxlength_path_failure", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/32_string_maxlength_path_failure", connect_options: [protocols: [:http1]])
       assert response.status == 422
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "1 validation error in request", "errors" => [%{"ctx" => %{"actual_length" => 42, "max_length" => 20}, "loc" => ["path", "username"], "msg" => "String length must not exceed 20", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}
@@ -103,7 +103,7 @@ defmodule E2e.PathParamsTest do
 
   describe "string_pattern_path_success" do
     test "Path parameter matching regex pattern should succeed" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/33_string_pattern_path_success", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/33_string_pattern_path_success", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"owner" => "spikard-labs", "repo" => "spikard-http"}
@@ -112,7 +112,7 @@ defmodule E2e.PathParamsTest do
 
   describe "string_pattern_path_failure" do
     test "Path parameter not matching regex pattern should fail" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/34_string_pattern_path_failure", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/34_string_pattern_path_failure", connect_options: [protocols: [:http1]])
       assert response.status == 422
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "1 validation error in request", "errors" => [%{"ctx" => %{"pattern" => "^[a-zA-Z0-9-]+$", "value" => "invalid@owner"}, "loc" => ["path", "owner"], "msg" => "String does not match pattern", "type" => "validation_error"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}
@@ -121,7 +121,7 @@ defmodule E2e.PathParamsTest do
 
   describe "negative_integer_path_param" do
     test "Path parameter with negative integer should be parsed correctly" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/35_negative_integer_path_param", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/35_negative_integer_path_param", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"value" => -100}
@@ -130,7 +130,7 @@ defmodule E2e.PathParamsTest do
 
   describe "boolean_path_parameter_numeric_1" do
     test "Tests boolean path parameter with '1' converts to true" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/boolean_path_parameter_numeric_1", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/boolean_path_parameter_numeric_1", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"item_id" => true}
@@ -139,7 +139,7 @@ defmodule E2e.PathParamsTest do
 
   describe "boolean_path_parameter_true" do
     test "Tests boolean path parameter with 'True' string value" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/boolean_path_parameter_true", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/boolean_path_parameter_true", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"item_id" => true}
@@ -148,7 +148,7 @@ defmodule E2e.PathParamsTest do
 
   describe "date_path_parameter_success" do
     test "Tests date path parameter with ISO format date" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/date_path_parameter_success", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/date_path_parameter_success", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"date_param" => "2023-07-15"}
@@ -157,7 +157,7 @@ defmodule E2e.PathParamsTest do
 
   describe "enum_path_parameter_invalid_value" do
     test "Tests enum path parameter with invalid enum value returns 422" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/enum_path_parameter_invalid_value", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/enum_path_parameter_invalid_value", connect_options: [protocols: [:http1]])
       assert response.status == 422
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "1 validation error in request", "errors" => [%{"ctx" => %{"expected" => "'alexnet', 'resnet' or 'lenet'"}, "input" => "foo", "loc" => ["path", "model_name"], "msg" => "Input should be 'alexnet', 'resnet' or 'lenet'", "type" => "enum"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}
@@ -166,7 +166,7 @@ defmodule E2e.PathParamsTest do
 
   describe "enum_path_parameter_success" do
     test "Tests enum path parameter with valid enum value" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/enum_path_parameter_success", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/enum_path_parameter_success", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"model_name" => "alexnet"}
@@ -175,7 +175,7 @@ defmodule E2e.PathParamsTest do
 
   describe "float_path_parameter_success" do
     test "Tests float path parameter with valid value" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/float_path_parameter_success", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/float_path_parameter_success", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"item_id" => 42.5}
@@ -184,7 +184,7 @@ defmodule E2e.PathParamsTest do
 
   describe "integer_path_parameter_invalid_string" do
     test "Tests integer path parameter with non-numeric string returns 422" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/integer_path_parameter_invalid_string", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/integer_path_parameter_invalid_string", connect_options: [protocols: [:http1]])
       assert response.status == 422
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "1 validation error in request", "errors" => [%{"input" => "foobar", "loc" => ["path", "item_id"], "msg" => "Input should be a valid integer, unable to parse string as an integer", "type" => "int_parsing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}
@@ -193,7 +193,7 @@ defmodule E2e.PathParamsTest do
 
   describe "integer_path_parameter_success" do
     test "Tests integer path parameter with valid value" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/integer_path_parameter_success", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/integer_path_parameter_success", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"item_id" => 42}
@@ -202,7 +202,7 @@ defmodule E2e.PathParamsTest do
 
   describe "integer_path_parameter_with_combined_lt_and_gt_constraints_success" do
     test "Tests integer path parameter with both lt and gt validation (range check)" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/integer_path_parameter_with_combined_lt_and_gt_constraints_success", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/integer_path_parameter_with_combined_lt_and_gt_constraints_success", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"item_id" => 2}
@@ -211,7 +211,7 @@ defmodule E2e.PathParamsTest do
 
   describe "integer_path_parameter_with_ge_constraint_success" do
     test "Tests integer path parameter with ge (greater than or equal) validation at boundary" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/integer_path_parameter_with_ge_constraint_success", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/integer_path_parameter_with_ge_constraint_success", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"item_id" => 3}
@@ -220,7 +220,7 @@ defmodule E2e.PathParamsTest do
 
   describe "integer_path_parameter_with_gt_constraint_failure" do
     test "Tests integer path parameter with gt validation fails when value too small" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/integer_path_parameter_with_gt_constraint_failure", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/integer_path_parameter_with_gt_constraint_failure", connect_options: [protocols: [:http1]])
       assert response.status == 422
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "1 validation error in request", "errors" => [%{"ctx" => %{"gt" => 3}, "input" => 2, "loc" => ["path", "item_id"], "msg" => "Input should be greater than 3", "type" => "greater_than"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}
@@ -229,7 +229,7 @@ defmodule E2e.PathParamsTest do
 
   describe "integer_path_parameter_with_gt_constraint_success" do
     test "Tests integer path parameter with gt (greater than) validation succeeds" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/integer_path_parameter_with_gt_constraint_success", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/integer_path_parameter_with_gt_constraint_success", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"item_id" => 42}
@@ -238,7 +238,7 @@ defmodule E2e.PathParamsTest do
 
   describe "integer_path_parameter_with_le_constraint_success" do
     test "Tests integer path parameter with le (less than or equal) validation at boundary" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/integer_path_parameter_with_le_constraint_success", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/integer_path_parameter_with_le_constraint_success", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"item_id" => 3}
@@ -247,7 +247,7 @@ defmodule E2e.PathParamsTest do
 
   describe "integer_path_parameter_with_lt_constraint_success" do
     test "Tests integer path parameter with lt (less than) validation" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/integer_path_parameter_with_lt_constraint_success", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/integer_path_parameter_with_lt_constraint_success", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"item_id" => 2}
@@ -256,7 +256,7 @@ defmodule E2e.PathParamsTest do
 
   describe "multiple_path_parameters_success" do
     test "Tests multiple path parameters in single route" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/multiple_path_parameters_success", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/multiple_path_parameters_success", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"order_id" => "c892496f-b1fd-4b91-bdb8-b46f92df1716", "service_id" => 1, "user_id" => "abc", "version" => 1.0}
@@ -265,7 +265,7 @@ defmodule E2e.PathParamsTest do
 
   describe "path_parameter_type_syntax_invalid_uuid" do
     test "Tests that :uuid type syntax auto-generates validation that rejects invalid UUIDs" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/path_parameter_type_syntax_invalid_uuid", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/path_parameter_type_syntax_invalid_uuid", connect_options: [protocols: [:http1]])
       assert response.status == 422
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "1 validation error in request", "errors" => [%{"input" => "not-a-uuid", "loc" => ["path", "id"], "msg" => "Input should be a valid UUID", "type" => "uuid_parsing"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}
@@ -274,7 +274,7 @@ defmodule E2e.PathParamsTest do
 
   describe "path_parameter_type_syntax_with_override" do
     test "Tests that explicit parameter schema merges with auto-generated type syntax schema" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/path_parameter_type_syntax_with_override", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/path_parameter_type_syntax_with_override", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"count" => "50"}
@@ -283,7 +283,7 @@ defmodule E2e.PathParamsTest do
 
   describe "path_parameter_with_type_syntax_integer" do
     test "Tests path parameter with :int type syntax auto-generates integer type" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/path_parameter_with_type_syntax_integer", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/path_parameter_with_type_syntax_integer", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"user_id" => "42"}
@@ -292,7 +292,7 @@ defmodule E2e.PathParamsTest do
 
   describe "path_parameter_with_type_syntax_uuid" do
     test "Tests path parameter with :uuid type syntax auto-generates UUID validation" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/path_parameter_with_type_syntax_uuid", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/path_parameter_with_type_syntax_uuid", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"id" => "550e8400-e29b-41d4-a716-446655440000"}
@@ -301,7 +301,7 @@ defmodule E2e.PathParamsTest do
 
   describe "path_type_parameter_file_path" do
     test "Tests path type parameter that captures remaining path segments" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/path_type_parameter_file_path", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/path_type_parameter_file_path", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"file_path" => "home/johndoe/myfile.txt"}
@@ -310,7 +310,7 @@ defmodule E2e.PathParamsTest do
 
   describe "string_path_parameter_success" do
     test "Tests string path parameter with valid value" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/string_path_parameter_success", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/string_path_parameter_success", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"item_id" => "foobar"}
@@ -319,7 +319,7 @@ defmodule E2e.PathParamsTest do
 
   describe "string_path_parameter_with_max_length_failure" do
     test "Tests string path parameter with max_length validation fails when too long" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/string_path_parameter_with_max_length_failure", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/string_path_parameter_with_max_length_failure", connect_options: [protocols: [:http1]])
       assert response.status == 422
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "1 validation error in request", "errors" => [%{"ctx" => %{"max_length" => 3}, "input" => "foobar", "loc" => ["path", "item_id"], "msg" => "String should have at most 3 characters", "type" => "string_too_long"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}
@@ -328,7 +328,7 @@ defmodule E2e.PathParamsTest do
 
   describe "string_path_parameter_with_min_length_failure" do
     test "Tests string path parameter with min_length validation fails" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/string_path_parameter_with_min_length_failure", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/string_path_parameter_with_min_length_failure", connect_options: [protocols: [:http1]])
       assert response.status == 422
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"detail" => "1 validation error in request", "errors" => [%{"ctx" => %{"min_length" => 3}, "input" => "fo", "loc" => ["path", "item_id"], "msg" => "String should have at least 3 characters", "type" => "string_too_short"}], "status" => 422, "title" => "Request Validation Failed", "type" => "https://spikard.dev/errors/validation-error"}
@@ -337,7 +337,7 @@ defmodule E2e.PathParamsTest do
 
   describe "uuid_path_parameter_success" do
     test "Tests UUID path parameter with valid UUID format" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/uuid_path_parameter_success", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/uuid_path_parameter_success", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"item_id" => "ec38df32-ceda-4cfa-9b4a-1aeb94ad551a"}

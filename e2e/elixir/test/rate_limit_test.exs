@@ -13,7 +13,7 @@ defmodule E2e.RateLimitTest do
 
   describe "rate_limit_below_threshold_succeeds" do
     test "Verifies that requests below the configured rate limit are served normally." do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/rate_limit_below_threshold_succeeds", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/rate_limit_below_threshold_succeeds", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"request" => "under-limit", "status" => "ok"}
@@ -22,7 +22,7 @@ defmodule E2e.RateLimitTest do
 
   describe "rate_limit_burst_setting_allows_spike" do
     test "Tests burst setting allows request spike beyond per_second rate" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/rate_limit_burst_setting_allows_spike", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/rate_limit_burst_setting_allows_spike", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"status" => "ok"}
@@ -31,14 +31,14 @@ defmodule E2e.RateLimitTest do
 
   describe "rate_limit_exceeded_returns_429" do
     test "Sends sequential requests until the configured limit is exceeded and validates the 429 response." do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/rate_limit_exceeded_returns_429", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/rate_limit_exceeded_returns_429", connect_options: [protocols: [:http1]])
       assert response.status == 429
     end
   end
 
   describe "rate_limit_ip_based_tracking" do
     test "Tests rate limiting is applied per IP address" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/rate_limit_ip_based_tracking", connect_options: [protocols: [:http1]], headers: [{"X-Forwarded-For", "192.168.1.100"}])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/rate_limit_ip_based_tracking", connect_options: [protocols: [:http1]], headers: [{"X-Forwarded-For", "192.168.1.100"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"status" => "ok"}
@@ -47,7 +47,7 @@ defmodule E2e.RateLimitTest do
 
   describe "rate_limit_per_second_setting_10_requests" do
     test "Tests rate limit allows up to 10 requests per second" do
-      {:ok, response} = Req.get(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/rate_limit_per_second_setting_10_requests", connect_options: [protocols: [:http1]])
+      {:ok, response} = Req.get(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/rate_limit_per_second_setting_10_requests", connect_options: [protocols: [:http1]])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"status" => "ok"}

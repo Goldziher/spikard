@@ -13,7 +13,7 @@ defmodule E2e.GraphqlOperationsTest do
 
   describe "graphql_field_level_error_partial_data" do
     test "Tests that a field-level resolver error returns partial data alongside an errors array" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/graphql_field_level_error_partial_data", connect_options: [protocols: [:http1]], json: %{"query" => "{ user(id: \"missing-user\") { id name avatar } status }"}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/graphql_field_level_error_partial_data", connect_options: [protocols: [:http1]], json: %{"query" => "{ user(id: \"missing-user\") { id name avatar } status }"}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"data" => %{"status" => "ok", "user" => nil}, "errors" => [%{"message" => "User not found", "path" => ["user"]}]}
@@ -22,7 +22,7 @@ defmodule E2e.GraphqlOperationsTest do
 
   describe "graphql_introspection_query" do
     test "Tests that the __schema introspection query returns the schema type list" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/graphql_introspection_query", connect_options: [protocols: [:http1]], json: %{"query" => "{ __schema { queryType { name } types { name kind } } }"}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/graphql_introspection_query", connect_options: [protocols: [:http1]], json: %{"query" => "{ __schema { queryType { name } types { name kind } } }"}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"data" => %{"__schema" => %{"queryType" => %{"name" => "Query"}, "types" => [%{"kind" => "OBJECT", "name" => "Query"}, %{"kind" => "SCALAR", "name" => "String"}, %{"kind" => "SCALAR", "name" => "Boolean"}]}}}
@@ -31,7 +31,7 @@ defmodule E2e.GraphqlOperationsTest do
 
   describe "graphql_invalid_syntax_rejected" do
     test "Tests that a query with invalid GraphQL syntax returns a syntax error in the errors array" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/graphql_invalid_syntax_rejected", connect_options: [protocols: [:http1]], json: %{"query" => "{ hello { this is not valid syntax {{{"}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/graphql_invalid_syntax_rejected", connect_options: [protocols: [:http1]], json: %{"query" => "{ hello { this is not valid syntax {{{"}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"errors" => [%{"locations" => [%{"column" => 10, "line" => 1}], "message" => "Syntax Error"}]}
@@ -40,7 +40,7 @@ defmodule E2e.GraphqlOperationsTest do
 
   describe "graphql_multi_operation_with_operation_name" do
     test "Tests executing a specific named operation from a document containing multiple operations" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/graphql_multi_operation_with_operation_name", connect_options: [protocols: [:http1]], json: %{"operationName" => "Version", "query" => "query Ping { ping } query Version { version }"}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/graphql_multi_operation_with_operation_name", connect_options: [protocols: [:http1]], json: %{"operationName" => "Version", "query" => "query Ping { ping } query Version { version }"}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"data" => %{"version" => "1.0.0"}}
@@ -49,7 +49,7 @@ defmodule E2e.GraphqlOperationsTest do
 
   describe "graphql_mutation_create_object" do
     test "Tests GraphQL mutation with an input type that returns the newly created object" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/graphql_mutation_create_object", connect_options: [protocols: [:http1]], json: %{"query" => "mutation CreateUser($input: CreateUserInput!) { createUser(input: $input) { id name email } }", "variables" => %{"input" => %{"email" => "carol@example.com", "name" => "Carol"}}}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/graphql_mutation_create_object", connect_options: [protocols: [:http1]], json: %{"query" => "mutation CreateUser($input: CreateUserInput!) { createUser(input: $input) { id name email } }", "variables" => %{"input" => %{"email" => "carol@example.com", "name" => "Carol"}}}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"data" => %{"createUser" => %{"email" => "carol@example.com", "id" => "new-user-id", "name" => "Carol"}}}
@@ -58,7 +58,7 @@ defmodule E2e.GraphqlOperationsTest do
 
   describe "graphql_ops_complexity_limit_exceeded" do
     test "Tests that a query exceeding the configured complexity limit returns an error" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/graphql_ops_complexity_limit_exceeded", connect_options: [protocols: [:http1]], json: %{"query" => "{ users { id friends { id friends { id friends { id friends { id } } } } } }"}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/graphql_ops_complexity_limit_exceeded", connect_options: [protocols: [:http1]], json: %{"query" => "{ users { id friends { id friends { id friends { id friends { id } } } } } }"}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"errors" => [%{"message" => "Query complexity exceeds maximum allowed complexity of 10"}]}
@@ -67,7 +67,7 @@ defmodule E2e.GraphqlOperationsTest do
 
   describe "graphql_ops_depth_limit_exceeded" do
     test "Tests that a query exceeding the configured depth limit returns an error" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/graphql_ops_depth_limit_exceeded", connect_options: [protocols: [:http1]], json: %{"query" => "{ a { b { c { d { e } } } } }"}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/graphql_ops_depth_limit_exceeded", connect_options: [protocols: [:http1]], json: %{"query" => "{ a { b { c { d { e } } } } }"}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"errors" => [%{"message" => "Query depth exceeds maximum allowed depth of 3"}]}
@@ -76,7 +76,7 @@ defmodule E2e.GraphqlOperationsTest do
 
   describe "graphql_query_nested_fields" do
     test "Tests GraphQL query selecting nested fields at depth 2-3" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/graphql_query_nested_fields", connect_options: [protocols: [:http1]], json: %{"query" => "{ order(id: \"ORD-1\") { id customer { name address { city } } items { sku quantity } } }"}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/graphql_query_nested_fields", connect_options: [protocols: [:http1]], json: %{"query" => "{ order(id: \"ORD-1\") { id customer { name address { city } } items { sku quantity } } }"}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"data" => %{"order" => %{"customer" => %{"address" => %{"city" => "Springfield"}, "name" => "Bob"}, "id" => "ORD-1", "items" => [%{"quantity" => 2, "sku" => "WIDGET-A"}]}}}
@@ -85,7 +85,7 @@ defmodule E2e.GraphqlOperationsTest do
 
   describe "graphql_query_with_variables" do
     test "Tests GraphQL query that uses variables passed in the request body" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/graphql_query_with_variables", connect_options: [protocols: [:http1]], json: %{"query" => "query GetUser($id: ID!) { user(id: $id) { id name } }", "variables" => %{"id" => "user-42"}}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/graphql_query_with_variables", connect_options: [protocols: [:http1]], json: %{"query" => "query GetUser($id: ID!) { user(id: $id) { id name } }", "variables" => %{"id" => "user-42"}}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"data" => %{"user" => %{"id" => "user-42", "name" => "Alice"}}}
@@ -94,7 +94,7 @@ defmodule E2e.GraphqlOperationsTest do
 
   describe "graphql_simple_query" do
     test "Tests simple GraphQL query execution returning data from the root query type" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/graphql_simple_query", connect_options: [protocols: [:http1]], json: %{"query" => "{ hello }"}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/graphql_simple_query", connect_options: [protocols: [:http1]], json: %{"query" => "{ hello }"}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"data" => %{"hello" => "world"}}
@@ -103,7 +103,7 @@ defmodule E2e.GraphqlOperationsTest do
 
   describe "graphql_subscription_declaration" do
     test "Tests that a subscription operation type is declared and the initial response shape matches" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/graphql_subscription_declaration", connect_options: [protocols: [:http1]], json: %{"query" => "subscription OnMessageAdded($roomId: ID!) { messageAdded(roomId: $roomId) { id text authorId } }", "variables" => %{"roomId" => "room-1"}}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/graphql_subscription_declaration", connect_options: [protocols: [:http1]], json: %{"query" => "subscription OnMessageAdded($roomId: ID!) { messageAdded(roomId: $roomId) { id text authorId } }", "variables" => %{"roomId" => "room-1"}}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"data" => %{"messageAdded" => %{"authorId" => "user-1", "id" => "msg-1", "text" => "Hello room"}}}
@@ -112,7 +112,7 @@ defmodule E2e.GraphqlOperationsTest do
 
   describe "graphql_undefined_field_error" do
     test "Tests that querying a field that does not exist in the schema returns a validation error" do
-      {:ok, response} = Req.post(url: "#{{ System.get_env("SUT_URL") || mock_server_url() }}/fixtures/graphql_undefined_field_error", connect_options: [protocols: [:http1]], json: %{"query" => "{ hello nonExistentField }"}, headers: [{"Content-Type", "application/json"}])
+      {:ok, response} = Req.post(url: ({ System.get_env("SUT_URL") || mock_server_url() }) <> "/fixtures/graphql_undefined_field_error", connect_options: [protocols: [:http1]], json: %{"query" => "{ hello nonExistentField }"}, headers: [{"Content-Type", "application/json"}])
       assert response.status == 200
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
       assert body_decoded == %{"errors" => [%{"message" => "Cannot query field \"nonExistentField\" on type \"Query\"."}]}
