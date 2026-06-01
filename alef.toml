@@ -221,7 +221,6 @@ axum = { version = "0.8", default-features = false, features = [
   "query",
   "tower-log",
 ] }
-getrandom02 = { package = "getrandom", version = "0.2", features = ["js"] }
 http-body-util = "0.1"
 serde = { version = "1", features = ["derive"] }
 serde_bytes = "0.11"
