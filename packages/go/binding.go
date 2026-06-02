@@ -140,23 +140,23 @@ type Method string
 
 const (
 	// MethodGet MethodGet is the Get variant of Method.
-	MethodGet Method = "get"
+	MethodGet Method = "Get"
 	// MethodPost MethodPost is the Post variant of Method.
-	MethodPost Method = "post"
+	MethodPost Method = "Post"
 	// MethodPut MethodPut is the Put variant of Method.
-	MethodPut Method = "put"
+	MethodPut Method = "Put"
 	// MethodPatch MethodPatch is the Patch variant of Method.
-	MethodPatch Method = "patch"
+	MethodPatch Method = "Patch"
 	// MethodDelete MethodDelete is the Delete variant of Method.
-	MethodDelete Method = "delete"
+	MethodDelete Method = "Delete"
 	// MethodHead MethodHead is the Head variant of Method.
-	MethodHead Method = "head"
+	MethodHead Method = "Head"
 	// MethodOptions MethodOptions is the Options variant of Method.
-	MethodOptions Method = "options"
+	MethodOptions Method = "Options"
 	// MethodConnect MethodConnect is the Connect variant of Method.
-	MethodConnect Method = "connect"
+	MethodConnect Method = "Connect"
 	// MethodTrace MethodTrace is the Trace variant of Method.
-	MethodTrace Method = "trace"
+	MethodTrace Method = "Trace"
 )
 
 // SecuritySchemeInfo security scheme types

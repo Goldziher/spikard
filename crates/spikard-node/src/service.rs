@@ -51,7 +51,6 @@ impl spikard::Handler for HandlerBridge {
 /// produced by the TypeScript service class.
 #[napi]
 pub async fn app_run(
-    env: Env,
     registrations: Vec<(
         String,
         Vec<JsUnknown>,
@@ -96,7 +95,6 @@ pub async fn app_run(
 /// produced by the TypeScript service class.
 #[napi]
 pub async fn app_into_router(
-    env: Env,
     registrations: Vec<(
         String,
         Vec<JsUnknown>,

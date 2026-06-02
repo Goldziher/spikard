@@ -15,7 +15,7 @@ class App
     self
   end
 
-  def route(builder: RouteBuilder, &block)
+  def route(builder, &block)
     # Register a route using the provided builder and handler function.
     #
     # # Errors
@@ -102,5 +102,4 @@ class App
     # Returns an error if server or router construction fails.
     Spikard.app_into_router(@registrations)
   end
-
 end

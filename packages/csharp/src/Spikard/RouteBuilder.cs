@@ -28,7 +28,8 @@ internal sealed class RouteBuilderSafeHandle : SafeHandle
 }
 /// <summary>/// Builder for defining a route./// </summary>
 public sealed class RouteBuilder : IDisposable
-{    private static readonly JsonSerializerOptions JsonOptions = new()
+{
+    private static readonly JsonSerializerOptions JsonOptions = new()
     {
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower) },
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault
