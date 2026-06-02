@@ -95,7 +95,7 @@ func main() {
 		}
 
 		// Register the route with the handler.
-		if err := app.RegisterRoute(handler, *builder); err != nil {
+		if err := app.RegisterRoute(handler, builder); err != nil {
 			log.Fatalf("register route %s: %v", fullRoute, err)
 		}
 		builder.Free()

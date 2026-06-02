@@ -137,7 +137,7 @@ func (s *App) Close() {
 // # Errors
 //
 // Returns an error if route construction fails or if the handler registration fails.
-func (s *App) RegisterRoute(handler HandlerFunc, builder RouteBuilder)  error {
+func (s *App) RegisterRoute(handler HandlerFunc, builder *RouteBuilder)  error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.owner == nil {
