@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.21.2"
+alef_version = "0.21.1"
 languages = [
   "python",
   "node",
@@ -402,7 +402,7 @@ python = "crates/spikard-py/src/"
 node = "crates/spikard-node/src/"
 ruby = "packages/ruby/ext/spikard_rb/src/"
 php = "crates/spikard-php/src/"
-elixir = "crates/spikard-elixir/src/"
+elixir = "packages/elixir/lib/"
 ffi = "crates/spikard-ffi/src/"
 wasm = "crates/spikard-wasm/src/"
 go = "packages/go/"

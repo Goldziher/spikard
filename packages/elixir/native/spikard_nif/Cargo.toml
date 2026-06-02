@@ -15,7 +15,7 @@ ignored = ["tokio"]
 
 [lib]
 name = "spikard_nif"
-path = "../../../../crates/spikard-elixir/src/lib.rs"
+path = "../../../../packages/elixir/lib/lib.rs"
 
 crate-type = ["cdylib"]
 

@@ -8,8 +8,8 @@ unless System.get_env("SUT_URL") do
   app_harness_bin = Path.expand("../app_harness.exs", __DIR__)
   project_root = Path.expand("..", __DIR__)
 
-  # Build the list of ebin directories from _build/dev/lib so the harness can access compiled dependencies
-  build_lib_dir = Path.join(project_root, "_build/dev/lib")
+  # Build the list of ebin directories from _build/test/lib so the harness can access compiled dependencies
+  build_lib_dir = Path.join(project_root, "_build/test/lib")
   lib_paths = if File.dir?(build_lib_dir) do
     File.ls!(build_lib_dir)
     |> Enum.map(&Path.join(build_lib_dir, &1))

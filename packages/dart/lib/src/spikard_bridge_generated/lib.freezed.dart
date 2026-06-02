@@ -213,7 +213,7 @@ return decode(_that.field0);case _:
 
 class AppError_Route extends AppError {
   const AppError_Route({required this.field0}): super._();
-
+  
 
 @override final  String field0;
 
@@ -279,7 +279,7 @@ as String,
 
 class AppError_Server extends AppError {
   const AppError_Server({required this.field0}): super._();
-
+  
 
 @override final  String field0;
 
@@ -345,7 +345,7 @@ as String,
 
 class AppError_Decode extends AppError {
   const AppError_Decode({required this.field0}): super._();
-
+  
 
 @override final  String field0;
 
@@ -649,7 +649,7 @@ return internalError(_that.field0);case _:
 
 class GraphQLError_ExecutionError extends GraphQLError {
   const GraphQLError_ExecutionError({required this.field0}): super._();
-
+  
 
  final  String field0;
 
@@ -715,7 +715,7 @@ as String,
 
 class GraphQLError_SchemaBuildError extends GraphQLError {
   const GraphQLError_SchemaBuildError({required this.field0}): super._();
-
+  
 
  final  String field0;
 
@@ -781,7 +781,7 @@ as String,
 
 class GraphQLError_RequestHandlingError extends GraphQLError {
   const GraphQLError_RequestHandlingError({required this.field0}): super._();
-
+  
 
  final  String field0;
 
@@ -847,7 +847,7 @@ as String,
 
 class GraphQLError_SerializationError extends GraphQLError {
   const GraphQLError_SerializationError({required this.field0}): super._();
-
+  
 
  final  String field0;
 
@@ -913,7 +913,7 @@ as String,
 
 class GraphQLError_JsonError extends GraphQLError {
   const GraphQLError_JsonError({required this.field0}): super._();
-
+  
 
  final  String field0;
 
@@ -979,7 +979,7 @@ as String,
 
 class GraphQLError_ValidationError extends GraphQLError {
   const GraphQLError_ValidationError({required this.field0}): super._();
-
+  
 
  final  String field0;
 
@@ -1045,7 +1045,7 @@ as String,
 
 class GraphQLError_ParseError extends GraphQLError {
   const GraphQLError_ParseError({required this.field0}): super._();
-
+  
 
  final  String field0;
 
@@ -1111,7 +1111,7 @@ as String,
 
 class GraphQLError_AuthenticationError extends GraphQLError {
   const GraphQLError_AuthenticationError({required this.field0}): super._();
-
+  
 
  final  String field0;
 
@@ -1177,7 +1177,7 @@ as String,
 
 class GraphQLError_AuthorizationError extends GraphQLError {
   const GraphQLError_AuthorizationError({required this.field0}): super._();
-
+  
 
  final  String field0;
 
@@ -1243,7 +1243,7 @@ as String,
 
 class GraphQLError_NotFound extends GraphQLError {
   const GraphQLError_NotFound({required this.field0}): super._();
-
+  
 
  final  String field0;
 
@@ -1309,7 +1309,7 @@ as String,
 
 class GraphQLError_RateLimitExceeded extends GraphQLError {
   const GraphQLError_RateLimitExceeded({required this.field0}): super._();
-
+  
 
  final  String field0;
 
@@ -1375,7 +1375,7 @@ as String,
 
 class GraphQLError_InvalidInput extends GraphQLError {
   const GraphQLError_InvalidInput({required this.message, required this.details}): super._();
-
+  
 
  final  String message;
  final  String details;
@@ -1443,7 +1443,7 @@ as String,
 
 class GraphQLError_ComplexityLimitExceeded extends GraphQLError {
   const GraphQLError_ComplexityLimitExceeded(): super._();
-
+  
 
 
 
@@ -1475,7 +1475,7 @@ String toString() {
 
 class GraphQLError_DepthLimitExceeded extends GraphQLError {
   const GraphQLError_DepthLimitExceeded(): super._();
-
+  
 
 
 
@@ -1507,7 +1507,7 @@ String toString() {
 
 class GraphQLError_InternalError extends GraphQLError {
   const GraphQLError_InternalError({required this.field0}): super._();
-
+  
 
  final  String field0;
 
@@ -1745,7 +1745,7 @@ return depthLimitExceeded(_that.limit,_that.actual);case _:
 
 class SchemaError_BuildingFailed extends SchemaError {
   const SchemaError_BuildingFailed({required this.field0}): super._();
-
+  
 
  final  String field0;
 
@@ -1811,7 +1811,7 @@ as String,
 
 class SchemaError_ValidationError extends SchemaError {
   const SchemaError_ValidationError({required this.field0}): super._();
-
+  
 
  final  String field0;
 
@@ -1877,7 +1877,7 @@ as String,
 
 class SchemaError_ComplexityLimitExceeded extends SchemaError {
   const SchemaError_ComplexityLimitExceeded({required this.limit, required this.actual}): super._();
-
+  
 
  final  PlatformInt64 limit;
  final  PlatformInt64 actual;
@@ -1945,7 +1945,7 @@ as PlatformInt64,
 
 class SchemaError_DepthLimitExceeded extends SchemaError {
   const SchemaError_DepthLimitExceeded({required this.limit, required this.actual}): super._();
-
+  
 
  final  PlatformInt64 limit;
  final  PlatformInt64 actual;
@@ -2173,7 +2173,7 @@ return apiKey(_that.location,_that.name);case _:
 
 class SecuritySchemeInfo_Http extends SecuritySchemeInfo {
   const SecuritySchemeInfo_Http({required this.scheme, required this.bearerFormat}): super._();
-
+  
 
  final  String scheme;
  final  String bearerFormat;
@@ -2241,7 +2241,7 @@ as String,
 
 class SecuritySchemeInfo_ApiKey extends SecuritySchemeInfo {
   const SecuritySchemeInfo_ApiKey({required this.location, required this.name}): super._();
-
+  
 
  final  String location;
  final  String name;
@@ -2500,7 +2500,7 @@ return decompression(_that.field0);case _:
 
 class SnapshotError_InvalidHeader extends SnapshotError {
   const SnapshotError_InvalidHeader({required this.field0}): super._();
-
+  
 
 @override final  String field0;
 
@@ -2566,7 +2566,7 @@ as String,
 
 class SnapshotError_Decompression extends SnapshotError {
   const SnapshotError_Decompression({required this.field0}): super._();
-
+  
 
 @override final  String field0;
 
@@ -2810,7 +2810,7 @@ return pong(_that.field0);case _:
 
 class WebSocketMessage_Text extends WebSocketMessage {
   const WebSocketMessage_Text({required this.field0}): super._();
-
+  
 
  final  String field0;
 
@@ -2876,7 +2876,7 @@ as String,
 
 class WebSocketMessage_Binary extends WebSocketMessage {
   const WebSocketMessage_Binary({required this.field0}): super._();
-
+  
 
  final  Uint8List field0;
 
@@ -2942,7 +2942,7 @@ as Uint8List,
 
 class WebSocketMessage_Close extends WebSocketMessage {
   const WebSocketMessage_Close({required this.code, required this.reason}): super._();
-
+  
 
 /// RFC 6455 close code.
  final  PlatformInt64 code;
@@ -3012,7 +3012,7 @@ as String,
 
 class WebSocketMessage_Ping extends WebSocketMessage {
   const WebSocketMessage_Ping({required this.field0}): super._();
-
+  
 
  final  Uint8List field0;
 
@@ -3078,7 +3078,7 @@ as Uint8List,
 
 class WebSocketMessage_Pong extends WebSocketMessage {
   const WebSocketMessage_Pong({required this.field0}): super._();
-
+  
 
  final  Uint8List field0;
 
