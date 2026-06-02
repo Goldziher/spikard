@@ -32,13 +32,16 @@ def test_cookie_samesite_strict() -> None:
     """Cookie with SameSite=Strict attribute should be validated."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/24_cookie_samesite_strict/secure"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -50,18 +53,22 @@ def test_cookie_samesite_strict() -> None:
         resp_body = _exc.read()  # noqa: F841
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
+
 
 def test_cookie_samesite_lax() -> None:
     """Cookie with SameSite=Lax attribute should be validated."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/25_cookie_samesite_lax/data"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -73,18 +80,22 @@ def test_cookie_samesite_lax() -> None:
         resp_body = _exc.read()  # noqa: F841
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
+
 
 def test_cookie_secure_flag() -> None:
     """Cookie with Secure flag should be validated for HTTPS."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/26_cookie_secure_flag/secure"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -96,18 +107,22 @@ def test_cookie_secure_flag() -> None:
         resp_body = _exc.read()  # noqa: F841
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
+
 
 def test_cookie_httponly_flag() -> None:
     """Cookie with HttpOnly flag should prevent JavaScript access."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/27_cookie_httponly_flag/secure"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -119,18 +134,22 @@ def test_cookie_httponly_flag() -> None:
         resp_body = _exc.read()  # noqa: F841
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
+
 
 def test_apikey_cookie_authentication_missing() -> None:
     """Tests APIKeyCookie authentication returns 403 when cookie missing."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/apikey_cookie_authentication_missing/users/me/auth"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -143,20 +162,31 @@ def test_apikey_cookie_authentication_missing() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 422  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
-    assert data == {"detail": "1 validation error in request", "errors": [{"input": None, "loc": ["cookie", "key"], "msg": "Field required", "type": "missing"}], "status": 422, "title": "Request Validation Failed", "type": "https://spikard.dev/errors/validation-error"}  # noqa: S101
+    assert data == {
+        "detail": "1 validation error in request",
+        "errors": [{"input": None, "loc": ["cookie", "key"], "msg": "Field required", "type": "missing"}],
+        "status": 422,
+        "title": "Request Validation Failed",
+        "type": "https://spikard.dev/errors/validation-error",
+    }  # noqa: S101
+
 
 def test_apikey_cookie_authentication_success() -> None:
     """Tests APIKeyCookie authentication with valid cookie."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/apikey_cookie_authentication_success/users/me"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -169,20 +199,25 @@ def test_apikey_cookie_authentication_success() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"username": "secret"}  # noqa: S101
+
 
 def test_cookie_regex_pattern_validation_fail() -> None:
     """Tests cookie with regex pattern validation failure."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/cookie_regex_pattern_validation_fail/cookies/pattern"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -195,20 +230,39 @@ def test_cookie_regex_pattern_validation_fail() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 422  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
-    assert data == {"detail": "1 validation error in request", "errors": [{"ctx": {"pattern": "^[A-Z0-9]{8}$"}, "input": "invalid-format", "loc": ["cookie", "tracking_id"], "msg": "String should match pattern '^[A-Z0-9]{8}$'", "type": "string_pattern_mismatch"}], "status": 422, "title": "Request Validation Failed", "type": "https://spikard.dev/errors/validation-error"}  # noqa: S101
+    assert data == {
+        "detail": "1 validation error in request",
+        "errors": [
+            {
+                "ctx": {"pattern": "^[A-Z0-9]{8}$"},
+                "input": "invalid-format",
+                "loc": ["cookie", "tracking_id"],
+                "msg": "String should match pattern '^[A-Z0-9]{8}$'",
+                "type": "string_pattern_mismatch",
+            }
+        ],
+        "status": 422,
+        "title": "Request Validation Failed",
+        "type": "https://spikard.dev/errors/validation-error",
+    }  # noqa: S101
+
 
 def test_cookie_regex_pattern_validation_success() -> None:
     """Tests cookie with regex pattern validation success."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/cookie_regex_pattern_validation_success/cookies/pattern"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -221,20 +275,25 @@ def test_cookie_regex_pattern_validation_success() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"tracking_id": "ABC12345"}  # noqa: S101
+
 
 def test_cookie_validation_max_length_constraint_fail() -> None:
     """Tests cookie validation with max_length constraint failure."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/cookie_validation_max_length_constraint_fail/cookies/validated"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -247,20 +306,39 @@ def test_cookie_validation_max_length_constraint_fail() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 422  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
-    assert data == {"detail": "1 validation error in request", "errors": [{"ctx": {"max_length": 20}, "input": "this_cookie_value_is_way_too_long", "loc": ["cookie", "session_id"], "msg": "String should have at most 20 characters", "type": "string_too_long"}], "status": 422, "title": "Request Validation Failed", "type": "https://spikard.dev/errors/validation-error"}  # noqa: S101
+    assert data == {
+        "detail": "1 validation error in request",
+        "errors": [
+            {
+                "ctx": {"max_length": 20},
+                "input": "this_cookie_value_is_way_too_long",
+                "loc": ["cookie", "session_id"],
+                "msg": "String should have at most 20 characters",
+                "type": "string_too_long",
+            }
+        ],
+        "status": 422,
+        "title": "Request Validation Failed",
+        "type": "https://spikard.dev/errors/validation-error",
+    }  # noqa: S101
+
 
 def test_cookie_validation_min_length_constraint_success() -> None:
     """Tests cookie validation with min_length constraint at boundary."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/cookie_validation_min_length_constraint_success/cookies/min-length"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -273,20 +351,25 @@ def test_cookie_validation_min_length_constraint_success() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"token": "abc"}  # noqa: S101
+
 
 def test_cookie_validation_min_length_failure() -> None:
     """Tests cookie parameter with min_length constraint returns 422 when too short."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/cookie_validation_min_length_failure/items/"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -299,20 +382,38 @@ def test_cookie_validation_min_length_failure() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 422  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
-    assert data == {"detail": "1 validation error in request", "errors": [{"input": "", "loc": ["cookie", "tracking_id"], "msg": "String should have at least 3 characters", "type": "string_too_short"}], "status": 422, "title": "Request Validation Failed", "type": "https://spikard.dev/errors/validation-error"}  # noqa: S101
+    assert data == {
+        "detail": "1 validation error in request",
+        "errors": [
+            {
+                "input": "",
+                "loc": ["cookie", "tracking_id"],
+                "msg": "String should have at least 3 characters",
+                "type": "string_too_short",
+            }
+        ],
+        "status": 422,
+        "title": "Request Validation Failed",
+        "type": "https://spikard.dev/errors/validation-error",
+    }  # noqa: S101
+
 
 def test_multiple_cookies_success() -> None:
     """Tests multiple cookie parameters in a single request."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/multiple_cookies_success/items/"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -325,20 +426,25 @@ def test_multiple_cookies_success() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"fatebook_tracker": "tracker456", "googall_tracker": "ga789", "session_id": "session123"}  # noqa: S101
+
 
 def test_optional_apikey_cookie_missing() -> None:
     """Tests optional APIKeyCookie (auto_error=False) returns None without 403."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/optional_apikey_cookie_missing/users/me"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -351,20 +457,25 @@ def test_optional_apikey_cookie_missing() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"msg": "Create an account first"}  # noqa: S101
+
 
 def test_optional_cookie_parameter_missing() -> None:
     """Tests optional cookie parameter returns None when not provided."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/optional_cookie_parameter_missing/items/"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -377,20 +488,25 @@ def test_optional_cookie_parameter_missing() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"ads_id": None}  # noqa: S101
+
 
 def test_optional_cookie_parameter_success() -> None:
     """Tests optional cookie parameter with value provided."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/optional_cookie_parameter_success/items/"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -403,20 +519,25 @@ def test_optional_cookie_parameter_success() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"ads_id": "abc123"}  # noqa: S101
+
 
 def test_required_cookie_missing() -> None:
     """Tests validation error when required cookie is missing."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/required_cookie_missing/items/cookies"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -429,23 +550,35 @@ def test_required_cookie_missing() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 422  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
-    assert data == {"detail": "1 validation error in request", "errors": [{"input": "", "loc": ["cookie", "session_id"], "msg": "Field required", "type": "missing"}], "status": 422, "title": "Request Validation Failed", "type": "https://spikard.dev/errors/validation-error"}  # noqa: S101
+    assert data == {
+        "detail": "1 validation error in request",
+        "errors": [{"input": "", "loc": ["cookie", "session_id"], "msg": "Field required", "type": "missing"}],
+        "status": 422,
+        "title": "Request Validation Failed",
+        "type": "https://spikard.dev/errors/validation-error",
+    }  # noqa: S101
+
 
 def test_response_cookie_with_domain_attribute() -> None:
     """Tests setting cookie with specific domain."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/response_cookie_with_domain_attribute/cookies/set-with-domain"
     _headers = {}
     import json  # noqa: PLC0415
+
     _headers.setdefault("Content-Type", "application/json")
     _body = json.dumps({"value": "domain_test"}).encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -458,23 +591,29 @@ def test_response_cookie_with_domain_attribute() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"message": "Cookie set with domain"}  # noqa: S101
+
 
 def test_response_cookie_with_path_attribute() -> None:
     """Tests setting cookie with specific path."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/response_cookie_with_path_attribute/cookies/set-with-path"
     _headers = {}
     import json  # noqa: PLC0415
+
     _headers.setdefault("Content-Type", "application/json")
     _body = json.dumps({"value": "path_test"}).encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -487,23 +626,29 @@ def test_response_cookie_with_path_attribute() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"message": "Cookie set with path"}  # noqa: S101
+
 
 def test_response_cookie_with_samesite_lax() -> None:
     """Tests setting cookie with SameSite lax attribute."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/response_cookie_with_samesite_lax/cookies/samesite-lax"
     _headers = {}
     import json  # noqa: PLC0415
+
     _headers.setdefault("Content-Type", "application/json")
     _body = json.dumps({"value": "lax_cookie"}).encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -516,23 +661,29 @@ def test_response_cookie_with_samesite_lax() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"message": "Cookie set with SameSite=Lax"}  # noqa: S101
+
 
 def test_response_cookie_with_samesite_none() -> None:
     """Tests setting cookie with SameSite none (requires Secure)."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/response_cookie_with_samesite_none/cookies/samesite-none"
     _headers = {}
     import json  # noqa: PLC0415
+
     _headers.setdefault("Content-Type", "application/json")
     _body = json.dumps({"value": "none_cookie"}).encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -545,23 +696,29 @@ def test_response_cookie_with_samesite_none() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"message": "Cookie set with SameSite=None"}  # noqa: S101
+
 
 def test_response_cookie_with_samesite_strict() -> None:
     """Tests setting cookie with SameSite strict attribute."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/response_cookie_with_samesite_strict/cookies/samesite-strict"
     _headers = {}
     import json  # noqa: PLC0415
+
     _headers.setdefault("Content-Type", "application/json")
     _body = json.dumps({"value": "strict_cookie"}).encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -574,20 +731,25 @@ def test_response_cookie_with_samesite_strict() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"message": "Cookie set with SameSite=Strict"}  # noqa: S101
+
 
 def test_response_delete_cookie() -> None:
     """Tests deleting a cookie by setting max_age to 0."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/response_delete_cookie/cookies/delete"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="POST")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -600,23 +762,29 @@ def test_response_delete_cookie() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"message": "Cookie deleted"}  # noqa: S101
+
 
 def test_response_multiple_cookies() -> None:
     """Tests setting multiple cookies in single response."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/response_multiple_cookies/cookies/multiple"
     _headers = {}
     import json  # noqa: PLC0415
+
     _headers.setdefault("Content-Type", "application/json")
     _body = json.dumps({"session": "session123", "user": "john"}).encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -629,23 +797,29 @@ def test_response_multiple_cookies() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"message": "Multiple cookies set"}  # noqa: S101
+
 
 def test_response_session_cookie_no_max_age() -> None:
     """Tests setting session cookie without max_age (expires with browser)."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/response_session_cookie_no_max_age/cookies/session"
     _headers = {}
     import json  # noqa: PLC0415
+
     _headers.setdefault("Content-Type", "application/json")
     _body = json.dumps({"value": "session_abc123"}).encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -658,20 +832,25 @@ def test_response_session_cookie_no_max_age() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"message": "Session cookie set"}  # noqa: S101
+
 
 def test_response_set_cookie_basic() -> None:
     """Tests setting a cookie in the response."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/response_set_cookie_basic/cookie/"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="POST")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -684,5 +863,6 @@ def test_response_set_cookie_basic() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"message": "Come to the dark side, we have cookies"}  # noqa: S101

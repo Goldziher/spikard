@@ -7,7 +7,6 @@
 import { describe, expect, it } from "vitest";
 
 describe("headers", () => {
-
   it("bearer_token_format_valid: Authorization header with valid Bearer token format should be accepted", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/30_bearer_token_format_valid/protected`;
@@ -15,10 +14,12 @@ describe("headers", () => {
       method: "GET",
       redirect: "manual",
       headers: {
-        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U",
+        Authorization:
+          "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U",
       },
     });
-    expect(response.status).toBe(200);  });
+    expect(response.status).toBe(200);
+  });
 
   it("bearer_token_format_invalid: Authorization header with invalid Bearer token format should fail validation", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -27,17 +28,29 @@ describe("headers", () => {
       method: "GET",
       redirect: "manual",
       headers: {
-        "Authorization": "Bearer invalid token with spaces",
+        Authorization: "Bearer invalid token with spaces",
       },
     });
-    expect(response.status).toBe(422);    const data = await response.json();
+    expect(response.status).toBe(422);
+    const data = await response.json();
     expect(data).toEqual({
       detail: "1 validation error in request",
-      errors: [{ ctx: { pattern: "^Bearer [A-Za-z0-9-._~+/]+=*$", value: "Bearer invalid token with spaces" }, loc: ["headers", "authorization"], msg: "Invalid Bearer token format", type: "validation_error" }],
+      errors: [
+        {
+          ctx: {
+            pattern: "^Bearer [A-Za-z0-9-._~+/]+=*$",
+            value: "Bearer invalid token with spaces",
+          },
+          loc: ["headers", "authorization"],
+          msg: "Invalid Bearer token format",
+          type: "validation_error",
+        },
+      ],
       status: 422,
       title: "Request Validation Failed",
       type: "https://spikard.dev/errors/validation-error",
-    });  });
+    });
+  });
 
   it("bearer_token_missing_prefix: Authorization header without Bearer prefix should fail validation", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -46,17 +59,29 @@ describe("headers", () => {
       method: "GET",
       redirect: "manual",
       headers: {
-        "Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+        Authorization: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
       },
     });
-    expect(response.status).toBe(422);    const data = await response.json();
+    expect(response.status).toBe(422);
+    const data = await response.json();
     expect(data).toEqual({
       detail: "1 validation error in request",
-      errors: [{ ctx: { pattern: "^Bearer [A-Za-z0-9-._~+/]+=*$", value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9" }, loc: ["headers", "authorization"], msg: "Invalid Bearer token format", type: "validation_error" }],
+      errors: [
+        {
+          ctx: {
+            pattern: "^Bearer [A-Za-z0-9-._~+/]+=*$",
+            value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+          },
+          loc: ["headers", "authorization"],
+          msg: "Invalid Bearer token format",
+          type: "validation_error",
+        },
+      ],
       status: 422,
       title: "Request Validation Failed",
       type: "https://spikard.dev/errors/validation-error",
-    });  });
+    });
+  });
 
   it("api_key_header_valid: X-API-Key header with valid format should be accepted", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -68,7 +93,8 @@ describe("headers", () => {
         "X-API-Key": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4",
       },
     });
-    expect(response.status).toBe(200);  });
+    expect(response.status).toBe(200);
+  });
 
   it("api_key_header_invalid: X-API-Key header with invalid format should fail validation", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -80,14 +106,23 @@ describe("headers", () => {
         "X-API-Key": "invalid-key",
       },
     });
-    expect(response.status).toBe(422);    const data = await response.json();
+    expect(response.status).toBe(422);
+    const data = await response.json();
     expect(data).toEqual({
       detail: "1 validation error in request",
-      errors: [{ ctx: { pattern: "^[a-f0-9]{32}$", value: "invalid-key" }, loc: ["headers", "x-api-key"], msg: "Invalid API key format", type: "validation_error" }],
+      errors: [
+        {
+          ctx: { pattern: "^[a-f0-9]{32}$", value: "invalid-key" },
+          loc: ["headers", "x-api-key"],
+          msg: "Invalid API key format",
+          type: "validation_error",
+        },
+      ],
       status: 422,
       title: "Request Validation Failed",
       type: "https://spikard.dev/errors/validation-error",
-    });  });
+    });
+  });
 
   it("accept_encoding_header: Tests Accept-Encoding header for compression negotiation", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -99,10 +134,12 @@ describe("headers", () => {
         "Accept-Encoding": "gzip, deflate, br",
       },
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       accept_encoding: "gzip, deflate, br",
-    });  });
+    });
+  });
 
   it("accept_header_json: Tests Accept header for content negotiation", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -111,13 +148,15 @@ describe("headers", () => {
       method: "GET",
       redirect: "manual",
       headers: {
-        "Accept": "application/json",
+        Accept: "application/json",
       },
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       accept: "application/json",
-    });  });
+    });
+  });
 
   it("accept_language_header: Tests Accept-Language header for locale/i18n", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -129,23 +168,29 @@ describe("headers", () => {
         "Accept-Language": "en-US,en;q=0.9",
       },
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       accept_language: "en-US,en;q=0.9",
-    });  });
+    });
+  });
 
   it("authorization_header_missing: Tests missing Authorization header returns 403", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/authorization_header_missing/users/me`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(422);    const data = await response.json();
+    expect(response.status).toBe(422);
+    const data = await response.json();
     expect(data).toEqual({
       detail: "1 validation error in request",
-      errors: [{ input: null, loc: ["headers", "authorization"], msg: "Field required", type: "missing" }],
+      errors: [
+        { input: null, loc: ["headers", "authorization"], msg: "Field required", type: "missing" },
+      ],
       status: 422,
       title: "Request Validation Failed",
       type: "https://spikard.dev/errors/validation-error",
-    });  });
+    });
+  });
 
   it("authorization_header_success: Tests Authorization header with valid Digest scheme", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -154,14 +199,16 @@ describe("headers", () => {
       method: "GET",
       redirect: "manual",
       headers: {
-        "Authorization": "Digest foobar",
+        Authorization: "Digest foobar",
       },
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       credentials: "foobar",
       scheme: "Digest",
-    });  });
+    });
+  });
 
   it("authorization_header_wrong_scheme: Tests Authorization header with incorrect scheme returns 403", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -170,17 +217,26 @@ describe("headers", () => {
       method: "GET",
       redirect: "manual",
       headers: {
-        "Authorization": "Other invalidauthorization",
+        Authorization: "Other invalidauthorization",
       },
     });
-    expect(response.status).toBe(422);    const data = await response.json();
+    expect(response.status).toBe(422);
+    const data = await response.json();
     expect(data).toEqual({
       detail: "1 validation error in request",
-      errors: [{ input: "Other invalidauthorization", loc: ["headers", "authorization"], msg: "String should match pattern '^Digest .+'", type: "string_pattern_mismatch" }],
+      errors: [
+        {
+          input: "Other invalidauthorization",
+          loc: ["headers", "authorization"],
+          msg: "String should match pattern '^Digest .+'",
+          type: "string_pattern_mismatch",
+        },
+      ],
       status: 422,
       title: "Request Validation Failed",
       type: "https://spikard.dev/errors/validation-error",
-    });  });
+    });
+  });
 
   it("basic_authentication_success: Tests Authorization header with Basic auth scheme", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -189,27 +245,33 @@ describe("headers", () => {
       method: "GET",
       redirect: "manual",
       headers: {
-        "Authorization": "Basic dXNlcm5hbWU6cGFzc3dvcmQ=",
+        Authorization: "Basic dXNlcm5hbWU6cGFzc3dvcmQ=",
       },
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       password: "password",
       username: "username",
-    });  });
+    });
+  });
 
   it("bearer_token_authentication_missing: Tests missing Bearer token returns 401 Unauthorized", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/bearer_token_authentication_missing/headers/bearer-auth`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(422);    const data = await response.json();
+    expect(response.status).toBe(422);
+    const data = await response.json();
     expect(data).toEqual({
       detail: "1 validation error in request",
-      errors: [{ input: null, loc: ["headers", "authorization"], msg: "Field required", type: "missing" }],
+      errors: [
+        { input: null, loc: ["headers", "authorization"], msg: "Field required", type: "missing" },
+      ],
       status: 422,
       title: "Request Validation Failed",
       type: "https://spikard.dev/errors/validation-error",
-    });  });
+    });
+  });
 
   it("bearer_token_authentication_success: Tests Authorization header with Bearer token scheme", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -218,13 +280,15 @@ describe("headers", () => {
       method: "GET",
       redirect: "manual",
       headers: {
-        "Authorization": "Bearer valid_token_123",
+        Authorization: "Bearer valid_token_123",
       },
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       token: "valid_token_123",
-    });  });
+    });
+  });
 
   it("content_type_header_application_json: Tests Content-Type header with JSON media type", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -236,10 +300,12 @@ describe("headers", () => {
         "Content-Type": "application/json",
       },
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       content_type: "application/json",
-    });  });
+    });
+  });
 
   it("header_case_insensitivity_access: Tests case-insensitive header access (Content-Type vs content-type)", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -252,12 +318,14 @@ describe("headers", () => {
       },
       body: JSON.stringify({ test: "data" }),
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       content_type_lower: "application/json",
       content_type_mixed: "application/json",
       content_type_upper: "application/json",
-    });  });
+    });
+  });
 
   it("header_regex_validation_fail: Tests header with regex pattern validation failure", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -269,14 +337,24 @@ describe("headers", () => {
         "X-Request-Id": "invalid-format",
       },
     });
-    expect(response.status).toBe(422);    const data = await response.json();
+    expect(response.status).toBe(422);
+    const data = await response.json();
     expect(data).toEqual({
       detail: "1 validation error in request",
-      errors: [{ ctx: { pattern: "^[0-9]{3,}$" }, input: "invalid-format", loc: ["headers", "x-request-id"], msg: "String should match pattern '^[0-9]{3,}$'", type: "string_pattern_mismatch" }],
+      errors: [
+        {
+          ctx: { pattern: "^[0-9]{3,}$" },
+          input: "invalid-format",
+          loc: ["headers", "x-request-id"],
+          msg: "String should match pattern '^[0-9]{3,}$'",
+          type: "string_pattern_mismatch",
+        },
+      ],
       status: 422,
       title: "Request Validation Failed",
       type: "https://spikard.dev/errors/validation-error",
-    });  });
+    });
+  });
 
   it("header_regex_validation_success: Tests header with regex pattern validation success", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -288,10 +366,12 @@ describe("headers", () => {
         "X-Request-Id": "12345",
       },
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       x_request_id: "12345",
-    });  });
+    });
+  });
 
   it("header_validation_max_length_constraint_fail: Tests header validation with max_length constraint failure", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -303,14 +383,24 @@ describe("headers", () => {
         "X-Session-Id": "this_is_way_too_long_for_validation",
       },
     });
-    expect(response.status).toBe(422);    const data = await response.json();
+    expect(response.status).toBe(422);
+    const data = await response.json();
     expect(data).toEqual({
       detail: "1 validation error in request",
-      errors: [{ ctx: { max_length: 20 }, input: "this_is_way_too_long_for_validation", loc: ["headers", "x-session-id"], msg: "String should have at most 20 characters", type: "string_too_long" }],
+      errors: [
+        {
+          ctx: { max_length: 20 },
+          input: "this_is_way_too_long_for_validation",
+          loc: ["headers", "x-session-id"],
+          msg: "String should have at most 20 characters",
+          type: "string_too_long",
+        },
+      ],
       status: 422,
       title: "Request Validation Failed",
       type: "https://spikard.dev/errors/validation-error",
-    });  });
+    });
+  });
 
   it("header_validation_min_length_constraint: Tests header validation with min_length constraint", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -322,14 +412,24 @@ describe("headers", () => {
         "X-Token": "ab",
       },
     });
-    expect(response.status).toBe(422);    const data = await response.json();
+    expect(response.status).toBe(422);
+    const data = await response.json();
     expect(data).toEqual({
       detail: "1 validation error in request",
-      errors: [{ ctx: { min_length: 3 }, input: "ab", loc: ["headers", "x-token"], msg: "String should have at least 3 characters", type: "string_too_short" }],
+      errors: [
+        {
+          ctx: { min_length: 3 },
+          input: "ab",
+          loc: ["headers", "x-token"],
+          msg: "String should have at least 3 characters",
+          type: "string_too_short",
+        },
+      ],
       status: 422,
       title: "Request Validation Failed",
       type: "https://spikard.dev/errors/validation-error",
-    });  });
+    });
+  });
 
   it("header_with_underscore_conversion_explicit: Tests X-Token header converted to x_token parameter", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -341,10 +441,12 @@ describe("headers", () => {
         "X-Token": "secret123",
       },
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       x_token: "secret123",
-    });  });
+    });
+  });
 
   it("host_header: Tests Host header (standard HTTP header)", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -353,13 +455,15 @@ describe("headers", () => {
       method: "GET",
       redirect: "manual",
       headers: {
-        "Host": "example.com:8080",
+        Host: "example.com:8080",
       },
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       host: "example.com:8080",
-    });  });
+    });
+  });
 
   it("multiple_custom_headers: Tests multiple custom headers in single request", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -373,12 +477,14 @@ describe("headers", () => {
         "X-Trace-Id": "trace-abc",
       },
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       x_client_version: "1.2.3",
       x_request_id: "req-12345",
       x_trace_id: "trace-abc",
-    });  });
+    });
+  });
 
   it("multiple_header_values_x_token: Tests multiple values for same header name (X-Token)", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -390,19 +496,23 @@ describe("headers", () => {
         "x-token": "foo, bar",
       },
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       "X-Token values": ["foo", "bar"],
-    });  });
+    });
+  });
 
   it("optional_header_with_none_default_missing: Tests optional header parameter with None default when not provided", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/optional_header_with_none_default_missing/items/`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       strange_header: null,
-    });  });
+    });
+  });
 
   it("origin_header: Tests Origin header for CORS", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -411,13 +521,15 @@ describe("headers", () => {
       method: "GET",
       redirect: "manual",
       headers: {
-        "Origin": "https://example.com",
+        Origin: "https://example.com",
       },
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       origin: "https://example.com",
-    });  });
+    });
+  });
 
   it("referer_header: Tests Referer header (standard misspelling)", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -426,13 +538,15 @@ describe("headers", () => {
       method: "GET",
       redirect: "manual",
       headers: {
-        "Referer": "https://example.com/page",
+        Referer: "https://example.com/page",
       },
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       referer: "https://example.com/page",
-    });  });
+    });
+  });
 
   it("user_agent_header_custom_value: Tests User-Agent header with custom value", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -444,28 +558,34 @@ describe("headers", () => {
         "User-Agent": "Mozilla/5.0 Custom Browser",
       },
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       "User-Agent": "Mozilla/5.0 Custom Browser",
-    });  });
+    });
+  });
 
   it("user_agent_header_default_value: Tests optional User-Agent header when not provided, uses testclient default", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/user_agent_header_default_value/items/`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       "User-Agent": "testclient",
-    });  });
+    });
+  });
 
   it("x_api_key_optional_header_missing: Tests optional X-API-Key header when not provided, returns fallback message", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/x_api_key_optional_header_missing/users/me`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       msg: "Hello World",
-    });  });
+    });
+  });
 
   it("x_api_key_optional_header_success: Tests optional X-API-Key header with valid value", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -474,26 +594,32 @@ describe("headers", () => {
       method: "GET",
       redirect: "manual",
       headers: {
-        "key": "secret",
+        key: "secret",
       },
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       msg: "Hello secret",
-    });  });
+    });
+  });
 
   it("x_api_key_required_header_missing: Tests required X-API-Key header when not provided, returns 403", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/x_api_key_required_header_missing/users/me`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(422);    const data = await response.json();
+    expect(response.status).toBe(422);
+    const data = await response.json();
     expect(data).toEqual({
       detail: "1 validation error in request",
-      errors: [{ input: null, loc: ["headers", "x-api-key"], msg: "Field required", type: "missing" }],
+      errors: [
+        { input: null, loc: ["headers", "x-api-key"], msg: "Field required", type: "missing" },
+      ],
       status: 422,
       title: "Request Validation Failed",
       type: "https://spikard.dev/errors/validation-error",
-    });  });
+    });
+  });
 
   it("x_api_key_required_header_success: Tests required X-API-Key header with valid value", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -502,12 +628,13 @@ describe("headers", () => {
       method: "GET",
       redirect: "manual",
       headers: {
-        "key": "secret",
+        key: "secret",
       },
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       username: "secret",
-    });  });
-
+    });
+  });
 });

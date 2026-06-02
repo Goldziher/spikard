@@ -27,7 +27,8 @@ internal sealed class GraphQLRouteConfigSafeHandle : SafeHandle
 }
 /// <summary>/// Configuration for GraphQL routes/// /// Provides a builder pattern for configuring GraphQL route parameters/// for the Spikard HTTP server's routing system./// </summary>
 public sealed class GraphQLRouteConfig : IDisposable
-{    private static readonly JsonSerializerOptions JsonOptions = new()
+{
+    private static readonly JsonSerializerOptions JsonOptions = new()
     {
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower) },
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault

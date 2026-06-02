@@ -68,6 +68,7 @@ class SchemaConfig:
 
 class QueryOnlyConfig(TypedDict, total=False):
     """Configuration for schemas with only Query type."""
+
     introspection_enabled: bool
 
     """Enable introspection queries"""
@@ -77,9 +78,11 @@ class QueryOnlyConfig(TypedDict, total=False):
     depth_limit: int | None
 
     """Maximum query depth (None = unlimited)"""
+
 
 class QueryMutationConfig(TypedDict, total=False):
     """Configuration for schemas with Query and Mutation types."""
+
     introspection_enabled: bool
 
     """Enable introspection queries"""
@@ -89,9 +92,11 @@ class QueryMutationConfig(TypedDict, total=False):
     depth_limit: int | None
 
     """Maximum query depth (None = unlimited)"""
+
 
 class FullSchemaConfig(TypedDict, total=False):
     """Configuration for fully-featured schemas with Query, Mutation, and Subscription types."""
+
     introspection_enabled: bool
 
     """Enable introspection queries"""
@@ -101,6 +106,7 @@ class FullSchemaConfig(TypedDict, total=False):
     depth_limit: int | None
 
     """Maximum query depth (None = unlimited)"""
+
 
 @dataclass(frozen=True, slots=True)
 class BackgroundTaskConfig:
@@ -290,6 +296,7 @@ class OpenApiConfig:
 
 class Response(TypedDict, total=False):
     """HTTP Response with custom status code, headers, and content."""
+
     content: str | None
 
     """Response body content"""
@@ -299,6 +306,7 @@ class Response(TypedDict, total=False):
     headers: dict[str, str]
 
     """Response headers"""
+
 
 @dataclass(frozen=True, slots=True)
 class ServerConfig:

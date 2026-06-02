@@ -32,16 +32,24 @@ def test_413_payload_too_large() -> None:
     """Request with body exceeding max size should return 413."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/19_413_payload_too_large/upload"
     _headers = {}
     import json  # noqa: PLC0415
+
     _headers.setdefault("Content-Type", "application/json")
-    _body = json.dumps({"data": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}).encode()
+    _body = json.dumps(
+        {
+            "data": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        }
+    ).encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -54,20 +62,28 @@ def test_413_payload_too_large() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 413  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
-    assert data == {"error": "Payload Too Large", "message": "Request body size exceeds maximum allowed size of 1024 bytes"}  # noqa: S101
+    assert data == {
+        "error": "Payload Too Large",
+        "message": "Request body size exceeds maximum allowed size of 1024 bytes",
+    }  # noqa: S101
+
 
 def test_ok_success() -> None:
     """Tests standard 200 OK response for successful GET request."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/200_ok_success/status-test/200"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -80,25 +96,31 @@ def test_ok_success() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"id": 1, "name": "Item 1"}  # noqa: S101
+
 
 def test_created_resource_created() -> None:
     """Tests 201 Created response for successful POST request."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/201_created_resource_created/items/"
     _headers = {
         "Content-Type": "application/json",
     }
     import json  # noqa: PLC0415
+
     _headers.setdefault("Content-Type", "application/json")
     _body = json.dumps({"name": "New Item"}).encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -111,25 +133,31 @@ def test_created_resource_created() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 201  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"id": 1, "name": "New Item"}  # noqa: S101
+
 
 def test_accepted_request_accepted_for_processing() -> None:
     """Tests 202 Accepted for async processing."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/202_accepted_request_accepted_for_processing/tasks/"
     _headers = {
         "Content-Type": "application/json",
     }
     import json  # noqa: PLC0415
+
     _headers.setdefault("Content-Type", "application/json")
     _body = json.dumps({"task": "process_data"}).encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -142,20 +170,25 @@ def test_accepted_request_accepted_for_processing() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 202  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"message": "Task accepted for processing", "task_id": "abc123"}  # noqa: S101
+
 
 def test_no_content_success_with_no_body() -> None:
     """Tests 204 No Content response for successful DELETE."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/204_no_content_success_with_no_body/status-test/204"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="DELETE")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -168,17 +201,21 @@ def test_no_content_success_with_no_body() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 204  # noqa: S101
 
+
 def test_414_uri_too_long() -> None:
     """Request with excessively long URI should return 414."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/20_414_uri_too_long/data?skip_template_expansion=true"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -191,22 +228,27 @@ def test_414_uri_too_long() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {}  # noqa: S101
+
 
 def test_431_request_header_fields_too_large() -> None:
     """Request with excessively large headers should return 431."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/21_431_request_header_fields_too_large/data"
     _headers = {
         "X-Large-Header": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
     }
     _req = urllib.request.Request(url, headers=_headers, method="GET")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -219,20 +261,28 @@ def test_431_request_header_fields_too_large() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 431  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
-    assert data == {"error": "Request Header Fields Too Large", "message": "Request headers exceed maximum allowed size of 8192 bytes"}  # noqa: S101
+    assert data == {
+        "error": "Request Header Fields Too Large",
+        "message": "Request headers exceed maximum allowed size of 8192 bytes",
+    }  # noqa: S101
+
 
 def test_501_not_implemented() -> None:
     """Unsupported HTTP method should return 501."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/22_501_not_implemented/data"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="TRACE")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -245,17 +295,21 @@ def test_501_not_implemented() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 405  # noqa: S101
 
+
 def test_503_service_unavailable() -> None:
     """Service temporarily unavailable should return 503 with Retry-After."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/23_503_service_unavailable/data"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -268,23 +322,31 @@ def test_503_service_unavailable() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 503  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
-    assert data == {"error": "Service Unavailable", "message": "The service is temporarily unavailable. Please try again later."}  # noqa: S101
+    assert data == {
+        "error": "Service Unavailable",
+        "message": "The service is temporarily unavailable. Please try again later.",
+    }  # noqa: S101
     assert resp_headers["retry-after"] == "0"  # noqa: S101
+
 
 def test_not_modified_cached_content_valid() -> None:
     """Tests 304 Not Modified for cached resources."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/304_not_modified_cached_content_valid/status-test/304"
     _headers = {
-        "If-None-Match": "\"abc123\"",
+        "If-None-Match": '"abc123"',
     }
     _req = urllib.request.Request(url, headers=_headers, method="GET")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -297,22 +359,27 @@ def test_not_modified_cached_content_valid() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 304  # noqa: S101
 
+
 def test_temporary_redirect_method_preserved() -> None:
     """Tests 307 temporary redirect with method preservation."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/307_temporary_redirect_method_preserved/redirect-post"
     _headers = {
         "Content-Type": "application/json",
     }
     import json  # noqa: PLC0415
+
     _headers.setdefault("Content-Type", "application/json")
     _body = json.dumps({}).encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -325,26 +392,32 @@ def test_temporary_redirect_method_preserved() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 307  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {}  # noqa: S101
     assert resp_headers["location"] == "/target-post"  # noqa: S101
+
 
 def test_bad_request_invalid_request() -> None:
     """Tests 400 Bad Request for malformed request."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/400_bad_request_invalid_request/items/"
     _headers = {
         "Content-Type": "application/json",
     }
     import json  # noqa: PLC0415
+
     _headers.setdefault("Content-Type", "application/json")
     _body = json.dumps("not valid json").encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -357,20 +430,25 @@ def test_bad_request_invalid_request() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 400  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"detail": "Invalid request format"}  # noqa: S101
+
 
 def test_not_found_resource_not_found() -> None:
     """Tests 404 Not Found for non-existent resource."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/404_not_found_resource_not_found/status-test/404"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -383,25 +461,31 @@ def test_not_found_resource_not_found() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 404  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"detail": "Item not found"}  # noqa: S101
+
 
 def test_request_timeout() -> None:
     """Tests 408 status code when request takes too long."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/408_request_timeout/slow-endpoint"
     _headers = {
         "Content-Type": "application/json",
     }
     import json  # noqa: PLC0415
+
     _headers.setdefault("Content-Type", "application/json")
     _body = json.dumps({"data": "large_data"}).encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -414,26 +498,32 @@ def test_request_timeout() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 408  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"detail": "Request timeout"}  # noqa: S101
     assert resp_headers["connection"] == "close"  # noqa: S101
+
 
 def test_unprocessable_entity_validation_error() -> None:
     """Tests 422 for validation errors (Pydantic)."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/422_unprocessable_entity_validation_error/items/"
     _headers = {
         "Content-Type": "application/json",
     }
     import json  # noqa: PLC0415
+
     _headers.setdefault("Content-Type", "application/json")
     _body = json.dumps({"price": "not a number"}).encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -446,5 +536,14 @@ def test_unprocessable_entity_validation_error() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 422  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
-    assert data == {"detail": "1 validation error in request", "errors": [{"input": {"price": "not a number"}, "loc": ["body", "name"], "msg": "Field required", "type": "missing"}], "status": 422, "title": "Request Validation Failed", "type": "https://spikard.dev/errors/validation-error"}  # noqa: S101
+    assert data == {
+        "detail": "1 validation error in request",
+        "errors": [
+            {"input": {"price": "not a number"}, "loc": ["body", "name"], "msg": "Field required", "type": "missing"}
+        ],
+        "status": 422,
+        "title": "Request Validation Failed",
+        "type": "https://spikard.dev/errors/validation-error",
+    }  # noqa: S101

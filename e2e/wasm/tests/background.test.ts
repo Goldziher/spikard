@@ -7,7 +7,6 @@
 import { describe, expect, it } from "vitest";
 
 describe("background", () => {
-
   it("background_event_logging: Enqueues a background job that appends the posted event to shared state", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/background_event_logging/background/events`;
@@ -19,7 +18,9 @@ describe("background", () => {
       },
       body: JSON.stringify({ event: "alpha" }),
     });
-    expect(response.status).toBe(202);    expect(response.headers.get("content-type")).toBe("application/json");  });
+    expect(response.status).toBe(202);
+    expect(response.headers.get("content-type")).toBe("application/json");
+  });
 
   it("background_event_logging_second_payload: Ensures background jobs handle different payloads", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -32,6 +33,7 @@ describe("background", () => {
       },
       body: JSON.stringify({ event: "beta" }),
     });
-    expect(response.status).toBe(202);    expect(response.headers.get("content-type")).toBe("application/json");  });
-
+    expect(response.status).toBe(202);
+    expect(response.headers.get("content-type")).toBe("application/json");
+  });
 });

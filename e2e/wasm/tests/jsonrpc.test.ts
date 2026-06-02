@@ -7,7 +7,6 @@
 import { describe, expect, it } from "vitest";
 
 describe("jsonrpc", () => {
-
   it("jsonrpc_batch_request: Tests JSON-RPC batch request with multiple calls", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/jsonrpc_batch_request/rpc`;
@@ -17,10 +16,18 @@ describe("jsonrpc", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify([{ id: 1, jsonrpc: "2.0", method: "add", params: [1, 2] }, { id: 2, jsonrpc: "2.0", method: "subtract", params: [5, 3] }]),
+      body: JSON.stringify([
+        { id: 1, jsonrpc: "2.0", method: "add", params: [1, 2] },
+        { id: 2, jsonrpc: "2.0", method: "subtract", params: [5, 3] },
+      ]),
     });
-    expect(response.status).toBe(200);    const data = await response.json();
-    expect(data).toEqual([{ id: 1, jsonrpc: "2.0", result: 3 }, { id: 2, jsonrpc: "2.0", result: 2 }]);  });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual([
+      { id: 1, jsonrpc: "2.0", result: 3 },
+      { id: 2, jsonrpc: "2.0", result: 2 },
+    ]);
+  });
 
   it("jsonrpc_call_with_positional_params: Tests JSON-RPC call with positional array parameters", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -33,12 +40,14 @@ describe("jsonrpc", () => {
       },
       body: JSON.stringify({ id: 2, jsonrpc: "2.0", method: "multiply", params: [4, 7] }),
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       id: 2,
       jsonrpc: "2.0",
       result: 28,
-    });  });
+    });
+  });
 
   it("jsonrpc_config_batch_disabled: Tests JSON-RPC batch requests disabled returns error", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -49,16 +58,21 @@ describe("jsonrpc", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify([{ id: 1, jsonrpc: "2.0", method: "add", params: [1, 2] }, { id: 2, jsonrpc: "2.0", method: "subtract", params: [5, 3] }]),
+      body: JSON.stringify([
+        { id: 1, jsonrpc: "2.0", method: "add", params: [1, 2] },
+        { id: 2, jsonrpc: "2.0", method: "subtract", params: [5, 3] },
+      ]),
     });
-    expect(response.status).toBe(400);    const data = await response.json();
+    expect(response.status).toBe(400);
+    const data = await response.json();
     expect(data).toEqual({
       error: {
         code: -32600,
         message: "Batch requests not enabled",
       },
       jsonrpc: "2.0",
-    });  });
+    });
+  });
 
   it("jsonrpc_config_custom_endpoint_path: Tests JSON-RPC server at custom endpoint path", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -69,14 +83,16 @@ describe("jsonrpc", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ id: 1, jsonrpc: "2.0", method: "test", params: {  } }),
+      body: JSON.stringify({ id: 1, jsonrpc: "2.0", method: "test", params: {} }),
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       id: 1,
       jsonrpc: "2.0",
       result: "ok",
-    });  });
+    });
+  });
 
   it("jsonrpc_config_max_batch_size: Tests JSON-RPC batch request respects maximum batch size", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -87,10 +103,20 @@ describe("jsonrpc", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify([{ id: 1, jsonrpc: "2.0", method: "method1" }, { id: 2, jsonrpc: "2.0", method: "method2" }, { id: 3, jsonrpc: "2.0", method: "method3" }]),
+      body: JSON.stringify([
+        { id: 1, jsonrpc: "2.0", method: "method1" },
+        { id: 2, jsonrpc: "2.0", method: "method2" },
+        { id: 3, jsonrpc: "2.0", method: "method3" },
+      ]),
     });
-    expect(response.status).toBe(200);    const data = await response.json();
-    expect(data).toEqual([{ id: 1, jsonrpc: "2.0", result: "result1" }, { id: 2, jsonrpc: "2.0", result: "result2" }, { id: 3, jsonrpc: "2.0", result: "result3" }]);  });
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data).toEqual([
+      { id: 1, jsonrpc: "2.0", result: "result1" },
+      { id: 2, jsonrpc: "2.0", result: "result2" },
+      { id: 3, jsonrpc: "2.0", result: "result3" },
+    ]);
+  });
 
   it("jsonrpc_deprecated_method_flag: Tests JSON-RPC method marked as deprecated", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -101,14 +127,18 @@ describe("jsonrpc", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ id: 1, jsonrpc: "2.0", method: "oldMethod", params: {  } }),
+      body: JSON.stringify({ id: 1, jsonrpc: "2.0", method: "oldMethod", params: {} }),
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       id: 1,
       jsonrpc: "2.0",
       result: "deprecated",
-    });    expect(response.headers.get("deprecation")).toBe("true");    expect(response.headers.get("sunset")).not.toBeNull();  });
+    });
+    expect(response.headers.get("deprecation")).toBe("true");
+    expect(response.headers.get("sunset")).not.toBeNull();
+  });
 
   it("jsonrpc_error_response: Tests JSON-RPC error response with error object", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -119,9 +149,15 @@ describe("jsonrpc", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ id: 3, jsonrpc: "2.0", method: "divide", params: { denominator: 0, numerator: 10 } }),
+      body: JSON.stringify({
+        id: 3,
+        jsonrpc: "2.0",
+        method: "divide",
+        params: { denominator: 0, numerator: 10 },
+      }),
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       error: {
         code: -32600,
@@ -130,7 +166,8 @@ describe("jsonrpc", () => {
       },
       id: 3,
       jsonrpc: "2.0",
-    });  });
+    });
+  });
 
   it("jsonrpc_invalid_params: Tests JSON-RPC error for invalid parameters", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -141,9 +178,15 @@ describe("jsonrpc", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ id: 5, jsonrpc: "2.0", method: "subtract", params: { wrong_field: 42 } }),
+      body: JSON.stringify({
+        id: 5,
+        jsonrpc: "2.0",
+        method: "subtract",
+        params: { wrong_field: 42 },
+      }),
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       error: {
         code: -32602,
@@ -151,7 +194,8 @@ describe("jsonrpc", () => {
       },
       id: 5,
       jsonrpc: "2.0",
-    });  });
+    });
+  });
 
   it("jsonrpc_method_not_found: Tests JSON-RPC error when method does not exist", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -164,7 +208,8 @@ describe("jsonrpc", () => {
       },
       body: JSON.stringify({ id: 4, jsonrpc: "2.0", method: "nonexistent_method" }),
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       error: {
         code: -32601,
@@ -172,7 +217,8 @@ describe("jsonrpc", () => {
       },
       id: 4,
       jsonrpc: "2.0",
-    });  });
+    });
+  });
 
   it("jsonrpc_method_parameter_validation: Tests JSON-RPC validates parameter types and values", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -183,9 +229,15 @@ describe("jsonrpc", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ id: 6, jsonrpc: "2.0", method: "update_user", params: { email: "john@example.com", id: 123, name: "John Doe" } }),
+      body: JSON.stringify({
+        id: 6,
+        jsonrpc: "2.0",
+        method: "update_user",
+        params: { email: "john@example.com", id: 123, name: "John Doe" },
+      }),
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       id: 6,
       jsonrpc: "2.0",
@@ -195,7 +247,8 @@ describe("jsonrpc", () => {
         name: "John Doe",
         updated: true,
       },
-    });  });
+    });
+  });
 
   it("jsonrpc_method_with_params_schema: Tests JSON-RPC method params validated against schema", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -206,9 +259,15 @@ describe("jsonrpc", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ id: 1, jsonrpc: "2.0", method: "createUser", params: { age: 30, name: "Alice" } }),
+      body: JSON.stringify({
+        id: 1,
+        jsonrpc: "2.0",
+        method: "createUser",
+        params: { age: 30, name: "Alice" },
+      }),
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       id: 1,
       jsonrpc: "2.0",
@@ -217,7 +276,8 @@ describe("jsonrpc", () => {
         id: 1,
         name: "Alice",
       },
-    });  });
+    });
+  });
 
   it("jsonrpc_method_with_result_schema: Tests JSON-RPC method result schema validation", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -230,7 +290,8 @@ describe("jsonrpc", () => {
       },
       body: JSON.stringify({ id: 1, jsonrpc: "2.0", method: "getUser", params: { id: 1 } }),
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       id: 1,
       jsonrpc: "2.0",
@@ -239,7 +300,8 @@ describe("jsonrpc", () => {
         id: 1,
         name: "John",
       },
-    });  });
+    });
+  });
 
   it("jsonrpc_notification_no_id: Tests JSON-RPC notification (no response expected)", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -250,9 +312,14 @@ describe("jsonrpc", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ jsonrpc: "2.0", method: "notify_event", params: { event: "user_login" } }),
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        method: "notify_event",
+        params: { event: "user_login" },
+      }),
     });
-    expect(response.status).toBe(204);  });
+    expect(response.status).toBe(204);
+  });
 
   it("jsonrpc_notification_no_response: Tests JSON-RPC notification (no id) doesn't return response", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -265,7 +332,8 @@ describe("jsonrpc", () => {
       },
       body: JSON.stringify({ jsonrpc: "2.0", method: "notify", params: { message: "hello" } }),
     });
-    expect(response.status).toBe(204);  });
+    expect(response.status).toBe(204);
+  });
 
   it("jsonrpc_single_call_success: Tests single JSON-RPC 2.0 call with successful response", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -278,11 +346,12 @@ describe("jsonrpc", () => {
       },
       body: JSON.stringify({ id: 1, jsonrpc: "2.0", method: "add", params: { a: 5, b: 3 } }),
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       id: 1,
       jsonrpc: "2.0",
       result: 8,
-    });  });
-
+    });
+  });
 });

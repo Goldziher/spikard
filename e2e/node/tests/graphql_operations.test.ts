@@ -7,7 +7,6 @@
 import { describe, expect, it } from "vitest";
 
 describe("graphql_operations", () => {
-
   it("graphql_field_level_error_partial_data: Tests that a field-level resolver error returns partial data alongside an errors array", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/graphql_field_level_error_partial_data/graphql`;
@@ -17,16 +16,18 @@ describe("graphql_operations", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ query: "{ user(id: \"missing-user\") { id name avatar } status }" }),
+      body: JSON.stringify({ query: '{ user(id: "missing-user") { id name avatar } status }' }),
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       data: {
         status: "ok",
         user: null,
       },
       errors: [{ message: "User not found", path: ["user"] }],
-    });  });
+    });
+  });
 
   it("graphql_introspection_query: Tests that the __schema introspection query returns the schema type list", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -39,17 +40,23 @@ describe("graphql_operations", () => {
       },
       body: JSON.stringify({ query: "{ __schema { queryType { name } types { name kind } } }" }),
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       data: {
         __schema: {
           queryType: {
             name: "Query",
           },
-          types: [{ kind: "OBJECT", name: "Query" }, { kind: "SCALAR", name: "String" }, { kind: "SCALAR", name: "Boolean" }],
+          types: [
+            { kind: "OBJECT", name: "Query" },
+            { kind: "SCALAR", name: "String" },
+            { kind: "SCALAR", name: "Boolean" },
+          ],
         },
       },
-    });  });
+    });
+  });
 
   it("graphql_invalid_syntax_rejected: Tests that a query with invalid GraphQL syntax returns a syntax error in the errors array", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -62,10 +69,12 @@ describe("graphql_operations", () => {
       },
       body: JSON.stringify({ query: "{ hello { this is not valid syntax {{{" }),
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       errors: [{ locations: [{ column: 10, line: 1 }], message: "Syntax Error" }],
-    });  });
+    });
+  });
 
   it("graphql_multi_operation_with_operation_name: Tests executing a specific named operation from a document containing multiple operations", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -76,14 +85,19 @@ describe("graphql_operations", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ operationName: "Version", query: "query Ping { ping } query Version { version }" }),
+      body: JSON.stringify({
+        operationName: "Version",
+        query: "query Ping { ping } query Version { version }",
+      }),
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       data: {
         version: "1.0.0",
       },
-    });  });
+    });
+  });
 
   it("graphql_mutation_create_object: Tests GraphQL mutation with an input type that returns the newly created object", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -94,9 +108,14 @@ describe("graphql_operations", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ query: "mutation CreateUser($input: CreateUserInput!) { createUser(input: $input) { id name email } }", variables: { input: { email: "carol@example.com", name: "Carol" } } }),
+      body: JSON.stringify({
+        query:
+          "mutation CreateUser($input: CreateUserInput!) { createUser(input: $input) { id name email } }",
+        variables: { input: { email: "carol@example.com", name: "Carol" } },
+      }),
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       data: {
         createUser: {
@@ -105,7 +124,8 @@ describe("graphql_operations", () => {
           name: "Carol",
         },
       },
-    });  });
+    });
+  });
 
   it("graphql_ops_complexity_limit_exceeded: Tests that a query exceeding the configured complexity limit returns an error", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -116,12 +136,16 @@ describe("graphql_operations", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ query: "{ users { id friends { id friends { id friends { id friends { id } } } } } }" }),
+      body: JSON.stringify({
+        query: "{ users { id friends { id friends { id friends { id friends { id } } } } } }",
+      }),
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       errors: [{ message: "Query complexity exceeds maximum allowed complexity of 10" }],
-    });  });
+    });
+  });
 
   it("graphql_ops_depth_limit_exceeded: Tests that a query exceeding the configured depth limit returns an error", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -134,10 +158,12 @@ describe("graphql_operations", () => {
       },
       body: JSON.stringify({ query: "{ a { b { c { d { e } } } } }" }),
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       errors: [{ message: "Query depth exceeds maximum allowed depth of 3" }],
-    });  });
+    });
+  });
 
   it("graphql_query_nested_fields: Tests GraphQL query selecting nested fields at depth 2-3", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -148,9 +174,13 @@ describe("graphql_operations", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ query: "{ order(id: \"ORD-1\") { id customer { name address { city } } items { sku quantity } } }" }),
+      body: JSON.stringify({
+        query:
+          '{ order(id: "ORD-1") { id customer { name address { city } } items { sku quantity } } }',
+      }),
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       data: {
         order: {
@@ -164,7 +194,8 @@ describe("graphql_operations", () => {
           items: [{ quantity: 2, sku: "WIDGET-A" }],
         },
       },
-    });  });
+    });
+  });
 
   it("graphql_query_with_variables: Tests GraphQL query that uses variables passed in the request body", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -175,9 +206,13 @@ describe("graphql_operations", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ query: "query GetUser($id: ID!) { user(id: $id) { id name } }", variables: { id: "user-42" } }),
+      body: JSON.stringify({
+        query: "query GetUser($id: ID!) { user(id: $id) { id name } }",
+        variables: { id: "user-42" },
+      }),
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       data: {
         user: {
@@ -185,7 +220,8 @@ describe("graphql_operations", () => {
           name: "Alice",
         },
       },
-    });  });
+    });
+  });
 
   it("graphql_simple_query: Tests simple GraphQL query execution returning data from the root query type", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -198,12 +234,14 @@ describe("graphql_operations", () => {
       },
       body: JSON.stringify({ query: "{ hello }" }),
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       data: {
         hello: "world",
       },
-    });  });
+    });
+  });
 
   it("graphql_subscription_declaration: Tests that a subscription operation type is declared and the initial response shape matches", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -214,9 +252,14 @@ describe("graphql_operations", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ query: "subscription OnMessageAdded($roomId: ID!) { messageAdded(roomId: $roomId) { id text authorId } }", variables: { roomId: "room-1" } }),
+      body: JSON.stringify({
+        query:
+          "subscription OnMessageAdded($roomId: ID!) { messageAdded(roomId: $roomId) { id text authorId } }",
+        variables: { roomId: "room-1" },
+      }),
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       data: {
         messageAdded: {
@@ -225,7 +268,8 @@ describe("graphql_operations", () => {
           text: "Hello room",
         },
       },
-    });  });
+    });
+  });
 
   it("graphql_undefined_field_error: Tests that querying a field that does not exist in the schema returns a validation error", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -238,9 +282,10 @@ describe("graphql_operations", () => {
       },
       body: JSON.stringify({ query: "{ hello nonExistentField }" }),
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
-      errors: [{ message: "Cannot query field \"nonExistentField\" on type \"Query\"." }],
-    });  });
-
+      errors: [{ message: 'Cannot query field "nonExistentField" on type "Query".' }],
+    });
+  });
 });

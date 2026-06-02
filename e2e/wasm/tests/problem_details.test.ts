@@ -7,7 +7,6 @@
 import { describe, expect, it } from "vitest";
 
 describe("problem_details", () => {
-
   it("problem_details_400_bad_request: Tests ProblemDetails for 400 Bad Request status", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/problem_details_400_bad_request/parse`;
@@ -19,62 +18,72 @@ describe("problem_details", () => {
       },
       body: JSON.stringify({ data: "example" }),
     });
-    expect(response.status).toBe(400);    const data = await response.json();
+    expect(response.status).toBe(400);
+    const data = await response.json();
     expect(data).toEqual({
       detail: "Invalid JSON in request body",
       status: 400,
       title: "Bad Request",
       type: "https://spikard.dev/errors/bad-request",
-    });  });
+    });
+  });
 
   it("problem_details_401_unauthorized: Tests ProblemDetails for 401 Unauthorized status", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/problem_details_401_unauthorized/protected`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(401);    const data = await response.json();
+    expect(response.status).toBe(401);
+    const data = await response.json();
     expect(data).toEqual({
       detail: "Authentication required",
       status: 401,
       title: "Unauthorized",
       type: "https://spikard.dev/errors/unauthorized",
-    });  });
+    });
+  });
 
   it("problem_details_403_forbidden: Tests ProblemDetails for 403 Forbidden status", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/problem_details_403_forbidden/admin/config`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(403);    const data = await response.json();
+    expect(response.status).toBe(403);
+    const data = await response.json();
     expect(data).toEqual({
       detail: "Insufficient permissions to access this resource",
       status: 403,
       title: "Forbidden",
       type: "https://spikard.dev/errors/forbidden",
-    });  });
+    });
+  });
 
   it("problem_details_500_internal_error: Tests ProblemDetails for 500 Internal Server Error status", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/problem_details_500_internal_error/error`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(500);    const data = await response.json();
+    expect(response.status).toBe(500);
+    const data = await response.json();
     expect(data).toEqual({
       detail: "An unexpected error occurred",
       status: 500,
       title: "Internal Server Error",
       type: "https://spikard.dev/errors/internal-error",
-    });  });
+    });
+  });
 
   it("problem_details_standard_all_fields: Tests RFC 9457 ProblemDetails response with all standard fields", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/problem_details_standard_all_fields/items/999`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(404);    const data = await response.json();
+    expect(response.status).toBe(404);
+    const data = await response.json();
     expect(data).toEqual({
       detail: "Item with ID 999 was not found",
       instance: "/items/999",
       status: 404,
       title: "Resource Not Found",
       type: "https://spikard.dev/errors/not-found",
-    });  });
+    });
+  });
 
   it("problem_details_with_extensions: Tests ProblemDetails includes custom extensions for additional context", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -87,7 +96,8 @@ describe("problem_details", () => {
       },
       body: JSON.stringify({ data: "invalid" }),
     });
-    expect(response.status).toBe(422);    const data = await response.json();
+    expect(response.status).toBe(422);
+    const data = await response.json();
     expect(data).toEqual({
       detail: "Validation failed",
       extensions: {
@@ -98,20 +108,23 @@ describe("problem_details", () => {
       status: 422,
       title: "Request Validation Failed",
       type: "https://spikard.dev/errors/validation-error",
-    });  });
+    });
+  });
 
   it("problem_details_with_instance: Tests ProblemDetails includes instance URI for context", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/problem_details_with_instance/users/123/posts/456`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(404);    const data = await response.json();
+    expect(response.status).toBe(404);
+    const data = await response.json();
     expect(data).toEqual({
       detail: "Post 456 not found for user 123",
       instance: "/users/123/posts/456",
       status: 404,
       title: "Post Not Found",
       type: "https://spikard.dev/errors/not-found",
-    });  });
+    });
+  });
 
   it("problem_details_with_type_uri: Tests ProblemDetails includes type URI for error classification", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -124,13 +137,22 @@ describe("problem_details", () => {
       },
       body: JSON.stringify({ value: -5 }),
     });
-    expect(response.status).toBe(422);    const data = await response.json();
+    expect(response.status).toBe(422);
+    const data = await response.json();
     expect(data).toEqual({
       detail: "1 validation error in request",
-      errors: [{ ctx: { ge: 1 }, input: -5, loc: ["body", "value"], msg: "Input should be greater than or equal to 1", type: "greater_than_equal" }],
+      errors: [
+        {
+          ctx: { ge: 1 },
+          input: -5,
+          loc: ["body", "value"],
+          msg: "Input should be greater than or equal to 1",
+          type: "greater_than_equal",
+        },
+      ],
       status: 422,
       title: "Request Validation Failed",
       type: "https://spikard.dev/errors/validation-error",
-    });  });
-
+    });
+  });
 });

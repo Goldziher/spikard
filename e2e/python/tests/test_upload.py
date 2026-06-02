@@ -32,18 +32,22 @@ def test_upload_file_as_bytes() -> None:
     """Tests file upload read as byte array."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/upload_file_as_bytes/upload/bytes"
     _headers = {
         "Content-Type": "multipart/form-data",
     }
     import json  # noqa: PLC0415
+
     _headers.setdefault("Content-Type", "application/json")
     _body = json.dumps({"file": {"content": "binary data", "filename": "binary.bin"}}).encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -56,25 +60,31 @@ def test_upload_file_as_bytes() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"as_bytes": True, "filename": "binary.bin", "size": 11}  # noqa: S101
+
 
 def test_upload_file_basic_success() -> None:
     """Tests basic file upload with single file."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/upload_file_basic_success/upload"
     _headers = {
         "Content-Type": "multipart/form-data",
     }
     import json  # noqa: PLC0415
+
     _headers.setdefault("Content-Type", "application/json")
     _body = json.dumps({"file": {"content": "Hello, World!", "filename": "test.txt"}}).encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -87,25 +97,31 @@ def test_upload_file_basic_success() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"filename": "test.txt", "size": 13}  # noqa: S101
+
 
 def test_upload_file_content_type_or_default() -> None:
     """Tests file upload uses provided content_type or defaults."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/upload_file_content_type_or_default/upload/auto-type"
     _headers = {
         "Content-Type": "multipart/form-data",
     }
     import json  # noqa: PLC0415
+
     _headers.setdefault("Content-Type", "application/json")
     _body = json.dumps({"file": {"content": "Some content", "filename": "unknown.xyz"}}).encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -118,25 +134,31 @@ def test_upload_file_content_type_or_default() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"content_type": "application/octet-stream", "filename": "unknown.xyz"}  # noqa: S101
+
 
 def test_upload_file_read_to_string() -> None:
     """Tests file upload read as string."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/upload_file_read_to_string/upload/string"
     _headers = {
         "Content-Type": "multipart/form-data",
     }
     import json  # noqa: PLC0415
+
     _headers.setdefault("Content-Type", "application/json")
     _body = json.dumps({"file": {"content": "Hello, World!", "filename": "text.txt"}}).encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -149,25 +171,33 @@ def test_upload_file_read_to_string() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"as_string": True, "content": "Hello, World!", "filename": "text.txt"}  # noqa: S101
+
 
 def test_upload_file_with_custom_content_type() -> None:
     """Tests file upload preserves custom Content-Type."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/upload_file_with_custom_content_type/upload/typed"
     _headers = {
         "Content-Type": "multipart/form-data",
     }
     import json  # noqa: PLC0415
+
     _headers.setdefault("Content-Type", "application/json")
-    _body = json.dumps({"file": {"content": '{"key": "value"}', "content_type": "application/json", "filename": "data.json"}}).encode()
+    _body = json.dumps(
+        {"file": {"content": '{"key": "value"}', "content_type": "application/json", "filename": "data.json"}}
+    ).encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -180,25 +210,37 @@ def test_upload_file_with_custom_content_type() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"content_type": "application/json", "filename": "data.json", "size": 16}  # noqa: S101
+
 
 def test_upload_file_with_form_fields() -> None:
     """Tests file upload with additional form fields."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/upload_file_with_form_fields/upload/with-fields"
     _headers = {
         "Content-Type": "multipart/form-data",
     }
     import json  # noqa: PLC0415
+
     _headers.setdefault("Content-Type", "application/json")
-    _body = json.dumps({"description": "Important document", "file": {"content": "PDF content", "filename": "document.pdf"}, "tags": ["important", "archive"]}).encode()
+    _body = json.dumps(
+        {
+            "description": "Important document",
+            "file": {"content": "PDF content", "filename": "document.pdf"},
+            "tags": ["important", "archive"],
+        }
+    ).encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -211,25 +253,33 @@ def test_upload_file_with_form_fields() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"description": "Important document", "filename": "document.pdf", "tags_count": 2}  # noqa: S101
+
 
 def test_upload_file_with_gzip_content_encoding() -> None:
     """Tests file upload with gzip content encoding."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/upload_file_with_gzip_content_encoding/upload/compressed"
     _headers = {
         "Content-Type": "multipart/form-data",
     }
     import json  # noqa: PLC0415
+
     _headers.setdefault("Content-Type", "application/json")
-    _body = json.dumps({"file": {"content": "compressed data", "content_encoding": "gzip", "filename": "data.gz"}}).encode()
+    _body = json.dumps(
+        {"file": {"content": "compressed data", "content_encoding": "gzip", "filename": "data.gz"}}
+    ).encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -242,25 +292,38 @@ def test_upload_file_with_gzip_content_encoding() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"content_encoding": "gzip", "filename": "data.gz"}  # noqa: S101
+
 
 def test_upload_multiple_files() -> None:
     """Tests uploading multiple files at once."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/upload_multiple_files/upload/multiple"
     _headers = {
         "Content-Type": "multipart/form-data",
     }
     import json  # noqa: PLC0415
+
     _headers.setdefault("Content-Type", "application/json")
-    _body = json.dumps({"files": [{"content": "Content 1", "filename": "file1.txt"}, {"content": "Content 2", "filename": "file2.txt"}]}).encode()
+    _body = json.dumps(
+        {
+            "files": [
+                {"content": "Content 1", "filename": "file1.txt"},
+                {"content": "Content 2", "filename": "file2.txt"},
+            ]
+        }
+    ).encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -273,5 +336,6 @@ def test_upload_multiple_files() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"total_size": 18, "uploaded_files": 2}  # noqa: S101

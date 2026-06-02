@@ -32,6 +32,7 @@ def test_cors_preflight_method_not_allowed() -> None:
     """CORS preflight request for non-allowed method should be rejected."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/06_cors_preflight_method_not_allowed/api/data"
     _headers = {
@@ -40,9 +41,11 @@ def test_cors_preflight_method_not_allowed() -> None:
         "Origin": "https://example.com",
     }
     _req = urllib.request.Request(url, headers=_headers, method="OPTIONS")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -55,10 +58,12 @@ def test_cors_preflight_method_not_allowed() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 403  # noqa: S101
 
+
 def test_cors_preflight_header_not_allowed() -> None:
     """CORS preflight request with non-allowed header should be rejected."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/07_cors_preflight_header_not_allowed/api/data"
     _headers = {
@@ -67,9 +72,11 @@ def test_cors_preflight_header_not_allowed() -> None:
         "Origin": "https://example.com",
     }
     _req = urllib.request.Request(url, headers=_headers, method="OPTIONS")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -82,10 +89,12 @@ def test_cors_preflight_header_not_allowed() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 403  # noqa: S101
 
+
 def test_cors_max_age() -> None:
     """CORS preflight response should include Access-Control-Max-Age."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/08_cors_max_age/api/data"
     _headers = {
@@ -94,9 +103,11 @@ def test_cors_max_age() -> None:
         "Origin": "https://example.com",
     }
     _req = urllib.request.Request(url, headers=_headers, method="OPTIONS")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -113,19 +124,23 @@ def test_cors_max_age() -> None:
     assert resp_headers["access-control-allow-origin"] == "https://example.com"  # noqa: S101
     assert resp_headers["access-control-max-age"] == "3600"  # noqa: S101
 
+
 def test_cors_expose_headers() -> None:
     """CORS response should include Access-Control-Expose-Headers for custom headers."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/09_cors_expose_headers/api/data"
     _headers = {
         "Origin": "https://example.com",
     }
     _req = urllib.request.Request(url, headers=_headers, method="GET")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -142,19 +157,23 @@ def test_cors_expose_headers() -> None:
     assert resp_headers["x-request-id"] == "abc123"  # noqa: S101
     assert resp_headers["x-total-count"] == "42"  # noqa: S101
 
+
 def test_cors_origin_null() -> None:
     """CORS request with 'null' origin should be handled according to policy."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/10_cors_origin_null/api/data"
     _headers = {
         "Origin": "null",
     }
     _req = urllib.request.Request(url, headers=_headers, method="GET")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -167,22 +186,27 @@ def test_cors_origin_null() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 403  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"error": "Origin 'null' is not allowed"}  # noqa: S101
+
 
 def test_cors_allow_credentials_flag() -> None:
     """Tests CORS response with credentials flag when allowed."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/cors_allow_credentials_flag/api/secure"
     _headers = {
         "Origin": "https://example.com",
     }
     _req = urllib.request.Request(url, headers=_headers, method="GET")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -195,15 +219,18 @@ def test_cors_allow_credentials_flag() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"message": "Success"}  # noqa: S101
     assert resp_headers["access-control-allow-credentials"] == "true"  # noqa: S101
     assert resp_headers["access-control-allow-origin"] == "https://example.com"  # noqa: S101
 
+
 def test_cors_custom_allowed_headers_x_custom() -> None:
     """Tests CORS allows custom X-Custom-Header in requests."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/cors_custom_allowed_headers_x_custom/api/data"
     _headers = {
@@ -212,9 +239,11 @@ def test_cors_custom_allowed_headers_x_custom() -> None:
         "Origin": "https://example.com",
     }
     _req = urllib.request.Request(url, headers=_headers, method="OPTIONS")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -230,19 +259,23 @@ def test_cors_custom_allowed_headers_x_custom() -> None:
     assert resp_headers["access-control-allow-methods"] == "POST"  # noqa: S101
     assert resp_headers["access-control-allow-origin"] == "https://example.com"  # noqa: S101
 
+
 def test_cors_request_blocked() -> None:
     """Tests CORS request from disallowed origin."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/cors_request_blocked/items/"
     _headers = {
         "Origin": "https://malicious-site.com",
     }
     _req = urllib.request.Request(url, headers=_headers, method="GET")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -255,22 +288,27 @@ def test_cors_request_blocked() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 403  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"detail": "CORS request from origin 'https://malicious-site.com' not allowed"}  # noqa: S101
+
 
 def test_cors_restricted_methods_post_get_only() -> None:
     """Tests CORS allows only specific HTTP methods (POST, GET)."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/cors_restricted_methods_post_get_only/api/data"
     _headers = {
         "Origin": "https://example.com",
     }
     _req = urllib.request.Request(url, headers=_headers, method="GET")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -283,14 +321,17 @@ def test_cors_restricted_methods_post_get_only() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"message": "Success"}  # noqa: S101
     assert resp_headers["access-control-allow-methods"] == "GET,POST"  # noqa: S101
+
 
 def test_cors_safelisted_headers_without_preflight() -> None:
     """Tests that safelisted headers (Content-Type: text/plain, Accept, Accept-Language) don't require preflight."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
+
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/cors_safelisted_headers_without_preflight/api/form"
     _headers = {
@@ -300,9 +341,11 @@ def test_cors_safelisted_headers_without_preflight() -> None:
         "Origin": "https://app.example.com",
     }
     _req = urllib.request.Request(url, headers=_headers, method="POST")
+
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
+
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -315,6 +358,7 @@ def test_cors_safelisted_headers_without_preflight() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
+
     data = _json.loads(resp_body)
     assert data == {"message": "Success"}  # noqa: S101
     assert resp_headers["access-control-allow-origin"] == "https://app.example.com"  # noqa: S101

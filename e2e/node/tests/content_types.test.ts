@@ -7,7 +7,6 @@
 import { describe, expect, it } from "vitest";
 
 describe("content_types", () => {
-
   it("json_with_charset_utf16: JSON with UTF-16 charset should be rejected (UTF-8 only)", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/13_json_with_charset_utf16/data`;
@@ -19,13 +18,15 @@ describe("content_types", () => {
       },
       body: JSON.stringify({ value: "test" }),
     });
-    expect(response.status).toBe(415);    const data = await response.json();
+    expect(response.status).toBe(415);
+    const data = await response.json();
     expect(data).toEqual({
       detail: "Unsupported charset 'utf-16' for JSON. Only UTF-8 is supported.",
       status: 415,
       title: "Unsupported Charset",
       type: "https://spikard.dev/errors/unsupported-charset",
-    });  });
+    });
+  });
 
   it("content_type_case_insensitive: Content-Type header should be case-insensitive", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -38,10 +39,12 @@ describe("content_types", () => {
       },
       body: JSON.stringify({ name: "test" }),
     });
-    expect(response.status).toBe(201);    const data = await response.json();
+    expect(response.status).toBe(201);
+    const data = await response.json();
     expect(data).toEqual({
       name: "test",
-    });  });
+    });
+  });
 
   it("multipart_boundary_required: Multipart content-type without boundary parameter should fail", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -53,10 +56,12 @@ describe("content_types", () => {
         "Content-Type": "multipart/form-data",
       },
     });
-    expect(response.status).toBe(400);    const data = await response.json();
+    expect(response.status).toBe(400);
+    const data = await response.json();
     expect(data).toEqual({
       error: "multipart/form-data requires 'boundary' parameter",
-    });  });
+    });
+  });
 
   it("text_plain_not_accepted: text/plain content-type should be rejected when JSON is expected", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -67,15 +72,17 @@ describe("content_types", () => {
       headers: {
         "Content-Type": "text/plain",
       },
-      body: JSON.stringify("{\"data\": \"value\"}"),
+      body: JSON.stringify('{"data": "value"}'),
     });
-    expect(response.status).toBe(415);    const data = await response.json();
+    expect(response.status).toBe(415);
+    const data = await response.json();
     expect(data).toEqual({
       detail: "Unsupported media type",
       status: 415,
       title: "Unsupported Media Type",
       type: "https://spikard.dev/errors/unsupported-media-type",
-    });  });
+    });
+  });
 
   it("vendor_json_accepted: Vendor-specific JSON content-type should be accepted", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -88,10 +95,12 @@ describe("content_types", () => {
       },
       body: JSON.stringify({ data: "value" }),
     });
-    expect(response.status).toBe(201);    const data = await response.json();
+    expect(response.status).toBe(201);
+    const data = await response.json();
     expect(data).toEqual({
       data: "value",
-    });  });
+    });
+  });
 
   it("content_type_with_multiple_params: Content-Type with multiple parameters should be parsed correctly", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -104,10 +113,12 @@ describe("content_types", () => {
       },
       body: JSON.stringify({ value: "test" }),
     });
-    expect(response.status).toBe(201);    const data = await response.json();
+    expect(response.status).toBe(201);
+    const data = await response.json();
     expect(data).toEqual({
       value: "test",
-    });  });
+    });
+  });
 
   it("missing_content_type_default_json: Missing Content-Type header should default to JSON when body is present", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -120,10 +131,12 @@ describe("content_types", () => {
       },
       body: JSON.stringify({ name: "test" }),
     });
-    expect(response.status).toBe(201);    const data = await response.json();
+    expect(response.status).toBe(201);
+    const data = await response.json();
     expect(data).toEqual({
       name: "test",
-    });  });
+    });
+  });
 
   it("unsupported_media_type: Tests rejection of unsupported content type", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -134,15 +147,17 @@ describe("content_types", () => {
       headers: {
         "Content-Type": "application/xml",
       },
-      body: JSON.stringify("<?xml version=\"1.0\"?><item><name>Item</name></item>"),
+      body: JSON.stringify('<?xml version="1.0"?><item><name>Item</name></item>'),
     });
-    expect(response.status).toBe(415);    const data = await response.json();
+    expect(response.status).toBe(415);
+    const data = await response.json();
     expect(data).toEqual({
       detail: "Unsupported media type",
       status: 415,
       title: "Unsupported Media Type",
       type: "https://spikard.dev/errors/unsupported-media-type",
-    });  });
+    });
+  });
 
   it("content_negotiation_accept_header: Tests content negotiation based on Accept header", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -151,13 +166,15 @@ describe("content_types", () => {
       method: "GET",
       redirect: "manual",
       headers: {
-        "Accept": "application/json",
+        Accept: "application/json",
       },
     });
-    expect(response.status).toBe(200);    const data = await response.json();
+    expect(response.status).toBe(200);
+    const data = await response.json();
     expect(data).toEqual({
       id: 1,
       name: "Item",
-    });    expect(response.headers.get("content-type")).toBe("application/json");  });
-
+    });
+    expect(response.headers.get("content-type")).toBe("application/json");
+  });
 });
