@@ -12,7 +12,8 @@ Gem::Specification.new do |spec|
   spec.metadata["keywords"] = %w[framework http polyglot rust web].join(",")
   spec.metadata["rubygems_mfa_required"] = "true"
 
-  spec.files         = Dir.glob(%w[README* LICENSE* lib/**/* ext/**/* sig/**/* Steepfile]).select { |f| File.file?(f) }.reject { |f| f.include?("/native/target/") || f.include?("/native/tmp/") }
+  candidate_files    = Dir.glob(%w[README* LICENSE* lib/**/* ext/**/* sig/**/* Steepfile]).select { |f| File.file?(f) }
+  spec.files         = candidate_files.reject { |f| f.include?("/native/target/") || f.include?("/native/tmp/") }
   spec.require_paths = ["lib"]
   spec.extensions    = ["ext/spikard_rb/native/extconf.rb"]
 

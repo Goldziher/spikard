@@ -1,7 +1,7 @@
 // Auto-generated service API class
 
-import type { JsObject, Method, RequestData, Response, RouteBuilder, ServerConfig } from '../index';
-import { app_run } from '../index';
+import type { JsObject, Method, RequestData, Response, RouteBuilder, ServerConfig } from "../index";
+import { app_run } from "../index";
 
 /**
  * Spikard application builder.
@@ -147,5 +147,4 @@ export class App {
   into_router(): string {
     return app_into_router(this._registrations);
   }
-
 }
