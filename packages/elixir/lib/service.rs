@@ -1,34 +1,61 @@
 #![allow(clippy::too_many_arguments, clippy::unused_async)]
 
-use rustler::{LocalPid, OwnedEnv, ResourceArc, types::atom::Atom};
+use rustler::Error as NifError;
+use rustler::{Encoder, LocalPid, NifResult, OwnedEnv, ResourceArc, types::atom::Atom};
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
-use tokio::sync::Mutex as TokioMutex;
+use std::sync::{Mutex, OnceLock};
+
+/// Atom constants used by the service NIFs.
+mod atoms {
+    rustler::atoms! {
+        ok,
+        error,
+        trait_call,
+    }
+}
 
 static REPLY_ID_COUNTER: AtomicU64 = AtomicU64::new(0);
+
+type TraitReplySender = tokio::sync::oneshot::Sender<String>;
+type TraitReplyMap = Mutex<HashMap<u64, TraitReplySender>>;
+
+static TRAIT_REPLY_MAP: OnceLock<TraitReplyMap> = OnceLock::new();
+
+fn trait_reply_map() -> &'static TraitReplyMap {
+    TRAIT_REPLY_MAP.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+/// Complete a pending trait call with the JSON response from Elixir.
+#[rustler::nif]
+pub fn complete_trait_call(reply_id: u64, response_json: String) -> Atom {
+    if let Some(tx) = trait_reply_map().lock().unwrap().remove(&reply_id) {
+        let _ = tx.send(response_json);
+    }
+    atoms::ok()
+}
 
 /// Generated rustler bridge for the `Handler` contract.
 ///
 /// Wraps an Elixir GenServer pid so it can be used
 /// as `Arc<dyn Handler>` from Rust async code.
 /// Uses message-passing to avoid blocking the BEAM scheduler.
+/// Pending replies are stored in the module-level `TRAIT_REPLY_MAP`
+/// keyed by `reply_id`; the GenServer completes them via the
+/// `complete_trait_call` NIF.
 pub struct ElixirHandlerBridge {
     pid: LocalPid,
-    reply_map: Arc<TokioMutex<std::collections::HashMap<u64, tokio::sync::oneshot::Sender<String>>>>,
 }
 
 impl ElixirHandlerBridge {
     /// Create a bridge from an Elixir GenServer pid.
     pub fn new(pid: LocalPid) -> Self {
-        Self {
-            pid,
-            reply_map: Arc::new(TokioMutex::new(std::collections::HashMap::new())),
-        }
+        Self { pid }
     }
 }
 
 // SAFETY: LocalPid is Send+Sync as guaranteed by Rustler.
-// Arc<TokioMutex<HashMap>> is Send+Sync.
 unsafe impl Send for ElixirHandlerBridge {}
 unsafe impl Sync for ElixirHandlerBridge {}
 
@@ -45,11 +72,7 @@ impl spikard::Handler for ElixirHandlerBridge {
 
                 let reply_id = REPLY_ID_COUNTER.fetch_add(1, Ordering::Relaxed);
                 let (tx, rx) = tokio::sync::oneshot::channel();
-
-                {
-                    let mut map = self.reply_map.lock().await;
-                    map.insert(reply_id, tx);
-                }
+                trait_reply_map().lock().unwrap().insert(reply_id, tx);
 
                 // Send trait_call message to Elixir GenServer
                 {

@@ -326,6 +326,42 @@ defmodule Spikard.Native do
   def response_snapshot_from_json(_json), do: :erlang.nif_error(:nif_not_loaded)
 
   @doc false
+  def complete_trait_call(_reply_id, _response_json), do: :erlang.nif_error(:nif_not_loaded)
+
+  @doc false
+  def app_run(_registrations), do: :erlang.nif_error(:nif_not_loaded)
+
+  @doc false
+  def app_into_router(_registrations), do: :erlang.nif_error(:nif_not_loaded)
+
+  @doc false
+  def app_get(_registrations, _path, _handler), do: :erlang.nif_error(:nif_not_loaded)
+
+  @doc false
+  def app_post(_registrations, _path, _handler), do: :erlang.nif_error(:nif_not_loaded)
+
+  @doc false
+  def app_put(_registrations, _path, _handler), do: :erlang.nif_error(:nif_not_loaded)
+
+  @doc false
+  def app_patch(_registrations, _path, _handler), do: :erlang.nif_error(:nif_not_loaded)
+
+  @doc false
+  def app_delete(_registrations, _path, _handler), do: :erlang.nif_error(:nif_not_loaded)
+
+  @doc false
+  def app_head(_registrations, _path, _handler), do: :erlang.nif_error(:nif_not_loaded)
+
+  @doc false
+  def app_options(_registrations, _path, _handler), do: :erlang.nif_error(:nif_not_loaded)
+
+  @doc false
+  def app_connect(_registrations, _path, _handler), do: :erlang.nif_error(:nif_not_loaded)
+
+  @doc false
+  def app_trace(_registrations, _path, _handler), do: :erlang.nif_error(:nif_not_loaded)
+
+  @doc false
   def graphqlerror_status_code(_msg), do: :erlang.nif_error(:nif_not_loaded)
 
   @doc false
