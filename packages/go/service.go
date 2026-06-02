@@ -4,8 +4,9 @@ package spikard
 #include <string.h>
 #include "spikard.h"
 extern char* service_handler_callback(void* ctx, char* req);
-char* _service_handler_const_wrapper(void* ctx, const char* req) {
-	return service_handler_callback(ctx, (char*)req);
+typedef char* (*ServiceHandlerCallbackPtr)(void*, const char*);
+static inline ServiceHandlerCallbackPtr get_service_handler_callback(void) {
+  return (ServiceHandlerCallbackPtr)service_handler_callback;
 }
 */
 import "C"
@@ -146,7 +147,7 @@ func (s *App) RegisterRoute(handler HandlerFunc, builder RouteBuilder)  error {
 	ctxID := registerHandler(handler)
 	ret := C.spikard_app_register_route(
 		(*C.SPIKARDAppOpaque)(s.owner),
-		(*[0]byte)(unsafe.Pointer(C._service_handler_const_wrapper)),
+		C.get_service_handler_callback(),
 		unsafe.Pointer(ctxID),
 		(*C.SPIKARDRouteBuilder)(unsafe.Pointer(builder.ptr)),
 	)
@@ -171,7 +172,7 @@ func (s *App) Get(handler HandlerFunc, path string)  error {
 	ctxID := registerHandler(handler)
 	ret := C.spikard_app_get(
 		(*C.SPIKARDAppOpaque)(s.owner),
-		(*[0]byte)(unsafe.Pointer(&service_handler_callback)),
+		C.get_service_handler_callback(),
 		unsafe.Pointer(ctxID),
 		C.CString(path),
 	)
@@ -196,7 +197,7 @@ func (s *App) Post(handler HandlerFunc, path string)  error {
 	ctxID := registerHandler(handler)
 	ret := C.spikard_app_post(
 		(*C.SPIKARDAppOpaque)(s.owner),
-		(*[0]byte)(unsafe.Pointer(&service_handler_callback)),
+		C.get_service_handler_callback(),
 		unsafe.Pointer(ctxID),
 		C.CString(path),
 	)
@@ -221,7 +222,7 @@ func (s *App) Put(handler HandlerFunc, path string)  error {
 	ctxID := registerHandler(handler)
 	ret := C.spikard_app_put(
 		(*C.SPIKARDAppOpaque)(s.owner),
-		(*[0]byte)(unsafe.Pointer(&service_handler_callback)),
+		C.get_service_handler_callback(),
 		unsafe.Pointer(ctxID),
 		C.CString(path),
 	)
@@ -246,7 +247,7 @@ func (s *App) Patch(handler HandlerFunc, path string)  error {
 	ctxID := registerHandler(handler)
 	ret := C.spikard_app_patch(
 		(*C.SPIKARDAppOpaque)(s.owner),
-		(*[0]byte)(unsafe.Pointer(&service_handler_callback)),
+		C.get_service_handler_callback(),
 		unsafe.Pointer(ctxID),
 		C.CString(path),
 	)
@@ -271,7 +272,7 @@ func (s *App) Delete(handler HandlerFunc, path string)  error {
 	ctxID := registerHandler(handler)
 	ret := C.spikard_app_delete(
 		(*C.SPIKARDAppOpaque)(s.owner),
-		(*[0]byte)(unsafe.Pointer(&service_handler_callback)),
+		C.get_service_handler_callback(),
 		unsafe.Pointer(ctxID),
 		C.CString(path),
 	)
@@ -296,7 +297,7 @@ func (s *App) Head(handler HandlerFunc, path string)  error {
 	ctxID := registerHandler(handler)
 	ret := C.spikard_app_head(
 		(*C.SPIKARDAppOpaque)(s.owner),
-		(*[0]byte)(unsafe.Pointer(&service_handler_callback)),
+		C.get_service_handler_callback(),
 		unsafe.Pointer(ctxID),
 		C.CString(path),
 	)
@@ -321,7 +322,7 @@ func (s *App) Options(handler HandlerFunc, path string)  error {
 	ctxID := registerHandler(handler)
 	ret := C.spikard_app_options(
 		(*C.SPIKARDAppOpaque)(s.owner),
-		(*[0]byte)(unsafe.Pointer(&service_handler_callback)),
+		C.get_service_handler_callback(),
 		unsafe.Pointer(ctxID),
 		C.CString(path),
 	)
@@ -346,7 +347,7 @@ func (s *App) Connect(handler HandlerFunc, path string)  error {
 	ctxID := registerHandler(handler)
 	ret := C.spikard_app_connect(
 		(*C.SPIKARDAppOpaque)(s.owner),
-		(*[0]byte)(unsafe.Pointer(&service_handler_callback)),
+		C.get_service_handler_callback(),
 		unsafe.Pointer(ctxID),
 		C.CString(path),
 	)
@@ -371,7 +372,7 @@ func (s *App) Trace(handler HandlerFunc, path string)  error {
 	ctxID := registerHandler(handler)
 	ret := C.spikard_app_trace(
 		(*C.SPIKARDAppOpaque)(s.owner),
-		(*[0]byte)(unsafe.Pointer(&service_handler_callback)),
+		C.get_service_handler_callback(),
 		unsafe.Pointer(ctxID),
 		C.CString(path),
 	)
