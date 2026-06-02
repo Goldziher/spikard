@@ -560,7 +560,7 @@ pub const SecuritySchemeInfo = union(enum) {
         scheme: []const u8,
         bearer_format: ?[]const u8,
     },
-    apiKey: struct {
+    api_key: struct {
         location: []const u8,
         name: []const u8,
     },

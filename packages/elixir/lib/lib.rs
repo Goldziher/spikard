@@ -21,6 +21,8 @@ use rustler::ResourceArc;
 use std::collections::HashMap;
 use std::sync::Arc;
 
+pub mod service;
+
 #[derive(Clone)]
 pub struct GraphQLRouteConfig {
     inner: Arc<spikard::GraphQLRouteConfig>,

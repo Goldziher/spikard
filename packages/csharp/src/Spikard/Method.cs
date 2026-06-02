@@ -13,23 +13,23 @@ namespace Spikard;
 [JsonConverter(typeof(MethodJsonConverter))]
 public enum Method
 {
-    [JsonPropertyName("get")]
+    [JsonPropertyName("Get")]
     Get,
-    [JsonPropertyName("post")]
+    [JsonPropertyName("Post")]
     Post,
-    [JsonPropertyName("put")]
+    [JsonPropertyName("Put")]
     Put,
-    [JsonPropertyName("patch")]
+    [JsonPropertyName("Patch")]
     Patch,
-    [JsonPropertyName("delete")]
+    [JsonPropertyName("Delete")]
     Delete,
-    [JsonPropertyName("head")]
+    [JsonPropertyName("Head")]
     Head,
-    [JsonPropertyName("options")]
+    [JsonPropertyName("Options")]
     Options,
-    [JsonPropertyName("connect")]
+    [JsonPropertyName("Connect")]
     Connect,
-    [JsonPropertyName("trace")]
+    [JsonPropertyName("Trace")]
     Trace,
 }
 
@@ -44,15 +44,15 @@ internal sealed class MethodJsonConverter : JsonConverter<Method>
         var value = reader.GetString();
         return value switch
         {
-            "get" => Method.Get,
-            "post" => Method.Post,
-            "put" => Method.Put,
-            "patch" => Method.Patch,
-            "delete" => Method.Delete,
-            "head" => Method.Head,
-            "options" => Method.Options,
-            "connect" => Method.Connect,
-            "trace" => Method.Trace,
+            "Get" => Method.Get,
+            "Post" => Method.Post,
+            "Put" => Method.Put,
+            "Patch" => Method.Patch,
+            "Delete" => Method.Delete,
+            "Head" => Method.Head,
+            "Options" => Method.Options,
+            "Connect" => Method.Connect,
+            "Trace" => Method.Trace,
             _ => throw new JsonException($"Unknown Method value: {value}")
         };
     }
@@ -61,15 +61,15 @@ internal sealed class MethodJsonConverter : JsonConverter<Method>
     {
         var str = value switch
         {
-            Method.Get => "get",
-            Method.Post => "post",
-            Method.Put => "put",
-            Method.Patch => "patch",
-            Method.Delete => "delete",
-            Method.Head => "head",
-            Method.Options => "options",
-            Method.Connect => "connect",
-            Method.Trace => "trace",
+            Method.Get => "Get",
+            Method.Post => "Post",
+            Method.Put => "Put",
+            Method.Patch => "Patch",
+            Method.Delete => "Delete",
+            Method.Head => "Head",
+            Method.Options => "Options",
+            Method.Connect => "Connect",
+            Method.Trace => "Trace",
             _ => throw new JsonException($"Unknown Method value: {value}")
         };
         writer.WriteStringValue(str);

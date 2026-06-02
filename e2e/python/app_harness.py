@@ -82,8 +82,9 @@ for fixture_id, fixture in _FIXTURES.items():
             mw_obj = config_cls.from_json(json.dumps(mw_config))
             builder = getattr(builder, builder_method)(mw_obj)
 
-    # Register the route with the handler.
-    app.route(builder, make_handler(expected_status, expected_body, expected_headers))
+    # Register the route with the handler. Python uses verb-decorator form:
+    # `app.route(builder)` returns a decorator that wraps the handler.
+    app.route(builder)(make_handler(expected_status, expected_body, expected_headers))
 
 # Configure and start the server.
 _config = ServerConfig(host="127.0.0.1", port=8000)
