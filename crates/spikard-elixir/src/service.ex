@@ -35,8 +35,46 @@ defmodule App do
   Returns an error if route construction fails or if the handler registration fails.
   """
   def route(self, builder, handler) do
-    entry = {"route", {builder}, handler}
+    # Wrap handler closure in a process if it's not already one
+    handler_pid = case handler do
+      pid when is_pid(pid) -> pid
+      fun when is_function(fun) ->
+        {:ok, pid} = GenServer.start_link(__MODULE__.HandlerWrapper, fun)
+        pid
+    end
+
+    entry = {"route", {builder}, handler_pid}
     %__MODULE__{self | registrations: [entry | self.registrations]}
+  end
+
+  # HandlerWrapper GenServer: wraps a closure for use as a handler
+  defmodule HandlerWrapper do
+    use GenServer
+
+    def start_link(handler_fn) do
+      GenServer.start_link(__MODULE__, handler_fn)
+    end
+
+    def init(handler_fn) do
+      {:ok, handler_fn}
+    end
+
+    def handle_cast({:trait_call, _method, args_json, reply_id}, handler_fn) do
+      case Jason.decode(args_json) do
+        {:ok, _args} ->
+          # Call the wrapped closure
+          try do
+            response = handler_fn.(nil)
+            response_json = Jason.encode!(response)
+            Native.complete_trait_call(reply_id, response_json)
+          rescue
+            _e -> Native.complete_trait_call(reply_id, "{\"error\": \"handler error\"}")
+          end
+        {:error, _} ->
+          Native.complete_trait_call(reply_id, "{\"error\": \"json decode error\"}")
+      end
+      {:noreply, handler_fn}
+    end
   end
 
   @doc """
