@@ -11,6 +11,13 @@ class App {
   }
 
   /**
+   * Create a new App instance.
+   */
+  static new() {
+    return new App();
+  }
+
+  /**
    * Set the server configuration.
    */
   config(config) {
