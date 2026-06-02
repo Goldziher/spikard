@@ -72,9 +72,9 @@ describe("multipart", () => {
       method: "POST",
       redirect: "manual",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "multipart/form-data; boundary=alef-boundary",
       },
-      body: JSON.stringify("--alef-boundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"script.sh\"\r\nContent-Type: application/x-sh\r\n\r\n#!/bin/bash\necho hello\r\n--alef-boundary--\r\n"),
+      body: Buffer.from("--alef-boundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"script.sh\"\r\nContent-Type: application/x-sh\r\n\r\n#!/bin/bash\necho hello\r\n--alef-boundary--\r\n", 'utf-8'),
     });
     expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({
@@ -92,9 +92,9 @@ describe("multipart", () => {
       method: "POST",
       redirect: "manual",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "multipart/form-data; boundary=alef-boundary",
       },
-      body: JSON.stringify("--alef-boundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"empty.txt\"\r\nContent-Type: text/plain\r\n\r\n\r\n--alef-boundary--\r\n"),
+      body: Buffer.from("--alef-boundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"empty.txt\"\r\nContent-Type: text/plain\r\n\r\n\r\n--alef-boundary--\r\n", 'utf-8'),
     });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
@@ -109,9 +109,9 @@ describe("multipart", () => {
       method: "POST",
       redirect: "manual",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "multipart/form-data; boundary=alef-boundary",
       },
-      body: JSON.stringify("--alef-boundary\r\nContent-Disposition: form-data; name=\"files\"; filename=\"file1.txt\"\r\nContent-Type: text/plain\r\n\r\nfirst file here\r\n--alef-boundary\r\nContent-Disposition: form-data; name=\"files\"; filename=\"file2.txt\"\r\nContent-Type: text/plain\r\n\r\nsecond file content here\r\n--alef-boundary--\r\n"),
+      body: Buffer.from("--alef-boundary\r\nContent-Disposition: form-data; name=\"files\"; filename=\"file1.txt\"\r\nContent-Type: text/plain\r\n\r\nfirst file here\r\n--alef-boundary\r\nContent-Disposition: form-data; name=\"files\"; filename=\"file2.txt\"\r\nContent-Type: text/plain\r\n\r\nsecond file content here\r\n--alef-boundary--\r\n", 'utf-8'),
     });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
@@ -126,9 +126,9 @@ describe("multipart", () => {
       method: "POST",
       redirect: "manual",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "multipart/form-data; boundary=alef-boundary",
       },
-      body: JSON.stringify("--alef-boundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"large.txt\"\r\nContent-Type: text/plain\r\n\r\nplaceholder content\r\n--alef-boundary--\r\n"),
+      body: Buffer.from("--alef-boundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"large.txt\"\r\nContent-Type: text/plain\r\n\r\nplaceholder content\r\n--alef-boundary--\r\n", 'utf-8'),
     });
     expect(response.status).toBe(413);    const data = await response.json();
     expect(data).toEqual({
@@ -175,9 +175,9 @@ describe("multipart", () => {
       method: "POST",
       redirect: "manual",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "multipart/form-data; boundary=alef-boundary",
       },
-      body: JSON.stringify("--alef-boundary\r\nContent-Disposition: form-data; name=\"image\"; filename=\"photo.jpg\"\r\nContent-Type: image/jpeg\r\n\r\nJPEG placeholder content here\r\n--alef-boundary--\r\n"),
+      body: Buffer.from("--alef-boundary\r\nContent-Disposition: form-data; name=\"image\"; filename=\"photo.jpg\"\r\nContent-Type: image/jpeg\r\n\r\nJPEG placeholder content here\r\n--alef-boundary--\r\n", 'utf-8'),
     });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
@@ -230,9 +230,9 @@ describe("multipart", () => {
       method: "POST",
       redirect: "manual",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "multipart/form-data; boundary=alef-boundary",
       },
-      body: JSON.stringify("--alef-boundary\r\nContent-Disposition: form-data; name=\"files\"; filename=\"file1.txt\"\r\nContent-Type: text/plain\r\n\r\nfirst file\r\n--alef-boundary\r\nContent-Disposition: form-data; name=\"files\"; filename=\"file2.txt\"\r\nContent-Type: text/plain\r\n\r\nsecond file\r\n--alef-boundary\r\nContent-Disposition: form-data; name=\"tags\"\r\n\r\npython\r\n--alef-boundary\r\nContent-Disposition: form-data; name=\"tags\"\r\n\r\nrust\r\n--alef-boundary\r\nContent-Disposition: form-data; name=\"tags\"\r\n\r\nweb\r\n--alef-boundary--\r\n"),
+      body: Buffer.from("--alef-boundary\r\nContent-Disposition: form-data; name=\"files\"; filename=\"file1.txt\"\r\nContent-Type: text/plain\r\n\r\nfirst file\r\n--alef-boundary\r\nContent-Disposition: form-data; name=\"files\"; filename=\"file2.txt\"\r\nContent-Type: text/plain\r\n\r\nsecond file\r\n--alef-boundary\r\nContent-Disposition: form-data; name=\"tags\"\r\n\r\npython\r\n--alef-boundary\r\nContent-Disposition: form-data; name=\"tags\"\r\n\r\nrust\r\n--alef-boundary\r\nContent-Disposition: form-data; name=\"tags\"\r\n\r\nweb\r\n--alef-boundary--\r\n", 'utf-8'),
     });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
@@ -247,9 +247,9 @@ describe("multipart", () => {
       method: "POST",
       redirect: "manual",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "multipart/form-data; boundary=alef-boundary",
       },
-      body: JSON.stringify("--alef-boundary--\r\n"),
+      body: Buffer.from("--alef-boundary--\r\n", 'utf-8'),
     });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
@@ -263,9 +263,9 @@ describe("multipart", () => {
       method: "POST",
       redirect: "manual",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "multipart/form-data; boundary=alef-boundary",
       },
-      body: JSON.stringify("--alef-boundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"optional.txt\"\r\nContent-Type: text/plain\r\n\r\noptional file content here\r\n--alef-boundary--\r\n"),
+      body: Buffer.from("--alef-boundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"optional.txt\"\r\nContent-Type: text/plain\r\n\r\noptional file content here\r\n--alef-boundary--\r\n", 'utf-8'),
     });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
@@ -281,9 +281,9 @@ describe("multipart", () => {
       method: "POST",
       redirect: "manual",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "multipart/form-data; boundary=alef-boundary",
       },
-      body: JSON.stringify("--alef-boundary\r\nContent-Disposition: form-data; name=\"document\"; filename=\"report.pdf\"\r\nContent-Type: application/pdf\r\n\r\nPDF placeholder here\r\n--alef-boundary--\r\n"),
+      body: Buffer.from("--alef-boundary\r\nContent-Disposition: form-data; name=\"document\"; filename=\"report.pdf\"\r\nContent-Type: application/pdf\r\n\r\nPDF placeholder here\r\n--alef-boundary--\r\n", 'utf-8'),
     });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
@@ -299,9 +299,9 @@ describe("multipart", () => {
       method: "POST",
       redirect: "manual",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "multipart/form-data; boundary=alef-boundary",
       },
-      body: JSON.stringify("--alef-boundary--\r\n"),
+      body: Buffer.from("--alef-boundary--\r\n", 'utf-8'),
     });
     expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({

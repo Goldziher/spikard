@@ -17,7 +17,7 @@ describe("url_encoded", () => {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: "tags[]=python&tags[]=rust&tags[]=typescript",
+      body: Buffer.from("tags[]=python&tags[]=rust&tags[]=typescript", 'utf-8'),
     });
     expect(response.status).toBe(201);    const data = await response.json();
     expect(data).toEqual({
@@ -33,7 +33,7 @@ describe("url_encoded", () => {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: "user[name]=John%20Doe&user[email]=john@example.com&user[age]=30",
+      body: Buffer.from("user[name]=John%20Doe&user[email]=john@example.com&user[age]=30", 'utf-8'),
     });
     expect(response.status).toBe(201);    const data = await response.json();
     expect(data).toEqual({
@@ -53,7 +53,7 @@ describe("url_encoded", () => {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: "user-name=JohnDoe&contact.email=john%40example.com",
+      body: Buffer.from("user-name=JohnDoe&contact.email=john%40example.com", 'utf-8'),
     });
     expect(response.status).toBe(201);    const data = await response.json();
     expect(data).toEqual({
@@ -70,7 +70,7 @@ describe("url_encoded", () => {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: "username=ab",
+      body: Buffer.from("username=ab", 'utf-8'),
     });
     expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({
@@ -90,7 +90,7 @@ describe("url_encoded", () => {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: "account_id=INVALID123",
+      body: Buffer.from("account_id=INVALID123", 'utf-8'),
     });
     expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({
@@ -110,7 +110,7 @@ describe("url_encoded", () => {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: "quantity=0",
+      body: Buffer.from("quantity=0", 'utf-8'),
     });
     expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({
@@ -130,7 +130,7 @@ describe("url_encoded", () => {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: "tags[]=single",
+      body: Buffer.from("tags[]=single", 'utf-8'),
     });
     expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({
@@ -150,7 +150,7 @@ describe("url_encoded", () => {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: "email=not-an-email",
+      body: Buffer.from("email=not-an-email", 'utf-8'),
     });
     expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({
@@ -170,7 +170,7 @@ describe("url_encoded", () => {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: "price=not-a-number",
+      body: Buffer.from("price=not-a-number", 'utf-8'),
     });
     expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({
@@ -190,7 +190,7 @@ describe("url_encoded", () => {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: "theme=dark&unknown_field=value",
+      body: Buffer.from("theme=dark&unknown_field=value", 'utf-8'),
     });
     expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({
@@ -210,7 +210,7 @@ describe("url_encoded", () => {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: "username=johndoe&subscribe=true",
+      body: Buffer.from("username=johndoe&subscribe=true", 'utf-8'),
     });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
@@ -227,7 +227,7 @@ describe("url_encoded", () => {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: "username=johndoe&description=",
+      body: Buffer.from("username=johndoe&description=", 'utf-8'),
     });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
@@ -244,7 +244,7 @@ describe("url_encoded", () => {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: "tags=python&tags=fastapi&tags=web",
+      body: Buffer.from("tags=python&tags=fastapi&tags=web", 'utf-8'),
     });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
@@ -260,7 +260,7 @@ describe("url_encoded", () => {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: "username=johndoe&age=30",
+      body: Buffer.from("username=johndoe&age=30", 'utf-8'),
     });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
@@ -277,7 +277,7 @@ describe("url_encoded", () => {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: "username=johndoe&password=secret&grant_type=password",
+      body: Buffer.from("username=johndoe&password=secret&grant_type=password", 'utf-8'),
     });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
@@ -294,7 +294,7 @@ describe("url_encoded", () => {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: "username=johndoe&password=secret",
+      body: Buffer.from("username=johndoe&password=secret", 'utf-8'),
     });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
@@ -311,7 +311,7 @@ describe("url_encoded", () => {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: "username=john+doe",
+      body: Buffer.from("username=john+doe", 'utf-8'),
     });
     expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({
@@ -331,7 +331,7 @@ describe("url_encoded", () => {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: "password=secret",
+      body: Buffer.from("password=secret", 'utf-8'),
     });
     expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({
@@ -351,7 +351,7 @@ describe("url_encoded", () => {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: "username=johndoe&password=secret",
+      body: Buffer.from("username=johndoe&password=secret", 'utf-8'),
     });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
@@ -367,7 +367,7 @@ describe("url_encoded", () => {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: "name=John+Doe&description=Test+%26+Development",
+      body: Buffer.from("name=John+Doe&description=Test+%26+Development", 'utf-8'),
     });
     expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
@@ -384,7 +384,7 @@ describe("url_encoded", () => {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: "username=this_is_a_very_long_username_that_exceeds_limit",
+      body: Buffer.from("username=this_is_a_very_long_username_that_exceeds_limit", 'utf-8'),
     });
     expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({
@@ -404,7 +404,7 @@ describe("url_encoded", () => {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: "username=ab",
+      body: Buffer.from("username=ab", 'utf-8'),
     });
     expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({

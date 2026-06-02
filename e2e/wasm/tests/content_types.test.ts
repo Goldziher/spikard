@@ -50,7 +50,6 @@ describe("content_types", () => {
       method: "POST",
       redirect: "manual",
       headers: {
-        "Content-Type": "multipart/form-data",
       },
     });
     expect(response.status).toBe(400);    const data = await response.json();

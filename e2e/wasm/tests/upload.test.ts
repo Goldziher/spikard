@@ -15,7 +15,7 @@ describe("upload", () => {
       method: "POST",
       redirect: "manual",
       headers: {
-        "Content-Type": "multipart/form-data",
+        "Content-Type": "multipart/form-data; boundary=alef-boundary",
       },
       body: JSON.stringify({ file: { content: "binary data", filename: "binary.bin" } }),
     });
@@ -33,7 +33,7 @@ describe("upload", () => {
       method: "POST",
       redirect: "manual",
       headers: {
-        "Content-Type": "multipart/form-data",
+        "Content-Type": "multipart/form-data; boundary=alef-boundary",
       },
       body: JSON.stringify({ file: { content: "Hello, World!", filename: "test.txt" } }),
     });
@@ -50,7 +50,7 @@ describe("upload", () => {
       method: "POST",
       redirect: "manual",
       headers: {
-        "Content-Type": "multipart/form-data",
+        "Content-Type": "multipart/form-data; boundary=alef-boundary",
       },
       body: JSON.stringify({ file: { content: "Some content", filename: "unknown.xyz" } }),
     });
@@ -67,7 +67,7 @@ describe("upload", () => {
       method: "POST",
       redirect: "manual",
       headers: {
-        "Content-Type": "multipart/form-data",
+        "Content-Type": "multipart/form-data; boundary=alef-boundary",
       },
       body: JSON.stringify({ file: { content: "Hello, World!", filename: "text.txt" } }),
     });
@@ -85,7 +85,7 @@ describe("upload", () => {
       method: "POST",
       redirect: "manual",
       headers: {
-        "Content-Type": "multipart/form-data",
+        "Content-Type": "multipart/form-data; boundary=alef-boundary",
       },
       body: JSON.stringify({ file: { content: "{\"key\": \"value\"}", content_type: "application/json", filename: "data.json" } }),
     });
@@ -103,7 +103,7 @@ describe("upload", () => {
       method: "POST",
       redirect: "manual",
       headers: {
-        "Content-Type": "multipart/form-data",
+        "Content-Type": "multipart/form-data; boundary=alef-boundary",
       },
       body: JSON.stringify({ description: "Important document", file: { content: "PDF content", filename: "document.pdf" }, tags: ["important", "archive"] }),
     });
@@ -121,7 +121,7 @@ describe("upload", () => {
       method: "POST",
       redirect: "manual",
       headers: {
-        "Content-Type": "multipart/form-data",
+        "Content-Type": "multipart/form-data; boundary=alef-boundary",
       },
       body: JSON.stringify({ file: { content: "compressed data", content_encoding: "gzip", filename: "data.gz" } }),
     });
@@ -138,7 +138,7 @@ describe("upload", () => {
       method: "POST",
       redirect: "manual",
       headers: {
-        "Content-Type": "multipart/form-data",
+        "Content-Type": "multipart/form-data; boundary=alef-boundary",
       },
       body: JSON.stringify({ files: [{ content: "Content 1", filename: "file1.txt" }, { content: "Content 2", filename: "file2.txt" }] }),
     });
