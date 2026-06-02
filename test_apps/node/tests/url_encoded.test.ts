@@ -7,6 +7,7 @@
 import { describe, expect, it } from "vitest";
 
 describe("url_encoded", () => {
+
   it("array_field_success: URL-encoded form with array field using bracket notation should parse correctly", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/13_array_field_success/register`;
@@ -18,10 +19,10 @@ describe("url_encoded", () => {
       },
       body: "tags[]=python&tags[]=rust&tags[]=typescript",
     });
-    expect(response.status).toBe(201);
-    const data = await response.json();
-    expect(data).toEqual({ tags: ["python", "rust", "typescript"] });
-  });
+    expect(response.status).toBe(201);    const data = await response.json();
+    expect(data).toEqual({
+      tags: ["python", "rust", "typescript"],
+    });  });
 
   it("nested_object_bracket_notation: URL-encoded form with nested object using bracket notation should parse correctly", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -34,10 +35,14 @@ describe("url_encoded", () => {
       },
       body: "user[name]=John%20Doe&user[email]=john@example.com&user[age]=30",
     });
-    expect(response.status).toBe(201);
-    const data = await response.json();
-    expect(data).toEqual({ user: { age: 30, email: "john@example.com", name: "John Doe" } });
-  });
+    expect(response.status).toBe(201);    const data = await response.json();
+    expect(data).toEqual({
+      user: {
+        age: 30,
+        email: "john@example.com",
+        name: "John Doe",
+      },
+    });  });
 
   it("special_characters_field_names: URL-encoded form with special characters in field names should be handled correctly", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -50,10 +55,11 @@ describe("url_encoded", () => {
       },
       body: "user-name=JohnDoe&contact.email=john%40example.com",
     });
-    expect(response.status).toBe(201);
-    const data = await response.json();
-    expect(data).toEqual({ "contact.email": "john@example.com", "user-name": "JohnDoe" });
-  });
+    expect(response.status).toBe(201);    const data = await response.json();
+    expect(data).toEqual({
+      "contact.email": "john@example.com",
+      "user-name": "JohnDoe",
+    });  });
 
   it("minlength_validation_failure: URL-encoded form field violating minLength constraint should fail", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -66,24 +72,14 @@ describe("url_encoded", () => {
       },
       body: "username=ab",
     });
-    expect(response.status).toBe(422);
-    const data = await response.json();
+    expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({
       detail: "1 validation error in request",
-      errors: [
-        {
-          ctx: { min_length: 3 },
-          input: "ab",
-          loc: ["body", "username"],
-          msg: "String should have at least 3 characters",
-          type: "string_too_short",
-        },
-      ],
+      errors: [{ ctx: { min_length: 3 }, input: "ab", loc: ["body", "username"], msg: "String should have at least 3 characters", type: "string_too_short" }],
       status: 422,
       title: "Request Validation Failed",
       type: "https://spikard.dev/errors/validation-error",
-    });
-  });
+    });  });
 
   it("pattern_validation_failure: URL-encoded form field violating regex pattern should fail", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -96,24 +92,14 @@ describe("url_encoded", () => {
       },
       body: "account_id=INVALID123",
     });
-    expect(response.status).toBe(422);
-    const data = await response.json();
+    expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({
       detail: "1 validation error in request",
-      errors: [
-        {
-          ctx: { pattern: "^ACC-[0-9]{6}$" },
-          input: "INVALID123",
-          loc: ["body", "account_id"],
-          msg: "String should match pattern '^ACC-[0-9]{6}$'",
-          type: "string_pattern_mismatch",
-        },
-      ],
+      errors: [{ ctx: { pattern: "^ACC-[0-9]{6}$" }, input: "INVALID123", loc: ["body", "account_id"], msg: "String should match pattern '^ACC-[0-9]{6}$'", type: "string_pattern_mismatch" }],
       status: 422,
       title: "Request Validation Failed",
       type: "https://spikard.dev/errors/validation-error",
-    });
-  });
+    });  });
 
   it("integer_minimum_validation_failure: URL-encoded integer field below minimum should fail", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -126,24 +112,14 @@ describe("url_encoded", () => {
       },
       body: "quantity=0",
     });
-    expect(response.status).toBe(422);
-    const data = await response.json();
+    expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({
       detail: "1 validation error in request",
-      errors: [
-        {
-          ctx: { ge: 1 },
-          input: 0,
-          loc: ["body", "quantity"],
-          msg: "Input should be greater than or equal to 1",
-          type: "greater_than_equal",
-        },
-      ],
+      errors: [{ ctx: { ge: 1 }, input: 0, loc: ["body", "quantity"], msg: "Input should be greater than or equal to 1", type: "greater_than_equal" }],
       status: 422,
       title: "Request Validation Failed",
       type: "https://spikard.dev/errors/validation-error",
-    });
-  });
+    });  });
 
   it("array_minitems_validation_failure: URL-encoded array with fewer items than minItems should fail", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -156,24 +132,14 @@ describe("url_encoded", () => {
       },
       body: "tags[]=single",
     });
-    expect(response.status).toBe(422);
-    const data = await response.json();
+    expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({
       detail: "1 validation error in request",
-      errors: [
-        {
-          ctx: { min_length: 2 },
-          input: ["single"],
-          loc: ["body", "tags"],
-          msg: "List should have at least 2 item after validation",
-          type: "too_short",
-        },
-      ],
+      errors: [{ ctx: { min_length: 2 }, input: ["single"], loc: ["body", "tags"], msg: "List should have at least 2 item after validation", type: "too_short" }],
       status: 422,
       title: "Request Validation Failed",
       type: "https://spikard.dev/errors/validation-error",
-    });
-  });
+    });  });
 
   it("format_email_validation_failure: URL-encoded form with invalid email format should fail", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -186,24 +152,14 @@ describe("url_encoded", () => {
       },
       body: "email=not-an-email",
     });
-    expect(response.status).toBe(422);
-    const data = await response.json();
+    expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({
       detail: "1 validation error in request",
-      errors: [
-        {
-          ctx: { pattern: "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$" },
-          input: "not-an-email",
-          loc: ["body", "email"],
-          msg: "String should match pattern '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'",
-          type: "string_pattern_mismatch",
-        },
-      ],
+      errors: [{ ctx: { pattern: "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$" }, input: "not-an-email", loc: ["body", "email"], msg: "String should match pattern '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'", type: "string_pattern_mismatch" }],
       status: 422,
       title: "Request Validation Failed",
       type: "https://spikard.dev/errors/validation-error",
-    });
-  });
+    });  });
 
   it("integer_type_coercion_failure: URL-encoded form with non-numeric value for integer field should fail", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -216,23 +172,14 @@ describe("url_encoded", () => {
       },
       body: "price=not-a-number",
     });
-    expect(response.status).toBe(422);
-    const data = await response.json();
+    expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({
       detail: "1 validation error in request",
-      errors: [
-        {
-          input: "not-a-number",
-          loc: ["body", "price"],
-          msg: "Input should be a valid integer, unable to parse string as an integer",
-          type: "int_parsing",
-        },
-      ],
+      errors: [{ input: "not-a-number", loc: ["body", "price"], msg: "Input should be a valid integer, unable to parse string as an integer", type: "int_parsing" }],
       status: 422,
       title: "Request Validation Failed",
       type: "https://spikard.dev/errors/validation-error",
-    });
-  });
+    });  });
 
   it("additional_properties_strict_failure: URL-encoded form with extra fields when additionalProperties is false should fail", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -245,24 +192,14 @@ describe("url_encoded", () => {
       },
       body: "theme=dark&unknown_field=value",
     });
-    expect(response.status).toBe(422);
-    const data = await response.json();
+    expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({
       detail: "1 validation error in request",
-      errors: [
-        {
-          ctx: { additional_properties: false, unexpected_field: "unknown_field" },
-          input: { theme: "dark", unknown_field: "value" },
-          loc: ["body", "unknown_field"],
-          msg: "Additional properties are not allowed",
-          type: "validation_error",
-        },
-      ],
+      errors: [{ ctx: { additional_properties: false, unexpected_field: "unknown_field" }, input: { theme: "dark", unknown_field: "value" }, loc: ["body", "unknown_field"], msg: "Additional properties are not allowed", type: "validation_error" }],
       status: 422,
       title: "Request Validation Failed",
       type: "https://spikard.dev/errors/validation-error",
-    });
-  });
+    });  });
 
   it("boolean_field_conversion: Tests conversion of form string value to boolean", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -275,10 +212,11 @@ describe("url_encoded", () => {
       },
       body: "username=johndoe&subscribe=true",
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ subscribe: true, username: "johndoe" });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      subscribe: true,
+      username: "johndoe",
+    });  });
 
   it("empty_string_value: Tests form field with empty string value", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -291,10 +229,11 @@ describe("url_encoded", () => {
       },
       body: "username=johndoe&description=",
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ description: "", username: "johndoe" });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      description: "",
+      username: "johndoe",
+    });  });
 
   it("multiple_values_for_same_field: Tests form field with multiple values (array)", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -307,10 +246,10 @@ describe("url_encoded", () => {
       },
       body: "tags=python&tags=fastapi&tags=web",
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ tags: ["python", "fastapi", "web"] });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      tags: ["python", "fastapi", "web"],
+    });  });
 
   it("numeric_field_type_conversion: Tests conversion of form string value to numeric type", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -323,10 +262,11 @@ describe("url_encoded", () => {
       },
       body: "username=johndoe&age=30",
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ age: 30, username: "johndoe" });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      age: 30,
+      username: "johndoe",
+    });  });
 
   it("oauth2_password_grant_flow: Tests OAuth2 password grant with form data", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -339,10 +279,11 @@ describe("url_encoded", () => {
       },
       body: "username=johndoe&password=secret&grant_type=password",
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ access_token: "johndoe", token_type: "bearer" });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      access_token: "johndoe",
+      token_type: "bearer",
+    });  });
 
   it("optional_field_missing_success: Tests form with optional field omitted", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -355,10 +296,11 @@ describe("url_encoded", () => {
       },
       body: "username=johndoe&password=secret",
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ email: null, username: "johndoe" });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      email: null,
+      username: "johndoe",
+    });  });
 
   it("pattern_validation_fail: Tests form field with regex pattern constraint failure", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -371,24 +313,14 @@ describe("url_encoded", () => {
       },
       body: "username=john+doe",
     });
-    expect(response.status).toBe(422);
-    const data = await response.json();
+    expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({
       detail: "1 validation error in request",
-      errors: [
-        {
-          ctx: { pattern: "^[a-z0-9_]+$" },
-          input: "john doe",
-          loc: ["body", "username"],
-          msg: "String should match pattern '^[a-z0-9_]+$'",
-          type: "string_pattern_mismatch",
-        },
-      ],
+      errors: [{ ctx: { pattern: "^[a-z0-9_]+$" }, input: "john doe", loc: ["body", "username"], msg: "String should match pattern '^[a-z0-9_]+$'", type: "string_pattern_mismatch" }],
       status: 422,
       title: "Request Validation Failed",
       type: "https://spikard.dev/errors/validation-error",
-    });
-  });
+    });  });
 
   it("required_field_missing_validation_error_2: Tests validation error when required form field is missing", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -401,23 +333,14 @@ describe("url_encoded", () => {
       },
       body: "password=secret",
     });
-    expect(response.status).toBe(422);
-    const data = await response.json();
+    expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({
       detail: "1 validation error in request",
-      errors: [
-        {
-          input: { password: "secret" },
-          loc: ["body", "username"],
-          msg: "Field required",
-          type: "missing",
-        },
-      ],
+      errors: [{ input: { password: "secret" }, loc: ["body", "username"], msg: "Field required", type: "missing" }],
       status: 422,
       title: "Request Validation Failed",
       type: "https://spikard.dev/errors/validation-error",
-    });
-  });
+    });  });
 
   it("simple_form_submission_success: Tests basic URL-encoded form with username and password", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -430,10 +353,10 @@ describe("url_encoded", () => {
       },
       body: "username=johndoe&password=secret",
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ username: "johndoe" });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      username: "johndoe",
+    });  });
 
   it("special_characters_encoding: Tests URL encoding of special characters in form data", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -446,10 +369,11 @@ describe("url_encoded", () => {
       },
       body: "name=John+Doe&description=Test+%26+Development",
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ description: "Test & Development", name: "John Doe" });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      description: "Test & Development",
+      name: "John Doe",
+    });  });
 
   it("string_max_length_validation_fail_2: Tests form field with max_length constraint failure", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -462,24 +386,14 @@ describe("url_encoded", () => {
       },
       body: "username=this_is_a_very_long_username_that_exceeds_limit",
     });
-    expect(response.status).toBe(422);
-    const data = await response.json();
+    expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({
       detail: "1 validation error in request",
-      errors: [
-        {
-          ctx: { max_length: 20 },
-          input: "this_is_a_very_long_username_that_exceeds_limit",
-          loc: ["body", "username"],
-          msg: "String should have at most 20 characters",
-          type: "string_too_long",
-        },
-      ],
+      errors: [{ ctx: { max_length: 20 }, input: "this_is_a_very_long_username_that_exceeds_limit", loc: ["body", "username"], msg: "String should have at most 20 characters", type: "string_too_long" }],
       status: 422,
       title: "Request Validation Failed",
       type: "https://spikard.dev/errors/validation-error",
-    });
-  });
+    });  });
 
   it("string_min_length_validation_fail_2: Tests form field with min_length constraint failure", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -492,22 +406,13 @@ describe("url_encoded", () => {
       },
       body: "username=ab",
     });
-    expect(response.status).toBe(422);
-    const data = await response.json();
+    expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({
       detail: "1 validation error in request",
-      errors: [
-        {
-          ctx: { min_length: 3 },
-          input: "ab",
-          loc: ["body", "username"],
-          msg: "String should have at least 3 characters",
-          type: "string_too_short",
-        },
-      ],
+      errors: [{ ctx: { min_length: 3 }, input: "ab", loc: ["body", "username"], msg: "String should have at least 3 characters", type: "string_too_short" }],
       status: 422,
       title: "Request Validation Failed",
       type: "https://spikard.dev/errors/validation-error",
-    });
-  });
+    });  });
+
 });

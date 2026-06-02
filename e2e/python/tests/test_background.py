@@ -32,20 +32,16 @@ def test_background_event_logging() -> None:
     """Enqueues a background job that appends the posted event to shared state."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/background_event_logging/background/events"
     _headers = {}
     import json  # noqa: PLC0415
-
     _headers.setdefault("Content-Type", "application/json")
     _body = json.dumps({"event": "alpha"}).encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -59,25 +55,20 @@ def test_background_event_logging() -> None:
     assert status_code == 202  # noqa: S101
     assert resp_headers["content-type"] == "application/json"  # noqa: S101
 
-
 def test_background_event_logging_second_payload() -> None:
     """Ensures background jobs handle different payloads."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/background_event_logging_second_payload/background/events"
     _headers = {}
     import json  # noqa: PLC0415
-
     _headers.setdefault("Content-Type", "application/json")
     _body = json.dumps({"event": "beta"}).encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310

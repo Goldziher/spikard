@@ -7,19 +7,21 @@
 import { describe, expect, it } from "vitest";
 
 describe("request_timeout", () => {
+
   it("request_completes_before_timeout: Simulated handler sleeps briefly and should complete before the timeout middleware fires.", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/request_completes_before_timeout/timeouts/fast`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ duration: "fast", status: "ok" });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      duration: "fast",
+      status: "ok",
+    });  });
 
   it("request_exceeds_timeout: Simulates a handler that sleeps longer than the configured timeout to ensure a 408 response.", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/request_exceeds_timeout/timeouts/slow`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(408);
-  });
+    expect(response.status).toBe(408);  });
+
 });

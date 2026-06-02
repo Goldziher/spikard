@@ -32,7 +32,6 @@ def test_array_field_success() -> None:
     """URL-encoded form with array field using bracket notation should parse correctly."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/13_array_field_success/register"
     _headers = {
@@ -40,11 +39,9 @@ def test_array_field_success() -> None:
     }
     _body = ("tags[]=python&tags[]=rust&tags[]=typescript").encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -57,16 +54,13 @@ def test_array_field_success() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 201  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
     assert data == {"tags": ["python", "rust", "typescript"]}  # noqa: S101
-
 
 def test_nested_object_bracket_notation() -> None:
     """URL-encoded form with nested object using bracket notation should parse correctly."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/14_nested_object_bracket_notation/profile"
     _headers = {
@@ -74,11 +68,9 @@ def test_nested_object_bracket_notation() -> None:
     }
     _body = ("user[name]=John%20Doe&user[email]=john@example.com&user[age]=30").encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -91,16 +83,13 @@ def test_nested_object_bracket_notation() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 201  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
     assert data == {"user": {"age": 30, "email": "john@example.com", "name": "John Doe"}}  # noqa: S101
-
 
 def test_special_characters_field_names() -> None:
     """URL-encoded form with special characters in field names should be handled correctly."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/15_special_characters_field_names/data"
     _headers = {
@@ -108,11 +97,9 @@ def test_special_characters_field_names() -> None:
     }
     _body = ("user-name=JohnDoe&contact.email=john%40example.com").encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -125,16 +112,13 @@ def test_special_characters_field_names() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 201  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
     assert data == {"contact.email": "john@example.com", "user-name": "JohnDoe"}  # noqa: S101
-
 
 def test_minlength_validation_failure() -> None:
     """URL-encoded form field violating minLength constraint should fail."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/16_minlength_validation_failure/users"
     _headers = {
@@ -142,11 +126,9 @@ def test_minlength_validation_failure() -> None:
     }
     _body = ("username=ab").encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -159,30 +141,13 @@ def test_minlength_validation_failure() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 422  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
-    assert data == {
-        "detail": "1 validation error in request",
-        "errors": [
-            {
-                "ctx": {"min_length": 3},
-                "input": "ab",
-                "loc": ["body", "username"],
-                "msg": "String should have at least 3 characters",
-                "type": "string_too_short",
-            }
-        ],
-        "status": 422,
-        "title": "Request Validation Failed",
-        "type": "https://spikard.dev/errors/validation-error",
-    }  # noqa: S101
-
+    assert data == {"detail": "1 validation error in request", "errors": [{"ctx": {"min_length": 3}, "input": "ab", "loc": ["body", "username"], "msg": "String should have at least 3 characters", "type": "string_too_short"}], "status": 422, "title": "Request Validation Failed", "type": "https://spikard.dev/errors/validation-error"}  # noqa: S101
 
 def test_pattern_validation_failure() -> None:
     """URL-encoded form field violating regex pattern should fail."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/17_pattern_validation_failure/accounts"
     _headers = {
@@ -190,11 +155,9 @@ def test_pattern_validation_failure() -> None:
     }
     _body = ("account_id=INVALID123").encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -207,30 +170,13 @@ def test_pattern_validation_failure() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 422  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
-    assert data == {
-        "detail": "1 validation error in request",
-        "errors": [
-            {
-                "ctx": {"pattern": "^ACC-[0-9]{6}$"},
-                "input": "INVALID123",
-                "loc": ["body", "account_id"],
-                "msg": "String should match pattern '^ACC-[0-9]{6}$'",
-                "type": "string_pattern_mismatch",
-            }
-        ],
-        "status": 422,
-        "title": "Request Validation Failed",
-        "type": "https://spikard.dev/errors/validation-error",
-    }  # noqa: S101
-
+    assert data == {"detail": "1 validation error in request", "errors": [{"ctx": {"pattern": "^ACC-[0-9]{6}$"}, "input": "INVALID123", "loc": ["body", "account_id"], "msg": "String should match pattern '^ACC-[0-9]{6}$'", "type": "string_pattern_mismatch"}], "status": 422, "title": "Request Validation Failed", "type": "https://spikard.dev/errors/validation-error"}  # noqa: S101
 
 def test_integer_minimum_validation_failure() -> None:
     """URL-encoded integer field below minimum should fail."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/18_integer_minimum_validation_failure/products"
     _headers = {
@@ -238,11 +184,9 @@ def test_integer_minimum_validation_failure() -> None:
     }
     _body = ("quantity=0").encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -255,30 +199,13 @@ def test_integer_minimum_validation_failure() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 422  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
-    assert data == {
-        "detail": "1 validation error in request",
-        "errors": [
-            {
-                "ctx": {"ge": 1},
-                "input": 0,
-                "loc": ["body", "quantity"],
-                "msg": "Input should be greater than or equal to 1",
-                "type": "greater_than_equal",
-            }
-        ],
-        "status": 422,
-        "title": "Request Validation Failed",
-        "type": "https://spikard.dev/errors/validation-error",
-    }  # noqa: S101
-
+    assert data == {"detail": "1 validation error in request", "errors": [{"ctx": {"ge": 1}, "input": 0, "loc": ["body", "quantity"], "msg": "Input should be greater than or equal to 1", "type": "greater_than_equal"}], "status": 422, "title": "Request Validation Failed", "type": "https://spikard.dev/errors/validation-error"}  # noqa: S101
 
 def test_array_minitems_validation_failure() -> None:
     """URL-encoded array with fewer items than minItems should fail."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/19_array_minitems_validation_failure/tags"
     _headers = {
@@ -286,11 +213,9 @@ def test_array_minitems_validation_failure() -> None:
     }
     _body = ("tags[]=single").encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -303,30 +228,13 @@ def test_array_minitems_validation_failure() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 422  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
-    assert data == {
-        "detail": "1 validation error in request",
-        "errors": [
-            {
-                "ctx": {"min_length": 2},
-                "input": ["single"],
-                "loc": ["body", "tags"],
-                "msg": "List should have at least 2 item after validation",
-                "type": "too_short",
-            }
-        ],
-        "status": 422,
-        "title": "Request Validation Failed",
-        "type": "https://spikard.dev/errors/validation-error",
-    }  # noqa: S101
-
+    assert data == {"detail": "1 validation error in request", "errors": [{"ctx": {"min_length": 2}, "input": ["single"], "loc": ["body", "tags"], "msg": "List should have at least 2 item after validation", "type": "too_short"}], "status": 422, "title": "Request Validation Failed", "type": "https://spikard.dev/errors/validation-error"}  # noqa: S101
 
 def test_format_email_validation_failure() -> None:
     """URL-encoded form with invalid email format should fail."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/20_format_email_validation_failure/subscribe"
     _headers = {
@@ -334,11 +242,9 @@ def test_format_email_validation_failure() -> None:
     }
     _body = ("email=not-an-email").encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -351,30 +257,13 @@ def test_format_email_validation_failure() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 422  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
-    assert data == {
-        "detail": "1 validation error in request",
-        "errors": [
-            {
-                "ctx": {"pattern": "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"},
-                "input": "not-an-email",
-                "loc": ["body", "email"],
-                "msg": "String should match pattern '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'",
-                "type": "string_pattern_mismatch",
-            }
-        ],
-        "status": 422,
-        "title": "Request Validation Failed",
-        "type": "https://spikard.dev/errors/validation-error",
-    }  # noqa: S101
-
+    assert data == {"detail": "1 validation error in request", "errors": [{"ctx": {"pattern": "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"}, "input": "not-an-email", "loc": ["body", "email"], "msg": "String should match pattern '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'", "type": "string_pattern_mismatch"}], "status": 422, "title": "Request Validation Failed", "type": "https://spikard.dev/errors/validation-error"}  # noqa: S101
 
 def test_integer_type_coercion_failure() -> None:
     """URL-encoded form with non-numeric value for integer field should fail."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/21_integer_type_coercion_failure/products"
     _headers = {
@@ -382,11 +271,9 @@ def test_integer_type_coercion_failure() -> None:
     }
     _body = ("price=not-a-number").encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -399,29 +286,13 @@ def test_integer_type_coercion_failure() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 422  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
-    assert data == {
-        "detail": "1 validation error in request",
-        "errors": [
-            {
-                "input": "not-a-number",
-                "loc": ["body", "price"],
-                "msg": "Input should be a valid integer, unable to parse string as an integer",
-                "type": "int_parsing",
-            }
-        ],
-        "status": 422,
-        "title": "Request Validation Failed",
-        "type": "https://spikard.dev/errors/validation-error",
-    }  # noqa: S101
-
+    assert data == {"detail": "1 validation error in request", "errors": [{"input": "not-a-number", "loc": ["body", "price"], "msg": "Input should be a valid integer, unable to parse string as an integer", "type": "int_parsing"}], "status": 422, "title": "Request Validation Failed", "type": "https://spikard.dev/errors/validation-error"}  # noqa: S101
 
 def test_additional_properties_strict_failure() -> None:
     """URL-encoded form with extra fields when additionalProperties is false should fail."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/22_additional_properties_strict_failure/settings"
     _headers = {
@@ -429,11 +300,9 @@ def test_additional_properties_strict_failure() -> None:
     }
     _body = ("theme=dark&unknown_field=value").encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -446,30 +315,13 @@ def test_additional_properties_strict_failure() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 422  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
-    assert data == {
-        "detail": "1 validation error in request",
-        "errors": [
-            {
-                "ctx": {"additional_properties": False, "unexpected_field": "unknown_field"},
-                "input": {"theme": "dark", "unknown_field": "value"},
-                "loc": ["body", "unknown_field"],
-                "msg": "Additional properties are not allowed",
-                "type": "validation_error",
-            }
-        ],
-        "status": 422,
-        "title": "Request Validation Failed",
-        "type": "https://spikard.dev/errors/validation-error",
-    }  # noqa: S101
-
+    assert data == {"detail": "1 validation error in request", "errors": [{"ctx": {"additional_properties": False, "unexpected_field": "unknown_field"}, "input": {"theme": "dark", "unknown_field": "value"}, "loc": ["body", "unknown_field"], "msg": "Additional properties are not allowed", "type": "validation_error"}], "status": 422, "title": "Request Validation Failed", "type": "https://spikard.dev/errors/validation-error"}  # noqa: S101
 
 def test_boolean_field_conversion() -> None:
     """Tests conversion of form string value to boolean."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/boolean_field_conversion/form/"
     _headers = {
@@ -477,11 +329,9 @@ def test_boolean_field_conversion() -> None:
     }
     _body = ("username=johndoe&subscribe=true").encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -494,16 +344,13 @@ def test_boolean_field_conversion() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
     assert data == {"subscribe": True, "username": "johndoe"}  # noqa: S101
-
 
 def test_empty_string_value() -> None:
     """Tests form field with empty string value."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/empty_string_value/form/"
     _headers = {
@@ -511,11 +358,9 @@ def test_empty_string_value() -> None:
     }
     _body = ("username=johndoe&description=").encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -528,16 +373,13 @@ def test_empty_string_value() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
     assert data == {"description": "", "username": "johndoe"}  # noqa: S101
-
 
 def test_multiple_values_for_same_field() -> None:
     """Tests form field with multiple values (array)."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/multiple_values_for_same_field/form/tags"
     _headers = {
@@ -545,11 +387,9 @@ def test_multiple_values_for_same_field() -> None:
     }
     _body = ("tags=python&tags=fastapi&tags=web").encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -562,16 +402,13 @@ def test_multiple_values_for_same_field() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
     assert data == {"tags": ["python", "fastapi", "web"]}  # noqa: S101
-
 
 def test_numeric_field_type_conversion() -> None:
     """Tests conversion of form string value to numeric type."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/numeric_field_type_conversion/form/"
     _headers = {
@@ -579,11 +416,9 @@ def test_numeric_field_type_conversion() -> None:
     }
     _body = ("username=johndoe&age=30").encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -596,16 +431,13 @@ def test_numeric_field_type_conversion() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
     assert data == {"age": 30, "username": "johndoe"}  # noqa: S101
-
 
 def test_oauth2_password_grant_flow() -> None:
     """Tests OAuth2 password grant with form data."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/oauth2_password_grant_flow/token"
     _headers = {
@@ -613,11 +445,9 @@ def test_oauth2_password_grant_flow() -> None:
     }
     _body = ("username=johndoe&password=secret&grant_type=password").encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -630,16 +460,13 @@ def test_oauth2_password_grant_flow() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
     assert data == {"access_token": "johndoe", "token_type": "bearer"}  # noqa: S101
-
 
 def test_optional_field_missing_success() -> None:
     """Tests form with optional field omitted."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/optional_field_missing_success/register/"
     _headers = {
@@ -647,11 +474,9 @@ def test_optional_field_missing_success() -> None:
     }
     _body = ("username=johndoe&password=secret").encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -664,16 +489,13 @@ def test_optional_field_missing_success() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
     assert data == {"email": None, "username": "johndoe"}  # noqa: S101
-
 
 def test_pattern_validation_fail() -> None:
     """Tests form field with regex pattern constraint failure."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/pattern_validation_fail/form/validated"
     _headers = {
@@ -681,11 +503,9 @@ def test_pattern_validation_fail() -> None:
     }
     _body = ("username=john+doe").encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -698,30 +518,13 @@ def test_pattern_validation_fail() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 422  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
-    assert data == {
-        "detail": "1 validation error in request",
-        "errors": [
-            {
-                "ctx": {"pattern": "^[a-z0-9_]+$"},
-                "input": "john doe",
-                "loc": ["body", "username"],
-                "msg": "String should match pattern '^[a-z0-9_]+$'",
-                "type": "string_pattern_mismatch",
-            }
-        ],
-        "status": 422,
-        "title": "Request Validation Failed",
-        "type": "https://spikard.dev/errors/validation-error",
-    }  # noqa: S101
-
+    assert data == {"detail": "1 validation error in request", "errors": [{"ctx": {"pattern": "^[a-z0-9_]+$"}, "input": "john doe", "loc": ["body", "username"], "msg": "String should match pattern '^[a-z0-9_]+$'", "type": "string_pattern_mismatch"}], "status": 422, "title": "Request Validation Failed", "type": "https://spikard.dev/errors/validation-error"}  # noqa: S101
 
 def test_required_field_missing_validation_error_2() -> None:
     """Tests validation error when required form field is missing."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/required_field_missing_validation_error_2/login/"
     _headers = {
@@ -729,11 +532,9 @@ def test_required_field_missing_validation_error_2() -> None:
     }
     _body = ("password=secret").encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -746,24 +547,13 @@ def test_required_field_missing_validation_error_2() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 422  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
-    assert data == {
-        "detail": "1 validation error in request",
-        "errors": [
-            {"input": {"password": "secret"}, "loc": ["body", "username"], "msg": "Field required", "type": "missing"}
-        ],
-        "status": 422,
-        "title": "Request Validation Failed",
-        "type": "https://spikard.dev/errors/validation-error",
-    }  # noqa: S101
-
+    assert data == {"detail": "1 validation error in request", "errors": [{"input": {"password": "secret"}, "loc": ["body", "username"], "msg": "Field required", "type": "missing"}], "status": 422, "title": "Request Validation Failed", "type": "https://spikard.dev/errors/validation-error"}  # noqa: S101
 
 def test_simple_form_submission_success() -> None:
     """Tests basic URL-encoded form with username and password."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/simple_form_submission_success/login/"
     _headers = {
@@ -771,11 +561,9 @@ def test_simple_form_submission_success() -> None:
     }
     _body = ("username=johndoe&password=secret").encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -788,16 +576,13 @@ def test_simple_form_submission_success() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
     assert data == {"username": "johndoe"}  # noqa: S101
-
 
 def test_special_characters_encoding() -> None:
     """Tests URL encoding of special characters in form data."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/special_characters_encoding/form/"
     _headers = {
@@ -805,11 +590,9 @@ def test_special_characters_encoding() -> None:
     }
     _body = ("name=John+Doe&description=Test+%26+Development").encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -822,16 +605,13 @@ def test_special_characters_encoding() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
     assert data == {"description": "Test & Development", "name": "John Doe"}  # noqa: S101
-
 
 def test_string_max_length_validation_fail_2() -> None:
     """Tests form field with max_length constraint failure."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/string_max_length_validation_fail_2/form/validated"
     _headers = {
@@ -839,11 +619,9 @@ def test_string_max_length_validation_fail_2() -> None:
     }
     _body = ("username=this_is_a_very_long_username_that_exceeds_limit").encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -856,30 +634,13 @@ def test_string_max_length_validation_fail_2() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 422  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
-    assert data == {
-        "detail": "1 validation error in request",
-        "errors": [
-            {
-                "ctx": {"max_length": 20},
-                "input": "this_is_a_very_long_username_that_exceeds_limit",
-                "loc": ["body", "username"],
-                "msg": "String should have at most 20 characters",
-                "type": "string_too_long",
-            }
-        ],
-        "status": 422,
-        "title": "Request Validation Failed",
-        "type": "https://spikard.dev/errors/validation-error",
-    }  # noqa: S101
-
+    assert data == {"detail": "1 validation error in request", "errors": [{"ctx": {"max_length": 20}, "input": "this_is_a_very_long_username_that_exceeds_limit", "loc": ["body", "username"], "msg": "String should have at most 20 characters", "type": "string_too_long"}], "status": 422, "title": "Request Validation Failed", "type": "https://spikard.dev/errors/validation-error"}  # noqa: S101
 
 def test_string_min_length_validation_fail_2() -> None:
     """Tests form field with min_length constraint failure."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/string_min_length_validation_fail_2/form/validated"
     _headers = {
@@ -887,11 +648,9 @@ def test_string_min_length_validation_fail_2() -> None:
     }
     _body = ("username=ab").encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -904,20 +663,5 @@ def test_string_min_length_validation_fail_2() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 422  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
-    assert data == {
-        "detail": "1 validation error in request",
-        "errors": [
-            {
-                "ctx": {"min_length": 3},
-                "input": "ab",
-                "loc": ["body", "username"],
-                "msg": "String should have at least 3 characters",
-                "type": "string_too_short",
-            }
-        ],
-        "status": 422,
-        "title": "Request Validation Failed",
-        "type": "https://spikard.dev/errors/validation-error",
-    }  # noqa: S101
+    assert data == {"detail": "1 validation error in request", "errors": [{"ctx": {"min_length": 3}, "input": "ab", "loc": ["body", "username"], "msg": "String should have at least 3 characters", "type": "string_too_short"}], "status": 422, "title": "Request Validation Failed", "type": "https://spikard.dev/errors/validation-error"}  # noqa: S101

@@ -7,41 +7,37 @@
 import { describe, expect, it } from "vitest";
 
 describe("http_methods", () => {
+
   it("delete_remove_resource: Tests DELETE method to remove a resource", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/delete_remove_resource/items/1`;
     const response = await fetch(url, { method: "DELETE", redirect: "manual" });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({});
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({});  });
 
   it("delete_resource_not_found: Tests DELETE on non-existent resource returns 404", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/delete_resource_not_found/items/999`;
     const response = await fetch(url, { method: "DELETE", redirect: "manual" });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({});
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({});  });
 
   it("delete_with_response_body: Tests DELETE returning deleted resource data", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/delete_with_response_body/items/1`;
     const response = await fetch(url, { method: "DELETE", redirect: "manual" });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ id: 1, message: "Item deleted successfully", name: "Deleted Item" });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      id: 1,
+      message: "Item deleted successfully",
+      name: "Deleted Item",
+    });  });
 
   it("head_get_metadata_without_body: Tests HEAD method returns headers without response body", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/head_get_metadata_without_body/items/1`;
     const response = await fetch(url, { method: "HEAD", redirect: "manual" });
-    expect(response.status).toBe(200);
-    expect(response.headers.get("content-length")).toBe("85");
-    expect(response.headers.get("content-type")).toBe("application/json");
-  });
+    expect(response.status).toBe(200);    expect(response.headers.get("content-length")).toBe("85");    expect(response.headers.get("content-type")).toBe("application/json");  });
 
   it("patch_partial_update: Tests PATCH method for partial resource updates", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -54,10 +50,13 @@ describe("http_methods", () => {
       },
       body: JSON.stringify({ price: 79.99 }),
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ id: 1, in_stock: true, name: "Existing Item", price: 79.99 });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      id: 1,
+      in_stock: true,
+      name: "Existing Item",
+      price: 79.99,
+    });  });
 
   it("patch_update_multiple_fields: Tests PATCH updating multiple fields at once", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -70,10 +69,13 @@ describe("http_methods", () => {
       },
       body: JSON.stringify({ in_stock: false, name: "Updated Name", price: 89.99 }),
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ id: 1, in_stock: false, name: "Updated Name", price: 89.99 });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      id: 1,
+      in_stock: false,
+      name: "Updated Name",
+      price: 89.99,
+    });  });
 
   it("put_complete_resource_replacement: Tests PUT method for complete resource replacement", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -84,24 +86,16 @@ describe("http_methods", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        description: "Completely replaced",
-        id: 1,
-        in_stock: true,
-        name: "Updated Item",
-        price: 99.99,
-      }),
+      body: JSON.stringify({ description: "Completely replaced", id: 1, in_stock: true, name: "Updated Item", price: 99.99 }),
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       description: "Completely replaced",
       id: 1,
       in_stock: true,
       name: "Updated Item",
       price: 99.99,
-    });
-  });
+    });  });
 
   it("put_create_resource_if_doesn_t_exist: Tests PUT creating new resource at specific URI", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -114,10 +108,12 @@ describe("http_methods", () => {
       },
       body: JSON.stringify({ id: 999, name: "New Item", price: 49.99 }),
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ id: 999, name: "New Item", price: 49.99 });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      id: 999,
+      name: "New Item",
+      price: 49.99,
+    });  });
 
   it("put_idempotent_operation: Tests PUT idempotency - repeated calls produce same result", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -130,10 +126,12 @@ describe("http_methods", () => {
       },
       body: JSON.stringify({ id: 1, name: "Fixed Name", price: 50.0 }),
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ id: 1, name: "Fixed Name", price: 50.0 });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      id: 1,
+      name: "Fixed Name",
+      price: 50.0,
+    });  });
 
   it("put_missing_required_field: Tests PUT with missing required fields returns 422", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -146,23 +144,14 @@ describe("http_methods", () => {
       },
       body: JSON.stringify({ id: 1, name: "Item Name" }),
     });
-    expect(response.status).toBe(422);
-    const data = await response.json();
+    expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({
       detail: "1 validation error in request",
-      errors: [
-        {
-          input: { id: 1, name: "Item Name" },
-          loc: ["body", "price"],
-          msg: "Field required",
-          type: "missing",
-        },
-      ],
+      errors: [{ input: { id: 1, name: "Item Name" }, loc: ["body", "price"], msg: "Field required", type: "missing" }],
       status: 422,
       title: "Request Validation Failed",
       type: "https://spikard.dev/errors/validation-error",
-    });
-  });
+    });  });
 
   it("put_validation_error: Tests PUT with invalid data returns 422", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -175,29 +164,13 @@ describe("http_methods", () => {
       },
       body: JSON.stringify({ id: 1, name: "X", price: -10 }),
     });
-    expect(response.status).toBe(422);
-    const data = await response.json();
+    expect(response.status).toBe(422);    const data = await response.json();
     expect(data).toEqual({
       detail: "2 validation errors in request",
-      errors: [
-        {
-          ctx: { min_length: 3 },
-          input: "X",
-          loc: ["body", "name"],
-          msg: "String should have at least 3 characters",
-          type: "string_too_short",
-        },
-        {
-          ctx: { gt: 0 },
-          input: -10,
-          loc: ["body", "price"],
-          msg: "Input should be greater than 0",
-          type: "greater_than",
-        },
-      ],
+      errors: [{ ctx: { min_length: 3 }, input: "X", loc: ["body", "name"], msg: "String should have at least 3 characters", type: "string_too_short" }, { ctx: { gt: 0 }, input: -10, loc: ["body", "price"], msg: "Input should be greater than 0", type: "greater_than" }],
       status: 422,
       title: "Request Validation Failed",
       type: "https://spikard.dev/errors/validation-error",
-    });
-  });
+    });  });
+
 });

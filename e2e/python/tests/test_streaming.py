@@ -32,16 +32,13 @@ def test_binary_log_download() -> None:
     """Streams binary log segments with control bytes."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/binary_log_download/stream/logfile"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -56,21 +53,17 @@ def test_binary_log_download() -> None:
     assert resp_body.decode() == "LOG:\\u0000\\u0001\\u0002\\u0003|TAIL|\\u0007\\n"  # noqa: S101
     assert resp_headers["content-type"] == "application/octet-stream"  # noqa: S101
 
-
 def test_chunked_csv_export() -> None:
     """Streams CSV header and rows as discrete chunks."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/chunked_csv_export/stream/csv-report"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -85,21 +78,17 @@ def test_chunked_csv_export() -> None:
     assert resp_body.decode() == "id,name,value\\n1,Alice,42\\n2,Bob,7\\n"  # noqa: S101
     assert resp_headers["content-type"] == "text/csv"  # noqa: S101
 
-
 def test_stream_json_lines() -> None:
     """Streams newline-delimited JSON payload in small chunks."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/stream_json_lines/stream/json-lines"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -111,8 +100,5 @@ def test_stream_json_lines() -> None:
         resp_body = _exc.read()  # noqa: F841
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
-    assert (
-        resp_body.decode()
-        == '{"index":0,"payload":"alpha"}\\n{"index":1,"payload":"beta"}\\n{"index":2,"payload":"gamma"}\\n'
-    )  # noqa: S101
+    assert resp_body.decode() == "{\"index\":0,\"payload\":\"alpha\"}\\n{\"index\":1,\"payload\":\"beta\"}\\n{\"index\":2,\"payload\":\"gamma\"}\\n"  # noqa: S101
     assert resp_headers["content-type"] == "application/x-ndjson"  # noqa: S101

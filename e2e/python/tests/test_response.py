@@ -32,16 +32,13 @@ def test_response_cache_control_header() -> None:
     """Tests response includes Cache-Control header."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/response_cache_control_header/static-resource"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -54,26 +51,21 @@ def test_response_cache_control_header() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
     assert data == {"resource": "data"}  # noqa: S101
     assert resp_headers["cache-control"] == "public, max-age=3600"  # noqa: S101
-
 
 def test_response_content_type_application_json() -> None:
     """Tests response with Content-Type: application/json."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/response_content_type_application_json/api/data"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -86,26 +78,21 @@ def test_response_content_type_application_json() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
     assert data == {"key": "value"}  # noqa: S101
     assert resp_headers["content-type"] == "application/json"  # noqa: S101
-
 
 def test_response_content_type_text_html() -> None:
     """Tests response with Content-Type: text/html."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/response_content_type_text_html/html"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -119,21 +106,17 @@ def test_response_content_type_text_html() -> None:
     assert status_code == 200  # noqa: S101
     assert resp_headers["content-type"] == "text/html"  # noqa: S101
 
-
 def test_response_location_header_redirect() -> None:
     """Tests response includes Location header for redirects."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/response_location_header_redirect/old-path"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -147,21 +130,17 @@ def test_response_location_header_redirect() -> None:
     assert status_code == 301  # noqa: S101
     assert resp_headers["location"] == "https://example.com/new-path"  # noqa: S101
 
-
 def test_response_multiple_headers_combined() -> None:
     """Tests response with multiple custom headers combined."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/response_multiple_headers_combined/complex"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -174,7 +153,6 @@ def test_response_multiple_headers_combined() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
     assert data == {"message": "Complex response"}  # noqa: S101
     assert resp_headers["content-type"] == "application/json"  # noqa: S101
@@ -182,27 +160,22 @@ def test_response_multiple_headers_combined() -> None:
     assert resp_headers["x-custom-header"] == "value1"  # noqa: S101
     assert resp_headers["x-third-header"] == "value3"  # noqa: S101
 
-
 def test_response_set_cookie_in_response() -> None:
     """Tests response sets cookie with Set-Cookie header."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/response_set_cookie_in_response/login"
     _headers = {
         "Content-Type": "application/json",
     }
     import json  # noqa: PLC0415
-
     _headers.setdefault("Content-Type", "application/json")
     _body = json.dumps({"password": "pass", "username": "user"}).encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -215,26 +188,21 @@ def test_response_set_cookie_in_response() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
     assert data == {"message": "Login successful"}  # noqa: S101
     assert "set-cookie" in resp_headers  # noqa: S101
-
 
 def test_response_status_code_200_success() -> None:
     """Tests response with explicit 200 status code."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/response_status_code_200_success/success"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -247,31 +215,25 @@ def test_response_status_code_200_success() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
     assert data == {"status": "ok"}  # noqa: S101
-
 
 def test_response_status_code_201_created() -> None:
     """Tests response with 201 Created status code."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/response_status_code_201_created/items"
     _headers = {
         "Content-Type": "application/json",
     }
     import json  # noqa: PLC0415
-
     _headers.setdefault("Content-Type", "application/json")
     _body = json.dumps({"name": "New Item"}).encode()
     _req = urllib.request.Request(url, data=_body, headers=_headers, method="POST")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -284,25 +246,20 @@ def test_response_status_code_201_created() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 201  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
     assert data == {"id": "1", "name": "New Item"}  # noqa: S101
-
 
 def test_response_status_code_204_no_content() -> None:
     """Tests response with 204 No Content status code."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/response_status_code_204_no_content/items/1"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="DELETE")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -316,21 +273,17 @@ def test_response_status_code_204_no_content() -> None:
     assert status_code == 204  # noqa: S101
     assert resp_body.decode() == ""  # noqa: S101
 
-
 def test_response_with_custom_headers() -> None:
     """Tests response includes custom headers."""
     import os  # noqa: PLC0415
     import urllib.request  # noqa: PLC0415
-
     base = os.environ.get("SUT_URL", "http://127.0.0.1:8000")
     url = f"{base}/fixtures/response_with_custom_headers/data"
     _headers = {}
     _req = urllib.request.Request(url, headers=_headers, method="GET")
-
     class _NoRedirect(urllib.request.HTTPRedirectHandler):  # noqa: N801
         def redirect_request(self, *args, **kwargs):
             return None
-
     _opener = urllib.request.build_opener(_NoRedirect())
     try:
         response = _opener.open(_req)  # noqa: S310
@@ -343,7 +296,6 @@ def test_response_with_custom_headers() -> None:
         resp_headers = dict(_exc.headers)  # noqa: F841
     assert status_code == 200  # noqa: S101
     import json as _json  # noqa: PLC0415
-
     data = _json.loads(resp_body)
     assert data == {"data": "value"}  # noqa: S101
     assert resp_headers["x-custom-header"] == "custom-value"  # noqa: S101

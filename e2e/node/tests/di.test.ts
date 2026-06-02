@@ -7,35 +7,29 @@
 import { describe, expect, it } from "vitest";
 
 describe("di", () => {
+
   it("async_factory_dependency_success: Tests async factory that creates database pool asynchronously", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/async_factory_dependency_success/api/db-status`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ max_size: 10, pool_status: "connected" });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      max_size: 10,
+      pool_status: "connected",
+    });  });
 
   it("circular_dependency_detection_error: Tests that circular dependencies (A depends on B, B depends on A) are detected and rejected at registration time", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/circular_dependency_detection_error/api/circular`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(500);
-    const data = await response.json();
+    expect(response.status).toBe(500);    const data = await response.json();
     expect(data).toEqual({
       detail: "Circular dependency detected",
-      errors: [
-        {
-          cycle: ["service_a", "service_b", "service_a"],
-          msg: "Circular dependency detected in dependency graph",
-          type: "circular_dependency",
-        },
-      ],
+      errors: [{ cycle: ["service_a", "service_b", "service_a"], msg: "Circular dependency detected in dependency graph", type: "circular_dependency" }],
       status: 500,
       title: "Dependency Resolution Failed",
       type: "https://spikard.dev/errors/dependency-error",
-    });
-  });
+    });  });
 
   it("dependency_injection_in_lifecycle_hooks_success: Tests accessing dependencies in lifecycle hooks (onRequest, preHandler) for auth, logging, etc.", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -44,174 +38,170 @@ describe("di", () => {
       method: "GET",
       redirect: "manual",
       headers: {
-        authorization: "Bearer valid_token",
+        "authorization": "Bearer valid_token",
       },
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ authenticated: true, logged: true });
-    expect(response.headers.get("x-auth-mode")).toBe("strict");
-    expect(response.headers.get("x-log-level")).toBe("debug");
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      authenticated: true,
+      logged: true,
+    });    expect(response.headers.get("x-auth-mode")).toBe("strict");    expect(response.headers.get("x-log-level")).toBe("debug");  });
 
   it("factory_dependency_success: Tests factory dependency that creates instances on-demand", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/factory_dependency_success/api/timestamp`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ timestamp: "<<present>>" });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      timestamp: "<<present>>",
+    });  });
 
   it("missing_dependency_error: Tests error when handler requires a dependency that was never registered", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/missing_dependency_error/api/missing-dep`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(500);
-    const data = await response.json();
+    expect(response.status).toBe(500);    const data = await response.json();
     expect(data).toEqual({
       detail: "Required dependency not found",
-      errors: [
-        {
-          dependency_key: "non_existent_service",
-          msg: "Dependency 'non_existent_service' is not registered",
-          type: "missing_dependency",
-        },
-      ],
+      errors: [{ dependency_key: "non_existent_service", msg: "Dependency 'non_existent_service' is not registered", type: "missing_dependency" }],
       status: 500,
       title: "Dependency Resolution Failed",
       type: "https://spikard.dev/errors/dependency-error",
-    });
-  });
+    });  });
 
   it("mixed_singleton_and_per_request_caching_success: Tests mixing singleton dependencies (shared across requests) with per-request dependencies (cached within request)", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/mixed_singleton_and_per_request_caching_success/api/mixed-caching`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ app_name: "MyApp", context_id: "<<uuid>>", pool_id: "<<uuid>>" });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      app_name: "MyApp",
+      context_id: "<<uuid>>",
+      pool_id: "<<uuid>>",
+    });  });
 
   it("multiple_dependencies_with_cleanup_success: Tests cleanup for multiple dependencies with generator pattern, ensuring all are cleaned up in reverse resolution order", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/multiple_dependencies_with_cleanup_success/api/multi-cleanup-test`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ session_active: true });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      session_active: true,
+    });  });
 
   it("nested_dependencies_3_levels_success: Tests dependency resolution where auth depends on cache and db, which both depend on config", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/nested_dependencies_3_levels_success/api/auth-status`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ auth_enabled: true, has_cache: true, has_db: true });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      auth_enabled: true,
+      has_cache: true,
+      has_db: true,
+    });  });
 
   it("node_js_object_destructuring_injection_success: Tests Node.js/TypeScript-specific object destructuring pattern for dependency injection", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/node_js_object_destructuring_injection_success/api/node-destructure`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ db_name: "PostgreSQL", log_level: "info" });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      db_name: "PostgreSQL",
+      log_level: "info",
+    });  });
 
   it("per_request_dependency_caching_success: Tests per-request caching where dependency is created once per request but shared by multiple usages within that request", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/per_request_dependency_caching_success/api/request-id`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ first_id: "<<uuid>>", second_id: "<<same_as:first_id>>" });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      first_id: "<<uuid>>",
+      second_id: "<<same_as:first_id>>",
+    });  });
 
   it("python_parameter_name_based_injection_success: Tests Python-specific parameter name-based dependency injection where dependencies are matched by parameter names", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/python_parameter_name_based_injection_success/api/python-name-inject`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ cache_status: "ready", db_status: "connected" });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      cache_status: "ready",
+      db_status: "connected",
+    });  });
 
   it("python_type_annotation_based_injection_success: Tests Python-specific type annotation-based dependency injection where dependencies are matched by type hints", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/python_type_annotation_based_injection_success/api/python-type-inject`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ cache_type: "Redis", pool_type: "PostgreSQL" });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      cache_type: "Redis",
+      pool_type: "PostgreSQL",
+    });  });
 
   it("resource_cleanup_after_request_success: Tests generator pattern cleanup where dependency resources are cleaned up after handler completes", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/resource_cleanup_after_request_success/api/cleanup-test`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ session_id: "<<uuid>>", status: "completed" });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      session_id: "<<uuid>>",
+      status: "completed",
+    });  });
 
   it("route_level_dependency_override_success: Tests route-level dependency override of app-level dependency for testing or special cases", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/route_level_dependency_override_success/api/override-test`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ mode: "test", strict: false });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      mode: "test",
+      strict: false,
+    });  });
 
   it("ruby_keyword_argument_injection_success: Tests Ruby-specific keyword argument pattern for dependency injection", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/ruby_keyword_argument_injection_success/api/ruby-kwargs`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ adapter: "postgresql", user_id: 42 });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      adapter: "postgresql",
+      user_id: 42,
+    });  });
 
   it("singleton_dependency_caching_success: Tests singleton dependency that is created once and shared across all requests", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/singleton_dependency_caching_success/api/app-counter`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ count: 1, counter_id: "<<uuid>>" });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      count: 1,
+      counter_id: "<<uuid>>",
+    });  });
 
   it("type_mismatch_in_dependency_resolution_error: Tests error when handler expects a different type than what the dependency provides", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/type_mismatch_in_dependency_resolution_error/api/type-mismatch`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(500);
-    const data = await response.json();
+    expect(response.status).toBe(500);    const data = await response.json();
     expect(data).toEqual({
       detail: "Dependency type mismatch",
-      errors: [
-        {
-          actual_type: "string",
-          dependency_key: "config",
-          expected_type: "object",
-          msg: "Dependency 'config' type mismatch: expected object, got string",
-          type: "type_mismatch",
-        },
-      ],
+      errors: [{ actual_type: "string", dependency_key: "config", expected_type: "object", msg: "Dependency 'config' type mismatch: expected object, got string", type: "type_mismatch" }],
       status: 500,
       title: "Dependency Resolution Failed",
       type: "https://spikard.dev/errors/dependency-error",
-    });
-  });
+    });  });
 
   it("value_dependency_injection_success: Tests simple value injection (config, constants) into a handler", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/value_dependency_injection_success/api/config`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual({ app_name: "SpikardApp", max_connections: 100, version: "1.0.0" });
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual({
+      app_name: "SpikardApp",
+      max_connections: 100,
+      version: "1.0.0",
+    });  });
+
 });
