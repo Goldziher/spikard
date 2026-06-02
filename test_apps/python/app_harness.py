@@ -83,7 +83,7 @@ for fixture_id, fixture in _FIXTURES.items():
             builder = getattr(builder, builder_method)(mw_obj)
 
     # Register the route with the handler.
-    app.route(builder, make_handler(expected_status, expected_body, expected_headers))
+    app.register_route(builder, make_handler(expected_status, expected_body, expected_headers))
 
 # Configure and start the server.
 _config = ServerConfig(host="127.0.0.1", port=8000)

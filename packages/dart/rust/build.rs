@@ -34,13 +34,6 @@ fn main() {
             // Patch the generated Dart entrypoint so the published package resolves
             // its native library from its own installed location.
             patch_published_loader();
-
-            // Fix FRB-generated Dart code that incorrectly calls executeSync/executeNormal
-            // on callback function parameters. The handler is a function type, not an object
-            // with these methods, so we rewrite the calls to use the RustLib binding instead.
-            // This must run after FRB codegen in all contexts (including `dart pub get`
-            // during e2e tests) to keep generated code correct.
-            fix_handler_executor_calls();
         }
         Ok(status) => panic!("flutter_rust_bridge_codegen generate failed (exit code: {status})"),
         Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
@@ -53,7 +46,6 @@ fn main() {
 }
 
 const FRB_GENERATED_DART: &str = "../lib/src/spikard_bridge_generated/frb_generated.dart";
-const FRB_HANDLER_EXECUTOR_CALLS_MARKER: &str = "handler.executeSync";
 const LOADER_MARKER: &str = "_alefResolveExternalLibrary";
 const FRB_INIT_PROLOGUE: &str = "  /// Initialize flutter_rust_bridge\n  static Future<void> init({\n    RustLibApi? api,\n    BaseHandler? handler,\n    ExternalLibrary? externalLibrary,\n    bool forceSameCodegenVersion = true,\n  }) async {\n";
 const FRB_INIT_REPLACEMENT: &str = r#"  /// Resolve the prebuilt native library from this package's own installed
@@ -119,35 +111,6 @@ const FRB_INIT_REPLACEMENT: &str = r#"  /// Resolve the prebuilt native library 
   }) async {
     externalLibrary ??= await _alefResolveExternalLibrary();
 "#;
-
-/// Fix FRB-generated Dart code that incorrectly calls executeSync/executeNormal
-/// on callback function parameters. The handler is a function type, not an object
-/// with these methods, so we rewrite the calls to use the RustLib binding instead.
-/// Idempotent: a no-op when already rewritten or the target file doesn't exist.
-fn fix_handler_executor_calls() {
-    let path = Path::new(FRB_GENERATED_DART);
-    let Ok(source) = std::fs::read_to_string(path) else {
-        // File doesn't exist yet or can't be read; skip silently.
-        return;
-    };
-
-    // If the broken pattern is not present, nothing to fix.
-    if !source.contains(FRB_HANDLER_EXECUTOR_CALLS_MARKER) {
-        return;
-    }
-
-    // Replace handler.executeSync and handler.executeNormal with the RustLib binding.
-    let fixed = source
-        .replace("handler.executeSync(", "generalizedFrbRustBinding.executeSync(")
-        .replace("handler.executeNormal(", "generalizedFrbRustBinding.executeNormal(");
-
-    if fixed != source {
-        if let Err(err) = std::fs::write(path, &fixed) {
-            println!("cargo:warning=failed to fix handler executor calls in {}: {err}", FRB_GENERATED_DART);
-            return;
-        }
-    }
-}
 
 /// Inject the published-package native-library loader into `frb_generated.dart`.
 /// Idempotent: a no-op when the marker is already present or the FRB entrypoint

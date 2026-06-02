@@ -40,74 +40,137 @@ class App
         return $this;
     }
 
-    public function get(string $path, callable $handler): callable
+    public function get(string $path, callable $handler): self
     {
         // Register a GET route at the given path.
-        return function (callable $handler) {
+        $this->registrations[] = ['route', [], $handler];
+        return $this;
+    }
+
+    public function getDecorator(string $path): Closure
+    {
+        // Register a GET route at the given path.
+        return function (callable $handler): self {
             return $this->route()($handler);
         };
     }
 
-    public function post(string $path, callable $handler): callable
+    public function post(string $path, callable $handler): self
     {
         // Register a POST route at the given path.
-        return function (callable $handler) {
+        $this->registrations[] = ['route', [], $handler];
+        return $this;
+    }
+
+    public function postDecorator(string $path): Closure
+    {
+        // Register a POST route at the given path.
+        return function (callable $handler): self {
             return $this->route()($handler);
         };
     }
 
-    public function put(string $path, callable $handler): callable
+    public function put(string $path, callable $handler): self
     {
         // Register a PUT route at the given path.
-        return function (callable $handler) {
+        $this->registrations[] = ['route', [], $handler];
+        return $this;
+    }
+
+    public function putDecorator(string $path): Closure
+    {
+        // Register a PUT route at the given path.
+        return function (callable $handler): self {
             return $this->route()($handler);
         };
     }
 
-    public function patch(string $path, callable $handler): callable
+    public function patch(string $path, callable $handler): self
     {
         // Register a PATCH route at the given path.
-        return function (callable $handler) {
+        $this->registrations[] = ['route', [], $handler];
+        return $this;
+    }
+
+    public function patchDecorator(string $path): Closure
+    {
+        // Register a PATCH route at the given path.
+        return function (callable $handler): self {
             return $this->route()($handler);
         };
     }
 
-    public function delete(string $path, callable $handler): callable
+    public function delete(string $path, callable $handler): self
     {
         // Register a DELETE route at the given path.
-        return function (callable $handler) {
+        $this->registrations[] = ['route', [], $handler];
+        return $this;
+    }
+
+    public function deleteDecorator(string $path): Closure
+    {
+        // Register a DELETE route at the given path.
+        return function (callable $handler): self {
             return $this->route()($handler);
         };
     }
 
-    public function head(string $path, callable $handler): callable
+    public function head(string $path, callable $handler): self
     {
         // Register a HEAD route at the given path.
-        return function (callable $handler) {
+        $this->registrations[] = ['route', [], $handler];
+        return $this;
+    }
+
+    public function headDecorator(string $path): Closure
+    {
+        // Register a HEAD route at the given path.
+        return function (callable $handler): self {
             return $this->route()($handler);
         };
     }
 
-    public function options(string $path, callable $handler): callable
+    public function options(string $path, callable $handler): self
     {
         // Register an OPTIONS route at the given path.
-        return function (callable $handler) {
+        $this->registrations[] = ['route', [], $handler];
+        return $this;
+    }
+
+    public function optionsDecorator(string $path): Closure
+    {
+        // Register an OPTIONS route at the given path.
+        return function (callable $handler): self {
             return $this->route()($handler);
         };
     }
 
-    public function connect(string $path, callable $handler): callable
+    public function connect(string $path, callable $handler): self
     {
         // Register a CONNECT route at the given path.
-        return function (callable $handler) {
+        $this->registrations[] = ['route', [], $handler];
+        return $this;
+    }
+
+    public function connectDecorator(string $path): Closure
+    {
+        // Register a CONNECT route at the given path.
+        return function (callable $handler): self {
             return $this->route()($handler);
         };
     }
 
-    public function trace(string $path, callable $handler): callable
+    public function trace(string $path, callable $handler): self
     {
         // Register a TRACE route at the given path.
-        return function (callable $handler) {
+        $this->registrations[] = ['route', [], $handler];
+        return $this;
+    }
+
+    public function traceDecorator(string $path): Closure
+    {
+        // Register a TRACE route at the given path.
+        return function (callable $handler): self {
             return $this->route()($handler);
         };
     }

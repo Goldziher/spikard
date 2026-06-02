@@ -85,10 +85,28 @@ defmodule App do
   end
 
   @doc """
+  Register a GET route at the given path.
+  """
+  def get_decorator(app, path) do
+    fn(handler) ->
+      get(app, path, handler)
+    end
+  end
+
+  @doc """
   Register a POST route at the given path.
   """
   def post(app, path, handler) do
     app
+  end
+
+  @doc """
+  Register a POST route at the given path.
+  """
+  def post_decorator(app, path) do
+    fn(handler) ->
+      post(app, path, handler)
+    end
   end
 
   @doc """
@@ -99,10 +117,28 @@ defmodule App do
   end
 
   @doc """
+  Register a PUT route at the given path.
+  """
+  def put_decorator(app, path) do
+    fn(handler) ->
+      put(app, path, handler)
+    end
+  end
+
+  @doc """
   Register a PATCH route at the given path.
   """
   def patch(app, path, handler) do
     app
+  end
+
+  @doc """
+  Register a PATCH route at the given path.
+  """
+  def patch_decorator(app, path) do
+    fn(handler) ->
+      patch(app, path, handler)
+    end
   end
 
   @doc """
@@ -113,10 +149,28 @@ defmodule App do
   end
 
   @doc """
+  Register a DELETE route at the given path.
+  """
+  def delete_decorator(app, path) do
+    fn(handler) ->
+      delete(app, path, handler)
+    end
+  end
+
+  @doc """
   Register a HEAD route at the given path.
   """
   def head(app, path, handler) do
     app
+  end
+
+  @doc """
+  Register a HEAD route at the given path.
+  """
+  def head_decorator(app, path) do
+    fn(handler) ->
+      head(app, path, handler)
+    end
   end
 
   @doc """
@@ -127,6 +181,15 @@ defmodule App do
   end
 
   @doc """
+  Register an OPTIONS route at the given path.
+  """
+  def options_decorator(app, path) do
+    fn(handler) ->
+      options(app, path, handler)
+    end
+  end
+
+  @doc """
   Register a CONNECT route at the given path.
   """
   def connect(app, path, handler) do
@@ -134,10 +197,28 @@ defmodule App do
   end
 
   @doc """
+  Register a CONNECT route at the given path.
+  """
+  def connect_decorator(app, path) do
+    fn(handler) ->
+      connect(app, path, handler)
+    end
+  end
+
+  @doc """
   Register a TRACE route at the given path.
   """
   def trace(app, path, handler) do
     app
+  end
+
+  @doc """
+  Register a TRACE route at the given path.
+  """
+  def trace_decorator(app, path) do
+    fn(handler) ->
+      trace(app, path, handler)
+    end
   end
 
   # GenServer for dispatching trait_call messages from Rust.

@@ -33,31 +33,25 @@ impl spikard::Handler for RbHandlerBridge {
         request_data: spikard::RequestData,
     ) -> std::pin::Pin<Box<dyn std::future::Future<Output = spikard::HandlerResult> + Send + '_>> {
         Box::pin(async move {
-            // Call the Ruby proc with the GVL via spawn_blocking.
-            // Ruby procs are synchronous, so we block on the spawned task.
-            let outcome: Result<spikard::Response, Box<dyn std::error::Error + Send + Sync>> = async move {
+            // Call the Ruby proc with the GVL re-acquired directly.
+            // SAFETY: `app_run` releases the GVL via `rb_thread_call_without_gvl`
+            // and drives a `new_current_thread` Tokio runtime inside that callback.
+            // Every async task therefore runs on the same OS thread that released
+            // the GVL; `call_ruby_proc_with_gvl` re-acquires it safely from here.
+            // Using spawn_blocking would create a non-Ruby OS thread from which
+            // `rb_thread_call_with_gvl` would abort the process.
+            let outcome: Result<spikard::Response, Box<dyn std::error::Error + Send + Sync>> = (|| {
                 // Serialize the request to JSON
                 let req_json = serde_json::to_string(&request_data)
                     .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
 
-                let resp_json = tokio::task::spawn_blocking({
-                    let proc_handle = self.proc_handle.clone();
-                    let req_json = req_json.clone();
-                    move || {
-                        // SAFETY: rb_sys::rb_thread_call_with_gvl acquires the GVL.
-                        // We pass a callback that will be invoked with the GVL held.
-                        call_ruby_proc_with_gvl(&proc_handle, &req_json)
-                    }
-                })
-                .await
-                .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)??;
+                let resp_json = call_ruby_proc_with_gvl(&self.proc_handle, &req_json)?;
 
                 // Deserialize the JSON result back into the wire response DTO.
                 let response: spikard::Response = serde_json::from_str(&resp_json)
                     .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
                 Ok(response)
-            }
-            .await;
+            })();
 
             spikard::handler_result_from_response(outcome)
         })
@@ -65,7 +59,7 @@ impl spikard::Handler for RbHandlerBridge {
 }
 
 /// Call a Ruby proc with the GVL acquired via rb_sys.
-/// This function is called from a tokio spawn_blocking task (non-GVL context).
+/// Called from within a `rb_thread_call_without_gvl` callback (same OS thread).
 fn call_ruby_proc_with_gvl(
     proc_handle: &Opaque<Value>,
     req_json: &str,
@@ -393,8 +387,61 @@ pub fn app_run(registrations: Value) -> magnus::error::Result<()> {
         }
     }
 
-    tokio::runtime::Handle::current()
-        .block_on(owner.run())
+    // SAFETY: `app_run` is called from the Ruby main thread (via `function!` macro),
+    // so the GVL is currently held. We release the GVL via `rb_thread_call_without_gvl`
+    // and run a current-thread Tokio runtime inside that callback. This is the SAME
+    // OS thread that released the GVL, so `rb_thread_call_with_gvl` re-acquisition
+    // from within the current-thread runtime's tasks is valid.
+    struct RunState {
+        owner: Option<spikard::App>,
+        result: Option<Result<(), Box<dyn std::error::Error + Send + Sync + 'static>>>,
+    }
+    // SAFETY: RunState is only accessed from the single callback thread.
+    unsafe impl Send for RunState {}
+    unsafe impl Sync for RunState {}
+
+    extern "C" fn run_without_gvl(data: *mut std::ffi::c_void) -> *mut std::ffi::c_void {
+        // SAFETY: data is a valid &mut RunState, valid for the full callback duration.
+        let state = unsafe { &mut *(data as *mut RunState) };
+        let app = match state.owner.take() {
+            Some(a) => a,
+            None => {
+                state.result =
+                    Some(Err(Box::new(std::io::Error::other("App already consumed"))
+                        as Box<dyn std::error::Error + Send + Sync>));
+                return std::ptr::null_mut();
+            }
+        };
+        let rt_result = tokio::runtime::Builder::new_current_thread().enable_all().build();
+        state.result = Some(match rt_result {
+            Ok(rt) => rt
+                .block_on(app.run())
+                .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>),
+            Err(e) => Err(Box::new(e) as Box<dyn std::error::Error + Send + Sync>),
+        });
+        std::ptr::null_mut()
+    }
+    extern "C" fn unblock_run(_data: *mut std::ffi::c_void) {}
+
+    let mut state = RunState {
+        owner: Some(owner),
+        result: None,
+    };
+    // SAFETY: `state` lives until after `rb_thread_call_without_gvl` returns.
+    unsafe {
+        rb_sys::rb_thread_call_without_gvl(
+            Some(run_without_gvl),
+            &mut state as *mut RunState as *mut std::ffi::c_void,
+            Some(unblock_run),
+            std::ptr::null_mut(),
+        );
+    }
+
+    state
+        .result
+        .unwrap_or_else(|| {
+            Err(Box::new(std::io::Error::other("server did not run")) as Box<dyn std::error::Error + Send + Sync>)
+        })
         .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e.to_string()))?;
     Ok(())
 }

@@ -1,8 +1,11 @@
 #![allow(clippy::too_many_arguments, clippy::unused_async)]
 
-use rustler::{LocalPid, ResourceArc};
+use rustler::{LocalPid, OwnedEnv, ResourceArc, types::atom::Atom};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use tokio::sync::Mutex as TokioMutex;
+
+static REPLY_ID_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 /// Generated rustler bridge for the `Handler` contract.
 ///
@@ -40,7 +43,7 @@ impl spikard::Handler for ElixirHandlerBridge {
                 let request_json = serde_json::to_string(&request_data)
                     .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
 
-                let reply_id = crate::nif_support::next_request_id();
+                let reply_id = REPLY_ID_COUNTER.fetch_add(1, Ordering::Relaxed);
                 let (tx, rx) = tokio::sync::oneshot::channel();
 
                 {
@@ -49,8 +52,25 @@ impl spikard::Handler for ElixirHandlerBridge {
                 }
 
                 // Send trait_call message to Elixir GenServer
-                // Note: This requires a NIF that sends the message
-                // crate::nif_support::send_trait_call(self.pid, "call", &request_json, reply_id)?;
+                {
+                    let pid = self.pid;
+                    let method_name = "call";
+                    let request_json_clone = request_json.clone();
+                    tokio::task::spawn_blocking(move || {
+                        let mut env = OwnedEnv::new();
+                        let _ = env.send_and_clear(&pid, |env| {
+                            (
+                                Atom::from_str(env, "trait_call").unwrap(),
+                                method_name,
+                                request_json_clone.as_str(),
+                                reply_id,
+                            )
+                                .encode(env)
+                        });
+                    })
+                    .await
+                    .ok();
+                }
 
                 // Await response
                 let response_json = rx.await.map_err(|e| {

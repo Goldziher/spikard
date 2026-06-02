@@ -42,20 +42,33 @@ module AppHarness
     # Register the handler at /fixtures/<fixture_id>{route}
     full_route = "/fixtures/#{fixture_id}#{route}"
 
-    # Get the Method enum value for this HTTP method.
-    method_enum_val = Spikard::Method.const_get(method_str, false)
-    next unless method_enum_val
+    # Normalize the HTTP method to PascalCase for RouteBuilder (accepts strings via TryConvert).
+    method_val = method_str.capitalize
+    next if method_val.empty?
 
     # Build the RouteBuilder with the method and path.
-    builder = Spikard::RouteBuilder.new(method_enum_val, full_route)
+    builder = Spikard::RouteBuilder.new(method_val, full_route)
 
     # If there's a body schema, attach it to the builder.
     if body_schema
       builder = builder.request_schema_json(JSON.dump(body_schema))
     end
 
+    # Thread handler middleware through to the RouteBuilder.
+    middleware_config = handler_config[:middleware] || {}
+    cors_config_class = Object.const_get("Spikard::ServerConfig".sub("ServerConfig", "CorsConfig"))
+    middleware_dispatch = {
+      "cors" => ->(cfg) { builder.cors(cors_config_class.from_json(cfg.to_json)) }
+    }
+    middleware_config.each do |mw_name, mw_cfg|
+      next unless mw_cfg
+      applicator = middleware_dispatch[mw_name.to_s]
+      next unless applicator
+      builder = applicator.call(mw_cfg)
+    end
+
     # Register the route with the handler.
-    APP.route(builder, handler_fn)
+    APP.register_route(builder, handler_fn)
   end
 
   # Configure and start the server.

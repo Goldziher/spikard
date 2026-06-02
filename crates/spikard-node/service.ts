@@ -10,6 +10,13 @@ export class App {
   private _registrations: Array<[string, any[], (...args: any[]) => any]> = [];
 
   /**
+   * Create a new App instance.
+   */
+  static new(): App {
+    return new App();
+  }
+
+  /**
    * Create a new application with the default server configuration.
    */
   constructor() {
@@ -55,12 +62,34 @@ export class App {
   }
 
   /**
+   * Register a GET route at the given path.
+   */
+  get(path: string): (fn: (...args: any[]) => any) => (...args: any[]) => any {
+    const builder = new RouteBuilder(Method.Get, path);
+    return (fn: (...args: any[]) => any) => {
+      this._registrations.push(["route", [builder], fn]);
+      return fn;
+    };
+  }
+
+  /**
    * Register a POST route at the given path.
    */
   post(path: string, handler: (...args: any[]) => any): this {
     const builder = new RouteBuilder(Method.Post, path);
     this._registrations.push(["route", [builder], handler]);
     return this;
+  }
+
+  /**
+   * Register a POST route at the given path.
+   */
+  post(path: string): (fn: (...args: any[]) => any) => (...args: any[]) => any {
+    const builder = new RouteBuilder(Method.Post, path);
+    return (fn: (...args: any[]) => any) => {
+      this._registrations.push(["route", [builder], fn]);
+      return fn;
+    };
   }
 
   /**
@@ -73,12 +102,34 @@ export class App {
   }
 
   /**
+   * Register a PUT route at the given path.
+   */
+  put(path: string): (fn: (...args: any[]) => any) => (...args: any[]) => any {
+    const builder = new RouteBuilder(Method.Put, path);
+    return (fn: (...args: any[]) => any) => {
+      this._registrations.push(["route", [builder], fn]);
+      return fn;
+    };
+  }
+
+  /**
    * Register a PATCH route at the given path.
    */
   patch(path: string, handler: (...args: any[]) => any): this {
     const builder = new RouteBuilder(Method.Patch, path);
     this._registrations.push(["route", [builder], handler]);
     return this;
+  }
+
+  /**
+   * Register a PATCH route at the given path.
+   */
+  patch(path: string): (fn: (...args: any[]) => any) => (...args: any[]) => any {
+    const builder = new RouteBuilder(Method.Patch, path);
+    return (fn: (...args: any[]) => any) => {
+      this._registrations.push(["route", [builder], fn]);
+      return fn;
+    };
   }
 
   /**
@@ -91,12 +142,34 @@ export class App {
   }
 
   /**
+   * Register a DELETE route at the given path.
+   */
+  delete(path: string): (fn: (...args: any[]) => any) => (...args: any[]) => any {
+    const builder = new RouteBuilder(Method.Delete, path);
+    return (fn: (...args: any[]) => any) => {
+      this._registrations.push(["route", [builder], fn]);
+      return fn;
+    };
+  }
+
+  /**
    * Register a HEAD route at the given path.
    */
   head(path: string, handler: (...args: any[]) => any): this {
     const builder = new RouteBuilder(Method.Head, path);
     this._registrations.push(["route", [builder], handler]);
     return this;
+  }
+
+  /**
+   * Register a HEAD route at the given path.
+   */
+  head(path: string): (fn: (...args: any[]) => any) => (...args: any[]) => any {
+    const builder = new RouteBuilder(Method.Head, path);
+    return (fn: (...args: any[]) => any) => {
+      this._registrations.push(["route", [builder], fn]);
+      return fn;
+    };
   }
 
   /**
@@ -109,6 +182,17 @@ export class App {
   }
 
   /**
+   * Register an OPTIONS route at the given path.
+   */
+  options(path: string): (fn: (...args: any[]) => any) => (...args: any[]) => any {
+    const builder = new RouteBuilder(Method.Options, path);
+    return (fn: (...args: any[]) => any) => {
+      this._registrations.push(["route", [builder], fn]);
+      return fn;
+    };
+  }
+
+  /**
    * Register a CONNECT route at the given path.
    */
   connect(path: string, handler: (...args: any[]) => any): this {
@@ -118,12 +202,34 @@ export class App {
   }
 
   /**
+   * Register a CONNECT route at the given path.
+   */
+  connect(path: string): (fn: (...args: any[]) => any) => (...args: any[]) => any {
+    const builder = new RouteBuilder(Method.Connect, path);
+    return (fn: (...args: any[]) => any) => {
+      this._registrations.push(["route", [builder], fn]);
+      return fn;
+    };
+  }
+
+  /**
    * Register a TRACE route at the given path.
    */
   trace(path: string, handler: (...args: any[]) => any): this {
     const builder = new RouteBuilder(Method.Trace, path);
     this._registrations.push(["route", [builder], handler]);
     return this;
+  }
+
+  /**
+   * Register a TRACE route at the given path.
+   */
+  trace(path: string): (fn: (...args: any[]) => any) => (...args: any[]) => any {
+    const builder = new RouteBuilder(Method.Trace, path);
+    return (fn: (...args: any[]) => any) => {
+      this._registrations.push(["route", [builder], fn]);
+      return fn;
+    };
   }
 
   /**

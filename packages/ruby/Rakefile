@@ -2,7 +2,7 @@
 
 require "bundler"
 Bundler::GemHelper.install_tasks name: "spikard"
-require "rake/extensiontask"
+require "rb_sys/extensiontask"
 require "rspec/core/rake_task"
 
 GEM_ROOT = __dir__
@@ -16,13 +16,22 @@ CROSS_PLATFORMS = %w[
   x64-mingw-ucrt
 ].freeze
 
-Rake::ExtensionTask.new("spikard-rb", GEMSPEC) do |ext|
-  ext.lib_dir = "lib"
-  ext.ext_dir = "ext/spikard_rb/native"
-  ext.source_pattern = "*.{}"
-  ext.platform = "ruby"
-  ext.cross_compile = true
-  ext.cross_platform = CROSS_PLATFORMS
+# rb_sys 0.9.x runs `cargo metadata` from the current working directory. When
+# the gem lives inside a Cargo workspace that excludes this crate (monorepo
+# layout), the metadata lookup resolves to the parent workspace and fails to
+# locate the crate. Chdir into the manifest directory for the duration of the
+# task construction so the metadata lookup finds the crate's own Cargo.toml.
+MANIFEST_DIR = File.expand_path("ext/spikard_rb", GEM_ROOT)
+
+Dir.chdir(MANIFEST_DIR) do
+  RbSys::ExtensionTask.new("spikard-rb", GEMSPEC) do |ext|
+    ext.lib_dir = "lib"
+    ext.ext_dir = "ext/spikard_rb/native"
+    ext.source_pattern = "*.{}"
+    ext.platform = "ruby"
+    ext.cross_compile = true
+    ext.cross_platform = CROSS_PLATFORMS
+  end
 end
 
 RSpec::Core::RakeTask.new(:spec)

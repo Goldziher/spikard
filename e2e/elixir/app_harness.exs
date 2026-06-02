@@ -64,7 +64,6 @@ config = %Spikard.ServerConfig{
 app = App.config(app, config)
 
 IO.puts("Harness listening on 127.0.0.1:8000")
-IO.flush()
 
 # Run the app
 App.run(app)

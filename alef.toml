@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.21.1"
+alef_version = "0.21.4"
 languages = [
   "python",
   "node",
@@ -909,7 +909,7 @@ languages = [
 # handlers per fixture, returning canned expected responses.
 imports = ["spikard"]
 app_class = "App"
-register_method = "route"
+register_method = "register_route"
 run_method = "run"
 # spikard's Response struct names the body payload `content`, not `body`.
 response_body_field = "content"
