@@ -247,13 +247,13 @@ sealed class AppError with _$AppError {
   const AppError._();
 
   /// Route registration failed.
-  const factory AppError.route({required String field0}) = AppError_Route;
+  const factory AppError.route({required String value}) = AppError_Route;
 
   /// Server/router construction failed.
-  const factory AppError.server({required String field0}) = AppError_Server;
+  const factory AppError.server({required String value}) = AppError_Server;
 
   /// Failed to extract DTO from the request context.
-  const factory AppError.decode({required String field0}) = AppError_Decode;
+  const factory AppError.decode({required String value}) = AppError_Decode;
 }
 
 /// AsyncAPI HTTP endpoint configuration
@@ -466,67 +466,67 @@ sealed class GraphQLError with _$GraphQLError {
   /// Error during schema execution
   ///
   /// Occurs when the GraphQL executor encounters a runtime error during query execution.
-  const factory GraphQLError.executionError({required String field0}) =
+  const factory GraphQLError.executionError({required String value}) =
       GraphQLError_ExecutionError;
 
   /// Error during schema building
   ///
   /// Occurs when schema construction fails due to invalid definitions or conflicts.
-  const factory GraphQLError.schemaBuildError({required String field0}) =
+  const factory GraphQLError.schemaBuildError({required String value}) =
       GraphQLError_SchemaBuildError;
 
   /// Error during request handling
   ///
   /// Occurs when the HTTP request cannot be properly handled or parsed.
-  const factory GraphQLError.requestHandlingError({required String field0}) =
+  const factory GraphQLError.requestHandlingError({required String value}) =
       GraphQLError_RequestHandlingError;
 
   /// Serialization error
   ///
   /// Occurs during JSON serialization/deserialization of GraphQL values.
-  const factory GraphQLError.serializationError({required String field0}) =
+  const factory GraphQLError.serializationError({required String value}) =
       GraphQLError_SerializationError;
 
   /// JSON parsing error
   ///
   /// Occurs when JSON input cannot be parsed.
-  const factory GraphQLError.jsonError({required String field0}) =
+  const factory GraphQLError.jsonError({required String value}) =
       GraphQLError_JsonError;
 
   /// GraphQL validation error
   ///
   /// Occurs when a GraphQL query fails schema validation.
-  const factory GraphQLError.validationError({required String field0}) =
+  const factory GraphQLError.validationError({required String value}) =
       GraphQLError_ValidationError;
 
   /// GraphQL parse error
   ///
   /// Occurs when the GraphQL query string cannot be parsed.
-  const factory GraphQLError.parseError({required String field0}) =
+  const factory GraphQLError.parseError({required String value}) =
       GraphQLError_ParseError;
 
   /// Authentication error
   ///
   /// Occurs when request authentication fails.
-  const factory GraphQLError.authenticationError({required String field0}) =
+  const factory GraphQLError.authenticationError({required String value}) =
       GraphQLError_AuthenticationError;
 
   /// Authorization error
   ///
   /// Occurs when user lacks required permissions.
-  const factory GraphQLError.authorizationError({required String field0}) =
+  const factory GraphQLError.authorizationError({required String value}) =
       GraphQLError_AuthorizationError;
 
   /// Not found error
   ///
   /// Occurs when a requested resource is not found.
-  const factory GraphQLError.notFound({required String field0}) =
+  const factory GraphQLError.notFound({required String value}) =
       GraphQLError_NotFound;
 
   /// Rate limit error
   ///
   /// Occurs when rate limit is exceeded.
-  const factory GraphQLError.rateLimitExceeded({required String field0}) =
+  const factory GraphQLError.rateLimitExceeded({required String value}) =
       GraphQLError_RateLimitExceeded;
 
   /// Invalid input error with validation details
@@ -552,7 +552,7 @@ sealed class GraphQLError with _$GraphQLError {
   /// Internal server error
   ///
   /// Occurs when an unexpected internal error happens.
-  const factory GraphQLError.internalError({required String field0}) =
+  const factory GraphQLError.internalError({required String value}) =
       GraphQLError_InternalError;
 
   /// Stable machine-readable error type identifier (`SCREAMING_SNAKE_CASE`).
@@ -1451,11 +1451,11 @@ sealed class SchemaError with _$SchemaError {
   const SchemaError._();
 
   /// Generic schema building error
-  const factory SchemaError.buildingFailed({required String field0}) =
+  const factory SchemaError.buildingFailed({required String value}) =
       SchemaError_BuildingFailed;
 
   /// Configuration validation error
-  const factory SchemaError.validationError({required String field0}) =
+  const factory SchemaError.validationError({required String value}) =
       SchemaError_ValidationError;
 
   /// Complexity limit exceeded
@@ -1641,11 +1641,11 @@ sealed class SnapshotError with _$SnapshotError {
   const SnapshotError._();
 
   /// Response header could not be decoded to UTF-8.
-  const factory SnapshotError.invalidHeader({required String field0}) =
+  const factory SnapshotError.invalidHeader({required String value}) =
       SnapshotError_InvalidHeader;
 
   /// Body decompression failed.
-  const factory SnapshotError.decompression({required String field0}) =
+  const factory SnapshotError.decompression({required String value}) =
       SnapshotError_Decompression;
 }
 
@@ -1810,11 +1810,11 @@ sealed class WebSocketMessage with _$WebSocketMessage {
   const WebSocketMessage._();
 
   /// A text message.
-  const factory WebSocketMessage.text({required String field0}) =
+  const factory WebSocketMessage.text({required String value}) =
       WebSocketMessage_Text;
 
   /// A binary message.
-  const factory WebSocketMessage.binary({required Uint8List field0}) =
+  const factory WebSocketMessage.binary({required Uint8List value}) =
       WebSocketMessage_Binary;
 
   /// A close message with a numeric close code (RFC 6455) and optional reason text.
@@ -1830,10 +1830,10 @@ sealed class WebSocketMessage with _$WebSocketMessage {
   }) = WebSocketMessage_Close;
 
   /// A ping message.
-  const factory WebSocketMessage.ping({required Uint8List field0}) =
+  const factory WebSocketMessage.ping({required Uint8List value}) =
       WebSocketMessage_Ping;
 
   /// A pong message.
-  const factory WebSocketMessage.pong({required Uint8List field0}) =
+  const factory WebSocketMessage.pong({required Uint8List value}) =
       WebSocketMessage_Pong;
 }

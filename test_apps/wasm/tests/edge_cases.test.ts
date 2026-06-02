@@ -178,7 +178,7 @@ describe("edge_cases", () => {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: "items[0]=first&items[2]=third&items[5]=sixth",
+      body: Buffer.from("items[0]=first&items[2]=third&items[5]=sixth", 'utf-8'),
     });
     expect(response.status).toBe(400);    const data = await response.json();
     expect(data).toEqual({
