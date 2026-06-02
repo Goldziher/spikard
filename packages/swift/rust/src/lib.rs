@@ -547,6 +547,15 @@ mod ffi {
         fn run(client: &mut App) -> String;
     }
     extern "Rust" {
+        // Factory for constructing RouteBuilder from its constructor args.
+        // Used by variant registration methods that need to build a RouteBuilder
+        // before forwarding to the base callback-registration C function. swift-bridge
+        // represents enum types (e.g. Method) as opaque classes — there are no static
+        // member constants — so a dedicated factory is required.
+        #[swift_bridge(swift_name = "routeBuilderNew")]
+        fn route_builder_new(method: &Method, path: String) -> RouteBuilder;
+    }
+    extern "Rust" {
         #[swift_bridge(swift_name = "corsConfigFromJson")]
         fn cors_config_from_json(json: String) -> Result<CorsConfig, String>;
         #[swift_bridge(swift_name = "serverConfigFromJson")]
@@ -671,6 +680,16 @@ pub fn run(client: &mut App) -> String {
 /// Expose the wrapper's address as a usize for cross-bridge ptr handoff.
 pub fn app_raw_ptr(client: &mut App) -> usize {
     client as *mut App as usize
+}
+
+/// Construct a [`RouteBuilder`] from its constructor args for use by Swift variant
+/// registration shortcuts. Fixed args (e.g. Method) are passed as opaque references;
+/// their `to_string()` returns the serde wire name used to reconstruct the Rust core type.
+pub fn route_builder_new(method: &Method, path: String) -> RouteBuilder {
+    RouteBuilder(spikard::RouteBuilder::new(
+        serde_json::from_str::<spikard::Method>(&format!("\"{}\"\n", method.to_string())).unwrap_or_default(),
+        path,
+    ))
 }
 
 mod extern_callbacks;

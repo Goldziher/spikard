@@ -1,4 +1,6 @@
+// swift-format-ignore-file
 import RustBridgeC
+
 public func graphQlRouteConfigPath<GenericIntoRustString: IntoRustString>(_ client: GraphQLRouteConfigRef, _ path: GenericIntoRustString) -> GraphQLRouteConfig {
     GraphQLRouteConfig(ptr: __swift_bridge__$graph_ql_route_config_path(client.ptr, { let rustString = path.intoRustString(); rustString.isOwned = false; return rustString.ptr }()))
 }
@@ -64,6 +66,9 @@ public func config(_ client: AppRefMut) {
 }
 public func run(_ client: AppRefMut) -> RustString {
     RustString(ptr: __swift_bridge__$run(client.ptr))
+}
+public func routeBuilderNew<GenericIntoRustString: IntoRustString>(_ method: MethodRef, _ path: GenericIntoRustString) -> RouteBuilder {
+    RouteBuilder(ptr: __swift_bridge__$route_builder_new(method.ptr, { let rustString = path.intoRustString(); rustString.isOwned = false; return rustString.ptr }()))
 }
 public func corsConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> CorsConfig {
     try { let val = __swift_bridge__$cors_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return CorsConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
@@ -160,7 +165,7 @@ public func securitySchemeInfoFromJson<GenericIntoRustString: IntoRustString>(_ 
 }
 
 public class UploadFile: UploadFileRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -178,7 +183,7 @@ public class UploadFileRefMut: UploadFileRef {
     }
 }
 public class UploadFileRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -256,7 +261,7 @@ extension UploadFile: Vectorizable {
 
 
 public class GraphQLRouteConfig: GraphQLRouteConfigRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -274,7 +279,7 @@ public class GraphQLRouteConfigRefMut: GraphQLRouteConfigRef {
     }
 }
 public class GraphQLRouteConfigRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -331,7 +336,7 @@ extension GraphQLRouteConfig: Vectorizable {
 
 
 public class SchemaConfig: SchemaConfigRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -354,7 +359,7 @@ public class SchemaConfigRefMut: SchemaConfigRef {
     }
 }
 public class SchemaConfigRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -424,7 +429,7 @@ extension SchemaConfig: Vectorizable {
 
 
 public class QueryOnlyConfig: QueryOnlyConfigRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -447,7 +452,7 @@ public class QueryOnlyConfigRefMut: QueryOnlyConfigRef {
     }
 }
 public class QueryOnlyConfigRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -517,7 +522,7 @@ extension QueryOnlyConfig: Vectorizable {
 
 
 public class QueryMutationConfig: QueryMutationConfigRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -540,7 +545,7 @@ public class QueryMutationConfigRefMut: QueryMutationConfigRef {
     }
 }
 public class QueryMutationConfigRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -610,7 +615,7 @@ extension QueryMutationConfig: Vectorizable {
 
 
 public class FullSchemaConfig: FullSchemaConfigRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -633,7 +638,7 @@ public class FullSchemaConfigRefMut: FullSchemaConfigRef {
     }
 }
 public class FullSchemaConfigRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -703,7 +708,7 @@ extension FullSchemaConfig: Vectorizable {
 
 
 public class BackgroundTaskConfig: BackgroundTaskConfigRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -726,7 +731,7 @@ public class BackgroundTaskConfigRefMut: BackgroundTaskConfigRef {
     }
 }
 public class BackgroundTaskConfigRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -796,7 +801,7 @@ extension BackgroundTaskConfig: Vectorizable {
 
 
 public class BackgroundJobMetadata: BackgroundJobMetadataRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -819,7 +824,7 @@ public class BackgroundJobMetadataRefMut: BackgroundJobMetadataRef {
     }
 }
 public class BackgroundJobMetadataRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -885,7 +890,7 @@ extension BackgroundJobMetadata: Vectorizable {
 
 
 public class CorsConfig: CorsConfigRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -908,7 +913,7 @@ public class CorsConfigRefMut: CorsConfigRef {
     }
 }
 public class CorsConfigRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -990,7 +995,7 @@ extension CorsConfig: Vectorizable {
 
 
 public class CompressionConfig: CompressionConfigRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -1013,7 +1018,7 @@ public class CompressionConfigRefMut: CompressionConfigRef {
     }
 }
 public class CompressionConfigRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -1087,7 +1092,7 @@ extension CompressionConfig: Vectorizable {
 
 
 public class RateLimitConfig: RateLimitConfigRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -1110,7 +1115,7 @@ public class RateLimitConfigRefMut: RateLimitConfigRef {
     }
 }
 public class RateLimitConfigRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -1180,7 +1185,7 @@ extension RateLimitConfig: Vectorizable {
 
 
 public class GrpcConfig: GrpcConfigRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -1203,7 +1208,7 @@ public class GrpcConfigRefMut: GrpcConfigRef {
     }
 }
 public class GrpcConfigRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -1297,7 +1302,7 @@ extension GrpcConfig: Vectorizable {
 
 
 public class JsonRpcConfig: JsonRpcConfigRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -1320,7 +1325,7 @@ public class JsonRpcConfigRefMut: JsonRpcConfigRef {
     }
 }
 public class JsonRpcConfigRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -1394,7 +1399,7 @@ extension JsonRpcConfig: Vectorizable {
 
 
 public class OpenApiConfig: OpenApiConfigRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -1417,7 +1422,7 @@ public class OpenApiConfigRefMut: OpenApiConfigRef {
     }
 }
 public class OpenApiConfigRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -1519,7 +1524,7 @@ extension OpenApiConfig: Vectorizable {
 
 
 public class Response: ResponseRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -1542,7 +1547,7 @@ public class ResponseRefMut: ResponseRef {
     }
 }
 public class ResponseRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -1612,7 +1617,7 @@ extension Response: Vectorizable {
 
 
 public class SseEvent: SseEventRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -1630,7 +1635,7 @@ public class SseEventRefMut: SseEventRef {
     }
 }
 public class SseEventRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -1704,7 +1709,7 @@ extension SseEvent: Vectorizable {
 
 
 public class JwtConfig: JwtConfigRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -1722,7 +1727,7 @@ public class JwtConfigRefMut: JwtConfigRef {
     }
 }
 public class JwtConfigRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -1800,7 +1805,7 @@ extension JwtConfig: Vectorizable {
 
 
 public class ApiKeyConfig: ApiKeyConfigRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -1818,7 +1823,7 @@ public class ApiKeyConfigRefMut: ApiKeyConfigRef {
     }
 }
 public class ApiKeyConfigRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -1884,7 +1889,7 @@ extension ApiKeyConfig: Vectorizable {
 
 
 public class StaticFilesConfig: StaticFilesConfigRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -1902,7 +1907,7 @@ public class StaticFilesConfigRefMut: StaticFilesConfigRef {
     }
 }
 public class StaticFilesConfigRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -1976,7 +1981,7 @@ extension StaticFilesConfig: Vectorizable {
 
 
 public class ServerConfig: ServerConfigRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -1999,7 +2004,7 @@ public class ServerConfigRefMut: ServerConfigRef {
     }
 }
 public class ServerConfigRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -2133,7 +2138,7 @@ extension ServerConfig: Vectorizable {
 
 
 public class RouteBuilder: RouteBuilderRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -2151,7 +2156,7 @@ public class RouteBuilderRefMut: RouteBuilderRef {
     }
 }
 public class RouteBuilderRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -2208,7 +2213,7 @@ extension RouteBuilder: Vectorizable {
 
 
 public class JsonRpcMethodInfo: JsonRpcMethodInfoRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -2226,7 +2231,7 @@ public class JsonRpcMethodInfoRefMut: JsonRpcMethodInfoRef {
     }
 }
 public class JsonRpcMethodInfoRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -2308,7 +2313,7 @@ extension JsonRpcMethodInfo: Vectorizable {
 
 
 public class ProblemDetails: ProblemDetailsRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -2326,7 +2331,7 @@ public class ProblemDetailsRefMut: ProblemDetailsRef {
     }
 }
 public class ProblemDetailsRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -2408,7 +2413,7 @@ extension ProblemDetails: Vectorizable {
 
 
 public class AsyncApiConfig: AsyncApiConfigRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -2431,7 +2436,7 @@ public class AsyncApiConfigRefMut: AsyncApiConfigRef {
     }
 }
 public class AsyncApiConfigRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -2497,7 +2502,7 @@ extension AsyncApiConfig: Vectorizable {
 
 
 public class ParsedChannel: ParsedChannelRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -2515,7 +2520,7 @@ public class ParsedChannelRefMut: ParsedChannelRef {
     }
 }
 public class ParsedChannelRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -2589,7 +2594,7 @@ extension ParsedChannel: Vectorizable {
 
 
 public class ParsedOperation: ParsedOperationRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -2607,7 +2612,7 @@ public class ParsedOperationRefMut: ParsedOperationRef {
     }
 }
 public class ParsedOperationRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -2677,7 +2682,7 @@ extension ParsedOperation: Vectorizable {
 
 
 public class ParsedMessage: ParsedMessageRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -2695,7 +2700,7 @@ public class ParsedMessageRefMut: ParsedMessageRef {
     }
 }
 public class ParsedMessageRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -2761,7 +2766,7 @@ extension ParsedMessage: Vectorizable {
 
 
 public class ParseResult: ParseResultRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -2779,7 +2784,7 @@ public class ParseResultRefMut: ParseResultRef {
     }
 }
 public class ParseResultRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -2861,7 +2866,7 @@ extension ParseResult: Vectorizable {
 
 
 public class ParseRequest: ParseRequestRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -2879,7 +2884,7 @@ public class ParseRequestRefMut: ParseRequestRef {
     }
 }
 public class ParseRequestRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -2941,7 +2946,7 @@ extension ParseRequest: Vectorizable {
 
 
 public class ValidationResponse: ValidationResponseRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -2959,7 +2964,7 @@ public class ValidationResponseRefMut: ValidationResponseRef {
     }
 }
 public class ValidationResponseRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -3021,7 +3026,7 @@ extension ValidationResponse: Vectorizable {
 
 
 public class ValidateRequest: ValidateRequestRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -3039,7 +3044,7 @@ public class ValidateRequestRefMut: ValidateRequestRef {
     }
 }
 public class ValidateRequestRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -3113,7 +3118,7 @@ extension ValidateRequest: Vectorizable {
 
 
 public class ContactInfo: ContactInfoRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -3131,7 +3136,7 @@ public class ContactInfoRefMut: ContactInfoRef {
     }
 }
 public class ContactInfoRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -3201,7 +3206,7 @@ extension ContactInfo: Vectorizable {
 
 
 public class LicenseInfo: LicenseInfoRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -3219,7 +3224,7 @@ public class LicenseInfoRefMut: LicenseInfoRef {
     }
 }
 public class LicenseInfoRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -3285,7 +3290,7 @@ extension LicenseInfo: Vectorizable {
 
 
 public class ServerInfo: ServerInfoRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -3303,7 +3308,7 @@ public class ServerInfoRefMut: ServerInfoRef {
     }
 }
 public class ServerInfoRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -3369,7 +3374,7 @@ extension ServerInfo: Vectorizable {
 
 
 public class TestingSseEvent: TestingSseEventRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -3387,7 +3392,7 @@ public class TestingSseEventRefMut: TestingSseEventRef {
     }
 }
 public class TestingSseEventRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -3449,7 +3454,7 @@ extension TestingSseEvent: Vectorizable {
 
 
 public class Method: MethodRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -3467,7 +3472,7 @@ public class MethodRefMut: MethodRef {
     }
 }
 public class MethodRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -3529,7 +3534,7 @@ extension Method: Vectorizable {
 
 
 public class SecuritySchemeInfo: SecuritySchemeInfoRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -3547,7 +3552,7 @@ public class SecuritySchemeInfoRefMut: SecuritySchemeInfoRef {
     }
 }
 public class SecuritySchemeInfoRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -3609,7 +3614,7 @@ extension SecuritySchemeInfo: Vectorizable {
 
 
 public class App: AppRefMut {
-    var isOwned: Bool = true
+    public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -3632,7 +3637,7 @@ public class AppRefMut: AppRef {
     }
 }
 public class AppRef {
-    var ptr: UnsafeMutableRawPointer
+    public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
@@ -3686,6 +3691,3 @@ extension App: Vectorizable {
         __swift_bridge__$Vec_App$len(vecPtr)
     }
 }
-
-
-
