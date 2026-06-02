@@ -10,6 +10,13 @@ export class App {
   private _registrations: Array<[string, any[], (...args: any[]) => any]> = [];
 
   /**
+   * Create a new App instance.
+   */
+  static new(): App {
+    return new App();
+  }
+
+  /**
    * Create a new application with the default server configuration.
    */
   constructor() {
