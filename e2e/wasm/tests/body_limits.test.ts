@@ -7,6 +7,7 @@
 import { describe, expect, it } from "vitest";
 
 describe("body_limits", () => {
+
   it("body_over_limit_returns_413: Requests that exceed the configured max body size should be rejected with Payload Too Large.", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/body_over_limit_returns_413/body-limit/over`;
@@ -16,12 +17,9 @@ describe("body_limits", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        note: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-      }),
+      body: JSON.stringify({ note: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" }),
     });
-    expect(response.status).toBe(413);
-  });
+    expect(response.status).toBe(413);  });
 
   it("body_under_limit_succeeds: Ensures requests smaller than the configured body limit are accepted.", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -34,11 +32,10 @@ describe("body_limits", () => {
       },
       body: JSON.stringify({ note: "small" }),
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       accepted: true,
       note: "small",
-    });
-  });
+    });  });
+
 });

@@ -7,6 +7,7 @@
 import { describe, expect, it } from "vitest";
 
 describe("openrpc", () => {
+
   it("openrpc_batch_mixed_valid_invalid: Tests batch request where some calls are valid and some reference undefined methods", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/openrpc_batch_mixed_valid_invalid/rpc`;
@@ -16,18 +17,10 @@ describe("openrpc", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify([
-        { id: 1, jsonrpc: "2.0", method: "add", params: { a: 5, b: 5 } },
-        { id: 2, jsonrpc: "2.0", method: "nonexistent", params: {} },
-      ]),
+      body: JSON.stringify([{ id: 1, jsonrpc: "2.0", method: "add", params: { a: 5, b: 5 } }, { id: 2, jsonrpc: "2.0", method: "nonexistent", params: {  } }]),
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual([
-      { id: 1, jsonrpc: "2.0", result: 10 },
-      { error: { code: -32601, message: "Method not found" }, id: 2, jsonrpc: "2.0" },
-    ]);
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual([{ id: 1, jsonrpc: "2.0", result: 10 }, { error: { code: -32601, message: "Method not found" }, id: 2, jsonrpc: "2.0" }]);  });
 
   it("openrpc_batch_request_all_valid: Tests batch request against OpenRPC-defined methods where all calls are valid", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -38,18 +31,10 @@ describe("openrpc", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify([
-        { id: 1, jsonrpc: "2.0", method: "add", params: { a: 1, b: 2 } },
-        { id: 2, jsonrpc: "2.0", method: "add", params: { a: 10, b: 20 } },
-      ]),
+      body: JSON.stringify([{ id: 1, jsonrpc: "2.0", method: "add", params: { a: 1, b: 2 } }, { id: 2, jsonrpc: "2.0", method: "add", params: { a: 10, b: 20 } }]),
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
-    expect(data).toEqual([
-      { id: 1, jsonrpc: "2.0", result: 3 },
-      { id: 2, jsonrpc: "2.0", result: 30 },
-    ]);
-  });
+    expect(response.status).toBe(200);    const data = await response.json();
+    expect(data).toEqual([{ id: 1, jsonrpc: "2.0", result: 3 }, { id: 2, jsonrpc: "2.0", result: 30 }]);  });
 
   it("openrpc_error_mapping_per_spec: Tests that application errors are mapped to the error codes defined in the OpenRPC spec errors array", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -60,15 +45,9 @@ describe("openrpc", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        id: 7,
-        jsonrpc: "2.0",
-        method: "resource.get",
-        params: { id: 99999 },
-      }),
+      body: JSON.stringify({ id: 7, jsonrpc: "2.0", method: "resource.get", params: { id: 99999 } }),
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       error: {
         code: -32000,
@@ -76,8 +55,7 @@ describe("openrpc", () => {
       },
       id: 7,
       jsonrpc: "2.0",
-    });
-  });
+    });  });
 
   it("openrpc_method_handler_basic: Tests calling a method defined in an OpenRPC spec that takes typed params and returns a typed result", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -90,14 +68,12 @@ describe("openrpc", () => {
       },
       body: JSON.stringify({ id: 1, jsonrpc: "2.0", method: "add", params: { a: 10, b: 5 } }),
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       id: 1,
       jsonrpc: "2.0",
       result: 15,
-    });
-  });
+    });  });
 
   it("openrpc_method_namespacing: Tests method with dot-namespaced name such as account.create is dispatched correctly", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -108,15 +84,9 @@ describe("openrpc", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        id: 1,
-        jsonrpc: "2.0",
-        method: "account.create",
-        params: { email: "alice@example.com", username: "alice" },
-      }),
+      body: JSON.stringify({ id: 1, jsonrpc: "2.0", method: "account.create", params: { email: "alice@example.com", username: "alice" } }),
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       id: 1,
       jsonrpc: "2.0",
@@ -124,8 +94,7 @@ describe("openrpc", () => {
         id: 1,
         username: "alice",
       },
-    });
-  });
+    });  });
 
   it("openrpc_multi_method_spec: Tests that a spec with multiple methods routes correctly to each registered handler", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -136,21 +105,14 @@ describe("openrpc", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        id: 10,
-        jsonrpc: "2.0",
-        method: "echo",
-        params: { message: "hello world" },
-      }),
+      body: JSON.stringify({ id: 10, jsonrpc: "2.0", method: "echo", params: { message: "hello world" } }),
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       id: 10,
       jsonrpc: "2.0",
       result: "hello world",
-    });
-  });
+    });  });
 
   it("openrpc_optional_param_omitted: Tests that a method call omitting an optional parameter succeeds using its default behaviour", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -161,15 +123,9 @@ describe("openrpc", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        id: 5,
-        jsonrpc: "2.0",
-        method: "search",
-        params: { query: "spikard" },
-      }),
+      body: JSON.stringify({ id: 5, jsonrpc: "2.0", method: "search", params: { query: "spikard" } }),
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       id: 5,
       jsonrpc: "2.0",
@@ -177,8 +133,7 @@ describe("openrpc", () => {
         items: [],
         total: 0,
       },
-    });
-  });
+    });  });
 
   it("openrpc_param_schema_ref_resolution: Tests that parameter schemas referenced via $ref in OpenRPC components/schemas are resolved", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -189,21 +144,14 @@ describe("openrpc", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        id: 8,
-        jsonrpc: "2.0",
-        method: "address.validate",
-        params: { address: { city: "Springfield", country: "US", street: "123 Main St" } },
-      }),
+      body: JSON.stringify({ id: 8, jsonrpc: "2.0", method: "address.validate", params: { address: { city: "Springfield", country: "US", street: "123 Main St" } } }),
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       id: 8,
       jsonrpc: "2.0",
       result: true,
-    });
-  });
+    });  });
 
   it("openrpc_param_validation_missing_required: Tests that a missing required parameter is rejected per the OpenRPC method param schema", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -214,15 +162,9 @@ describe("openrpc", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        id: 3,
-        jsonrpc: "2.0",
-        method: "user.create",
-        params: { name: "Alice" },
-      }),
+      body: JSON.stringify({ id: 3, jsonrpc: "2.0", method: "user.create", params: { name: "Alice" } }),
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       error: {
         code: -32602,
@@ -230,8 +172,7 @@ describe("openrpc", () => {
       },
       id: 3,
       jsonrpc: "2.0",
-    });
-  });
+    });  });
 
   it("openrpc_param_validation_wrong_type: Tests that a parameter with wrong type is rejected per the OpenRPC method param schema", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -242,15 +183,9 @@ describe("openrpc", () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        id: 2,
-        jsonrpc: "2.0",
-        method: "multiply",
-        params: { factor: "not_a_number" },
-      }),
+      body: JSON.stringify({ id: 2, jsonrpc: "2.0", method: "multiply", params: { factor: "not_a_number" } }),
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       error: {
         code: -32602,
@@ -258,6 +193,6 @@ describe("openrpc", () => {
       },
       id: 2,
       jsonrpc: "2.0",
-    });
-  });
+    });  });
+
 });

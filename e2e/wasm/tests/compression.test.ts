@@ -7,6 +7,7 @@
 import { describe, expect, it } from "vitest";
 
 describe("compression", () => {
+
   it("compression_brotli_only: Tests Brotli compression when enabled and client supports it", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/compression_brotli_only/compression/brotli`;
@@ -17,14 +18,11 @@ describe("compression", () => {
         "Accept-Encoding": "br",
       },
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       data: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       message: "Brotli compressed payload",
-    });
-    expect(response.headers.get("vary")).toBe("Accept-Encoding");
-  });
+    });    expect(response.headers.get("vary")).toBe("Accept-Encoding");  });
 
   it("compression_gzip_applied: Serves a JSON payload compressed with gzip when the client advertises support.", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -36,15 +34,11 @@ describe("compression", () => {
         "Accept-Encoding": "gzip",
       },
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       message: "Compressed payload",
-      payload:
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    });
-    expect(response.headers.get("vary")).toBe("Accept-Encoding");
-  });
+      payload: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    });    expect(response.headers.get("vary")).toBe("Accept-Encoding");  });
 
   it("compression_min_size_threshold_exact_boundary: Tests compression respects exact minimum size boundary", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -56,12 +50,10 @@ describe("compression", () => {
         "Accept-Encoding": "gzip",
       },
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       message: "Exact size payload that is exactly 100 bytes or more to test boundary",
-    });
-  });
+    });  });
 
   it("compression_payload_below_min_size_is_not_compressed: Ensures responses smaller than the configured min_size are sent uncompressed even when the client sends Accept-Encoding.", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -73,13 +65,11 @@ describe("compression", () => {
         "Accept-Encoding": "gzip",
       },
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       message: "Small payload",
       payload: "tiny",
-    });
-  });
+    });  });
 
   it("compression_quality_level_9: Tests compression with high quality level setting", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -91,11 +81,10 @@ describe("compression", () => {
         "Accept-Encoding": "gzip",
       },
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       message: "High quality compression",
       payload: "x",
-    });
-  });
+    });  });
+
 });

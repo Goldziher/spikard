@@ -7,6 +7,7 @@
 import { describe, expect, it } from "vitest";
 
 describe("upload", () => {
+
   it("upload_file_as_bytes: Tests file upload read as byte array", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/upload_file_as_bytes/upload/bytes`;
@@ -18,14 +19,12 @@ describe("upload", () => {
       },
       body: JSON.stringify({ file: { content: "binary data", filename: "binary.bin" } }),
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       as_bytes: true,
       filename: "binary.bin",
       size: 11,
-    });
-  });
+    });  });
 
   it("upload_file_basic_success: Tests basic file upload with single file", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -38,13 +37,11 @@ describe("upload", () => {
       },
       body: JSON.stringify({ file: { content: "Hello, World!", filename: "test.txt" } }),
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       filename: "test.txt",
       size: 13,
-    });
-  });
+    });  });
 
   it("upload_file_content_type_or_default: Tests file upload uses provided content_type or defaults", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -57,13 +54,11 @@ describe("upload", () => {
       },
       body: JSON.stringify({ file: { content: "Some content", filename: "unknown.xyz" } }),
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       content_type: "application/octet-stream",
       filename: "unknown.xyz",
-    });
-  });
+    });  });
 
   it("upload_file_read_to_string: Tests file upload read as string", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -76,14 +71,12 @@ describe("upload", () => {
       },
       body: JSON.stringify({ file: { content: "Hello, World!", filename: "text.txt" } }),
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       as_string: true,
       content: "Hello, World!",
       filename: "text.txt",
-    });
-  });
+    });  });
 
   it("upload_file_with_custom_content_type: Tests file upload preserves custom Content-Type", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -94,22 +87,14 @@ describe("upload", () => {
       headers: {
         "Content-Type": "multipart/form-data",
       },
-      body: JSON.stringify({
-        file: {
-          content: '{"key": "value"}',
-          content_type: "application/json",
-          filename: "data.json",
-        },
-      }),
+      body: JSON.stringify({ file: { content: "{\"key\": \"value\"}", content_type: "application/json", filename: "data.json" } }),
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       content_type: "application/json",
       filename: "data.json",
       size: 16,
-    });
-  });
+    });  });
 
   it("upload_file_with_form_fields: Tests file upload with additional form fields", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -120,20 +105,14 @@ describe("upload", () => {
       headers: {
         "Content-Type": "multipart/form-data",
       },
-      body: JSON.stringify({
-        description: "Important document",
-        file: { content: "PDF content", filename: "document.pdf" },
-        tags: ["important", "archive"],
-      }),
+      body: JSON.stringify({ description: "Important document", file: { content: "PDF content", filename: "document.pdf" }, tags: ["important", "archive"] }),
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       description: "Important document",
       filename: "document.pdf",
       tags_count: 2,
-    });
-  });
+    });  });
 
   it("upload_file_with_gzip_content_encoding: Tests file upload with gzip content encoding", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -144,17 +123,13 @@ describe("upload", () => {
       headers: {
         "Content-Type": "multipart/form-data",
       },
-      body: JSON.stringify({
-        file: { content: "compressed data", content_encoding: "gzip", filename: "data.gz" },
-      }),
+      body: JSON.stringify({ file: { content: "compressed data", content_encoding: "gzip", filename: "data.gz" } }),
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       content_encoding: "gzip",
       filename: "data.gz",
-    });
-  });
+    });  });
 
   it("upload_multiple_files: Tests uploading multiple files at once", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -165,18 +140,12 @@ describe("upload", () => {
       headers: {
         "Content-Type": "multipart/form-data",
       },
-      body: JSON.stringify({
-        files: [
-          { content: "Content 1", filename: "file1.txt" },
-          { content: "Content 2", filename: "file2.txt" },
-        ],
-      }),
+      body: JSON.stringify({ files: [{ content: "Content 1", filename: "file1.txt" }, { content: "Content 2", filename: "file2.txt" }] }),
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       total_size: 18,
       uploaded_files: 2,
-    });
-  });
+    });  });
+
 });

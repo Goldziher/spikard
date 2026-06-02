@@ -3,9 +3,9 @@
 // To regenerate: alef generate
 // To verify freshness: alef verify --exit-code
 // Issues & docs: https://github.com/kreuzberg-dev/alef
-import { spawn } from "child_process";
-import { resolve } from "path";
-import { createConnection } from "net";
+import { spawn } from 'child_process';
+import { resolve } from 'path';
+import { createConnection } from 'net';
 
 let serverProcess: any;
 
@@ -24,11 +24,13 @@ export async function setup() {
 
   // Spawn the app harness as a subprocess.
   // The harness script loads fixtures and registers handlers for the SUT.
-  serverProcess = spawn(process.execPath, [resolve(__dirname, "./app_harness.mjs")], {
-    stdio: ["pipe", "pipe", "inherit"],
-  });
+  serverProcess = spawn(
+    process.execPath,
+    [resolve(__dirname, './app_harness.mjs')],
+    { stdio: ['pipe', 'pipe', 'inherit'] }
+  );
 
-  const host = "127.0.0.1";
+  const host = '127.0.0.1';
   const port = 8000;
   const url = `http://${host}:${port}`;
 
@@ -50,8 +52,8 @@ export async function setup() {
           socket.destroy();
           resolve(true);
         });
-        socket.on("error", () => resolve(false));
-        socket.on("timeout", () => {
+        socket.on('error', () => resolve(false));
+        socket.on('timeout', () => {
           socket.destroy();
           resolve(false);
         });
@@ -70,7 +72,7 @@ export async function setup() {
   if (!ready) {
     // Process died or timeout
     if (serverProcess && serverProcess.exitCode === null) {
-      serverProcess.kill("SIGTERM");
+      serverProcess.kill('SIGTERM');
     }
     throw new Error(`App harness did not become reachable on ${host}:${port} within 15s`);
   }
@@ -99,11 +101,11 @@ export async function teardown() {
     }
 
     const timeout = setTimeout(() => {
-      child.kill("SIGKILL");
+      child.kill('SIGKILL');
       resolve();
     }, 5000);
 
-    child.once("close", () => {
+    child.once('close', () => {
       clearTimeout(timeout);
       resolve();
     });
@@ -111,6 +113,6 @@ export async function teardown() {
     if (child.stdin) {
       child.stdin.end();
     }
-    child.kill("SIGTERM");
+    child.kill('SIGTERM');
   });
 }

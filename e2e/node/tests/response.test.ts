@@ -7,60 +7,45 @@
 import { describe, expect, it } from "vitest";
 
 describe("response", () => {
+
   it("response_cache_control_header: Tests response includes Cache-Control header", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/response_cache_control_header/static-resource`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       resource: "data",
-    });
-    expect(response.headers.get("cache-control")).toBe("public, max-age=3600");
-  });
+    });    expect(response.headers.get("cache-control")).toBe("public, max-age=3600");  });
 
   it("response_content_type_application_json: Tests response with Content-Type: application/json", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/response_content_type_application_json/api/data`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       key: "value",
-    });
-    expect(response.headers.get("content-type")).toBe("application/json");
-  });
+    });    expect(response.headers.get("content-type")).toBe("application/json");  });
 
   it("response_content_type_text_html: Tests response with Content-Type: text/html", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/response_content_type_text_html/html`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);
-    expect(response.headers.get("content-type")).toBe("text/html");
-  });
+    expect(response.status).toBe(200);    expect(response.headers.get("content-type")).toBe("text/html");  });
 
   it("response_location_header_redirect: Tests response includes Location header for redirects", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/response_location_header_redirect/old-path`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(301);
-    expect(response.headers.get("location")).toBe("https://example.com/new-path");
-  });
+    expect(response.status).toBe(301);    expect(response.headers.get("location")).toBe("https://example.com/new-path");  });
 
   it("response_multiple_headers_combined: Tests response with multiple custom headers combined", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/response_multiple_headers_combined/complex`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       message: "Complex response",
-    });
-    expect(response.headers.get("content-type")).toBe("application/json");
-    expect(response.headers.get("x-another-header")).toBe("value2");
-    expect(response.headers.get("x-custom-header")).toBe("value1");
-    expect(response.headers.get("x-third-header")).toBe("value3");
-  });
+    });    expect(response.headers.get("content-type")).toBe("application/json");    expect(response.headers.get("x-another-header")).toBe("value2");    expect(response.headers.get("x-custom-header")).toBe("value1");    expect(response.headers.get("x-third-header")).toBe("value3");  });
 
   it("response_set_cookie_in_response: Tests response sets cookie with Set-Cookie header", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -73,24 +58,19 @@ describe("response", () => {
       },
       body: JSON.stringify({ password: "pass", username: "user" }),
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       message: "Login successful",
-    });
-    expect(response.headers.get("set-cookie")).not.toBeNull();
-  });
+    });    expect(response.headers.get("set-cookie")).not.toBeNull();  });
 
   it("response_status_code_200_success: Tests response with explicit 200 status code", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/response_status_code_200_success/success`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       status: "ok",
-    });
-  });
+    });  });
 
   it("response_status_code_201_created: Tests response with 201 Created status code", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -103,32 +83,25 @@ describe("response", () => {
       },
       body: JSON.stringify({ name: "New Item" }),
     });
-    expect(response.status).toBe(201);
-    const data = await response.json();
+    expect(response.status).toBe(201);    const data = await response.json();
     expect(data).toEqual({
       id: "1",
       name: "New Item",
-    });
-  });
+    });  });
 
   it("response_status_code_204_no_content: Tests response with 204 No Content status code", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/response_status_code_204_no_content/items/1`;
     const response = await fetch(url, { method: "DELETE", redirect: "manual" });
-    expect(response.status).toBe(204);
-  });
+    expect(response.status).toBe(204);  });
 
   it("response_with_custom_headers: Tests response includes custom headers", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/response_with_custom_headers/data`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       data: "value",
-    });
-    expect(response.headers.get("x-custom-header")).toBe("custom-value");
-    expect(response.headers.get("x-request-id")).not.toBeNull();
-    expect(response.headers.get("x-total-count")).toBe("42");
-  });
+    });    expect(response.headers.get("x-custom-header")).toBe("custom-value");    expect(response.headers.get("x-request-id")).not.toBeNull();    expect(response.headers.get("x-total-count")).toBe("42");  });
+
 });

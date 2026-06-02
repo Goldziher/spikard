@@ -96,4 +96,5 @@ class App
     # Returns an error if server or router construction fails.
     Spikard.app_into_router(@registrations)
   end
+
 end

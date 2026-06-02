@@ -7,35 +7,31 @@
 import { describe, expect, it } from "vitest";
 
 describe("rate_limit", () => {
+
   it("rate_limit_below_threshold_succeeds: Verifies that requests below the configured rate limit are served normally.", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/rate_limit_below_threshold_succeeds/rate-limit/basic`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       request: "under-limit",
       status: "ok",
-    });
-  });
+    });  });
 
   it("rate_limit_burst_setting_allows_spike: Tests burst setting allows request spike beyond per_second rate", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/rate_limit_burst_setting_allows_spike/rate-limit/burst`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       status: "ok",
-    });
-  });
+    });  });
 
   it("rate_limit_exceeded_returns_429: Sends sequential requests until the configured limit is exceeded and validates the 429 response.", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/rate_limit_exceeded_returns_429/rate-limit/exceeded`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(429);
-  });
+    expect(response.status).toBe(429);  });
 
   it("rate_limit_ip_based_tracking: Tests rate limiting is applied per IP address", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -47,21 +43,18 @@ describe("rate_limit", () => {
         "X-Forwarded-For": "192.168.1.100",
       },
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       status: "ok",
-    });
-  });
+    });  });
 
   it("rate_limit_per_second_setting_10_requests: Tests rate limit allows up to 10 requests per second", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/rate_limit_per_second_setting_10_requests/rate-limit/per-second`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       status: "ok",
-    });
-  });
+    });  });
+
 });

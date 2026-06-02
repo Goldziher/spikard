@@ -7,6 +7,7 @@
 import { describe, expect, it } from "vitest";
 
 describe("request_id", () => {
+
   it("request_id_header_is_preserved: When the client supplies X-Request-ID the same value should appear on the response.", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/request_id_header_is_preserved/request-id/preserved`;
@@ -17,26 +18,20 @@ describe("request_id", () => {
         "X-Request-ID": "trace-123",
       },
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       echo: "trace-123",
       status: "preserved",
-    });
-    expect(response.headers.get("x-request-id")).toBe("trace-123");
-  });
+    });    expect(response.headers.get("x-request-id")).toBe("trace-123");  });
 
   it("request_id_is_generated_when_not_provided: Ensures the request ID middleware attaches a UUID to responses when the client does not send one.", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
     const url = `${sutUrl}/fixtures/request_id_is_generated_when_not_provided/request-id/generated`;
     const response = await fetch(url, { method: "GET", redirect: "manual" });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       status: "generated",
-    });
-    expect(response.headers.get("x-request-id")).toBe("a4c20a2c-3b1f-4e2d-8b1d-3c9a1f2e4d5a");
-  });
+    });    expect(response.headers.get("x-request-id")).toBe("a4c20a2c-3b1f-4e2d-8b1d-3c9a1f2e4d5a");  });
 
   it("request_id_middleware_can_be_disabled: When request ID generation is disabled the response should not contain X-Request-ID even if the client sends a header.", async () => {
     const sutUrl = process.env.SUT_URL || "http://127.0.0.1:8001";
@@ -48,10 +43,9 @@ describe("request_id", () => {
         "X-Request-ID": "external-id",
       },
     });
-    expect(response.status).toBe(200);
-    const data = await response.json();
+    expect(response.status).toBe(200);    const data = await response.json();
     expect(data).toEqual({
       status: "no-request-id",
-    });
-  });
+    });  });
+
 });

@@ -122,20 +122,20 @@ public sealed record ProblemDetails
     public ProblemDetails WithDetail(string detail)
     {
         var selfJson = JsonSerializer.Serialize(this, JsonSerializationOptions);
-        var selfHandle = NativeMethods.ProblemDetailsFromJson(selfJson);
+var selfHandle = NativeMethods.ProblemDetailsFromJson(selfJson);
         try
         {
             var nativeResult = NativeMethods.ProblemDetailsWithDetail(selfHandle, detail);
-            var jsonPtr = NativeMethods.ProblemDetailsToJson(nativeResult);
-            var json = global::System.Runtime.InteropServices.Marshal.PtrToStringUTF8(jsonPtr);
-            NativeMethods.FreeString(jsonPtr);
-            NativeMethods.ProblemDetailsFree(nativeResult);
-            return JsonSerializer.Deserialize<ProblemDetails>(json ?? "null", JsonOptions)!;
-        }
-        finally
+var jsonPtr = NativeMethods.ProblemDetailsToJson(nativeResult);
+var json = global::System.Runtime.InteropServices.Marshal.PtrToStringUTF8(jsonPtr);
+NativeMethods.FreeString(jsonPtr);
+NativeMethods.ProblemDetailsFree(nativeResult);
+return JsonSerializer.Deserialize<ProblemDetails>(json ?? "null", JsonOptions)!;
+}
+finally
         {
             NativeMethods.ProblemDetailsFree(selfHandle);
-        }
+}
     }
 
     /// <summary>
@@ -144,20 +144,20 @@ public sealed record ProblemDetails
     public ProblemDetails WithInstance(string instance)
     {
         var selfJson = JsonSerializer.Serialize(this, JsonSerializationOptions);
-        var selfHandle = NativeMethods.ProblemDetailsFromJson(selfJson);
+var selfHandle = NativeMethods.ProblemDetailsFromJson(selfJson);
         try
         {
             var nativeResult = NativeMethods.ProblemDetailsWithInstance(selfHandle, instance);
-            var jsonPtr = NativeMethods.ProblemDetailsToJson(nativeResult);
-            var json = global::System.Runtime.InteropServices.Marshal.PtrToStringUTF8(jsonPtr);
-            NativeMethods.FreeString(jsonPtr);
-            NativeMethods.ProblemDetailsFree(nativeResult);
-            return JsonSerializer.Deserialize<ProblemDetails>(json ?? "null", JsonOptions)!;
-        }
-        finally
+var jsonPtr = NativeMethods.ProblemDetailsToJson(nativeResult);
+var json = global::System.Runtime.InteropServices.Marshal.PtrToStringUTF8(jsonPtr);
+NativeMethods.FreeString(jsonPtr);
+NativeMethods.ProblemDetailsFree(nativeResult);
+return JsonSerializer.Deserialize<ProblemDetails>(json ?? "null", JsonOptions)!;
+}
+finally
         {
             NativeMethods.ProblemDetailsFree(selfHandle);
-        }
+}
     }
 
     /// <summary>
