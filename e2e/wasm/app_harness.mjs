@@ -72,7 +72,7 @@ for (const [fixtureId, fixture] of Object.entries(_FIXTURES)) {
 }
 
 // Configure and start the server
-const config = new ServerConfig();
+const config = ;
 config.host = '127.0.0.1';
 config.port = 8000;
 app.config(config);

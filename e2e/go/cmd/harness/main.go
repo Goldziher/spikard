@@ -10,9 +10,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 	spikard "github.com/Goldziher/spikard"
 )
 
@@ -99,6 +101,27 @@ func main() {
 		builder.Free()
 	}
 
+	// Spawn the server in a goroutine and poll for port readiness.
+	runErr := make(chan error, 1)
+	go func() {
+		runErr <- app.Run()
+	}()
+
+	// Poll the bind port with 50ms intervals, capped at 500ms total.
+	addr := fmt.Sprintf("%s:%d", host, port)
+	readyDeadline := time.Now().Add(500 * time.Millisecond)
+	for {
+		if time.Now().After(readyDeadline) {
+			log.Fatalf("server did not bind to %s within 500ms", addr)
+		}
+		conn, err := net.DialTimeout("tcp", addr, 50*time.Millisecond)
+		if err == nil {
+			conn.Close()
+			break
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
 	// Signal readiness to the parent test process.
 	fmt.Printf("Harness listening on %s:%d\n", host, port)
 	os.Stdout.Sync()
@@ -111,8 +134,8 @@ func main() {
 		os.Exit(0)
 	}()
 
-	// Run the server. This is blocking — the harness stays alive until interrupted.
-	if err := app.Run(); err != nil {
+	// Wait for the server to finish (should not return unless error).
+	if err := <-runErr; err != nil {
 		log.Fatalf("run: %v", err)
 	}
 }
