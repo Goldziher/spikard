@@ -833,7 +833,9 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ### Content-Type
+
 Responses using this struct should set:
+
 ```text
 Content-Type: application/problem+json
 ```
@@ -1273,6 +1275,7 @@ Events can have an optional type, ID, and retry timeout for advanced scenarios.
 ### SSE Format
 
 Events are serialized to the following text format:
+
 ```text
 event: event_type
 data: {"json":"value"}
@@ -1407,96 +1410,6 @@ native API surfaces.
 
 ### Methods
 
-#### get()
-
-Make a GET request
-
-**Signature:**
-
-```dart
-ResponseSnapshot get(String path, [List<List<String>>? queryParams, List<List<String>>? headers])
-```
-
-#### post()
-
-Make a POST request
-
-**Signature:**
-
-```dart
-ResponseSnapshot post(String path, String multipart, [String? json, List<List<String>>? formData, List<List<String>>? queryParams, List<List<String>>? headers])
-```
-
-#### requestRaw()
-
-Make a request with a raw body payload.
-
-**Signature:**
-
-```dart
-ResponseSnapshot requestRaw(Method method, String path, Uint8List body, [List<List<String>>? queryParams, List<List<String>>? headers])
-```
-
-#### put()
-
-Make a PUT request
-
-**Signature:**
-
-```dart
-ResponseSnapshot put(String path, [String? json, List<List<String>>? queryParams, List<List<String>>? headers])
-```
-
-#### patch()
-
-Make a PATCH request
-
-**Signature:**
-
-```dart
-ResponseSnapshot patch(String path, [String? json, List<List<String>>? queryParams, List<List<String>>? headers])
-```
-
-#### delete()
-
-Make a DELETE request
-
-**Signature:**
-
-```dart
-ResponseSnapshot delete(String path, [List<List<String>>? queryParams, List<List<String>>? headers])
-```
-
-#### options()
-
-Make an OPTIONS request
-
-**Signature:**
-
-```dart
-ResponseSnapshot options(String path, [List<List<String>>? queryParams, List<List<String>>? headers])
-```
-
-#### head()
-
-Make a HEAD request
-
-**Signature:**
-
-```dart
-ResponseSnapshot head(String path, [List<List<String>>? queryParams, List<List<String>>? headers])
-```
-
-#### trace()
-
-Make a TRACE request
-
-**Signature:**
-
-```dart
-ResponseSnapshot trace(String path, [List<List<String>>? queryParams, List<List<String>>? headers])
-```
-
 #### graphqlAt()
 
 Send a GraphQL query/mutation to a custom endpoint
@@ -1515,21 +1428,6 @@ Send a GraphQL query/mutation
 
 ```dart
 ResponseSnapshot graphql(String query, [String? variables, String? operationName])
-```
-
-#### graphqlWithStatus()
-
-Send a GraphQL query and return HTTP status code separately
-
-This method allows tests to distinguish between:
-
-- HTTP-level errors (400/422 for invalid requests)
-- GraphQL-level errors (200 with errors in response body)
-
-**Signature:**
-
-```dart
-String graphqlWithStatus(String query, [String? variables, String? operationName])
 ```
 
 #### graphqlSubscriptionAt()

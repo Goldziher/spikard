@@ -9,7 +9,7 @@ defmodule App do
 
   defstruct [
     :registrations,
-    :config,
+    :config
   ]
 
   @doc """
@@ -17,7 +17,7 @@ defmodule App do
   """
   def new(options \\ []) do
     %__MODULE__{
-      registrations: [],
+      registrations: []
     }
   end
 
@@ -38,12 +38,15 @@ defmodule App do
   """
   def route(self, builder, handler) do
     # Wrap handler closure in a process if it's not already one
-    handler_pid = case handler do
-      pid when is_pid(pid) -> pid
-      fun when is_function(fun) ->
-        {:ok, pid} = GenServer.start_link(__MODULE__.HandlerWrapper, fun)
-        pid
-    end
+    handler_pid =
+      case handler do
+        pid when is_pid(pid) ->
+          pid
+
+        fun when is_function(fun) ->
+          {:ok, pid} = GenServer.start_link(__MODULE__.HandlerWrapper, fun)
+          pid
+      end
 
     entry = {"route", {builder}, handler_pid}
     %__MODULE__{self | registrations: [entry | self.registrations]}
@@ -72,9 +75,11 @@ defmodule App do
           rescue
             _e -> Native.complete_trait_call(reply_id, "{\"error\": \"handler error\"}")
           end
+
         {:error, _} ->
           Native.complete_trait_call(reply_id, "{\"error\": \"json decode error\"}")
       end
+
       {:noreply, handler_fn}
     end
   end
@@ -83,14 +88,15 @@ defmodule App do
   Register a GET route at the given path.
   """
   def get(app, path, handler) do
-    app
+    builder = Spikard.RouteBuilder.new(Spikard.Method.get(), path)
+    route(app, builder, handler)
   end
 
   @doc """
   Register a GET route at the given path.
   """
   def get_decorator(app, path) do
-    fn(handler) ->
+    fn handler ->
       get(app, path, handler)
     end
   end
@@ -99,14 +105,15 @@ defmodule App do
   Register a POST route at the given path.
   """
   def post(app, path, handler) do
-    app
+    builder = Spikard.RouteBuilder.new(Spikard.Method.post(), path)
+    route(app, builder, handler)
   end
 
   @doc """
   Register a POST route at the given path.
   """
   def post_decorator(app, path) do
-    fn(handler) ->
+    fn handler ->
       post(app, path, handler)
     end
   end
@@ -115,14 +122,15 @@ defmodule App do
   Register a PUT route at the given path.
   """
   def put(app, path, handler) do
-    app
+    builder = Spikard.RouteBuilder.new(Spikard.Method.put(), path)
+    route(app, builder, handler)
   end
 
   @doc """
   Register a PUT route at the given path.
   """
   def put_decorator(app, path) do
-    fn(handler) ->
+    fn handler ->
       put(app, path, handler)
     end
   end
@@ -131,14 +139,15 @@ defmodule App do
   Register a PATCH route at the given path.
   """
   def patch(app, path, handler) do
-    app
+    builder = Spikard.RouteBuilder.new(Spikard.Method.patch(), path)
+    route(app, builder, handler)
   end
 
   @doc """
   Register a PATCH route at the given path.
   """
   def patch_decorator(app, path) do
-    fn(handler) ->
+    fn handler ->
       patch(app, path, handler)
     end
   end
@@ -147,14 +156,15 @@ defmodule App do
   Register a DELETE route at the given path.
   """
   def delete(app, path, handler) do
-    app
+    builder = Spikard.RouteBuilder.new(Spikard.Method.delete(), path)
+    route(app, builder, handler)
   end
 
   @doc """
   Register a DELETE route at the given path.
   """
   def delete_decorator(app, path) do
-    fn(handler) ->
+    fn handler ->
       delete(app, path, handler)
     end
   end
@@ -163,14 +173,15 @@ defmodule App do
   Register a HEAD route at the given path.
   """
   def head(app, path, handler) do
-    app
+    builder = Spikard.RouteBuilder.new(Spikard.Method.head(), path)
+    route(app, builder, handler)
   end
 
   @doc """
   Register a HEAD route at the given path.
   """
   def head_decorator(app, path) do
-    fn(handler) ->
+    fn handler ->
       head(app, path, handler)
     end
   end
@@ -179,14 +190,15 @@ defmodule App do
   Register an OPTIONS route at the given path.
   """
   def options(app, path, handler) do
-    app
+    builder = Spikard.RouteBuilder.new(Spikard.Method.options(), path)
+    route(app, builder, handler)
   end
 
   @doc """
   Register an OPTIONS route at the given path.
   """
   def options_decorator(app, path) do
-    fn(handler) ->
+    fn handler ->
       options(app, path, handler)
     end
   end
@@ -195,14 +207,15 @@ defmodule App do
   Register a CONNECT route at the given path.
   """
   def connect(app, path, handler) do
-    app
+    builder = Spikard.RouteBuilder.new(Spikard.Method.connect(), path)
+    route(app, builder, handler)
   end
 
   @doc """
   Register a CONNECT route at the given path.
   """
   def connect_decorator(app, path) do
-    fn(handler) ->
+    fn handler ->
       connect(app, path, handler)
     end
   end
@@ -211,14 +224,15 @@ defmodule App do
   Register a TRACE route at the given path.
   """
   def trace(app, path, handler) do
-    app
+    builder = Spikard.RouteBuilder.new(Spikard.Method.trace(), path)
+    route(app, builder, handler)
   end
 
   @doc """
   Register a TRACE route at the given path.
   """
   def trace_decorator(app, path) do
-    fn(handler) ->
+    fn handler ->
       trace(app, path, handler)
     end
   end
@@ -240,10 +254,12 @@ defmodule App do
       case decode_args_and_dispatch(method, args_json, registrations) do
         {:ok, response} ->
           Native.complete_trait_call(reply_id, response)
+
         {:error, reason} ->
           error_response = %{"error" => reason}
           Native.complete_trait_call(reply_id, error_response)
       end
+
       {:noreply, registrations}
     end
 
@@ -252,6 +268,7 @@ defmodule App do
       case find_handler(method, registrations) do
         nil ->
           {:error, "Handler not registered for method: #{method}"}
+
         {^method, _metadata, handler} ->
           # Decode JSON args (assumes handler accepts a single arg)
           case Jason.decode(args_json) do
@@ -268,6 +285,7 @@ defmodule App do
                 e ->
                   {:error, "Handler raised exception: #{inspect(e)}"}
               end
+
             {:error, reason} ->
               {:error, "Failed to decode args: #{reason}"}
           end
@@ -275,13 +293,14 @@ defmodule App do
     end
 
     defp find_handler(_method, []), do: nil
+
     defp find_handler(target, [{name, _metadata, _handler} = entry | _rest]) when name == target do
       entry
     end
+
     defp find_handler(target, [_head | rest]) do
       find_handler(target, rest)
     end
-
   end
 
   @doc """
@@ -305,5 +324,4 @@ defmodule App do
   def into_router(self) do
     Native.app_into_router(self.registrations)
   end
-
 end

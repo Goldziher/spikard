@@ -1024,7 +1024,7 @@ public enum GraphQLError: Swift.Error {
     /// Invalid input error with validation details
     ///
     /// Occurs during input validation with detailed error information.
-    case invalidInput(message: String, details: String?)
+    case invalidInput(message: String)
     /// Query complexity limit exceeded
     ///
     /// Occurs when a GraphQL query exceeds the configured complexity limit.
@@ -1053,7 +1053,7 @@ extension GraphQLError {
         case .authorizationError(message: _, field0: _): return 0
         case .notFound(message: _, field0: _): return 0
         case .rateLimitExceeded(message: _, field0: _): return 0
-        case .invalidInput(message: _, details: _): return 0
+        case .invalidInput(message: _): return 0
         case .complexityLimitExceeded: return 0
         case .depthLimitExceeded: return 0
         case .internalError(message: _, field0: _): return 0
@@ -1072,7 +1072,7 @@ extension GraphQLError {
         case .authorizationError(message: _, field0: _): return false
         case .notFound(message: _, field0: _): return false
         case .rateLimitExceeded(message: _, field0: _): return false
-        case .invalidInput(message: _, details: _): return false
+        case .invalidInput(message: _): return false
         case .complexityLimitExceeded: return false
         case .depthLimitExceeded: return false
         case .internalError(message: _, field0: _): return false
@@ -1091,7 +1091,7 @@ extension GraphQLError {
         case .authorizationError(message: _, field0: _): return ""
         case .notFound(message: _, field0: _): return ""
         case .rateLimitExceeded(message: _, field0: _): return ""
-        case .invalidInput(message: _, details: _): return ""
+        case .invalidInput(message: _): return ""
         case .complexityLimitExceeded: return ""
         case .depthLimitExceeded: return ""
         case .internalError(message: _, field0: _): return ""

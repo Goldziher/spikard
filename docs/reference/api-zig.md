@@ -833,7 +833,9 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ### Content-Type
+
 Responses using this struct should set:
+
 ```text
 Content-Type: application/problem+json
 ```
@@ -1273,6 +1275,7 @@ Events can have an optional type, ID, and retry timeout for advanced scenarios.
 ### SSE Format
 
 Events are serialized to the following text format:
+
 ```text
 event: event_type
 data: {"json":"value"}
@@ -1407,96 +1410,6 @@ native API surfaces.
 
 ### Methods
 
-#### get()
-
-Make a GET request
-
-**Signature:**
-
-```zig
-pub fn get(self: *const TestClient, path: [:0]const u8, query_params: ?[]const []const [:0]const u8, headers: ?[]const []const [:0]const u8) SnapshotError!ResponseSnapshot
-```
-
-#### post()
-
-Make a POST request
-
-**Signature:**
-
-```zig
-pub fn post(self: *const TestClient, path: [:0]const u8, json: ?[:0]const u8, form_data: ?[]const []const [:0]const u8, multipart: [:0]const u8, query_params: ?[]const []const [:0]const u8, headers: ?[]const []const [:0]const u8) SnapshotError!ResponseSnapshot
-```
-
-#### requestRaw()
-
-Make a request with a raw body payload.
-
-**Signature:**
-
-```zig
-pub fn requestRaw(self: *const TestClient, method: Method, path: [:0]const u8, body: []const u8, query_params: ?[]const []const [:0]const u8, headers: ?[]const []const [:0]const u8) SnapshotError!ResponseSnapshot
-```
-
-#### put()
-
-Make a PUT request
-
-**Signature:**
-
-```zig
-pub fn put(self: *const TestClient, path: [:0]const u8, json: ?[:0]const u8, query_params: ?[]const []const [:0]const u8, headers: ?[]const []const [:0]const u8) SnapshotError!ResponseSnapshot
-```
-
-#### patch()
-
-Make a PATCH request
-
-**Signature:**
-
-```zig
-pub fn patch(self: *const TestClient, path: [:0]const u8, json: ?[:0]const u8, query_params: ?[]const []const [:0]const u8, headers: ?[]const []const [:0]const u8) SnapshotError!ResponseSnapshot
-```
-
-#### delete()
-
-Make a DELETE request
-
-**Signature:**
-
-```zig
-pub fn delete(self: *const TestClient, path: [:0]const u8, query_params: ?[]const []const [:0]const u8, headers: ?[]const []const [:0]const u8) SnapshotError!ResponseSnapshot
-```
-
-#### options()
-
-Make an OPTIONS request
-
-**Signature:**
-
-```zig
-pub fn options(self: *const TestClient, path: [:0]const u8, query_params: ?[]const []const [:0]const u8, headers: ?[]const []const [:0]const u8) SnapshotError!ResponseSnapshot
-```
-
-#### head()
-
-Make a HEAD request
-
-**Signature:**
-
-```zig
-pub fn head(self: *const TestClient, path: [:0]const u8, query_params: ?[]const []const [:0]const u8, headers: ?[]const []const [:0]const u8) SnapshotError!ResponseSnapshot
-```
-
-#### trace()
-
-Make a TRACE request
-
-**Signature:**
-
-```zig
-pub fn trace(self: *const TestClient, path: [:0]const u8, query_params: ?[]const []const [:0]const u8, headers: ?[]const []const [:0]const u8) SnapshotError!ResponseSnapshot
-```
-
 #### graphqlAt()
 
 Send a GraphQL query/mutation to a custom endpoint
@@ -1515,21 +1428,6 @@ Send a GraphQL query/mutation
 
 ```zig
 pub fn graphql(self: *const TestClient, query: [:0]const u8, variables: ?[:0]const u8, operation_name: ?[:0]const u8) SnapshotError!ResponseSnapshot
-```
-
-#### graphqlWithStatus()
-
-Send a GraphQL query and return HTTP status code separately
-
-This method allows tests to distinguish between:
-
-- HTTP-level errors (400/422 for invalid requests)
-- GraphQL-level errors (200 with errors in response body)
-
-**Signature:**
-
-```zig
-pub fn graphqlWithStatus(self: *const TestClient, query: [:0]const u8, variables: ?[:0]const u8, operation_name: ?[:0]const u8) SnapshotError![:0]const u8
 ```
 
 #### graphqlSubscriptionAt()

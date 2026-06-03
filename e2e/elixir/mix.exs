@@ -15,6 +15,7 @@ defmodule E2eElixir.MixProject do
       {:spikard, path: "../../packages/elixir"},
       {:rustler_precompiled, "~> 0.9"},
       {:rustler, "~> 0.38.0", runtime: false},
+      {:finch, "~> 0.18"},
       {:req, "~> 0.5"},
       {:jason, "~> 1.4"}
     ]

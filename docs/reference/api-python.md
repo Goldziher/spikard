@@ -845,7 +845,9 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ### Content-Type
+
 Responses using this struct should set:
+
 ```text
 Content-Type: application/problem+json
 ```
@@ -1296,6 +1298,7 @@ Events can have an optional type, ID, and retry timeout for advanced scenarios.
 ### SSE Format
 
 Events are serialized to the following text format:
+
 ```text
 event: event_type
 data: {"json":"value"}
@@ -1430,96 +1433,6 @@ native API surfaces.
 
 ### Methods
 
-#### get()
-
-Make a GET request
-
-**Signature:**
-
-```python
-def get(self, path: str, query_params: list[list[str]], headers: list[list[str]]) -> ResponseSnapshot
-```
-
-#### post()
-
-Make a POST request
-
-**Signature:**
-
-```python
-def post(self, path: str, json: dict[str, Any], form_data: list[list[str]], multipart: str, query_params: list[list[str]], headers: list[list[str]]) -> ResponseSnapshot
-```
-
-#### request_raw()
-
-Make a request with a raw body payload.
-
-**Signature:**
-
-```python
-def request_raw(self, method: Method, path: str, body: bytes, query_params: list[list[str]], headers: list[list[str]]) -> ResponseSnapshot
-```
-
-#### put()
-
-Make a PUT request
-
-**Signature:**
-
-```python
-def put(self, path: str, json: dict[str, Any], query_params: list[list[str]], headers: list[list[str]]) -> ResponseSnapshot
-```
-
-#### patch()
-
-Make a PATCH request
-
-**Signature:**
-
-```python
-def patch(self, path: str, json: dict[str, Any], query_params: list[list[str]], headers: list[list[str]]) -> ResponseSnapshot
-```
-
-#### delete()
-
-Make a DELETE request
-
-**Signature:**
-
-```python
-def delete(self, path: str, query_params: list[list[str]], headers: list[list[str]]) -> ResponseSnapshot
-```
-
-#### options()
-
-Make an OPTIONS request
-
-**Signature:**
-
-```python
-def options(self, path: str, query_params: list[list[str]], headers: list[list[str]]) -> ResponseSnapshot
-```
-
-#### head()
-
-Make a HEAD request
-
-**Signature:**
-
-```python
-def head(self, path: str, query_params: list[list[str]], headers: list[list[str]]) -> ResponseSnapshot
-```
-
-#### trace()
-
-Make a TRACE request
-
-**Signature:**
-
-```python
-def trace(self, path: str, query_params: list[list[str]], headers: list[list[str]]) -> ResponseSnapshot
-```
-
 #### graphql_at()
 
 Send a GraphQL query/mutation to a custom endpoint
@@ -1538,21 +1451,6 @@ Send a GraphQL query/mutation
 
 ```python
 def graphql(self, query: str, variables: dict[str, Any], operation_name: str) -> ResponseSnapshot
-```
-
-#### graphql_with_status()
-
-Send a GraphQL query and return HTTP status code separately
-
-This method allows tests to distinguish between:
-
-- HTTP-level errors (400/422 for invalid requests)
-- GraphQL-level errors (200 with errors in response body)
-
-**Signature:**
-
-```python
-def graphql_with_status(self, query: str, variables: dict[str, Any], operation_name: str) -> str
 ```
 
 #### graphql_subscription_at()

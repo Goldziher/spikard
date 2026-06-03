@@ -89,6 +89,7 @@ impl TestClient {
     }
 
     /// Make a GET request
+    #[doc(hidden)]
     pub async fn get(
         &self,
         path: &str,
@@ -107,6 +108,7 @@ impl TestClient {
     }
 
     /// Make a POST request
+    #[doc(hidden)]
     pub async fn post(
         &self,
         path: &str,
@@ -144,6 +146,7 @@ impl TestClient {
     }
 
     /// Make a request with a raw body payload.
+    #[doc(hidden)]
     pub async fn request_raw(
         &self,
         method: Method,
@@ -165,6 +168,7 @@ impl TestClient {
     }
 
     /// Make a PUT request
+    #[doc(hidden)]
     pub async fn put(
         &self,
         path: &str,
@@ -188,6 +192,7 @@ impl TestClient {
     }
 
     /// Make a PATCH request
+    #[doc(hidden)]
     pub async fn patch(
         &self,
         path: &str,
@@ -211,6 +216,7 @@ impl TestClient {
     }
 
     /// Make a DELETE request
+    #[doc(hidden)]
     pub async fn delete(
         &self,
         path: &str,
@@ -229,6 +235,7 @@ impl TestClient {
     }
 
     /// Make an OPTIONS request
+    #[doc(hidden)]
     pub async fn options(
         &self,
         path: &str,
@@ -247,6 +254,7 @@ impl TestClient {
     }
 
     /// Make a HEAD request
+    #[doc(hidden)]
     pub async fn head(
         &self,
         path: &str,
@@ -265,6 +273,7 @@ impl TestClient {
     }
 
     /// Make a TRACE request
+    #[doc(hidden)]
     pub async fn trace(
         &self,
         path: &str,
@@ -319,6 +328,7 @@ impl TestClient {
     /// ).await?;
     /// assert_eq!(status, 400); // HTTP parse error
     /// ```
+    #[doc(hidden)]
     pub async fn graphql_with_status(
         &self,
         query: &str,

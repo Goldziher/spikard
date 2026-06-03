@@ -833,7 +833,9 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ### Content-Type
+
 Responses using this struct should set:
+
 ```text
 Content-Type: application/problem+json
 ```
@@ -1273,6 +1275,7 @@ Events can have an optional type, ID, and retry timeout for advanced scenarios.
 ### SSE Format
 
 Events are serialized to the following text format:
+
 ```text
 event: event_type
 data: {"json":"value"}
@@ -1407,96 +1410,6 @@ native API surfaces.
 
 ### Methods
 
-#### get()
-
-Make a GET request
-
-**Signature:**
-
-```ruby
-def get(path, query_params, headers)
-```
-
-#### post()
-
-Make a POST request
-
-**Signature:**
-
-```ruby
-def post(path, json, form_data, multipart, query_params, headers)
-```
-
-#### request_raw()
-
-Make a request with a raw body payload.
-
-**Signature:**
-
-```ruby
-def request_raw(method, path, body, query_params, headers)
-```
-
-#### put()
-
-Make a PUT request
-
-**Signature:**
-
-```ruby
-def put(path, json, query_params, headers)
-```
-
-#### patch()
-
-Make a PATCH request
-
-**Signature:**
-
-```ruby
-def patch(path, json, query_params, headers)
-```
-
-#### delete()
-
-Make a DELETE request
-
-**Signature:**
-
-```ruby
-def delete(path, query_params, headers)
-```
-
-#### options()
-
-Make an OPTIONS request
-
-**Signature:**
-
-```ruby
-def options(path, query_params, headers)
-```
-
-#### head()
-
-Make a HEAD request
-
-**Signature:**
-
-```ruby
-def head(path, query_params, headers)
-```
-
-#### trace()
-
-Make a TRACE request
-
-**Signature:**
-
-```ruby
-def trace(path, query_params, headers)
-```
-
 #### graphql_at()
 
 Send a GraphQL query/mutation to a custom endpoint
@@ -1515,21 +1428,6 @@ Send a GraphQL query/mutation
 
 ```ruby
 def graphql(query, variables, operation_name)
-```
-
-#### graphql_with_status()
-
-Send a GraphQL query and return HTTP status code separately
-
-This method allows tests to distinguish between:
-
-- HTTP-level errors (400/422 for invalid requests)
-- GraphQL-level errors (200 with errors in response body)
-
-**Signature:**
-
-```ruby
-def graphql_with_status(query, variables, operation_name)
 ```
 
 #### graphql_subscription_at()

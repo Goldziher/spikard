@@ -833,7 +833,9 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ### Content-Type
+
 Responses using this struct should set:
+
 ```text
 Content-Type: application/problem+json
 ```
@@ -1273,6 +1275,7 @@ Events can have an optional type, ID, and retry timeout for advanced scenarios.
 ### SSE Format
 
 Events are serialized to the following text format:
+
 ```text
 event: event_type
 data: {"json":"value"}
@@ -1407,96 +1410,6 @@ native API surfaces.
 
 ### Methods
 
-#### get()
-
-Make a GET request
-
-**Signature:**
-
-```typescript
-get(path: string, queryParams: Array<Array<string>>, headers: Array<Array<string>>): ResponseSnapshot
-```
-
-#### post()
-
-Make a POST request
-
-**Signature:**
-
-```typescript
-post(path: string, json: unknown, formData: Array<Array<string>>, multipart: string, queryParams: Array<Array<string>>, headers: Array<Array<string>>): ResponseSnapshot
-```
-
-#### requestRaw()
-
-Make a request with a raw body payload.
-
-**Signature:**
-
-```typescript
-requestRaw(method: Method, path: string, body: Buffer, queryParams: Array<Array<string>>, headers: Array<Array<string>>): ResponseSnapshot
-```
-
-#### put()
-
-Make a PUT request
-
-**Signature:**
-
-```typescript
-put(path: string, json: unknown, queryParams: Array<Array<string>>, headers: Array<Array<string>>): ResponseSnapshot
-```
-
-#### patch()
-
-Make a PATCH request
-
-**Signature:**
-
-```typescript
-patch(path: string, json: unknown, queryParams: Array<Array<string>>, headers: Array<Array<string>>): ResponseSnapshot
-```
-
-#### delete()
-
-Make a DELETE request
-
-**Signature:**
-
-```typescript
-delete(path: string, queryParams: Array<Array<string>>, headers: Array<Array<string>>): ResponseSnapshot
-```
-
-#### options()
-
-Make an OPTIONS request
-
-**Signature:**
-
-```typescript
-options(path: string, queryParams: Array<Array<string>>, headers: Array<Array<string>>): ResponseSnapshot
-```
-
-#### head()
-
-Make a HEAD request
-
-**Signature:**
-
-```typescript
-head(path: string, queryParams: Array<Array<string>>, headers: Array<Array<string>>): ResponseSnapshot
-```
-
-#### trace()
-
-Make a TRACE request
-
-**Signature:**
-
-```typescript
-trace(path: string, queryParams: Array<Array<string>>, headers: Array<Array<string>>): ResponseSnapshot
-```
-
 #### graphqlAt()
 
 Send a GraphQL query/mutation to a custom endpoint
@@ -1515,21 +1428,6 @@ Send a GraphQL query/mutation
 
 ```typescript
 graphql(query: string, variables: unknown, operationName: string): ResponseSnapshot
-```
-
-#### graphqlWithStatus()
-
-Send a GraphQL query and return HTTP status code separately
-
-This method allows tests to distinguish between:
-
-- HTTP-level errors (400/422 for invalid requests)
-- GraphQL-level errors (200 with errors in response body)
-
-**Signature:**
-
-```typescript
-graphqlWithStatus(query: string, variables: unknown, operationName: string): string
 ```
 
 #### graphqlSubscriptionAt()

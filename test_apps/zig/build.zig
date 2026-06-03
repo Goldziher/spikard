@@ -7,10 +7,16 @@ pub fn build(b: *std.Build) void {
     const test_step = b.step("test", "Run tests");
 
     // Fetch the published Zig package from the registry.
-    const spikard_module = b.dependency("spikard", .{
+    const spikard_dep = b.dependency("spikard", .{
         .target = target,
         .optimize = optimize,
-    }).module("spikard");
+    });
+    const spikard_module = spikard_dep.module("spikard");
+    const spikard_lib_path = spikard_dep.path("lib");
+    const spikard_include_path = spikard_dep.path("include");
+    spikard_module.addLibraryPath(spikard_lib_path);
+    spikard_module.addIncludePath(spikard_include_path);
+    spikard_module.linkSystemLibrary("spikard_ffi", .{});
 
     const _alloc = b.allocator;
     var mock_server_url: ?[]const u8 = b.graph.environ_map.get("MOCK_SERVER_URL");

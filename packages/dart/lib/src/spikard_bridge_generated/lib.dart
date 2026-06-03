@@ -532,10 +532,8 @@ sealed class GraphQLError with _$GraphQLError {
   /// Invalid input error with validation details
   ///
   /// Occurs during input validation with detailed error information.
-  const factory GraphQLError.invalidInput({
-    required String message,
-    required String details,
-  }) = GraphQLError_InvalidInput;
+  const factory GraphQLError.invalidInput({required String message}) =
+      GraphQLError_InvalidInput;
 
   /// Query complexity limit exceeded
   ///

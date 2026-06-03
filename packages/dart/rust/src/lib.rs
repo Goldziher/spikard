@@ -806,15 +806,6 @@ impl RouteBuilder {
 }
 
 impl TestClient {
-    // Method `get` has a sanitized return type that cannot be bridged through FRB — skipped.
-    // Method `post` has a sanitized return type that cannot be bridged through FRB — skipped.
-    // Method `request_raw` has a sanitized return type that cannot be bridged through FRB — skipped.
-    // Method `put` has a sanitized return type that cannot be bridged through FRB — skipped.
-    // Method `patch` has a sanitized return type that cannot be bridged through FRB — skipped.
-    // Method `delete` has a sanitized return type that cannot be bridged through FRB — skipped.
-    // Method `options` has a sanitized return type that cannot be bridged through FRB — skipped.
-    // Method `head` has a sanitized return type that cannot be bridged through FRB — skipped.
-    // Method `trace` has a sanitized return type that cannot be bridged through FRB — skipped.
     #[frb]
     pub async fn graphql_at(
         &self,
@@ -851,7 +842,6 @@ impl TestClient {
             .map(|v| ResponseSnapshot::from(v))
             .map_err(|e| e.to_string())
     }
-    // Method `graphql_with_status` has a sanitized return type that cannot be bridged through FRB — skipped.
     #[frb]
     pub async fn graphql_subscription_at(
         &self,
@@ -1007,7 +997,7 @@ pub enum GraphQLError {
     /// Invalid input error with validation details
     ///
     /// Occurs during input validation with detailed error information.
-    InvalidInput { message: String, details: String },
+    InvalidInput { message: String },
     /// Query complexity limit exceeded
     ///
     /// Occurs when a GraphQL query exceeds the configured complexity limit.
@@ -1037,10 +1027,12 @@ impl From<&GraphQLError> for spikard_graphql::error::GraphQLError {
             GraphQLError::AuthorizationError { field0: f_field0 } => Self::AuthorizationError(f_field0.clone()),
             GraphQLError::NotFound { field0: f_field0 } => Self::NotFound(f_field0.clone()),
             GraphQLError::RateLimitExceeded { field0: f_field0 } => Self::RateLimitExceeded(f_field0.clone()),
+            GraphQLError::InvalidInput { message: f_message } => Self::InvalidInput {
+                message: f_message.clone(),
+            },
             GraphQLError::ComplexityLimitExceeded => Self::ComplexityLimitExceeded,
             GraphQLError::DepthLimitExceeded => Self::DepthLimitExceeded,
             GraphQLError::InternalError { field0: f_field0 } => Self::InternalError(f_field0.clone()),
-            _ => unreachable!("mirror variant has sanitized fields and cannot be converted to the core error type"),
         }
     }
 }

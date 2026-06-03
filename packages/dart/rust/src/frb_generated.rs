@@ -740,7 +740,7 @@ fn wire__crate__GraphQlRouteConfig_get_description_impl(
     rust_vec_len_: i32,
     data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "GraphQlRouteConfig_get_description", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "GraphQlRouteConfig_get_description", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || {
             let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
             let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_that = <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<GraphQLRouteConfig>>>::sse_decode(&mut deserializer);deserializer.end(); move |context|  {
@@ -764,7 +764,7 @@ fn wire__crate__GraphQlRouteConfig_get_method_impl(
     rust_vec_len_: i32,
     data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "GraphQlRouteConfig_get_method", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "GraphQlRouteConfig_get_method", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || {
             let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
             let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_that = <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<GraphQLRouteConfig>>>::sse_decode(&mut deserializer);deserializer.end(); move |context|  {
@@ -788,7 +788,7 @@ fn wire__crate__GraphQlRouteConfig_get_path_impl(
     rust_vec_len_: i32,
     data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "GraphQlRouteConfig_get_path", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "GraphQlRouteConfig_get_path", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || {
             let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
             let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_that = <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<GraphQLRouteConfig>>>::sse_decode(&mut deserializer);deserializer.end(); move |context|  {
@@ -812,7 +812,7 @@ fn wire__crate__GraphQlRouteConfig_is_playground_enabled_impl(
     rust_vec_len_: i32,
     data_len_: i32,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "GraphQlRouteConfig_is_playground_enabled", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { 
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "GraphQlRouteConfig_is_playground_enabled", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || {
             let message = unsafe { flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_) };
             let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_that = <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<GraphQLRouteConfig>>>::sse_decode(&mut deserializer);deserializer.end(); move |context|  {
@@ -2498,9 +2498,8 @@ const _: fn() = || {
         crate::GraphQLError::RateLimitExceeded { field0 } => {
             let _: String = field0;
         }
-        crate::GraphQLError::InvalidInput { message, details } => {
+        crate::GraphQLError::InvalidInput { message } => {
             let _: String = message;
-            let _: String = details;
         }
         crate::GraphQLError::ComplexityLimitExceeded => {}
         crate::GraphQLError::DepthLimitExceeded => {}
@@ -3118,11 +3117,7 @@ impl SseDecode for crate::GraphQLError {
             }
             11 => {
                 let mut var_message = <String>::sse_decode(deserializer);
-                let mut var_details = <String>::sse_decode(deserializer);
-                return crate::GraphQLError::InvalidInput {
-                    message: var_message,
-                    details: var_details,
-                };
+                return crate::GraphQLError::InvalidInput { message: var_message };
             }
             12 => {
                 return crate::GraphQLError::ComplexityLimitExceeded;
@@ -4378,12 +4373,9 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::GraphQLError> {
             crate::GraphQLError::RateLimitExceeded { field0 } => {
                 [10.into_dart(), field0.into_into_dart().into_dart()].into_dart()
             }
-            crate::GraphQLError::InvalidInput { message, details } => [
-                11.into_dart(),
-                message.into_into_dart().into_dart(),
-                details.into_into_dart().into_dart(),
-            ]
-            .into_dart(),
+            crate::GraphQLError::InvalidInput { message } => {
+                [11.into_dart(), message.into_into_dart().into_dart()].into_dart()
+            }
             crate::GraphQLError::ComplexityLimitExceeded => [12.into_dart()].into_dart(),
             crate::GraphQLError::DepthLimitExceeded => [13.into_dart()].into_dart(),
             crate::GraphQLError::InternalError { field0 } => {
@@ -5263,10 +5255,9 @@ impl SseEncode for crate::GraphQLError {
                 <i32>::sse_encode(10, serializer);
                 <String>::sse_encode(field0, serializer);
             }
-            crate::GraphQLError::InvalidInput { message, details } => {
+            crate::GraphQLError::InvalidInput { message } => {
                 <i32>::sse_encode(11, serializer);
                 <String>::sse_encode(message, serializer);
-                <String>::sse_encode(details, serializer);
             }
             crate::GraphQLError::ComplexityLimitExceeded => {
                 <i32>::sse_encode(12, serializer);

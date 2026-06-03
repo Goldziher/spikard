@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "Spikard"
+require "spikard"
 
 # Spikard application builder.
 class App

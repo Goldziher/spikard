@@ -90,9 +90,6 @@ pub enum GraphQLError {
     InvalidInput {
         /// Error message
         message: String,
-        /// Validation error details
-        #[source]
-        details: Option<Box<Self>>,
     },
 
     /// Query complexity limit exceeded
@@ -406,7 +403,6 @@ mod tests {
     fn test_error_code_serialization() {
         let error = GraphQLError::InvalidInput {
             message: "Field required".to_string(),
-            details: None,
         };
         assert_eq!(error.error_code(), "VALIDATION_ERROR");
     }
@@ -431,11 +427,9 @@ mod tests {
     }
 
     #[test]
-    fn test_invalid_input_error_with_details() {
-        let detail_error = Box::new(GraphQLError::ValidationError("Field required".to_string()));
+    fn test_invalid_input_error() {
         let error = GraphQLError::InvalidInput {
             message: "Invalid input provided".to_string(),
-            details: Some(detail_error),
         };
 
         let response = error.to_http_response();
@@ -539,10 +533,7 @@ mod tests {
             GraphQLError::AuthorizationError(String::new()),
             GraphQLError::NotFound(String::new()),
             GraphQLError::RateLimitExceeded(String::new()),
-            GraphQLError::InvalidInput {
-                message: String::new(),
-                details: None,
-            },
+            GraphQLError::InvalidInput { message: String::new() },
             GraphQLError::InternalError(String::new()),
         ];
 

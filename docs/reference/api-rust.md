@@ -833,7 +833,9 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ### Content-Type
+
 Responses using this struct should set:
+
 ```text
 Content-Type: application/problem+json
 ```
@@ -1273,6 +1275,7 @@ Events can have an optional type, ID, and retry timeout for advanced scenarios.
 ### SSE Format
 
 Events are serialized to the following text format:
+
 ```text
 event: event_type
 data: {"json":"value"}
@@ -1407,96 +1410,6 @@ native API surfaces.
 
 ### Methods
 
-#### get()
-
-Make a GET request
-
-**Signature:**
-
-```rust
-pub fn get(&self, path: &str, query_params: Option<Vec<Vec<String>>>, headers: Option<Vec<Vec<String>>>) -> ResponseSnapshot
-```
-
-#### post()
-
-Make a POST request
-
-**Signature:**
-
-```rust
-pub fn post(&self, path: &str, json: Option<serde_json::Value>, form_data: Option<Vec<Vec<String>>>, multipart: &str, query_params: Option<Vec<Vec<String>>>, headers: Option<Vec<Vec<String>>>) -> ResponseSnapshot
-```
-
-#### request_raw()
-
-Make a request with a raw body payload.
-
-**Signature:**
-
-```rust
-pub fn request_raw(&self, method: Method, path: &str, body: &[u8], query_params: Option<Vec<Vec<String>>>, headers: Option<Vec<Vec<String>>>) -> ResponseSnapshot
-```
-
-#### put()
-
-Make a PUT request
-
-**Signature:**
-
-```rust
-pub fn put(&self, path: &str, json: Option<serde_json::Value>, query_params: Option<Vec<Vec<String>>>, headers: Option<Vec<Vec<String>>>) -> ResponseSnapshot
-```
-
-#### patch()
-
-Make a PATCH request
-
-**Signature:**
-
-```rust
-pub fn patch(&self, path: &str, json: Option<serde_json::Value>, query_params: Option<Vec<Vec<String>>>, headers: Option<Vec<Vec<String>>>) -> ResponseSnapshot
-```
-
-#### delete()
-
-Make a DELETE request
-
-**Signature:**
-
-```rust
-pub fn delete(&self, path: &str, query_params: Option<Vec<Vec<String>>>, headers: Option<Vec<Vec<String>>>) -> ResponseSnapshot
-```
-
-#### options()
-
-Make an OPTIONS request
-
-**Signature:**
-
-```rust
-pub fn options(&self, path: &str, query_params: Option<Vec<Vec<String>>>, headers: Option<Vec<Vec<String>>>) -> ResponseSnapshot
-```
-
-#### head()
-
-Make a HEAD request
-
-**Signature:**
-
-```rust
-pub fn head(&self, path: &str, query_params: Option<Vec<Vec<String>>>, headers: Option<Vec<Vec<String>>>) -> ResponseSnapshot
-```
-
-#### trace()
-
-Make a TRACE request
-
-**Signature:**
-
-```rust
-pub fn trace(&self, path: &str, query_params: Option<Vec<Vec<String>>>, headers: Option<Vec<Vec<String>>>) -> ResponseSnapshot
-```
-
 #### graphql_at()
 
 Send a GraphQL query/mutation to a custom endpoint
@@ -1515,21 +1428,6 @@ Send a GraphQL query/mutation
 
 ```rust
 pub fn graphql(&self, query: &str, variables: Option<serde_json::Value>, operation_name: Option<String>) -> ResponseSnapshot
-```
-
-#### graphql_with_status()
-
-Send a GraphQL query and return HTTP status code separately
-
-This method allows tests to distinguish between:
-
-- HTTP-level errors (400/422 for invalid requests)
-- GraphQL-level errors (200 with errors in response body)
-
-**Signature:**
-
-```rust
-pub fn graphql_with_status(&self, query: &str, variables: Option<serde_json::Value>, operation_name: Option<String>) -> String
 ```
 
 #### graphql_subscription_at()

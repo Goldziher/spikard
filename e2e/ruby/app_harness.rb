@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby# frozen_string_literal: true
 
 require "json"
+require "socket"
 require "spikard"
 
 module AppHarness
@@ -43,7 +44,8 @@ module AppHarness
     full_route = "/fixtures/#{fixture_id}#{route}"
 
     # Normalize the HTTP method to PascalCase for RouteBuilder (accepts strings via TryConvert).
-    method_val = method_str.capitalize
+    method_str_upper = method_str.upcase
+    method_val = method_str_upper.capitalize
     next if method_val.empty?
 
     # Build the RouteBuilder with the method and path.
@@ -72,9 +74,28 @@ module AppHarness
     APP.route(builder, &handler_fn)
   end
 
-  # Configure and start the server.
-  APP.config(Spikard::ServerConfig.new(host: "127.0.0.1", port: 8000))
-  puts "Harness listening on 127.0.0.1:8000"
-  STDOUT.flush
-  APP.run
+  # Configure and start the server with retry on bind failure.
+  # The probe-close window may leave the port in TIME_WAIT, causing EADDRINUSE.
+  # Retry with fresh random ports from the dynamic range (40000-60000).
+  max_attempts = 20
+  attempt = 0
+  loop do
+    attempt += 1
+    port = rand(40000..60000)
+
+    begin
+      APP.config(Spikard::ServerConfig.new(host: "127.0.0.1", port: port))
+      puts "HARNESS_PORT=#{port}"
+      STDOUT.flush
+      APP.run
+      break  # Success: run returned normally
+    rescue Errno::EADDRINUSE, RuntimeError => e
+      # Bind failed; raise if we've exhausted retries
+      if attempt >= max_attempts
+        raise "Failed to bind after #{max_attempts} attempts: #{e.message}"
+      end
+      # Try again with a different port
+      next
+    end
+  end
 end

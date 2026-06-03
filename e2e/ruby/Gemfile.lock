@@ -2,7 +2,7 @@ PATH
   remote: ../../packages/ruby
   specs:
     spikard (0.15.6.pre.rc.9)
-      rb_sys (~> 0.9)
+      rb_sys (>= 0.9)
       sorbet-runtime (~> 0.5)
 
 GEM

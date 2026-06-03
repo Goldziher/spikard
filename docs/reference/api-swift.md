@@ -833,7 +833,9 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ### Content-Type
+
 Responses using this struct should set:
+
 ```text
 Content-Type: application/problem+json
 ```
@@ -1273,6 +1275,7 @@ Events can have an optional type, ID, and retry timeout for advanced scenarios.
 ### SSE Format
 
 Events are serialized to the following text format:
+
 ```text
 event: event_type
 data: {"json":"value"}
@@ -1407,96 +1410,6 @@ native API surfaces.
 
 ### Methods
 
-#### get()
-
-Make a GET request
-
-**Signature:**
-
-```swift
-public func get(path: String, queryParams: [[String]]? = nil, headers: [[String]]? = nil) throws -> ResponseSnapshot
-```
-
-#### post()
-
-Make a POST request
-
-**Signature:**
-
-```swift
-public func post(path: String, json: String? = nil, formData: [[String]]? = nil, multipart: String, queryParams: [[String]]? = nil, headers: [[String]]? = nil) throws -> ResponseSnapshot
-```
-
-#### requestRaw()
-
-Make a request with a raw body payload.
-
-**Signature:**
-
-```swift
-public func requestRaw(method: Method, path: String, body: Data, queryParams: [[String]]? = nil, headers: [[String]]? = nil) throws -> ResponseSnapshot
-```
-
-#### put()
-
-Make a PUT request
-
-**Signature:**
-
-```swift
-public func put(path: String, json: String? = nil, queryParams: [[String]]? = nil, headers: [[String]]? = nil) throws -> ResponseSnapshot
-```
-
-#### patch()
-
-Make a PATCH request
-
-**Signature:**
-
-```swift
-public func patch(path: String, json: String? = nil, queryParams: [[String]]? = nil, headers: [[String]]? = nil) throws -> ResponseSnapshot
-```
-
-#### delete()
-
-Make a DELETE request
-
-**Signature:**
-
-```swift
-public func delete(path: String, queryParams: [[String]]? = nil, headers: [[String]]? = nil) throws -> ResponseSnapshot
-```
-
-#### options()
-
-Make an OPTIONS request
-
-**Signature:**
-
-```swift
-public func options(path: String, queryParams: [[String]]? = nil, headers: [[String]]? = nil) throws -> ResponseSnapshot
-```
-
-#### head()
-
-Make a HEAD request
-
-**Signature:**
-
-```swift
-public func head(path: String, queryParams: [[String]]? = nil, headers: [[String]]? = nil) throws -> ResponseSnapshot
-```
-
-#### trace()
-
-Make a TRACE request
-
-**Signature:**
-
-```swift
-public func trace(path: String, queryParams: [[String]]? = nil, headers: [[String]]? = nil) throws -> ResponseSnapshot
-```
-
 #### graphqlAt()
 
 Send a GraphQL query/mutation to a custom endpoint
@@ -1515,21 +1428,6 @@ Send a GraphQL query/mutation
 
 ```swift
 public func graphql(query: String, variables: String? = nil, operationName: String? = nil) throws -> ResponseSnapshot
-```
-
-#### graphqlWithStatus()
-
-Send a GraphQL query and return HTTP status code separately
-
-This method allows tests to distinguish between:
-
-- HTTP-level errors (400/422 for invalid requests)
-- GraphQL-level errors (200 with errors in response body)
-
-**Signature:**
-
-```swift
-public func graphqlWithStatus(query: String, variables: String? = nil, operationName: String? = nil) throws -> String
 ```
 
 #### graphqlSubscriptionAt()

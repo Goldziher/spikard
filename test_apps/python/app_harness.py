@@ -86,6 +86,58 @@ for fixture_id, fixture in _FIXTURES.items():
     # `app.route(builder)` returns a decorator that wraps the handler.
     app.route(builder)(make_handler(expected_status, expected_body, expected_headers))
 
+    # If the fixture has CORS middleware configured, register an OPTIONS preflight handler
+    if middleware and "cors" in middleware:
+        cors_config = middleware["cors"]
+
+        # Build a CORS preflight handler
+        def make_cors_preflight_handler(cors_cfg):
+            def cors_handler_fn(*args, **kwargs):
+                origin = kwargs.get("origin", "") or ""
+                request_method = kwargs.get("access-control-request-method", "") or ""
+                request_headers = kwargs.get("access-control-request-headers", "") or ""
+
+                # Simple CORS validation: check origin and method
+                allowed_origins = cors_cfg.get("allowed_origins") or []
+                allowed_methods = cors_cfg.get("allowed_methods") or []
+                allowed_headers = cors_cfg.get("allowed_headers") or []
+
+                is_origin_allowed = origin in allowed_origins
+                is_method_allowed = not request_method or request_method.upper() in [m.upper() for m in allowed_methods]
+                headers_array = [h.strip().upper() for h in request_headers.split(",")] if request_headers else []
+                are_headers_allowed = all(
+                    h in [ah.upper() for ah in allowed_headers] for h in headers_array
+                )
+
+                if not is_origin_allowed or not is_method_allowed or not are_headers_allowed:
+                    return {
+                        "status_code": 403,
+                        "content": None,
+                        "headers": {}
+                    }
+
+                cors_headers = {
+                    "Access-Control-Allow-Origin": origin,
+                    "Access-Control-Allow-Methods": request_method or ", ".join(allowed_methods),
+                    "Access-Control-Allow-Headers": request_headers or ", ".join(allowed_headers)
+                }
+
+                if cors_cfg.get("max_age"):
+                    cors_headers["Access-Control-Max-Age"] = str(cors_cfg["max_age"])
+
+                return {
+                    "status_code": 204,
+                    "content": None,
+                    "headers": cors_headers
+                }
+            return cors_handler_fn
+
+        # Register the OPTIONS handler
+        options_method = getattr(Method, "Options", None)
+        if options_method is not None:
+            options_builder = RouteBuilder(options_method, full_route)
+            app.route(options_builder)(make_cors_preflight_handler(cors_config))
+
 # Configure and start the server.
 _config = ServerConfig(host="127.0.0.1", port=8000)
 app.config(_config)
