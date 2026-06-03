@@ -63,7 +63,7 @@ pub struct ProblemDetails {
     /// Extension members - problem-type-specific data.
     /// For validation errors, this typically contains an "errors" array.
     #[serde(flatten, skip_serializing_if = "HashMap::is_empty")]
-    pub extensions: HashMap<String, Value>,
+    pub extensions: HashMap<String, serde_json::Value>,
 }
 
 impl ProblemDetails {
