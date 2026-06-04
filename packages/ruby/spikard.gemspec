@@ -7,6 +7,7 @@ Gem::Specification.new do |spec|
   spec.summary       = "Rust-centric multi-language HTTP framework with polyglot bindings"
   spec.description   = "Rust-centric multi-language HTTP framework with polyglot bindings"
   spec.homepage      = "https://github.com/Goldziher/spikard"
+
   spec.license       = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
   spec.metadata["keywords"] = %w[framework http polyglot rust web].join(",")
@@ -17,6 +18,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
   spec.extensions    = ["ext/spikard_rb/native/extconf.rb"]
 
-  spec.add_dependency "rb_sys", ">= 0.9"
+  spec.add_dependency "rb_sys", ">= 0.9", "< 0.9.128"
   spec.add_dependency "sorbet-runtime", "~> 0.5"
 end

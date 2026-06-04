@@ -387,14 +387,6 @@ mod ffi {
     extern "Rust" {
         #[swift_bridge(swift_name = "routeBuilderHandlerName")]
         fn route_builder_handler_name(client: &RouteBuilder, name: String) -> RouteBuilder;
-        #[swift_bridge(swift_name = "routeBuilderRequestSchemaJson")]
-        fn route_builder_request_schema_json(client: &RouteBuilder, schema: String) -> RouteBuilder;
-        #[swift_bridge(swift_name = "routeBuilderResponseSchemaJson")]
-        fn route_builder_response_schema_json(client: &RouteBuilder, schema: String) -> RouteBuilder;
-        #[swift_bridge(swift_name = "routeBuilderParamsSchemaJson")]
-        fn route_builder_params_schema_json(client: &RouteBuilder, schema: String) -> RouteBuilder;
-        #[swift_bridge(swift_name = "routeBuilderFileParamsJson")]
-        fn route_builder_file_params_json(client: &RouteBuilder, schema: String) -> RouteBuilder;
         #[swift_bridge(swift_name = "routeBuilderCors")]
         fn route_builder_cors(client: &RouteBuilder, cors: CorsConfig) -> RouteBuilder;
         #[swift_bridge(swift_name = "routeBuilderSync")]
@@ -1627,37 +1619,6 @@ pub struct RouteBuilder(pub spikard::RouteBuilder);
 
 pub fn route_builder_handler_name(client: &RouteBuilder, name: String) -> RouteBuilder {
     RouteBuilder(client.0.clone().handler_name(&name))
-}
-pub fn route_builder_request_schema_json(client: &RouteBuilder, schema: String) -> RouteBuilder {
-    RouteBuilder(
-        client
-            .0
-            .clone()
-            .request_schema_json(serde_json::from_str::<serde_json::Value>(&schema).unwrap_or(serde_json::Value::Null)),
-    )
-}
-pub fn route_builder_response_schema_json(client: &RouteBuilder, schema: String) -> RouteBuilder {
-    RouteBuilder(
-        client.0.clone().response_schema_json(
-            serde_json::from_str::<serde_json::Value>(&schema).unwrap_or(serde_json::Value::Null),
-        ),
-    )
-}
-pub fn route_builder_params_schema_json(client: &RouteBuilder, schema: String) -> RouteBuilder {
-    RouteBuilder(
-        client
-            .0
-            .clone()
-            .params_schema_json(serde_json::from_str::<serde_json::Value>(&schema).unwrap_or(serde_json::Value::Null)),
-    )
-}
-pub fn route_builder_file_params_json(client: &RouteBuilder, schema: String) -> RouteBuilder {
-    RouteBuilder(
-        client
-            .0
-            .clone()
-            .file_params_json(serde_json::from_str::<serde_json::Value>(&schema).unwrap_or(serde_json::Value::Null)),
-    )
 }
 pub fn route_builder_cors(client: &RouteBuilder, cors: CorsConfig) -> RouteBuilder {
     RouteBuilder(client.0.clone().cors(cors.0))

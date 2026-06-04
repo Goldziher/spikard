@@ -40,7 +40,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.12.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -301533701;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 635222925;
 
 // Section: executor
 
@@ -944,35 +944,6 @@ fn wire__crate__RouteBuilder_cors_impl(
         },
     )
 }
-fn wire__crate__RouteBuilder_file_params_json_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "RouteBuilder_file_params_json",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_)
-            };
-            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_that = <RouteBuilder>::sse_decode(&mut deserializer);
-            let api_schema = <String>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| {
-                transform_result_sse::<_, ()>((move || {
-                    let output_ok = Result::<_, ()>::Ok(crate::RouteBuilder::file_params_json(api_that, api_schema))?;
-                    Ok(output_ok)
-                })())
-            }
-        },
-    )
-}
 fn wire__crate__RouteBuilder_handler_dependencies_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -1061,95 +1032,6 @@ fn wire__crate__RouteBuilder_new_impl(
         },
     )
 }
-fn wire__crate__RouteBuilder_params_schema_json_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "RouteBuilder_params_schema_json",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_)
-            };
-            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_that = <RouteBuilder>::sse_decode(&mut deserializer);
-            let api_schema = <String>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| {
-                transform_result_sse::<_, ()>((move || {
-                    let output_ok = Result::<_, ()>::Ok(crate::RouteBuilder::params_schema_json(api_that, api_schema))?;
-                    Ok(output_ok)
-                })())
-            }
-        },
-    )
-}
-fn wire__crate__RouteBuilder_request_schema_json_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "RouteBuilder_request_schema_json",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_)
-            };
-            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_that = <RouteBuilder>::sse_decode(&mut deserializer);
-            let api_schema = <String>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| {
-                transform_result_sse::<_, ()>((move || {
-                    let output_ok =
-                        Result::<_, ()>::Ok(crate::RouteBuilder::request_schema_json(api_that, api_schema))?;
-                    Ok(output_ok)
-                })())
-            }
-        },
-    )
-}
-fn wire__crate__RouteBuilder_response_schema_json_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "RouteBuilder_response_schema_json",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_)
-            };
-            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_that = <RouteBuilder>::sse_decode(&mut deserializer);
-            let api_schema = <String>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| {
-                transform_result_sse::<_, ()>((move || {
-                    let output_ok =
-                        Result::<_, ()>::Ok(crate::RouteBuilder::response_schema_json(api_that, api_schema))?;
-                    Ok(output_ok)
-                })())
-            }
-        },
-    )
-}
 fn wire__crate__RouteBuilder_sync_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -1174,222 +1056,6 @@ fn wire__crate__RouteBuilder_sync_impl(
                     let output_ok = Result::<_, ()>::Ok(crate::RouteBuilder::sync(api_that))?;
                     Ok(output_ok)
                 })())
-            }
-        },
-    )
-}
-fn wire__crate__TestClient_graphql_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "TestClient_graphql",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_)
-            };
-            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_that =
-                <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TestClient>>>::sse_decode(
-                    &mut deserializer,
-                );
-            let api_query = <String>::sse_decode(&mut deserializer);
-            let api_variables = <Option<String>>::sse_decode(&mut deserializer);
-            let api_operation_name = <Option<String>>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| async move {
-                transform_result_sse::<_, String>(
-                    (move || async move {
-                        let mut api_that_guard = None;
-                        let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
-                            flutter_rust_bridge::for_generated::LockableOrderInfo::new(&api_that, 0, false),
-                        ]);
-                        for i in decode_indices_ {
-                            match i {
-                                0 => api_that_guard = Some(api_that.lockable_decode_async_ref().await),
-                                _ => unreachable!(),
-                            }
-                        }
-                        let api_that_guard = api_that_guard.unwrap();
-                        let output_ok =
-                            crate::TestClient::graphql(&*api_that_guard, api_query, api_variables, api_operation_name)
-                                .await?;
-                        Ok(output_ok)
-                    })()
-                    .await,
-                )
-            }
-        },
-    )
-}
-fn wire__crate__TestClient_graphql_at_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "TestClient_graphql_at",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_)
-            };
-            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_that =
-                <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TestClient>>>::sse_decode(
-                    &mut deserializer,
-                );
-            let api_endpoint = <String>::sse_decode(&mut deserializer);
-            let api_query = <String>::sse_decode(&mut deserializer);
-            let api_variables = <Option<String>>::sse_decode(&mut deserializer);
-            let api_operation_name = <Option<String>>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| async move {
-                transform_result_sse::<_, String>(
-                    (move || async move {
-                        let mut api_that_guard = None;
-                        let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
-                            flutter_rust_bridge::for_generated::LockableOrderInfo::new(&api_that, 0, false),
-                        ]);
-                        for i in decode_indices_ {
-                            match i {
-                                0 => api_that_guard = Some(api_that.lockable_decode_async_ref().await),
-                                _ => unreachable!(),
-                            }
-                        }
-                        let api_that_guard = api_that_guard.unwrap();
-                        let output_ok = crate::TestClient::graphql_at(
-                            &*api_that_guard,
-                            api_endpoint,
-                            api_query,
-                            api_variables,
-                            api_operation_name,
-                        )
-                        .await?;
-                        Ok(output_ok)
-                    })()
-                    .await,
-                )
-            }
-        },
-    )
-}
-fn wire__crate__TestClient_graphql_subscription_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "TestClient_graphql_subscription",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_)
-            };
-            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_that =
-                <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TestClient>>>::sse_decode(
-                    &mut deserializer,
-                );
-            let api_query = <String>::sse_decode(&mut deserializer);
-            let api_variables = <Option<String>>::sse_decode(&mut deserializer);
-            let api_operation_name = <Option<String>>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| async move {
-                transform_result_sse::<_, String>(
-                    (move || async move {
-                        let mut api_that_guard = None;
-                        let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
-                            flutter_rust_bridge::for_generated::LockableOrderInfo::new(&api_that, 0, false),
-                        ]);
-                        for i in decode_indices_ {
-                            match i {
-                                0 => api_that_guard = Some(api_that.lockable_decode_async_ref().await),
-                                _ => unreachable!(),
-                            }
-                        }
-                        let api_that_guard = api_that_guard.unwrap();
-                        let output_ok = crate::TestClient::graphql_subscription(
-                            &*api_that_guard,
-                            api_query,
-                            api_variables,
-                            api_operation_name,
-                        )
-                        .await?;
-                        Ok(output_ok)
-                    })()
-                    .await,
-                )
-            }
-        },
-    )
-}
-fn wire__crate__TestClient_graphql_subscription_at_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "TestClient_graphql_subscription_at",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_)
-            };
-            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_that =
-                <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TestClient>>>::sse_decode(
-                    &mut deserializer,
-                );
-            let api_endpoint = <String>::sse_decode(&mut deserializer);
-            let api_query = <String>::sse_decode(&mut deserializer);
-            let api_variables = <Option<String>>::sse_decode(&mut deserializer);
-            let api_operation_name = <Option<String>>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| async move {
-                transform_result_sse::<_, String>(
-                    (move || async move {
-                        let mut api_that_guard = None;
-                        let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
-                            flutter_rust_bridge::for_generated::LockableOrderInfo::new(&api_that, 0, false),
-                        ]);
-                        for i in decode_indices_ {
-                            match i {
-                                0 => api_that_guard = Some(api_that.lockable_decode_async_ref().await),
-                                _ => unreachable!(),
-                            }
-                        }
-                        let api_that_guard = api_that_guard.unwrap();
-                        let output_ok = crate::TestClient::graphql_subscription_at(
-                            &*api_that_guard,
-                            api_endpoint,
-                            api_query,
-                            api_variables,
-                            api_operation_name,
-                        )
-                        .await?;
-                        Ok(output_ok)
-                    })()
-                    .await,
-                )
             }
         },
     )
@@ -2508,14 +2174,6 @@ const _: fn() = || {
         }
     }
     {
-        let GraphQLSubscriptionSnapshot = None::<crate::GraphQLSubscriptionSnapshot>.unwrap();
-        let _: String = GraphQLSubscriptionSnapshot.operation_id;
-        let _: bool = GraphQLSubscriptionSnapshot.acknowledged;
-        let _: Option<String> = GraphQLSubscriptionSnapshot.event;
-        let _: Vec<String> = GraphQLSubscriptionSnapshot.errors;
-        let _: bool = GraphQLSubscriptionSnapshot.complete_received;
-    }
-    {
         let GrpcConfig = None::<crate::GrpcConfig>.unwrap();
         let _: bool = GrpcConfig.enabled;
         let _: i64 = GrpcConfig.max_message_size;
@@ -2782,9 +2440,6 @@ flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
 flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
     flutter_rust_bridge::for_generated::RustAutoOpaqueInner<RouteBuilder>
 );
-flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
-    flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TestClient>
-);
 
 // Section: dart2rust
 
@@ -2832,17 +2487,6 @@ impl SseDecode for RouteBuilder {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner =
             <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<RouteBuilder>>>::sse_decode(
-                deserializer,
-            );
-        return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
-    }
-}
-
-impl SseDecode for TestClient {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner =
-            <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TestClient>>>::sse_decode(
                 deserializer,
             );
         return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
@@ -2898,14 +2542,6 @@ impl SseDecode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpa
 }
 
 impl SseDecode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<RouteBuilder>> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <usize>::sse_decode(deserializer);
-        return decode_rust_opaque_moi(inner);
-    }
-}
-
-impl SseDecode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TestClient>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <usize>::sse_decode(deserializer);
@@ -3133,24 +2769,6 @@ impl SseDecode for crate::GraphQLError {
                 unimplemented!("");
             }
         }
-    }
-}
-
-impl SseDecode for crate::GraphQLSubscriptionSnapshot {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_operationId = <String>::sse_decode(deserializer);
-        let mut var_acknowledged = <bool>::sse_decode(deserializer);
-        let mut var_event = <Option<String>>::sse_decode(deserializer);
-        let mut var_errors = <Vec<String>>::sse_decode(deserializer);
-        let mut var_completeReceived = <bool>::sse_decode(deserializer);
-        return crate::GraphQLSubscriptionSnapshot {
-            operation_id: var_operationId,
-            acknowledged: var_acknowledged,
-            event: var_event,
-            errors: var_errors,
-            complete_received: var_completeReceived,
-        };
     }
 }
 
@@ -4032,54 +3650,46 @@ fn pde_ffi_dispatcher_primary_impl(
         23 => wire__crate__GraphQlRouteConfig_new_impl(port, ptr, rust_vec_len, data_len),
         24 => wire__crate__GraphQlRouteConfig_path_impl(port, ptr, rust_vec_len, data_len),
         25 => wire__crate__RouteBuilder_cors_impl(port, ptr, rust_vec_len, data_len),
-        26 => wire__crate__RouteBuilder_file_params_json_impl(port, ptr, rust_vec_len, data_len),
-        27 => wire__crate__RouteBuilder_handler_dependencies_impl(port, ptr, rust_vec_len, data_len),
-        28 => wire__crate__RouteBuilder_handler_name_impl(port, ptr, rust_vec_len, data_len),
-        29 => wire__crate__RouteBuilder_new_impl(port, ptr, rust_vec_len, data_len),
-        30 => wire__crate__RouteBuilder_params_schema_json_impl(port, ptr, rust_vec_len, data_len),
-        31 => wire__crate__RouteBuilder_request_schema_json_impl(port, ptr, rust_vec_len, data_len),
-        32 => wire__crate__RouteBuilder_response_schema_json_impl(port, ptr, rust_vec_len, data_len),
-        33 => wire__crate__RouteBuilder_sync_impl(port, ptr, rust_vec_len, data_len),
-        34 => wire__crate__TestClient_graphql_impl(port, ptr, rust_vec_len, data_len),
-        35 => wire__crate__TestClient_graphql_at_impl(port, ptr, rust_vec_len, data_len),
-        36 => wire__crate__TestClient_graphql_subscription_impl(port, ptr, rust_vec_len, data_len),
-        37 => wire__crate__TestClient_graphql_subscription_at_impl(port, ptr, rust_vec_len, data_len),
-        38 => wire__crate__create_api_key_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        39 => wire__crate__create_async_api_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        40 => wire__crate__create_background_job_metadata_from_json_impl(port, ptr, rust_vec_len, data_len),
-        41 => wire__crate__create_background_task_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        42 => wire__crate__create_compression_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        43 => wire__crate__create_contact_info_from_json_impl(port, ptr, rust_vec_len, data_len),
-        44 => wire__crate__create_cors_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        45 => wire__crate__create_full_schema_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        46 => wire__crate__create_grpc_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        47 => wire__crate__create_json_rpc_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        48 => wire__crate__create_json_rpc_method_info_from_json_impl(port, ptr, rust_vec_len, data_len),
-        49 => wire__crate__create_jwt_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        50 => wire__crate__create_license_info_from_json_impl(port, ptr, rust_vec_len, data_len),
-        51 => wire__crate__create_open_api_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        52 => wire__crate__create_parse_result_from_json_impl(port, ptr, rust_vec_len, data_len),
-        53 => wire__crate__create_parsed_channel_from_json_impl(port, ptr, rust_vec_len, data_len),
-        54 => wire__crate__create_parsed_message_from_json_impl(port, ptr, rust_vec_len, data_len),
-        55 => wire__crate__create_parsed_operation_from_json_impl(port, ptr, rust_vec_len, data_len),
-        56 => wire__crate__create_problem_details_from_json_impl(port, ptr, rust_vec_len, data_len),
-        57 => wire__crate__create_query_mutation_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        58 => wire__crate__create_query_only_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        59 => wire__crate__create_rate_limit_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        60 => wire__crate__create_response_from_json_impl(port, ptr, rust_vec_len, data_len),
-        61 => wire__crate__create_response_snapshot_from_json_impl(port, ptr, rust_vec_len, data_len),
-        62 => wire__crate__create_schema_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        63 => wire__crate__create_server_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        64 => wire__crate__create_server_info_from_json_impl(port, ptr, rust_vec_len, data_len),
-        65 => wire__crate__create_sse_event_from_json_impl(port, ptr, rust_vec_len, data_len),
-        66 => wire__crate__create_static_files_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        67 => wire__crate__create_upload_file_from_json_impl(port, ptr, rust_vec_len, data_len),
-        68 => wire__crate__graph_ql_error_error_type_impl(port, ptr, rust_vec_len, data_len),
-        69 => wire__crate__graph_ql_error_is_transient_impl(port, ptr, rust_vec_len, data_len),
-        70 => wire__crate__graph_ql_error_status_code_impl(port, ptr, rust_vec_len, data_len),
-        71 => wire__crate__schema_full_impl(port, ptr, rust_vec_len, data_len),
-        72 => wire__crate__schema_query_mutation_impl(port, ptr, rust_vec_len, data_len),
-        73 => wire__crate__schema_query_only_impl(port, ptr, rust_vec_len, data_len),
+        26 => wire__crate__RouteBuilder_handler_dependencies_impl(port, ptr, rust_vec_len, data_len),
+        27 => wire__crate__RouteBuilder_handler_name_impl(port, ptr, rust_vec_len, data_len),
+        28 => wire__crate__RouteBuilder_new_impl(port, ptr, rust_vec_len, data_len),
+        29 => wire__crate__RouteBuilder_sync_impl(port, ptr, rust_vec_len, data_len),
+        30 => wire__crate__create_api_key_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        31 => wire__crate__create_async_api_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        32 => wire__crate__create_background_job_metadata_from_json_impl(port, ptr, rust_vec_len, data_len),
+        33 => wire__crate__create_background_task_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        34 => wire__crate__create_compression_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        35 => wire__crate__create_contact_info_from_json_impl(port, ptr, rust_vec_len, data_len),
+        36 => wire__crate__create_cors_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        37 => wire__crate__create_full_schema_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        38 => wire__crate__create_grpc_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        39 => wire__crate__create_json_rpc_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        40 => wire__crate__create_json_rpc_method_info_from_json_impl(port, ptr, rust_vec_len, data_len),
+        41 => wire__crate__create_jwt_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        42 => wire__crate__create_license_info_from_json_impl(port, ptr, rust_vec_len, data_len),
+        43 => wire__crate__create_open_api_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        44 => wire__crate__create_parse_result_from_json_impl(port, ptr, rust_vec_len, data_len),
+        45 => wire__crate__create_parsed_channel_from_json_impl(port, ptr, rust_vec_len, data_len),
+        46 => wire__crate__create_parsed_message_from_json_impl(port, ptr, rust_vec_len, data_len),
+        47 => wire__crate__create_parsed_operation_from_json_impl(port, ptr, rust_vec_len, data_len),
+        48 => wire__crate__create_problem_details_from_json_impl(port, ptr, rust_vec_len, data_len),
+        49 => wire__crate__create_query_mutation_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        50 => wire__crate__create_query_only_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        51 => wire__crate__create_rate_limit_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        52 => wire__crate__create_response_from_json_impl(port, ptr, rust_vec_len, data_len),
+        53 => wire__crate__create_response_snapshot_from_json_impl(port, ptr, rust_vec_len, data_len),
+        54 => wire__crate__create_schema_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        55 => wire__crate__create_server_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        56 => wire__crate__create_server_info_from_json_impl(port, ptr, rust_vec_len, data_len),
+        57 => wire__crate__create_sse_event_from_json_impl(port, ptr, rust_vec_len, data_len),
+        58 => wire__crate__create_static_files_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        59 => wire__crate__create_upload_file_from_json_impl(port, ptr, rust_vec_len, data_len),
+        60 => wire__crate__graph_ql_error_error_type_impl(port, ptr, rust_vec_len, data_len),
+        61 => wire__crate__graph_ql_error_is_transient_impl(port, ptr, rust_vec_len, data_len),
+        62 => wire__crate__graph_ql_error_status_code_impl(port, ptr, rust_vec_len, data_len),
+        63 => wire__crate__schema_full_impl(port, ptr, rust_vec_len, data_len),
+        64 => wire__crate__schema_query_mutation_impl(port, ptr, rust_vec_len, data_len),
+        65 => wire__crate__schema_query_only_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -4162,20 +3772,6 @@ impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<
 
 impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<RouteBuilder>> for RouteBuilder {
     fn into_into_dart(self) -> FrbWrapper<RouteBuilder> {
-        self.into()
-    }
-}
-
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<TestClient> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self.0).into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<TestClient> {}
-
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<TestClient>> for TestClient {
-    fn into_into_dart(self) -> FrbWrapper<TestClient> {
         self.into()
     }
 }
@@ -4390,27 +3986,6 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::GraphQLError> {
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<crate::GraphQLError> {}
 impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::GraphQLError>> for crate::GraphQLError {
     fn into_into_dart(self) -> FrbWrapper<crate::GraphQLError> {
-        self.into()
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::GraphQLSubscriptionSnapshot> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.0.operation_id.into_into_dart().into_dart(),
-            self.0.acknowledged.into_into_dart().into_dart(),
-            self.0.event.into_into_dart().into_dart(),
-            self.0.errors.into_into_dart().into_dart(),
-            self.0.complete_received.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<crate::GraphQLSubscriptionSnapshot> {}
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::GraphQLSubscriptionSnapshot>>
-    for crate::GraphQLSubscriptionSnapshot
-{
-    fn into_into_dart(self) -> FrbWrapper<crate::GraphQLSubscriptionSnapshot> {
         self.into()
     }
 }
@@ -5021,16 +4596,6 @@ impl SseEncode for RouteBuilder {
     }
 }
 
-impl SseEncode for TestClient {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TestClient>>>::sse_encode(
-            flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self),
-            serializer,
-        );
-    }
-}
-
 impl SseEncode for flutter_rust_bridge::DartOpaque {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5080,15 +4645,6 @@ impl SseEncode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpa
 }
 
 impl SseEncode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<RouteBuilder>> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        let (ptr, size) = self.sse_encode_raw();
-        <usize>::sse_encode(ptr, serializer);
-        <i32>::sse_encode(size, serializer);
-    }
-}
-
-impl SseEncode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TestClient>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         let (ptr, size) = self.sse_encode_raw();
@@ -5273,17 +4829,6 @@ impl SseEncode for crate::GraphQLError {
                 unimplemented!("");
             }
         }
-    }
-}
-
-impl SseEncode for crate::GraphQLSubscriptionSnapshot {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <String>::sse_encode(self.operation_id, serializer);
-        <bool>::sse_encode(self.acknowledged, serializer);
-        <Option<String>>::sse_encode(self.event, serializer);
-        <Vec<String>>::sse_encode(self.errors, serializer);
-        <bool>::sse_encode(self.complete_received, serializer);
     }
 }
 
@@ -6024,20 +5569,6 @@ mod io {
             ptr as _,
         );
     }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_spikard_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TestClient>>::increment_strong_count(ptr as _);
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_spikard_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TestClient>>::decrement_strong_count(ptr as _);
-    }
 }
 #[cfg(not(target_family = "wasm"))]
 pub use io::*;
@@ -6129,20 +5660,6 @@ mod web {
         MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<RouteBuilder>>::decrement_strong_count(
             ptr as _,
         );
-    }
-
-    #[wasm_bindgen]
-    pub fn rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TestClient>>::increment_strong_count(ptr as _);
-    }
-
-    #[wasm_bindgen]
-    pub fn rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TestClient>>::decrement_strong_count(ptr as _);
     }
 }
 #[cfg(target_family = "wasm")]

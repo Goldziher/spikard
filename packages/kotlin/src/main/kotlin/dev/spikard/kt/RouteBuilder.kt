@@ -9,26 +9,8 @@ import dev.spikard.RouteBuilder
 class RouteBuilder internal constructor(
     internal val inner: dev.spikard.RouteBuilder,
 ) : AutoCloseable {
-    private companion object {
-        private val MAPPER =
-            com.fasterxml.jackson.databind
-                .ObjectMapper()
-    }
-
     // Assign an explicit handler name.
     fun handlerName(name: String): RouteBuilder = inner.handlerName(name)
-
-    // Provide a raw JSON schema for the request body.
-    fun requestSchemaJson(schema: Any): RouteBuilder = inner.requestSchemaJson(MAPPER.writeValueAsString(schema))
-
-    // Provide a raw JSON schema for the response body.
-    fun responseSchemaJson(schema: Any): RouteBuilder = inner.responseSchemaJson(MAPPER.writeValueAsString(schema))
-
-    // Provide a raw JSON schema for request parameters.
-    fun paramsSchemaJson(schema: Any): RouteBuilder = inner.paramsSchemaJson(MAPPER.writeValueAsString(schema))
-
-    // Provide multipart file parameter configuration.
-    fun fileParamsJson(schema: Any): RouteBuilder = inner.fileParamsJson(MAPPER.writeValueAsString(schema))
 
     // Attach a CORS configuration for this route.
     fun cors(cors: CorsConfig): RouteBuilder = inner.cors(cors)

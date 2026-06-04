@@ -763,34 +763,10 @@ impl RouteBuilder {
     pub fn handler_name(self, name: String) -> RouteBuilder {
         (|v| RouteBuilder::from(v))(self.inner.handler_name(name))
     }
-    #[frb]
-    pub fn request_schema_json(self, schema: String) -> RouteBuilder {
-        (|v| RouteBuilder::from(v))(
-            self.inner
-                .request_schema_json(serde_json::from_str(&schema).unwrap_or(serde_json::Value::Null)),
-        )
-    }
-    #[frb]
-    pub fn response_schema_json(self, schema: String) -> RouteBuilder {
-        (|v| RouteBuilder::from(v))(
-            self.inner
-                .response_schema_json(serde_json::from_str(&schema).unwrap_or(serde_json::Value::Null)),
-        )
-    }
-    #[frb]
-    pub fn params_schema_json(self, schema: String) -> RouteBuilder {
-        (|v| RouteBuilder::from(v))(
-            self.inner
-                .params_schema_json(serde_json::from_str(&schema).unwrap_or(serde_json::Value::Null)),
-        )
-    }
-    #[frb]
-    pub fn file_params_json(self, schema: String) -> RouteBuilder {
-        (|v| RouteBuilder::from(v))(
-            self.inner
-                .file_params_json(serde_json::from_str(&schema).unwrap_or(serde_json::Value::Null)),
-        )
-    }
+    // Method `request_schema_json` has a sanitized return type that cannot be bridged through FRB — skipped.
+    // Method `response_schema_json` has a sanitized return type that cannot be bridged through FRB — skipped.
+    // Method `params_schema_json` has a sanitized return type that cannot be bridged through FRB — skipped.
+    // Method `file_params_json` has a sanitized return type that cannot be bridged through FRB — skipped.
     #[frb]
     pub fn cors(self, cors: CorsConfig) -> RouteBuilder {
         (|v| RouteBuilder::from(v))(self.inner.cors(spikard::CorsConfig::from(cors)))
@@ -806,78 +782,10 @@ impl RouteBuilder {
 }
 
 impl TestClient {
-    #[frb]
-    pub async fn graphql_at(
-        &self,
-        endpoint: String,
-        query: String,
-        variables: Option<String>,
-        operation_name: Option<String>,
-    ) -> Result<ResponseSnapshot, String> {
-        self.inner
-            .graphql_at(
-                &endpoint,
-                &query,
-                variables.as_deref().and_then(|s| serde_json::from_str(s).ok()),
-                operation_name.as_deref(),
-            )
-            .await
-            .map(|v| ResponseSnapshot::from(v))
-            .map_err(|e| e.to_string())
-    }
-    #[frb]
-    pub async fn graphql(
-        &self,
-        query: String,
-        variables: Option<String>,
-        operation_name: Option<String>,
-    ) -> Result<ResponseSnapshot, String> {
-        self.inner
-            .graphql(
-                &query,
-                variables.as_deref().and_then(|s| serde_json::from_str(s).ok()),
-                operation_name.as_deref(),
-            )
-            .await
-            .map(|v| ResponseSnapshot::from(v))
-            .map_err(|e| e.to_string())
-    }
-    #[frb]
-    pub async fn graphql_subscription_at(
-        &self,
-        endpoint: String,
-        query: String,
-        variables: Option<String>,
-        operation_name: Option<String>,
-    ) -> Result<GraphQLSubscriptionSnapshot, String> {
-        self.inner
-            .graphql_subscription_at(
-                &endpoint,
-                &query,
-                variables.as_deref().and_then(|s| serde_json::from_str(s).ok()),
-                operation_name.as_deref(),
-            )
-            .await
-            .map(|v| GraphQLSubscriptionSnapshot::from(v))
-            .map_err(|e| e.to_string())
-    }
-    #[frb]
-    pub async fn graphql_subscription(
-        &self,
-        query: String,
-        variables: Option<String>,
-        operation_name: Option<String>,
-    ) -> Result<GraphQLSubscriptionSnapshot, String> {
-        self.inner
-            .graphql_subscription(
-                &query,
-                variables.as_deref().and_then(|s| serde_json::from_str(s).ok()),
-                operation_name.as_deref(),
-            )
-            .await
-            .map(|v| GraphQLSubscriptionSnapshot::from(v))
-            .map_err(|e| e.to_string())
-    }
+    // Method `graphql_at` has a sanitized return type that cannot be bridged through FRB — skipped.
+    // Method `graphql` has a sanitized return type that cannot be bridged through FRB — skipped.
+    // Method `graphql_subscription_at` has a sanitized return type that cannot be bridged through FRB — skipped.
+    // Method `graphql_subscription` has a sanitized return type that cannot be bridged through FRB — skipped.
 }
 
 /// HTTP method
@@ -1177,10 +1085,12 @@ impl From<spikard::BackgroundJobMetadata> for BackgroundJobMetadata {
 impl From<spikard::CorsConfig> for CorsConfig {
     fn from(v: spikard::CorsConfig) -> Self {
         CorsConfig {
-            allowed_origins: v.allowed_origins.into_iter().map(|s| s.into()).collect(),
-            allowed_methods: v.allowed_methods.into_iter().map(|s| s.into()).collect(),
-            allowed_headers: v.allowed_headers.into_iter().map(|s| s.into()).collect(),
-            expose_headers: v.expose_headers.map(|vec| vec.into_iter().map(|s| s.into()).collect()),
+            allowed_origins: v.allowed_origins.into_iter().map(|s| s.into()).collect::<Vec<_>>(),
+            allowed_methods: v.allowed_methods.into_iter().map(|s| s.into()).collect::<Vec<_>>(),
+            allowed_headers: v.allowed_headers.into_iter().map(|s| s.into()).collect::<Vec<_>>(),
+            expose_headers: v
+                .expose_headers
+                .map(|vec| vec.into_iter().map(|s| s.into()).collect::<Vec<_>>()),
             max_age: v.max_age.map(|x| x as _),
             allow_credentials: v.allow_credentials.map(|x| x as _),
         }
@@ -1247,7 +1157,7 @@ impl From<spikard::OpenApiConfig> for OpenApiConfig {
             openapi_json_path: v.openapi_json_path.into(),
             contact: v.contact.map(ContactInfo::from),
             license: v.license.map(LicenseInfo::from),
-            servers: v.servers.into_iter().map(ServerInfo::from).collect(),
+            servers: v.servers.into_iter().map(ServerInfo::from).collect::<Vec<_>>(),
             security_schemes: v
                 .security_schemes
                 .into_iter()
@@ -1260,7 +1170,7 @@ impl From<spikard::OpenApiConfig> for OpenApiConfig {
 impl From<spikard::Response> for Response {
     fn from(v: spikard::Response) -> Self {
         Response {
-            content: v.content.map(|j| serde_json::to_string(&j).unwrap_or_default()),
+            content: Default::default(),
             status_code: v.status_code as _,
             headers: v.headers.into_iter().map(|(k, v)| (k.into(), v.into())).collect(),
         }
@@ -1271,7 +1181,7 @@ impl From<spikard::SseEvent> for SseEvent {
     fn from(v: spikard::SseEvent) -> Self {
         SseEvent {
             event_type: v.event_type.map(|s| s.into()),
-            data: serde_json::to_string(&v.data).unwrap_or_default(),
+            data: Default::default(),
             id: v.id.map(|s| s.into()),
             retry: v.retry.map(|x| x as _),
         }
@@ -1283,7 +1193,9 @@ impl From<spikard::JwtConfig> for JwtConfig {
         JwtConfig {
             secret: v.secret.into(),
             algorithm: v.algorithm.into(),
-            audience: v.audience.map(|vec| vec.into_iter().map(|s| s.into()).collect()),
+            audience: v
+                .audience
+                .map(|vec| vec.into_iter().map(|s| s.into()).collect::<Vec<_>>()),
             issuer: v.issuer.map(|s| s.into()),
             leeway: v.leeway as _,
         }
@@ -1293,7 +1205,7 @@ impl From<spikard::JwtConfig> for JwtConfig {
 impl From<spikard::ApiKeyConfig> for ApiKeyConfig {
     fn from(v: spikard::ApiKeyConfig) -> Self {
         ApiKeyConfig {
-            keys: v.keys.into_iter().map(|s| s.into()).collect(),
+            keys: v.keys.into_iter().map(|s| s.into()).collect::<Vec<_>>(),
             header_name: v.header_name.into(),
         }
     }
@@ -1323,7 +1235,11 @@ impl From<spikard::ServerConfig> for ServerConfig {
             rate_limit: v.rate_limit.map(RateLimitConfig::from),
             jwt_auth: v.jwt_auth.map(JwtConfig::from),
             api_key_auth: v.api_key_auth.map(ApiKeyConfig::from),
-            static_files: v.static_files.into_iter().map(StaticFilesConfig::from).collect(),
+            static_files: v
+                .static_files
+                .into_iter()
+                .map(StaticFilesConfig::from)
+                .collect::<Vec<_>>(),
             graceful_shutdown: v.graceful_shutdown as _,
             shutdown_timeout: v.shutdown_timeout as _,
             asyncapi: v.asyncapi.map(AsyncApiConfig::from),
@@ -1341,10 +1257,10 @@ impl From<spikard_core::JsonRpcMethodInfo> for JsonRpcMethodInfo {
         JsonRpcMethodInfo {
             method_name: v.method_name.into(),
             description: v.description.map(|s| s.into()),
-            params_schema: v.params_schema.map(|j| serde_json::to_string(&j).unwrap_or_default()),
-            result_schema: v.result_schema.map(|j| serde_json::to_string(&j).unwrap_or_default()),
+            params_schema: Default::default(),
+            result_schema: Default::default(),
             deprecated: v.deprecated as _,
-            tags: v.tags.into_iter().map(|s| s.into()).collect(),
+            tags: v.tags.into_iter().map(|s| s.into()).collect::<Vec<_>>(),
         }
     }
 }
@@ -1370,7 +1286,7 @@ impl From<spikard_http::AsyncApiConfig> for AsyncApiConfig {
     fn from(v: spikard_http::AsyncApiConfig) -> Self {
         AsyncApiConfig {
             enabled: v.enabled as _,
-            spec: v.spec.map(|j| serde_json::to_string(&j).unwrap_or_default()),
+            spec: Default::default(),
         }
     }
 }
@@ -1380,8 +1296,8 @@ impl From<spikard_http::ParsedChannel> for ParsedChannel {
         ParsedChannel {
             name: v.name.into(),
             address: v.address.into(),
-            messages: v.messages.into_iter().map(|s| s.into()).collect(),
-            bindings: v.bindings.map(|j| serde_json::to_string(&j).unwrap_or_default()),
+            messages: v.messages.into_iter().map(|s| s.into()).collect::<Vec<_>>(),
+            bindings: Default::default(),
         }
     }
 }
@@ -1400,7 +1316,7 @@ impl From<spikard_http::ParsedMessage> for ParsedMessage {
     fn from(v: spikard_http::ParsedMessage) -> Self {
         ParsedMessage {
             name: v.name.into(),
-            schema: v.schema.map(|j| serde_json::to_string(&j).unwrap_or_default()),
+            schema: Default::default(),
         }
     }
 }
@@ -1411,9 +1327,9 @@ impl From<spikard_http::ParseResult> for ParseResult {
             spec_version: v.spec_version.into(),
             title: v.title.into(),
             api_version: v.api_version.into(),
-            channels: v.channels.into_iter().map(ParsedChannel::from).collect(),
-            operations: v.operations.into_iter().map(ParsedOperation::from).collect(),
-            messages: v.messages.into_iter().map(ParsedMessage::from).collect(),
+            channels: v.channels.into_iter().map(ParsedChannel::from).collect::<Vec<_>>(),
+            operations: v.operations.into_iter().map(ParsedOperation::from).collect::<Vec<_>>(),
+            messages: v.messages.into_iter().map(ParsedMessage::from).collect::<Vec<_>>(),
         }
     }
 }
@@ -1421,7 +1337,7 @@ impl From<spikard_http::ParseResult> for ParseResult {
 impl From<spikard_http::asyncapi::ParseRequest> for ParseRequest {
     fn from(v: spikard_http::asyncapi::ParseRequest) -> Self {
         ParseRequest {
-            spec: serde_json::to_string(&v.spec).unwrap_or_default(),
+            spec: Default::default(),
         }
     }
 }
@@ -1430,7 +1346,7 @@ impl From<spikard_http::ValidationResponse> for ValidationResponse {
     fn from(v: spikard_http::ValidationResponse) -> Self {
         ValidationResponse {
             valid: v.valid as _,
-            errors: v.errors.into_iter().map(|s| s.into()).collect(),
+            errors: v.errors.into_iter().map(|s| s.into()).collect::<Vec<_>>(),
         }
     }
 }
@@ -1438,10 +1354,10 @@ impl From<spikard_http::ValidationResponse> for ValidationResponse {
 impl From<spikard_http::ValidateRequest> for ValidateRequest {
     fn from(v: spikard_http::ValidateRequest) -> Self {
         ValidateRequest {
-            spec: serde_json::to_string(&v.spec).unwrap_or_default(),
+            spec: Default::default(),
             channel: v.channel.into(),
             message: v.message.into(),
-            payload: serde_json::to_string(&v.payload).unwrap_or_default(),
+            payload: Default::default(),
         }
     }
 }
@@ -1495,12 +1411,8 @@ impl From<spikard_http::testing::test_client::GraphQLSubscriptionSnapshot> for G
         GraphQLSubscriptionSnapshot {
             operation_id: v.operation_id.into(),
             acknowledged: v.acknowledged as _,
-            event: v.event.map(|j| serde_json::to_string(&j).unwrap_or_default()),
-            errors: v
-                .errors
-                .into_iter()
-                .map(|j| serde_json::to_string(&j).unwrap_or_default())
-                .collect(),
+            event: Default::default(),
+            errors: Default::default(),
             complete_received: v.complete_received as _,
         }
     }
@@ -1725,7 +1637,7 @@ impl From<AsyncApiConfig> for spikard_http::AsyncApiConfig {
     fn from(v: AsyncApiConfig) -> Self {
         spikard_http::AsyncApiConfig {
             enabled: v.enabled as _,
-            spec: v.spec.as_deref().and_then(|s| serde_json::from_str(s).ok()),
+            spec: Default::default(),
         }
     }
 }

@@ -82,7 +82,11 @@ public class HarnessMain {
                         );
                         resp.put("headers", headers);
                     }
-                    return MAPPER.writeValueAsString(resp);
+                    try {
+                        return MAPPER.writeValueAsString(resp);
+                    } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+                        throw new RuntimeException("Failed to serialize response: " + e.getMessage(), e);
+                    }
                 };
 
                 // Create RouteBuilder with the method enum and full route
