@@ -19,16 +19,21 @@ class ServerError(AppError):
 
 class DecodeError(AppError):
     """Failed to extract DTO from the request context."""
+
+
 class GraphQLError(Exception):
     """Errors that can occur during GraphQL operations."""
+
     @property
     def status_code(self) -> int:
         """HTTP status code for this error (0 means no associated status)."""
         raise NotImplementedError
+
     @property
     def is_transient(self) -> bool:
         """Returns True if the error is transient and a retry may succeed."""
         raise NotImplementedError
+
     @property
     def error_type(self) -> str:
         """Machine-readable error category string for matching and logging."""
@@ -93,6 +98,8 @@ class DepthLimitExceededError(GraphQLError):
 
 class InternalError(GraphQLError):
     """Internal server error."""
+
+
 class SchemaError(Exception):
     """Error type for schema building operations."""
 

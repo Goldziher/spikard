@@ -22,6 +22,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   static final instance = RustLib._();
 
   RustLib._();
+
   /// Resolve the prebuilt native library from environment variable,
   /// package-relative location, or defer to flutter_rust_bridge's default loader.
   /// Returns `null` to defer to flutter_rust_bridge's default loader.
@@ -44,7 +45,8 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
       // Check FRB_DART_LOAD_EXTERNAL_LIBRARY_NATIVE_LIB_DIR env var first.
       // This allows test harnesses to override library location for development.
-      final envDir = Platform.environment['FRB_DART_LOAD_EXTERNAL_LIBRARY_NATIVE_LIB_DIR'];
+      final envDir =
+          Platform.environment['FRB_DART_LOAD_EXTERNAL_LIBRARY_NATIVE_LIB_DIR'];
       if (envDir != null && envDir.isNotEmpty) {
         final libDir = Directory(envDir);
         if (libDir.existsSync()) {
@@ -63,9 +65,12 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
         // Use Dart's Platform.version to detect architecture.
         // Format: "Dart <version> (stable) ... on \"<os> <arch>\""
         final version = Platform.version;
-        final archMatch = version.contains('x86_64') ? 'x64'
-            : version.contains('aarch64') || version.contains('arm64') ? 'arm64'
-            : version.contains('armv7') ? 'arm'
+        final archMatch = version.contains('x86_64')
+            ? 'x64'
+            : version.contains('aarch64') || version.contains('arm64')
+            ? 'arm64'
+            : version.contains('armv7')
+            ? 'arm'
             : null;
         if (archMatch == null) return null;
 
@@ -83,8 +88,9 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
       final rid = computeRid();
       if (rid != null) {
-        final packageRoot =
-            await Isolate.resolvePackageUri(_DartCore.Uri.parse('package:spikard/spikard.dart'));
+        final packageRoot = await Isolate.resolvePackageUri(
+          _DartCore.Uri.parse('package:spikard/spikard.dart'),
+        );
         if (packageRoot != null) {
           final ridDir = packageRoot.resolve('src/native/$rid/');
           for (final candidate in candidates) {
@@ -97,8 +103,9 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
       }
 
       // Check legacy package-installed location as fallback.
-      final packageRoot =
-          await Isolate.resolvePackageUri(_DartCore.Uri.parse('package:spikard/spikard.dart'));
+      final packageRoot = await Isolate.resolvePackageUri(
+        _DartCore.Uri.parse('package:spikard/spikard.dart'),
+      );
       if (packageRoot != null) {
         final libDir = packageRoot.resolve('src/spikard_bridge_generated/');
         for (final candidate in candidates) {

@@ -582,8 +582,7 @@ pub fn schema_query_only() error{OutOfMemory}![]u8 {
         const slice = std.mem.sliceTo(_json_ptr, 0);
         const owned = try std.heap.c_allocator.dupe(u8, slice);
         break :blk owned;
-    }
-;
+    };
 }
 
 /// Create a schema configuration with Query and Mutation types.
@@ -602,8 +601,7 @@ pub fn schema_query_mutation() error{OutOfMemory}![]u8 {
         const slice = std.mem.sliceTo(_json_ptr, 0);
         const owned = try std.heap.c_allocator.dupe(u8, slice);
         break :blk owned;
-    }
-;
+    };
 }
 
 /// Create a schema configuration with all three root types.
@@ -622,8 +620,7 @@ pub fn schema_full() error{OutOfMemory}![]u8 {
         const slice = std.mem.sliceTo(_json_ptr, 0);
         const owned = try std.heap.c_allocator.dupe(u8, slice);
         break :blk owned;
-    }
-;
+    };
 }
 
 /// Create a new GraphQL route configuration with defaults
@@ -777,7 +774,7 @@ pub const RouteBuilder = struct {
     }
 
     /// Attach a CORS configuration for this route.
-    pub fn cors(self: *RouteBuilder, value: []const u8) error{OutOfMemory,InvalidJson}!RouteBuilder {
+    pub fn cors(self: *RouteBuilder, value: []const u8) error{ OutOfMemory, InvalidJson }!RouteBuilder {
         const value_z = try std.heap.c_allocator.dupeZ(u8, value);
         defer std.heap.c_allocator.free(value_z);
         const value_handle = c.spikard_cors_config_from_json(value_z.ptr);
