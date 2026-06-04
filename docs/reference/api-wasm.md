@@ -182,16 +182,6 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 isMethodAllowed(method: string): boolean
 ```
 
-#### areHeadersAllowed()
-
-Check if all requested headers are allowed (O(n) where n = num requested headers)
-
-**Signature:**
-
-```typescript
-areHeadersAllowed(requested: Array<string>): boolean
-```
-
 #### default()
 
 **Signature:**
@@ -491,9 +481,7 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ### Content-Type
-
 Responses using this struct should set:
-
 ```text
 Content-Type: application/problem+json
 ```

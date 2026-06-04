@@ -129,20 +129,6 @@ Returns an error if server or router construction fails.
 pub fn intoRouter(self: *const App) AppError![:0]const u8
 ```
 
-#### run()
-
-Run the HTTP server using the configured routes.
-
-**Errors:**
-
-Returns an error if server construction or execution fails.
-
-**Signature:**
-
-```zig
-pub fn run(self: *const App) AppError!void
-```
-
 #### default()
 
 **Signature:**
@@ -295,16 +281,6 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 
 ```zig
 pub fn isMethodAllowed(self: *const CorsConfig, method: [:0]const u8) bool
-```
-
-#### areHeadersAllowed()
-
-Check if all requested headers are allowed (O(n) where n = num requested headers)
-
-**Signature:**
-
-```zig
-pub fn areHeadersAllowed(self: *const CorsConfig, requested: []const [:0]const u8) bool
 ```
 
 #### default()
@@ -809,9 +785,7 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ### Content-Type
-
 Responses using this struct should set:
-
 ```text
 Content-Type: application/problem+json
 ```
@@ -1255,7 +1229,6 @@ Events can have an optional type, ID, and retry timeout for advanced scenarios.
 ### SSE Format
 
 Events are serialized to the following text format:
-
 ```text
 event: event_type
 data: {"json":"value"}

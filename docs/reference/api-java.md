@@ -129,20 +129,6 @@ Returns an error if server or router construction fails.
 public String intoRouter() throws AppError
 ```
 
-#### run()
-
-Run the HTTP server using the configured routes.
-
-**Errors:**
-
-Returns an error if server construction or execution fails.
-
-**Signature:**
-
-```java
-public void run() throws AppError
-```
-
 #### defaultOptions()
 
 **Signature:**
@@ -295,16 +281,6 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 
 ```java
 public boolean isMethodAllowed(String method)
-```
-
-#### areHeadersAllowed()
-
-Check if all requested headers are allowed (O(n) where n = num requested headers)
-
-**Signature:**
-
-```java
-public boolean areHeadersAllowed(List<String> requested)
 ```
 
 #### defaultOptions()
@@ -795,9 +771,7 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ### Content-Type
-
 Responses using this struct should set:
-
 ```text
 Content-Type: application/problem+json
 ```
@@ -1207,7 +1181,6 @@ Events can have an optional type, ID, and retry timeout for advanced scenarios.
 ### SSE Format
 
 Events are serialized to the following text format:
-
 ```text
 event: event_type
 data: {"json":"value"}
