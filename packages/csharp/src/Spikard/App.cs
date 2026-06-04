@@ -25,14 +25,6 @@ public class App {
     }
 
     /// <summary>
-    /// Configure config.
-    /// </summary>
-    public App config(string config) {
-        // Store configuration if needed
-        return this;
-    }
-
-    /// <summary>
     /// Register a handler for route.
     /// </summary>
     public int route(RouteBuilder builder, Delegate handler) {

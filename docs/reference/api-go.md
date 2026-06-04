@@ -95,16 +95,6 @@ Create a new application with the default server configuration.
 func (o *App) New() App
 ```
 
-#### Config()
-
-Set the server configuration.
-
-**Signature:**
-
-```go
-func (o *App) Config(config ServerConfig) App
-```
-
 #### MergeAxumRouter()
 
 Attach an existing Axum router to this application, returning ownership.
@@ -161,20 +151,6 @@ func (o *App) Run() error
 func (o *App) Default() App
 ```
 
-#### Route()
-
-Register a route using the provided builder and handler function.
-
-**Errors:**
-
-Returns an error if route construction fails or if the handler registration fails.
-
-**Signature:**
-
-```go
-func (o *App) Route(builder RouteBuilder, handler H) (App, error)
-```
-
 ---
 
 #### AsyncApiConfig
@@ -184,7 +160,7 @@ AsyncAPI HTTP endpoint configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `Enabled` | `bool` | — | Enable AsyncAPI endpoints (default: false) |
-| `Spec` | `*string` | `nil` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+| `Spec` | `*interface{}` | `nil` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 
@@ -687,8 +663,8 @@ enabling discovery and documentation of RPC-compatible endpoints.
 |-------|------|---------|-------------|
 | `MethodName` | `string` | — | The JSON-RPC method name (e.g., "user.create") |
 | `Description` | `*string` | `nil` | Optional description of what the method does |
-| `ParamsSchema` | `*string` | `nil` | Optional JSON Schema for method parameters |
-| `ResultSchema` | `*string` | `nil` | Optional JSON Schema for the result |
+| `ParamsSchema` | `*interface{}` | `nil` | Optional JSON Schema for method parameters |
+| `ResultSchema` | `*interface{}` | `nil` | Optional JSON Schema for the result |
 | `Deprecated` | `bool` | `/* serde(default) */` | Whether this method is deprecated |
 | `Tags` | `[]string` | `/* serde(default) */` | Tags for categorizing and grouping methods |
 
@@ -755,7 +731,7 @@ Request body for `POST /asyncapi/parse`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `Spec` | `string` | — | Spec |
+| `Spec` | `interface{}` | — | Spec |
 
 ---
 
@@ -783,7 +759,7 @@ A single channel extracted from an AsyncAPI spec
 | `Name` | `string` | — | Channel key from the spec (e.g. "chat/messages") |
 | `Address` | `string` | — | Channel address / path |
 | `Messages` | `[]string` | — | Message names declared on this channel |
-| `Bindings` | `*string` | `nil` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
+| `Bindings` | `*interface{}` | `nil` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
 
@@ -794,7 +770,7 @@ A resolved message (name + JSON Schema)
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `Name` | `string` | — | Message name |
-| `Schema` | `*string` | `nil` | Resolved JSON Schema for the message payload, if available |
+| `Schema` | `*interface{}` | `nil` | Resolved JSON Schema for the message payload, if available |
 
 ---
 
@@ -1001,13 +977,17 @@ func (o *RateLimitConfig) Default() RateLimitConfig
 
 ---
 
+#### Request
+
+---
+
 #### Response
 
 HTTP Response with custom status code, headers, and content
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `Content` | `*string` | `nil` | Response body content |
+| `Content` | `*interface{}` | `nil` | Response body content |
 | `StatusCode` | `uint16` | — | HTTP status code (defaults to 200) |
 | `Headers` | `map[string]string` | `nil` | Response headers |
 
@@ -1076,7 +1056,7 @@ Provide a raw JSON schema for the request body.
 **Signature:**
 
 ```go
-func (o *RouteBuilder) RequestSchemaJson(schema string) RouteBuilder
+func (o *RouteBuilder) RequestSchemaJson(schema interface{}) RouteBuilder
 ```
 
 #### ResponseSchemaJson()
@@ -1086,7 +1066,7 @@ Provide a raw JSON schema for the response body.
 **Signature:**
 
 ```go
-func (o *RouteBuilder) ResponseSchemaJson(schema string) RouteBuilder
+func (o *RouteBuilder) ResponseSchemaJson(schema interface{}) RouteBuilder
 ```
 
 #### ParamsSchemaJson()
@@ -1096,7 +1076,7 @@ Provide a raw JSON schema for request parameters.
 **Signature:**
 
 ```go
-func (o *RouteBuilder) ParamsSchemaJson(schema string) RouteBuilder
+func (o *RouteBuilder) ParamsSchemaJson(schema interface{}) RouteBuilder
 ```
 
 #### FileParamsJson()
@@ -1106,7 +1086,7 @@ Provide multipart file parameter configuration.
 **Signature:**
 
 ```go
-func (o *RouteBuilder) FileParamsJson(schema string) RouteBuilder
+func (o *RouteBuilder) FileParamsJson(schema interface{}) RouteBuilder
 ```
 
 #### Cors()
@@ -1238,7 +1218,7 @@ retry: 3000
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `EventType` | `*string` | `nil` | Event type (optional) |
-| `Data` | `string` | — | Event data (JSON value) |
+| `Data` | `interface{}` | — | Event data (JSON value) |
 | `Id` | `*string` | `nil` | Event ID (optional, for client-side reconnection) |
 | `Retry` | `*uint64` | `nil` | Retry timeout in milliseconds (optional) |
 
@@ -1268,72 +1248,6 @@ if the connection is lost. The client browser will automatically handle reconnec
 
 ```go
 func (o *SseEvent) WithRetry(retryMs uint64) SseEvent
-```
-
----
-
-#### SseEventProducer
-
-SSE event producer trait
-
-Implement this trait to create custom Server-Sent Event (SSE) producers for your application.
-The producer generates events that are streamed to connected clients.
-
-### Understanding SSE
-
-Server-Sent Events (SSE) provide one-way communication from server to client over HTTP.
-Unlike WebSocket, SSE uses standard HTTP and automatically handles reconnection.
-Use SSE when you need to push data to clients without bidirectional communication.
-
-### Implementing the Trait
-
-You must implement the `next_event` method to generate events. The `on_connect` and
-`on_disconnect` methods are optional lifecycle hooks.
-
-### Methods
-
-#### NextEvent()
-
-Generate the next event
-
-Called repeatedly to produce the event stream. Should return `Some(event)` when
-an event is ready to send, or `nil` when the stream should end.
-
-**Returns:**
-
-- `Some(event)` - Event to send to the client
-- `nil` - Stream complete, connection will close
-
-**Signature:**
-
-```go
-func (o *SseEventProducer) NextEvent() Future
-```
-
-#### OnConnect()
-
-Called when a client connects to the SSE endpoint
-
-Optional lifecycle hook invoked when a new SSE connection is established.
-Default implementation does nothing.
-
-**Signature:**
-
-```go
-func (o *SseEventProducer) OnConnect() Future
-```
-
-#### OnDisconnect()
-
-Called when a client disconnects from the SSE endpoint
-
-Optional lifecycle hook invoked when an SSE connection is closed (either by the
-client or the stream ending). Default implementation does nothing.
-
-**Signature:**
-
-```go
-func (o *SseEventProducer) OnDisconnect() Future
 ```
 
 ---
@@ -1423,10 +1337,10 @@ Request body for `POST /asyncapi/validate`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `Spec` | `string` | — | Spec |
+| `Spec` | `interface{}` | — | Spec |
 | `Channel` | `string` | — | Channel |
 | `Message` | `string` | — | Message |
-| `Payload` | `string` | — | Payload |
+| `Payload` | `interface{}` | — | Payload |
 
 ---
 
@@ -1438,67 +1352,6 @@ Response body for `POST /asyncapi/validate`
 |-------|------|---------|-------------|
 | `Valid` | `bool` | — | Valid |
 | `Errors` | `[]string` | — | Errors |
-
----
-
-#### WebSocketHandler
-
-WebSocket message handler trait
-
-Implement this trait to create custom WebSocket message handlers for your application.
-The handler processes JSON messages received from WebSocket clients and can optionally
-send responses back.
-
-### Implementing the Trait
-
-You must implement the `handle_message` method. The `on_connect` and `on_disconnect`
-methods are optional and provide lifecycle hooks.
-
-### Methods
-
-#### HandleMessage()
-
-Handle incoming WebSocket message
-
-Called whenever a text message is received from a WebSocket client.
-Messages are automatically parsed as JSON.
-
-**Returns:**
-
-- `Some(value)` - JSON value to send back to the client
-- `nil` - No response to send
-
-**Signature:**
-
-```go
-func (o *WebSocketHandler) HandleMessage(message Value) Future
-```
-
-#### OnConnect()
-
-Called when a client connects to the WebSocket
-
-Optional lifecycle hook invoked when a new WebSocket connection is established.
-Default implementation does nothing.
-
-**Signature:**
-
-```go
-func (o *WebSocketHandler) OnConnect() Future
-```
-
-#### OnDisconnect()
-
-Called when a client disconnects from the WebSocket
-
-Optional lifecycle hook invoked when a WebSocket connection is closed
-(either by the client or due to an error). Default implementation does nothing.
-
-**Signature:**
-
-```go
-func (o *WebSocketHandler) OnDisconnect() Future
-```
 
 ---
 

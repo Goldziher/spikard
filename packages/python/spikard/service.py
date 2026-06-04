@@ -10,8 +10,6 @@ from ._spikard import Method, RouteBuilder
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from ._spikard import ServerConfig
-
 
 class App:
     """Spikard application builder."""
@@ -19,11 +17,6 @@ class App:
     def __init__(self) -> None:
         """Create a new application with the default server configuration."""
         self._registrations: list[tuple[Any, ...]] = []
-
-    def config(self, config: ServerConfig) -> App:
-        """Set the server configuration."""
-        self._config = config
-        return self
 
     def route(self, builder: RouteBuilder) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Register a route using the provided builder and handler function.

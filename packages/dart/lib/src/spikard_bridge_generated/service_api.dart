@@ -11,8 +11,6 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<App>>
 abstract class App implements RustOpaqueInterface {
-  void config({required ServerConfig config});
-
   int connect({
     required String path,
     required FutureOr<String> Function(String) handler,

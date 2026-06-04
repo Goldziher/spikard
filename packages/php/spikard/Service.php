@@ -12,13 +12,6 @@ class App
         // Create a new application with the default server configuration.
     }
 
-    public function config(ServerConfig $config): self
-    {
-        // Set the server configuration.
-        $this->_config = $config;
-        return $this;
-    }
-
     public function route(RouteBuilder $builder): callable
     {
         /**

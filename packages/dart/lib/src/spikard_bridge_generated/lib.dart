@@ -8,8 +8,8 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'lib.freezed.dart';
 
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `GraphQLSubscriptionSnapshot`, `ParseRequest`, `TestClient`, `TestingSseEvent`, `ValidateRequest`, `ValidationResponse`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `HandlerResult`, `ParseRequest`, `RequestData`, `Request`, `TestingSseEvent`, `ValidateRequest`, `ValidationResponse`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
 
 /// Create a simple schema configuration with only Query type.
 ///
@@ -168,6 +168,8 @@ abstract class GraphQlRouteConfig implements RustOpaqueInterface {
 abstract class RouteBuilder implements RustOpaqueInterface {
   Future<RouteBuilder> cors({required CorsConfig cors});
 
+  Future<RouteBuilder> fileParamsJson({required String schema});
+
   Future<RouteBuilder> handlerDependencies({
     required List<String> dependencies,
   });
@@ -180,7 +182,42 @@ abstract class RouteBuilder implements RustOpaqueInterface {
     required String path,
   }) => RustLib.instance.api.crateRouteBuilderNew(method: method, path: path);
 
+  Future<RouteBuilder> paramsSchemaJson({required String schema});
+
+  Future<RouteBuilder> requestSchemaJson({required String schema});
+
+  Future<RouteBuilder> responseSchemaJson({required String schema});
+
   Future<RouteBuilder> sync_();
+}
+
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TestClient>>
+abstract class TestClient implements RustOpaqueInterface {
+  Future<ResponseSnapshot> graphql({
+    required String query,
+    String? variables,
+    String? operationName,
+  });
+
+  Future<ResponseSnapshot> graphqlAt({
+    required String endpoint,
+    required String query,
+    String? variables,
+    String? operationName,
+  });
+
+  Future<GraphQLSubscriptionSnapshot> graphqlSubscription({
+    required String query,
+    String? variables,
+    String? operationName,
+  });
+
+  Future<GraphQLSubscriptionSnapshot> graphqlSubscriptionAt({
+    required String endpoint,
+    required String query,
+    String? variables,
+    String? operationName,
+  });
 }
 
 /// API Key authentication configuration
@@ -557,6 +594,51 @@ sealed class GraphQLError with _$GraphQLError {
   /// ```
   Future<PlatformInt64> statusCode() =>
       RustLib.instance.api.crateGraphQlErrorStatusCode(that: this);
+}
+
+/// Snapshot of a GraphQL subscription exchange over WebSocket.
+class GraphQLSubscriptionSnapshot {
+  /// Operation id used for the subscription request.
+  final String operationId;
+
+  /// Whether the server acknowledged the GraphQL WebSocket connection.
+  final bool acknowledged;
+
+  /// First `next.payload` received for this subscription, if any.
+  final String? event;
+
+  /// GraphQL protocol errors emitted by the server.
+  final List<String> errors;
+
+  /// Whether a `complete` frame was observed for this operation.
+  final bool completeReceived;
+
+  const GraphQLSubscriptionSnapshot({
+    required this.operationId,
+    required this.acknowledged,
+    this.event,
+    required this.errors,
+    required this.completeReceived,
+  });
+
+  @override
+  int get hashCode =>
+      operationId.hashCode ^
+      acknowledged.hashCode ^
+      event.hashCode ^
+      errors.hashCode ^
+      completeReceived.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is GraphQLSubscriptionSnapshot &&
+          runtimeType == other.runtimeType &&
+          operationId == other.operationId &&
+          acknowledged == other.acknowledged &&
+          event == other.event &&
+          errors == other.errors &&
+          completeReceived == other.completeReceived;
 }
 
 /// Configuration for gRPC support

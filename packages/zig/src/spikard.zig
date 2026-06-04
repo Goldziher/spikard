@@ -742,34 +742,26 @@ pub const RouteBuilder = struct {
     }
 
     /// Provide a raw JSON schema for the request body.
-    pub fn request_schema_json(self: *RouteBuilder, schema: []const u8) error{OutOfMemory}!RouteBuilder {
-        const schema_z = try std.heap.c_allocator.dupeZ(u8, schema);
-        defer std.heap.c_allocator.free(schema_z);
-        const _result = c.spikard_route_builder_request_schema_json(@as(*c.SPIKARDRouteBuilder, @ptrCast(self._handle)), schema_z);
+    pub fn request_schema_json(self: *RouteBuilder, schema: []const u8) RouteBuilder {
+        const _result = c.spikard_route_builder_request_schema_json(@as(*c.SPIKARDRouteBuilder, @ptrCast(self._handle)), schema);
         return RouteBuilder{ ._handle = _result.? };
     }
 
     /// Provide a raw JSON schema for the response body.
-    pub fn response_schema_json(self: *RouteBuilder, schema: []const u8) error{OutOfMemory}!RouteBuilder {
-        const schema_z = try std.heap.c_allocator.dupeZ(u8, schema);
-        defer std.heap.c_allocator.free(schema_z);
-        const _result = c.spikard_route_builder_response_schema_json(@as(*c.SPIKARDRouteBuilder, @ptrCast(self._handle)), schema_z);
+    pub fn response_schema_json(self: *RouteBuilder, schema: []const u8) RouteBuilder {
+        const _result = c.spikard_route_builder_response_schema_json(@as(*c.SPIKARDRouteBuilder, @ptrCast(self._handle)), schema);
         return RouteBuilder{ ._handle = _result.? };
     }
 
     /// Provide a raw JSON schema for request parameters.
-    pub fn params_schema_json(self: *RouteBuilder, schema: []const u8) error{OutOfMemory}!RouteBuilder {
-        const schema_z = try std.heap.c_allocator.dupeZ(u8, schema);
-        defer std.heap.c_allocator.free(schema_z);
-        const _result = c.spikard_route_builder_params_schema_json(@as(*c.SPIKARDRouteBuilder, @ptrCast(self._handle)), schema_z);
+    pub fn params_schema_json(self: *RouteBuilder, schema: []const u8) RouteBuilder {
+        const _result = c.spikard_route_builder_params_schema_json(@as(*c.SPIKARDRouteBuilder, @ptrCast(self._handle)), schema);
         return RouteBuilder{ ._handle = _result.? };
     }
 
     /// Provide multipart file parameter configuration.
-    pub fn file_params_json(self: *RouteBuilder, schema: []const u8) error{OutOfMemory}!RouteBuilder {
-        const schema_z = try std.heap.c_allocator.dupeZ(u8, schema);
-        defer std.heap.c_allocator.free(schema_z);
-        const _result = c.spikard_route_builder_file_params_json(@as(*c.SPIKARDRouteBuilder, @ptrCast(self._handle)), schema_z);
+    pub fn file_params_json(self: *RouteBuilder, schema: []const u8) RouteBuilder {
+        const _result = c.spikard_route_builder_file_params_json(@as(*c.SPIKARDRouteBuilder, @ptrCast(self._handle)), schema);
         return RouteBuilder{ ._handle = _result.? };
     }
 
@@ -841,5 +833,23 @@ pub const TestingSseEvent = struct {
     /// Release the underlying FFI handle. Safe to call once per instance.
     pub fn free(self: *TestingSseEvent) void {
         c.spikard_testing_sse_event_free(@as(*c.SPIKARDTestingSseEvent, @ptrCast(self._handle)));
+    }
+};
+
+pub const HandlerResult = struct {
+    _handle: *anyopaque,
+
+    /// Release the underlying FFI handle. Safe to call once per instance.
+    pub fn free(self: *HandlerResult) void {
+        c.spikard_handler_result_free(@as(*c.SPIKARDHandlerResult, @ptrCast(self._handle)));
+    }
+};
+
+pub const RequestData = struct {
+    _handle: *anyopaque,
+
+    /// Release the underlying FFI handle. Safe to call once per instance.
+    pub fn free(self: *RequestData) void {
+        c.spikard_request_data_free(@as(*c.SPIKARDRequestData, @ptrCast(self._handle)));
     }
 };

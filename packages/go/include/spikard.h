@@ -112,6 +112,7 @@ typedef struct SPIKARDGrpcConfig SPIKARDGrpcConfig;
  * implements this trait to bridge their runtime to our HTTP server.
  */
 typedef struct SPIKARDHandler SPIKARDHandler;
+typedef struct SPIKARDHandlerResult SPIKARDHandlerResult;
 /**
  * Convert user-facing handler functions into the low-level `Handler` trait.
  */
@@ -222,6 +223,8 @@ typedef struct SPIKARDQueryOnlyConfig SPIKARDQueryOnlyConfig;
  * Rate limiting configuration shared across runtimes
  */
 typedef struct SPIKARDRateLimitConfig SPIKARDRateLimitConfig;
+typedef struct SPIKARDRequest SPIKARDRequest;
+typedef struct SPIKARDRequestData SPIKARDRequestData;
 /**
  * HTTP Response with custom status code, headers, and content
  */
@@ -282,56 +285,6 @@ typedef struct SPIKARDSnapshotError SPIKARDSnapshotError;
  */
 typedef struct SPIKARDSseEvent SPIKARDSseEvent;
 /**
- * SSE event producer trait
- *
- * Implement this trait to create custom Server-Sent Event (SSE) producers for your application.
- * The producer generates events that are streamed to connected clients.
- *
- * # Understanding SSE
- *
- * Server-Sent Events (SSE) provide one-way communication from server to client over HTTP.
- * Unlike WebSocket, SSE uses standard HTTP and automatically handles reconnection.
- * Use SSE when you need to push data to clients without bidirectional communication.
- *
- * # Implementing the Trait
- *
- * You must implement the `next_event` method to generate events. The `on_connect` and
- * `on_disconnect` methods are optional lifecycle hooks.
- * \code
- * use spikard_http::sse::{SseEventProducer, SseEvent};
- * use serde_json::json;
- * use std::time::Duration;
- * use tokio::time::sleep;
- *
- * struct CounterProducer {
- *     limit: usize,
- * }
- *
- * #[async_trait]
- * impl SseEventProducer for CounterProducer {
- *     async fn next_event(&self) -> Option<SseEvent> {
- *         static COUNTER: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
- *
- *         let count = COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
- *         if count < self.limit {
- *             Some(SseEvent::new(json!({"count": count})))
- *         } else {
- *             None
- *         }
- *     }
- *
- *     async fn on_connect(&self) {
- *         println!("Client connected");
- *     }
- *
- *     async fn on_disconnect(&self) {
- *         println!("Client disconnected");
- *     }
- * }
- * \endcode
- */
-typedef struct SPIKARDSseEventProducer SPIKARDSseEventProducer;
-/**
  * Static file serving configuration
  */
 typedef struct SPIKARDStaticFilesConfig SPIKARDStaticFilesConfig;
@@ -378,41 +331,6 @@ typedef struct SPIKARDValidateRequest SPIKARDValidateRequest;
  * Response body for `POST /asyncapi/validate`
  */
 typedef struct SPIKARDValidationResponse SPIKARDValidationResponse;
-/**
- * WebSocket message handler trait
- *
- * Implement this trait to create custom WebSocket message handlers for your application.
- * The handler processes JSON messages received from WebSocket clients and can optionally
- * send responses back.
- *
- * # Implementing the Trait
- *
- * You must implement the `handle_message` method. The `on_connect` and `on_disconnect`
- * methods are optional and provide lifecycle hooks.
- * \code
- * use spikard_http::websocket::WebSocketHandler;
- * use serde_json::{json, Value};
- *
- * struct EchoHandler;
- *
- * #[async_trait]
- * impl WebSocketHandler for EchoHandler {
- *     async fn handle_message(&self, message: Value) -> Option<Value> {
- *         // Echo the message back to the client
- *         Some(message)
- *     }
- *
- *     async fn on_connect(&self) {
- *         println!("Client connected");
- *     }
- *
- *     async fn on_disconnect(&self) {
- *         println!("Client disconnected");
- *     }
- * }
- * \endcode
- */
-typedef struct SPIKARDWebSocketHandler SPIKARDWebSocketHandler;
 /**
  * A WebSocket message that can be text or binary.
  */
@@ -1414,6 +1332,13 @@ char *spikard_response_to_json(const SPIKARDResponse *ptr);
 void spikard_response_free(SPIKARDResponse *ptr);
 
 /**
+ * Get the `content` field from a `Response`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_response_content(const SPIKARDResponse *ptr);
+
+/**
  * Get the `status_code` field from a `Response`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
@@ -1486,6 +1411,13 @@ void spikard_sse_event_free(SPIKARDSseEvent *ptr);
  * Pointer must be a valid handle returned by this library.
  */
 char *spikard_sse_event_event_type(const SPIKARDSseEvent *ptr);
+
+/**
+ * Get the `data` field from a `SseEvent`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_sse_event_data(const SPIKARDSseEvent *ptr);
 
 /**
  * Get the `id` field from a `SseEvent`.
@@ -1870,32 +1802,32 @@ SPIKARDRouteBuilder *spikard_route_builder_handler_name(SPIKARDRouteBuilder *thi
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
-SPIKARDRouteBuilder *spikard_route_builder_request_schema_json(SPIKARDRouteBuilder *_this,
-                                                               const char *_schema);
+SPIKARDRouteBuilder *spikard_route_builder_request_schema_json(SPIKARDRouteBuilder *this_,
+                                                               const char *schema);
 
 /**
  * Provide a raw JSON schema for the response body.
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
-SPIKARDRouteBuilder *spikard_route_builder_response_schema_json(SPIKARDRouteBuilder *_this,
-                                                                const char *_schema);
+SPIKARDRouteBuilder *spikard_route_builder_response_schema_json(SPIKARDRouteBuilder *this_,
+                                                                const char *schema);
 
 /**
  * Provide a raw JSON schema for request parameters.
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
-SPIKARDRouteBuilder *spikard_route_builder_params_schema_json(SPIKARDRouteBuilder *_this,
-                                                              const char *_schema);
+SPIKARDRouteBuilder *spikard_route_builder_params_schema_json(SPIKARDRouteBuilder *this_,
+                                                              const char *schema);
 
 /**
  * Provide multipart file parameter configuration.
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */
-SPIKARDRouteBuilder *spikard_route_builder_file_params_json(SPIKARDRouteBuilder *_this,
-                                                            const char *_schema);
+SPIKARDRouteBuilder *spikard_route_builder_file_params_json(SPIKARDRouteBuilder *this_,
+                                                            const char *schema);
 
 /**
  * Attach a CORS configuration for this route.
@@ -1956,6 +1888,20 @@ char *spikard_json_rpc_method_info_method_name(const SPIKARDJsonRpcMethodInfo *p
  * Pointer must be a valid handle returned by this library.
  */
 char *spikard_json_rpc_method_info_description(const SPIKARDJsonRpcMethodInfo *ptr);
+
+/**
+ * Get the `params_schema` field from a `JsonRpcMethodInfo`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_json_rpc_method_info_params_schema(const SPIKARDJsonRpcMethodInfo *ptr);
+
+/**
+ * Get the `result_schema` field from a `JsonRpcMethodInfo`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_json_rpc_method_info_result_schema(const SPIKARDJsonRpcMethodInfo *ptr);
 
 /**
  * Get the `deprecated` field from a `JsonRpcMethodInfo`.
@@ -2119,6 +2065,13 @@ void spikard_async_api_config_free(SPIKARDAsyncApiConfig *ptr);
 int32_t spikard_async_api_config_enabled(const SPIKARDAsyncApiConfig *ptr);
 
 /**
+ * Get the `spec` field from a `AsyncApiConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_async_api_config_spec(const SPIKARDAsyncApiConfig *ptr);
+
+/**
  * Create a `ParsedChannel` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
@@ -2161,6 +2114,13 @@ char *spikard_parsed_channel_address(const SPIKARDParsedChannel *ptr);
  * Pointer must be a valid handle returned by this library.
  */
 char *spikard_parsed_channel_messages(const SPIKARDParsedChannel *ptr);
+
+/**
+ * Get the `bindings` field from a `ParsedChannel`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_parsed_channel_bindings(const SPIKARDParsedChannel *ptr);
 
 /**
  * Create a `ParsedOperation` from a JSON string. Returns null on failure.
@@ -2237,6 +2197,13 @@ void spikard_parsed_message_free(SPIKARDParsedMessage *ptr);
 char *spikard_parsed_message_name(const SPIKARDParsedMessage *ptr);
 
 /**
+ * Get the `schema` field from a `ParsedMessage`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_parsed_message_schema(const SPIKARDParsedMessage *ptr);
+
+/**
  * Create a `ParseResult` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
@@ -2309,6 +2276,13 @@ char *spikard_parse_result_messages(const SPIKARDParseResult *ptr);
 void spikard_parse_request_free(SPIKARDParseRequest *ptr);
 
 /**
+ * Get the `spec` field from a `ParseRequest`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_parse_request_spec(const SPIKARDParseRequest *ptr);
+
+/**
  * Free a `ValidationResponse` handle.
  * # Safety
  * Pointer must have been returned by this library, or be null.
@@ -2337,6 +2311,13 @@ char *spikard_validation_response_errors(const SPIKARDValidationResponse *ptr);
 void spikard_validate_request_free(SPIKARDValidateRequest *ptr);
 
 /**
+ * Get the `spec` field from a `ValidateRequest`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_validate_request_spec(const SPIKARDValidateRequest *ptr);
+
+/**
  * Get the `channel` field from a `ValidateRequest`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
@@ -2349,6 +2330,13 @@ char *spikard_validate_request_channel(const SPIKARDValidateRequest *ptr);
  * Pointer must be a valid handle returned by this library.
  */
 char *spikard_validate_request_message(const SPIKARDValidateRequest *ptr);
+
+/**
+ * Get the `payload` field from a `ValidateRequest`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_validate_request_payload(const SPIKARDValidateRequest *ptr);
 
 /**
  * Create a `ContactInfo` from a JSON string. Returns null on failure.
@@ -2481,6 +2469,20 @@ void spikard_testing_sse_event_free(SPIKARDSseEvent *ptr);
  * Pointer must be a valid handle returned by this library.
  */
 char *spikard_testing_sse_event_data(const SPIKARDSseEvent *ptr);
+
+/**
+ * Free a `HandlerResult` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void spikard_handler_result_free(SPIKARDHandlerResult *ptr);
+
+/**
+ * Free a `RequestData` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void spikard_request_data_free(SPIKARDRequestData *ptr);
 
 /**
  * Convert an integer to a `Method` variant. Returns -1 on invalid input.

@@ -1,7 +1,10 @@
 export {
   App,
   GraphQLRouteConfig,
+  HandlerResult,
   Method,
+  Request,
+  RequestData,
   TestClient,
   schemaFull,
   schemaQueryMutation,

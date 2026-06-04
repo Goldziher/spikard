@@ -95,16 +95,6 @@ Create a new application with the default server configuration.
 pub fn new() -> App
 ```
 
-#### config()
-
-Set the server configuration.
-
-**Signature:**
-
-```rust
-pub fn config(&self, config: ServerConfig) -> App
-```
-
 #### merge_axum_router()
 
 Attach an existing Axum router to this application, returning ownership.
@@ -161,20 +151,6 @@ pub fn run(&self)
 pub fn default() -> App
 ```
 
-#### route()
-
-Register a route using the provided builder and handler function.
-
-**Errors:**
-
-Returns an error if route construction fails or if the handler registration fails.
-
-**Signature:**
-
-```rust
-pub fn route(&self, builder: RouteBuilder, handler: H) -> App
-```
-
 ---
 
 #### AsyncApiConfig
@@ -184,7 +160,7 @@ AsyncAPI HTTP endpoint configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `bool` | — | Enable AsyncAPI endpoints (default: false) |
-| `spec` | `Option<String>` | `Default::default()` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+| `spec` | `Option<serde_json::Value>` | `Default::default()` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 
@@ -486,8 +462,8 @@ Snapshot of a GraphQL subscription exchange over WebSocket.
 |-------|------|---------|-------------|
 | `operation_id` | `String` | — | Operation id used for the subscription request. |
 | `acknowledged` | `bool` | — | Whether the server acknowledged the GraphQL WebSocket connection. |
-| `event` | `Option<String>` | `None` | First `next.payload` received for this subscription, if any. |
-| `errors` | `Vec<String>` | — | GraphQL protocol errors emitted by the server. |
+| `event` | `Option<serde_json::Value>` | `None` | First `next.payload` received for this subscription, if any. |
+| `errors` | `Vec<serde_json::Value>` | — | GraphQL protocol errors emitted by the server. |
 | `complete_received` | `bool` | — | Whether a `complete` frame was observed for this operation. |
 
 ---
@@ -701,8 +677,8 @@ enabling discovery and documentation of RPC-compatible endpoints.
 |-------|------|---------|-------------|
 | `method_name` | `String` | — | The JSON-RPC method name (e.g., "user.create") |
 | `description` | `Option<String>` | `None` | Optional description of what the method does |
-| `params_schema` | `Option<String>` | `None` | Optional JSON Schema for method parameters |
-| `result_schema` | `Option<String>` | `None` | Optional JSON Schema for the result |
+| `params_schema` | `Option<serde_json::Value>` | `None` | Optional JSON Schema for method parameters |
+| `result_schema` | `Option<serde_json::Value>` | `None` | Optional JSON Schema for the result |
 | `deprecated` | `bool` | `/* serde(default) */` | Whether this method is deprecated |
 | `tags` | `Vec<String>` | `/* serde(default) */` | Tags for categorizing and grouping methods |
 
@@ -769,7 +745,7 @@ Request body for `POST /asyncapi/parse`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `String` | — | Spec |
+| `spec` | `serde_json::Value` | — | Spec |
 
 ---
 
@@ -797,7 +773,7 @@ A single channel extracted from an AsyncAPI spec
 | `name` | `String` | — | Channel key from the spec (e.g. "chat/messages") |
 | `address` | `String` | — | Channel address / path |
 | `messages` | `Vec<String>` | — | Message names declared on this channel |
-| `bindings` | `Option<String>` | `None` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
+| `bindings` | `Option<serde_json::Value>` | `None` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
 
@@ -808,7 +784,7 @@ A resolved message (name + JSON Schema)
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String` | — | Message name |
-| `schema` | `Option<String>` | `None` | Resolved JSON Schema for the message payload, if available |
+| `schema` | `Option<serde_json::Value>` | `None` | Resolved JSON Schema for the message payload, if available |
 
 ---
 
@@ -1015,13 +991,17 @@ pub fn default() -> RateLimitConfig
 
 ---
 
+#### Request
+
+---
+
 #### Response
 
 HTTP Response with custom status code, headers, and content
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `Option<String>` | `Default::default()` | Response body content |
+| `content` | `Option<serde_json::Value>` | `Default::default()` | Response body content |
 | `status_code` | `u16` | — | HTTP status code (defaults to 200) |
 | `headers` | `HashMap<String, String>` | `HashMap::new()` | Response headers |
 
@@ -1124,7 +1104,7 @@ Provide a raw JSON schema for the request body.
 **Signature:**
 
 ```rust
-pub fn request_schema_json(&self, schema: &str) -> RouteBuilder
+pub fn request_schema_json(&self, schema: serde_json::Value) -> RouteBuilder
 ```
 
 #### response_schema_json()
@@ -1134,7 +1114,7 @@ Provide a raw JSON schema for the response body.
 **Signature:**
 
 ```rust
-pub fn response_schema_json(&self, schema: &str) -> RouteBuilder
+pub fn response_schema_json(&self, schema: serde_json::Value) -> RouteBuilder
 ```
 
 #### params_schema_json()
@@ -1144,7 +1124,7 @@ Provide a raw JSON schema for request parameters.
 **Signature:**
 
 ```rust
-pub fn params_schema_json(&self, schema: &str) -> RouteBuilder
+pub fn params_schema_json(&self, schema: serde_json::Value) -> RouteBuilder
 ```
 
 #### file_params_json()
@@ -1154,7 +1134,7 @@ Provide multipart file parameter configuration.
 **Signature:**
 
 ```rust
-pub fn file_params_json(&self, schema: &str) -> RouteBuilder
+pub fn file_params_json(&self, schema: serde_json::Value) -> RouteBuilder
 ```
 
 #### cors()
@@ -1286,7 +1266,7 @@ retry: 3000
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `event_type` | `Option<String>` | `None` | Event type (optional) |
-| `data` | `String` | — | Event data (JSON value) |
+| `data` | `serde_json::Value` | — | Event data (JSON value) |
 | `id` | `Option<String>` | `None` | Event ID (optional, for client-side reconnection) |
 | `retry` | `Option<u64>` | `None` | Retry timeout in milliseconds (optional) |
 
@@ -1316,72 +1296,6 @@ if the connection is lost. The client browser will automatically handle reconnec
 
 ```rust
 pub fn with_retry(&self, retry_ms: u64) -> SseEvent
-```
-
----
-
-#### SseEventProducer
-
-SSE event producer trait
-
-Implement this trait to create custom Server-Sent Event (SSE) producers for your application.
-The producer generates events that are streamed to connected clients.
-
-### Understanding SSE
-
-Server-Sent Events (SSE) provide one-way communication from server to client over HTTP.
-Unlike WebSocket, SSE uses standard HTTP and automatically handles reconnection.
-Use SSE when you need to push data to clients without bidirectional communication.
-
-### Implementing the Trait
-
-You must implement the `next_event` method to generate events. The `on_connect` and
-`on_disconnect` methods are optional lifecycle hooks.
-
-### Methods
-
-#### next_event()
-
-Generate the next event
-
-Called repeatedly to produce the event stream. Should return `Some(event)` when
-an event is ready to send, or `None` when the stream should end.
-
-**Returns:**
-
-- `Some(event)` - Event to send to the client
-- `None` - Stream complete, connection will close
-
-**Signature:**
-
-```rust
-pub fn next_event(&self) -> Future
-```
-
-#### on_connect()
-
-Called when a client connects to the SSE endpoint
-
-Optional lifecycle hook invoked when a new SSE connection is established.
-Default implementation does nothing.
-
-**Signature:**
-
-```rust
-pub fn on_connect(&self) -> Future
-```
-
-#### on_disconnect()
-
-Called when a client disconnects from the SSE endpoint
-
-Optional lifecycle hook invoked when an SSE connection is closed (either by the
-client or the stream ending). Default implementation does nothing.
-
-**Signature:**
-
-```rust
-pub fn on_disconnect(&self) -> Future
 ```
 
 ---
@@ -1417,7 +1331,7 @@ Send a GraphQL query/mutation to a custom endpoint
 **Signature:**
 
 ```rust
-pub fn graphql_at(&self, endpoint: &str, query: &str, variables: Option<String>, operation_name: Option<String>) -> ResponseSnapshot
+pub fn graphql_at(&self, endpoint: &str, query: &str, variables: Option<serde_json::Value>, operation_name: Option<String>) -> ResponseSnapshot
 ```
 
 #### graphql()
@@ -1427,7 +1341,7 @@ Send a GraphQL query/mutation
 **Signature:**
 
 ```rust
-pub fn graphql(&self, query: &str, variables: Option<String>, operation_name: Option<String>) -> ResponseSnapshot
+pub fn graphql(&self, query: &str, variables: Option<serde_json::Value>, operation_name: Option<String>) -> ResponseSnapshot
 ```
 
 #### graphql_subscription_at()
@@ -1440,7 +1354,7 @@ After the first payload is received, this client sends `complete` to unsubscribe
 **Signature:**
 
 ```rust
-pub fn graphql_subscription_at(&self, endpoint: &str, query: &str, variables: Option<String>, operation_name: Option<String>) -> GraphQlSubscriptionSnapshot
+pub fn graphql_subscription_at(&self, endpoint: &str, query: &str, variables: Option<serde_json::Value>, operation_name: Option<String>) -> GraphQlSubscriptionSnapshot
 ```
 
 #### graphql_subscription()
@@ -1452,7 +1366,7 @@ Uses `/graphql` as the default subscription endpoint.
 **Signature:**
 
 ```rust
-pub fn graphql_subscription(&self, query: &str, variables: Option<String>, operation_name: Option<String>) -> GraphQlSubscriptionSnapshot
+pub fn graphql_subscription(&self, query: &str, variables: Option<serde_json::Value>, operation_name: Option<String>) -> GraphQlSubscriptionSnapshot
 ```
 
 ---
@@ -1529,10 +1443,10 @@ Request body for `POST /asyncapi/validate`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `String` | — | Spec |
+| `spec` | `serde_json::Value` | — | Spec |
 | `channel` | `String` | — | Channel |
 | `message` | `String` | — | Message |
-| `payload` | `String` | — | Payload |
+| `payload` | `serde_json::Value` | — | Payload |
 
 ---
 
@@ -1544,67 +1458,6 @@ Response body for `POST /asyncapi/validate`
 |-------|------|---------|-------------|
 | `valid` | `bool` | — | Valid |
 | `errors` | `Vec<String>` | — | Errors |
-
----
-
-#### WebSocketHandler
-
-WebSocket message handler trait
-
-Implement this trait to create custom WebSocket message handlers for your application.
-The handler processes JSON messages received from WebSocket clients and can optionally
-send responses back.
-
-### Implementing the Trait
-
-You must implement the `handle_message` method. The `on_connect` and `on_disconnect`
-methods are optional and provide lifecycle hooks.
-
-### Methods
-
-#### handle_message()
-
-Handle incoming WebSocket message
-
-Called whenever a text message is received from a WebSocket client.
-Messages are automatically parsed as JSON.
-
-**Returns:**
-
-- `Some(value)` - JSON value to send back to the client
-- `None` - No response to send
-
-**Signature:**
-
-```rust
-pub fn handle_message(&self, message: Value) -> Future
-```
-
-#### on_connect()
-
-Called when a client connects to the WebSocket
-
-Optional lifecycle hook invoked when a new WebSocket connection is established.
-Default implementation does nothing.
-
-**Signature:**
-
-```rust
-pub fn on_connect(&self) -> Future
-```
-
-#### on_disconnect()
-
-Called when a client disconnects from the WebSocket
-
-Optional lifecycle hook invoked when a WebSocket connection is closed
-(either by the client or due to an error). Default implementation does nothing.
-
-**Signature:**
-
-```rust
-pub fn on_disconnect(&self) -> Future
-```
 
 ---
 

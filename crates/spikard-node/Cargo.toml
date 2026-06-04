@@ -20,6 +20,7 @@ ignored = ["serde_json"]
 crate-type = ["cdylib"]
 
 [dependencies]
+axum = { default-features = false, version = "0.8" }
 napi = { version = "3", features = ["async", "serde-json"] }
 napi-derive = "3"
 serde = { version = "1", features = ["derive"] }

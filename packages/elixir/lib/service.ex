@@ -9,7 +9,6 @@ defmodule App do
 
   defstruct [
     :registrations,
-    :config,
   ]
 
   @doc """
@@ -19,14 +18,6 @@ defmodule App do
     %__MODULE__{
       registrations: [],
     }
-  end
-
-  @doc """
-  Set the server configuration.
-  """
-  def config(self, config) do
-    self = %__MODULE__{self | config: config}
-    self
   end
 
   @doc """

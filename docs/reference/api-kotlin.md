@@ -96,16 +96,6 @@ Create a new application with the default server configuration.
 fun new(): App
 ```
 
-#### config()
-
-Set the server configuration.
-
-**Signature:**
-
-```kotlin
-fun config(config: ServerConfig): App
-```
-
 #### mergeAxumRouter()
 
 Attach an existing Axum router to this application, returning ownership.
@@ -165,21 +155,6 @@ fun run()
 fun default(): App
 ```
 
-#### route()
-
-Register a route using the provided builder and handler function.
-
-**Errors:**
-
-Returns an error if route construction fails or if the handler registration fails.
-
-**Signature:**
-
-```kotlin
-@Throws(AppError::class)
-fun route(builder: RouteBuilder, handler: H): App
-```
-
 ---
 
 #### AsyncApiConfig
@@ -189,7 +164,7 @@ AsyncAPI HTTP endpoint configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `Boolean` | — | Enable AsyncAPI endpoints (default: false) |
-| `spec` | `String?` | `null` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+| `spec` | `Any?` | `null` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 
@@ -701,8 +676,8 @@ enabling discovery and documentation of RPC-compatible endpoints.
 |-------|------|---------|-------------|
 | `methodName` | `String` | — | The JSON-RPC method name (e.g., "user.create") |
 | `description` | `String?` | `null` | Optional description of what the method does |
-| `paramsSchema` | `String?` | `null` | Optional JSON Schema for method parameters |
-| `resultSchema` | `String?` | `null` | Optional JSON Schema for the result |
+| `paramsSchema` | `Any?` | `null` | Optional JSON Schema for method parameters |
+| `resultSchema` | `Any?` | `null` | Optional JSON Schema for the result |
 | `deprecated` | `Boolean` | `/* serde(default) */` | Whether this method is deprecated |
 | `tags` | `List<String>` | `/* serde(default) */` | Tags for categorizing and grouping methods |
 
@@ -770,7 +745,7 @@ Request body for `POST /asyncapi/parse`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `String` | — | Spec |
+| `spec` | `Any` | — | Spec |
 
 ---
 
@@ -798,7 +773,7 @@ A single channel extracted from an AsyncAPI spec
 | `name` | `String` | — | Channel key from the spec (e.g. "chat/messages") |
 | `address` | `String` | — | Channel address / path |
 | `messages` | `List<String>` | — | Message names declared on this channel |
-| `bindings` | `String?` | `null` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
+| `bindings` | `Any?` | `null` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
 
@@ -809,7 +784,7 @@ A resolved message (name + JSON Schema)
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String` | — | Message name |
-| `schema` | `String?` | `null` | Resolved JSON Schema for the message payload, if available |
+| `schema` | `Any?` | `null` | Resolved JSON Schema for the message payload, if available |
 
 ---
 
@@ -1025,13 +1000,17 @@ fun default(): RateLimitConfig
 
 ---
 
+#### Request
+
+---
+
 #### Response
 
 HTTP Response with custom status code, headers, and content
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `String?` | `null` | Response body content |
+| `content` | `Any?` | `null` | Response body content |
 | `statusCode` | `Short` | — | HTTP status code (defaults to 200) |
 | `headers` | `Map<String, String>` | `{}` | Response headers |
 
@@ -1102,7 +1081,7 @@ Provide a raw JSON schema for the request body.
 **Signature:**
 
 ```kotlin
-fun requestSchemaJson(schema: String): RouteBuilder
+fun requestSchemaJson(schema: Any): RouteBuilder
 ```
 
 #### responseSchemaJson()
@@ -1112,7 +1091,7 @@ Provide a raw JSON schema for the response body.
 **Signature:**
 
 ```kotlin
-fun responseSchemaJson(schema: String): RouteBuilder
+fun responseSchemaJson(schema: Any): RouteBuilder
 ```
 
 #### paramsSchemaJson()
@@ -1122,7 +1101,7 @@ Provide a raw JSON schema for request parameters.
 **Signature:**
 
 ```kotlin
-fun paramsSchemaJson(schema: String): RouteBuilder
+fun paramsSchemaJson(schema: Any): RouteBuilder
 ```
 
 #### fileParamsJson()
@@ -1132,7 +1111,7 @@ Provide multipart file parameter configuration.
 **Signature:**
 
 ```kotlin
-fun fileParamsJson(schema: String): RouteBuilder
+fun fileParamsJson(schema: Any): RouteBuilder
 ```
 
 #### cors()
@@ -1266,7 +1245,7 @@ retry: 3000
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `eventType` | `String?` | `null` | Event type (optional) |
-| `data` | `String` | — | Event data (JSON value) |
+| `data` | `Any` | — | Event data (JSON value) |
 | `id` | `String?` | `null` | Event ID (optional, for client-side reconnection) |
 | `retry` | `Long?` | `null` | Retry timeout in milliseconds (optional) |
 
@@ -1296,72 +1275,6 @@ if the connection is lost. The client browser will automatically handle reconnec
 
 ```kotlin
 fun withRetry(retryMs: Long): SseEvent
-```
-
----
-
-#### SseEventProducer
-
-SSE event producer trait
-
-Implement this trait to create custom Server-Sent Event (SSE) producers for your application.
-The producer generates events that are streamed to connected clients.
-
-### Understanding SSE
-
-Server-Sent Events (SSE) provide one-way communication from server to client over HTTP.
-Unlike WebSocket, SSE uses standard HTTP and automatically handles reconnection.
-Use SSE when you need to push data to clients without bidirectional communication.
-
-### Implementing the Trait
-
-You must implement the `next_event` method to generate events. The `on_connect` and
-`on_disconnect` methods are optional lifecycle hooks.
-
-### Methods
-
-#### nextEvent()
-
-Generate the next event
-
-Called repeatedly to produce the event stream. Should return `Some(event)` when
-an event is ready to send, or `null` when the stream should end.
-
-**Returns:**
-
-- `Some(event)` - Event to send to the client
-- `null` - Stream complete, connection will close
-
-**Signature:**
-
-```kotlin
-fun nextEvent(): Future
-```
-
-#### onConnect()
-
-Called when a client connects to the SSE endpoint
-
-Optional lifecycle hook invoked when a new SSE connection is established.
-Default implementation does nothing.
-
-**Signature:**
-
-```kotlin
-fun onConnect(): Future
-```
-
-#### onDisconnect()
-
-Called when a client disconnects from the SSE endpoint
-
-Optional lifecycle hook invoked when an SSE connection is closed (either by the
-client or the stream ending). Default implementation does nothing.
-
-**Signature:**
-
-```kotlin
-fun onDisconnect(): Future
 ```
 
 ---
@@ -1452,10 +1365,10 @@ Request body for `POST /asyncapi/validate`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `String` | — | Spec |
+| `spec` | `Any` | — | Spec |
 | `channel` | `String` | — | Channel |
 | `message` | `String` | — | Message |
-| `payload` | `String` | — | Payload |
+| `payload` | `Any` | — | Payload |
 
 ---
 
@@ -1467,67 +1380,6 @@ Response body for `POST /asyncapi/validate`
 |-------|------|---------|-------------|
 | `valid` | `Boolean` | — | Valid |
 | `errors` | `List<String>` | — | Errors |
-
----
-
-#### WebSocketHandler
-
-WebSocket message handler trait
-
-Implement this trait to create custom WebSocket message handlers for your application.
-The handler processes JSON messages received from WebSocket clients and can optionally
-send responses back.
-
-### Implementing the Trait
-
-You must implement the `handle_message` method. The `on_connect` and `on_disconnect`
-methods are optional and provide lifecycle hooks.
-
-### Methods
-
-#### handleMessage()
-
-Handle incoming WebSocket message
-
-Called whenever a text message is received from a WebSocket client.
-Messages are automatically parsed as JSON.
-
-**Returns:**
-
-- `Some(value)` - JSON value to send back to the client
-- `null` - No response to send
-
-**Signature:**
-
-```kotlin
-fun handleMessage(message: Value): Future
-```
-
-#### onConnect()
-
-Called when a client connects to the WebSocket
-
-Optional lifecycle hook invoked when a new WebSocket connection is established.
-Default implementation does nothing.
-
-**Signature:**
-
-```kotlin
-fun onConnect(): Future
-```
-
-#### onDisconnect()
-
-Called when a client disconnects from the WebSocket
-
-Optional lifecycle hook invoked when a WebSocket connection is closed
-(either by the client or due to an error). Default implementation does nothing.
-
-**Signature:**
-
-```kotlin
-fun onDisconnect(): Future
-```
 
 ---
 

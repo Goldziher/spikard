@@ -593,6 +593,42 @@ void* __swift_bridge__$Vec_TestingSseEvent$get_mut(void* vec_ptr, uintptr_t inde
 uintptr_t __swift_bridge__$Vec_TestingSseEvent$len(void* vec_ptr);
 void* __swift_bridge__$Vec_TestingSseEvent$as_ptr(void* vec_ptr);
 
+typedef struct HandlerResult HandlerResult;
+void __swift_bridge__$HandlerResult$_free(void* self);
+
+void* __swift_bridge__$Vec_HandlerResult$new(void);
+void __swift_bridge__$Vec_HandlerResult$drop(void* vec_ptr);
+void __swift_bridge__$Vec_HandlerResult$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_HandlerResult$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_HandlerResult$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_HandlerResult$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_HandlerResult$len(void* vec_ptr);
+void* __swift_bridge__$Vec_HandlerResult$as_ptr(void* vec_ptr);
+
+typedef struct Request Request;
+void __swift_bridge__$Request$_free(void* self);
+
+void* __swift_bridge__$Vec_Request$new(void);
+void __swift_bridge__$Vec_Request$drop(void* vec_ptr);
+void __swift_bridge__$Vec_Request$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_Request$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_Request$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_Request$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_Request$len(void* vec_ptr);
+void* __swift_bridge__$Vec_Request$as_ptr(void* vec_ptr);
+
+typedef struct RequestData RequestData;
+void __swift_bridge__$RequestData$_free(void* self);
+
+void* __swift_bridge__$Vec_RequestData$new(void);
+void __swift_bridge__$Vec_RequestData$drop(void* vec_ptr);
+void __swift_bridge__$Vec_RequestData$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_RequestData$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_RequestData$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_RequestData$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_RequestData$len(void* vec_ptr);
+void* __swift_bridge__$Vec_RequestData$as_ptr(void* vec_ptr);
+
 typedef struct Method Method;
 void __swift_bridge__$Method$_free(void* self);
 
@@ -748,6 +784,10 @@ void* __swift_bridge__$ServerConfig$grpc(void* self);
 void* __swift_bridge__$ServerConfig$background_tasks(void* self);
 bool __swift_bridge__$ServerConfig$enable_http_trace(void* self);
 void* __swift_bridge__$route_builder_handler_name(void* client, void* name);
+void* __swift_bridge__$route_builder_request_schema_json(void* client, void* schema);
+void* __swift_bridge__$route_builder_response_schema_json(void* client, void* schema);
+void* __swift_bridge__$route_builder_params_schema_json(void* client, void* schema);
+void* __swift_bridge__$route_builder_file_params_json(void* client, void* schema);
 void* __swift_bridge__$route_builder_cors(void* client, void* cors);
 void* __swift_bridge__$route_builder_sync(void* client);
 void* __swift_bridge__$route_builder_handler_dependencies(void* client, void* dependencies);
@@ -802,11 +842,9 @@ void* __swift_bridge__$schema_query_mutation(void);
 void* __swift_bridge__$schema_full(void);
 void* __swift_bridge__$App$new(void);
 uintptr_t __swift_bridge__$app_raw_ptr(void* client);
-void __swift_bridge__$config(void* client);
 void* __swift_bridge__$run(void* client);
 void* __swift_bridge__$route_builder_new(void* method, void* path);
 struct __private__ResultPtrAndPtr __swift_bridge__$cors_config_from_json(void* json);
-struct __private__ResultPtrAndPtr __swift_bridge__$server_config_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$upload_file_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$schema_config_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$query_only_config_from_json(void* json);
@@ -824,6 +862,7 @@ struct __private__ResultPtrAndPtr __swift_bridge__$sse_event_from_json(void* jso
 struct __private__ResultPtrAndPtr __swift_bridge__$jwt_config_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$api_key_config_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$static_files_config_from_json(void* json);
+struct __private__ResultPtrAndPtr __swift_bridge__$server_config_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$json_rpc_method_info_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$problem_details_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$async_api_config_from_json(void* json);

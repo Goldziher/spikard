@@ -95,16 +95,6 @@ Create a new application with the default server configuration.
 public static App new()
 ```
 
-#### config()
-
-Set the server configuration.
-
-**Signature:**
-
-```java
-public App config(ServerConfig config)
-```
-
 #### mergeAxumRouter()
 
 Attach an existing Axum router to this application, returning ownership.
@@ -161,20 +151,6 @@ public void run() throws AppError
 public static App defaultOptions()
 ```
 
-#### route()
-
-Register a route using the provided builder and handler function.
-
-**Errors:**
-
-Returns an error if route construction fails or if the handler registration fails.
-
-**Signature:**
-
-```java
-public App route(RouteBuilder builder, H handler) throws AppError
-```
-
 ---
 
 #### AsyncApiConfig
@@ -184,7 +160,7 @@ AsyncAPI HTTP endpoint configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `boolean` | — | Enable AsyncAPI endpoints (default: false) |
-| `spec` | `Optional<String>` | `null` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+| `spec` | `Optional<Object>` | `null` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 
@@ -687,8 +663,8 @@ enabling discovery and documentation of RPC-compatible endpoints.
 |-------|------|---------|-------------|
 | `methodName` | `String` | — | The JSON-RPC method name (e.g., "user.create") |
 | `description` | `Optional<String>` | `null` | Optional description of what the method does |
-| `paramsSchema` | `Optional<String>` | `null` | Optional JSON Schema for method parameters |
-| `resultSchema` | `Optional<String>` | `null` | Optional JSON Schema for the result |
+| `paramsSchema` | `Optional<Object>` | `null` | Optional JSON Schema for method parameters |
+| `resultSchema` | `Optional<Object>` | `null` | Optional JSON Schema for the result |
 | `deprecated` | `boolean` | `/* serde(default) */` | Whether this method is deprecated |
 | `tags` | `List<String>` | `/* serde(default) */` | Tags for categorizing and grouping methods |
 
@@ -755,7 +731,7 @@ Request body for `POST /asyncapi/parse`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `String` | — | Spec |
+| `spec` | `Object` | — | Spec |
 
 ---
 
@@ -783,7 +759,7 @@ A single channel extracted from an AsyncAPI spec
 | `name` | `String` | — | Channel key from the spec (e.g. "chat/messages") |
 | `address` | `String` | — | Channel address / path |
 | `messages` | `List<String>` | — | Message names declared on this channel |
-| `bindings` | `Optional<String>` | `null` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
+| `bindings` | `Optional<Object>` | `null` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
 
@@ -794,7 +770,7 @@ A resolved message (name + JSON Schema)
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String` | — | Message name |
-| `schema` | `Optional<String>` | `null` | Resolved JSON Schema for the message payload, if available |
+| `schema` | `Optional<Object>` | `null` | Resolved JSON Schema for the message payload, if available |
 
 ---
 
@@ -1001,13 +977,17 @@ public static RateLimitConfig defaultOptions()
 
 ---
 
+#### Request
+
+---
+
 #### Response
 
 HTTP Response with custom status code, headers, and content
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `Optional<String>` | `null` | Response body content |
+| `content` | `Optional<Object>` | `null` | Response body content |
 | `statusCode` | `short` | — | HTTP status code (defaults to 200) |
 | `headers` | `Map<String, String>` | `Collections.emptyMap()` | Response headers |
 
@@ -1076,7 +1056,7 @@ Provide a raw JSON schema for the request body.
 **Signature:**
 
 ```java
-public RouteBuilder requestSchemaJson(String schema)
+public RouteBuilder requestSchemaJson(Object schema)
 ```
 
 #### responseSchemaJson()
@@ -1086,7 +1066,7 @@ Provide a raw JSON schema for the response body.
 **Signature:**
 
 ```java
-public RouteBuilder responseSchemaJson(String schema)
+public RouteBuilder responseSchemaJson(Object schema)
 ```
 
 #### paramsSchemaJson()
@@ -1096,7 +1076,7 @@ Provide a raw JSON schema for request parameters.
 **Signature:**
 
 ```java
-public RouteBuilder paramsSchemaJson(String schema)
+public RouteBuilder paramsSchemaJson(Object schema)
 ```
 
 #### fileParamsJson()
@@ -1106,7 +1086,7 @@ Provide multipart file parameter configuration.
 **Signature:**
 
 ```java
-public RouteBuilder fileParamsJson(String schema)
+public RouteBuilder fileParamsJson(Object schema)
 ```
 
 #### cors()
@@ -1238,7 +1218,7 @@ retry: 3000
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `eventType` | `Optional<String>` | `null` | Event type (optional) |
-| `data` | `String` | — | Event data (JSON value) |
+| `data` | `Object` | — | Event data (JSON value) |
 | `id` | `Optional<String>` | `null` | Event ID (optional, for client-side reconnection) |
 | `retry` | `Optional<Long>` | `null` | Retry timeout in milliseconds (optional) |
 
@@ -1268,72 +1248,6 @@ if the connection is lost. The client browser will automatically handle reconnec
 
 ```java
 public SseEvent withRetry(long retryMs)
-```
-
----
-
-#### SseEventProducer
-
-SSE event producer trait
-
-Implement this trait to create custom Server-Sent Event (SSE) producers for your application.
-The producer generates events that are streamed to connected clients.
-
-### Understanding SSE
-
-Server-Sent Events (SSE) provide one-way communication from server to client over HTTP.
-Unlike WebSocket, SSE uses standard HTTP and automatically handles reconnection.
-Use SSE when you need to push data to clients without bidirectional communication.
-
-### Implementing the Trait
-
-You must implement the `next_event` method to generate events. The `on_connect` and
-`on_disconnect` methods are optional lifecycle hooks.
-
-### Methods
-
-#### nextEvent()
-
-Generate the next event
-
-Called repeatedly to produce the event stream. Should return `Some(event)` when
-an event is ready to send, or `null` when the stream should end.
-
-**Returns:**
-
-- `Some(event)` - Event to send to the client
-- `null` - Stream complete, connection will close
-
-**Signature:**
-
-```java
-public Future nextEvent()
-```
-
-#### onConnect()
-
-Called when a client connects to the SSE endpoint
-
-Optional lifecycle hook invoked when a new SSE connection is established.
-Default implementation does nothing.
-
-**Signature:**
-
-```java
-public Future onConnect()
-```
-
-#### onDisconnect()
-
-Called when a client disconnects from the SSE endpoint
-
-Optional lifecycle hook invoked when an SSE connection is closed (either by the
-client or the stream ending). Default implementation does nothing.
-
-**Signature:**
-
-```java
-public Future onDisconnect()
 ```
 
 ---
@@ -1423,10 +1337,10 @@ Request body for `POST /asyncapi/validate`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `String` | — | Spec |
+| `spec` | `Object` | — | Spec |
 | `channel` | `String` | — | Channel |
 | `message` | `String` | — | Message |
-| `payload` | `String` | — | Payload |
+| `payload` | `Object` | — | Payload |
 
 ---
 
@@ -1438,67 +1352,6 @@ Response body for `POST /asyncapi/validate`
 |-------|------|---------|-------------|
 | `valid` | `boolean` | — | Valid |
 | `errors` | `List<String>` | — | Errors |
-
----
-
-#### WebSocketHandler
-
-WebSocket message handler trait
-
-Implement this trait to create custom WebSocket message handlers for your application.
-The handler processes JSON messages received from WebSocket clients and can optionally
-send responses back.
-
-### Implementing the Trait
-
-You must implement the `handle_message` method. The `on_connect` and `on_disconnect`
-methods are optional and provide lifecycle hooks.
-
-### Methods
-
-#### handleMessage()
-
-Handle incoming WebSocket message
-
-Called whenever a text message is received from a WebSocket client.
-Messages are automatically parsed as JSON.
-
-**Returns:**
-
-- `Some(value)` - JSON value to send back to the client
-- `null` - No response to send
-
-**Signature:**
-
-```java
-public Future handleMessage(Value message)
-```
-
-#### onConnect()
-
-Called when a client connects to the WebSocket
-
-Optional lifecycle hook invoked when a new WebSocket connection is established.
-Default implementation does nothing.
-
-**Signature:**
-
-```java
-public Future onConnect()
-```
-
-#### onDisconnect()
-
-Called when a client disconnects from the WebSocket
-
-Optional lifecycle hook invoked when a WebSocket connection is closed
-(either by the client or due to an error). Default implementation does nothing.
-
-**Signature:**
-
-```java
-public Future onDisconnect()
-```
 
 ---
 

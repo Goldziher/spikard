@@ -5,7 +5,7 @@
 // which rejects the Rust 2024 `#[unsafe(no_mangle)]` attribute form.
 // swift-bridge only parses src/lib.rs, so this file is invisible to it.
 
-#![allow(unused_variables, unreachable_code)]
+#![allow(unused_variables, unreachable_code, unreachable_patterns)]
 
 use super::*;
 

@@ -95,16 +95,6 @@ Create a new application with the default server configuration.
 public static function new(): App
 ```
 
-#### config()
-
-Set the server configuration.
-
-**Signature:**
-
-```php
-public function config(ServerConfig $config): App
-```
-
 #### mergeAxumRouter()
 
 Attach an existing Axum router to this application, returning ownership.
@@ -161,20 +151,6 @@ public function run(): void
 public static function default(): App
 ```
 
-#### route()
-
-Register a route using the provided builder and handler function.
-
-**Errors:**
-
-Returns an error if route construction fails or if the handler registration fails.
-
-**Signature:**
-
-```php
-public function route(RouteBuilder $builder, H $handler): App
-```
-
 ---
 
 #### AsyncApiConfig
@@ -184,7 +160,7 @@ AsyncAPI HTTP endpoint configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `bool` | — | Enable AsyncAPI endpoints (default: false) |
-| `spec` | `?string` | `null` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+| `spec` | `?mixed` | `null` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 
@@ -486,8 +462,8 @@ Snapshot of a GraphQL subscription exchange over WebSocket.
 |-------|------|---------|-------------|
 | `operationId` | `string` | — | Operation id used for the subscription request. |
 | `acknowledged` | `bool` | — | Whether the server acknowledged the GraphQL WebSocket connection. |
-| `event` | `?string` | `null` | First `next.payload` received for this subscription, if any. |
-| `errors` | `array<string>` | — | GraphQL protocol errors emitted by the server. |
+| `event` | `?mixed` | `null` | First `next.payload` received for this subscription, if any. |
+| `errors` | `array<mixed>` | — | GraphQL protocol errors emitted by the server. |
 | `completeReceived` | `bool` | — | Whether a `complete` frame was observed for this operation. |
 
 ---
@@ -701,8 +677,8 @@ enabling discovery and documentation of RPC-compatible endpoints.
 |-------|------|---------|-------------|
 | `methodName` | `string` | — | The JSON-RPC method name (e.g., "user.create") |
 | `description` | `?string` | `null` | Optional description of what the method does |
-| `paramsSchema` | `?string` | `null` | Optional JSON Schema for method parameters |
-| `resultSchema` | `?string` | `null` | Optional JSON Schema for the result |
+| `paramsSchema` | `?mixed` | `null` | Optional JSON Schema for method parameters |
+| `resultSchema` | `?mixed` | `null` | Optional JSON Schema for the result |
 | `deprecated` | `bool` | `/* serde(default) */` | Whether this method is deprecated |
 | `tags` | `array<string>` | `/* serde(default) */` | Tags for categorizing and grouping methods |
 
@@ -769,7 +745,7 @@ Request body for `POST /asyncapi/parse`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `string` | — | Spec |
+| `spec` | `mixed` | — | Spec |
 
 ---
 
@@ -797,7 +773,7 @@ A single channel extracted from an AsyncAPI spec
 | `name` | `string` | — | Channel key from the spec (e.g. "chat/messages") |
 | `address` | `string` | — | Channel address / path |
 | `messages` | `array<string>` | — | Message names declared on this channel |
-| `bindings` | `?string` | `null` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
+| `bindings` | `?mixed` | `null` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
 
@@ -808,7 +784,7 @@ A resolved message (name + JSON Schema)
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `string` | — | Message name |
-| `schema` | `?string` | `null` | Resolved JSON Schema for the message payload, if available |
+| `schema` | `?mixed` | `null` | Resolved JSON Schema for the message payload, if available |
 
 ---
 
@@ -1015,13 +991,17 @@ public static function default(): RateLimitConfig
 
 ---
 
+#### Request
+
+---
+
 #### Response
 
 HTTP Response with custom status code, headers, and content
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `?string` | `null` | Response body content |
+| `content` | `?mixed` | `null` | Response body content |
 | `statusCode` | `int` | — | HTTP status code (defaults to 200) |
 | `headers` | `array<string, string>` | `{}` | Response headers |
 
@@ -1124,7 +1104,7 @@ Provide a raw JSON schema for the request body.
 **Signature:**
 
 ```php
-public function requestSchemaJson(string $schema): RouteBuilder
+public function requestSchemaJson(mixed $schema): RouteBuilder
 ```
 
 #### responseSchemaJson()
@@ -1134,7 +1114,7 @@ Provide a raw JSON schema for the response body.
 **Signature:**
 
 ```php
-public function responseSchemaJson(string $schema): RouteBuilder
+public function responseSchemaJson(mixed $schema): RouteBuilder
 ```
 
 #### paramsSchemaJson()
@@ -1144,7 +1124,7 @@ Provide a raw JSON schema for request parameters.
 **Signature:**
 
 ```php
-public function paramsSchemaJson(string $schema): RouteBuilder
+public function paramsSchemaJson(mixed $schema): RouteBuilder
 ```
 
 #### fileParamsJson()
@@ -1154,7 +1134,7 @@ Provide multipart file parameter configuration.
 **Signature:**
 
 ```php
-public function fileParamsJson(string $schema): RouteBuilder
+public function fileParamsJson(mixed $schema): RouteBuilder
 ```
 
 #### cors()
@@ -1286,7 +1266,7 @@ retry: 3000
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `eventType` | `?string` | `null` | Event type (optional) |
-| `data` | `string` | — | Event data (JSON value) |
+| `data` | `mixed` | — | Event data (JSON value) |
 | `id` | `?string` | `null` | Event ID (optional, for client-side reconnection) |
 | `retry` | `?int` | `null` | Retry timeout in milliseconds (optional) |
 
@@ -1316,72 +1296,6 @@ if the connection is lost. The client browser will automatically handle reconnec
 
 ```php
 public function withRetry(int $retryMs): SseEvent
-```
-
----
-
-#### SseEventProducer
-
-SSE event producer trait
-
-Implement this trait to create custom Server-Sent Event (SSE) producers for your application.
-The producer generates events that are streamed to connected clients.
-
-### Understanding SSE
-
-Server-Sent Events (SSE) provide one-way communication from server to client over HTTP.
-Unlike WebSocket, SSE uses standard HTTP and automatically handles reconnection.
-Use SSE when you need to push data to clients without bidirectional communication.
-
-### Implementing the Trait
-
-You must implement the `next_event` method to generate events. The `on_connect` and
-`on_disconnect` methods are optional lifecycle hooks.
-
-### Methods
-
-#### nextEvent()
-
-Generate the next event
-
-Called repeatedly to produce the event stream. Should return `Some(event)` when
-an event is ready to send, or `null` when the stream should end.
-
-**Returns:**
-
-- `Some(event)` - Event to send to the client
-- `null` - Stream complete, connection will close
-
-**Signature:**
-
-```php
-public function nextEvent(): Future
-```
-
-#### onConnect()
-
-Called when a client connects to the SSE endpoint
-
-Optional lifecycle hook invoked when a new SSE connection is established.
-Default implementation does nothing.
-
-**Signature:**
-
-```php
-public function onConnect(): Future
-```
-
-#### onDisconnect()
-
-Called when a client disconnects from the SSE endpoint
-
-Optional lifecycle hook invoked when an SSE connection is closed (either by the
-client or the stream ending). Default implementation does nothing.
-
-**Signature:**
-
-```php
-public function onDisconnect(): Future
 ```
 
 ---
@@ -1471,10 +1385,10 @@ Request body for `POST /asyncapi/validate`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `string` | — | Spec |
+| `spec` | `mixed` | — | Spec |
 | `channel` | `string` | — | Channel |
 | `message` | `string` | — | Message |
-| `payload` | `string` | — | Payload |
+| `payload` | `mixed` | — | Payload |
 
 ---
 
@@ -1486,67 +1400,6 @@ Response body for `POST /asyncapi/validate`
 |-------|------|---------|-------------|
 | `valid` | `bool` | — | Valid |
 | `errors` | `array<string>` | — | Errors |
-
----
-
-#### WebSocketHandler
-
-WebSocket message handler trait
-
-Implement this trait to create custom WebSocket message handlers for your application.
-The handler processes JSON messages received from WebSocket clients and can optionally
-send responses back.
-
-### Implementing the Trait
-
-You must implement the `handle_message` method. The `on_connect` and `on_disconnect`
-methods are optional and provide lifecycle hooks.
-
-### Methods
-
-#### handleMessage()
-
-Handle incoming WebSocket message
-
-Called whenever a text message is received from a WebSocket client.
-Messages are automatically parsed as JSON.
-
-**Returns:**
-
-- `Some(value)` - JSON value to send back to the client
-- `null` - No response to send
-
-**Signature:**
-
-```php
-public function handleMessage(Value $message): Future
-```
-
-#### onConnect()
-
-Called when a client connects to the WebSocket
-
-Optional lifecycle hook invoked when a new WebSocket connection is established.
-Default implementation does nothing.
-
-**Signature:**
-
-```php
-public function onConnect(): Future
-```
-
-#### onDisconnect()
-
-Called when a client disconnects from the WebSocket
-
-Optional lifecycle hook invoked when a WebSocket connection is closed
-(either by the client or due to an error). Default implementation does nothing.
-
-**Signature:**
-
-```php
-public function onDisconnect(): Future
-```
 
 ---
 

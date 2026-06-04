@@ -69,20 +69,6 @@ impl App {
     }
 
     #[frb(sync)]
-    pub fn config(&mut self, config: ServerConfig) -> &mut Self {
-        let mut guard = self.inner.blocking_lock();
-        // Take-modify-replace: works for both consume-self builders (returning
-        // `Self`) and `&mut self` builders (returning `&mut Self`). For the
-        // mutate-in-place case the mutated value is the same `inner` we put back;
-        // for the consuming case the new value is the configurator's return.
-        if let Some(inner) = guard.take() {
-            *guard = Some(inner.config(config.into()));
-        }
-        drop(guard);
-        self
-    }
-
-    #[frb(sync)]
     pub fn route(
         &mut self,
         builder: RouteBuilder,

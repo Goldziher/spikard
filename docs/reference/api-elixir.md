@@ -98,16 +98,6 @@ Create a new application with the default server configuration.
 def new()
 ```
 
-#### config()
-
-Set the server configuration.
-
-**Signature:**
-
-```elixir
-def config(config)
-```
-
 #### merge_axum_router()
 
 Attach an existing Axum router to this application, returning ownership.
@@ -164,20 +154,6 @@ def run()
 def default()
 ```
 
-#### route()
-
-Register a route using the provided builder and handler function.
-
-**Errors:**
-
-Returns an error if route construction fails or if the handler registration fails.
-
-**Signature:**
-
-```elixir
-def route(builder, handler)
-```
-
 ---
 
 #### AsyncApiConfig
@@ -187,7 +163,7 @@ AsyncAPI HTTP endpoint configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `boolean()` | — | Enable AsyncAPI endpoints (default: false) |
-| `spec` | `String.t() \| nil` | `nil` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+| `spec` | `term() \| nil` | `nil` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 
@@ -489,8 +465,8 @@ Snapshot of a GraphQL subscription exchange over WebSocket.
 |-------|------|---------|-------------|
 | `operation_id` | `String.t()` | — | Operation id used for the subscription request. |
 | `acknowledged` | `boolean()` | — | Whether the server acknowledged the GraphQL WebSocket connection. |
-| `event` | `String.t() \| nil` | `nil` | First `next.payload` received for this subscription, if any. |
-| `errors` | `list(String.t())` | — | GraphQL protocol errors emitted by the server. |
+| `event` | `term() \| nil` | `nil` | First `next.payload` received for this subscription, if any. |
+| `errors` | `list(term())` | — | GraphQL protocol errors emitted by the server. |
 | `complete_received` | `boolean()` | — | Whether a `complete` frame was observed for this operation. |
 
 ---
@@ -704,8 +680,8 @@ enabling discovery and documentation of RPC-compatible endpoints.
 |-------|------|---------|-------------|
 | `method_name` | `String.t()` | — | The JSON-RPC method name (e.g., "user.create") |
 | `description` | `String.t() \| nil` | `nil` | Optional description of what the method does |
-| `params_schema` | `String.t() \| nil` | `nil` | Optional JSON Schema for method parameters |
-| `result_schema` | `String.t() \| nil` | `nil` | Optional JSON Schema for the result |
+| `params_schema` | `term() \| nil` | `nil` | Optional JSON Schema for method parameters |
+| `result_schema` | `term() \| nil` | `nil` | Optional JSON Schema for the result |
 | `deprecated` | `boolean()` | `/* serde(default) */` | Whether this method is deprecated |
 | `tags` | `list(String.t())` | `/* serde(default) */` | Tags for categorizing and grouping methods |
 
@@ -772,7 +748,7 @@ Request body for `POST /asyncapi/parse`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `String.t()` | — | Spec |
+| `spec` | `term()` | — | Spec |
 
 ---
 
@@ -800,7 +776,7 @@ A single channel extracted from an AsyncAPI spec
 | `name` | `String.t()` | — | Channel key from the spec (e.g. "chat/messages") |
 | `address` | `String.t()` | — | Channel address / path |
 | `messages` | `list(String.t())` | — | Message names declared on this channel |
-| `bindings` | `String.t() \| nil` | `nil` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
+| `bindings` | `term() \| nil` | `nil` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
 
@@ -811,7 +787,7 @@ A resolved message (name + JSON Schema)
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String.t()` | — | Message name |
-| `schema` | `String.t() \| nil` | `nil` | Resolved JSON Schema for the message payload, if available |
+| `schema` | `term() \| nil` | `nil` | Resolved JSON Schema for the message payload, if available |
 
 ---
 
@@ -1024,7 +1000,7 @@ HTTP Response with custom status code, headers, and content
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `String.t() \| nil` | `nil` | Response body content |
+| `content` | `term() \| nil` | `nil` | Response body content |
 | `status_code` | `integer()` | — | HTTP status code (defaults to 200) |
 | `headers` | `map()` | `%{}` | Response headers |
 
@@ -1289,7 +1265,7 @@ retry: 3000
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `event_type` | `String.t() \| nil` | `nil` | Event type (optional) |
-| `data` | `String.t()` | — | Event data (JSON value) |
+| `data` | `term()` | — | Event data (JSON value) |
 | `id` | `String.t() \| nil` | `nil` | Event ID (optional, for client-side reconnection) |
 | `retry` | `integer() \| nil` | `nil` | Retry timeout in milliseconds (optional) |
 
@@ -1323,72 +1299,6 @@ def with_retry(retry_ms)
 
 ---
 
-#### SseEventProducer
-
-SSE event producer trait
-
-Implement this trait to create custom Server-Sent Event (SSE) producers for your application.
-The producer generates events that are streamed to connected clients.
-
-### Understanding SSE
-
-Server-Sent Events (SSE) provide one-way communication from server to client over HTTP.
-Unlike WebSocket, SSE uses standard HTTP and automatically handles reconnection.
-Use SSE when you need to push data to clients without bidirectional communication.
-
-### Implementing the Trait
-
-You must implement the `next_event` method to generate events. The `on_connect` and
-`on_disconnect` methods are optional lifecycle hooks.
-
-### Functions
-
-#### next_event()
-
-Generate the next event
-
-Called repeatedly to produce the event stream. Should return `Some(event)` when
-an event is ready to send, or `nil` when the stream should end.
-
-**Returns:**
-
-- `Some(event)` - Event to send to the client
-- `nil` - Stream complete, connection will close
-
-**Signature:**
-
-```elixir
-def next_event()
-```
-
-#### on_connect()
-
-Called when a client connects to the SSE endpoint
-
-Optional lifecycle hook invoked when a new SSE connection is established.
-Default implementation does nothing.
-
-**Signature:**
-
-```elixir
-def on_connect()
-```
-
-#### on_disconnect()
-
-Called when a client disconnects from the SSE endpoint
-
-Optional lifecycle hook invoked when an SSE connection is closed (either by the
-client or the stream ending). Default implementation does nothing.
-
-**Signature:**
-
-```elixir
-def on_disconnect()
-```
-
----
-
 #### StaticFilesConfig
 
 Static file serving configuration
@@ -1418,10 +1328,10 @@ Request body for `POST /asyncapi/validate`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `String.t()` | — | Spec |
+| `spec` | `term()` | — | Spec |
 | `channel` | `String.t()` | — | Channel |
 | `message` | `String.t()` | — | Message |
-| `payload` | `String.t()` | — | Payload |
+| `payload` | `term()` | — | Payload |
 
 ---
 
@@ -1433,67 +1343,6 @@ Response body for `POST /asyncapi/validate`
 |-------|------|---------|-------------|
 | `valid` | `boolean()` | — | Valid |
 | `errors` | `list(String.t())` | — | Errors |
-
----
-
-#### WebSocketHandler
-
-WebSocket message handler trait
-
-Implement this trait to create custom WebSocket message handlers for your application.
-The handler processes JSON messages received from WebSocket clients and can optionally
-send responses back.
-
-### Implementing the Trait
-
-You must implement the `handle_message` method. The `on_connect` and `on_disconnect`
-methods are optional and provide lifecycle hooks.
-
-### Functions
-
-#### handle_message()
-
-Handle incoming WebSocket message
-
-Called whenever a text message is received from a WebSocket client.
-Messages are automatically parsed as JSON.
-
-**Returns:**
-
-- `Some(value)` - JSON value to send back to the client
-- `nil` - No response to send
-
-**Signature:**
-
-```elixir
-def handle_message(message)
-```
-
-#### on_connect()
-
-Called when a client connects to the WebSocket
-
-Optional lifecycle hook invoked when a new WebSocket connection is established.
-Default implementation does nothing.
-
-**Signature:**
-
-```elixir
-def on_connect()
-```
-
-#### on_disconnect()
-
-Called when a client disconnects from the WebSocket
-
-Optional lifecycle hook invoked when a WebSocket connection is closed
-(either by the client or due to an error). Default implementation does nothing.
-
-**Signature:**
-
-```elixir
-def on_disconnect()
-```
 
 ---
 

@@ -10,7 +10,7 @@ buildscript {
 
 plugins {
   `java-library`
-  kotlin("jvm") version "2.3.21"
+  kotlin("jvm") version "2.2.0"
   id("com.vanniktech.maven.publish") version "0.36.0"
   id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
 }
@@ -34,7 +34,7 @@ dependencies {
   // consumers see the annotations on cross-language types.
   api("org.jspecify:jspecify:1.0.0")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
-  testImplementation("org.jetbrains.kotlin:kotlin-test:2.3.21")
+  testImplementation("org.jetbrains.kotlin:kotlin-test:2.2.0")
   testImplementation("junit:junit:4.13.2")
 }
 

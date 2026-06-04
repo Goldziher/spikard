@@ -593,43 +593,7 @@ public typealias Response = RustBridge.Response
 /// id: event-123
 /// retry: 3000
 /// ```
-public struct SseEvent: Codable, Sendable, Hashable {
-    /// Event type (optional)
-    public let eventType: String?
-    /// Event data (JSON value)
-    public let data: String
-    /// Event ID (optional, for client-side reconnection)
-    public let id: String?
-    /// Retry timeout in milliseconds (optional)
-    public let retry: UInt64?
-    public init(eventType: String? = nil, data: String, id: String? = nil, retry: UInt64? = nil) {
-        self.eventType = eventType
-        self.data = data
-        self.id = id
-        self.retry = retry
-    }
-    private enum CodingKeys: String, CodingKey {
-        case eventType = "event_type"
-        case data = "data"
-        case id = "id"
-        case retry = "retry"
-    }
-}
-
-// MARK: - Internal FFI conversions for SseEvent
-internal extension SseEvent {
-    init(_ rb: RustBridge.SseEventRef) throws {
-        self.eventType = rb.eventType()?.toString()
-        self.data = rb.data().toString()
-        self.id = rb.id()?.toString()
-        self.retry = rb.retry()
-    }
-    func intoRust() throws -> RustBridge.SseEvent {
-        let data = try JSONEncoder().encode(self)
-        let json = String(data: data, encoding: .utf8) ?? "{}"
-        return try RustBridge.sseEventFromJson(json)
-    }
-}
+public typealias SseEvent = RustBridge.SseEvent
 
 /// JWT authentication configuration
 public struct JwtConfig: Codable, Sendable, Hashable {
@@ -769,53 +733,7 @@ public typealias ServerConfig = RustBridge.ServerConfig
 ///     tags: vec!["users".to_string()],
 /// };
 /// ```
-public struct JsonRpcMethodInfo: Codable, Sendable, Hashable {
-    /// The JSON-RPC method name (e.g., "user.create")
-    public let methodName: String
-    /// Optional description of what the method does
-    public let description: String?
-    /// Optional JSON Schema for method parameters
-    public let paramsSchema: String?
-    /// Optional JSON Schema for the result
-    public let resultSchema: String?
-    /// Whether this method is deprecated
-    public let deprecated: Bool
-    /// Tags for categorizing and grouping methods
-    public let tags: [String]
-    public init(methodName: String, description: String? = nil, paramsSchema: String? = nil, resultSchema: String? = nil, deprecated: Bool, tags: [String]) {
-        self.methodName = methodName
-        self.description = description
-        self.paramsSchema = paramsSchema
-        self.resultSchema = resultSchema
-        self.deprecated = deprecated
-        self.tags = tags
-    }
-    private enum CodingKeys: String, CodingKey {
-        case methodName = "method_name"
-        case description = "description"
-        case paramsSchema = "params_schema"
-        case resultSchema = "result_schema"
-        case deprecated = "deprecated"
-        case tags = "tags"
-    }
-}
-
-// MARK: - Internal FFI conversions for JsonRpcMethodInfo
-internal extension JsonRpcMethodInfo {
-    init(_ rb: RustBridge.JsonRpcMethodInfoRef) throws {
-        self.methodName = rb.methodName().toString()
-        self.description = rb.description()?.toString()
-        self.paramsSchema = rb.paramsSchema()?.toString()
-        self.resultSchema = rb.resultSchema()?.toString()
-        self.deprecated = rb.deprecated()
-        self.tags = rb.tags().map { $0.as_str().toString() }
-    }
-    func intoRust() throws -> RustBridge.JsonRpcMethodInfo {
-        let data = try JSONEncoder().encode(self)
-        let json = String(data: data, encoding: .utf8) ?? "{}"
-        return try RustBridge.jsonRpcMethodInfoFromJson(json)
-    }
-}
+public typealias JsonRpcMethodInfo = RustBridge.JsonRpcMethodInfo
 
 /// RFC 9457 Problem Details for HTTP APIs
 ///
@@ -841,69 +759,10 @@ internal extension JsonRpcMethodInfo {
 public typealias ProblemDetails = RustBridge.ProblemDetails
 
 /// AsyncAPI HTTP endpoint configuration
-public struct AsyncApiConfig: Codable, Sendable, Hashable {
-    /// Enable AsyncAPI endpoints (default: false)
-    public let enabled: Bool
-    /// Pre-registered AsyncAPI spec to serve from GET /asyncapi.json
-    public let spec: String?
-    public init(enabled: Bool, spec: String? = nil) {
-        self.enabled = enabled
-        self.spec = spec
-    }
-    private enum CodingKeys: String, CodingKey {
-        case enabled = "enabled"
-        case spec = "spec"
-    }
-    public init(from decoder: any Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.enabled = try container.decodeIfPresent(Bool.self, forKey: .enabled) ?? false
-        self.spec = try container.decodeIfPresent(String.self, forKey: .spec) ?? nil
-    }
-}
-
-// MARK: - Internal FFI conversions for AsyncApiConfig
-internal extension AsyncApiConfig {
-    init(_ rb: RustBridge.AsyncApiConfigRef) throws {
-        self.enabled = rb.enabled()
-        self.spec = rb.spec()?.toString()
-    }
-    func intoRust() throws -> RustBridge.AsyncApiConfig {
-        return RustBridge.AsyncApiConfig(self.enabled, self.spec.map(RustString.init))
-    }
-}
+public typealias AsyncApiConfig = RustBridge.AsyncApiConfig
 
 /// A single channel extracted from an AsyncAPI spec
-public struct ParsedChannel: Codable, Sendable, Hashable {
-    /// Channel key from the spec (e.g. "chat/messages")
-    public let name: String
-    /// Channel address / path
-    public let address: String
-    /// Message names declared on this channel
-    public let messages: [String]
-    /// Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility
-    public let bindings: String?
-    public init(name: String, address: String, messages: [String], bindings: String? = nil) {
-        self.name = name
-        self.address = address
-        self.messages = messages
-        self.bindings = bindings
-    }
-}
-
-// MARK: - Internal FFI conversions for ParsedChannel
-internal extension ParsedChannel {
-    init(_ rb: RustBridge.ParsedChannelRef) throws {
-        self.name = rb.name().toString()
-        self.address = rb.address().toString()
-        self.messages = rb.messages().map { $0.as_str().toString() }
-        self.bindings = rb.bindings()?.toString()
-    }
-    func intoRust() throws -> RustBridge.ParsedChannel {
-        let data = try JSONEncoder().encode(self)
-        let json = String(data: data, encoding: .utf8) ?? "{}"
-        return try RustBridge.parsedChannelFromJson(json)
-    }
-}
+public typealias ParsedChannel = RustBridge.ParsedChannel
 
 /// A single operation extracted from an AsyncAPI spec
 public struct ParsedOperation: Codable, Sendable, Hashable {
@@ -935,72 +794,10 @@ internal extension ParsedOperation {
 }
 
 /// A resolved message (name + JSON Schema)
-public struct ParsedMessage: Codable, Sendable, Hashable {
-    /// Message name
-    public let name: String
-    /// Resolved JSON Schema for the message payload, if available
-    public let schema: String?
-    public init(name: String, schema: String? = nil) {
-        self.name = name
-        self.schema = schema
-    }
-}
-
-// MARK: - Internal FFI conversions for ParsedMessage
-internal extension ParsedMessage {
-    init(_ rb: RustBridge.ParsedMessageRef) throws {
-        self.name = rb.name().toString()
-        self.schema = rb.schema()?.toString()
-    }
-    func intoRust() throws -> RustBridge.ParsedMessage {
-        let data = try JSONEncoder().encode(self)
-        let json = String(data: data, encoding: .utf8) ?? "{}"
-        return try RustBridge.parsedMessageFromJson(json)
-    }
-}
+public typealias ParsedMessage = RustBridge.ParsedMessage
 
 /// Full parse result returned by `POST /asyncapi/parse`
-public struct ParseResult: Codable, Sendable, Hashable {
-    public let specVersion: String
-    public let title: String
-    public let apiVersion: String
-    public let channels: [ParsedChannel]
-    public let operations: [ParsedOperation]
-    public let messages: [ParsedMessage]
-    public init(specVersion: String, title: String, apiVersion: String, channels: [ParsedChannel], operations: [ParsedOperation], messages: [ParsedMessage]) {
-        self.specVersion = specVersion
-        self.title = title
-        self.apiVersion = apiVersion
-        self.channels = channels
-        self.operations = operations
-        self.messages = messages
-    }
-    private enum CodingKeys: String, CodingKey {
-        case specVersion = "spec_version"
-        case title = "title"
-        case apiVersion = "api_version"
-        case channels = "channels"
-        case operations = "operations"
-        case messages = "messages"
-    }
-}
-
-// MARK: - Internal FFI conversions for ParseResult
-internal extension ParseResult {
-    init(_ rb: RustBridge.ParseResultRef) throws {
-        self.specVersion = rb.specVersion().toString()
-        self.title = rb.title().toString()
-        self.apiVersion = rb.apiVersion().toString()
-        self.channels = try rb.channels().map { try ParsedChannel($0) }
-        self.operations = try rb.operations().map { try ParsedOperation($0) }
-        self.messages = try rb.messages().map { try ParsedMessage($0) }
-    }
-    func intoRust() throws -> RustBridge.ParseResult {
-        let data = try JSONEncoder().encode(self)
-        let json = String(data: data, encoding: .utf8) ?? "{}"
-        return try RustBridge.parseResultFromJson(json)
-    }
-}
+public typealias ParseResult = RustBridge.ParseResult
 
 /// Request body for `POST /asyncapi/parse`
 public typealias ParseRequest = RustBridge.ParseRequest
@@ -1387,8 +1184,7 @@ public func responseFromJson(_ json: String) throws -> Response {
 }
 
 public func sseEventFromJson(_ json: String) throws -> SseEvent {
-    let data = json.data(using: .utf8) ?? Data()
-    return try JSONDecoder().decode(SseEvent.self, from: data)
+    return try RustBridge.sseEventFromJson(json)
 }
 
 public func jwtConfigFromJson(_ json: String) throws -> JwtConfig {
@@ -1411,8 +1207,7 @@ public func serverConfigFromJson(_ json: String) throws -> ServerConfig {
 }
 
 public func jsonRpcMethodInfoFromJson(_ json: String) throws -> JsonRpcMethodInfo {
-    let data = json.data(using: .utf8) ?? Data()
-    return try JSONDecoder().decode(JsonRpcMethodInfo.self, from: data)
+    return try RustBridge.jsonRpcMethodInfoFromJson(json)
 }
 
 public func problemDetailsFromJson(_ json: String) throws -> ProblemDetails {
@@ -1420,13 +1215,11 @@ public func problemDetailsFromJson(_ json: String) throws -> ProblemDetails {
 }
 
 public func asyncApiConfigFromJson(_ json: String) throws -> AsyncApiConfig {
-    let data = json.data(using: .utf8) ?? Data()
-    return try JSONDecoder().decode(AsyncApiConfig.self, from: data)
+    return try RustBridge.asyncApiConfigFromJson(json)
 }
 
 public func parsedChannelFromJson(_ json: String) throws -> ParsedChannel {
-    let data = json.data(using: .utf8) ?? Data()
-    return try JSONDecoder().decode(ParsedChannel.self, from: data)
+    return try RustBridge.parsedChannelFromJson(json)
 }
 
 public func parsedOperationFromJson(_ json: String) throws -> ParsedOperation {
@@ -1435,13 +1228,11 @@ public func parsedOperationFromJson(_ json: String) throws -> ParsedOperation {
 }
 
 public func parsedMessageFromJson(_ json: String) throws -> ParsedMessage {
-    let data = json.data(using: .utf8) ?? Data()
-    return try JSONDecoder().decode(ParsedMessage.self, from: data)
+    return try RustBridge.parsedMessageFromJson(json)
 }
 
 public func parseResultFromJson(_ json: String) throws -> ParseResult {
-    let data = json.data(using: .utf8) ?? Data()
-    return try JSONDecoder().decode(ParseResult.self, from: data)
+    return try RustBridge.parseResultFromJson(json)
 }
 
 public func contactInfoFromJson(_ json: String) throws -> ContactInfo {

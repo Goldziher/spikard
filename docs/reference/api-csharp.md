@@ -95,16 +95,6 @@ Create a new application with the default server configuration.
 public App New()
 ```
 
-#### Config()
-
-Set the server configuration.
-
-**Signature:**
-
-```csharp
-public App Config(ServerConfig config)
-```
-
 #### MergeAxumRouter()
 
 Attach an existing Axum router to this application, returning ownership.
@@ -161,20 +151,6 @@ public async Task RunAsync()
 public App CreateDefault()
 ```
 
-#### Route()
-
-Register a route using the provided builder and handler function.
-
-**Errors:**
-
-Returns an error if route construction fails or if the handler registration fails.
-
-**Signature:**
-
-```csharp
-public App Route(RouteBuilder builder, H handler)
-```
-
 ---
 
 #### AsyncApiConfig
@@ -184,7 +160,7 @@ AsyncAPI HTTP endpoint configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `Enabled` | `bool` | — | Enable AsyncAPI endpoints (default: false) |
-| `Spec` | `string?` | `null` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+| `Spec` | `object?` | `null` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 
@@ -687,8 +663,8 @@ enabling discovery and documentation of RPC-compatible endpoints.
 |-------|------|---------|-------------|
 | `MethodName` | `string` | — | The JSON-RPC method name (e.g., "user.create") |
 | `Description` | `string?` | `null` | Optional description of what the method does |
-| `ParamsSchema` | `string?` | `null` | Optional JSON Schema for method parameters |
-| `ResultSchema` | `string?` | `null` | Optional JSON Schema for the result |
+| `ParamsSchema` | `object?` | `null` | Optional JSON Schema for method parameters |
+| `ResultSchema` | `object?` | `null` | Optional JSON Schema for the result |
 | `Deprecated` | `bool` | `/* serde(default) */` | Whether this method is deprecated |
 | `Tags` | `List<string>` | `/* serde(default) */` | Tags for categorizing and grouping methods |
 
@@ -755,7 +731,7 @@ Request body for `POST /asyncapi/parse`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `Spec` | `string` | — | Spec |
+| `Spec` | `object` | — | Spec |
 
 ---
 
@@ -783,7 +759,7 @@ A single channel extracted from an AsyncAPI spec
 | `Name` | `string` | — | Channel key from the spec (e.g. "chat/messages") |
 | `Address` | `string` | — | Channel address / path |
 | `Messages` | `List<string>` | — | Message names declared on this channel |
-| `Bindings` | `string?` | `null` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
+| `Bindings` | `object?` | `null` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
 
@@ -794,7 +770,7 @@ A resolved message (name + JSON Schema)
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `Name` | `string` | — | Message name |
-| `Schema` | `string?` | `null` | Resolved JSON Schema for the message payload, if available |
+| `Schema` | `object?` | `null` | Resolved JSON Schema for the message payload, if available |
 
 ---
 
@@ -1001,13 +977,17 @@ public RateLimitConfig CreateDefault()
 
 ---
 
+#### Request
+
+---
+
 #### Response
 
 HTTP Response with custom status code, headers, and content
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `Content` | `string?` | `null` | Response body content |
+| `Content` | `object?` | `null` | Response body content |
 | `StatusCode` | `ushort` | — | HTTP status code (defaults to 200) |
 | `Headers` | `Dictionary<string, string>` | `new Dictionary<string, string>()` | Response headers |
 
@@ -1076,7 +1056,7 @@ Provide a raw JSON schema for the request body.
 **Signature:**
 
 ```csharp
-public RouteBuilder RequestSchemaJson(string schema)
+public RouteBuilder RequestSchemaJson(object schema)
 ```
 
 #### ResponseSchemaJson()
@@ -1086,7 +1066,7 @@ Provide a raw JSON schema for the response body.
 **Signature:**
 
 ```csharp
-public RouteBuilder ResponseSchemaJson(string schema)
+public RouteBuilder ResponseSchemaJson(object schema)
 ```
 
 #### ParamsSchemaJson()
@@ -1096,7 +1076,7 @@ Provide a raw JSON schema for request parameters.
 **Signature:**
 
 ```csharp
-public RouteBuilder ParamsSchemaJson(string schema)
+public RouteBuilder ParamsSchemaJson(object schema)
 ```
 
 #### FileParamsJson()
@@ -1106,7 +1086,7 @@ Provide multipart file parameter configuration.
 **Signature:**
 
 ```csharp
-public RouteBuilder FileParamsJson(string schema)
+public RouteBuilder FileParamsJson(object schema)
 ```
 
 #### Cors()
@@ -1238,7 +1218,7 @@ retry: 3000
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `EventType` | `string?` | `null` | Event type (optional) |
-| `Data` | `string` | — | Event data (JSON value) |
+| `Data` | `object` | — | Event data (JSON value) |
 | `Id` | `string?` | `null` | Event ID (optional, for client-side reconnection) |
 | `Retry` | `ulong?` | `null` | Retry timeout in milliseconds (optional) |
 
@@ -1268,72 +1248,6 @@ if the connection is lost. The client browser will automatically handle reconnec
 
 ```csharp
 public SseEvent WithRetry(ulong retryMs)
-```
-
----
-
-#### SseEventProducer
-
-SSE event producer trait
-
-Implement this trait to create custom Server-Sent Event (SSE) producers for your application.
-The producer generates events that are streamed to connected clients.
-
-### Understanding SSE
-
-Server-Sent Events (SSE) provide one-way communication from server to client over HTTP.
-Unlike WebSocket, SSE uses standard HTTP and automatically handles reconnection.
-Use SSE when you need to push data to clients without bidirectional communication.
-
-### Implementing the Trait
-
-You must implement the `next_event` method to generate events. The `on_connect` and
-`on_disconnect` methods are optional lifecycle hooks.
-
-### Methods
-
-#### NextEvent()
-
-Generate the next event
-
-Called repeatedly to produce the event stream. Should return `Some(event)` when
-an event is ready to send, or `null` when the stream should end.
-
-**Returns:**
-
-- `Some(event)` - Event to send to the client
-- `null` - Stream complete, connection will close
-
-**Signature:**
-
-```csharp
-public Future NextEvent()
-```
-
-#### OnConnect()
-
-Called when a client connects to the SSE endpoint
-
-Optional lifecycle hook invoked when a new SSE connection is established.
-Default implementation does nothing.
-
-**Signature:**
-
-```csharp
-public Future OnConnect()
-```
-
-#### OnDisconnect()
-
-Called when a client disconnects from the SSE endpoint
-
-Optional lifecycle hook invoked when an SSE connection is closed (either by the
-client or the stream ending). Default implementation does nothing.
-
-**Signature:**
-
-```csharp
-public Future OnDisconnect()
 ```
 
 ---
@@ -1423,10 +1337,10 @@ Request body for `POST /asyncapi/validate`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `Spec` | `string` | — | Spec |
+| `Spec` | `object` | — | Spec |
 | `Channel` | `string` | — | Channel |
 | `Message` | `string` | — | Message |
-| `Payload` | `string` | — | Payload |
+| `Payload` | `object` | — | Payload |
 
 ---
 
@@ -1438,67 +1352,6 @@ Response body for `POST /asyncapi/validate`
 |-------|------|---------|-------------|
 | `Valid` | `bool` | — | Valid |
 | `Errors` | `List<string>` | — | Errors |
-
----
-
-#### WebSocketHandler
-
-WebSocket message handler trait
-
-Implement this trait to create custom WebSocket message handlers for your application.
-The handler processes JSON messages received from WebSocket clients and can optionally
-send responses back.
-
-### Implementing the Trait
-
-You must implement the `handle_message` method. The `on_connect` and `on_disconnect`
-methods are optional and provide lifecycle hooks.
-
-### Methods
-
-#### HandleMessage()
-
-Handle incoming WebSocket message
-
-Called whenever a text message is received from a WebSocket client.
-Messages are automatically parsed as JSON.
-
-**Returns:**
-
-- `Some(value)` - JSON value to send back to the client
-- `null` - No response to send
-
-**Signature:**
-
-```csharp
-public Future HandleMessage(Value message)
-```
-
-#### OnConnect()
-
-Called when a client connects to the WebSocket
-
-Optional lifecycle hook invoked when a new WebSocket connection is established.
-Default implementation does nothing.
-
-**Signature:**
-
-```csharp
-public Future OnConnect()
-```
-
-#### OnDisconnect()
-
-Called when a client disconnects from the WebSocket
-
-Optional lifecycle hook invoked when a WebSocket connection is closed
-(either by the client or due to an error). Default implementation does nothing.
-
-**Signature:**
-
-```csharp
-public Future OnDisconnect()
-```
 
 ---
 

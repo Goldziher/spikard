@@ -156,6 +156,16 @@ axum = { version = "0.8", default-features = false }
 [crates.ruby]
 gem_name = "spikard"
 features = ["di"]
+# Magnus `TypedData` requires the wrapped Rust type to be `Send`. The declared
+# opaque core types `HandlerResult`, `Request`, `RequestData` (declared in
+# `[workspace.opaque_types]`) transitively contain `axum::body::Body` which is
+# `!Send`, so emitting `magnus::wrap(class = "Spikard::HandlerResult") pub
+# struct HandlerResult { inner: Arc<spikard_http::handler_trait::HandlerResult> }`
+# fails to compile with E0277 "the trait `Send` is not implemented for
+# `UnsyncBoxBody<Bytes, Error>`". Exclude them at the ruby binding level; Ruby
+# consumers drive request handling through the high-level `App.serve` entrypoint
+# and never touch raw HandlerResult/Request/RequestData wrappers.
+exclude_types = ["HandlerResult", "Request", "RequestData"]
 
 [crates.ruby.extra_dependencies]
 spikard-core = { path = "../../../../../crates/spikard-core" }
@@ -192,7 +202,13 @@ features = ["di"]
 # - TestClient: graphql_* methods take Option<serde_json::Value> for variables;
 #   alef maps these to Option<String> in the elixir layer, causing a parameter
 #   type mismatch. Same shape as the PHP issue.
-exclude_types = ["UploadFile", "TestClient"]
+#
+# Rustler `Resource: Sized + Send + Sync + 'static` rejects the wrapper structs
+# for declared opaque core types (HandlerResult, Request, RequestData) because
+# they transitively contain `axum::body::Body` which is `!Send`. Same root cause
+# as the magnus exclusion in `[crates.ruby]`; Elixir consumers do not interact
+# with these raw handle types directly.
+exclude_types = ["UploadFile", "TestClient", "HandlerResult", "Request", "RequestData"]
 
 [crates.elixir.extra_dependencies]
 spikard-core = { path = "../../../../crates/spikard-core" }
@@ -294,6 +310,12 @@ style = "frb"
 spikard-core = { path = "../../../crates/spikard-core" }
 spikard-graphql = { path = "../../../crates/spikard-graphql" }
 spikard-http = { path = "../../../crates/spikard-http" }
+# `Request = "axum::http::Request<axum::body::Body>"` (declared in
+# `[workspace.opaque_types]`) generates FFI shims that reference `axum::http`
+# and `axum::body` paths. Without axum as a direct dependency, dart-side
+# `cargo build` fails with E0433 cannot find module `axum`. Same pattern as
+# the FFI/node/swift extra_deps additions.
+axum = { version = "0.8", default-features = false }
 
 [crates.build_commands.dart]
 precondition = "command -v cargo >/dev/null 2>&1"

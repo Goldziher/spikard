@@ -96,16 +96,6 @@ Create a new application with the default server configuration.
 def new() -> App
 ```
 
-#### config()
-
-Set the server configuration.
-
-**Signature:**
-
-```python
-def config(self, config: ServerConfig) -> App
-```
-
 #### merge_axum_router()
 
 Attach an existing Axum router to this application, returning ownership.
@@ -163,20 +153,6 @@ def run(self) -> None
 def default() -> App
 ```
 
-#### route()
-
-Register a route using the provided builder and handler function.
-
-**Errors:**
-
-Returns an error if route construction fails or if the handler registration fails.
-
-**Signature:**
-
-```python
-def route(self, builder: RouteBuilder, handler: H) -> App
-```
-
 ---
 
 #### AsyncApiConfig
@@ -186,7 +162,7 @@ AsyncAPI HTTP endpoint configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `bool` | — | Enable AsyncAPI endpoints (default: false) |
-| `spec` | `str \| None` | `None` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+| `spec` | `dict[str, Any] \| None` | `None` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 
@@ -495,8 +471,8 @@ Snapshot of a GraphQL subscription exchange over WebSocket.
 |-------|------|---------|-------------|
 | `operation_id` | `str` | — | Operation id used for the subscription request. |
 | `acknowledged` | `bool` | — | Whether the server acknowledged the GraphQL WebSocket connection. |
-| `event` | `str \| None` | `None` | First `next.payload` received for this subscription, if any. |
-| `errors` | `list[str]` | — | GraphQL protocol errors emitted by the server. |
+| `event` | `dict[str, Any] \| None` | `None` | First `next.payload` received for this subscription, if any. |
+| `errors` | `list[dict[str, Any]]` | — | GraphQL protocol errors emitted by the server. |
 | `complete_received` | `bool` | — | Whether a `complete` frame was observed for this operation. |
 
 ---
@@ -712,8 +688,8 @@ enabling discovery and documentation of RPC-compatible endpoints.
 |-------|------|---------|-------------|
 | `method_name` | `str` | — | The JSON-RPC method name (e.g., "user.create") |
 | `description` | `str \| None` | `None` | Optional description of what the method does |
-| `params_schema` | `str \| None` | `None` | Optional JSON Schema for method parameters |
-| `result_schema` | `str \| None` | `None` | Optional JSON Schema for the result |
+| `params_schema` | `dict[str, Any] \| None` | `None` | Optional JSON Schema for method parameters |
+| `result_schema` | `dict[str, Any] \| None` | `None` | Optional JSON Schema for the result |
 | `deprecated` | `bool` | `/* serde(default) */` | Whether this method is deprecated |
 | `tags` | `list[str]` | `/* serde(default) */` | Tags for categorizing and grouping methods |
 
@@ -781,7 +757,7 @@ Request body for `POST /asyncapi/parse`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `str` | — | Spec |
+| `spec` | `dict[str, Any]` | — | Spec |
 
 ---
 
@@ -809,7 +785,7 @@ A single channel extracted from an AsyncAPI spec
 | `name` | `str` | — | Channel key from the spec (e.g. "chat/messages") |
 | `address` | `str` | — | Channel address / path |
 | `messages` | `list[str]` | — | Message names declared on this channel |
-| `bindings` | `str \| None` | `None` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
+| `bindings` | `dict[str, Any] \| None` | `None` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
 
@@ -820,7 +796,7 @@ A resolved message (name + JSON Schema)
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `str` | — | Message name |
-| `schema` | `str \| None` | `None` | Resolved JSON Schema for the message payload, if available |
+| `schema` | `dict[str, Any] \| None` | `None` | Resolved JSON Schema for the message payload, if available |
 
 ---
 
@@ -1034,13 +1010,17 @@ def default() -> RateLimitConfig
 
 ---
 
+#### Request
+
+---
+
 #### Response
 
 HTTP Response with custom status code, headers, and content
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `str \| None` | `None` | Response body content |
+| `content` | `dict[str, Any] \| None` | `None` | Response body content |
 | `status_code` | `int` | — | HTTP status code (defaults to 200) |
 | `headers` | `dict[str, str]` | `{}` | Response headers |
 
@@ -1145,7 +1125,7 @@ Provide a raw JSON schema for the request body.
 **Signature:**
 
 ```python
-def request_schema_json(self, schema: str) -> RouteBuilder
+def request_schema_json(self, schema: dict[str, Any]) -> RouteBuilder
 ```
 
 #### response_schema_json()
@@ -1155,7 +1135,7 @@ Provide a raw JSON schema for the response body.
 **Signature:**
 
 ```python
-def response_schema_json(self, schema: str) -> RouteBuilder
+def response_schema_json(self, schema: dict[str, Any]) -> RouteBuilder
 ```
 
 #### params_schema_json()
@@ -1165,7 +1145,7 @@ Provide a raw JSON schema for request parameters.
 **Signature:**
 
 ```python
-def params_schema_json(self, schema: str) -> RouteBuilder
+def params_schema_json(self, schema: dict[str, Any]) -> RouteBuilder
 ```
 
 #### file_params_json()
@@ -1175,7 +1155,7 @@ Provide multipart file parameter configuration.
 **Signature:**
 
 ```python
-def file_params_json(self, schema: str) -> RouteBuilder
+def file_params_json(self, schema: dict[str, Any]) -> RouteBuilder
 ```
 
 #### cors()
@@ -1309,7 +1289,7 @@ retry: 3000
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `event_type` | `str \| None` | `None` | Event type (optional) |
-| `data` | `str` | — | Event data (JSON value) |
+| `data` | `dict[str, Any]` | — | Event data (JSON value) |
 | `id` | `str \| None` | `None` | Event ID (optional, for client-side reconnection) |
 | `retry` | `int \| None` | `None` | Retry timeout in milliseconds (optional) |
 
@@ -1339,72 +1319,6 @@ if the connection is lost. The client browser will automatically handle reconnec
 
 ```python
 def with_retry(self, retry_ms: int) -> SseEvent
-```
-
----
-
-#### SseEventProducer
-
-SSE event producer trait
-
-Implement this trait to create custom Server-Sent Event (SSE) producers for your application.
-The producer generates events that are streamed to connected clients.
-
-### Understanding SSE
-
-Server-Sent Events (SSE) provide one-way communication from server to client over HTTP.
-Unlike WebSocket, SSE uses standard HTTP and automatically handles reconnection.
-Use SSE when you need to push data to clients without bidirectional communication.
-
-### Implementing the Trait
-
-You must implement the `next_event` method to generate events. The `on_connect` and
-`on_disconnect` methods are optional lifecycle hooks.
-
-### Methods
-
-#### next_event()
-
-Generate the next event
-
-Called repeatedly to produce the event stream. Should return `Some(event)` when
-an event is ready to send, or `None` when the stream should end.
-
-**Returns:**
-
-- `Some(event)` - Event to send to the client
-- `None` - Stream complete, connection will close
-
-**Signature:**
-
-```python
-def next_event(self) -> Future
-```
-
-#### on_connect()
-
-Called when a client connects to the SSE endpoint
-
-Optional lifecycle hook invoked when a new SSE connection is established.
-Default implementation does nothing.
-
-**Signature:**
-
-```python
-def on_connect(self) -> Future
-```
-
-#### on_disconnect()
-
-Called when a client disconnects from the SSE endpoint
-
-Optional lifecycle hook invoked when an SSE connection is closed (either by the
-client or the stream ending). Default implementation does nothing.
-
-**Signature:**
-
-```python
-def on_disconnect(self) -> Future
 ```
 
 ---
@@ -1440,7 +1354,7 @@ Send a GraphQL query/mutation to a custom endpoint
 **Signature:**
 
 ```python
-def graphql_at(self, endpoint: str, query: str, variables: str, operation_name: str) -> ResponseSnapshot
+def graphql_at(self, endpoint: str, query: str, variables: dict[str, Any], operation_name: str) -> ResponseSnapshot
 ```
 
 #### graphql()
@@ -1450,7 +1364,7 @@ Send a GraphQL query/mutation
 **Signature:**
 
 ```python
-def graphql(self, query: str, variables: str, operation_name: str) -> ResponseSnapshot
+def graphql(self, query: str, variables: dict[str, Any], operation_name: str) -> ResponseSnapshot
 ```
 
 #### graphql_subscription_at()
@@ -1463,7 +1377,7 @@ After the first payload is received, this client sends `complete` to unsubscribe
 **Signature:**
 
 ```python
-def graphql_subscription_at(self, endpoint: str, query: str, variables: str, operation_name: str) -> GraphQlSubscriptionSnapshot
+def graphql_subscription_at(self, endpoint: str, query: str, variables: dict[str, Any], operation_name: str) -> GraphQlSubscriptionSnapshot
 ```
 
 #### graphql_subscription()
@@ -1475,7 +1389,7 @@ Uses `/graphql` as the default subscription endpoint.
 **Signature:**
 
 ```python
-def graphql_subscription(self, query: str, variables: str, operation_name: str) -> GraphQlSubscriptionSnapshot
+def graphql_subscription(self, query: str, variables: dict[str, Any], operation_name: str) -> GraphQlSubscriptionSnapshot
 ```
 
 ---
@@ -1552,10 +1466,10 @@ Request body for `POST /asyncapi/validate`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `str` | — | Spec |
+| `spec` | `dict[str, Any]` | — | Spec |
 | `channel` | `str` | — | Channel |
 | `message` | `str` | — | Message |
-| `payload` | `str` | — | Payload |
+| `payload` | `dict[str, Any]` | — | Payload |
 
 ---
 
@@ -1567,67 +1481,6 @@ Response body for `POST /asyncapi/validate`
 |-------|------|---------|-------------|
 | `valid` | `bool` | — | Valid |
 | `errors` | `list[str]` | — | Errors |
-
----
-
-#### WebSocketHandler
-
-WebSocket message handler trait
-
-Implement this trait to create custom WebSocket message handlers for your application.
-The handler processes JSON messages received from WebSocket clients and can optionally
-send responses back.
-
-### Implementing the Trait
-
-You must implement the `handle_message` method. The `on_connect` and `on_disconnect`
-methods are optional and provide lifecycle hooks.
-
-### Methods
-
-#### handle_message()
-
-Handle incoming WebSocket message
-
-Called whenever a text message is received from a WebSocket client.
-Messages are automatically parsed as JSON.
-
-**Returns:**
-
-- `Some(value)` - JSON value to send back to the client
-- `None` - No response to send
-
-**Signature:**
-
-```python
-def handle_message(self, message: Value) -> Future
-```
-
-#### on_connect()
-
-Called when a client connects to the WebSocket
-
-Optional lifecycle hook invoked when a new WebSocket connection is established.
-Default implementation does nothing.
-
-**Signature:**
-
-```python
-def on_connect(self) -> Future
-```
-
-#### on_disconnect()
-
-Called when a client disconnects from the WebSocket
-
-Optional lifecycle hook invoked when a WebSocket connection is closed
-(either by the client or due to an error). Default implementation does nothing.
-
-**Signature:**
-
-```python
-def on_disconnect(self) -> Future
-```
 
 ---
 

@@ -95,16 +95,6 @@ Create a new application with the default server configuration.
 SpikardApp spikard_new();
 ```
 
-#### spikard_config()
-
-Set the server configuration.
-
-**Signature:**
-
-```c
-SpikardApp spikard_config(SpikardServerConfig config);
-```
-
 #### spikard_merge_axum_router()
 
 Attach an existing Axum router to this application, returning ownership.
@@ -161,20 +151,6 @@ void spikard_run();
 SpikardApp spikard_default();
 ```
 
-#### spikard_route()
-
-Register a route using the provided builder and handler function.
-
-**Errors:**
-
-Returns an error if route construction fails or if the handler registration fails.
-
-**Signature:**
-
-```c
-SpikardApp spikard_route(SpikardRouteBuilder builder, SpikardH handler);
-```
-
 ---
 
 #### SpikardAsyncApiConfig
@@ -184,7 +160,7 @@ AsyncAPI HTTP endpoint configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `bool` | — | Enable AsyncAPI endpoints (default: false) |
-| `spec` | `const char**` | `NULL` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+| `spec` | `void**` | `NULL` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 
@@ -687,8 +663,8 @@ enabling discovery and documentation of RPC-compatible endpoints.
 |-------|------|---------|-------------|
 | `method_name` | `const char*` | — | The JSON-RPC method name (e.g., "user.create") |
 | `description` | `const char**` | `NULL` | Optional description of what the method does |
-| `params_schema` | `const char**` | `NULL` | Optional JSON Schema for method parameters |
-| `result_schema` | `const char**` | `NULL` | Optional JSON Schema for the result |
+| `params_schema` | `void**` | `NULL` | Optional JSON Schema for method parameters |
+| `result_schema` | `void**` | `NULL` | Optional JSON Schema for the result |
 | `deprecated` | `bool` | `/* serde(default) */` | Whether this method is deprecated |
 | `tags` | `const char**` | `/* serde(default) */` | Tags for categorizing and grouping methods |
 
@@ -755,7 +731,7 @@ Request body for `POST /asyncapi/parse`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `const char*` | — | Spec |
+| `spec` | `void*` | — | Spec |
 
 ---
 
@@ -783,7 +759,7 @@ A single channel extracted from an AsyncAPI spec
 | `name` | `const char*` | — | Channel key from the spec (e.g. "chat/messages") |
 | `address` | `const char*` | — | Channel address / path |
 | `messages` | `const char**` | — | Message names declared on this channel |
-| `bindings` | `const char**` | `NULL` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
+| `bindings` | `void**` | `NULL` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
 
@@ -794,7 +770,7 @@ A resolved message (name + JSON Schema)
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `const char*` | — | Message name |
-| `schema` | `const char**` | `NULL` | Resolved JSON Schema for the message payload, if available |
+| `schema` | `void**` | `NULL` | Resolved JSON Schema for the message payload, if available |
 
 ---
 
@@ -1001,13 +977,17 @@ SpikardRateLimitConfig spikard_default();
 
 ---
 
+#### SpikardRequest
+
+---
+
 #### SpikardResponse
 
 HTTP Response with custom status code, headers, and content
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `const char**` | `NULL` | Response body content |
+| `content` | `void**` | `NULL` | Response body content |
 | `status_code` | `uint16_t` | — | HTTP status code (defaults to 200) |
 | `headers` | `void*` | `NULL` | Response headers |
 
@@ -1076,7 +1056,7 @@ Provide a raw JSON schema for the request body.
 **Signature:**
 
 ```c
-SpikardRouteBuilder spikard_request_schema_json(const char* schema);
+SpikardRouteBuilder spikard_request_schema_json(void* schema);
 ```
 
 #### spikard_response_schema_json()
@@ -1086,7 +1066,7 @@ Provide a raw JSON schema for the response body.
 **Signature:**
 
 ```c
-SpikardRouteBuilder spikard_response_schema_json(const char* schema);
+SpikardRouteBuilder spikard_response_schema_json(void* schema);
 ```
 
 #### spikard_params_schema_json()
@@ -1096,7 +1076,7 @@ Provide a raw JSON schema for request parameters.
 **Signature:**
 
 ```c
-SpikardRouteBuilder spikard_params_schema_json(const char* schema);
+SpikardRouteBuilder spikard_params_schema_json(void* schema);
 ```
 
 #### spikard_file_params_json()
@@ -1106,7 +1086,7 @@ Provide multipart file parameter configuration.
 **Signature:**
 
 ```c
-SpikardRouteBuilder spikard_file_params_json(const char* schema);
+SpikardRouteBuilder spikard_file_params_json(void* schema);
 ```
 
 #### spikard_cors()
@@ -1238,7 +1218,7 @@ retry: 3000
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `event_type` | `const char**` | `NULL` | Event type (optional) |
-| `data` | `const char*` | — | Event data (JSON value) |
+| `data` | `void*` | — | Event data (JSON value) |
 | `id` | `const char**` | `NULL` | Event ID (optional, for client-side reconnection) |
 | `retry` | `uint64_t*` | `NULL` | Retry timeout in milliseconds (optional) |
 
@@ -1268,72 +1248,6 @@ if the connection is lost. The client browser will automatically handle reconnec
 
 ```c
 SpikardSseEvent spikard_with_retry(uint64_t retry_ms);
-```
-
----
-
-#### SpikardSseEventProducer
-
-SSE event producer trait
-
-Implement this trait to create custom Server-Sent Event (SSE) producers for your application.
-The producer generates events that are streamed to connected clients.
-
-### Understanding SSE
-
-Server-Sent Events (SSE) provide one-way communication from server to client over HTTP.
-Unlike WebSocket, SSE uses standard HTTP and automatically handles reconnection.
-Use SSE when you need to push data to clients without bidirectional communication.
-
-### Implementing the Trait
-
-You must implement the `next_event` method to generate events. The `on_connect` and
-`on_disconnect` methods are optional lifecycle hooks.
-
-### Methods
-
-#### spikard_next_event()
-
-Generate the next event
-
-Called repeatedly to produce the event stream. Should return `Some(event)` when
-an event is ready to send, or `NULL` when the stream should end.
-
-**Returns:**
-
-- `Some(event)` - Event to send to the client
-- `NULL` - Stream complete, connection will close
-
-**Signature:**
-
-```c
-SpikardFuture spikard_next_event();
-```
-
-#### spikard_on_connect()
-
-Called when a client connects to the SSE endpoint
-
-Optional lifecycle hook invoked when a new SSE connection is established.
-Default implementation does nothing.
-
-**Signature:**
-
-```c
-SpikardFuture spikard_on_connect();
-```
-
-#### spikard_on_disconnect()
-
-Called when a client disconnects from the SSE endpoint
-
-Optional lifecycle hook invoked when an SSE connection is closed (either by the
-client or the stream ending). Default implementation does nothing.
-
-**Signature:**
-
-```c
-SpikardFuture spikard_on_disconnect();
 ```
 
 ---
@@ -1423,10 +1337,10 @@ Request body for `POST /asyncapi/validate`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `const char*` | — | Spec |
+| `spec` | `void*` | — | Spec |
 | `channel` | `const char*` | — | Channel |
 | `message` | `const char*` | — | Message |
-| `payload` | `const char*` | — | Payload |
+| `payload` | `void*` | — | Payload |
 
 ---
 
@@ -1438,67 +1352,6 @@ Response body for `POST /asyncapi/validate`
 |-------|------|---------|-------------|
 | `valid` | `bool` | — | Valid |
 | `errors` | `const char**` | — | Errors |
-
----
-
-#### SpikardWebSocketHandler
-
-WebSocket message handler trait
-
-Implement this trait to create custom WebSocket message handlers for your application.
-The handler processes JSON messages received from WebSocket clients and can optionally
-send responses back.
-
-### Implementing the Trait
-
-You must implement the `handle_message` method. The `on_connect` and `on_disconnect`
-methods are optional and provide lifecycle hooks.
-
-### Methods
-
-#### spikard_handle_message()
-
-Handle incoming WebSocket message
-
-Called whenever a text message is received from a WebSocket client.
-Messages are automatically parsed as JSON.
-
-**Returns:**
-
-- `Some(value)` - JSON value to send back to the client
-- `NULL` - No response to send
-
-**Signature:**
-
-```c
-SpikardFuture spikard_handle_message(SpikardValue message);
-```
-
-#### spikard_on_connect()
-
-Called when a client connects to the WebSocket
-
-Optional lifecycle hook invoked when a new WebSocket connection is established.
-Default implementation does nothing.
-
-**Signature:**
-
-```c
-SpikardFuture spikard_on_connect();
-```
-
-#### spikard_on_disconnect()
-
-Called when a client disconnects from the WebSocket
-
-Optional lifecycle hook invoked when a WebSocket connection is closed
-(either by the client or due to an error). Default implementation does nothing.
-
-**Signature:**
-
-```c
-SpikardFuture spikard_on_disconnect();
-```
 
 ---
 
