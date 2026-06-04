@@ -6,7 +6,7 @@ license = "MIT"
 description = "Rust-centric multi-language HTTP framework with polyglot bindings"
 readme = false
 keywords = ["framework", "http", "polyglot", "rust", "web"]
-categories = ["text-processing"]
+categories = []
 
 # `pyo3-async-runtimes` and `serde_json` are emitted unconditionally above so
 # the manifest is stable across regens, but for umbrella crates with no

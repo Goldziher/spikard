@@ -556,12 +556,6 @@ methods = [
   # bindings drive the server through `App.serve` / `ServerConfig` instead. Same
   # non-delegatable shape as `App.config` from the napi `&self` perspective.
   "App.run",
-  # `are_headers_allowed` is a private free function in `crates/spikard-http/src/cors.rs`,
-  # NOT a method on `CorsConfig`. Alef's extractor (post-v0.23.1) misassociates it with
-  # `CorsConfig` and emits a `compile_error!` for non-delegatable methods. Excluding
-  # the misattributed name silences the diagnostic until the alef extractor's
-  # association heuristic is tightened.
-  "CorsConfig.are_headers_allowed",
   "RouteBuilder.request_body",
   "RouteBuilder.response_body",
   "RouteBuilder.params",
@@ -1068,6 +1062,11 @@ imports = ["@spikard/node"]
 # (`Spikard::App`). alef v0.22.27+ ruby harness uses the configured `app_class`
 # verbatim (without prefixing `::`), so the FQDN is required.
 app_class = "Spikard::App"
+
+[crates.e2e.harness.overrides.swift]
+# Swift module names are PascalCase (capitalized). The base config specifies
+# lowercase "spikard", but Swift requires `import Spikard` (uppercase).
+imports = ["Spikard"]
 
 [crates.e2e.call]
 result_var = "response"

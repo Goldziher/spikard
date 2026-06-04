@@ -6,7 +6,7 @@ license = "MIT"
 description = "Rust-centric multi-language HTTP framework with polyglot bindings"
 readme = false
 keywords = ["framework", "http", "polyglot", "rust", "web"]
-categories = ["text-processing"]
+categories = []
 
 [package.metadata.cargo-machete]
 ignored = ["tokio"]

@@ -933,14 +933,6 @@ int32_t spikard_cors_config_is_method_allowed(const SPIKARDCorsConfig *this_,
                                               const char *method);
 
 /**
- * Check if all requested headers are allowed (O(n) where n = num requested headers)
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-int32_t spikard_cors_config_are_headers_allowed(const SPIKARDCorsConfig *this_,
-                                                const char *requested);
-
-/**
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
  */

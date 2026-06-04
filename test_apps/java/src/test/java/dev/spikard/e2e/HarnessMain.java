@@ -12,19 +12,25 @@ public class HarnessMain {
     public static void main(String[] args) {
         try {
             // Resolve the port: read SUT_URL env var (e.g., http://127.0.0.1:8000)
-            // or fall back to the configured default port
+            // or discover an available port dynamically
             String sutUrl = System.getenv("SUT_URL");
-            int effectivePort = 8000;
+            int effectivePort;
             String effectiveHost = "127.0.0.1";
 
             if (sutUrl != null && !sutUrl.isEmpty()) {
                 try {
                     URI uri = new URI(sutUrl);
                     effectiveHost = uri.getHost() != null ? uri.getHost() : effectiveHost;
-                    effectivePort = uri.getPort() > 0 ? uri.getPort() : effectivePort;
+                    effectivePort = uri.getPort() > 0 ? uri.getPort() : 8000;
                 } catch (Exception e) {
                     System.err.println("Warning: failed to parse SUT_URL: " + e.getMessage());
+                    effectivePort = 8000;
                 }
+            } else {
+                // Discover an available port via ServerSocket probe
+                java.net.ServerSocket probe = new java.net.ServerSocket(0, 1, java.net.InetAddress.getByName(effectiveHost));
+                effectivePort = probe.getLocalPort();
+                probe.close();
             }
 
             // Create and configure the app
@@ -100,13 +106,15 @@ public class HarnessMain {
                 }
             }
 
-            // Signal that harness is ready and listening
+            // Emit the SUT_URL before blocking on app.run()
+            // Note: the harness will use the effective port, which may differ
+            // from the default if discovered dynamically or set via SUT_URL env var.
             String harnessUrl = "http://" + effectiveHost + ":" + effectivePort;
             System.out.println("SUT_URL=" + harnessUrl);
             System.out.flush();
 
             // Run the app (blocks indefinitely)
-            // The app is expected to listen on the configured port.
+            // The app is expected to listen on the configured default port.
             app.run();
         } catch (Exception e) {
             e.printStackTrace();

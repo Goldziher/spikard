@@ -147,7 +147,7 @@ for fixture_id, fixture in _FIXTURES.items():
             return cors_handler_fn
 
         # Register the OPTIONS handler
-        options_method = getattr(Method, "Options", None)
+        options_method = getattr(Method, "OPTIONS", None)
         if options_method is not None:
             options_builder = RouteBuilder(options_method, full_route)
             app.route(options_builder)(make_cors_preflight_handler(cors_config))
