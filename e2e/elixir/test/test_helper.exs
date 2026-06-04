@@ -1,6 +1,8 @@
-# Start a named Finch pool before ExUnit with HTTP/1 protocol configuration.
-# Tests pass finch: AlefE2EFinch to Req, which uses this pool. Force HTTP/1 since
-# the test SUT only supports HTTP/1.1 (not HTTP/2 which Finch defaults to).
+# Start a named Finch pool before ExUnit configured to use HTTP/1 only.
+# Tests pass `finch: AlefE2EFinch` on every Req call; the pool's protocol
+# selection (via `pools.default.protocols: [:http1]`) is the canonical place
+# to pin the wire protocol since Req rejects per-call `:connect_options` when
+# `:finch` is set.
 {:ok, _} = Finch.start_link(name: AlefE2EFinch, pools: %{:default => [protocols: [:http1]]})
 
 ExUnit.start()
