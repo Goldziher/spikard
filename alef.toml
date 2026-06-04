@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.23.0"
+alef_version = "0.23.2"
 languages = [
   "python",
   "node",
@@ -11,6 +11,7 @@ languages = [
   "java",
   "csharp",
   "kotlin",
+  "kotlin_android",
   "dart",
   "swift",
   "zig",
@@ -28,6 +29,7 @@ go = "struct"
 java = "record"
 csharp = "record"
 kotlin = "data-class"
+kotlin_android = "data-class"
 dart = "class"
 swift = "struct"
 zig = "struct"
@@ -327,6 +329,10 @@ build_release = "cargo build --release --manifest-path packages/dart/rust/Cargo.
 package = "dev.spikard"
 target = "jvm"
 
+[crates.kotlin_android]
+package = "dev.spikard"
+target = "android"
+
 [crates.swift]
 module_name = "Spikard"
 package_name = "Spikard"
@@ -354,6 +360,12 @@ before = "cargo build -p spikard-ffi"
 build = "cd packages/kotlin && gradle build -x test --no-daemon"
 build_release = "cd packages/kotlin && gradle build -x test --no-daemon"
 
+[crates.build_commands.kotlin_android]
+precondition = "command -v gradle >/dev/null 2>&1"
+before = "cargo build -p spikard-ffi"
+build = "cd packages/kotlin-android && gradle build -x test --no-daemon"
+build_release = "cd packages/kotlin-android && gradle build -x test --no-daemon"
+
 [crates.build_commands.swift]
 precondition = "command -v swift >/dev/null 2>&1"
 build = "INPUT_PACKAGE_DIR=packages/swift INPUT_CRATE_NAME=spikard-swift INPUT_BUILD_PROFILE=dev INPUT_DRY_RUN=false bash ../kreuzberg-dev/actions/build-swift-package/scripts/build.sh && cd packages/swift && CLANG_MODULE_CACHE_PATH=.build/clang-module-cache swift build"
@@ -376,7 +388,7 @@ module_name = "spikard"
 owner_type = "App"
 constructor = "new"
 configurators = ["config"]
-skip_languages = ["wasm"]
+skip_languages = ["wasm", "kotlin_android"]
 # napi `JsApp` (and the parallel wrappers in other host backends) wrap the real
 # owner behind `inner: Arc<Mutex<spikard::App>>`. The verb-method emission needs
 # to unlock that mutex before forwarding to the base method on the real owner.
@@ -472,6 +484,7 @@ go = "packages/go/"
 java = "packages/java/src/main/java/"
 csharp = "packages/csharp/src/"
 kotlin = "packages/kotlin/src/main/kotlin/dev/spikard/kt/"
+kotlin_android = "packages/kotlin-android/src/main/kotlin/dev/spikard/android/"
 dart = "packages/dart/lib/src/"
 swift = "packages/swift/Sources/Spikard/"
 zig = "packages/zig/src/"
@@ -539,6 +552,16 @@ methods = [
   # wrapper (it would consume the Arc<Mutex<App>> inner); configuration is wired via
   # `ServerConfig` builder + `App::new(config)` in the binding-side service entrypoint.
   "App.config",
+  # `App.run(self) -> Result<(), AppError>` consumes `self` by value and is async;
+  # bindings drive the server through `App.serve` / `ServerConfig` instead. Same
+  # non-delegatable shape as `App.config` from the napi `&self` perspective.
+  "App.run",
+  # `are_headers_allowed` is a private free function in `crates/spikard-http/src/cors.rs`,
+  # NOT a method on `CorsConfig`. Alef's extractor (post-v0.23.1) misassociates it with
+  # `CorsConfig` and emits a `compile_error!` for non-delegatable methods. Excluding
+  # the misattributed name silences the diagnostic until the alef extractor's
+  # association heuristic is tightened.
+  "CorsConfig.are_headers_allowed",
   "RouteBuilder.request_body",
   "RouteBuilder.response_body",
   "RouteBuilder.params",
@@ -824,6 +847,11 @@ precondition = "command -v gradle >/dev/null 2>&1"
 format = "cd packages/kotlin && gradle ktlintFormat --no-daemon"
 check = "cd packages/kotlin && gradle ktlintCheck --no-daemon"
 
+[crates.lint.kotlin_android]
+precondition = "command -v gradle >/dev/null 2>&1"
+format = "cd packages/kotlin-android && gradle ktlintFormat --no-daemon"
+check = "cd packages/kotlin-android && gradle ktlintCheck --no-daemon"
+
 [crates.lint.dart]
 precondition = "command -v dart >/dev/null 2>&1"
 format = "cd packages/dart && dart format ."
@@ -942,6 +970,12 @@ before = "cargo build --release -p spikard-ffi && cargo build --manifest-path e2
 command = "cd packages/kotlin && gradle test --no-daemon"
 e2e = "rm -f /tmp/alef_kotlin_ms.log; (tail -f /dev/null | e2e/rust/target/release/mock-server fixtures) >/tmp/alef_kotlin_ms.log 2>&1 </dev/null & MS=$!; for i in $(seq 1 200); do U=$(sed -n 's/^MOCK_SERVER_URL=//p' /tmp/alef_kotlin_ms.log | head -1); [ -n \"$U\" ] && break; sleep 0.1; done; echo \"MOCK_SERVER_URL=$U\"; if [ -z \"$U\" ]; then echo '--- mock-server log ---'; cat /tmp/alef_kotlin_ms.log; kill $MS 2>/dev/null || true; exit 1; fi; cd e2e/kotlin && SUT_URL=\"$U\" gradle test --no-daemon; RC=$?; if [ $RC -ne 0 ]; then echo '--- mock-server log ---'; cat /tmp/alef_kotlin_ms.log; fi; kill $MS 2>/dev/null || true; wait $MS 2>/dev/null || true; exit $RC"
 
+[crates.test.kotlin_android]
+precondition = "command -v gradle >/dev/null 2>&1"
+before = "cargo build --release -p spikard-ffi && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
+command = "cd packages/kotlin-android && gradle test --no-daemon"
+e2e = "rm -f /tmp/alef_kotlin_android_ms.log; (tail -f /dev/null | e2e/rust/target/release/mock-server fixtures) >/tmp/alef_kotlin_android_ms.log 2>&1 </dev/null & MS=$!; for i in $(seq 1 200); do U=$(sed -n 's/^MOCK_SERVER_URL=//p' /tmp/alef_kotlin_android_ms.log | head -1); [ -n \"$U\" ] && break; sleep 0.1; done; echo \"MOCK_SERVER_URL=$U\"; if [ -z \"$U\" ]; then echo '--- mock-server log ---'; cat /tmp/alef_kotlin_android_ms.log; kill $MS 2>/dev/null || true; exit 1; fi; cd e2e/kotlin_android && SUT_URL=\"$U\" gradle test --no-daemon; RC=$?; if [ $RC -ne 0 ]; then echo '--- mock-server log ---'; cat /tmp/alef_kotlin_android_ms.log; fi; kill $MS 2>/dev/null || true; wait $MS 2>/dev/null || true; exit $RC"
+
 [crates.test.dart]
 precondition = "command -v dart >/dev/null 2>&1"
 before = "cargo build --release --manifest-path packages/dart/rust/Cargo.toml && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
@@ -990,6 +1024,7 @@ languages = [
   "java",
   "csharp",
   "kotlin",
+  "kotlin_android",
   "dart",
   "swift",
   "zig",
@@ -1075,6 +1110,10 @@ path = "../../packages/csharp/Spikard/Spikard.csproj"
 module = "dev.spikard"
 path = "../../packages/kotlin"
 
+[crates.e2e.packages.kotlin_android]
+module = "dev.spikard"
+path = "../../packages/kotlin-android"
+
 [crates.e2e.packages.dart]
 name = "spikard"
 path = "../../packages/dart"
@@ -1129,6 +1168,9 @@ name = "Spikard"
 # sibling Java facade `dev.spikard:spikard`. The generated registry coordinate
 # is `dev.spikard:spikard-kotlin:<version>`.
 name = "spikard-kotlin"
+
+[crates.e2e.registry.packages.kotlin_android]
+name = "spikard-kotlin-android"
 
 [crates.e2e.registry.packages.dart]
 name = "spikard"

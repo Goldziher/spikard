@@ -1,6 +1,6 @@
-# Start a named Finch pool before ExUnit. When tests call Req with
-# connect_options: [protocols: [:http1]], they bypass Req's default lazy
-# init and require an explicit Finch supervisor to be running.
+# Start a named Finch pool before ExUnit. Tests pass finch: AlefE2EFinch
+# to Req.get/post/etc, which requires an explicit Finch supervisor to be running
+# before ExUnit starts.
 {:ok, _} = Finch.start_link(name: AlefE2EFinch)
 
 ExUnit.start()

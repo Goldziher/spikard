@@ -140,7 +140,7 @@ mavenPublishing {
     scm {
       url.set("https://github.com/Goldziher/spikard")
       connection.set("scm:git:git://github.com/Goldziher/spikard.git")
-      developerConnection.set("scm:git:ssh://git@github.com:Goldziher/spikard.git")
+      developerConnection.set("scm:git:ssh://git@github.com/Goldziher/spikard.git")
     }
   }
 }

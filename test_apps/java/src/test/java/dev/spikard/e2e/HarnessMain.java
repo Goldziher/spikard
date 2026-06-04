@@ -93,7 +93,7 @@ public class HarnessMain {
                 RouteBuilder builder = RouteBuilder.create(Method.valueOf(method), fullRoute);
 
                 // Register the handler with the app
-                int regResult = app.route(handler, builder);
+                int regResult = app.registerAppRoute(handler, builder);
 
                 if (regResult != 0) {
                     System.err.println("Warning: failed to register fixture handler for " + fixtureId);

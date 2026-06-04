@@ -29,7 +29,7 @@
 
     <scm>
         <connection>scm:git:git://github.com/Goldziher/spikard.git</connection>
-        <developerConnection>scm:git:ssh://github.com:Goldziher/spikard.git</developerConnection>
+        <developerConnection>scm:git:ssh://git@github.com/Goldziher/spikard.git</developerConnection>
         <url>https://github.com/Goldziher/spikard</url>
     </scm>
 

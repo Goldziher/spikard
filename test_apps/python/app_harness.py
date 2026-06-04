@@ -93,9 +93,23 @@ for fixture_id, fixture in _FIXTURES.items():
         # Build a CORS preflight handler
         def make_cors_preflight_handler(cors_cfg):
             def cors_handler_fn(*args, **kwargs):
-                origin = kwargs.get("origin", "") or ""
-                request_method = kwargs.get("access-control-request-method", "") or ""
-                request_headers = kwargs.get("access-control-request-headers", "") or ""
+                # Case-insensitive header lookup helper (HTTP headers are case-insensitive)
+                def get_header_value(headers_dict, name):
+                    if not headers_dict:
+                        return ""
+                    # Try direct lookup first
+                    if name in headers_dict:
+                        return headers_dict.get(name) or ""
+                    # Fallback: search keys case-insensitively
+                    lower_name = name.lower()
+                    for key, value in headers_dict.items():
+                        if key.lower() == lower_name:
+                            return value or ""
+                    return ""
+
+                origin = get_header_value(kwargs, "origin")
+                request_method = get_header_value(kwargs, "access-control-request-method")
+                request_headers = get_header_value(kwargs, "access-control-request-headers")
 
                 # Simple CORS validation: check origin and method
                 allowed_origins = cors_cfg.get("allowed_origins") or []

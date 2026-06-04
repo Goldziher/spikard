@@ -1,7 +1,7 @@
-# Start a named Finch pool before ExUnit. When tests call Req with
-# connect_options: [protocols: [:http1]], they bypass Req's default lazy
-# init and require an explicit Finch supervisor to be running.
-{:ok, _} = Finch.start_link(name: AlefE2EFinch)
+# Start a named Finch pool before ExUnit with HTTP/1 protocol configuration.
+# Tests pass finch: AlefE2EFinch to Req, which uses this pool. Force HTTP/1 since
+# the test SUT only supports HTTP/1.1 (not HTTP/2 which Finch defaults to).
+{:ok, _} = Finch.start_link(name: AlefE2EFinch, pools: %{:default => [protocols: [:http1]]})
 
 ExUnit.start()
 
