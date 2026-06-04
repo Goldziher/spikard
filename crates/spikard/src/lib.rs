@@ -21,7 +21,6 @@ use axum::http::StatusCode;
 use axum::routing::get as axum_get;
 use schemars::JsonSchema;
 use serde::de::DeserializeOwned;
-use serde_json::Value;
 #[cfg(feature = "di")]
 use spikard_core::di;
 pub use spikard_graphql::{FullSchemaConfig, GraphQLRouteConfig, QueryMutationConfig, QueryOnlyConfig, SchemaConfig};
@@ -289,10 +288,10 @@ pub struct RouteBuilder {
     method: Method,
     path: String,
     handler_name: String,
-    request_schema: Option<Value>,
-    response_schema: Option<Value>,
-    parameter_schema: Option<Value>,
-    file_params: Option<Value>,
+    request_schema: Option<serde_json::Value>,
+    response_schema: Option<serde_json::Value>,
+    parameter_schema: Option<serde_json::Value>,
+    file_params: Option<serde_json::Value>,
     cors: Option<CorsConfig>,
     is_async: bool,
     #[cfg(feature = "di")]
@@ -350,28 +349,28 @@ impl RouteBuilder {
 
     /// Provide a raw JSON schema for the request body.
     #[must_use]
-    pub fn request_schema_json(mut self, schema: Value) -> Self {
+    pub fn request_schema_json(mut self, schema: serde_json::Value) -> Self {
         self.request_schema = Some(schema);
         self
     }
 
     /// Provide a raw JSON schema for the response body.
     #[must_use]
-    pub fn response_schema_json(mut self, schema: Value) -> Self {
+    pub fn response_schema_json(mut self, schema: serde_json::Value) -> Self {
         self.response_schema = Some(schema);
         self
     }
 
     /// Provide a raw JSON schema for request parameters.
     #[must_use]
-    pub fn params_schema_json(mut self, schema: Value) -> Self {
+    pub fn params_schema_json(mut self, schema: serde_json::Value) -> Self {
         self.parameter_schema = Some(schema);
         self
     }
 
     /// Provide multipart file parameter configuration.
     #[must_use]
-    pub fn file_params_json(mut self, schema: Value) -> Self {
+    pub fn file_params_json(mut self, schema: serde_json::Value) -> Self {
         self.file_params = Some(schema);
         self
     }
@@ -503,13 +502,13 @@ fn sanitize_identifier(input: &str) -> String {
     ident.trim_matches('_').to_string()
 }
 
-fn schema_for<T: JsonSchema>() -> Value {
+fn schema_for<T: JsonSchema>() -> serde_json::Value {
     let root = schemars::schema_for!(T);
     match serde_json::to_value(root) {
         Ok(value) => value.get("schema").cloned().unwrap_or(value),
         Err(e) => {
             eprintln!("warning: failed to serialize schema: {e}, returning null");
-            Value::Null
+            serde_json::Value::Null
         }
     }
 }
@@ -588,7 +587,7 @@ impl RequestContext {
 
     /// Borrow the parsed query parameters as JSON.
     #[must_use]
-    pub fn query_value(&self) -> &Value {
+    pub fn query_value(&self) -> &serde_json::Value {
         &self.data.query_params
     }
 
@@ -646,7 +645,7 @@ impl RequestContext {
 
     /// Borrow the raw JSON request body.
     #[must_use]
-    pub fn body_value(&self) -> &Value {
+    pub fn body_value(&self) -> &serde_json::Value {
         &self.data.body
     }
 
@@ -818,11 +817,11 @@ mod tests {
             path: "/users/{id}".to_string(),
             headers: std::sync::Arc::new(headers),
             cookies: std::sync::Arc::new(cookies),
-            query_params: std::sync::Arc::new(Value::Object(serde_json::Map::new())),
+            query_params: std::sync::Arc::new(serde_json::Value::Object(serde_json::Map::new())),
             validated_params: None,
             raw_query_params: std::sync::Arc::new(HashMap::new()),
             path_params: std::sync::Arc::new(path_params),
-            body: std::sync::Arc::new(Value::Null),
+            body: std::sync::Arc::new(serde_json::Value::Null),
             raw_body: None,
             #[cfg(feature = "di")]
             dependencies: None,

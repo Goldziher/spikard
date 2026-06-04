@@ -3,14 +3,13 @@
 //! Response types for returning custom responses with status codes, headers, and content
 
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::collections::HashMap;
 
 /// HTTP Response with custom status code, headers, and content
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Response {
     /// Response body content
-    pub content: Option<Value>,
+    pub content: Option<serde_json::Value>,
     /// HTTP status code (defaults to 200)
     pub status_code: u16,
     /// Response headers
@@ -19,7 +18,7 @@ pub struct Response {
 
 impl Response {
     /// Create a new Response with default status 200
-    pub fn new(content: Option<Value>) -> Self {
+    pub fn new(content: Option<serde_json::Value>) -> Self {
         Self {
             content,
             status_code: 200,
@@ -28,7 +27,7 @@ impl Response {
     }
 
     /// Create a response with a specific status code
-    pub fn with_status(content: Option<Value>, status_code: u16) -> Self {
+    pub fn with_status(content: Option<serde_json::Value>, status_code: u16) -> Self {
         Self {
             content,
             status_code,

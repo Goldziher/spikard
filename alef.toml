@@ -48,7 +48,12 @@ replace = 'version = "{version}"'
 # treat them as known (black-box) references so the validator does not emit
 # `unknown_named_type` for them.
 [workspace.opaque_types]
-Request = "axum::http::Request"
+# `Request` carries axum's `Body` generic; without `<axum::body::Body>` the wasm
+# wrapper emits `Arc<axum::http::Request>` (E0107) and the FFI `_free` shim emits
+# `*mut axum::http::Request` (E0107). Including the generic in the rust_path also
+# triggers alef's "skip wasm wrapper for generic paths" rule so wasm-bindgen does
+# not attempt to model the parameterised type as a `#[wasm_bindgen]` class.
+Request = "axum::http::Request<axum::body::Body>"
 RequestData = "spikard_http::handler_trait::RequestData"
 HandlerResult = "spikard_http::handler_trait::HandlerResult"
 
@@ -144,6 +149,9 @@ features = ["di"]
 [crates.node.extra_dependencies]
 serde_bytes = "0.11"
 tokio = { version = "1", features = ["full"] }
+# Required by alef-generated handler bridges that reference
+# `axum::http::Request<axum::body::Body>` (declared opaque type).
+axum = { version = "0.8", default-features = false }
 
 [crates.ruby]
 gem_name = "spikard"
@@ -262,6 +270,13 @@ exclude_types = [
   "MultipartFilePart",
 ]
 
+# Alef declares `Request = "axum::http::Request"` as a workspace opaque, and its
+# FFI codegen emits `_free(ptr: *mut axum::http::Request)` lifecycle symbols so the
+# C-side consumers can free handles. The binding crate therefore needs axum as a
+# direct dependency.
+[crates.ffi.extra_dependencies]
+axum = { version = "0.8", default-features = false }
+
 [crates.go]
 module = "github.com/Goldziher/spikard"
 package_name = "spikard"
@@ -298,6 +313,9 @@ package_name = "Spikard"
 spikard-core = { path = "../../../crates/spikard-core" }
 spikard-graphql = { path = "../../../crates/spikard-graphql" }
 spikard-http = { path = "../../../crates/spikard-http" }
+# Required by alef-generated handler bridges that reference
+# `axum::http::Request<axum::body::Body>` (declared opaque type).
+axum = { version = "0.8", default-features = false }
 
 [crates.csharp]
 namespace = "Spikard"
@@ -487,6 +505,21 @@ methods = [
   "ResponseSnapshot.graphql_data",
   "ResponseSnapshot.graphql_errors",
   "TestingSseEvent.as_json",
+  # Generic inherent methods on App / RouteBuilder — bindings drive registration
+  # through the JSON-schema variants below; the generic builder methods are Rust-only
+  # ergonomics that cannot cross FFI without explicit monomorphization metadata.
+  "App.route",
+  "App.websocket",
+  "App.websocket_with_schemas",
+  "App.sse",
+  "App.sse_with_schema",
+  # `App.config(mut self, ...) -> Self` is non-delegatable through the napi `&self`
+  # wrapper (it would consume the Arc<Mutex<App>> inner); configuration is wired via
+  # `ServerConfig` builder + `App::new(config)` in the binding-side service entrypoint.
+  "App.config",
+  "RouteBuilder.request_body",
+  "RouteBuilder.response_body",
+  "RouteBuilder.params",
 ]
 types = [
   # Not part of public API — closures, Arc<dyn Handler>, internal protocol types
@@ -622,6 +655,8 @@ types = [
   # / lifecycle plumbing that bindings do not need.
   "HookResult",
   "TargetLifecycleHooks",
+  "NativeLifecycleHook",
+  "LocalLifecycleHook",
   "spikard_graphql::error::Result",
   "spikard_graphql::schema::SchemaResult",
 ]

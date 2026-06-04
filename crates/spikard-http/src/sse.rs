@@ -10,7 +10,6 @@ use axum::{
     },
 };
 use futures_util::stream;
-use serde_json::Value;
 use std::{convert::Infallible, sync::Arc, time::Duration};
 use tracing::{debug, error, info};
 
@@ -118,7 +117,7 @@ pub struct SseEvent {
     /// Event type (optional)
     pub event_type: Option<String>,
     /// Event data (JSON value)
-    pub data: Value,
+    pub data: serde_json::Value,
     /// Event ID (optional, for client-side reconnection)
     pub id: Option<String>,
     /// Retry timeout in milliseconds (optional)
@@ -142,7 +141,7 @@ impl SseEvent {
     ///
     /// let event = SseEvent::new(json!({"status": "connected"}));
     /// ```
-    pub fn new(data: Value) -> Self {
+    pub fn new(data: serde_json::Value) -> Self {
         Self {
             event_type: None,
             data,
@@ -169,7 +168,7 @@ impl SseEvent {
     /// let event = SseEvent::with_type("update", json!({"count": 42}));
     /// // Client can listen with: eventSource.addEventListener("update", ...)
     /// ```
-    pub fn with_type(event_type: impl Into<String>, data: Value) -> Self {
+    pub fn with_type(event_type: impl Into<String>, data: serde_json::Value) -> Self {
         Self {
             event_type: Some(event_type.into()),
             data,
