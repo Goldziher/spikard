@@ -24,7 +24,7 @@ pub struct AsyncApiConfig {
     /// Enable AsyncAPI endpoints (default: false)
     pub enabled: bool,
     /// Pre-registered AsyncAPI spec to serve from GET /asyncapi.json
-    pub spec: Option<Value>,
+    pub spec: Option<serde_json::Value>,
 }
 
 // ── Shared state for axum handlers ────────────────────────────────────────────
@@ -48,7 +48,7 @@ pub struct ParsedChannel {
     /// Message names declared on this channel
     pub messages: Vec<String>,
     /// Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility
-    pub bindings: Option<Value>,
+    pub bindings: Option<serde_json::Value>,
 }
 
 /// A single operation extracted from an AsyncAPI spec
@@ -68,7 +68,7 @@ pub struct ParsedMessage {
     /// Message name
     pub name: String,
     /// Resolved JSON Schema for the message payload, if available
-    pub schema: Option<Value>,
+    pub schema: Option<serde_json::Value>,
 }
 
 /// Full parse result returned by `POST /asyncapi/parse`
@@ -382,7 +382,7 @@ fn normalize_schema_ref_value(value: Value) -> Value {
 #[derive(Debug, Deserialize)]
 pub struct ParseRequest {
     #[serde(flatten)]
-    pub spec: Value,
+    pub spec: serde_json::Value,
 }
 
 /// Response body for `POST /asyncapi/validate`
@@ -396,10 +396,10 @@ pub struct ValidationResponse {
 /// Request body for `POST /asyncapi/validate`
 #[derive(Debug, Deserialize)]
 pub struct ValidateRequest {
-    pub spec: Value,
+    pub spec: serde_json::Value,
     pub channel: String,
     pub message: String,
-    pub payload: Value,
+    pub payload: serde_json::Value,
 }
 
 // ── Axum handlers ─────────────────────────────────────────────────────────────

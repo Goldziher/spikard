@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.22.26"
+alef_version = "0.23.0"
 languages = [
   "python",
   "node",
@@ -42,6 +42,15 @@ extra_paths = []
 path = "crates/spikard-http/src/lib.rs"
 search = 'version = "\d+\.\d+\.\d+"'
 replace = 'version = "{version}"'
+
+# These types appear in handler-contract dispatch signatures and the service wire
+# types but are not generated as binding types. Declaring them opaque makes alef
+# treat them as known (black-box) references so the validator does not emit
+# `unknown_named_type` for them.
+[workspace.opaque_types]
+Request = "axum::http::Request"
+RequestData = "spikard_http::handler_trait::RequestData"
+HandlerResult = "spikard_http::handler_trait::HandlerResult"
 
 [[crates]]
 name = "spikard"
@@ -483,6 +492,13 @@ types = [
   # Not part of public API — closures, Arc<dyn Handler>, internal protocol types
   "Route",
   "RouteMetadata",
+  # SseEventProducer and WebSocketHandler use RPITIT (`-> impl Future`) on all
+  # trait methods. Alef cannot resolve the `Future` return to a known binding
+  # type and emits `unknown_named_type`. These traits are also not dyn-compatible,
+  # so the Arc<dyn Contract> handler-bridge cannot wrap them. Exclude until alef
+  # supports non-object-safe contracts via a concrete wrapper.
+  "SseEventProducer",
+  "WebSocketHandler",
   "BackgroundHandle",
   "BackgroundJobError",
   "Claims",
@@ -600,11 +616,24 @@ types = [
   # being excluded AND non-pub. Remove once alef respects pub(crate) on
   # disambiguated names.
   "GrpcGrpcRegistry",
+  # Public generic items that cannot cross FFI without monomorphization metadata
+  # — excluded via fully qualified path so the alef v0.23.0+ `unsupported_generic_item`
+  # validator can filter them out before erroring. These are internal helper aliases
+  # / lifecycle plumbing that bindings do not need.
+  "HookResult",
+  "TargetLifecycleHooks",
+  "spikard_graphql::error::Result",
+  "spikard_graphql::schema::SchemaResult",
 ]
 functions = [
   "request_hook",
   "response_hook",
   "shield_panic",
+  # Public generic axum handler builders — not part of the polyglot binding surface
+  # (handlers are wired via tower-http internally). Exclude so the v0.23.0+
+  # `unsupported_generic_item` validator passes.
+  "sse_handler",
+  "websocket_handler",
   "add_cors_headers",
   "api_key_auth_middleware",
   "assemble_openapi_spec",
@@ -929,6 +958,8 @@ languages = [
 # canonical lowercase `route` round-trips unchanged in every language.
 imports = ["spikard"]
 app_class = "App"
+# alef v0.22.27+ ruby harness accepts FQDN paths; spikard gem's Ruby App lives
+# at `Spikard::App` not the top-level `::App`. The override here resolves it.
 register_method = "route"
 run_method = "run"
 # spikard's Response struct names the body payload `content`, not `body`.
@@ -940,8 +971,11 @@ port = 8000
 # Node binding ships as @spikard/node, not bare spikard.
 imports = ["@spikard/node"]
 
-# Ruby App class is defined at top-level (`class App`) in spikard/service.rb,
-# not nested inside the Spikard module, so the default `App` resolves correctly.
+[crates.e2e.harness.overrides.ruby]
+# The Ruby spikard gem nests its app class under the `Spikard` module
+# (`Spikard::App`). alef v0.22.27+ ruby harness uses the configured `app_class`
+# verbatim (without prefixing `::`), so the FQDN is required.
+app_class = "Spikard::App"
 
 [crates.e2e.call]
 result_var = "response"

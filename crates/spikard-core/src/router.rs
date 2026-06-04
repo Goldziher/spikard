@@ -56,11 +56,11 @@ pub struct JsonRpcMethodInfo {
 
     /// Optional JSON Schema for method parameters
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub params_schema: Option<Value>,
+    pub params_schema: Option<serde_json::Value>,
 
     /// Optional JSON Schema for the result
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub result_schema: Option<Value>,
+    pub result_schema: Option<serde_json::Value>,
 
     /// Whether this method is deprecated
     #[serde(default)]

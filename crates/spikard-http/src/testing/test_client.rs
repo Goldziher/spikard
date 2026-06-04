@@ -29,9 +29,9 @@ pub struct GraphQLSubscriptionSnapshot {
     /// Whether the server acknowledged the GraphQL WebSocket connection.
     pub acknowledged: bool,
     /// First `next.payload` received for this subscription, if any.
-    pub event: Option<Value>,
+    pub event: Option<serde_json::Value>,
     /// GraphQL protocol errors emitted by the server.
-    pub errors: Vec<Value>,
+    pub errors: Vec<serde_json::Value>,
     /// Whether a `complete` frame was observed for this operation.
     pub complete_received: bool,
 }
@@ -296,7 +296,7 @@ impl TestClient {
         &self,
         endpoint: &str,
         query: &str,
-        variables: Option<Value>,
+        variables: Option<serde_json::Value>,
         operation_name: Option<&str>,
     ) -> Result<ResponseSnapshot, SnapshotError> {
         let body = build_graphql_body(query, variables, operation_name);
@@ -307,7 +307,7 @@ impl TestClient {
     pub async fn graphql(
         &self,
         query: &str,
-        variables: Option<Value>,
+        variables: Option<serde_json::Value>,
         operation_name: Option<&str>,
     ) -> Result<ResponseSnapshot, SnapshotError> {
         self.graphql_at("/graphql", query, variables, operation_name).await
@@ -332,7 +332,7 @@ impl TestClient {
     pub async fn graphql_with_status(
         &self,
         query: &str,
-        variables: Option<Value>,
+        variables: Option<serde_json::Value>,
         operation_name: Option<&str>,
     ) -> Result<(u16, ResponseSnapshot), SnapshotError> {
         let snapshot = self.graphql(query, variables, operation_name).await?;
@@ -348,7 +348,7 @@ impl TestClient {
         &self,
         endpoint: &str,
         query: &str,
-        variables: Option<Value>,
+        variables: Option<serde_json::Value>,
         operation_name: Option<&str>,
     ) -> Result<GraphQLSubscriptionSnapshot, SnapshotError> {
         let operation_id = "spikard-subscription-1".to_string();
@@ -475,7 +475,7 @@ impl TestClient {
     pub async fn graphql_subscription(
         &self,
         query: &str,
-        variables: Option<Value>,
+        variables: Option<serde_json::Value>,
         operation_name: Option<&str>,
     ) -> Result<GraphQLSubscriptionSnapshot, SnapshotError> {
         self.graphql_subscription_at("/graphql", query, variables, operation_name)
@@ -557,7 +557,7 @@ async fn receive_graphql_protocol_message(websocket: &mut super::WebSocketConnec
 }
 
 /// Build a GraphQL request body from query, variables, and operation name
-pub fn build_graphql_body(query: &str, variables: Option<Value>, operation_name: Option<&str>) -> Value {
+pub fn build_graphql_body(query: &str, variables: Option<serde_json::Value>, operation_name: Option<&str>) -> Value {
     let mut body = serde_json::json!({ "query": query });
     if let Some(vars) = variables {
         body["variables"] = vars;

@@ -9,6 +9,7 @@ Gem::Specification.new do |spec|
   spec.homepage      = "https://github.com/Goldziher/spikard"
 
   spec.license       = "MIT"
+
   spec.required_ruby_version = ">= 3.2.0"
   spec.metadata["keywords"] = %w[framework http polyglot rust web].join(",")
   spec.metadata["rubygems_mfa_required"] = "true"
