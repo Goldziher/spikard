@@ -184,7 +184,7 @@ AsyncAPI HTTP endpoint configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `Enabled` | `bool` | — | Enable AsyncAPI endpoints (default: false) |
-| `Spec` | `*interface{}` | `nil` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+| `Spec` | `*string` | `nil` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 
@@ -687,8 +687,8 @@ enabling discovery and documentation of RPC-compatible endpoints.
 |-------|------|---------|-------------|
 | `MethodName` | `string` | — | The JSON-RPC method name (e.g., "user.create") |
 | `Description` | `*string` | `nil` | Optional description of what the method does |
-| `ParamsSchema` | `*interface{}` | `nil` | Optional JSON Schema for method parameters |
-| `ResultSchema` | `*interface{}` | `nil` | Optional JSON Schema for the result |
+| `ParamsSchema` | `*string` | `nil` | Optional JSON Schema for method parameters |
+| `ResultSchema` | `*string` | `nil` | Optional JSON Schema for the result |
 | `Deprecated` | `bool` | `/* serde(default) */` | Whether this method is deprecated |
 | `Tags` | `[]string` | `/* serde(default) */` | Tags for categorizing and grouping methods |
 
@@ -755,7 +755,7 @@ Request body for `POST /asyncapi/parse`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `Spec` | `interface{}` | — | Spec |
+| `Spec` | `string` | — | Spec |
 
 ---
 
@@ -783,7 +783,7 @@ A single channel extracted from an AsyncAPI spec
 | `Name` | `string` | — | Channel key from the spec (e.g. "chat/messages") |
 | `Address` | `string` | — | Channel address / path |
 | `Messages` | `[]string` | — | Message names declared on this channel |
-| `Bindings` | `*interface{}` | `nil` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
+| `Bindings` | `*string` | `nil` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
 
@@ -794,7 +794,7 @@ A resolved message (name + JSON Schema)
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `Name` | `string` | — | Message name |
-| `Schema` | `*interface{}` | `nil` | Resolved JSON Schema for the message payload, if available |
+| `Schema` | `*string` | `nil` | Resolved JSON Schema for the message payload, if available |
 
 ---
 
@@ -1005,7 +1005,7 @@ HTTP Response with custom status code, headers, and content
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `Content` | `*interface{}` | `nil` | Response body content |
+| `Content` | `*string` | `nil` | Response body content |
 | `StatusCode` | `uint16` | — | HTTP status code (defaults to 200) |
 | `Headers` | `map[string]string` | `nil` | Response headers |
 
@@ -1074,7 +1074,7 @@ Provide a raw JSON schema for the request body.
 **Signature:**
 
 ```go
-func (o *RouteBuilder) RequestSchemaJson(schema interface{}) RouteBuilder
+func (o *RouteBuilder) RequestSchemaJson(schema string) RouteBuilder
 ```
 
 #### ResponseSchemaJson()
@@ -1084,7 +1084,7 @@ Provide a raw JSON schema for the response body.
 **Signature:**
 
 ```go
-func (o *RouteBuilder) ResponseSchemaJson(schema interface{}) RouteBuilder
+func (o *RouteBuilder) ResponseSchemaJson(schema string) RouteBuilder
 ```
 
 #### ParamsSchemaJson()
@@ -1094,7 +1094,7 @@ Provide a raw JSON schema for request parameters.
 **Signature:**
 
 ```go
-func (o *RouteBuilder) ParamsSchemaJson(schema interface{}) RouteBuilder
+func (o *RouteBuilder) ParamsSchemaJson(schema string) RouteBuilder
 ```
 
 #### FileParamsJson()
@@ -1104,7 +1104,7 @@ Provide multipart file parameter configuration.
 **Signature:**
 
 ```go
-func (o *RouteBuilder) FileParamsJson(schema interface{}) RouteBuilder
+func (o *RouteBuilder) FileParamsJson(schema string) RouteBuilder
 ```
 
 #### Cors()
@@ -1235,7 +1235,7 @@ retry: 3000
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `EventType` | `*string` | `nil` | Event type (optional) |
-| `Data` | `interface{}` | — | Event data (JSON value) |
+| `Data` | `string` | — | Event data (JSON value) |
 | `Id` | `*string` | `nil` | Event ID (optional, for client-side reconnection) |
 | `Retry` | `*uint64` | `nil` | Retry timeout in milliseconds (optional) |
 
@@ -1420,10 +1420,10 @@ Request body for `POST /asyncapi/validate`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `Spec` | `interface{}` | — | Spec |
+| `Spec` | `string` | — | Spec |
 | `Channel` | `string` | — | Channel |
 | `Message` | `string` | — | Message |
-| `Payload` | `interface{}` | — | Payload |
+| `Payload` | `string` | — | Payload |
 
 ---
 
@@ -1468,7 +1468,7 @@ Messages are automatically parsed as JSON.
 **Signature:**
 
 ```go
-func (o *WebSocketHandler) HandleMessage(message interface{}) Future
+func (o *WebSocketHandler) HandleMessage(message Value) Future
 ```
 
 #### OnConnect()

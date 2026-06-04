@@ -201,7 +201,7 @@ HTTP Response with custom status code, headers, and content
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `dict[str, Any] \| None` | `None` | Response body content |
+| `content` | `str \| None` | `None` | Response body content |
 | `status_code` | `int` | — | HTTP status code (defaults to 200) |
 | `headers` | `dict[str, str]` | `{}` | Response headers |
 
@@ -282,7 +282,7 @@ AsyncAPI HTTP endpoint configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `bool` | — | Enable AsyncAPI endpoints (default: false) |
-| `spec` | `dict[str, Any] \| None` | `None` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+| `spec` | `str \| None` | `None` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 

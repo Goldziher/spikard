@@ -189,7 +189,7 @@ AsyncAPI HTTP endpoint configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `Boolean` | — | Enable AsyncAPI endpoints (default: false) |
-| `spec` | `Any?` | `null` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+| `spec` | `String?` | `null` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 
@@ -701,8 +701,8 @@ enabling discovery and documentation of RPC-compatible endpoints.
 |-------|------|---------|-------------|
 | `methodName` | `String` | — | The JSON-RPC method name (e.g., "user.create") |
 | `description` | `String?` | `null` | Optional description of what the method does |
-| `paramsSchema` | `Any?` | `null` | Optional JSON Schema for method parameters |
-| `resultSchema` | `Any?` | `null` | Optional JSON Schema for the result |
+| `paramsSchema` | `String?` | `null` | Optional JSON Schema for method parameters |
+| `resultSchema` | `String?` | `null` | Optional JSON Schema for the result |
 | `deprecated` | `Boolean` | `/* serde(default) */` | Whether this method is deprecated |
 | `tags` | `List<String>` | `/* serde(default) */` | Tags for categorizing and grouping methods |
 
@@ -770,7 +770,7 @@ Request body for `POST /asyncapi/parse`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `Any` | — | Spec |
+| `spec` | `String` | — | Spec |
 
 ---
 
@@ -798,7 +798,7 @@ A single channel extracted from an AsyncAPI spec
 | `name` | `String` | — | Channel key from the spec (e.g. "chat/messages") |
 | `address` | `String` | — | Channel address / path |
 | `messages` | `List<String>` | — | Message names declared on this channel |
-| `bindings` | `Any?` | `null` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
+| `bindings` | `String?` | `null` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
 
@@ -809,7 +809,7 @@ A resolved message (name + JSON Schema)
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String` | — | Message name |
-| `schema` | `Any?` | `null` | Resolved JSON Schema for the message payload, if available |
+| `schema` | `String?` | `null` | Resolved JSON Schema for the message payload, if available |
 
 ---
 
@@ -1029,7 +1029,7 @@ HTTP Response with custom status code, headers, and content
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `Any?` | `null` | Response body content |
+| `content` | `String?` | `null` | Response body content |
 | `statusCode` | `Short` | — | HTTP status code (defaults to 200) |
 | `headers` | `Map<String, String>` | `{}` | Response headers |
 
@@ -1100,7 +1100,7 @@ Provide a raw JSON schema for the request body.
 **Signature:**
 
 ```kotlin
-fun requestSchemaJson(schema: Any): RouteBuilder
+fun requestSchemaJson(schema: String): RouteBuilder
 ```
 
 #### responseSchemaJson()
@@ -1110,7 +1110,7 @@ Provide a raw JSON schema for the response body.
 **Signature:**
 
 ```kotlin
-fun responseSchemaJson(schema: Any): RouteBuilder
+fun responseSchemaJson(schema: String): RouteBuilder
 ```
 
 #### paramsSchemaJson()
@@ -1120,7 +1120,7 @@ Provide a raw JSON schema for request parameters.
 **Signature:**
 
 ```kotlin
-fun paramsSchemaJson(schema: Any): RouteBuilder
+fun paramsSchemaJson(schema: String): RouteBuilder
 ```
 
 #### fileParamsJson()
@@ -1130,7 +1130,7 @@ Provide multipart file parameter configuration.
 **Signature:**
 
 ```kotlin
-fun fileParamsJson(schema: Any): RouteBuilder
+fun fileParamsJson(schema: String): RouteBuilder
 ```
 
 #### cors()
@@ -1263,7 +1263,7 @@ retry: 3000
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `eventType` | `String?` | `null` | Event type (optional) |
-| `data` | `Any` | — | Event data (JSON value) |
+| `data` | `String` | — | Event data (JSON value) |
 | `id` | `String?` | `null` | Event ID (optional, for client-side reconnection) |
 | `retry` | `Long?` | `null` | Retry timeout in milliseconds (optional) |
 
@@ -1449,10 +1449,10 @@ Request body for `POST /asyncapi/validate`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `Any` | — | Spec |
+| `spec` | `String` | — | Spec |
 | `channel` | `String` | — | Channel |
 | `message` | `String` | — | Message |
-| `payload` | `Any` | — | Payload |
+| `payload` | `String` | — | Payload |
 
 ---
 
@@ -1497,7 +1497,7 @@ Messages are automatically parsed as JSON.
 **Signature:**
 
 ```kotlin
-fun handleMessage(message: Any): Future
+fun handleMessage(message: Value): Future
 ```
 
 #### onConnect()

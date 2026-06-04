@@ -15,7 +15,7 @@ namespace Spikard;
 /// <summary>
 /// Security scheme types
 /// </summary>
-[JsonConverter(typeof(SecuritySchemeInfoJsonConverter))]
+    [JsonConverter(typeof(SecuritySchemeInfoJsonConverter))]
 public abstract record SecuritySchemeInfo
 {
     public sealed record Http(
@@ -103,10 +103,7 @@ public sealed class SecuritySchemeInfoJsonConverter : JsonConverter<SecuritySche
         var wrappedJson = msWrapped.ToArray();
 
         return tagValue switch
-        {
-            "http" => JsonSerializer.Deserialize<SecuritySchemeInfo.Http>(flatJson, options) ?? throw new JsonException("Failed to deserialize variant"),
-            "apiKey" => JsonSerializer.Deserialize<SecuritySchemeInfo.ApiKey>(flatJson, options) ?? throw new JsonException("Failed to deserialize variant"),
-            _ => throw new JsonException($"Unknown SecuritySchemeInfo discriminator: {tagValue}")
+        {            "http" => JsonSerializer.Deserialize<SecuritySchemeInfo.Http>(flatJson, options) ?? throw new JsonException("Failed to deserialize variant"),            "apiKey" => JsonSerializer.Deserialize<SecuritySchemeInfo.ApiKey>(flatJson, options) ?? throw new JsonException("Failed to deserialize variant"),            _ => throw new JsonException($"Unknown SecuritySchemeInfo discriminator: {tagValue}")
         };
     }
 
@@ -120,12 +117,9 @@ public sealed class SecuritySchemeInfoJsonConverter : JsonConverter<SecuritySche
         string tag;
         object? inner;
         switch (value)
-        {
-            case SecuritySchemeInfo.Http v_http:
-                tag = "http"; inner = v_http; break;
-            case SecuritySchemeInfo.ApiKey v_apikey:
-                tag = "apiKey"; inner = v_apikey; break;
-            default:
+        {            case SecuritySchemeInfo.Http v_http:
+                tag = "http";                inner = v_http;                break;            case SecuritySchemeInfo.ApiKey v_apikey:
+                tag = "apiKey";                inner = v_apikey;                break;            default:
                 throw new JsonException($"Unknown SecuritySchemeInfo variant: {value.GetType().Name}");
         }
 

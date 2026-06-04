@@ -184,7 +184,7 @@ AsyncAPI HTTP endpoint configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `Enabled` | `bool` | — | Enable AsyncAPI endpoints (default: false) |
-| `Spec` | `object?` | `null` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+| `Spec` | `string?` | `null` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 
@@ -687,8 +687,8 @@ enabling discovery and documentation of RPC-compatible endpoints.
 |-------|------|---------|-------------|
 | `MethodName` | `string` | — | The JSON-RPC method name (e.g., "user.create") |
 | `Description` | `string?` | `null` | Optional description of what the method does |
-| `ParamsSchema` | `object?` | `null` | Optional JSON Schema for method parameters |
-| `ResultSchema` | `object?` | `null` | Optional JSON Schema for the result |
+| `ParamsSchema` | `string?` | `null` | Optional JSON Schema for method parameters |
+| `ResultSchema` | `string?` | `null` | Optional JSON Schema for the result |
 | `Deprecated` | `bool` | `/* serde(default) */` | Whether this method is deprecated |
 | `Tags` | `List<string>` | `/* serde(default) */` | Tags for categorizing and grouping methods |
 
@@ -755,7 +755,7 @@ Request body for `POST /asyncapi/parse`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `Spec` | `object` | — | Spec |
+| `Spec` | `string` | — | Spec |
 
 ---
 
@@ -783,7 +783,7 @@ A single channel extracted from an AsyncAPI spec
 | `Name` | `string` | — | Channel key from the spec (e.g. "chat/messages") |
 | `Address` | `string` | — | Channel address / path |
 | `Messages` | `List<string>` | — | Message names declared on this channel |
-| `Bindings` | `object?` | `null` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
+| `Bindings` | `string?` | `null` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
 
@@ -794,7 +794,7 @@ A resolved message (name + JSON Schema)
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `Name` | `string` | — | Message name |
-| `Schema` | `object?` | `null` | Resolved JSON Schema for the message payload, if available |
+| `Schema` | `string?` | `null` | Resolved JSON Schema for the message payload, if available |
 
 ---
 
@@ -1005,7 +1005,7 @@ HTTP Response with custom status code, headers, and content
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `Content` | `object?` | `null` | Response body content |
+| `Content` | `string?` | `null` | Response body content |
 | `StatusCode` | `ushort` | — | HTTP status code (defaults to 200) |
 | `Headers` | `Dictionary<string, string>` | `new Dictionary<string, string>()` | Response headers |
 
@@ -1074,7 +1074,7 @@ Provide a raw JSON schema for the request body.
 **Signature:**
 
 ```csharp
-public RouteBuilder RequestSchemaJson(object schema)
+public RouteBuilder RequestSchemaJson(string schema)
 ```
 
 #### ResponseSchemaJson()
@@ -1084,7 +1084,7 @@ Provide a raw JSON schema for the response body.
 **Signature:**
 
 ```csharp
-public RouteBuilder ResponseSchemaJson(object schema)
+public RouteBuilder ResponseSchemaJson(string schema)
 ```
 
 #### ParamsSchemaJson()
@@ -1094,7 +1094,7 @@ Provide a raw JSON schema for request parameters.
 **Signature:**
 
 ```csharp
-public RouteBuilder ParamsSchemaJson(object schema)
+public RouteBuilder ParamsSchemaJson(string schema)
 ```
 
 #### FileParamsJson()
@@ -1104,7 +1104,7 @@ Provide multipart file parameter configuration.
 **Signature:**
 
 ```csharp
-public RouteBuilder FileParamsJson(object schema)
+public RouteBuilder FileParamsJson(string schema)
 ```
 
 #### Cors()
@@ -1235,7 +1235,7 @@ retry: 3000
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `EventType` | `string?` | `null` | Event type (optional) |
-| `Data` | `object` | — | Event data (JSON value) |
+| `Data` | `string` | — | Event data (JSON value) |
 | `Id` | `string?` | `null` | Event ID (optional, for client-side reconnection) |
 | `Retry` | `ulong?` | `null` | Retry timeout in milliseconds (optional) |
 
@@ -1420,10 +1420,10 @@ Request body for `POST /asyncapi/validate`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `Spec` | `object` | — | Spec |
+| `Spec` | `string` | — | Spec |
 | `Channel` | `string` | — | Channel |
 | `Message` | `string` | — | Message |
-| `Payload` | `object` | — | Payload |
+| `Payload` | `string` | — | Payload |
 
 ---
 
@@ -1468,7 +1468,7 @@ Messages are automatically parsed as JSON.
 **Signature:**
 
 ```csharp
-public Future HandleMessage(object message)
+public Future HandleMessage(Value message)
 ```
 
 #### OnConnect()

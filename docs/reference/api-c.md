@@ -184,7 +184,7 @@ AsyncAPI HTTP endpoint configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `bool` | — | Enable AsyncAPI endpoints (default: false) |
-| `spec` | `void**` | `NULL` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+| `spec` | `const char**` | `NULL` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 
@@ -687,8 +687,8 @@ enabling discovery and documentation of RPC-compatible endpoints.
 |-------|------|---------|-------------|
 | `method_name` | `const char*` | — | The JSON-RPC method name (e.g., "user.create") |
 | `description` | `const char**` | `NULL` | Optional description of what the method does |
-| `params_schema` | `void**` | `NULL` | Optional JSON Schema for method parameters |
-| `result_schema` | `void**` | `NULL` | Optional JSON Schema for the result |
+| `params_schema` | `const char**` | `NULL` | Optional JSON Schema for method parameters |
+| `result_schema` | `const char**` | `NULL` | Optional JSON Schema for the result |
 | `deprecated` | `bool` | `/* serde(default) */` | Whether this method is deprecated |
 | `tags` | `const char**` | `/* serde(default) */` | Tags for categorizing and grouping methods |
 
@@ -755,7 +755,7 @@ Request body for `POST /asyncapi/parse`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `void*` | — | Spec |
+| `spec` | `const char*` | — | Spec |
 
 ---
 
@@ -783,7 +783,7 @@ A single channel extracted from an AsyncAPI spec
 | `name` | `const char*` | — | Channel key from the spec (e.g. "chat/messages") |
 | `address` | `const char*` | — | Channel address / path |
 | `messages` | `const char**` | — | Message names declared on this channel |
-| `bindings` | `void**` | `NULL` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
+| `bindings` | `const char**` | `NULL` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
 
@@ -794,7 +794,7 @@ A resolved message (name + JSON Schema)
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `const char*` | — | Message name |
-| `schema` | `void**` | `NULL` | Resolved JSON Schema for the message payload, if available |
+| `schema` | `const char**` | `NULL` | Resolved JSON Schema for the message payload, if available |
 
 ---
 
@@ -1005,7 +1005,7 @@ HTTP Response with custom status code, headers, and content
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `void**` | `NULL` | Response body content |
+| `content` | `const char**` | `NULL` | Response body content |
 | `status_code` | `uint16_t` | — | HTTP status code (defaults to 200) |
 | `headers` | `void*` | `NULL` | Response headers |
 
@@ -1074,7 +1074,7 @@ Provide a raw JSON schema for the request body.
 **Signature:**
 
 ```c
-SpikardRouteBuilder spikard_request_schema_json(void* schema);
+SpikardRouteBuilder spikard_request_schema_json(const char* schema);
 ```
 
 #### spikard_response_schema_json()
@@ -1084,7 +1084,7 @@ Provide a raw JSON schema for the response body.
 **Signature:**
 
 ```c
-SpikardRouteBuilder spikard_response_schema_json(void* schema);
+SpikardRouteBuilder spikard_response_schema_json(const char* schema);
 ```
 
 #### spikard_params_schema_json()
@@ -1094,7 +1094,7 @@ Provide a raw JSON schema for request parameters.
 **Signature:**
 
 ```c
-SpikardRouteBuilder spikard_params_schema_json(void* schema);
+SpikardRouteBuilder spikard_params_schema_json(const char* schema);
 ```
 
 #### spikard_file_params_json()
@@ -1104,7 +1104,7 @@ Provide multipart file parameter configuration.
 **Signature:**
 
 ```c
-SpikardRouteBuilder spikard_file_params_json(void* schema);
+SpikardRouteBuilder spikard_file_params_json(const char* schema);
 ```
 
 #### spikard_cors()
@@ -1235,7 +1235,7 @@ retry: 3000
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `event_type` | `const char**` | `NULL` | Event type (optional) |
-| `data` | `void*` | — | Event data (JSON value) |
+| `data` | `const char*` | — | Event data (JSON value) |
 | `id` | `const char**` | `NULL` | Event ID (optional, for client-side reconnection) |
 | `retry` | `uint64_t*` | `NULL` | Retry timeout in milliseconds (optional) |
 
@@ -1420,10 +1420,10 @@ Request body for `POST /asyncapi/validate`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `void*` | — | Spec |
+| `spec` | `const char*` | — | Spec |
 | `channel` | `const char*` | — | Channel |
 | `message` | `const char*` | — | Message |
-| `payload` | `void*` | — | Payload |
+| `payload` | `const char*` | — | Payload |
 
 ---
 
@@ -1468,7 +1468,7 @@ Messages are automatically parsed as JSON.
 **Signature:**
 
 ```c
-SpikardFuture spikard_handle_message(void* message);
+SpikardFuture spikard_handle_message(SpikardValue message);
 ```
 
 #### spikard_on_connect()

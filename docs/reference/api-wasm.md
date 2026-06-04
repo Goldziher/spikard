@@ -86,7 +86,7 @@ AsyncAPI HTTP endpoint configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `boolean` | — | Enable AsyncAPI endpoints (default: false) |
-| `spec` | `unknown \| null` | `null` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+| `spec` | `string \| null` | `null` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 
@@ -359,8 +359,8 @@ enabling discovery and documentation of RPC-compatible endpoints.
 |-------|------|---------|-------------|
 | `methodName` | `string` | — | The JSON-RPC method name (e.g., "user.create") |
 | `description` | `string \| null` | `null` | Optional description of what the method does |
-| `paramsSchema` | `unknown \| null` | `null` | Optional JSON Schema for method parameters |
-| `resultSchema` | `unknown \| null` | `null` | Optional JSON Schema for the result |
+| `paramsSchema` | `string \| null` | `null` | Optional JSON Schema for method parameters |
+| `resultSchema` | `string \| null` | `null` | Optional JSON Schema for the result |
 | `deprecated` | `boolean` | `/* serde(default) */` | Whether this method is deprecated |
 | `tags` | `Array<string>` | `/* serde(default) */` | Tags for categorizing and grouping methods |
 
@@ -427,7 +427,7 @@ Request body for `POST /asyncapi/parse`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `unknown` | — | Spec |
+| `spec` | `string` | — | Spec |
 
 ---
 
@@ -455,7 +455,7 @@ A single channel extracted from an AsyncAPI spec
 | `name` | `string` | — | Channel key from the spec (e.g. "chat/messages") |
 | `address` | `string` | — | Channel address / path |
 | `messages` | `Array<string>` | — | Message names declared on this channel |
-| `bindings` | `unknown \| null` | `null` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
+| `bindings` | `string \| null` | `null` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
 
@@ -466,7 +466,7 @@ A resolved message (name + JSON Schema)
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `string` | — | Message name |
-| `schema` | `unknown \| null` | `null` | Resolved JSON Schema for the message payload, if available |
+| `schema` | `string \| null` | `null` | Resolved JSON Schema for the message payload, if available |
 
 ---
 
@@ -491,9 +491,7 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ### Content-Type
-
 Responses using this struct should set:
-
 ```text
 Content-Type: application/problem+json
 ```
@@ -635,7 +633,7 @@ HTTP Response with custom status code, headers, and content
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `unknown \| null` | `null` | Response body content |
+| `content` | `string \| null` | `null` | Response body content |
 | `statusCode` | `number` | — | HTTP status code (defaults to 200) |
 | `headers` | `Record<string, string>` | `{}` | Response headers |
 
@@ -740,7 +738,7 @@ Send a GraphQL query/mutation to a custom endpoint
 **Signature:**
 
 ```typescript
-graphqlAt(endpoint: string, query: string, variables: unknown, operationName: string): ResponseSnapshot
+graphqlAt(endpoint: string, query: string, variables: string, operationName: string): ResponseSnapshot
 ```
 
 #### graphql()
@@ -750,7 +748,7 @@ Send a GraphQL query/mutation
 **Signature:**
 
 ```typescript
-graphql(query: string, variables: unknown, operationName: string): ResponseSnapshot
+graphql(query: string, variables: string, operationName: string): ResponseSnapshot
 ```
 
 #### graphqlSubscriptionAt()
@@ -763,7 +761,7 @@ After the first payload is received, this client sends `complete` to unsubscribe
 **Signature:**
 
 ```typescript
-graphqlSubscriptionAt(endpoint: string, query: string, variables: unknown, operationName: string): GraphQlSubscriptionSnapshot
+graphqlSubscriptionAt(endpoint: string, query: string, variables: string, operationName: string): GraphQlSubscriptionSnapshot
 ```
 
 #### graphqlSubscription()
@@ -775,7 +773,7 @@ Uses `/graphql` as the default subscription endpoint.
 **Signature:**
 
 ```typescript
-graphqlSubscription(query: string, variables: unknown, operationName: string): GraphQlSubscriptionSnapshot
+graphqlSubscription(query: string, variables: string, operationName: string): GraphQlSubscriptionSnapshot
 ```
 
 ---
@@ -796,10 +794,10 @@ Request body for `POST /asyncapi/validate`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `unknown` | — | Spec |
+| `spec` | `string` | — | Spec |
 | `channel` | `string` | — | Channel |
 | `message` | `string` | — | Message |
-| `payload` | `unknown` | — | Payload |
+| `payload` | `string` | — | Payload |
 
 ---
 

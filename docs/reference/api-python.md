@@ -186,7 +186,7 @@ AsyncAPI HTTP endpoint configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `bool` | — | Enable AsyncAPI endpoints (default: false) |
-| `spec` | `dict[str, Any] \| None` | `None` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+| `spec` | `str \| None` | `None` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 
@@ -495,8 +495,8 @@ Snapshot of a GraphQL subscription exchange over WebSocket.
 |-------|------|---------|-------------|
 | `operation_id` | `str` | — | Operation id used for the subscription request. |
 | `acknowledged` | `bool` | — | Whether the server acknowledged the GraphQL WebSocket connection. |
-| `event` | `dict[str, Any] \| None` | `None` | First `next.payload` received for this subscription, if any. |
-| `errors` | `list[dict[str, Any]]` | — | GraphQL protocol errors emitted by the server. |
+| `event` | `str \| None` | `None` | First `next.payload` received for this subscription, if any. |
+| `errors` | `list[str]` | — | GraphQL protocol errors emitted by the server. |
 | `complete_received` | `bool` | — | Whether a `complete` frame was observed for this operation. |
 
 ---
@@ -712,8 +712,8 @@ enabling discovery and documentation of RPC-compatible endpoints.
 |-------|------|---------|-------------|
 | `method_name` | `str` | — | The JSON-RPC method name (e.g., "user.create") |
 | `description` | `str \| None` | `None` | Optional description of what the method does |
-| `params_schema` | `dict[str, Any] \| None` | `None` | Optional JSON Schema for method parameters |
-| `result_schema` | `dict[str, Any] \| None` | `None` | Optional JSON Schema for the result |
+| `params_schema` | `str \| None` | `None` | Optional JSON Schema for method parameters |
+| `result_schema` | `str \| None` | `None` | Optional JSON Schema for the result |
 | `deprecated` | `bool` | `/* serde(default) */` | Whether this method is deprecated |
 | `tags` | `list[str]` | `/* serde(default) */` | Tags for categorizing and grouping methods |
 
@@ -781,7 +781,7 @@ Request body for `POST /asyncapi/parse`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `dict[str, Any]` | — | Spec |
+| `spec` | `str` | — | Spec |
 
 ---
 
@@ -809,7 +809,7 @@ A single channel extracted from an AsyncAPI spec
 | `name` | `str` | — | Channel key from the spec (e.g. "chat/messages") |
 | `address` | `str` | — | Channel address / path |
 | `messages` | `list[str]` | — | Message names declared on this channel |
-| `bindings` | `dict[str, Any] \| None` | `None` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
+| `bindings` | `str \| None` | `None` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
 
@@ -820,7 +820,7 @@ A resolved message (name + JSON Schema)
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `str` | — | Message name |
-| `schema` | `dict[str, Any] \| None` | `None` | Resolved JSON Schema for the message payload, if available |
+| `schema` | `str \| None` | `None` | Resolved JSON Schema for the message payload, if available |
 
 ---
 
@@ -845,9 +845,7 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ### Content-Type
-
 Responses using this struct should set:
-
 ```text
 Content-Type: application/problem+json
 ```
@@ -1040,7 +1038,7 @@ HTTP Response with custom status code, headers, and content
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `dict[str, Any] \| None` | `None` | Response body content |
+| `content` | `str \| None` | `None` | Response body content |
 | `status_code` | `int` | — | HTTP status code (defaults to 200) |
 | `headers` | `dict[str, str]` | `{}` | Response headers |
 
@@ -1145,7 +1143,7 @@ Provide a raw JSON schema for the request body.
 **Signature:**
 
 ```python
-def request_schema_json(self, schema: dict[str, Any]) -> RouteBuilder
+def request_schema_json(self, schema: str) -> RouteBuilder
 ```
 
 #### response_schema_json()
@@ -1155,7 +1153,7 @@ Provide a raw JSON schema for the response body.
 **Signature:**
 
 ```python
-def response_schema_json(self, schema: dict[str, Any]) -> RouteBuilder
+def response_schema_json(self, schema: str) -> RouteBuilder
 ```
 
 #### params_schema_json()
@@ -1165,7 +1163,7 @@ Provide a raw JSON schema for request parameters.
 **Signature:**
 
 ```python
-def params_schema_json(self, schema: dict[str, Any]) -> RouteBuilder
+def params_schema_json(self, schema: str) -> RouteBuilder
 ```
 
 #### file_params_json()
@@ -1175,7 +1173,7 @@ Provide multipart file parameter configuration.
 **Signature:**
 
 ```python
-def file_params_json(self, schema: dict[str, Any]) -> RouteBuilder
+def file_params_json(self, schema: str) -> RouteBuilder
 ```
 
 #### cors()
@@ -1298,7 +1296,6 @@ Events can have an optional type, ID, and retry timeout for advanced scenarios.
 ### SSE Format
 
 Events are serialized to the following text format:
-
 ```text
 event: event_type
 data: {"json":"value"}
@@ -1309,7 +1306,7 @@ retry: 3000
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `event_type` | `str \| None` | `None` | Event type (optional) |
-| `data` | `dict[str, Any]` | — | Event data (JSON value) |
+| `data` | `str` | — | Event data (JSON value) |
 | `id` | `str \| None` | `None` | Event ID (optional, for client-side reconnection) |
 | `retry` | `int \| None` | `None` | Retry timeout in milliseconds (optional) |
 
@@ -1440,7 +1437,7 @@ Send a GraphQL query/mutation to a custom endpoint
 **Signature:**
 
 ```python
-def graphql_at(self, endpoint: str, query: str, variables: dict[str, Any], operation_name: str) -> ResponseSnapshot
+def graphql_at(self, endpoint: str, query: str, variables: str, operation_name: str) -> ResponseSnapshot
 ```
 
 #### graphql()
@@ -1450,7 +1447,7 @@ Send a GraphQL query/mutation
 **Signature:**
 
 ```python
-def graphql(self, query: str, variables: dict[str, Any], operation_name: str) -> ResponseSnapshot
+def graphql(self, query: str, variables: str, operation_name: str) -> ResponseSnapshot
 ```
 
 #### graphql_subscription_at()
@@ -1463,7 +1460,7 @@ After the first payload is received, this client sends `complete` to unsubscribe
 **Signature:**
 
 ```python
-def graphql_subscription_at(self, endpoint: str, query: str, variables: dict[str, Any], operation_name: str) -> GraphQlSubscriptionSnapshot
+def graphql_subscription_at(self, endpoint: str, query: str, variables: str, operation_name: str) -> GraphQlSubscriptionSnapshot
 ```
 
 #### graphql_subscription()
@@ -1475,7 +1472,7 @@ Uses `/graphql` as the default subscription endpoint.
 **Signature:**
 
 ```python
-def graphql_subscription(self, query: str, variables: dict[str, Any], operation_name: str) -> GraphQlSubscriptionSnapshot
+def graphql_subscription(self, query: str, variables: str, operation_name: str) -> GraphQlSubscriptionSnapshot
 ```
 
 ---
@@ -1552,10 +1549,10 @@ Request body for `POST /asyncapi/validate`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `dict[str, Any]` | — | Spec |
+| `spec` | `str` | — | Spec |
 | `channel` | `str` | — | Channel |
 | `message` | `str` | — | Message |
-| `payload` | `dict[str, Any]` | — | Payload |
+| `payload` | `str` | — | Payload |
 
 ---
 
@@ -1600,7 +1597,7 @@ Messages are automatically parsed as JSON.
 **Signature:**
 
 ```python
-def handle_message(self, message: dict[str, Any]) -> Future
+def handle_message(self, message: Value) -> Future
 ```
 
 #### on_connect()

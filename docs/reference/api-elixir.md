@@ -187,7 +187,7 @@ AsyncAPI HTTP endpoint configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `boolean()` | — | Enable AsyncAPI endpoints (default: false) |
-| `spec` | `term() \| nil` | `nil` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+| `spec` | `String.t() \| nil` | `nil` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 
@@ -489,8 +489,8 @@ Snapshot of a GraphQL subscription exchange over WebSocket.
 |-------|------|---------|-------------|
 | `operation_id` | `String.t()` | — | Operation id used for the subscription request. |
 | `acknowledged` | `boolean()` | — | Whether the server acknowledged the GraphQL WebSocket connection. |
-| `event` | `term() \| nil` | `nil` | First `next.payload` received for this subscription, if any. |
-| `errors` | `list(term())` | — | GraphQL protocol errors emitted by the server. |
+| `event` | `String.t() \| nil` | `nil` | First `next.payload` received for this subscription, if any. |
+| `errors` | `list(String.t())` | — | GraphQL protocol errors emitted by the server. |
 | `complete_received` | `boolean()` | — | Whether a `complete` frame was observed for this operation. |
 
 ---
@@ -704,8 +704,8 @@ enabling discovery and documentation of RPC-compatible endpoints.
 |-------|------|---------|-------------|
 | `method_name` | `String.t()` | — | The JSON-RPC method name (e.g., "user.create") |
 | `description` | `String.t() \| nil` | `nil` | Optional description of what the method does |
-| `params_schema` | `term() \| nil` | `nil` | Optional JSON Schema for method parameters |
-| `result_schema` | `term() \| nil` | `nil` | Optional JSON Schema for the result |
+| `params_schema` | `String.t() \| nil` | `nil` | Optional JSON Schema for method parameters |
+| `result_schema` | `String.t() \| nil` | `nil` | Optional JSON Schema for the result |
 | `deprecated` | `boolean()` | `/* serde(default) */` | Whether this method is deprecated |
 | `tags` | `list(String.t())` | `/* serde(default) */` | Tags for categorizing and grouping methods |
 
@@ -772,7 +772,7 @@ Request body for `POST /asyncapi/parse`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `term()` | — | Spec |
+| `spec` | `String.t()` | — | Spec |
 
 ---
 
@@ -800,7 +800,7 @@ A single channel extracted from an AsyncAPI spec
 | `name` | `String.t()` | — | Channel key from the spec (e.g. "chat/messages") |
 | `address` | `String.t()` | — | Channel address / path |
 | `messages` | `list(String.t())` | — | Message names declared on this channel |
-| `bindings` | `term() \| nil` | `nil` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
+| `bindings` | `String.t() \| nil` | `nil` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
 
@@ -811,7 +811,7 @@ A resolved message (name + JSON Schema)
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String.t()` | — | Message name |
-| `schema` | `term() \| nil` | `nil` | Resolved JSON Schema for the message payload, if available |
+| `schema` | `String.t() \| nil` | `nil` | Resolved JSON Schema for the message payload, if available |
 
 ---
 
@@ -1022,7 +1022,7 @@ HTTP Response with custom status code, headers, and content
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `term() \| nil` | `nil` | Response body content |
+| `content` | `String.t() \| nil` | `nil` | Response body content |
 | `status_code` | `integer()` | — | HTTP status code (defaults to 200) |
 | `headers` | `map()` | `%{}` | Response headers |
 
@@ -1286,7 +1286,7 @@ retry: 3000
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `event_type` | `String.t() \| nil` | `nil` | Event type (optional) |
-| `data` | `term()` | — | Event data (JSON value) |
+| `data` | `String.t()` | — | Event data (JSON value) |
 | `id` | `String.t() \| nil` | `nil` | Event ID (optional, for client-side reconnection) |
 | `retry` | `integer() \| nil` | `nil` | Retry timeout in milliseconds (optional) |
 
@@ -1415,10 +1415,10 @@ Request body for `POST /asyncapi/validate`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `term()` | — | Spec |
+| `spec` | `String.t()` | — | Spec |
 | `channel` | `String.t()` | — | Channel |
 | `message` | `String.t()` | — | Message |
-| `payload` | `term()` | — | Payload |
+| `payload` | `String.t()` | — | Payload |
 
 ---
 

@@ -6,22 +6,26 @@ import dev.spikard.CorsConfig
 import dev.spikard.RouteBuilder
 
 /** Coroutine-friendly wrapper around the Java `dev.spikard.RouteBuilder` facade. */
-class RouteBuilder internal constructor(
-    internal val inner: dev.spikard.RouteBuilder,
-) : AutoCloseable {
+class RouteBuilder internal constructor(internal val inner: dev.spikard.RouteBuilder) : AutoCloseable {
     // Assign an explicit handler name.
-    fun handlerName(name: String): RouteBuilder = inner.handlerName(name)
+    fun handlerName(name: String): RouteBuilder {
+        return inner.handlerName(name)
+    }
 
     // Attach a CORS configuration for this route.
-    fun cors(cors: CorsConfig): RouteBuilder = inner.cors(cors)
+    fun cors(cors: CorsConfig): RouteBuilder {
+        return inner.cors(cors)
+    }
 
     // Mark the route as synchronous.
-    fun sync(): RouteBuilder = inner.sync()
+    fun sync(): RouteBuilder {
+        return inner.sync()
+    }
 
     // Declare the dependency keys that must be resolved before this handler runs.
-    fun handlerDependencies(dependencies: List<String>): RouteBuilder = inner.handlerDependencies(dependencies)
-
-    override fun close() {
-        inner.close()
+    fun handlerDependencies(dependencies: List<String>): RouteBuilder {
+        return inner.handlerDependencies(dependencies)
     }
+
+    override fun close() { inner.close() }
 }

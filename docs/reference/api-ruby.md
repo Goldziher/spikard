@@ -184,7 +184,7 @@ AsyncAPI HTTP endpoint configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `Boolean` | — | Enable AsyncAPI endpoints (default: false) |
-| `spec` | `Object?` | `nil` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+| `spec` | `String?` | `nil` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 
@@ -486,8 +486,8 @@ Snapshot of a GraphQL subscription exchange over WebSocket.
 |-------|------|---------|-------------|
 | `operation_id` | `String` | — | Operation id used for the subscription request. |
 | `acknowledged` | `Boolean` | — | Whether the server acknowledged the GraphQL WebSocket connection. |
-| `event` | `Object?` | `nil` | First `next.payload` received for this subscription, if any. |
-| `errors` | `Array<Object>` | — | GraphQL protocol errors emitted by the server. |
+| `event` | `String?` | `nil` | First `next.payload` received for this subscription, if any. |
+| `errors` | `Array<String>` | — | GraphQL protocol errors emitted by the server. |
 | `complete_received` | `Boolean` | — | Whether a `complete` frame was observed for this operation. |
 
 ---
@@ -701,8 +701,8 @@ enabling discovery and documentation of RPC-compatible endpoints.
 |-------|------|---------|-------------|
 | `method_name` | `String` | — | The JSON-RPC method name (e.g., "user.create") |
 | `description` | `String?` | `nil` | Optional description of what the method does |
-| `params_schema` | `Object?` | `nil` | Optional JSON Schema for method parameters |
-| `result_schema` | `Object?` | `nil` | Optional JSON Schema for the result |
+| `params_schema` | `String?` | `nil` | Optional JSON Schema for method parameters |
+| `result_schema` | `String?` | `nil` | Optional JSON Schema for the result |
 | `deprecated` | `Boolean` | `/* serde(default) */` | Whether this method is deprecated |
 | `tags` | `Array<String>` | `/* serde(default) */` | Tags for categorizing and grouping methods |
 
@@ -769,7 +769,7 @@ Request body for `POST /asyncapi/parse`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `Object` | — | Spec |
+| `spec` | `String` | — | Spec |
 
 ---
 
@@ -797,7 +797,7 @@ A single channel extracted from an AsyncAPI spec
 | `name` | `String` | — | Channel key from the spec (e.g. "chat/messages") |
 | `address` | `String` | — | Channel address / path |
 | `messages` | `Array<String>` | — | Message names declared on this channel |
-| `bindings` | `Object?` | `nil` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
+| `bindings` | `String?` | `nil` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
 
@@ -808,7 +808,7 @@ A resolved message (name + JSON Schema)
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String` | — | Message name |
-| `schema` | `Object?` | `nil` | Resolved JSON Schema for the message payload, if available |
+| `schema` | `String?` | `nil` | Resolved JSON Schema for the message payload, if available |
 
 ---
 
@@ -833,9 +833,7 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ### Content-Type
-
 Responses using this struct should set:
-
 ```text
 Content-Type: application/problem+json
 ```
@@ -1021,7 +1019,7 @@ HTTP Response with custom status code, headers, and content
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `Object?` | `nil` | Response body content |
+| `content` | `String?` | `nil` | Response body content |
 | `status_code` | `Integer` | — | HTTP status code (defaults to 200) |
 | `headers` | `Hash{String=>String}` | `{}` | Response headers |
 
@@ -1275,7 +1273,6 @@ Events can have an optional type, ID, and retry timeout for advanced scenarios.
 ### SSE Format
 
 Events are serialized to the following text format:
-
 ```text
 event: event_type
 data: {"json":"value"}
@@ -1286,7 +1283,7 @@ retry: 3000
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `event_type` | `String?` | `nil` | Event type (optional) |
-| `data` | `Object` | — | Event data (JSON value) |
+| `data` | `String` | — | Event data (JSON value) |
 | `id` | `String?` | `nil` | Event ID (optional, for client-side reconnection) |
 | `retry` | `Integer?` | `nil` | Retry timeout in milliseconds (optional) |
 
@@ -1529,10 +1526,10 @@ Request body for `POST /asyncapi/validate`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `Object` | — | Spec |
+| `spec` | `String` | — | Spec |
 | `channel` | `String` | — | Channel |
 | `message` | `String` | — | Message |
-| `payload` | `Object` | — | Payload |
+| `payload` | `String` | — | Payload |
 
 ---
 

@@ -224,7 +224,7 @@ HTTP Response with custom status code, headers, and content
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `Option<serde_json::Value>` | `Default::default()` | Response body content |
+| `content` | `Option<String>` | `Default::default()` | Response body content |
 | `status_code` | `u16` | — | HTTP status code (defaults to 200) |
 | `headers` | `HashMap<String, String>` | `HashMap::new()` | Response headers |
 
@@ -313,7 +313,7 @@ AsyncAPI HTTP endpoint configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `bool` | — | Enable AsyncAPI endpoints (default: false) |
-| `spec` | `Option<serde_json::Value>` | `Default::default()` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+| `spec` | `Option<String>` | `Default::default()` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 
@@ -390,7 +390,7 @@ retry: 3000
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `event_type` | `Option<String>` | `None` | Event type (optional) |
-| `data` | `serde_json::Value` | — | Event data (JSON value) |
+| `data` | `String` | — | Event data (JSON value) |
 | `id` | `Option<String>` | `None` | Event ID (optional, for client-side reconnection) |
 | `retry` | `Option<u64>` | `None` | Retry timeout in milliseconds (optional) |
 
@@ -440,8 +440,8 @@ enabling discovery and documentation of RPC-compatible endpoints.
 |-------|------|---------|-------------|
 | `method_name` | `String` | — | The JSON-RPC method name (e.g., "user.create") |
 | `description` | `Option<String>` | `None` | Optional description of what the method does |
-| `params_schema` | `Option<serde_json::Value>` | `None` | Optional JSON Schema for method parameters |
-| `result_schema` | `Option<serde_json::Value>` | `None` | Optional JSON Schema for the result |
+| `params_schema` | `Option<String>` | `None` | Optional JSON Schema for method parameters |
+| `result_schema` | `Option<String>` | `None` | Optional JSON Schema for the result |
 | `deprecated` | `bool` | `/* serde(default) */` | Whether this method is deprecated |
 | `tags` | `Vec<String>` | `/* serde(default) */` | Tags for categorizing and grouping methods |
 
@@ -491,7 +491,7 @@ A single channel extracted from an AsyncAPI spec
 | `name` | `String` | — | Channel key from the spec (e.g. "chat/messages") |
 | `address` | `String` | — | Channel address / path |
 | `messages` | `Vec<String>` | — | Message names declared on this channel |
-| `bindings` | `Option<serde_json::Value>` | `None` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
+| `bindings` | `Option<String>` | `None` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
 
@@ -514,7 +514,7 @@ A resolved message (name + JSON Schema)
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String` | — | Message name |
-| `schema` | `Option<serde_json::Value>` | `None` | Resolved JSON Schema for the message payload, if available |
+| `schema` | `Option<String>` | `None` | Resolved JSON Schema for the message payload, if available |
 
 ---
 
@@ -524,7 +524,7 @@ Request body for `POST /asyncapi/parse`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `serde_json::Value` | — | Spec |
+| `spec` | `String` | — | Spec |
 
 ---
 
@@ -545,10 +545,10 @@ Request body for `POST /asyncapi/validate`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `serde_json::Value` | — | Spec |
+| `spec` | `String` | — | Spec |
 | `channel` | `String` | — | Channel |
 | `message` | `String` | — | Message |
-| `payload` | `serde_json::Value` | — | Payload |
+| `payload` | `String` | — | Payload |
 
 ---
 
@@ -627,8 +627,8 @@ Snapshot of a GraphQL subscription exchange over WebSocket.
 |-------|------|---------|-------------|
 | `operation_id` | `String` | — | Operation id used for the subscription request. |
 | `acknowledged` | `bool` | — | Whether the server acknowledged the GraphQL WebSocket connection. |
-| `event` | `Option<serde_json::Value>` | `None` | First `next.payload` received for this subscription, if any. |
-| `errors` | `Vec<serde_json::Value>` | — | GraphQL protocol errors emitted by the server. |
+| `event` | `Option<String>` | `None` | First `next.payload` received for this subscription, if any. |
+| `errors` | `Vec<String>` | — | GraphQL protocol errors emitted by the server. |
 | `complete_received` | `bool` | — | Whether a `complete` frame was observed for this operation. |
 
 ---

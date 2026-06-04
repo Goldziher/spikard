@@ -184,7 +184,7 @@ AsyncAPI HTTP endpoint configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `boolean` | — | Enable AsyncAPI endpoints (default: false) |
-| `spec` | `Optional<Object>` | `null` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+| `spec` | `Optional<String>` | `null` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 
@@ -687,8 +687,8 @@ enabling discovery and documentation of RPC-compatible endpoints.
 |-------|------|---------|-------------|
 | `methodName` | `String` | — | The JSON-RPC method name (e.g., "user.create") |
 | `description` | `Optional<String>` | `null` | Optional description of what the method does |
-| `paramsSchema` | `Optional<Object>` | `null` | Optional JSON Schema for method parameters |
-| `resultSchema` | `Optional<Object>` | `null` | Optional JSON Schema for the result |
+| `paramsSchema` | `Optional<String>` | `null` | Optional JSON Schema for method parameters |
+| `resultSchema` | `Optional<String>` | `null` | Optional JSON Schema for the result |
 | `deprecated` | `boolean` | `/* serde(default) */` | Whether this method is deprecated |
 | `tags` | `List<String>` | `/* serde(default) */` | Tags for categorizing and grouping methods |
 
@@ -755,7 +755,7 @@ Request body for `POST /asyncapi/parse`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `Object` | — | Spec |
+| `spec` | `String` | — | Spec |
 
 ---
 
@@ -783,7 +783,7 @@ A single channel extracted from an AsyncAPI spec
 | `name` | `String` | — | Channel key from the spec (e.g. "chat/messages") |
 | `address` | `String` | — | Channel address / path |
 | `messages` | `List<String>` | — | Message names declared on this channel |
-| `bindings` | `Optional<Object>` | `null` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
+| `bindings` | `Optional<String>` | `null` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
 
@@ -794,7 +794,7 @@ A resolved message (name + JSON Schema)
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String` | — | Message name |
-| `schema` | `Optional<Object>` | `null` | Resolved JSON Schema for the message payload, if available |
+| `schema` | `Optional<String>` | `null` | Resolved JSON Schema for the message payload, if available |
 
 ---
 
@@ -1005,7 +1005,7 @@ HTTP Response with custom status code, headers, and content
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `Optional<Object>` | `null` | Response body content |
+| `content` | `Optional<String>` | `null` | Response body content |
 | `statusCode` | `short` | — | HTTP status code (defaults to 200) |
 | `headers` | `Map<String, String>` | `Collections.emptyMap()` | Response headers |
 
@@ -1074,7 +1074,7 @@ Provide a raw JSON schema for the request body.
 **Signature:**
 
 ```java
-public RouteBuilder requestSchemaJson(Object schema)
+public RouteBuilder requestSchemaJson(String schema)
 ```
 
 #### responseSchemaJson()
@@ -1084,7 +1084,7 @@ Provide a raw JSON schema for the response body.
 **Signature:**
 
 ```java
-public RouteBuilder responseSchemaJson(Object schema)
+public RouteBuilder responseSchemaJson(String schema)
 ```
 
 #### paramsSchemaJson()
@@ -1094,7 +1094,7 @@ Provide a raw JSON schema for request parameters.
 **Signature:**
 
 ```java
-public RouteBuilder paramsSchemaJson(Object schema)
+public RouteBuilder paramsSchemaJson(String schema)
 ```
 
 #### fileParamsJson()
@@ -1104,7 +1104,7 @@ Provide multipart file parameter configuration.
 **Signature:**
 
 ```java
-public RouteBuilder fileParamsJson(Object schema)
+public RouteBuilder fileParamsJson(String schema)
 ```
 
 #### cors()
@@ -1235,7 +1235,7 @@ retry: 3000
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `eventType` | `Optional<String>` | `null` | Event type (optional) |
-| `data` | `Object` | — | Event data (JSON value) |
+| `data` | `String` | — | Event data (JSON value) |
 | `id` | `Optional<String>` | `null` | Event ID (optional, for client-side reconnection) |
 | `retry` | `Optional<Long>` | `null` | Retry timeout in milliseconds (optional) |
 
@@ -1420,10 +1420,10 @@ Request body for `POST /asyncapi/validate`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `Object` | — | Spec |
+| `spec` | `String` | — | Spec |
 | `channel` | `String` | — | Channel |
 | `message` | `String` | — | Message |
-| `payload` | `Object` | — | Payload |
+| `payload` | `String` | — | Payload |
 
 ---
 
@@ -1468,7 +1468,7 @@ Messages are automatically parsed as JSON.
 **Signature:**
 
 ```java
-public Future handleMessage(Object message)
+public Future handleMessage(Value message)
 ```
 
 #### onConnect()

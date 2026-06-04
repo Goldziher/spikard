@@ -184,7 +184,7 @@ AsyncAPI HTTP endpoint configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `bool` | — | Enable AsyncAPI endpoints (default: false) |
-| `spec` | `Option<serde_json::Value>` | `Default::default()` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+| `spec` | `Option<String>` | `Default::default()` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 
@@ -486,8 +486,8 @@ Snapshot of a GraphQL subscription exchange over WebSocket.
 |-------|------|---------|-------------|
 | `operation_id` | `String` | — | Operation id used for the subscription request. |
 | `acknowledged` | `bool` | — | Whether the server acknowledged the GraphQL WebSocket connection. |
-| `event` | `Option<serde_json::Value>` | `None` | First `next.payload` received for this subscription, if any. |
-| `errors` | `Vec<serde_json::Value>` | — | GraphQL protocol errors emitted by the server. |
+| `event` | `Option<String>` | `None` | First `next.payload` received for this subscription, if any. |
+| `errors` | `Vec<String>` | — | GraphQL protocol errors emitted by the server. |
 | `complete_received` | `bool` | — | Whether a `complete` frame was observed for this operation. |
 
 ---
@@ -701,8 +701,8 @@ enabling discovery and documentation of RPC-compatible endpoints.
 |-------|------|---------|-------------|
 | `method_name` | `String` | — | The JSON-RPC method name (e.g., "user.create") |
 | `description` | `Option<String>` | `None` | Optional description of what the method does |
-| `params_schema` | `Option<serde_json::Value>` | `None` | Optional JSON Schema for method parameters |
-| `result_schema` | `Option<serde_json::Value>` | `None` | Optional JSON Schema for the result |
+| `params_schema` | `Option<String>` | `None` | Optional JSON Schema for method parameters |
+| `result_schema` | `Option<String>` | `None` | Optional JSON Schema for the result |
 | `deprecated` | `bool` | `/* serde(default) */` | Whether this method is deprecated |
 | `tags` | `Vec<String>` | `/* serde(default) */` | Tags for categorizing and grouping methods |
 
@@ -769,7 +769,7 @@ Request body for `POST /asyncapi/parse`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `serde_json::Value` | — | Spec |
+| `spec` | `String` | — | Spec |
 
 ---
 
@@ -797,7 +797,7 @@ A single channel extracted from an AsyncAPI spec
 | `name` | `String` | — | Channel key from the spec (e.g. "chat/messages") |
 | `address` | `String` | — | Channel address / path |
 | `messages` | `Vec<String>` | — | Message names declared on this channel |
-| `bindings` | `Option<serde_json::Value>` | `None` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
+| `bindings` | `Option<String>` | `None` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
 
@@ -808,7 +808,7 @@ A resolved message (name + JSON Schema)
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `String` | — | Message name |
-| `schema` | `Option<serde_json::Value>` | `None` | Resolved JSON Schema for the message payload, if available |
+| `schema` | `Option<String>` | `None` | Resolved JSON Schema for the message payload, if available |
 
 ---
 
@@ -833,9 +833,7 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ### Content-Type
-
 Responses using this struct should set:
-
 ```text
 Content-Type: application/problem+json
 ```
@@ -1021,7 +1019,7 @@ HTTP Response with custom status code, headers, and content
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `Option<serde_json::Value>` | `Default::default()` | Response body content |
+| `content` | `Option<String>` | `Default::default()` | Response body content |
 | `status_code` | `u16` | — | HTTP status code (defaults to 200) |
 | `headers` | `HashMap<String, String>` | `HashMap::new()` | Response headers |
 
@@ -1124,7 +1122,7 @@ Provide a raw JSON schema for the request body.
 **Signature:**
 
 ```rust
-pub fn request_schema_json(&self, schema: serde_json::Value) -> RouteBuilder
+pub fn request_schema_json(&self, schema: &str) -> RouteBuilder
 ```
 
 #### response_schema_json()
@@ -1134,7 +1132,7 @@ Provide a raw JSON schema for the response body.
 **Signature:**
 
 ```rust
-pub fn response_schema_json(&self, schema: serde_json::Value) -> RouteBuilder
+pub fn response_schema_json(&self, schema: &str) -> RouteBuilder
 ```
 
 #### params_schema_json()
@@ -1144,7 +1142,7 @@ Provide a raw JSON schema for request parameters.
 **Signature:**
 
 ```rust
-pub fn params_schema_json(&self, schema: serde_json::Value) -> RouteBuilder
+pub fn params_schema_json(&self, schema: &str) -> RouteBuilder
 ```
 
 #### file_params_json()
@@ -1154,7 +1152,7 @@ Provide multipart file parameter configuration.
 **Signature:**
 
 ```rust
-pub fn file_params_json(&self, schema: serde_json::Value) -> RouteBuilder
+pub fn file_params_json(&self, schema: &str) -> RouteBuilder
 ```
 
 #### cors()
@@ -1275,7 +1273,6 @@ Events can have an optional type, ID, and retry timeout for advanced scenarios.
 ### SSE Format
 
 Events are serialized to the following text format:
-
 ```text
 event: event_type
 data: {"json":"value"}
@@ -1286,7 +1283,7 @@ retry: 3000
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `event_type` | `Option<String>` | `None` | Event type (optional) |
-| `data` | `serde_json::Value` | — | Event data (JSON value) |
+| `data` | `String` | — | Event data (JSON value) |
 | `id` | `Option<String>` | `None` | Event ID (optional, for client-side reconnection) |
 | `retry` | `Option<u64>` | `None` | Retry timeout in milliseconds (optional) |
 
@@ -1417,7 +1414,7 @@ Send a GraphQL query/mutation to a custom endpoint
 **Signature:**
 
 ```rust
-pub fn graphql_at(&self, endpoint: &str, query: &str, variables: Option<serde_json::Value>, operation_name: Option<String>) -> ResponseSnapshot
+pub fn graphql_at(&self, endpoint: &str, query: &str, variables: Option<String>, operation_name: Option<String>) -> ResponseSnapshot
 ```
 
 #### graphql()
@@ -1427,7 +1424,7 @@ Send a GraphQL query/mutation
 **Signature:**
 
 ```rust
-pub fn graphql(&self, query: &str, variables: Option<serde_json::Value>, operation_name: Option<String>) -> ResponseSnapshot
+pub fn graphql(&self, query: &str, variables: Option<String>, operation_name: Option<String>) -> ResponseSnapshot
 ```
 
 #### graphql_subscription_at()
@@ -1440,7 +1437,7 @@ After the first payload is received, this client sends `complete` to unsubscribe
 **Signature:**
 
 ```rust
-pub fn graphql_subscription_at(&self, endpoint: &str, query: &str, variables: Option<serde_json::Value>, operation_name: Option<String>) -> GraphQlSubscriptionSnapshot
+pub fn graphql_subscription_at(&self, endpoint: &str, query: &str, variables: Option<String>, operation_name: Option<String>) -> GraphQlSubscriptionSnapshot
 ```
 
 #### graphql_subscription()
@@ -1452,7 +1449,7 @@ Uses `/graphql` as the default subscription endpoint.
 **Signature:**
 
 ```rust
-pub fn graphql_subscription(&self, query: &str, variables: Option<serde_json::Value>, operation_name: Option<String>) -> GraphQlSubscriptionSnapshot
+pub fn graphql_subscription(&self, query: &str, variables: Option<String>, operation_name: Option<String>) -> GraphQlSubscriptionSnapshot
 ```
 
 ---
@@ -1529,10 +1526,10 @@ Request body for `POST /asyncapi/validate`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `serde_json::Value` | — | Spec |
+| `spec` | `String` | — | Spec |
 | `channel` | `String` | — | Channel |
 | `message` | `String` | — | Message |
-| `payload` | `serde_json::Value` | — | Payload |
+| `payload` | `String` | — | Payload |
 
 ---
 
@@ -1577,7 +1574,7 @@ Messages are automatically parsed as JSON.
 **Signature:**
 
 ```rust
-pub fn handle_message(&self, message: serde_json::Value) -> Future
+pub fn handle_message(&self, message: Value) -> Future
 ```
 
 #### on_connect()

@@ -184,7 +184,7 @@ AsyncAPI HTTP endpoint configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `bool` | — | Enable AsyncAPI endpoints (default: false) |
-| `spec` | `?mixed` | `null` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+| `spec` | `?string` | `null` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 
@@ -486,8 +486,8 @@ Snapshot of a GraphQL subscription exchange over WebSocket.
 |-------|------|---------|-------------|
 | `operationId` | `string` | — | Operation id used for the subscription request. |
 | `acknowledged` | `bool` | — | Whether the server acknowledged the GraphQL WebSocket connection. |
-| `event` | `?mixed` | `null` | First `next.payload` received for this subscription, if any. |
-| `errors` | `array<mixed>` | — | GraphQL protocol errors emitted by the server. |
+| `event` | `?string` | `null` | First `next.payload` received for this subscription, if any. |
+| `errors` | `array<string>` | — | GraphQL protocol errors emitted by the server. |
 | `completeReceived` | `bool` | — | Whether a `complete` frame was observed for this operation. |
 
 ---
@@ -701,8 +701,8 @@ enabling discovery and documentation of RPC-compatible endpoints.
 |-------|------|---------|-------------|
 | `methodName` | `string` | — | The JSON-RPC method name (e.g., "user.create") |
 | `description` | `?string` | `null` | Optional description of what the method does |
-| `paramsSchema` | `?mixed` | `null` | Optional JSON Schema for method parameters |
-| `resultSchema` | `?mixed` | `null` | Optional JSON Schema for the result |
+| `paramsSchema` | `?string` | `null` | Optional JSON Schema for method parameters |
+| `resultSchema` | `?string` | `null` | Optional JSON Schema for the result |
 | `deprecated` | `bool` | `/* serde(default) */` | Whether this method is deprecated |
 | `tags` | `array<string>` | `/* serde(default) */` | Tags for categorizing and grouping methods |
 
@@ -769,7 +769,7 @@ Request body for `POST /asyncapi/parse`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `mixed` | — | Spec |
+| `spec` | `string` | — | Spec |
 
 ---
 
@@ -797,7 +797,7 @@ A single channel extracted from an AsyncAPI spec
 | `name` | `string` | — | Channel key from the spec (e.g. "chat/messages") |
 | `address` | `string` | — | Channel address / path |
 | `messages` | `array<string>` | — | Message names declared on this channel |
-| `bindings` | `?mixed` | `null` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
+| `bindings` | `?string` | `null` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
 
@@ -808,7 +808,7 @@ A resolved message (name + JSON Schema)
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `string` | — | Message name |
-| `schema` | `?mixed` | `null` | Resolved JSON Schema for the message payload, if available |
+| `schema` | `?string` | `null` | Resolved JSON Schema for the message payload, if available |
 
 ---
 
@@ -1019,7 +1019,7 @@ HTTP Response with custom status code, headers, and content
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `?mixed` | `null` | Response body content |
+| `content` | `?string` | `null` | Response body content |
 | `statusCode` | `int` | — | HTTP status code (defaults to 200) |
 | `headers` | `array<string, string>` | `{}` | Response headers |
 
@@ -1122,7 +1122,7 @@ Provide a raw JSON schema for the request body.
 **Signature:**
 
 ```php
-public function requestSchemaJson(mixed $schema): RouteBuilder
+public function requestSchemaJson(string $schema): RouteBuilder
 ```
 
 #### responseSchemaJson()
@@ -1132,7 +1132,7 @@ Provide a raw JSON schema for the response body.
 **Signature:**
 
 ```php
-public function responseSchemaJson(mixed $schema): RouteBuilder
+public function responseSchemaJson(string $schema): RouteBuilder
 ```
 
 #### paramsSchemaJson()
@@ -1142,7 +1142,7 @@ Provide a raw JSON schema for request parameters.
 **Signature:**
 
 ```php
-public function paramsSchemaJson(mixed $schema): RouteBuilder
+public function paramsSchemaJson(string $schema): RouteBuilder
 ```
 
 #### fileParamsJson()
@@ -1152,7 +1152,7 @@ Provide multipart file parameter configuration.
 **Signature:**
 
 ```php
-public function fileParamsJson(mixed $schema): RouteBuilder
+public function fileParamsJson(string $schema): RouteBuilder
 ```
 
 #### cors()
@@ -1283,7 +1283,7 @@ retry: 3000
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `eventType` | `?string` | `null` | Event type (optional) |
-| `data` | `mixed` | — | Event data (JSON value) |
+| `data` | `string` | — | Event data (JSON value) |
 | `id` | `?string` | `null` | Event ID (optional, for client-side reconnection) |
 | `retry` | `?int` | `null` | Retry timeout in milliseconds (optional) |
 
@@ -1468,10 +1468,10 @@ Request body for `POST /asyncapi/validate`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `mixed` | — | Spec |
+| `spec` | `string` | — | Spec |
 | `channel` | `string` | — | Channel |
 | `message` | `string` | — | Message |
-| `payload` | `mixed` | — | Payload |
+| `payload` | `string` | — | Payload |
 
 ---
 
@@ -1516,7 +1516,7 @@ Messages are automatically parsed as JSON.
 **Signature:**
 
 ```php
-public function handleMessage(mixed $message): Future
+public function handleMessage(Value $message): Future
 ```
 
 #### onConnect()
