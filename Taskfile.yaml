@@ -166,15 +166,41 @@ tasks:
     cmds:
       - rustup update stable
       - task: rust:upgrade
+      - task: zig:deps:upgrade
       - alef update --latest
       - prek autoupdate
       - cmd: |
           if command -v gau >/dev/null 2>&1; then
-            gau --update .
+            gau --recursive .github/
           else
-            echo "gau not installed; skipping (optional)"
+            echo "gau (gh-actions-updater) not installed; skipping"
           fi
         ignore_error: true
+
+  zig:deps:upgrade:
+    desc: "Upgrade zig dependencies in every build.zig.zon (via `zig fetch --save`)"
+    cmds:
+      - cmd: |
+          if ! command -v zig >/dev/null 2>&1; then
+            echo "zig not installed; skipping"
+            exit 0
+          fi
+          set -e
+          find . -name "build.zig.zon" \
+              -not -path "./target/*" \
+              -not -path "*/.build/*" \
+              -not -path "*/zig-cache/*" \
+              -not -path "*/zig-out/*" \
+              -not -path "*/test_apps/zig/zig-pkg/*" \
+              -print | while read -r zon; do
+            urls="$(grep '\.url' "$zon" | cut -d '=' -f 2 | cut -d '#' -f 1 | tr -d '" ,')"
+            [ -z "$urls" ] && continue
+            dir="$(dirname "$zon")"
+            echo "Updating zig deps in $dir"
+            for url in $urls; do
+              (cd "$dir" && zig fetch --save "$url")
+            done
+          done
 
   # === Coverage ===
   cov:rust:
