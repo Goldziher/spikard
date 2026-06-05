@@ -122,7 +122,7 @@ func main() {
 	// the TCP socket is bound, so the server is guaranteed to be accepting
 	// connections when this call returns.  This avoids the goroutine + polling
 	// pattern that previously exhausted cgo OS threads.
-	serverHandle, err := app.(host, port)
+	serverHandle, err := app.StartBackground(host, port)
 	if err != nil {
 		log.Fatalf("start background server on %s:%d: %v", host, port, err)
 	}
