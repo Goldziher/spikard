@@ -352,6 +352,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -389,6 +390,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -457,6 +459,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -504,6 +507,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -564,6 +568,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -605,6 +610,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(PanicHandlerImpl);
@@ -656,6 +662,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -706,6 +713,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -761,6 +769,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -812,6 +821,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -849,6 +859,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -893,6 +904,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -941,6 +953,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(PanicHandlerImpl);
@@ -983,6 +996,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1031,6 +1045,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1091,6 +1106,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1131,6 +1147,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1168,6 +1185,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1206,6 +1224,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(PanicHandlerImpl);
@@ -1257,6 +1276,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1296,6 +1316,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1333,6 +1354,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1383,6 +1405,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(PanicHandlerImpl);
@@ -1430,6 +1453,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1473,6 +1497,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1513,6 +1538,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1570,6 +1596,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1623,6 +1650,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1671,6 +1699,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1708,6 +1737,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(PanicHandlerImpl);
@@ -1776,6 +1806,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let boundary = "TestBoundary1234";
@@ -1854,6 +1885,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let mut headers = HashMap::new();
@@ -1918,6 +1950,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1987,6 +2020,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -2048,6 +2082,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -2116,6 +2151,7 @@ mod tests {
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
             jsonrpc_method: None,
+            compression: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);

@@ -1121,6 +1121,16 @@ Attach a CORS configuration for this route.
 public function cors(CorsConfig $cors): RouteBuilder
 ```
 
+#### compression()
+
+Attach a compression configuration for this route.
+
+**Signature:**
+
+```php
+public function compression(CompressionConfig $compression): RouteBuilder
+```
+
 #### sync()
 
 Mark the route as synchronous.

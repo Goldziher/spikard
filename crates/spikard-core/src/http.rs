@@ -225,6 +225,7 @@ impl Default for RouteMetadata {
             handler_dependencies: None,
             jsonrpc_method: None,
             static_response: None,
+            compression: None,
         }
     }
 }
@@ -544,6 +545,7 @@ mod tests {
             handler_dependencies: None,
             jsonrpc_method: None,
             static_response: None,
+            compression: None,
         };
         assert_eq!(metadata.method, "GET");
         assert_eq!(metadata.path, "/api/users");

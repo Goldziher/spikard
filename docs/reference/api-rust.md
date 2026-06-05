@@ -1121,6 +1121,16 @@ Attach a CORS configuration for this route.
 pub fn cors(&self, cors: CorsConfig) -> RouteBuilder
 ```
 
+#### compression()
+
+Attach a compression configuration for this route.
+
+**Signature:**
+
+```rust
+pub fn compression(&self, compression: CompressionConfig) -> RouteBuilder
+```
+
 #### sync()
 
 Mark the route as synchronous.

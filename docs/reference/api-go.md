@@ -1073,6 +1073,16 @@ Attach a CORS configuration for this route.
 func (o *RouteBuilder) Cors(cors CorsConfig) RouteBuilder
 ```
 
+#### Compression()
+
+Attach a compression configuration for this route.
+
+**Signature:**
+
+```go
+func (o *RouteBuilder) Compression(compression CompressionConfig) RouteBuilder
+```
+
 #### Sync()
 
 Mark the route as synchronous.

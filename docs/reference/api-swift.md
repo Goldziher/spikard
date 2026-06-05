@@ -1121,6 +1121,16 @@ Attach a CORS configuration for this route.
 public func cors(cors: CorsConfig) -> RouteBuilder
 ```
 
+#### compression()
+
+Attach a compression configuration for this route.
+
+**Signature:**
+
+```swift
+public func compression(compression: CompressionConfig) -> RouteBuilder
+```
+
 #### sync()
 
 Mark the route as synchronous.

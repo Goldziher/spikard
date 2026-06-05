@@ -58,6 +58,7 @@ fn route(path: &str, method: Method) -> Route {
         response_validator: None,
         parameter_validator: None,
         jsonrpc_method: None,
+        compression: None,
         #[cfg(feature = "di")]
         handler_dependencies: vec![],
     }

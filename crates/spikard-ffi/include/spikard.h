@@ -1830,6 +1830,14 @@ SPIKARDRouteBuilder *spikard_route_builder_cors(SPIKARDRouteBuilder *this_,
                                                 const SPIKARDCorsConfig *cors);
 
 /**
+ * Attach a compression configuration for this route.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+SPIKARDRouteBuilder *spikard_route_builder_compression(SPIKARDRouteBuilder *this_,
+                                                       const SPIKARDCompressionConfig *compression);
+
+/**
  * Mark the route as synchronous.
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.

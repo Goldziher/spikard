@@ -45,6 +45,7 @@ fn route(method: Method, path: &str, expects_json_body: bool) -> Route {
         response_validator: None,
         parameter_validator: None,
         jsonrpc_method: None,
+        compression: None,
         #[cfg(feature = "di")]
         handler_dependencies: Vec::new(),
     }

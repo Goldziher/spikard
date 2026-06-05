@@ -67,6 +67,7 @@ fn build_routes(path: &str) -> Vec<(Route, Arc<dyn Handler>)> {
                     deprecated: false,
                     tags: vec!["test".to_string()],
                 }),
+                compression: None,
                 #[cfg(feature = "di")]
                 handler_dependencies: Vec::new(),
             },
@@ -85,6 +86,7 @@ fn build_routes(path: &str) -> Vec<(Route, Arc<dyn Handler>)> {
                 response_validator: None,
                 parameter_validator: None,
                 jsonrpc_method: None,
+                compression: None,
                 #[cfg(feature = "di")]
                 handler_dependencies: Vec::new(),
             },
@@ -136,6 +138,7 @@ fn build_route_metadata(path: &str) -> Vec<RouteMetadata> {
                 .expect("jsonrpc method info"),
             ),
             static_response: None,
+            compression: None,
         },
         RouteMetadata {
             method: "POST".to_string(),
@@ -151,6 +154,7 @@ fn build_route_metadata(path: &str) -> Vec<RouteMetadata> {
             #[cfg(feature = "di")]
             handler_dependencies: None,
             jsonrpc_method: None,
+            compression: None,
             static_response: None,
         },
     ]
@@ -334,6 +338,7 @@ async fn static_response_route_serves_pre_built_response() {
         #[cfg(feature = "di")]
         handler_dependencies: None,
         jsonrpc_method: None,
+        compression: None,
         static_response: None,
     };
 
@@ -381,6 +386,7 @@ async fn static_and_dynamic_routes_coexist() {
         #[cfg(feature = "di")]
         handler_dependencies: None,
         jsonrpc_method: None,
+        compression: None,
         static_response: None,
     };
 
@@ -398,6 +404,7 @@ async fn static_and_dynamic_routes_coexist() {
         #[cfg(feature = "di")]
         handler_dependencies: None,
         jsonrpc_method: None,
+        compression: None,
         static_response: None,
     };
 

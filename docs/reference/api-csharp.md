@@ -1073,6 +1073,16 @@ Attach a CORS configuration for this route.
 public RouteBuilder Cors(CorsConfig cors)
 ```
 
+#### Compression()
+
+Attach a compression configuration for this route.
+
+**Signature:**
+
+```csharp
+public RouteBuilder Compression(CompressionConfig compression)
+```
+
 #### Sync()
 
 Mark the route as synchronous.

@@ -1073,6 +1073,16 @@ Attach a CORS configuration for this route.
 SpikardRouteBuilder spikard_cors(SpikardCorsConfig cors);
 ```
 
+#### spikard_compression()
+
+Attach a compression configuration for this route.
+
+**Signature:**
+
+```c
+SpikardRouteBuilder spikard_compression(SpikardCompressionConfig compression);
+```
+
 #### spikard_sync()
 
 Mark the route as synchronous.

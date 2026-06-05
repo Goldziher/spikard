@@ -1117,6 +1117,16 @@ Attach a CORS configuration for this route.
 def cors(cors)
 ```
 
+#### compression()
+
+Attach a compression configuration for this route.
+
+**Signature:**
+
+```ruby
+def compression(compression)
+```
+
 #### sync()
 
 Mark the route as synchronous.

@@ -98,6 +98,8 @@ pub struct Route {
     /// Optional JSON-RPC method information
     /// When present, this route can be exposed as a JSON-RPC method
     pub jsonrpc_method: Option<JsonRpcMethodInfo>,
+    /// Optional per-route compression configuration
+    pub compression: Option<crate::http::CompressionConfig>,
 }
 
 impl Default for Route {
@@ -116,6 +118,7 @@ impl Default for Route {
             #[cfg(feature = "di")]
             handler_dependencies: Vec::new(),
             jsonrpc_method: None,
+            compression: None,
         }
     }
 }
@@ -196,6 +199,7 @@ impl Route {
             #[cfg(feature = "di")]
             handler_dependencies: metadata.handler_dependencies.unwrap_or_default(),
             jsonrpc_method,
+            compression: metadata.compression,
         })
     }
 
@@ -291,6 +295,7 @@ mod tests {
             body_param_name: None,
             jsonrpc_method: None,
             static_response: None,
+            compression: None,
             #[cfg(feature = "di")]
             handler_dependencies: None,
         };
@@ -326,6 +331,7 @@ mod tests {
             body_param_name: None,
             jsonrpc_method: None,
             static_response: None,
+            compression: None,
             #[cfg(feature = "di")]
             handler_dependencies: None,
         };
@@ -359,6 +365,7 @@ mod tests {
             body_param_name: None,
             jsonrpc_method: None,
             static_response: None,
+            compression: None,
             #[cfg(feature = "di")]
             handler_dependencies: None,
         };
@@ -376,6 +383,7 @@ mod tests {
             body_param_name: None,
             jsonrpc_method: None,
             static_response: None,
+            compression: None,
             #[cfg(feature = "di")]
             handler_dependencies: None,
         };
@@ -455,6 +463,7 @@ mod tests {
             body_param_name: None,
             jsonrpc_method: None,
             static_response: None,
+            compression: None,
             #[cfg(feature = "di")]
             handler_dependencies: None,
         };
@@ -529,6 +538,7 @@ mod tests {
             body_param_name: None,
             jsonrpc_method: None,
             static_response: None,
+            compression: None,
             #[cfg(feature = "di")]
             handler_dependencies: None,
         };

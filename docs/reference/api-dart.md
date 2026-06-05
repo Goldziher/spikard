@@ -1121,6 +1121,16 @@ Attach a CORS configuration for this route.
 RouteBuilder cors(CorsConfig cors)
 ```
 
+#### compression()
+
+Attach a compression configuration for this route.
+
+**Signature:**
+
+```dart
+RouteBuilder compression(CompressionConfig compression)
+```
+
 #### sync()
 
 Mark the route as synchronous.

@@ -1142,6 +1142,16 @@ Attach a CORS configuration for this route.
 def cors(self, cors: CorsConfig) -> RouteBuilder
 ```
 
+#### compression()
+
+Attach a compression configuration for this route.
+
+**Signature:**
+
+```python
+def compression(self, compression: CompressionConfig) -> RouteBuilder
+```
+
 #### sync()
 
 Mark the route as synchronous.

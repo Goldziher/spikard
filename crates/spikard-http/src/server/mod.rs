@@ -91,6 +91,7 @@ fn route_to_metadata(route: &crate::Route) -> crate::RouteMetadata {
                 .as_ref()
                 .map(|info| serde_json::to_value(info).unwrap_or(serde_json::json!(null))),
             static_response: None,
+            compression: route.compression.clone(),
         }
     }
     #[cfg(not(feature = "di"))]
@@ -120,6 +121,7 @@ fn route_to_metadata(route: &crate::Route) -> crate::RouteMetadata {
                 .as_ref()
                 .map(|info| serde_json::to_value(info).unwrap_or(serde_json::json!(null))),
             static_response: None,
+            compression: route.compression.clone(),
         }
     }
 }
@@ -1231,6 +1233,7 @@ mod tests {
             response_validator: None,
             parameter_validator: None,
             jsonrpc_method: None,
+            compression: None,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
         }
@@ -1256,6 +1259,7 @@ mod tests {
             response_validator: None,
             parameter_validator: None,
             jsonrpc_method: None,
+            compression: None,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
         }

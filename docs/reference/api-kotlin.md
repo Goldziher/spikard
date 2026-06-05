@@ -1097,6 +1097,16 @@ Attach a CORS configuration for this route.
 fun cors(cors: CorsConfig): RouteBuilder
 ```
 
+#### compression()
+
+Attach a compression configuration for this route.
+
+**Signature:**
+
+```kotlin
+fun compression(compression: CompressionConfig): RouteBuilder
+```
+
 #### sync()
 
 Mark the route as synchronous.

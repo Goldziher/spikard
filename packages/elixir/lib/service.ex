@@ -1,6 +1,6 @@
 # This file is generated. Do not edit.
 
-defmodule App do
+defmodule Spikard.App do
   @moduledoc """
   Spikard application builder.
   """

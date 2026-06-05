@@ -107,9 +107,11 @@ for fixture_id, fixture in _FIXTURES.items():
                             return value or ""
                     return ""
 
-                origin = get_header_value(kwargs, "origin")
-                request_method = get_header_value(kwargs, "access-control-request-method")
-                request_headers = get_header_value(kwargs, "access-control-request-headers")
+                request_data = args[0] or {}
+                headers_dict = request_data.get("headers", {})
+                origin = get_header_value(headers_dict, "origin")
+                request_method = get_header_value(headers_dict, "access-control-request-method")
+                request_headers = get_header_value(headers_dict, "access-control-request-headers")
 
                 # Simple CORS validation: check origin and method
                 allowed_origins = cors_cfg.get("allowed_origins") or []

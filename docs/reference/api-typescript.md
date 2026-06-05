@@ -1121,6 +1121,16 @@ Attach a CORS configuration for this route.
 cors(cors: CorsConfig): RouteBuilder
 ```
 
+#### compression()
+
+Attach a compression configuration for this route.
+
+**Signature:**
+
+```typescript
+compression(compression: CompressionConfig): RouteBuilder
+```
+
 #### sync()
 
 Mark the route as synchronous.

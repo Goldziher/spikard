@@ -1073,6 +1073,16 @@ Attach a CORS configuration for this route.
 public RouteBuilder cors(CorsConfig cors)
 ```
 
+#### compression()
+
+Attach a compression configuration for this route.
+
+**Signature:**
+
+```java
+public RouteBuilder compression(CompressionConfig compression)
+```
+
 #### sync()
 
 Mark the route as synchronous.
