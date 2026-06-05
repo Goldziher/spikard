@@ -70,4 +70,9 @@ object SpikardBridge {
     @Throws(SpikardBridgeException::class)
     external fun nativeRouteBuilderHandlerDependencies(handle: Long, requestJson: String): String
     external fun nativeFreeRouteBuilder(handle: Long)
+
+    // Destructor external funs for handle-only opaque types.
+    external fun nativeFreeHandlerResult(handle: Long)
+    external fun nativeFreeRequest(handle: Long)
+    external fun nativeFreeRequestData(handle: Long)
 }

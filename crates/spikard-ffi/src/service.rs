@@ -556,45 +556,6 @@ pub extern "C" fn spikard_app_trace(
     }
 }
 
-/// Apply server configuration (host, port, workers) to the App.
-///
-/// Replaces the App's `ServerConfig` with a default config whose `host`, `port`,
-/// and `workers` fields are overridden by the provided arguments. Call this
-/// before `spikard_app_ep_run`. Other ServerConfig fields stay at their defaults.
-///
-/// # Safety
-/// - `owner` must be a valid pointer returned by `spikard_app_new()` and not yet freed.
-/// - `host` must be a valid null-terminated UTF-8 C string; the caller retains ownership.
-/// Returns 0 on success, non-zero error code on failure.
-#[no_mangle]
-pub extern "C" fn spikard_app_config(owner: *mut AppOpaque, host: *const c_char, port: u16, workers: usize) -> i32 {
-    if owner.is_null() || host.is_null() {
-        return 1;
-    }
-
-    let host_str = match unsafe { CStr::from_ptr(host) }.to_str() {
-        Ok(s) => s.to_string(),
-        Err(_) => return 1,
-    };
-
-    let cfg = spikard::ServerConfig {
-        host: host_str,
-        port,
-        workers,
-        ..spikard::ServerConfig::default()
-    };
-
-    // SAFETY: owner was allocated by _new() and is valid until freed.
-    // App::config(self, cfg) consumes self and returns Self, so we take the
-    // boxed App out, configure it, and put it back.
-    unsafe {
-        let owner_ref = &mut (*owner).inner;
-        let owned: Box<spikard::App> = std::mem::replace(owner_ref, Box::new(spikard::App::new()));
-        *owner_ref = Box::new((*owned).config(cfg));
-    }
-    0
-}
-
 /// Run the service entrypoint 'run'.
 ///
 /// # Safety
