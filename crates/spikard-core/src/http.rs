@@ -189,6 +189,8 @@ pub struct RouteMetadata {
     #[serde(default)]
     pub is_async: bool,
     pub cors: Option<CorsConfig>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub compression: Option<CompressionConfig>,
     /// Name of the body parameter (defaults to "body" if not specified)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub body_param_name: Option<String>,

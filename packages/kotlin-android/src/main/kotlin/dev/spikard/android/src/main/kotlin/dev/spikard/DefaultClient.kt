@@ -128,6 +128,12 @@ class RouteBuilder internal constructor(internal val handle: Long) : AutoCloseab
         return MAPPER.readValue(responseJson, RouteBuilder::class.java)
     }
 
+    // Attach a compression configuration for this route.
+    fun compression(compression: CompressionConfig): RouteBuilder {
+        val responseJson = SpikardBridge.nativeRouteBuilderCompression(handle, MAPPER.writeValueAsString(compression))
+        return MAPPER.readValue(responseJson, RouteBuilder::class.java)
+    }
+
     // Mark the route as synchronous.
     fun sync(): RouteBuilder {
         val responseJson = SpikardBridge.nativeRouteBuilderSync(handle)

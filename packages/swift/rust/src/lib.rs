@@ -397,6 +397,8 @@ mod ffi {
         fn route_builder_file_params_json(client: &RouteBuilder, schema: String) -> RouteBuilder;
         #[swift_bridge(swift_name = "routeBuilderCors")]
         fn route_builder_cors(client: &RouteBuilder, cors: CorsConfig) -> RouteBuilder;
+        #[swift_bridge(swift_name = "routeBuilderCompression")]
+        fn route_builder_compression(client: &RouteBuilder, compression: CompressionConfig) -> RouteBuilder;
         #[swift_bridge(swift_name = "routeBuilderSync")]
         fn route_builder_sync(client: &RouteBuilder) -> RouteBuilder;
         #[swift_bridge(swift_name = "routeBuilderHandlerDependencies")]
@@ -568,6 +570,8 @@ mod ffi {
     extern "Rust" {
         #[swift_bridge(swift_name = "corsConfigFromJson")]
         fn cors_config_from_json(json: String) -> Result<CorsConfig, String>;
+        #[swift_bridge(swift_name = "compressionConfigFromJson")]
+        fn compression_config_from_json(json: String) -> Result<CompressionConfig, String>;
     }
     extern "Rust" {
         #[swift_bridge(swift_name = "uploadFileFromJson")]
@@ -584,8 +588,6 @@ mod ffi {
         fn background_task_config_from_json(json: String) -> Result<BackgroundTaskConfig, String>;
         #[swift_bridge(swift_name = "backgroundJobMetadataFromJson")]
         fn background_job_metadata_from_json(json: String) -> Result<BackgroundJobMetadata, String>;
-        #[swift_bridge(swift_name = "compressionConfigFromJson")]
-        fn compression_config_from_json(json: String) -> Result<CompressionConfig, String>;
         #[swift_bridge(swift_name = "rateLimitConfigFromJson")]
         fn rate_limit_config_from_json(json: String) -> Result<RateLimitConfig, String>;
         #[swift_bridge(swift_name = "grpcConfigFromJson")]
@@ -1672,6 +1674,9 @@ pub fn route_builder_file_params_json(client: &RouteBuilder, schema: String) -> 
 pub fn route_builder_cors(client: &RouteBuilder, cors: CorsConfig) -> RouteBuilder {
     RouteBuilder(client.0.clone().cors(cors.0))
 }
+pub fn route_builder_compression(client: &RouteBuilder, compression: CompressionConfig) -> RouteBuilder {
+    RouteBuilder(client.0.clone().compression(compression.0))
+}
 pub fn route_builder_sync(client: &RouteBuilder) -> RouteBuilder {
     RouteBuilder(client.0.clone().sync())
 }
@@ -1995,6 +2000,11 @@ pub fn cors_config_from_json(json: String) -> Result<CorsConfig, String> {
         .map(CorsConfig)
         .map_err(|e| e.to_string())
 }
+pub fn compression_config_from_json(json: String) -> Result<CompressionConfig, String> {
+    serde_json::from_str::<spikard::CompressionConfig>(&json)
+        .map(CompressionConfig)
+        .map_err(|e| e.to_string())
+}
 pub fn upload_file_from_json(json: String) -> Result<UploadFile, String> {
     serde_json::from_str::<spikard::UploadFile>(&json)
         .map(UploadFile)
@@ -2028,11 +2038,6 @@ pub fn background_task_config_from_json(json: String) -> Result<BackgroundTaskCo
 pub fn background_job_metadata_from_json(json: String) -> Result<BackgroundJobMetadata, String> {
     serde_json::from_str::<spikard::BackgroundJobMetadata>(&json)
         .map(BackgroundJobMetadata)
-        .map_err(|e| e.to_string())
-}
-pub fn compression_config_from_json(json: String) -> Result<CompressionConfig, String> {
-    serde_json::from_str::<spikard::CompressionConfig>(&json)
-        .map(CompressionConfig)
         .map_err(|e| e.to_string())
 }
 pub fn rate_limit_config_from_json(json: String) -> Result<RateLimitConfig, String> {

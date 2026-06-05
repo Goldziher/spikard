@@ -293,6 +293,7 @@ pub struct RouteBuilder {
     parameter_schema: Option<serde_json::Value>,
     file_params: Option<serde_json::Value>,
     cors: Option<CorsConfig>,
+    compression: Option<CompressionConfig>,
     is_async: bool,
     #[cfg(feature = "di")]
     handler_dependencies: Option<Vec<String>>,
@@ -313,6 +314,7 @@ impl RouteBuilder {
             parameter_schema: None,
             file_params: None,
             cors: None,
+            compression: None,
             is_async: true,
             #[cfg(feature = "di")]
             handler_dependencies: None,
@@ -382,6 +384,13 @@ impl RouteBuilder {
         self
     }
 
+    /// Attach a compression configuration for this route.
+    #[must_use]
+    pub fn compression(mut self, compression: CompressionConfig) -> Self {
+        self.compression = Some(compression);
+        self
+    }
+
     /// Mark the route as synchronous.
     #[must_use]
     pub const fn sync(mut self) -> Self {
@@ -410,6 +419,7 @@ impl RouteBuilder {
                 file_params: self.file_params,
                 is_async: self.is_async,
                 cors: self.cors,
+                compression: self.compression,
                 body_param_name: None,
                 handler_dependencies: self.handler_dependencies,
                 jsonrpc_method: None,
@@ -428,6 +438,7 @@ impl RouteBuilder {
                 file_params: self.file_params,
                 is_async: self.is_async,
                 cors: self.cors,
+                compression: self.compression,
                 body_param_name: None,
                 jsonrpc_method: None,
                 static_response: None,

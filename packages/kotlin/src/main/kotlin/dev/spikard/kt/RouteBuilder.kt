@@ -23,6 +23,7 @@
 
 package dev.spikard.kt
 
+import dev.spikard.CompressionConfig
 import dev.spikard.CorsConfig
 import dev.spikard.RouteBuilder
 
@@ -60,6 +61,11 @@ class RouteBuilder internal constructor(internal val inner: dev.spikard.RouteBui
     // Attach a CORS configuration for this route.
     fun cors(cors: CorsConfig): RouteBuilder {
         return inner.cors(cors)
+    }
+
+    // Attach a compression configuration for this route.
+    fun compression(compression: CompressionConfig): RouteBuilder {
+        return inner.compression(compression)
     }
 
     // Mark the route as synchronous.

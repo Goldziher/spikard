@@ -843,6 +843,10 @@ impl RouteBuilder {
         (|v| RouteBuilder::from(v))(self.inner.cors(spikard::CorsConfig::from(cors)))
     }
     #[frb]
+    pub fn compression(self, compression: CompressionConfig) -> RouteBuilder {
+        (|v| RouteBuilder::from(v))(self.inner.compression(spikard::CompressionConfig::from(compression)))
+    }
+    #[frb]
     pub fn sync(self) -> RouteBuilder {
         (|v| RouteBuilder::from(v))(self.inner.sync())
     }
@@ -1630,6 +1634,17 @@ impl From<CorsConfig> for spikard::CorsConfig {
             allow_credentials: v.allow_credentials.map(|x| x as _),
             methods_joined_cache: Default::default(),
             headers_joined_cache: Default::default(),
+        }
+    }
+}
+
+impl From<CompressionConfig> for spikard::CompressionConfig {
+    fn from(v: CompressionConfig) -> Self {
+        spikard::CompressionConfig {
+            gzip: v.gzip as _,
+            brotli: v.brotli as _,
+            min_size: v.min_size as _,
+            quality: v.quality as _,
         }
     }
 }

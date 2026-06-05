@@ -62,6 +62,8 @@ object SpikardBridge {
     @Throws(SpikardBridgeException::class)
     external fun nativeRouteBuilderCors(handle: Long, requestJson: String): String
     @Throws(SpikardBridgeException::class)
+    external fun nativeRouteBuilderCompression(handle: Long, requestJson: String): String
+    @Throws(SpikardBridgeException::class)
     external fun nativeRouteBuilderSync(handle: Long): String
     @Throws(SpikardBridgeException::class)
     external fun nativeRouteBuilderHandlerDependencies(handle: Long, requestJson: String): String

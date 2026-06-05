@@ -779,6 +779,17 @@ pub const RouteBuilder = struct {
         return RouteBuilder{ ._handle = _result.? };
     }
 
+    /// Attach a compression configuration for this route.
+    pub fn compression(self: *RouteBuilder, value: []const u8) error{OutOfMemory,InvalidJson}!RouteBuilder {
+        const value_z = try std.heap.c_allocator.dupeZ(u8, value);
+        defer std.heap.c_allocator.free(value_z);
+        const value_handle = c.spikard_compression_config_from_json(value_z.ptr);
+        if (value_handle == null) return error.InvalidJson;
+        defer c.spikard_compression_config_free(value_handle);
+        const _result = c.spikard_route_builder_compression(@as(*c.SPIKARDRouteBuilder, @ptrCast(self._handle)), value_handle);
+        return RouteBuilder{ ._handle = _result.? };
+    }
+
     /// Mark the route as synchronous.
     pub fn sync(self: *RouteBuilder) RouteBuilder {
         const _result = c.spikard_route_builder_sync(@as(*c.SPIKARDRouteBuilder, @ptrCast(self._handle)));
