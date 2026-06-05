@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.23.2"
+alef_version = "0.23.6"
 languages = [
   "python",
   "node",
@@ -361,10 +361,15 @@ build = "cd packages/kotlin && gradle build -x test --no-daemon"
 build_release = "cd packages/kotlin && gradle build -x test --no-daemon"
 
 [crates.build_commands.kotlin_android]
+# Android library scaffold (packages/kotlin-android/build.gradle.kts + AGP)
+# is not yet emitted by alef's kotlin_android backend. Binding code is compiled
+# via the cargo-built JNI ffi crate; e2e tests build their own gradle project
+# under e2e/kotlin_android/. Binding-level gradle build is a no-op until alef
+# emits a full Android library scaffold.
 precondition = "command -v gradle >/dev/null 2>&1"
 before = "cargo build -p spikard-ffi"
-build = "cd packages/kotlin-android && gradle build -x test --no-daemon"
-build_release = "cd packages/kotlin-android && gradle build -x test --no-daemon"
+build = ":"
+build_release = ":"
 
 [crates.build_commands.swift]
 precondition = "command -v swift >/dev/null 2>&1"
@@ -556,6 +561,13 @@ methods = [
   # bindings drive the server through `App.serve` / `ServerConfig` instead. Same
   # non-delegatable shape as `App.config` from the napi `&self` perspective.
   "App.run",
+  # `are_headers_allowed` in `crates/spikard-http/src/cors.rs` is a PRIVATE free
+  # function. The alef extractor still associates it with `CorsConfig` via name
+  # prefix matching (the function name starts with `are_headers_…` and lives in
+  # the same module as `CorsConfig`), even though `extract_function` now skips
+  # private *free* functions at the extraction boundary. Until the
+  # function→type association heuristic is tightened, keep the exclude here.
+  "CorsConfig.are_headers_allowed",
   "RouteBuilder.request_body",
   "RouteBuilder.response_body",
   "RouteBuilder.params",

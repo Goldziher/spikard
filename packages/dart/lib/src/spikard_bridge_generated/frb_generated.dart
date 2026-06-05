@@ -502,7 +502,7 @@ abstract class RustLibApi extends BaseApi {
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_TestClientPtr;
 }
 
-class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi async {
+class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RustLibApiImpl({
     required super.handler,
     required super.wire,
@@ -515,10 +515,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi async 
     required App that,
     required String path,
     required FutureOr<String> Function(String) handler,
-  }) async {
-    return await handler(
+  }) {
+    return handler(
       SyncTask(
-        callFfi: () async {
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
             that,
@@ -552,10 +552,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi async 
     required App that,
     required String path,
     required FutureOr<String> Function(String) handler,
-  }) async {
-    return await handler(
+  }) {
+    return handler(
       SyncTask(
-        callFfi: () async {
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
             that,
@@ -589,10 +589,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi async 
     required App that,
     required String path,
     required FutureOr<String> Function(String) handler,
-  }) async {
-    return await handler(
+  }) {
+    return handler(
       SyncTask(
-        callFfi: () async {
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
             that,
@@ -626,10 +626,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi async 
     required App that,
     required String path,
     required FutureOr<String> Function(String) handler,
-  }) async {
-    return await handler(
+  }) {
+    return handler(
       SyncTask(
-        callFfi: () async {
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
             that,
@@ -659,10 +659,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi async 
   );
 
   @override
-  App crateServiceApiAppNew() async {
-    return await handler(
+  App crateServiceApiAppNew() {
+    return handler(
       SyncTask(
-        callFfi: () async {
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 5)!;
         },
@@ -686,10 +686,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi async 
     required App that,
     required String path,
     required FutureOr<String> Function(String) handler,
-  }) async {
-    return await handler(
+  }) {
+    return handler(
       SyncTask(
-        callFfi: () async {
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
             that,
@@ -723,10 +723,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi async 
     required App that,
     required String path,
     required FutureOr<String> Function(String) handler,
-  }) async {
-    return await handler(
+  }) {
+    return handler(
       SyncTask(
-        callFfi: () async {
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
             that,
@@ -760,10 +760,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi async 
     required App that,
     required String path,
     required FutureOr<String> Function(String) handler,
-  }) async {
-    return await handler(
+  }) {
+    return handler(
       SyncTask(
-        callFfi: () async {
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
             that,
@@ -797,10 +797,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi async 
     required App that,
     required String path,
     required FutureOr<String> Function(String) handler,
-  }) async {
-    return await handler(
+  }) {
+    return handler(
       SyncTask(
-        callFfi: () async {
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
             that,
@@ -834,10 +834,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi async 
     required App that,
     required RouteBuilder builder,
     required FutureOr<String> Function(String) handler,
-  }) async {
-    return await handler(
+  }) {
+    return handler(
       SyncTask(
-        callFfi: () async {
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
             that,
@@ -905,10 +905,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi async 
     required App that,
     required String path,
     required FutureOr<String> Function(String) handler,
-  }) async {
-    return await handler(
+  }) {
+    return handler(
       SyncTask(
-        callFfi: () async {
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
             that,
