@@ -39,11 +39,18 @@ class App {
   }
 
   /**
-   * Register a route callback directly.
+   * Register a route callback directly (snake_case form).
    */
   register_route(builder, handler) {
     this._registrations.push(["route", [builder], handler]);
     return this;
+  }
+
+  /**
+   * Register a route callback directly (camelCase alias for register_route).
+   */
+  registerRoute(builder, handler) {
+    return this.register_route(builder, handler);
   }
 
   /**
