@@ -41,8 +41,10 @@ public class ValidationErrorsTest {
         pb.redirectErrorStream(false);
         harnessProcess = pb.start();
 
-        // Read SUT_URL from harness stdout
-        // Also drain stderr in a background thread so the pipe doesn't block
+        // Drain harness output in background (optional port discovery, but primarily
+        // to prevent pipe blocking). The harness may emit HARNESS_PORT but stdout buffering
+        // when piped often prevents timely delivery, so we don't rely on it — instead we
+        // use a default port and TCP polling below.
         java.io.BufferedReader reader = new java.io.BufferedReader(
             new java.io.InputStreamReader(harnessProcess.getInputStream(), "UTF-8")
         );
@@ -59,28 +61,28 @@ public class ValidationErrorsTest {
         });
         stderrDrainer.setDaemon(true);
         stderrDrainer.start();
+        Thread stdoutDrainer = new Thread(() -> {
+            try {
+                String outLine;
+                while ((outLine = reader.readLine()) != null) {
+                    // Optionally parse HARNESS_PORT if present, but don't rely on it
+                    if (outLine.startsWith("HARNESS_PORT=")) {
+                        System.out.println("[Harness port marker] " + outLine);
+                    }
+                }
+            } catch (java.io.IOException ignored) {}
+        });
+        stdoutDrainer.setDaemon(true);
+        stdoutDrainer.start();
 
-        String line;
+        // Use the default harness port and TCP polling to verify reachability
+        int harnessPort = 8000;
+        String host = "127.0.0.1";
+        int port = harnessPort;
+        sutUrl = "http://" + host + ":" + port;
+
+        // TCP-readiness probe: poll until the harness accepts connections on the configured port
         long deadline = System.currentTimeMillis() + 15_000;
-        while (System.currentTimeMillis() < deadline && (line = reader.readLine()) != null) {
-            if (line.startsWith("SUT_URL=")) {
-                sutUrl = line.substring("SUT_URL=".length()).trim();
-                break;
-            }
-        }
-
-        if (sutUrl == null || sutUrl.isEmpty()) {
-            if (harnessProcess != null) {
-                harnessProcess.destroyForcibly();
-            }
-            throw new RuntimeException("Harness did not emit SUT_URL within 15s");
-        }
-
-        // TCP-readiness probe: ensure harness is accepting connections
-        java.net.URI uri = new java.net.URI(sutUrl);
-        String host = uri.getHost();
-        int port = uri.getPort() > 0 ? uri.getPort() : 8000;
-        deadline = System.currentTimeMillis() + 15_000;
         boolean ready = false;
         while (System.currentTimeMillis() < deadline) {
             if (harnessProcess.isAlive() == false) {
