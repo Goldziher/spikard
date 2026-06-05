@@ -60,9 +60,7 @@ Future<void> main() async {
     if (methodEnum == null) continue;
 
     // Build the RouteBuilder with the path, method, and optional body schema.
-    var builder = (await RouteBuilder.new_())
-        .path(fullRoute)
-        .method(methodEnum);
+    var builder = await RouteBuilder.newInstance(method: methodEnum, path: fullRoute);
 
     if (bodySchema != null && bodySchema.isNotEmpty) {
       builder = await builder.requestSchemaJson(bodySchema);

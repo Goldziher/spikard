@@ -96,7 +96,7 @@ public class HarnessMain {
                 };
 
                 // Create RouteBuilder with the method enum and full route
-                RouteBuilder builder = RouteBuilder.create(Method.valueOf(method), fullRoute);
+                RouteBuilder builder = RouteBuilder.create(Method.fromValue(method), fullRoute);
 
                 // Register the handler with the app
                 int regResult = app.registerAppRoute(handler, builder);

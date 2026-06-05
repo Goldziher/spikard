@@ -71,10 +71,10 @@ app = Enum.reduce(fixtures, app, fn {fixture_id, fixture}, app_acc ->
 end)
 
 # Configure and start the server
-config = %Spikard.ServerConfig{
+config = struct(Spikard.ServerConfig, %{
   host: "127.0.0.1",
   port: 8000
-}
+})
 
 app = Spikard.App.config(app, config)
 IO.puts("Harness listening on 127.0.0.1:8000")
