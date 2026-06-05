@@ -252,6 +252,31 @@ impl App {
         Ok(router)
     }
 
+    /// Decompose the application into its Axum router and server configuration.
+    ///
+    /// This is the low-level escape hatch used by the C FFI layer to start the
+    /// server on a background thread while retaining the bind address from the
+    /// caller-supplied [`ServerConfig`].  Prefer [`App::run`] for normal use.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if router construction fails.
+    pub fn into_router_and_config(self) -> std::result::Result<(axum::Router, ServerConfig), AppError> {
+        let Self {
+            config,
+            routes,
+            metadata,
+            attached_routers,
+            ..
+        } = self;
+        let mut router =
+            Server::with_handlers_and_metadata(config.clone(), routes, metadata).map_err(AppError::Server)?;
+        for extra in attached_routers {
+            router = router.merge(extra);
+        }
+        Ok((router, config))
+    }
+
     /// Run the HTTP server using the configured routes.
     ///
     /// # Errors
@@ -386,7 +411,7 @@ impl RouteBuilder {
 
     /// Attach a compression configuration for this route.
     #[must_use]
-    pub fn compression(mut self, compression: CompressionConfig) -> Self {
+    pub const fn compression(mut self, compression: CompressionConfig) -> Self {
         self.compression = Some(compression);
         self
     }

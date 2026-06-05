@@ -9,12 +9,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
-	"time"
 	spikard "github.com/Goldziher/spikard"
 )
 
@@ -120,25 +118,13 @@ func main() {
 		}
 	}
 
-	// Spawn the server in a goroutine and poll for port readiness.
-	runErr := make(chan error, 1)
-	go func() {
-		runErr <- app.Run()
-	}()
-
-	// Poll the bind port with 50ms intervals, capped at 500ms total.
-	addr := fmt.Sprintf("%s:%d", host, port)
-	readyDeadline := time.Now().Add(500 * time.Millisecond)
-	for {
-		if time.Now().After(readyDeadline) {
-			log.Fatalf("server did not bind to %s within 500ms", addr)
-		}
-		conn, err := net.DialTimeout("tcp", addr, 50*time.Millisecond)
-		if err == nil {
-			conn.Close()
-			break
-		}
-		time.Sleep(50 * time.Millisecond)
+	// Start the server on a background OS thread.  StartBackground blocks until
+	// the TCP socket is bound, so the server is guaranteed to be accepting
+	// connections when this call returns.  This avoids the goroutine + polling
+	// pattern that previously exhausted cgo OS threads.
+	serverHandle, err := app.(host, port)
+	if err != nil {
+		log.Fatalf("start background server on %s:%d: %v", host, port, err)
 	}
 
 	// Signal readiness to the parent test process.
@@ -148,15 +134,8 @@ func main() {
 	// Graceful shutdown on interrupt.
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-sigChan
-		os.Exit(0)
-	}()
-
-	// Wait for the server to finish (should not return unless error).
-	if err := <-runErr; err != nil {
-		log.Fatalf("run: %v", err)
-	}
+	<-sigChan
+	serverHandle.Stop()
 }
 
 // makeHandler returns a handler function that always returns the expected response.

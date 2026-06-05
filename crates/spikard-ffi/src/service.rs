@@ -1,4 +1,9 @@
-#![allow(clippy::too_many_arguments, unused_variables, unused_mut)]
+#![allow(
+    clippy::too_many_arguments,
+    clippy::not_unsafe_ptr_arg_deref,
+    unused_variables,
+    unused_mut
+)]
 
 use std::ffi::{c_char, c_void, CStr, CString};
 use std::panic;
@@ -575,6 +580,180 @@ pub extern "C" fn spikard_app_ep_run(owner: *mut AppOpaque) -> i32 {
         Ok(_) => 0,
         Err(_) => 1,
     }
+}
+
+/// Opaque handle to a running background server.
+/// Returned by `spikard_app_ep_start_background`, consumed by `spikard_app_ep_stop`.
+pub struct ServerHandle {
+    thread: Option<std::thread::JoinHandle<()>>,
+    shutdown_tx: Option<tokio::sync::oneshot::Sender<()>>,
+}
+
+/// Start the HTTP server on a background OS thread and return immediately.
+///
+/// Unlike `spikard_app_ep_run`, this function does **not** block the calling
+/// thread (safe for cgo / JNI / P-Invoke callers).  It spawns a dedicated OS
+/// thread outside any managed thread pool, creates a Tokio runtime on that
+/// thread, binds the TCP listener, and returns a non-null `*mut ServerHandle`
+/// only after the socket is bound and the server is ready to accept connections.
+///
+/// The caller must eventually pass the returned handle to
+/// `spikard_app_ep_stop` to shut the server down and release resources.
+///
+/// Returns null if the server fails to start (e.g. port already in use or
+/// the 10-second bind timeout expires).
+///
+/// # Parameters
+///
+/// * `owner` – consumed by this call; must not be used or freed afterwards.
+/// * `host`  – null-terminated bind address (e.g. `"127.0.0.1"`), or null to
+///             use the address from the App's `ServerConfig`.
+/// * `port`  – TCP port to bind, or 0 to use the port from `ServerConfig`.
+///
+/// # Safety
+/// - `owner` must be a valid pointer returned by `spikard_app_new()` and not
+///   yet freed.
+/// - `host`, if non-null, must be a valid null-terminated UTF-8 string.
+/// - The returned handle must be freed via `spikard_app_ep_stop`.
+// <!-- go-ffi-nonblock -->
+#[no_mangle]
+pub extern "C" fn spikard_app_ep_start_background(
+    owner: *mut AppOpaque,
+    host: *const c_char,
+    port: u16,
+) -> *mut ServerHandle {
+    if owner.is_null() {
+        return std::ptr::null_mut();
+    }
+
+    // SAFETY: owner was allocated by _new() (Box::into_raw) and is consumed here.
+    let owner = unsafe { Box::from_raw(owner) };
+    let inner = *owner.inner;
+
+    // Parse the optional host override from the C string.
+    let host_override: Option<String> = if host.is_null() {
+        None
+    } else {
+        // SAFETY: null-checked above; caller guarantees a valid null-terminated UTF-8 string.
+        match unsafe { CStr::from_ptr(host) }.to_str() {
+            Ok(s) => Some(s.to_owned()),
+            Err(_) => return std::ptr::null_mut(),
+        }
+    };
+
+    // Channel: spawned thread sends Ok(()) once the socket is bound, Err on failure.
+    let (ready_tx, ready_rx) = std::sync::mpsc::channel::<Result<(), String>>();
+
+    // Oneshot used by the caller to request graceful shutdown.
+    let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel::<()>();
+
+    let thread = std::thread::spawn(move || {
+        let rt = match tokio::runtime::Runtime::new() {
+            Ok(r) => r,
+            Err(e) => {
+                let _ = ready_tx.send(Err(format!("failed to create tokio runtime: {e}")));
+                return;
+            }
+        };
+
+        rt.block_on(async move {
+            // Decompose the App into its Axum router + server configuration.
+            let (router, config) = match inner.into_router_and_config() {
+                Ok(pair) => pair,
+                Err(e) => {
+                    let _ = ready_tx.send(Err(format!("failed to build router: {e}")));
+                    return;
+                }
+            };
+
+            // Apply caller-supplied overrides on top of the App's ServerConfig.
+            let bind_host = host_override.as_deref().unwrap_or(&config.host);
+            let bind_port = if port != 0 { port } else { config.port };
+            let addr_str = format!("{bind_host}:{bind_port}");
+
+            let addr: std::net::SocketAddr = match addr_str.parse() {
+                Ok(a) => a,
+                Err(e) => {
+                    let _ = ready_tx.send(Err(format!("invalid bind address '{addr_str}': {e}")));
+                    return;
+                }
+            };
+
+            let listener = match tokio::net::TcpListener::bind(addr).await {
+                Ok(l) => l,
+                Err(e) => {
+                    let _ = ready_tx.send(Err(format!("failed to bind {addr}: {e}")));
+                    return;
+                }
+            };
+
+            // Signal readiness *after* bind, *before* serve — caller can now
+            // dial the port.
+            let _ = ready_tx.send(Ok(()));
+
+            // Serve until the shutdown signal arrives.
+            let _ = axum::serve(listener, router)
+                .with_graceful_shutdown(async move {
+                    let _ = shutdown_rx.await;
+                })
+                .await;
+        });
+    });
+
+    // Wait for the server to bind (or fail). 10-second timeout so callers
+    // don't block forever when the port is permanently unavailable.
+    match ready_rx.recv_timeout(std::time::Duration::from_secs(10)) {
+        Ok(Ok(())) => {
+            let handle = Box::new(ServerHandle {
+                thread: Some(thread),
+                shutdown_tx: Some(shutdown_tx),
+            });
+            Box::into_raw(handle)
+        }
+        Ok(Err(_msg)) => {
+            // Server reported a startup error; thread has already exited.
+            let _ = thread.join();
+            std::ptr::null_mut()
+        }
+        Err(_timeout) => {
+            // Timed out — request shutdown so the thread can exit cleanly.
+            let _ = shutdown_tx.send(());
+            let _ = thread.join();
+            std::ptr::null_mut()
+        }
+    }
+}
+
+/// Stop a server started by `spikard_app_ep_start_background` and free its handle.
+///
+/// Sends a graceful-shutdown signal to the background server, waits for the
+/// server thread to exit, and releases all resources.
+///
+/// Passing null is a safe no-op. After this call `handle` must not be used again.
+///
+/// # Safety
+/// - `handle` must have been returned by `spikard_app_ep_start_background` and
+///   not yet freed.
+/// - Calling this twice on the same pointer causes undefined behavior.
+#[no_mangle]
+pub extern "C" fn spikard_app_ep_stop(handle: *mut ServerHandle) {
+    if handle.is_null() {
+        return;
+    }
+
+    // SAFETY: handle was allocated by Box::into_raw in start_background; sole owner.
+    let mut handle = unsafe { Box::from_raw(handle) };
+
+    // Signal shutdown (best-effort; receiver may already be gone if server crashed).
+    if let Some(tx) = handle.shutdown_tx.take() {
+        let _ = tx.send(());
+    }
+
+    // Join the background thread to ensure it exits before we return.
+    if let Some(thread) = handle.thread.take() {
+        let _ = thread.join();
+    }
+    // `handle` is dropped here, freeing the Box.
 }
 
 /// Run the service entrypoint 'into_router'.

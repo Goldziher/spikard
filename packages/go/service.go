@@ -1,6 +1,7 @@
 package spikard
 
 /*
+#include <stdlib.h>
 #include <string.h>
 #include "spikard.h"
 extern char* service_handler_callback(void* ctx, char* req);
@@ -387,24 +388,88 @@ func (s *App) Trace(handler HandlerFunc, path string)  error {
 // Run() runs the service's run entrypoint.
 //
 // Run the HTTP server using the configured routes.
+// This call blocks until the server exits; use StartBackground for non-blocking startup.
 //
 // # Errors
 //
 // Returns an error if server construction or execution fails.
 func (s *App) Run() error {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 	if s.owner == nil {
+		s.mu.Unlock()
 		return errors.New("service is closed")
 	}
+	owner := s.owner
+	s.owner = nil // consumed by ep_run
+	s.mu.Unlock()
 
 	ret := C.spikard_app_ep_run(
-		(*C.SPIKARDAppOpaque)(s.owner),
+		(*C.SPIKARDAppOpaque)(owner),
 	)
 	if ret != 0 {
 		return fmt.Errorf("run failed: error code %d", ret)
 	}
 	return nil
+}
+
+// ServerHandle is an opaque handle to a background server started via StartBackground.
+// Call Stop() to shut the server down and release resources.
+type ServerHandle struct {
+	ptr unsafe.Pointer
+}
+
+// StartBackground starts the HTTP server on a background OS thread and returns
+// immediately once the server has successfully bound its TCP port.
+//
+// Unlike Run(), this method does not block the calling goroutine and is safe
+// to use from cgo contexts where blocking OS threads is constrained.
+//
+// host and port override the App's configured ServerConfig values (pass an
+// empty string and 0 to use the App's own configuration).
+//
+// Returns a *ServerHandle that must be passed to Stop() when the server is
+// no longer needed.
+//
+// # Errors
+//
+// Returns an error if the server fails to start within 10 seconds (e.g. port
+// already in use).
+func (s *App) StartBackground(host string, port uint16) (*ServerHandle, error) {
+	s.mu.Lock()
+	if s.owner == nil {
+		s.mu.Unlock()
+		return nil, errors.New("service is closed")
+	}
+	owner := s.owner
+	s.owner = nil // consumed by ep_start_background
+	s.mu.Unlock()
+
+	var cHost *C.char
+	if host != "" {
+		cHost = C.CString(host)
+		defer C.free(unsafe.Pointer(cHost))
+	}
+
+	handle := C.spikard_app_ep_start_background(
+		(*C.SPIKARDAppOpaque)(owner),
+		cHost,
+		C.uint16_t(port),
+	)
+	if handle == nil {
+		return nil, errors.New("failed to start server in background (port in use or bind timeout)")
+	}
+	return &ServerHandle{ptr: unsafe.Pointer(handle)}, nil
+}
+
+// Stop shuts down the background server associated with this handle and
+// releases all resources. After Stop returns, the ServerHandle must not be
+// used again. Calling Stop on a nil handle is a safe no-op.
+func (h *ServerHandle) Stop() {
+	if h == nil || h.ptr == nil {
+		return
+	}
+	C.spikard_app_ep_stop((*C.SPIKARDServerHandle)(h.ptr))
+	h.ptr = nil
 }
 
 // IntoRouter() runs the service's into_router entrypoint.
