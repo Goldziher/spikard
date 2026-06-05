@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Java native library bundling now works on all platforms. The `maven-antrun-plugin` in `packages/java/pom.xml` and e2e `pom.xml.jinja` now uses reliable Java system property matching (`os.name` and `os.arch`) instead of unreliable antrun `<os family>` conditions which failed on macOS. Previously on macOS, the library was incorrectly placed in `src/main/resources/natives/linux-arm64/` instead of `macos-arm64/`, causing `UnsatisfiedLinkError: Failed to load spikard_ffi native library. Expected resource: /natives/macos-arm64/libspikard_ffi.dylib` at runtime. Both main library and e2e JAR builds now correctly copy the native library to `src/main/resources/natives/{rid}/` (RID = os-arch, e.g. `macos-arm64`) before packaging, and `NativeLib.java` successfully extracts and loads it via `System.load()`. <!-- java-native-bundle-r3 -->
+
 ## [0.15.6-rc.9] - 2026-05-27
 
 ### Fixed
