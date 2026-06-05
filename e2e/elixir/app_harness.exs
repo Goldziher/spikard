@@ -68,7 +68,9 @@ app = Enum.reduce(fixtures, app, fn {fixture_id, fixture}, app_acc ->
     # Register the route with the handler
     Spikard.App.route(app_acc, builder, handler_fn)
   end
-end)# Configure and start the server
+end)
+
+# Configure and start the server
 config = %Spikard.ServerConfig{
   host: "127.0.0.1",
   port: 8000

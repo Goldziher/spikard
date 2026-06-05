@@ -1,13 +1,25 @@
 // Auto-generated service API class
-// Delayed requires to avoid circular dependencies with index.js
+// Delegates to native App (JsApp in Rust) for server operations via
+// nativeRegisterRoute, setConfig, and nativeRun methods added in
+// the e2e/node CORS+compression fix.
 
 /**
  * Spikard application builder.
  */
 class App {
   constructor() {
+    // Access the raw native binding via _nativePkg — index.js exports this
+    // before overriding module.exports.App with this service App class.
+    // This avoids the circular dependency that would occur if we used
+    // `require("./index").App` (which would point back to this class).
+    try {
+      const pkg = require("./index");
+      const nativeModule = pkg._nativePkg;
+      this._native = nativeModule && nativeModule.App ? nativeModule.App.new() : null;
+    } catch (e) {
+      this._native = null;
+    }
     this._registrations = [];
-    // Constructor initialization (parameters stored for future use)
   }
 
   /**
@@ -19,8 +31,12 @@ class App {
 
   /**
    * Set the server configuration.
+   * Delegates to native setConfig when available (supports compression etc).
    */
   config(config) {
+    if (this._native && typeof this._native.setConfig === 'function') {
+      this._native.setConfig(config);
+    }
     return this;
   }
 
@@ -33,7 +49,7 @@ class App {
    */
   route(builder) {
     return (fn) => {
-      this._registrations.push(["route", [builder], fn]);
+      this.registerRoute(builder, fn);
       return fn;
     };
   }
@@ -42,15 +58,20 @@ class App {
    * Register a route callback directly (snake_case form).
    */
   register_route(builder, handler) {
-    this._registrations.push(["route", [builder], handler]);
-    return this;
+    return this.registerRoute(builder, handler);
   }
 
   /**
-   * Register a route callback directly (camelCase alias for register_route).
+   * Register a route callback directly (camelCase alias).
+   * Delegates to native nativeRegisterRoute when available.
    */
   registerRoute(builder, handler) {
-    return this.register_route(builder, handler);
+    if (this._native && typeof this._native.nativeRegisterRoute === 'function') {
+      this._native.nativeRegisterRoute(builder, handler);
+    } else {
+      this._registrations.push(["route", [builder], handler]);
+    }
+    return this;
   }
 
   /**
@@ -59,8 +80,7 @@ class App {
   get(path, handler) {
     const { RouteBuilder, Method } = require("./index");
     const builder = new RouteBuilder(Method.Get, path);
-    this._registrations.push(["route", [builder], handler]);
-    return this;
+    return this.registerRoute(builder, handler);
   }
 
   /**
@@ -69,8 +89,7 @@ class App {
   post(path, handler) {
     const { RouteBuilder, Method } = require("./index");
     const builder = new RouteBuilder(Method.Post, path);
-    this._registrations.push(["route", [builder], handler]);
-    return this;
+    return this.registerRoute(builder, handler);
   }
 
   /**
@@ -79,8 +98,7 @@ class App {
   put(path, handler) {
     const { RouteBuilder, Method } = require("./index");
     const builder = new RouteBuilder(Method.Put, path);
-    this._registrations.push(["route", [builder], handler]);
-    return this;
+    return this.registerRoute(builder, handler);
   }
 
   /**
@@ -89,8 +107,7 @@ class App {
   patch(path, handler) {
     const { RouteBuilder, Method } = require("./index");
     const builder = new RouteBuilder(Method.Patch, path);
-    this._registrations.push(["route", [builder], handler]);
-    return this;
+    return this.registerRoute(builder, handler);
   }
 
   /**
@@ -99,8 +116,7 @@ class App {
   delete(path, handler) {
     const { RouteBuilder, Method } = require("./index");
     const builder = new RouteBuilder(Method.Delete, path);
-    this._registrations.push(["route", [builder], handler]);
-    return this;
+    return this.registerRoute(builder, handler);
   }
 
   /**
@@ -109,8 +125,7 @@ class App {
   head(path, handler) {
     const { RouteBuilder, Method } = require("./index");
     const builder = new RouteBuilder(Method.Head, path);
-    this._registrations.push(["route", [builder], handler]);
-    return this;
+    return this.registerRoute(builder, handler);
   }
 
   /**
@@ -119,8 +134,7 @@ class App {
   options(path, handler) {
     const { RouteBuilder, Method } = require("./index");
     const builder = new RouteBuilder(Method.Options, path);
-    this._registrations.push(["route", [builder], handler]);
-    return this;
+    return this.registerRoute(builder, handler);
   }
 
   /**
@@ -129,8 +143,7 @@ class App {
   connect(path, handler) {
     const { RouteBuilder, Method } = require("./index");
     const builder = new RouteBuilder(Method.Connect, path);
-    this._registrations.push(["route", [builder], handler]);
-    return this;
+    return this.registerRoute(builder, handler);
   }
 
   /**
@@ -139,28 +152,27 @@ class App {
   trace(path, handler) {
     const { RouteBuilder, Method } = require("./index");
     const builder = new RouteBuilder(Method.Trace, path);
-    this._registrations.push(["route", [builder], handler]);
-    return this;
+    return this.registerRoute(builder, handler);
   }
 
   /**
    * Run the HTTP server using the configured routes.
-   *
-   * # Errors
-   *
-   * Returns an error if server construction or execution fails.
+   * Delegates to native nativeRun when available.
    */
   async run() {
+    if (this._native && typeof this._native.nativeRun === 'function') {
+      return await this._native.nativeRun();
+    }
+    // Fallback: try app_run (legacy path)
     const { app_run } = require("./index");
-    return await app_run(this._registrations);
+    if (typeof app_run === 'function') {
+      return await app_run(this._registrations);
+    }
+    throw new Error('No run method available: native nativeRun missing and app_run not exported');
   }
 
   /**
    * Build the underlying Axum router.
-   *
-   * # Errors
-   *
-   * Returns an error if server or router construction fails.
    */
   into_router() {
     const { app_into_router } = require("./index");

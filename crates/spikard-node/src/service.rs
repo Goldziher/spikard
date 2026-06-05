@@ -3,7 +3,6 @@
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::ThreadsafeFunction;
 use napi_derive::napi;
-use std::sync::Arc;
 
 /// Generated NAPI bridge for the `Handler` contract.
 ///
@@ -92,12 +91,8 @@ impl JsApp {
         handler: ThreadsafeFunction<serde_json::Value, serde_json::Value>,
     ) -> napi::Result<()> {
         let builder = spikard::RouteBuilder::new(spikard::Method::Get, path);
-        let bridge = HandlerBridge::new(handler);
-        let handler_arc: std::sync::Arc<dyn spikard::Handler> = std::sync::Arc::new(bridge);
-        let mut inner = self.inner.lock().expect("app mutex poisoned");
-        inner
-            .route(builder, handler_arc)
-            .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
+        let mut routes = self.routes.lock().expect("routes mutex poisoned");
+        routes.push((builder, handler));
         Ok(())
     }
 
@@ -111,12 +106,8 @@ impl JsApp {
         handler: ThreadsafeFunction<serde_json::Value, serde_json::Value>,
     ) -> napi::Result<()> {
         let builder = spikard::RouteBuilder::new(spikard::Method::Post, path);
-        let bridge = HandlerBridge::new(handler);
-        let handler_arc: std::sync::Arc<dyn spikard::Handler> = std::sync::Arc::new(bridge);
-        let mut inner = self.inner.lock().expect("app mutex poisoned");
-        inner
-            .route(builder, handler_arc)
-            .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
+        let mut routes = self.routes.lock().expect("routes mutex poisoned");
+        routes.push((builder, handler));
         Ok(())
     }
 
@@ -130,12 +121,8 @@ impl JsApp {
         handler: ThreadsafeFunction<serde_json::Value, serde_json::Value>,
     ) -> napi::Result<()> {
         let builder = spikard::RouteBuilder::new(spikard::Method::Put, path);
-        let bridge = HandlerBridge::new(handler);
-        let handler_arc: std::sync::Arc<dyn spikard::Handler> = std::sync::Arc::new(bridge);
-        let mut inner = self.inner.lock().expect("app mutex poisoned");
-        inner
-            .route(builder, handler_arc)
-            .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
+        let mut routes = self.routes.lock().expect("routes mutex poisoned");
+        routes.push((builder, handler));
         Ok(())
     }
 
@@ -149,12 +136,8 @@ impl JsApp {
         handler: ThreadsafeFunction<serde_json::Value, serde_json::Value>,
     ) -> napi::Result<()> {
         let builder = spikard::RouteBuilder::new(spikard::Method::Patch, path);
-        let bridge = HandlerBridge::new(handler);
-        let handler_arc: std::sync::Arc<dyn spikard::Handler> = std::sync::Arc::new(bridge);
-        let mut inner = self.inner.lock().expect("app mutex poisoned");
-        inner
-            .route(builder, handler_arc)
-            .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
+        let mut routes = self.routes.lock().expect("routes mutex poisoned");
+        routes.push((builder, handler));
         Ok(())
     }
 
@@ -168,12 +151,8 @@ impl JsApp {
         handler: ThreadsafeFunction<serde_json::Value, serde_json::Value>,
     ) -> napi::Result<()> {
         let builder = spikard::RouteBuilder::new(spikard::Method::Delete, path);
-        let bridge = HandlerBridge::new(handler);
-        let handler_arc: std::sync::Arc<dyn spikard::Handler> = std::sync::Arc::new(bridge);
-        let mut inner = self.inner.lock().expect("app mutex poisoned");
-        inner
-            .route(builder, handler_arc)
-            .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
+        let mut routes = self.routes.lock().expect("routes mutex poisoned");
+        routes.push((builder, handler));
         Ok(())
     }
 
@@ -187,12 +166,8 @@ impl JsApp {
         handler: ThreadsafeFunction<serde_json::Value, serde_json::Value>,
     ) -> napi::Result<()> {
         let builder = spikard::RouteBuilder::new(spikard::Method::Head, path);
-        let bridge = HandlerBridge::new(handler);
-        let handler_arc: std::sync::Arc<dyn spikard::Handler> = std::sync::Arc::new(bridge);
-        let mut inner = self.inner.lock().expect("app mutex poisoned");
-        inner
-            .route(builder, handler_arc)
-            .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
+        let mut routes = self.routes.lock().expect("routes mutex poisoned");
+        routes.push((builder, handler));
         Ok(())
     }
 
@@ -206,12 +181,8 @@ impl JsApp {
         handler: ThreadsafeFunction<serde_json::Value, serde_json::Value>,
     ) -> napi::Result<()> {
         let builder = spikard::RouteBuilder::new(spikard::Method::Options, path);
-        let bridge = HandlerBridge::new(handler);
-        let handler_arc: std::sync::Arc<dyn spikard::Handler> = std::sync::Arc::new(bridge);
-        let mut inner = self.inner.lock().expect("app mutex poisoned");
-        inner
-            .route(builder, handler_arc)
-            .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
+        let mut routes = self.routes.lock().expect("routes mutex poisoned");
+        routes.push((builder, handler));
         Ok(())
     }
 
@@ -225,12 +196,8 @@ impl JsApp {
         handler: ThreadsafeFunction<serde_json::Value, serde_json::Value>,
     ) -> napi::Result<()> {
         let builder = spikard::RouteBuilder::new(spikard::Method::Connect, path);
-        let bridge = HandlerBridge::new(handler);
-        let handler_arc: std::sync::Arc<dyn spikard::Handler> = std::sync::Arc::new(bridge);
-        let mut inner = self.inner.lock().expect("app mutex poisoned");
-        inner
-            .route(builder, handler_arc)
-            .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
+        let mut routes = self.routes.lock().expect("routes mutex poisoned");
+        routes.push((builder, handler));
         Ok(())
     }
 
@@ -244,12 +211,8 @@ impl JsApp {
         handler: ThreadsafeFunction<serde_json::Value, serde_json::Value>,
     ) -> napi::Result<()> {
         let builder = spikard::RouteBuilder::new(spikard::Method::Trace, path);
-        let bridge = HandlerBridge::new(handler);
-        let handler_arc: std::sync::Arc<dyn spikard::Handler> = std::sync::Arc::new(bridge);
-        let mut inner = self.inner.lock().expect("app mutex poisoned");
-        inner
-            .route(builder, handler_arc)
-            .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
+        let mut routes = self.routes.lock().expect("routes mutex poisoned");
+        routes.push((builder, handler));
         Ok(())
     }
 }

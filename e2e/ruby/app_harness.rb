@@ -60,18 +60,16 @@ module AppHarness
     end
 
     # Thread handler middleware through to the RouteBuilder.
-    # For each middleware config, construct the appropriate config object
-    # by extracting fields from the fixture and building via the builder.
     middleware_config = handler_config[:middleware] || {}
+    cors_config_class = Object.const_get("Spikard::ServerConfig".sub("ServerConfig", "CorsConfig"))
+    middleware_dispatch = {
+      "cors" => ->(cfg) { builder.cors(cors_config_class.from_json(cfg.to_json)) }
+    }
     middleware_config.each do |mw_name, mw_cfg|
       next unless mw_cfg
-      case mw_name.to_s
-      when "cors"
-        # Build CorsConfig from fixture fields using keyword arguments
-        cors_config_class = Object.const_get("Spikard::ServerConfig".sub("ServerConfig", "CorsConfig"))
-        cors_config = cors_config_class.new(mw_cfg)
-        builder = builder.cors(cors_config)
-      end
+      applicator = middleware_dispatch[mw_name.to_s]
+      next unless applicator
+      builder = applicator.call(mw_cfg)
     end
 
     # Register the route with the handler.

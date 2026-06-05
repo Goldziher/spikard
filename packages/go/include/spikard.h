@@ -338,6 +338,12 @@ typedef struct SPIKARDWebSocketMessage SPIKARDWebSocketMessage;
 
 
 /**
+ * Opaque handle to a running background server.
+ * Returned by `spikard_app_ep_start_background`, consumed by `spikard_app_ep_stop`.
+ */
+typedef struct SPIKARDServerHandle SPIKARDServerHandle;
+
+/**
  * Opaque handle to a App service instance.
  * Allocated by spikard_app_new(), freed by spikard_app_free().
  */
@@ -2797,6 +2803,53 @@ int32_t spikard_app_trace(struct SPIKARDAppOpaque *owner,
  * - `owner` is consumed by this call; it must not be used or freed afterwards.
  */
 int32_t spikard_app_ep_run(struct SPIKARDAppOpaque *owner);
+
+/**
+ * Start the HTTP server on a background OS thread and return immediately.
+ *
+ * Unlike `spikard_app_ep_run`, this function does **not** block the calling
+ * thread (safe for cgo / JNI / P-Invoke callers).  It spawns a dedicated OS
+ * thread outside any managed thread pool, creates a Tokio runtime on that
+ * thread, binds the TCP listener, and returns a non-null `*mut ServerHandle`
+ * only after the socket is bound and the server is ready to accept connections.
+ *
+ * The caller must eventually pass the returned handle to
+ * `spikard_app_ep_stop` to shut the server down and release resources.
+ *
+ * Returns null if the server fails to start (e.g. port already in use or
+ * the 10-second bind timeout expires).
+ *
+ * # Parameters
+ *
+ * * `owner` – consumed by this call; must not be used or freed afterwards.
+ * * `host`  – null-terminated bind address (e.g. `"127.0.0.1"`), or null to
+ *             use the address from the App's `ServerConfig`.
+ * * `port`  – TCP port to bind, or 0 to use the port from `ServerConfig`.
+ *
+ * # Safety
+ * - `owner` must be a valid pointer returned by `spikard_app_new()` and not
+ *   yet freed.
+ * - `host`, if non-null, must be a valid null-terminated UTF-8 string.
+ * - The returned handle must be freed via `spikard_app_ep_stop`.
+ */
+struct SPIKARDServerHandle *spikard_app_ep_start_background(struct SPIKARDAppOpaque *owner,
+                                                            const char *host,
+                                                            uint16_t port);
+
+/**
+ * Stop a server started by `spikard_app_ep_start_background` and free its handle.
+ *
+ * Sends a graceful-shutdown signal to the background server, waits for the
+ * server thread to exit, and releases all resources.
+ *
+ * Passing null is a safe no-op. After this call `handle` must not be used again.
+ *
+ * # Safety
+ * - `handle` must have been returned by `spikard_app_ep_start_background` and
+ *   not yet freed.
+ * - Calling this twice on the same pointer causes undefined behavior.
+ */
+void spikard_app_ep_stop(struct SPIKARDServerHandle *handle);
 
 /**
  * Run the service entrypoint 'into_router'.
