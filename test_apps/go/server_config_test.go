@@ -280,7 +280,7 @@ func Test_ServerGrpcIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "application/grpc")
 	req.Header.Set(`Content-Type`, `application/grpc`)
 	req.Header.Set(`te`, `trailers`)
 	noRedirectClient := &http.Client{

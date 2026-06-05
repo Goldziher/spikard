@@ -118,7 +118,7 @@ class ServerConfigTest {
         val uri = java.net.URI.create("$baseUrl/fixtures/server_grpc_integration/api.Service/Method")
         val builder = java.net.http.HttpRequest.newBuilder(uri)
             .method("POST", java.net.http.HttpRequest.BodyPublishers.ofString("{\"data\":\"test\"}"))
-            .header("Content-Type", "application/json")
+            .header("Content-Type", "application/grpc")
             .header("Content-Type", "application/grpc")
             .header("te", "trailers")
         val response = java.net.http.HttpClient.newHttpClient()

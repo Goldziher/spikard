@@ -27,7 +27,7 @@ func Test_UploadFileAsBytes(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "multipart/form-data")
 	req.Header.Set(`Content-Type`, `multipart/form-data`)
 	noRedirectClient := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -71,7 +71,7 @@ func Test_UploadFileBasicSuccess(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "multipart/form-data")
 	req.Header.Set(`Content-Type`, `multipart/form-data`)
 	noRedirectClient := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -115,7 +115,7 @@ func Test_UploadFileContentTypeOrDefault(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "multipart/form-data")
 	req.Header.Set(`Content-Type`, `multipart/form-data`)
 	noRedirectClient := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -159,7 +159,7 @@ func Test_UploadFileReadToString(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "multipart/form-data")
 	req.Header.Set(`Content-Type`, `multipart/form-data`)
 	noRedirectClient := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -203,7 +203,7 @@ func Test_UploadFileWithCustomContentType(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "multipart/form-data")
 	req.Header.Set(`Content-Type`, `multipart/form-data`)
 	noRedirectClient := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -247,7 +247,7 @@ func Test_UploadFileWithFormFields(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "multipart/form-data")
 	req.Header.Set(`Content-Type`, `multipart/form-data`)
 	noRedirectClient := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -291,7 +291,7 @@ func Test_UploadFileWithGzipContentEncoding(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "multipart/form-data")
 	req.Header.Set(`Content-Type`, `multipart/form-data`)
 	noRedirectClient := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -335,7 +335,7 @@ func Test_UploadMultipleFiles(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "multipart/form-data")
 	req.Header.Set(`Content-Type`, `multipart/form-data`)
 	noRedirectClient := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {

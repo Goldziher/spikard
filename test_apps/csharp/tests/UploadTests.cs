@@ -29,7 +29,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/upload_file_as_bytes/upload/bytes");
-        request.Content = new System.Net.Http.StringContent("{\"file\":{\"content\":\"binary data\",\"filename\":\"binary.bin\"}}", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("{\"file\":{\"content\":\"binary data\",\"filename\":\"binary.bin\"}}", System.Text.Encoding.UTF8, "multipart/form-data");
         var response = await client.SendAsync(request);
         Assert.Equal(200, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -45,7 +45,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/upload_file_basic_success/upload");
-        request.Content = new System.Net.Http.StringContent("{\"file\":{\"content\":\"Hello, World!\",\"filename\":\"test.txt\"}}", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("{\"file\":{\"content\":\"Hello, World!\",\"filename\":\"test.txt\"}}", System.Text.Encoding.UTF8, "multipart/form-data");
         var response = await client.SendAsync(request);
         Assert.Equal(200, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -61,7 +61,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/upload_file_content_type_or_default/upload/auto-type");
-        request.Content = new System.Net.Http.StringContent("{\"file\":{\"content\":\"Some content\",\"filename\":\"unknown.xyz\"}}", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("{\"file\":{\"content\":\"Some content\",\"filename\":\"unknown.xyz\"}}", System.Text.Encoding.UTF8, "multipart/form-data");
         var response = await client.SendAsync(request);
         Assert.Equal(200, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -77,7 +77,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/upload_file_read_to_string/upload/string");
-        request.Content = new System.Net.Http.StringContent("{\"file\":{\"content\":\"Hello, World!\",\"filename\":\"text.txt\"}}", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("{\"file\":{\"content\":\"Hello, World!\",\"filename\":\"text.txt\"}}", System.Text.Encoding.UTF8, "multipart/form-data");
         var response = await client.SendAsync(request);
         Assert.Equal(200, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -93,7 +93,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/upload_file_with_custom_content_type/upload/typed");
-        request.Content = new System.Net.Http.StringContent("{\"file\":{\"content\":\"{\\\"key\\\": \\\"value\\\"}\",\"content_type\":\"application/json\",\"filename\":\"data.json\"}}", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("{\"file\":{\"content\":\"{\\\"key\\\": \\\"value\\\"}\",\"content_type\":\"application/json\",\"filename\":\"data.json\"}}", System.Text.Encoding.UTF8, "multipart/form-data");
         var response = await client.SendAsync(request);
         Assert.Equal(200, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -109,7 +109,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/upload_file_with_form_fields/upload/with-fields");
-        request.Content = new System.Net.Http.StringContent("{\"description\":\"Important document\",\"file\":{\"content\":\"PDF content\",\"filename\":\"document.pdf\"},\"tags\":[\"important\",\"archive\"]}", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("{\"description\":\"Important document\",\"file\":{\"content\":\"PDF content\",\"filename\":\"document.pdf\"},\"tags\":[\"important\",\"archive\"]}", System.Text.Encoding.UTF8, "multipart/form-data");
         var response = await client.SendAsync(request);
         Assert.Equal(200, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -125,7 +125,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/upload_file_with_gzip_content_encoding/upload/compressed");
-        request.Content = new System.Net.Http.StringContent("{\"file\":{\"content\":\"compressed data\",\"content_encoding\":\"gzip\",\"filename\":\"data.gz\"}}", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("{\"file\":{\"content\":\"compressed data\",\"content_encoding\":\"gzip\",\"filename\":\"data.gz\"}}", System.Text.Encoding.UTF8, "multipart/form-data");
         var response = await client.SendAsync(request);
         Assert.Equal(200, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -141,7 +141,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/upload_multiple_files/upload/multiple");
-        request.Content = new System.Net.Http.StringContent("{\"files\":[{\"content\":\"Content 1\",\"filename\":\"file1.txt\"},{\"content\":\"Content 2\",\"filename\":\"file2.txt\"}]}", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("{\"files\":[{\"content\":\"Content 1\",\"filename\":\"file1.txt\"},{\"content\":\"Content 2\",\"filename\":\"file2.txt\"}]}", System.Text.Encoding.UTF8, "multipart/form-data");
         var response = await client.SendAsync(request);
         Assert.Equal(200, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();

@@ -29,7 +29,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/13_json_with_charset_utf16/data");
-        request.Content = new System.Net.Http.StringContent("{\"value\":\"test\"}", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("{\"value\":\"test\"}", System.Text.Encoding.UTF8, "application/json; charset=utf-16");
         var response = await client.SendAsync(request);
         Assert.Equal(415, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -45,7 +45,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/14_content_type_case_insensitive/data");
-        request.Content = new System.Net.Http.StringContent("{\"name\":\"test\"}", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("{\"name\":\"test\"}", System.Text.Encoding.UTF8, "APPLICATION/JSON");
         var response = await client.SendAsync(request);
         Assert.Equal(201, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -76,7 +76,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/16_text_plain_not_accepted/data");
-        request.Content = new System.Net.Http.StringContent("\"{\\\"data\\\": \\\"value\\\"}\"", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("\"{\\\"data\\\": \\\"value\\\"}\"", System.Text.Encoding.UTF8, "text/plain");
         var response = await client.SendAsync(request);
         Assert.Equal(415, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -92,7 +92,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/17_vendor_json_accepted/api/v1/resource");
-        request.Content = new System.Net.Http.StringContent("{\"data\":\"value\"}", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("{\"data\":\"value\"}", System.Text.Encoding.UTF8, "application/vnd.api+json");
         var response = await client.SendAsync(request);
         Assert.Equal(201, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -108,7 +108,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/18_content_type_with_multiple_params/data");
-        request.Content = new System.Net.Http.StringContent("{\"value\":\"test\"}", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("{\"value\":\"test\"}", System.Text.Encoding.UTF8, "application/json; charset=utf-8; boundary=something");
         var response = await client.SendAsync(request);
         Assert.Equal(201, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -156,7 +156,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/415_unsupported_media_type/items/");
-        request.Content = new System.Net.Http.StringContent("\"<?xml version=\\\"1.0\\\"?><item><name>Item</name></item>\"", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("\"<?xml version=\\\"1.0\\\"?><item><name>Item</name></item>\"", System.Text.Encoding.UTF8, "application/xml");
         var response = await client.SendAsync(request);
         Assert.Equal(415, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();

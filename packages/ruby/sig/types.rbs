@@ -242,6 +242,7 @@ module Spikard
     def merge_axum_router: (String router) -> App
     def attach_axum_router: (String router) -> App
     def into_router: () -> String
+    def into_router_and_config: () -> String
     def self.new: () -> App
     def self.default: () -> App
   end

@@ -18,7 +18,7 @@ repository = "https://github.com/Goldziher/spikard"
 # configured but no actual async-trait / async-stream callsite in the generated
 # FFI shim.
 [package.metadata.cargo-machete]
-ignored = ["ahash", "axum", "serde_json", "tokio"]
+ignored = ["ahash", "serde_json", "tokio"]
 
 [lib]
 crate-type = ["cdylib", "staticlib", "rlib"]
@@ -28,7 +28,6 @@ default = []
 
 [dependencies]
 ahash = "0.8"
-axum = { workspace = true }
 serde_json = "1"
 spikard = { path = "../spikard", version = "0.15.6-rc.9", features = ["di"] }
 spikard-core = { path = "../spikard-core", version = "0.15.6-rc.9" }

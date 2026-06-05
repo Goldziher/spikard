@@ -35,6 +35,13 @@ final class App
         throw new \RuntimeException('Not implemented — provided by the native extension.');
     }
     /**
+     * Decompose the application into its Axum router and server configuration.
+     */
+    public function intoRouterAndConfig(): string
+    {
+        throw new \RuntimeException('Not implemented — provided by the native extension.');
+    }
+    /**
      * Create a new application with the default server configuration.
      */
     public static function new(): App

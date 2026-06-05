@@ -70,8 +70,7 @@ final class UrlEncodedTests: XCTestCase {
         var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/13_array_field_success/register")!)
         _req.httpMethod = "POST"
         _req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        _req.httpBody = "\"tags[]=python&tags[]=rust&tags[]=typescript\"".data(using: .utf8)
-        _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        _req.httpBody = "tags[]=python&tags[]=rust&tags[]=typescript".data(using: .utf8)
         var response: HTTPURLResponse?
         var _responseData: Data?
         let _sema = DispatchSemaphore(value: 0)
@@ -95,8 +94,7 @@ final class UrlEncodedTests: XCTestCase {
         var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/14_nested_object_bracket_notation/profile")!)
         _req.httpMethod = "POST"
         _req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        _req.httpBody = "\"user[name]=John%20Doe&user[email]=john@example.com&user[age]=30\"".data(using: .utf8)
-        _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        _req.httpBody = "user[name]=John%20Doe&user[email]=john@example.com&user[age]=30".data(using: .utf8)
         var response: HTTPURLResponse?
         var _responseData: Data?
         let _sema = DispatchSemaphore(value: 0)
@@ -120,8 +118,7 @@ final class UrlEncodedTests: XCTestCase {
         var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/15_special_characters_field_names/data")!)
         _req.httpMethod = "POST"
         _req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        _req.httpBody = "\"user-name=JohnDoe&contact.email=john%40example.com\"".data(using: .utf8)
-        _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        _req.httpBody = "user-name=JohnDoe&contact.email=john%40example.com".data(using: .utf8)
         var response: HTTPURLResponse?
         var _responseData: Data?
         let _sema = DispatchSemaphore(value: 0)
@@ -145,8 +142,7 @@ final class UrlEncodedTests: XCTestCase {
         var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/16_minlength_validation_failure/users")!)
         _req.httpMethod = "POST"
         _req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        _req.httpBody = "\"username=ab\"".data(using: .utf8)
-        _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        _req.httpBody = "username=ab".data(using: .utf8)
         var response: HTTPURLResponse?
         var _responseData: Data?
         let _sema = DispatchSemaphore(value: 0)
@@ -170,8 +166,7 @@ final class UrlEncodedTests: XCTestCase {
         var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/17_pattern_validation_failure/accounts")!)
         _req.httpMethod = "POST"
         _req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        _req.httpBody = "\"account_id=INVALID123\"".data(using: .utf8)
-        _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        _req.httpBody = "account_id=INVALID123".data(using: .utf8)
         var response: HTTPURLResponse?
         var _responseData: Data?
         let _sema = DispatchSemaphore(value: 0)
@@ -195,8 +190,7 @@ final class UrlEncodedTests: XCTestCase {
         var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/18_integer_minimum_validation_failure/products")!)
         _req.httpMethod = "POST"
         _req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        _req.httpBody = "\"quantity=0\"".data(using: .utf8)
-        _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        _req.httpBody = "quantity=0".data(using: .utf8)
         var response: HTTPURLResponse?
         var _responseData: Data?
         let _sema = DispatchSemaphore(value: 0)
@@ -220,8 +214,7 @@ final class UrlEncodedTests: XCTestCase {
         var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/19_array_minitems_validation_failure/tags")!)
         _req.httpMethod = "POST"
         _req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        _req.httpBody = "\"tags[]=single\"".data(using: .utf8)
-        _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        _req.httpBody = "tags[]=single".data(using: .utf8)
         var response: HTTPURLResponse?
         var _responseData: Data?
         let _sema = DispatchSemaphore(value: 0)
@@ -245,8 +238,7 @@ final class UrlEncodedTests: XCTestCase {
         var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/20_format_email_validation_failure/subscribe")!)
         _req.httpMethod = "POST"
         _req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        _req.httpBody = "\"email=not-an-email\"".data(using: .utf8)
-        _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        _req.httpBody = "email=not-an-email".data(using: .utf8)
         var response: HTTPURLResponse?
         var _responseData: Data?
         let _sema = DispatchSemaphore(value: 0)
@@ -270,8 +262,7 @@ final class UrlEncodedTests: XCTestCase {
         var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/21_integer_type_coercion_failure/products")!)
         _req.httpMethod = "POST"
         _req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        _req.httpBody = "\"price=not-a-number\"".data(using: .utf8)
-        _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        _req.httpBody = "price=not-a-number".data(using: .utf8)
         var response: HTTPURLResponse?
         var _responseData: Data?
         let _sema = DispatchSemaphore(value: 0)
@@ -295,8 +286,7 @@ final class UrlEncodedTests: XCTestCase {
         var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/22_additional_properties_strict_failure/settings")!)
         _req.httpMethod = "POST"
         _req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        _req.httpBody = "\"theme=dark&unknown_field=value\"".data(using: .utf8)
-        _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        _req.httpBody = "theme=dark&unknown_field=value".data(using: .utf8)
         var response: HTTPURLResponse?
         var _responseData: Data?
         let _sema = DispatchSemaphore(value: 0)
@@ -320,8 +310,7 @@ final class UrlEncodedTests: XCTestCase {
         var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/boolean_field_conversion/form/")!)
         _req.httpMethod = "POST"
         _req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        _req.httpBody = "\"username=johndoe&subscribe=true\"".data(using: .utf8)
-        _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        _req.httpBody = "username=johndoe&subscribe=true".data(using: .utf8)
         var response: HTTPURLResponse?
         var _responseData: Data?
         let _sema = DispatchSemaphore(value: 0)
@@ -345,8 +334,7 @@ final class UrlEncodedTests: XCTestCase {
         var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/empty_string_value/form/")!)
         _req.httpMethod = "POST"
         _req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        _req.httpBody = "\"username=johndoe&description=\"".data(using: .utf8)
-        _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        _req.httpBody = "username=johndoe&description=".data(using: .utf8)
         var response: HTTPURLResponse?
         var _responseData: Data?
         let _sema = DispatchSemaphore(value: 0)
@@ -370,8 +358,7 @@ final class UrlEncodedTests: XCTestCase {
         var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/multiple_values_for_same_field/form/tags")!)
         _req.httpMethod = "POST"
         _req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        _req.httpBody = "\"tags=python&tags=fastapi&tags=web\"".data(using: .utf8)
-        _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        _req.httpBody = "tags=python&tags=fastapi&tags=web".data(using: .utf8)
         var response: HTTPURLResponse?
         var _responseData: Data?
         let _sema = DispatchSemaphore(value: 0)
@@ -395,8 +382,7 @@ final class UrlEncodedTests: XCTestCase {
         var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/numeric_field_type_conversion/form/")!)
         _req.httpMethod = "POST"
         _req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        _req.httpBody = "\"username=johndoe&age=30\"".data(using: .utf8)
-        _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        _req.httpBody = "username=johndoe&age=30".data(using: .utf8)
         var response: HTTPURLResponse?
         var _responseData: Data?
         let _sema = DispatchSemaphore(value: 0)
@@ -420,8 +406,7 @@ final class UrlEncodedTests: XCTestCase {
         var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/oauth2_password_grant_flow/token")!)
         _req.httpMethod = "POST"
         _req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        _req.httpBody = "\"username=johndoe&password=secret&grant_type=password\"".data(using: .utf8)
-        _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        _req.httpBody = "username=johndoe&password=secret&grant_type=password".data(using: .utf8)
         var response: HTTPURLResponse?
         var _responseData: Data?
         let _sema = DispatchSemaphore(value: 0)
@@ -445,8 +430,7 @@ final class UrlEncodedTests: XCTestCase {
         var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/optional_field_missing_success/register/")!)
         _req.httpMethod = "POST"
         _req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        _req.httpBody = "\"username=johndoe&password=secret\"".data(using: .utf8)
-        _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        _req.httpBody = "username=johndoe&password=secret".data(using: .utf8)
         var response: HTTPURLResponse?
         var _responseData: Data?
         let _sema = DispatchSemaphore(value: 0)
@@ -470,8 +454,7 @@ final class UrlEncodedTests: XCTestCase {
         var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/pattern_validation_fail/form/validated")!)
         _req.httpMethod = "POST"
         _req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        _req.httpBody = "\"username=john+doe\"".data(using: .utf8)
-        _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        _req.httpBody = "username=john+doe".data(using: .utf8)
         var response: HTTPURLResponse?
         var _responseData: Data?
         let _sema = DispatchSemaphore(value: 0)
@@ -495,8 +478,7 @@ final class UrlEncodedTests: XCTestCase {
         var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/required_field_missing_validation_error_2/login/")!)
         _req.httpMethod = "POST"
         _req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        _req.httpBody = "\"password=secret\"".data(using: .utf8)
-        _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        _req.httpBody = "password=secret".data(using: .utf8)
         var response: HTTPURLResponse?
         var _responseData: Data?
         let _sema = DispatchSemaphore(value: 0)
@@ -520,8 +502,7 @@ final class UrlEncodedTests: XCTestCase {
         var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/simple_form_submission_success/login/")!)
         _req.httpMethod = "POST"
         _req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        _req.httpBody = "\"username=johndoe&password=secret\"".data(using: .utf8)
-        _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        _req.httpBody = "username=johndoe&password=secret".data(using: .utf8)
         var response: HTTPURLResponse?
         var _responseData: Data?
         let _sema = DispatchSemaphore(value: 0)
@@ -545,8 +526,7 @@ final class UrlEncodedTests: XCTestCase {
         var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/special_characters_encoding/form/")!)
         _req.httpMethod = "POST"
         _req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        _req.httpBody = "\"name=John+Doe&description=Test+%26+Development\"".data(using: .utf8)
-        _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        _req.httpBody = "name=John+Doe&description=Test+%26+Development".data(using: .utf8)
         var response: HTTPURLResponse?
         var _responseData: Data?
         let _sema = DispatchSemaphore(value: 0)
@@ -570,8 +550,7 @@ final class UrlEncodedTests: XCTestCase {
         var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/string_max_length_validation_fail_2/form/validated")!)
         _req.httpMethod = "POST"
         _req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        _req.httpBody = "\"username=this_is_a_very_long_username_that_exceeds_limit\"".data(using: .utf8)
-        _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        _req.httpBody = "username=this_is_a_very_long_username_that_exceeds_limit".data(using: .utf8)
         var response: HTTPURLResponse?
         var _responseData: Data?
         let _sema = DispatchSemaphore(value: 0)
@@ -595,8 +574,7 @@ final class UrlEncodedTests: XCTestCase {
         var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/string_min_length_validation_fail_2/form/validated")!)
         _req.httpMethod = "POST"
         _req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        _req.httpBody = "\"username=ab\"".data(using: .utf8)
-        _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        _req.httpBody = "username=ab".data(using: .utf8)
         var response: HTTPURLResponse?
         var _responseData: Data?
         let _sema = DispatchSemaphore(value: 0)

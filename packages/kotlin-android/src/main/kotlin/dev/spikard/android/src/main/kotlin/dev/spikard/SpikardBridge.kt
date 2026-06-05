@@ -48,6 +48,8 @@ object SpikardBridge {
     external fun nativeAppAttachAxumRouter(handle: Long, requestJson: String): String
     @Throws(SpikardBridgeException::class)
     external fun nativeAppIntoRouter(handle: Long): String
+    @Throws(SpikardBridgeException::class)
+    external fun nativeAppIntoRouterAndConfig(handle: Long): String
     external fun nativeFreeApp(handle: Long)
     @Throws(SpikardBridgeException::class)
     external fun nativeRouteBuilderHandlerName(handle: Long, requestJson: String): String

@@ -131,6 +131,25 @@ Returns an error if server or router construction fails.
 fun intoRouter(): String
 ```
 
+#### intoRouterAndConfig()
+
+Decompose the application into its Axum router and server configuration.
+
+This is the low-level escape hatch used by the C FFI layer to start the
+server on a background thread while retaining the bind address from the
+caller-supplied `ServerConfig`. Prefer `App.run` for normal use.
+
+**Errors:**
+
+Returns an error if router construction fails.
+
+**Signature:**
+
+```kotlin
+@Throws(AppError::class)
+fun intoRouterAndConfig(): String
+```
+
 #### default()
 
 **Signature:**
@@ -784,7 +803,9 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ### Content-Type
+
 Responses using this struct should set:
+
 ```text
 Content-Type: application/problem+json
 ```
@@ -1217,6 +1238,7 @@ Events can have an optional type, ID, and retry timeout for advanced scenarios.
 ### SSE Format
 
 Events are serialized to the following text format:
+
 ```text
 event: event_type
 data: {"json":"value"}

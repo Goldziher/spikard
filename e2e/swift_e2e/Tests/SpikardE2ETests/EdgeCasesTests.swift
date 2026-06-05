@@ -348,8 +348,7 @@ final class EdgeCasesTests: XCTestCase {
         var _req = URLRequest(url: URL(string: _baseURL + "/fixtures/24_array_with_holes/items")!)
         _req.httpMethod = "POST"
         _req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        _req.httpBody = "\"items[0]=first&items[2]=third&items[5]=sixth\"".data(using: .utf8)
-        _req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        _req.httpBody = "items[0]=first&items[2]=third&items[5]=sixth".data(using: .utf8)
         var response: HTTPURLResponse?
         var _responseData: Data?
         let _sema = DispatchSemaphore(value: 0)

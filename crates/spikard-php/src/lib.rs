@@ -1731,6 +1731,24 @@ impl App {
     }
 
     /**
+     * Decompose the application into its Axum router and server configuration.
+     *
+     * This is the low-level escape hatch used by the C FFI layer to start the
+     * server on a background thread while retaining the bind address from the
+     * caller-supplied `ServerConfig`.  Prefer `App.run` for normal use.
+     * @throws SpikardException Returns an error if router construction fails.
+     */
+    pub fn into_router_and_config(&self) -> PhpResult<String> {
+        let result = self
+            .inner
+            .lock()
+            .unwrap()
+            .into_router_and_config()
+            .map_err(|e| ext_php_rs::exception::PhpException::default(e.to_string()))?;
+        Ok(result)
+    }
+
+    /**
      * Create a new application with the default server configuration.
      */
     #[php(name = "new")]

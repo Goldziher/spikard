@@ -10,11 +10,13 @@ fixtures_json = "{\"06_cors_preflight_method_not_allowed\":{\"http\":{\"expected
 
 # Alias binding module names for readability
 # The binding module name is derived from imports
-alias App
+alias Spikard.App
 alias Spikard.RouteBuilder
 alias Spikard.Method
+alias Spikard.ServerConfig
+
 # Create and configure the app
-app = App.new()
+app = Spikard.App.new()
 
 # Register a handler for each fixture
 app = Enum.reduce(fixtures, app, fn {fixture_id, fixture}, app_acc ->
@@ -64,10 +66,16 @@ app = Enum.reduce(fixtures, app, fn {fixture_id, fixture}, app_acc ->
       end
 
     # Register the route with the handler
-    App.route(app_acc, builder, handler_fn)
+    Spikard.App.route(app_acc, builder, handler_fn)
   end
-end)
+end)# Configure and start the server
+config = %Spikard.ServerConfig{
+  host: "127.0.0.1",
+  port: 8000
+}
+
+app = Spikard.App.config(app, config)
 IO.puts("Harness listening on 127.0.0.1:8000")
 
 # Run the app
-App.run(app)
+Spikard.App.run(app)

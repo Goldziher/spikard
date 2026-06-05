@@ -29,7 +29,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/13_array_field_success/register");
-        request.Content = new System.Net.Http.StringContent("\"tags[]=python&tags[]=rust&tags[]=typescript\"", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("\"tags[]=python&tags[]=rust&tags[]=typescript\"", System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
         var response = await client.SendAsync(request);
         Assert.Equal(201, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -45,7 +45,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/14_nested_object_bracket_notation/profile");
-        request.Content = new System.Net.Http.StringContent("\"user[name]=John%20Doe&user[email]=john@example.com&user[age]=30\"", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("\"user[name]=John%20Doe&user[email]=john@example.com&user[age]=30\"", System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
         var response = await client.SendAsync(request);
         Assert.Equal(201, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -61,7 +61,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/15_special_characters_field_names/data");
-        request.Content = new System.Net.Http.StringContent("\"user-name=JohnDoe&contact.email=john%40example.com\"", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("\"user-name=JohnDoe&contact.email=john%40example.com\"", System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
         var response = await client.SendAsync(request);
         Assert.Equal(201, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -77,7 +77,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/16_minlength_validation_failure/users");
-        request.Content = new System.Net.Http.StringContent("\"username=ab\"", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("\"username=ab\"", System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
         var response = await client.SendAsync(request);
         Assert.Equal(422, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -93,7 +93,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/17_pattern_validation_failure/accounts");
-        request.Content = new System.Net.Http.StringContent("\"account_id=INVALID123\"", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("\"account_id=INVALID123\"", System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
         var response = await client.SendAsync(request);
         Assert.Equal(422, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -109,7 +109,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/18_integer_minimum_validation_failure/products");
-        request.Content = new System.Net.Http.StringContent("\"quantity=0\"", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("\"quantity=0\"", System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
         var response = await client.SendAsync(request);
         Assert.Equal(422, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -125,7 +125,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/19_array_minitems_validation_failure/tags");
-        request.Content = new System.Net.Http.StringContent("\"tags[]=single\"", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("\"tags[]=single\"", System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
         var response = await client.SendAsync(request);
         Assert.Equal(422, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -141,7 +141,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/20_format_email_validation_failure/subscribe");
-        request.Content = new System.Net.Http.StringContent("\"email=not-an-email\"", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("\"email=not-an-email\"", System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
         var response = await client.SendAsync(request);
         Assert.Equal(422, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -157,7 +157,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/21_integer_type_coercion_failure/products");
-        request.Content = new System.Net.Http.StringContent("\"price=not-a-number\"", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("\"price=not-a-number\"", System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
         var response = await client.SendAsync(request);
         Assert.Equal(422, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -173,7 +173,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/22_additional_properties_strict_failure/settings");
-        request.Content = new System.Net.Http.StringContent("\"theme=dark&unknown_field=value\"", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("\"theme=dark&unknown_field=value\"", System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
         var response = await client.SendAsync(request);
         Assert.Equal(422, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -189,7 +189,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/boolean_field_conversion/form/");
-        request.Content = new System.Net.Http.StringContent("\"username=johndoe&subscribe=true\"", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("\"username=johndoe&subscribe=true\"", System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
         var response = await client.SendAsync(request);
         Assert.Equal(200, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -205,7 +205,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/empty_string_value/form/");
-        request.Content = new System.Net.Http.StringContent("\"username=johndoe&description=\"", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("\"username=johndoe&description=\"", System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
         var response = await client.SendAsync(request);
         Assert.Equal(200, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -221,7 +221,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/multiple_values_for_same_field/form/tags");
-        request.Content = new System.Net.Http.StringContent("\"tags=python&tags=fastapi&tags=web\"", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("\"tags=python&tags=fastapi&tags=web\"", System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
         var response = await client.SendAsync(request);
         Assert.Equal(200, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -237,7 +237,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/numeric_field_type_conversion/form/");
-        request.Content = new System.Net.Http.StringContent("\"username=johndoe&age=30\"", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("\"username=johndoe&age=30\"", System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
         var response = await client.SendAsync(request);
         Assert.Equal(200, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -253,7 +253,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/oauth2_password_grant_flow/token");
-        request.Content = new System.Net.Http.StringContent("\"username=johndoe&password=secret&grant_type=password\"", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("\"username=johndoe&password=secret&grant_type=password\"", System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
         var response = await client.SendAsync(request);
         Assert.Equal(200, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -269,7 +269,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/optional_field_missing_success/register/");
-        request.Content = new System.Net.Http.StringContent("\"username=johndoe&password=secret\"", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("\"username=johndoe&password=secret\"", System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
         var response = await client.SendAsync(request);
         Assert.Equal(200, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -285,7 +285,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/pattern_validation_fail/form/validated");
-        request.Content = new System.Net.Http.StringContent("\"username=john+doe\"", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("\"username=john+doe\"", System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
         var response = await client.SendAsync(request);
         Assert.Equal(422, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -301,7 +301,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/required_field_missing_validation_error_2/login/");
-        request.Content = new System.Net.Http.StringContent("\"password=secret\"", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("\"password=secret\"", System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
         var response = await client.SendAsync(request);
         Assert.Equal(422, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -317,7 +317,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/simple_form_submission_success/login/");
-        request.Content = new System.Net.Http.StringContent("\"username=johndoe&password=secret\"", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("\"username=johndoe&password=secret\"", System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
         var response = await client.SendAsync(request);
         Assert.Equal(200, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -333,7 +333,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/special_characters_encoding/form/");
-        request.Content = new System.Net.Http.StringContent("\"name=John+Doe&description=Test+%26+Development\"", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("\"name=John+Doe&description=Test+%26+Development\"", System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
         var response = await client.SendAsync(request);
         Assert.Equal(200, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -349,7 +349,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/string_max_length_validation_fail_2/form/validated");
-        request.Content = new System.Net.Http.StringContent("\"username=this_is_a_very_long_username_that_exceeds_limit\"", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("\"username=this_is_a_very_long_username_that_exceeds_limit\"", System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
         var response = await client.SendAsync(request);
         Assert.Equal(422, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -365,7 +365,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/string_min_length_validation_fail_2/form/validated");
-        request.Content = new System.Net.Http.StringContent("\"username=ab\"", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("\"username=ab\"", System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
         var response = await client.SendAsync(request);
         Assert.Equal(422, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();

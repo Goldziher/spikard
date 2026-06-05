@@ -27,7 +27,7 @@ func Test_13JsonWithCharsetUtf16(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "application/json; charset=utf-16")
 	req.Header.Set(`Content-Type`, `application/json; charset=utf-16`)
 	noRedirectClient := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -71,7 +71,7 @@ func Test_14ContentTypeCaseInsensitive(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "APPLICATION/JSON")
 	req.Header.Set(`Content-Type`, `APPLICATION/JSON`)
 	noRedirectClient := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -158,7 +158,7 @@ func Test_16TextPlainNotAccepted(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "text/plain")
 	req.Header.Set(`Content-Type`, `text/plain`)
 	noRedirectClient := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -202,7 +202,7 @@ func Test_17VendorJsonAccepted(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "application/vnd.api+json")
 	req.Header.Set(`Content-Type`, `application/vnd.api+json`)
 	noRedirectClient := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -246,7 +246,7 @@ func Test_18ContentTypeWithMultipleParams(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "application/json; charset=utf-8; boundary=something")
 	req.Header.Set(`Content-Type`, `application/json; charset=utf-8; boundary=something`)
 	noRedirectClient := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -378,7 +378,7 @@ func Test_415UnsupportedMediaType(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "application/xml")
 	req.Header.Set(`Content-Type`, `application/xml`)
 	noRedirectClient := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {

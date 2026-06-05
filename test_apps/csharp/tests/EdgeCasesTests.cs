@@ -216,7 +216,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/24_array_with_holes/items");
-        request.Content = new System.Net.Http.StringContent("\"items[0]=first&items[2]=third&items[5]=sixth\"", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("\"items[0]=first&items[2]=third&items[5]=sixth\"", System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
         var response = await client.SendAsync(request);
         Assert.Equal(400, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();
@@ -312,7 +312,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/unicode_and_emoji_handling/items/");
-        request.Content = new System.Net.Http.StringContent("{\"description\":\"Best café in München 🇩🇪\",\"emoji_reactions\":\"👍❤️😂🎉\",\"name\":\"Coffee Shop ☕\",\"tags\":[\"食べ物\",\"音楽\",\"💰\"]}", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("{\"description\":\"Best café in München 🇩🇪\",\"emoji_reactions\":\"👍❤️😂🎉\",\"name\":\"Coffee Shop ☕\",\"tags\":[\"食べ物\",\"音楽\",\"💰\"]}", System.Text.Encoding.UTF8, "application/json; charset=utf-8");
         var response = await client.SendAsync(request);
         Assert.Equal(200, (int)response.StatusCode);
         var bodyText = await response.Content.ReadAsStringAsync();

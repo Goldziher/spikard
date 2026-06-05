@@ -538,7 +538,7 @@ func Test_24ArrayWithHoles(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set(`Content-Type`, `application/x-www-form-urlencoded`)
 	noRedirectClient := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -802,7 +802,7 @@ func Test_UnicodeAndEmojiHandling(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "application/json; charset=utf-8")
 	req.Header.Set(`Content-Type`, `application/json; charset=utf-8`)
 	noRedirectClient := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {

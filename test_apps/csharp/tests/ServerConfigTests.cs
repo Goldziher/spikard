@@ -120,7 +120,7 @@ namespace Spikard
         using var handler = new System.Net.Http.HttpClientHandler { AllowAutoRedirect = false };
         using var client = new System.Net.Http.HttpClient(handler);
         var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{baseUrl}/fixtures/server_grpc_integration/api.Service/Method");
-        request.Content = new System.Net.Http.StringContent("{\"data\":\"test\"}", System.Text.Encoding.UTF8, "application/json");
+        request.Content = new System.Net.Http.StringContent("{\"data\":\"test\"}", System.Text.Encoding.UTF8, "application/grpc");
         request.Headers.Add("te", "trailers");
         var response = await client.SendAsync(request);
         Assert.Equal(200, (int)response.StatusCode);
