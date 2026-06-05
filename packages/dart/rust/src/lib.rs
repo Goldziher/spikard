@@ -1657,7 +1657,7 @@ impl From<CompressionConfig> for spikard::CompressionConfig {
 ///
 /// A `QueryOnlyConfig` with default settings
 pub fn schema_query_only() -> QueryOnlyConfig {
-    (QueryOnlyConfig::from)(spikard_graphql::schema_query_only())
+    QueryOnlyConfig::from(spikard_graphql::schema_query_only())
 }
 
 /// Create a schema configuration with Query and Mutation types.
@@ -1668,7 +1668,7 @@ pub fn schema_query_only() -> QueryOnlyConfig {
 ///
 /// A `QueryMutationConfig` with default settings
 pub fn schema_query_mutation() -> QueryMutationConfig {
-    (QueryMutationConfig::from)(spikard_graphql::schema_query_mutation())
+    QueryMutationConfig::from(spikard_graphql::schema_query_mutation())
 }
 
 /// Create a schema configuration with all three root types.
@@ -1679,7 +1679,7 @@ pub fn schema_query_mutation() -> QueryMutationConfig {
 ///
 /// A `FullSchemaConfig` with default settings
 pub fn schema_full() -> FullSchemaConfig {
-    (FullSchemaConfig::from)(spikard_graphql::schema_full())
+    FullSchemaConfig::from(spikard_graphql::schema_full())
 }
 
 // `create_<Type>_from_json` helpers — deserialize a JSON string into a mirror type.

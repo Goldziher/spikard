@@ -521,7 +521,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required String path,
     required FutureOr<String> Function(String) handler,
   }) {
-    return 
+    return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -544,7 +544,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         argValues: [that, path, handler],
         apiImpl: this,
       ),
-    ).executeSync();
+    );
   }
 
   TaskConstMeta get kCrateServiceApiAppConnectConstMeta => const TaskConstMeta(
@@ -558,7 +558,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required String path,
     required FutureOr<String> Function(String) handler,
   }) {
-    return 
+    return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -581,7 +581,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         argValues: [that, path, handler],
         apiImpl: this,
       ),
-    ).executeSync();
+    );
   }
 
   TaskConstMeta get kCrateServiceApiAppDeleteConstMeta => const TaskConstMeta(
@@ -595,7 +595,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required String path,
     required FutureOr<String> Function(String) handler,
   }) {
-    return 
+    return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -618,7 +618,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         argValues: [that, path, handler],
         apiImpl: this,
       ),
-    ).executeSync();
+    );
   }
 
   TaskConstMeta get kCrateServiceApiAppGetConstMeta => const TaskConstMeta(
@@ -632,7 +632,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required String path,
     required FutureOr<String> Function(String) handler,
   }) {
-    return 
+    return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -655,7 +655,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         argValues: [that, path, handler],
         apiImpl: this,
       ),
-    ).executeSync();
+    );
   }
 
   TaskConstMeta get kCrateServiceApiAppHeadConstMeta => const TaskConstMeta(
@@ -692,7 +692,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required String path,
     required FutureOr<String> Function(String) handler,
   }) {
-    return 
+    return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -715,7 +715,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         argValues: [that, path, handler],
         apiImpl: this,
       ),
-    ).executeSync();
+    );
   }
 
   TaskConstMeta get kCrateServiceApiAppOptionsConstMeta => const TaskConstMeta(
@@ -729,7 +729,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required String path,
     required FutureOr<String> Function(String) handler,
   }) {
-    return 
+    return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -752,7 +752,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         argValues: [that, path, handler],
         apiImpl: this,
       ),
-    ).executeSync();
+    );
   }
 
   TaskConstMeta get kCrateServiceApiAppPatchConstMeta => const TaskConstMeta(
@@ -766,7 +766,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required String path,
     required FutureOr<String> Function(String) handler,
   }) {
-    return 
+    return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -789,7 +789,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         argValues: [that, path, handler],
         apiImpl: this,
       ),
-    ).executeSync();
+    );
   }
 
   TaskConstMeta get kCrateServiceApiAppPostConstMeta => const TaskConstMeta(
@@ -803,7 +803,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required String path,
     required FutureOr<String> Function(String) handler,
   }) {
-    return 
+    return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -826,7 +826,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         argValues: [that, path, handler],
         apiImpl: this,
       ),
-    ).executeSync();
+    );
   }
 
   TaskConstMeta get kCrateServiceApiAppPutConstMeta => const TaskConstMeta(
@@ -840,7 +840,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required RouteBuilder builder,
     required FutureOr<String> Function(String) handler,
   }) {
-    return 
+    return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -866,7 +866,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         argValues: [that, builder, handler],
         apiImpl: this,
       ),
-    ).executeSync();
+    );
   }
 
   TaskConstMeta get kCrateServiceApiAppRouteConstMeta => const TaskConstMeta(
@@ -911,7 +911,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required String path,
     required FutureOr<String> Function(String) handler,
   }) {
-    return 
+    return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -934,7 +934,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         argValues: [that, path, handler],
         apiImpl: this,
       ),
-    ).executeSync();
+    );
   }
 
   TaskConstMeta get kCrateServiceApiAppTraceConstMeta => const TaskConstMeta(
@@ -946,7 +946,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Future<DartHandlerHandler> crateServiceApiDartHandlerHandlerNew({
     required FutureOr<String> Function(String) handler,
   }) {
-    return 
+    return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -970,7 +970,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         argValues: [handler],
         apiImpl: this,
       ),
-    ).executeNormal();
+    );
   }
 
   TaskConstMeta get kCrateServiceApiDartHandlerHandlerNewConstMeta =>

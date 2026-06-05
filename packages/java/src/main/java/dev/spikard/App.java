@@ -93,9 +93,10 @@ public class App implements AutoCloseable {
 
             // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
             // Marshals C pointers <-> Java strings via Arena
-            MethodHandle adapter = lookup.findStatic(App.class, "invokeHandlerWithMarshal",
+            MethodHandle baseMh = lookup.findStatic(App.class, "invokeHandlerWithMarshal",
                 MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
-            ).bindTo(handler).bindTo(arena);
+            );
+            MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
 
             MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
@@ -112,13 +113,12 @@ public class App implements AutoCloseable {
             );
             MethodHandle regHandle = LINKER.downcallHandle(regAddr, regDesc);
 
-            Object[] args = new Object[] {
+            return (int) regHandle.invokeExact(
                 ownerHandle,     // owner
                 upcallStub       // callback
 ,
                 builder.handle()    // opaque handle
-            };
-            return (int) regHandle.invokeExact(args);
+            );
         } catch (Throwable e) {
             throw new RuntimeException("Failed to register handler", e);
         }
@@ -151,9 +151,10 @@ public class App implements AutoCloseable {
 
             // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
             // Marshals C pointers <-> Java strings via Arena
-            MethodHandle adapter = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
+            MethodHandle baseMh = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
                 MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
-            ).bindTo(handler).bindTo(arena);
+            );
+            MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
 
             MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
@@ -209,9 +210,10 @@ public class App implements AutoCloseable {
 
             // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
             // Marshals C pointers <-> Java strings via Arena
-            MethodHandle adapter = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
+            MethodHandle baseMh = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
                 MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
-            ).bindTo(handler).bindTo(arena);
+            );
+            MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
 
             MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
@@ -267,9 +269,10 @@ public class App implements AutoCloseable {
 
             // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
             // Marshals C pointers <-> Java strings via Arena
-            MethodHandle adapter = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
+            MethodHandle baseMh = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
                 MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
-            ).bindTo(handler).bindTo(arena);
+            );
+            MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
 
             MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
@@ -325,9 +328,10 @@ public class App implements AutoCloseable {
 
             // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
             // Marshals C pointers <-> Java strings via Arena
-            MethodHandle adapter = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
+            MethodHandle baseMh = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
                 MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
-            ).bindTo(handler).bindTo(arena);
+            );
+            MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
 
             MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
@@ -383,9 +387,10 @@ public class App implements AutoCloseable {
 
             // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
             // Marshals C pointers <-> Java strings via Arena
-            MethodHandle adapter = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
+            MethodHandle baseMh = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
                 MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
-            ).bindTo(handler).bindTo(arena);
+            );
+            MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
 
             MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
@@ -441,9 +446,10 @@ public class App implements AutoCloseable {
 
             // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
             // Marshals C pointers <-> Java strings via Arena
-            MethodHandle adapter = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
+            MethodHandle baseMh = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
                 MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
-            ).bindTo(handler).bindTo(arena);
+            );
+            MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
 
             MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
@@ -499,9 +505,10 @@ public class App implements AutoCloseable {
 
             // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
             // Marshals C pointers <-> Java strings via Arena
-            MethodHandle adapter = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
+            MethodHandle baseMh = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
                 MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
-            ).bindTo(handler).bindTo(arena);
+            );
+            MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
 
             MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
@@ -557,9 +564,10 @@ public class App implements AutoCloseable {
 
             // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
             // Marshals C pointers <-> Java strings via Arena
-            MethodHandle adapter = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
+            MethodHandle baseMh = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
                 MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
-            ).bindTo(handler).bindTo(arena);
+            );
+            MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
 
             MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
@@ -615,9 +623,10 @@ public class App implements AutoCloseable {
 
             // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
             // Marshals C pointers <-> Java strings via Arena
-            MethodHandle adapter = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
+            MethodHandle baseMh = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
                 MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
-            ).bindTo(handler).bindTo(arena);
+            );
+            MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
 
             MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
