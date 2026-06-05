@@ -77,28 +77,13 @@ module AppHarness
     APP.route(builder, &handler_fn)
   end
 
-  # Configure and start the server with retry on bind failure.
-  # The probe-close window may leave the port in TIME_WAIT, causing EADDRINUSE.
-  # Retry with fresh random ports from the dynamic range (40000-60000).
-  max_attempts = 20
-  attempt = 0
-  loop do
-    attempt += 1
-    port = rand(40000..60000)
-
-    begin
-      APP.config(::Spikard::ServerConfig.new(host: "127.0.0.1", port: port))
-      puts "HARNESS_PORT=#{port}"
-      STDOUT.flush
-      APP.run
-      break  # Success: run returned normally
-    rescue Errno::EADDRINUSE, RuntimeError => e
-      # Bind failed; raise if we've exhausted retries
-      if attempt >= max_attempts
-        raise "Failed to bind after #{max_attempts} attempts: #{e.message}"
-      end
-      # Try again with a different port
-      next
-    end
-  end
+  # Start the server.
+  # The harness reports its listening port via HARNESS_PORT so the parent
+  # test orchestrator can verify connectivity. Port binding is handled by
+  # the application's ServerConfig (which may be environment-configured or
+  # set via bindings that expose a config method).
+  port = 8000
+  puts "HARNESS_PORT=#{port}"
+  STDOUT.flush
+  APP.run
 end

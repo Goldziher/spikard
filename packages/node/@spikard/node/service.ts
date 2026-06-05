@@ -199,17 +199,6 @@ export class App {
   }
 
   /**
-   * Run the HTTP server using the configured routes.
-   *
-   * # Errors
-   *
-   * Returns an error if server construction or execution fails.
-   */
-  async run(): Promise<void> {
-    return await app_run(this._registrations);
-  }
-
-  /**
    * Build the underlying Axum router.
    *
    * # Errors

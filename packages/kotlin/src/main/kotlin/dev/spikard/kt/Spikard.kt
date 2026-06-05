@@ -23,6 +23,7 @@
 
 package dev.spikard.kt
 
+
 import dev.spikard.Spikard as Bridge
 
 typealias UploadFile = dev.spikard.UploadFile
@@ -67,6 +68,7 @@ typealias GraphQLErrorException = dev.spikard.GraphQLErrorException
 typealias SchemaErrorException = dev.spikard.SchemaErrorException
 
 object Spikard {
+
     /**
      * Create a simple schema configuration with only Query type.
      *
@@ -108,4 +110,5 @@ object Spikard {
 
         return Bridge.schemaFull()
     }
+
 }

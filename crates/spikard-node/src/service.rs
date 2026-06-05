@@ -52,33 +52,6 @@ impl spikard::Handler for HandlerBridge {
     }
 }
 
-/// Drive `spikard::App::run` from JavaScript.
-///
-/// Each entry in `registrations` is a `[method_name, metadata, callback]` triple
-/// produced by the TypeScript service class.
-#[napi]
-pub async fn app_run(
-    registrations: Vec<(
-        String,
-        Vec<serde_json::Value>,
-        ThreadsafeFunction<serde_json::Value, serde_json::Value>,
-    )>,
-) -> napi::Result<()> {
-    let mut owner = spikard::App::new();
-
-    for (method_name, _metadata, handler_fn) in registrations {
-        match method_name.as_str() {
-            _ => {}
-        }
-    }
-
-    owner
-        .run()
-        .await
-        .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
-    Ok(())
-}
-
 /// Drive `spikard::App::into_router` from JavaScript.
 ///
 /// Each entry in `registrations` is a `[method_name, metadata, callback]` triple

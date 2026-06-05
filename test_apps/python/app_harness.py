@@ -152,9 +152,6 @@ for fixture_id, fixture in _FIXTURES.items():
             options_builder = RouteBuilder(options_method, full_route)
             app.route(options_builder)(make_cors_preflight_handler(cors_config))
 
-# Configure and start the server.
-_config = ServerConfig(host="127.0.0.1", port=8000)
-app.config(_config)
-print(f"Harness listening on 127.0.0.1:8000")
+# Configure and start the server.print(f"Harness listening on 127.0.0.1:8000")
 sys.stdout.flush()
 app.run()
