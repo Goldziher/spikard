@@ -225,6 +225,17 @@ tasks:
     desc: "Regenerate all Alef-managed outputs without formatting or building"
     cmds:
       - alef all --clean --format=false
+      - cmd: |
+          # Invoke cargo build for spikard-dart to trigger FRB codegen and the
+          # fix_handler_executor_calls() rewrite. This is necessary because alef's
+          # generate phase only regenerates Rust source files; FRB codegen and the
+          # rewrite only run during cargo build.
+          if command -v cargo >/dev/null 2>&1; then
+            cargo build --manifest-path packages/dart/rust/Cargo.toml 2>&1 | grep -v "^warning:" || true
+          else
+            echo "cargo not available; skipping spikard-dart build"
+          fi
+        ignore_error: true
 
   alef:verify:
     desc: "Check Alef-generated files are up to date"
