@@ -2790,6 +2790,23 @@ int32_t spikard_app_trace(struct SPIKARDAppOpaque *owner,
                           const char *path);
 
 /**
+ * Apply server configuration (host, port, workers) to the App.
+ *
+ * Replaces the App's `ServerConfig` with a default config whose `host`, `port`,
+ * and `workers` fields are overridden by the provided arguments. Call this
+ * before `spikard_app_ep_run`. Other ServerConfig fields stay at their defaults.
+ *
+ * # Safety
+ * - `owner` must be a valid pointer returned by `spikard_app_new()` and not yet freed.
+ * - `host` must be a valid null-terminated UTF-8 C string; the caller retains ownership.
+ * Returns 0 on success, non-zero error code on failure.
+ */
+int32_t spikard_app_config(struct SPIKARDAppOpaque *owner,
+                           const char *host,
+                           uint16_t port,
+                           uintptr_t workers);
+
+/**
  * Run the service entrypoint 'run'.
  *
  * # Safety
