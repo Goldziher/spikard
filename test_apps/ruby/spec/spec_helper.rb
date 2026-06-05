@@ -18,8 +18,9 @@ RSpec.configure do |config|
     unless File.exist?(harness_bin)
       raise "app_harness.rb not found at #{harness_bin}"
     end
-    # Spawn the harness and read its stdout to extract the dynamic port.
-    @_harness_stdin, @_harness_stdout, @_harness_stderr, @_harness_thread = Open3.popen3('ruby', harness_bin)
+    # Spawn the harness via `bundle exec ruby` so Bundler resolves the gem path.
+    # Plain `ruby` would not find local-path gems declared in the e2e/ Gemfile.
+    @_harness_stdin, @_harness_stdout, @_harness_stderr, @_harness_thread = Open3.popen3('bundle', 'exec', 'ruby', harness_bin)
     @_harness_pid = @_harness_thread.pid
     harness_port = nil
     deadline = Time.now + 15.0
