@@ -103,20 +103,20 @@ public sealed record SseEvent
     public SseEvent WithId(string id)
     {
         var selfJson = JsonSerializer.Serialize(this, JsonSerializationOptions);
-var selfHandle = NativeMethods.SseEventFromJson(selfJson);
+        var selfHandle = NativeMethods.SseEventFromJson(selfJson);
         try
         {
             var nativeResult = NativeMethods.SseEventWithId(selfHandle, id);
-var jsonPtr = NativeMethods.SseEventToJson(nativeResult);
-var json = global::System.Runtime.InteropServices.Marshal.PtrToStringUTF8(jsonPtr);
-NativeMethods.FreeString(jsonPtr);
-NativeMethods.SseEventFree(nativeResult);
-return JsonSerializer.Deserialize<SseEvent>(json ?? "null", JsonOptions)!;
-}
-finally
+            var jsonPtr = NativeMethods.SseEventToJson(nativeResult);
+            var json = global::System.Runtime.InteropServices.Marshal.PtrToStringUTF8(jsonPtr);
+            NativeMethods.FreeString(jsonPtr);
+            NativeMethods.SseEventFree(nativeResult);
+            return JsonSerializer.Deserialize<SseEvent>(json ?? "null", JsonOptions)!;
+        }
+        finally
         {
             NativeMethods.SseEventFree(selfHandle);
-}
+        }
     }
 
     /// <summary>
@@ -125,19 +125,19 @@ finally
     public SseEvent WithRetry(ulong retryMs)
     {
         var selfJson = JsonSerializer.Serialize(this, JsonSerializationOptions);
-var selfHandle = NativeMethods.SseEventFromJson(selfJson);
+        var selfHandle = NativeMethods.SseEventFromJson(selfJson);
         try
         {
             var nativeResult = NativeMethods.SseEventWithRetry(selfHandle, retryMs);
-var jsonPtr = NativeMethods.SseEventToJson(nativeResult);
-var json = global::System.Runtime.InteropServices.Marshal.PtrToStringUTF8(jsonPtr);
-NativeMethods.FreeString(jsonPtr);
-NativeMethods.SseEventFree(nativeResult);
-return JsonSerializer.Deserialize<SseEvent>(json ?? "null", JsonOptions)!;
-}
-finally
+            var jsonPtr = NativeMethods.SseEventToJson(nativeResult);
+            var json = global::System.Runtime.InteropServices.Marshal.PtrToStringUTF8(jsonPtr);
+            NativeMethods.FreeString(jsonPtr);
+            NativeMethods.SseEventFree(nativeResult);
+            return JsonSerializer.Deserialize<SseEvent>(json ?? "null", JsonOptions)!;
+        }
+        finally
         {
             NativeMethods.SseEventFree(selfHandle);
-}
+        }
     }
 }

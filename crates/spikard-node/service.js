@@ -8,14 +8,12 @@
  */
 class App {
   constructor() {
-    // Access the raw native binding via _nativePkg — index.js exports this
-    // before overriding module.exports.App with this service App class.
-    // This avoids the circular dependency that would occur if we used
-    // `require("./index").App` (which would point back to this class).
+    // Access the native App class via _nativeApp — index.js saves this
+    // BEFORE overriding module.exports.App with this service App class.
     try {
       const pkg = require("./index");
-      const nativeModule = pkg._nativePkg;
-      this._native = nativeModule && nativeModule.App ? nativeModule.App.new() : null;
+      const NativeApp = pkg._nativeApp;
+      this._native = NativeApp ? NativeApp.new() : null;
     } catch (e) {
       this._native = null;
     }
@@ -34,7 +32,7 @@ class App {
    * Delegates to native setConfig when available (supports compression etc).
    */
   config(config) {
-    if (this._native && typeof this._native.setConfig === 'function') {
+    if (this._native && typeof this._native.setConfig === "function") {
       this._native.setConfig(config);
     }
     return this;
@@ -66,7 +64,7 @@ class App {
    * Delegates to native nativeRegisterRoute when available.
    */
   registerRoute(builder, handler) {
-    if (this._native && typeof this._native.nativeRegisterRoute === 'function') {
+    if (this._native && typeof this._native.nativeRegisterRoute === "function") {
       this._native.nativeRegisterRoute(builder, handler);
     } else {
       this._registrations.push(["route", [builder], handler]);
@@ -160,15 +158,15 @@ class App {
    * Delegates to native nativeRun when available.
    */
   async run() {
-    if (this._native && typeof this._native.nativeRun === 'function') {
+    if (this._native && typeof this._native.nativeRun === "function") {
       return await this._native.nativeRun();
     }
     // Fallback: try app_run (legacy path)
     const { app_run } = require("./index");
-    if (typeof app_run === 'function') {
+    if (typeof app_run === "function") {
       return await app_run(this._registrations);
     }
-    throw new Error('No run method available: native nativeRun missing and app_run not exported');
+    throw new Error("No run method available: native nativeRun missing and app_run not exported");
   }
 
   /**
