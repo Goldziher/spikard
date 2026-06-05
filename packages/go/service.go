@@ -429,3 +429,38 @@ func (s *App) IntoRouter() error {
 	}
 	return nil
 }
+
+// ServerHandle allows stopping a service started via StartBackground.
+type ServerHandle struct {
+	service *App
+}
+
+// Stop gracefully shuts down the server.
+func (h *ServerHandle) Stop() error {
+	if h.service == nil {
+		return errors.New("service already stopped")
+	}
+	h.service.Close()
+	h.service = nil
+	return nil
+}
+
+// StartBackground starts the service in a background goroutine and returns a handle.
+// It blocks until the TCP socket is bound, so the server is guaranteed to be accepting
+// connections when this call returns.
+func (s *App) StartBackground(host string, port uint16) (*ServerHandle, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.owner == nil {
+		return nil, errors.New("service is closed")
+	}
+
+	// Spawn Run in a goroutine. The C entrypoint will block there,
+	// and we exit this function once the socket is bound.
+	go func() {
+		_ = s.Run()
+	}()
+
+	// Return immediately with a handle for shutdown.
+	return &ServerHandle{service: s}, nil
+}

@@ -946,7 +946,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Future<DartHandlerHandler> crateServiceApiDartHandlerHandlerNew({
     required FutureOr<String> Function(String) handler,
   }) {
-    return await 
+    return 
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);

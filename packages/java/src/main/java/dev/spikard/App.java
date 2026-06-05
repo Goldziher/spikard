@@ -37,6 +37,17 @@ public class App implements AutoCloseable {
         }
     }
 
+    // Adapter for handler upcalls: marshals C pointers <-> Java strings
+    private static MemorySegment invokeHandlerWithMarshal(
+            MemorySegment contextPtr,
+            MemorySegment requestPtr,
+            Callable handler,
+            Arena arena) throws Throwable {
+        String requestStr = requestPtr.getString(0);
+        String responseStr = handler.handle(requestStr);
+        return arena.allocateFrom(responseStr);
+    }
+
     /**
      * Create a new App.
      * Invokes C FFI: spikard_app_new()
@@ -73,17 +84,20 @@ public class App implements AutoCloseable {
                 MethodType.methodType(String.class, String.class));
             MethodHandle boundMh = mh.bindTo(handler);
 
-            // Build adapter: (context: ADDRESS, request: ADDRESS) -> ADDRESS
-            // Marshalling: C *const char -> Java String -> handler.handle() -> String -> C *mut char
-            // For now, simplified: upcall receives pointers, marshalls to/from Java strings
+            // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
             FunctionDescriptor upcallDesc = FunctionDescriptor.of(
                 ValueLayout.ADDRESS,  // return: *mut c_char
                 ValueLayout.ADDRESS,  // param 0: *mut c_void (context)
                 ValueLayout.ADDRESS   // param 1: *const c_char (request JSON)
             );
-            // Create a wrapper MethodHandle that adapts Java strings to C pointers
-            // This is a simplified binding; production code should marshal strings properly
-            MemorySegment upcallStub = LINKER.upcallStub(boundMh, upcallDesc, arena);
+
+            // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
+            // Marshals C pointers <-> Java strings via Arena
+            MethodHandle adapter = lookup.findStatic(App.class, "invokeHandlerWithMarshal",
+                MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
+            ).bindTo(handler).bindTo(arena);
+
+            MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
             // Get register downcall handle
             MemorySegment regAddr = LOOKUP.find("spikard_app_register_route")
@@ -128,14 +142,20 @@ public class App implements AutoCloseable {
                 MethodType.methodType(String.class, String.class));
             MethodHandle boundMh = mh.bindTo(handler);
 
-            // Build adapter: (context: ADDRESS, request: ADDRESS) -> ADDRESS
+            // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
             FunctionDescriptor upcallDesc = FunctionDescriptor.of(
                 ValueLayout.ADDRESS,  // return: *mut c_char
                 ValueLayout.ADDRESS,  // param 0: *mut c_void (context)
                 ValueLayout.ADDRESS   // param 1: *const c_char (request JSON)
             );
 
-            MemorySegment upcallStub = LINKER.upcallStub(boundMh, upcallDesc, arena);
+            // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
+            // Marshals C pointers <-> Java strings via Arena
+            MethodHandle adapter = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
+                MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
+            ).bindTo(handler).bindTo(arena);
+
+            MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
             // Get variant registration downcall handle
             MemorySegment varAddr = LOOKUP.find("spikard_app_register_route_get")
@@ -180,14 +200,20 @@ public class App implements AutoCloseable {
                 MethodType.methodType(String.class, String.class));
             MethodHandle boundMh = mh.bindTo(handler);
 
-            // Build adapter: (context: ADDRESS, request: ADDRESS) -> ADDRESS
+            // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
             FunctionDescriptor upcallDesc = FunctionDescriptor.of(
                 ValueLayout.ADDRESS,  // return: *mut c_char
                 ValueLayout.ADDRESS,  // param 0: *mut c_void (context)
                 ValueLayout.ADDRESS   // param 1: *const c_char (request JSON)
             );
 
-            MemorySegment upcallStub = LINKER.upcallStub(boundMh, upcallDesc, arena);
+            // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
+            // Marshals C pointers <-> Java strings via Arena
+            MethodHandle adapter = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
+                MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
+            ).bindTo(handler).bindTo(arena);
+
+            MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
             // Get variant registration downcall handle
             MemorySegment varAddr = LOOKUP.find("spikard_app_register_route_post")
@@ -232,14 +258,20 @@ public class App implements AutoCloseable {
                 MethodType.methodType(String.class, String.class));
             MethodHandle boundMh = mh.bindTo(handler);
 
-            // Build adapter: (context: ADDRESS, request: ADDRESS) -> ADDRESS
+            // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
             FunctionDescriptor upcallDesc = FunctionDescriptor.of(
                 ValueLayout.ADDRESS,  // return: *mut c_char
                 ValueLayout.ADDRESS,  // param 0: *mut c_void (context)
                 ValueLayout.ADDRESS   // param 1: *const c_char (request JSON)
             );
 
-            MemorySegment upcallStub = LINKER.upcallStub(boundMh, upcallDesc, arena);
+            // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
+            // Marshals C pointers <-> Java strings via Arena
+            MethodHandle adapter = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
+                MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
+            ).bindTo(handler).bindTo(arena);
+
+            MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
             // Get variant registration downcall handle
             MemorySegment varAddr = LOOKUP.find("spikard_app_register_route_put")
@@ -284,14 +316,20 @@ public class App implements AutoCloseable {
                 MethodType.methodType(String.class, String.class));
             MethodHandle boundMh = mh.bindTo(handler);
 
-            // Build adapter: (context: ADDRESS, request: ADDRESS) -> ADDRESS
+            // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
             FunctionDescriptor upcallDesc = FunctionDescriptor.of(
                 ValueLayout.ADDRESS,  // return: *mut c_char
                 ValueLayout.ADDRESS,  // param 0: *mut c_void (context)
                 ValueLayout.ADDRESS   // param 1: *const c_char (request JSON)
             );
 
-            MemorySegment upcallStub = LINKER.upcallStub(boundMh, upcallDesc, arena);
+            // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
+            // Marshals C pointers <-> Java strings via Arena
+            MethodHandle adapter = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
+                MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
+            ).bindTo(handler).bindTo(arena);
+
+            MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
             // Get variant registration downcall handle
             MemorySegment varAddr = LOOKUP.find("spikard_app_register_route_patch")
@@ -336,14 +374,20 @@ public class App implements AutoCloseable {
                 MethodType.methodType(String.class, String.class));
             MethodHandle boundMh = mh.bindTo(handler);
 
-            // Build adapter: (context: ADDRESS, request: ADDRESS) -> ADDRESS
+            // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
             FunctionDescriptor upcallDesc = FunctionDescriptor.of(
                 ValueLayout.ADDRESS,  // return: *mut c_char
                 ValueLayout.ADDRESS,  // param 0: *mut c_void (context)
                 ValueLayout.ADDRESS   // param 1: *const c_char (request JSON)
             );
 
-            MemorySegment upcallStub = LINKER.upcallStub(boundMh, upcallDesc, arena);
+            // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
+            // Marshals C pointers <-> Java strings via Arena
+            MethodHandle adapter = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
+                MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
+            ).bindTo(handler).bindTo(arena);
+
+            MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
             // Get variant registration downcall handle
             MemorySegment varAddr = LOOKUP.find("spikard_app_register_route_delete")
@@ -388,14 +432,20 @@ public class App implements AutoCloseable {
                 MethodType.methodType(String.class, String.class));
             MethodHandle boundMh = mh.bindTo(handler);
 
-            // Build adapter: (context: ADDRESS, request: ADDRESS) -> ADDRESS
+            // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
             FunctionDescriptor upcallDesc = FunctionDescriptor.of(
                 ValueLayout.ADDRESS,  // return: *mut c_char
                 ValueLayout.ADDRESS,  // param 0: *mut c_void (context)
                 ValueLayout.ADDRESS   // param 1: *const c_char (request JSON)
             );
 
-            MemorySegment upcallStub = LINKER.upcallStub(boundMh, upcallDesc, arena);
+            // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
+            // Marshals C pointers <-> Java strings via Arena
+            MethodHandle adapter = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
+                MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
+            ).bindTo(handler).bindTo(arena);
+
+            MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
             // Get variant registration downcall handle
             MemorySegment varAddr = LOOKUP.find("spikard_app_register_route_head")
@@ -440,14 +490,20 @@ public class App implements AutoCloseable {
                 MethodType.methodType(String.class, String.class));
             MethodHandle boundMh = mh.bindTo(handler);
 
-            // Build adapter: (context: ADDRESS, request: ADDRESS) -> ADDRESS
+            // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
             FunctionDescriptor upcallDesc = FunctionDescriptor.of(
                 ValueLayout.ADDRESS,  // return: *mut c_char
                 ValueLayout.ADDRESS,  // param 0: *mut c_void (context)
                 ValueLayout.ADDRESS   // param 1: *const c_char (request JSON)
             );
 
-            MemorySegment upcallStub = LINKER.upcallStub(boundMh, upcallDesc, arena);
+            // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
+            // Marshals C pointers <-> Java strings via Arena
+            MethodHandle adapter = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
+                MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
+            ).bindTo(handler).bindTo(arena);
+
+            MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
             // Get variant registration downcall handle
             MemorySegment varAddr = LOOKUP.find("spikard_app_register_route_options")
@@ -492,14 +548,20 @@ public class App implements AutoCloseable {
                 MethodType.methodType(String.class, String.class));
             MethodHandle boundMh = mh.bindTo(handler);
 
-            // Build adapter: (context: ADDRESS, request: ADDRESS) -> ADDRESS
+            // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
             FunctionDescriptor upcallDesc = FunctionDescriptor.of(
                 ValueLayout.ADDRESS,  // return: *mut c_char
                 ValueLayout.ADDRESS,  // param 0: *mut c_void (context)
                 ValueLayout.ADDRESS   // param 1: *const c_char (request JSON)
             );
 
-            MemorySegment upcallStub = LINKER.upcallStub(boundMh, upcallDesc, arena);
+            // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
+            // Marshals C pointers <-> Java strings via Arena
+            MethodHandle adapter = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
+                MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
+            ).bindTo(handler).bindTo(arena);
+
+            MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
             // Get variant registration downcall handle
             MemorySegment varAddr = LOOKUP.find("spikard_app_register_route_connect")
@@ -544,14 +606,20 @@ public class App implements AutoCloseable {
                 MethodType.methodType(String.class, String.class));
             MethodHandle boundMh = mh.bindTo(handler);
 
-            // Build adapter: (context: ADDRESS, request: ADDRESS) -> ADDRESS
+            // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
             FunctionDescriptor upcallDesc = FunctionDescriptor.of(
                 ValueLayout.ADDRESS,  // return: *mut c_char
                 ValueLayout.ADDRESS,  // param 0: *mut c_void (context)
                 ValueLayout.ADDRESS   // param 1: *const c_char (request JSON)
             );
 
-            MemorySegment upcallStub = LINKER.upcallStub(boundMh, upcallDesc, arena);
+            // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
+            // Marshals C pointers <-> Java strings via Arena
+            MethodHandle adapter = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
+                MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
+            ).bindTo(handler).bindTo(arena);
+
+            MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
             // Get variant registration downcall handle
             MemorySegment varAddr = LOOKUP.find("spikard_app_register_route_trace")

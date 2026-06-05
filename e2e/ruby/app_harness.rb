@@ -61,9 +61,8 @@ module AppHarness
 
     # Thread handler middleware through to the RouteBuilder.
     middleware_config = handler_config[:middleware] || {}
-    cors_config_class = Object.const_get("Spikard::ServerConfig".sub("ServerConfig", "CorsConfig"))
     middleware_dispatch = {
-      "cors" => ->(cfg) { builder.cors(cors_config_class.from_json(cfg.to_json)) }
+      "cors" => ->(cfg) { builder.cors(cfg) }
     }
     middleware_config.each do |mw_name, mw_cfg|
       next unless mw_cfg
