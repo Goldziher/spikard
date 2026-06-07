@@ -1,10 +1,17 @@
+// reason: SQL module is internal codegen infrastructure; pedantic doc lints
+// (missing_errors_doc, must_use_candidate, doc_markdown, module_name_repetitions, …)
+// are silenced at the module level to keep per-function annotations noise-free.
+// too_many_lines applies to route_from_query which is deliberately a single pipeline function.
+// similar_names applies to test locals (spec/sec) where renaming would reduce clarity.
 #![allow(
     clippy::missing_errors_doc,
     clippy::missing_panics_doc,
     clippy::must_use_candidate,
     clippy::doc_markdown,
     clippy::too_long_first_doc_paragraph,
-    clippy::module_name_repetitions
+    clippy::module_name_repetitions,
+    clippy::too_many_lines,
+    clippy::similar_names
 )]
 //! SQL-driven HTTP handler generation.
 //!

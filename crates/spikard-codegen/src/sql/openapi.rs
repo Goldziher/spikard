@@ -1,11 +1,3 @@
-#![allow(
-    clippy::missing_errors_doc,
-    clippy::missing_panics_doc,
-    clippy::must_use_candidate,
-    clippy::doc_markdown,
-    clippy::too_long_first_doc_paragraph,
-    clippy::module_name_repetitions
-)]
 //! Emit an OpenAPI 3.1 document from a slice of [`SqlRoute`].
 //!
 //! The spec is built as a raw `serde_json::Value` rather than reusing

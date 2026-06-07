@@ -1,12 +1,3 @@
-#![allow(
-    clippy::missing_errors_doc,
-    clippy::missing_panics_doc,
-    clippy::must_use_candidate,
-    clippy::doc_markdown,
-    clippy::too_long_first_doc_paragraph,
-    clippy::module_name_repetitions,
-    clippy::too_many_lines
-)]
 //! Spikard's HTTP annotation grammar, parsed out of scythe's `CustomAnnotation`
 //! slice. Scythe captures every unknown `-- @<name> <value>` line verbatim;
 //! spikard owns the vocabulary that turns those triples into route metadata.

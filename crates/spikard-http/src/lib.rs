@@ -1,3 +1,6 @@
+// reason: pedantic and nursery lints produce ~500 actionable items across this large crate
+// (missing_errors_doc, must_use_candidate, module_name_repetitions, uninlined_format_args, …);
+// tracked for incremental cleanup — do not expand these suppression categories.
 #![allow(clippy::pedantic, clippy::nursery)]
 #![cfg_attr(test, allow(clippy::all))]
 // On wasm32 the server/background/grpc/sse/websocket modules are gated out, leaving

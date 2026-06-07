@@ -41,6 +41,9 @@ impl Response {
     }
 
     /// Set a cookie in the response
+    // reason: cookie attributes (secure, http_only, max_age, domain, path, same_site) are
+    // all distinct options; collapsing into a struct would require a separate CookieOptions
+    // type in the public API — tracked separately.
     #[allow(clippy::too_many_arguments)]
     pub fn set_cookie(
         &mut self,
