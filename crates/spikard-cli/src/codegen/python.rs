@@ -1088,7 +1088,7 @@ import msgspec
             output.push_str(&format!(", {}: Path[{}]", param_name.to_snake_case(), param_type));
         }
 
-        for (param_name, param_type, required) in query_params.iter().filter(|(_, _, required)| *required) {
+        for (param_name, param_type, _required) in query_params.iter().filter(|(_, _, required)| *required) {
             output.push_str(&format!(", {}: Query[{}]", param_name.to_snake_case(), param_type));
         }
 

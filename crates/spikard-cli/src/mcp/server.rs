@@ -13,7 +13,7 @@ use crate::{
         },
     },
 };
-use anyhow::{Result, bail};
+use anyhow::Result;
 use rmcp::{
     ServerHandler, ServiceExt,
     handler::server::{router::tool::ToolRouter, wrapper::Parameters},
@@ -29,6 +29,9 @@ use rmcp::transport::streamable_http_server::{StreamableHttpService, session::lo
 /// MCP server for Spikard's codegen-first workflows.
 #[derive(Clone)]
 pub struct SpikardMcp {
+    // reason: tool_router is read by #[tool_router] macro-generated ServerHandler impl;
+    // the compiler's dead_code pass cannot see inside proc-macro output.
+    #[allow(dead_code)]
     tool_router: ToolRouter<SpikardMcp>,
 }
 

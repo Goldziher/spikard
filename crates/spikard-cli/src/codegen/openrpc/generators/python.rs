@@ -402,7 +402,7 @@ fn resolve_inline_schema(schema: &Value) -> &Value {
     schema
 }
 
-fn result_type_for_method(spec: &OpenRpcSpec, method: &OpenRpcMethod) -> String {
+fn result_type_for_method(_spec: &OpenRpcSpec, method: &OpenRpcMethod) -> String {
     schema_ref_name(&method.result.schema)
         .map(component_class_name)
         .unwrap_or_else(|| get_result_class_name(&method.name))

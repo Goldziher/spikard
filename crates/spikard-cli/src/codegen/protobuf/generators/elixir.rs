@@ -255,7 +255,7 @@ fn field_type_spec(schema: &ProtobufSchema, field: &FieldDef) -> String {
     wrap_type(base_type_spec(schema, &field.field_type), field)
 }
 
-fn method_input_type(schema: &ProtobufSchema, method: &MethodDef) -> String {
+fn method_input_type(_schema: &ProtobufSchema, method: &MethodDef) -> String {
     match method_rpc_kind(method) {
         RpcKind::UnaryLike => "Spikard.Grpc.Request.t()".to_string(),
         RpcKind::StreamingOut if method.input_streaming => "[Spikard.Grpc.Request.t()]".to_string(),

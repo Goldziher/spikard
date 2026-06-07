@@ -668,8 +668,7 @@ impl QualityValidator {
         .map_err(|e| QualityError::IoError(e.to_string()))?;
 
         Ok(TypeScriptTempProject {
-            workdir,
-            entry_path,
+            _workdir: workdir,
             config_path,
         })
     }
@@ -1113,8 +1112,8 @@ struct RustTempProject {
 }
 
 struct TypeScriptTempProject {
-    workdir: TempDir,
-    entry_path: PathBuf,
+    // _workdir holds the TempDir alive for RAII cleanup; path is not read directly.
+    _workdir: TempDir,
     config_path: PathBuf,
 }
 

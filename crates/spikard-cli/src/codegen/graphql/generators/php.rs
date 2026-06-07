@@ -7,7 +7,7 @@
 use super::GraphQLGenerator;
 #[allow(unused_imports)]
 use crate::codegen::common::{EscapeContext, escape_quotes, to_snake_case};
-use crate::codegen::graphql::spec_parser::{GraphQLArgument, GraphQLField, GraphQLInputField, GraphQLSchema, TypeKind};
+use crate::codegen::graphql::spec_parser::{GraphQLField, GraphQLInputField, GraphQLSchema, TypeKind};
 use anyhow::Result;
 
 #[derive(Default, Debug, Clone, Copy)]

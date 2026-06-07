@@ -560,7 +560,6 @@ mod tests {
                     },
                     "required": ["type", "body"]
                 })),
-                examples: vec![],
             }],
         }];
 

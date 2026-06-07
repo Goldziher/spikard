@@ -281,25 +281,6 @@ fn generate_channel_message_models(channel: &ChannelInfo) -> String {
     code
 }
 
-fn ruby_channel_payload_type(channel: &ChannelInfo) -> Option<String> {
-    match channel.message_definitions.as_slice() {
-        [] => None,
-        [message] => message
-            .schema
-            .as_ref()
-            .map(|_| format!("AsyncApiTypes::{}", ruby_message_type_name(channel, message))),
-        _ => Some(
-            channel
-                .message_definitions
-                .iter()
-                .filter(|message| message.schema.is_some())
-                .map(|message| format!("AsyncApiTypes::{}", ruby_message_type_name(channel, message)))
-                .collect::<Vec<_>>()
-                .join(" | "),
-        ),
-    }
-}
-
 fn ruby_message_type_name(channel: &ChannelInfo, message: &ChannelMessage) -> String {
     format!(
         "{}Payload",
@@ -621,7 +602,6 @@ mod tests {
                     },
                     "required": ["type", "body"]
                 })),
-                examples: vec![],
             }],
         }];
 

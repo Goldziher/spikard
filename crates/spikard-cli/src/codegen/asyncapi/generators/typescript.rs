@@ -4,7 +4,7 @@ use anyhow::{Result, bail};
 use heck::ToPascalCase;
 use serde_json::Value;
 
-use super::base::{sanitize_identifier, sanitize_typescript_identifier};
+use super::base::sanitize_identifier;
 use super::{AsyncApiGenerator, ChannelInfo, ChannelMessage};
 
 /// TypeScript `AsyncAPI` code generator
@@ -147,10 +147,6 @@ impl AsyncApiGenerator for TypeScriptAsyncApiGenerator {
 
         Ok(code)
     }
-}
-
-fn camel_identifier(name: &str) -> String {
-    sanitize_typescript_identifier(name)
 }
 
 fn pascal_identifier(name: &str) -> String {
@@ -410,7 +406,6 @@ mod tests {
                     },
                     "required": ["type", "body"]
                 })),
-                examples: vec![],
             }],
         }];
 

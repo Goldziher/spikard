@@ -121,9 +121,6 @@ pub fn extract_channel_info(spec: &AsyncApiV3Spec) -> Result<Vec<ChannelInfo>> {
                             name: message_name.clone(),
                             schema_name,
                             schema: definition.map(|definition| definition.schema.clone()),
-                            examples: definition
-                                .map(|definition| definition.examples.clone())
-                                .unwrap_or_default(),
                         }
                     })
                     .collect();

@@ -50,8 +50,6 @@ pub struct ChannelMessage {
     pub schema_name: String,
     /// Fully resolved JSON schema payload for the message, when available.
     pub schema: Option<Value>,
-    /// Examples extracted from the AsyncAPI document.
-    pub examples: Vec<Value>,
 }
 
 /// Channel information extracted from `AsyncAPI` spec
@@ -81,7 +79,6 @@ mod tests {
                 name: "UserUpdated".to_string(),
                 schema_name: "UserUpdated".to_string(),
                 schema: Some(serde_json::json!({"type": "object"})),
-                examples: vec![],
             }],
         };
 

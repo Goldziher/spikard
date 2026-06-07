@@ -155,7 +155,7 @@ fn split_queries(body: &str) -> Vec<&str> {
     let mut chunks = Vec::new();
     let mut start: Option<usize> = None;
     let mut last_pos = 0usize;
-    for (idx, line) in body.match_indices('\n').chain(std::iter::once((body.len(), ""))) {
+    for (idx, _line) in body.match_indices('\n').chain(std::iter::once((body.len(), ""))) {
         let line_start = last_pos;
         let line_end = idx;
         let line = &body[line_start..line_end];

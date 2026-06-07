@@ -36,24 +36,6 @@ pub fn sanitize_identifier(name: &str) -> String {
     ident
 }
 
-/// Sanitize identifier for TypeScript (handle camelCase conversion)
-pub fn sanitize_typescript_identifier(name: &str) -> String {
-    let identifier = sanitize_identifier(name);
-    let parts: Vec<&str> = identifier.split('_').collect();
-    if parts.is_empty() {
-        return "handler".to_string();
-    }
-
-    let mut result = parts[0].to_string();
-    for part in &parts[1..] {
-        if !part.is_empty() {
-            result.push_str(&part[0..1].to_uppercase());
-            result.push_str(&part[1..]);
-        }
-    }
-    result
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -65,13 +47,6 @@ mod tests {
         assert_eq!(sanitize_identifier("__double__"), "double");
         assert_eq!(sanitize_identifier("CAPS"), "caps");
         assert_eq!(sanitize_identifier("hello_world"), "hello_world");
-    }
-
-    #[test]
-    fn test_sanitize_typescript_identifier() {
-        assert_eq!(sanitize_typescript_identifier("hello_world"), "helloWorld");
-        assert_eq!(sanitize_typescript_identifier("my_handler"), "myHandler");
-        assert_eq!(sanitize_typescript_identifier("simple"), "simple");
     }
 
     #[test]
