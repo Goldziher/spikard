@@ -1,11 +1,1 @@
-{
-  "http": {
-    "expected_response": {
-      "body": null,
-      "headers": { "Cache-Control": "no-cache", "Content-Type": "text/event-stream" },
-      "status_code": 200
-    },
-    "handler": { "body_schema": null, "method": "GET", "route": "/events" },
-    "request": { "path": "/events" }
-  }
-}
+{"http":{"expected_response":{"body":null,"headers":{"Cache-Control":"no-cache","Content-Type":"text/event-stream"},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/events"},"request":{"path":"/events"}}}

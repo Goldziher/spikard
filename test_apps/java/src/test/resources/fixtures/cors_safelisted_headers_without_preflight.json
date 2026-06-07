@@ -1,11 +1,1 @@
-{
-  "http": {
-    "expected_response": {
-      "body": { "message": "Success" },
-      "headers": { "Access-Control-Allow-Origin": "https://app.example.com", "Vary": "Origin" },
-      "status_code": 200
-    },
-    "handler": { "body_schema": null, "method": "POST", "route": "/api/form" },
-    "request": { "path": "/api/form" }
-  }
-}
+{"http":{"expected_response":{"body":{"message":"Success"},"headers":{"Access-Control-Allow-Origin":"https://app.example.com","Vary":"Origin"},"status_code":200},"handler":{"body_schema":null,"method":"POST","route":"/api/form"},"request":{"path":"/api/form"}}}

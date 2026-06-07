@@ -1,11 +1,1 @@
-{
-  "http": {
-    "expected_response": {
-      "body": { "date_param": "2023-07-15" },
-      "headers": {},
-      "status_code": 200
-    },
-    "handler": { "body_schema": null, "method": "GET", "route": "/date/{date_param}" },
-    "request": { "path": "/date/2023-07-15" }
-  }
-}
+{"http":{"expected_response":{"body":{"date_param":"2023-07-15"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/date/{date_param}"},"request":{"path":"/date/2023-07-15"}}}

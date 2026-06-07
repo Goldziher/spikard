@@ -1,7 +1,1 @@
-{
-  "http": {
-    "expected_response": { "body": { "workers": 4 }, "headers": {}, "status_code": 200 },
-    "handler": { "body_schema": null, "method": "GET", "route": "/workers" },
-    "request": { "path": "/workers" }
-  }
-}
+{"http":{"expected_response":{"body":{"workers":4},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/workers"},"request":{"path":"/workers"}}}

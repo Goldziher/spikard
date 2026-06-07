@@ -1,11 +1,1 @@
-{
-  "http": {
-    "expected_response": {
-      "body": { "openapi": "3.0.0" },
-      "headers": { "Content-Type": "application/json" },
-      "status_code": 200
-    },
-    "handler": { "body_schema": null, "method": "GET", "route": "/api/openapi.json" },
-    "request": { "path": "/api/openapi.json" }
-  }
-}
+{"http":{"expected_response":{"body":{"openapi":"3.0.0"},"headers":{"Content-Type":"application/json"},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/api/openapi.json"},"request":{"path":"/api/openapi.json"}}}

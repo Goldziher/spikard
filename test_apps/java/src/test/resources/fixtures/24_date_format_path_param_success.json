@@ -1,7 +1,1 @@
-{
-  "http": {
-    "expected_response": { "body": { "date": "2025-10-30" }, "headers": {}, "status_code": 200 },
-    "handler": { "body_schema": null, "method": "GET", "route": "/events/{date}" },
-    "request": { "path": "/events/2025-10-30" }
-  }
-}
+{"http":{"expected_response":{"body":{"date":"2025-10-30"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/events/{date}"},"request":{"path":"/events/2025-10-30"}}}

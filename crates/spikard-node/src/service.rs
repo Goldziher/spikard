@@ -61,14 +61,14 @@ pub async fn app_into_router(
         ThreadsafeFunction<serde_json::Value, serde_json::Value>,
     )>,
 ) -> napi::Result<()> {
-    let mut owner = spikard::App::new();
+    let owner = spikard::App::new();
     for (method_name, _metadata, handler_fn) in registrations {
         match method_name.as_str() {
             _ => {}
         }
     }
 
-    owner
+    let _ = owner
         .into_router()
         .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
     Ok(())
@@ -272,7 +272,7 @@ impl JsApp {
             let mut guard = self.inner.lock().expect("app mutex poisoned");
             std::mem::take(&mut *guard)
         };
-        owner
+        let _ = owner
             .into_router()
             .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
         Ok(())

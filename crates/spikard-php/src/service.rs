@@ -201,6 +201,6 @@ pub fn app_into_router(registrations: &Bound<'_, Zval>) -> PhpResult<()> {
         }
     }
 
-    owner.into_router().map_err(|e| PhpException::default(e.to_string()))?;
+    let _ = owner.into_router().map_err(|e| PhpException::default(e.to_string()))?;
     Ok(())
 }

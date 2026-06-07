@@ -1,11 +1,1 @@
-{
-  "http": {
-    "expected_response": {
-      "body": { "error": "Forbidden", "message": "Admin role required for this endpoint" },
-      "headers": {},
-      "status_code": 403
-    },
-    "handler": { "body_schema": null, "method": "GET", "route": "/api/admin-only-forbidden" },
-    "request": { "path": "/api/admin-only-forbidden" }
-  }
-}
+{"http":{"expected_response":{"body":{"error":"Forbidden","message":"Admin role required for this endpoint"},"headers":{},"status_code":403},"handler":{"body_schema":null,"method":"GET","route":"/api/admin-only-forbidden"},"request":{"path":"/api/admin-only-forbidden"}}}

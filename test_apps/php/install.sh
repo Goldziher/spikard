@@ -42,9 +42,16 @@ fi
 EXT_DIR="$(php -r 'echo ini_get("extension_dir");')"
 test -f "$EXT_DIR/spikard_php.so" || test -f "$EXT_DIR/spikard_php.dylib" || test -f "$EXT_DIR/spikard_php.dll"
 
-# Load it explicitly for the smoke test (the verify-install action runs
-# phpunit with this same `-d extension=` flag in CI).
-if ! php -dextension=spikard_php -m | grep -qi spikard_php; then
+# Export the installed extension path for downstream test runners (composer test).
+# The test app's run_tests.php checks for PIE_INSTALLED_EXTENSION_PATH and loads the extension via `-d`.
+export PIE_INSTALLED_EXTENSION_PATH="$EXT_DIR/spikard_php.so"
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  export PIE_INSTALLED_EXTENSION_PATH="$EXT_DIR/spikard_php.dylib"
+fi
+
+# Verify the extension loads via explicit `-d` flag (same mechanism run_tests.php uses).
+# Note: The extension internally registers as "ts-pack-core-php" despite the filename.
+if ! php -d extension=spikard_php -m | grep -qi "ts-pack-core-php"; then
   echo "::error::spikard_php extension failed to load after PIE install" >&2
   exit 1
 fi

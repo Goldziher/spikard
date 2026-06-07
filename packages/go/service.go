@@ -364,11 +364,18 @@ func (s *App) Config(config *ServerConfig) error {
 	if s.owner == nil {
 		return errors.New("service is closed")
 	}
+	c_configJSON, err := json.Marshal(config)
+	if err != nil {
+		return err
+	}
+	c_config := C.spikard_server_config_from_json(C.CString(string(c_configJSON)))
+	if c_config == nil {
+		return errors.New("ServerConfig config failed")
+	}
+	defer C.spikard_server_config_free(c_config)
 	new_owner := C.spikard_app_config(
-		(*C.SPIKARDAppOpaque)(s.owner)
-,
-		(*C.SPIKARDServerConfig)(unsafe.Pointer(config.ptr))
-,
+		(*C.SPIKARDAppOpaque)(s.owner),
+		c_config,
 	)
 
 	if new_owner == nil {

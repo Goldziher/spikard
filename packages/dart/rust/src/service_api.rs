@@ -4,8 +4,6 @@
 use crate::{RouteBuilder, ServerConfig};
 use flutter_rust_bridge::{DartFnFuture, frb};
 use std::pin::Pin;
-use std::sync::Arc;
-use tokio::sync::Mutex;
 
 /// Generated handler bridge for the `Handler` contract.
 ///
@@ -91,7 +89,7 @@ impl App {
         let bridge: std::sync::Arc<dyn spikard_http::Handler> = std::sync::Arc::new(crate::DartHandlerHandler::new(cb));
         let mut guard = self.inner.blocking_lock();
         if let Some(inner) = guard.as_mut() {
-            inner.route(builder.inner, bridge);
+            let _ = inner.route(builder.inner, bridge);
             0
         } else {
             -1

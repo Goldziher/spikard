@@ -1,11 +1,1 @@
-{
-  "http": {
-    "expected_response": {
-      "body": { "keywords": ["rust", "web", "framework"] },
-      "headers": {},
-      "status_code": 200
-    },
-    "handler": { "body_schema": null, "method": "GET", "route": "/search" },
-    "request": { "path": "/search?keywords=rust%20web%20framework" }
-  }
-}
+{"http":{"expected_response":{"body":{"keywords":["rust","web","framework"]},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/search"},"request":{"path":"/search?keywords=rust%20web%20framework"}}}

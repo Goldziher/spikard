@@ -1,11 +1,1 @@
-{
-  "http": {
-    "expected_response": {
-      "body": { "timestamp": "<<present>>" },
-      "headers": {},
-      "status_code": 200
-    },
-    "handler": { "body_schema": null, "method": "GET", "route": "/api/timestamp" },
-    "request": { "path": "/api/timestamp" }
-  }
-}
+{"http":{"expected_response":{"body":{"timestamp":"<<present>>"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/api/timestamp"},"request":{"path":"/api/timestamp"}}}

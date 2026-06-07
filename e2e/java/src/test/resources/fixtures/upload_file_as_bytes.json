@@ -1,11 +1,1 @@
-{
-  "http": {
-    "expected_response": {
-      "body": { "as_bytes": true, "filename": "binary.bin", "size": 11 },
-      "headers": {},
-      "status_code": 200
-    },
-    "handler": { "body_schema": null, "method": "POST", "route": "/upload/bytes" },
-    "request": { "path": "/upload/bytes" }
-  }
-}
+{"http":{"expected_response":{"body":{"as_bytes":true,"filename":"binary.bin","size":11},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"POST","route":"/upload/bytes"},"request":{"path":"/upload/bytes"}}}

@@ -1,11 +1,1 @@
-{
-  "http": {
-    "expected_response": {
-      "body": { "item_id": "c892496f-b1fd-4b91-bdb8-b46f92df1716" },
-      "headers": {},
-      "status_code": 200
-    },
-    "handler": { "body_schema": null, "method": "GET", "route": "/query/uuid" },
-    "request": { "path": "/query/uuid" }
-  }
-}
+{"http":{"expected_response":{"body":{"item_id":"c892496f-b1fd-4b91-bdb8-b46f92df1716"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/query/uuid"},"request":{"path":"/query/uuid"}}}

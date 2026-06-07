@@ -645,7 +645,7 @@ pub fn app_into_router(registrations: Value) -> magnus::error::Result<()> {
         }
     }
 
-    owner
+    let _ = owner
         .into_router()
         .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e.to_string()))?;
     Ok(())

@@ -1,7 +1,1 @@
-{
-  "http": {
-    "expected_response": { "body": null, "headers": {}, "status_code": 204 },
-    "handler": { "body_schema": null, "method": "DELETE", "route": "/status-test/{code}" },
-    "request": { "path": "/status-test/204" }
-  }
-}
+{"http":{"expected_response":{"body":null,"headers":{},"status_code":204},"handler":{"body_schema":null,"method":"DELETE","route":"/status-test/{code}"},"request":{"path":"/status-test/204"}}}

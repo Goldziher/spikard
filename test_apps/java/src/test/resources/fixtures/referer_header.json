@@ -1,11 +1,1 @@
-{
-  "http": {
-    "expected_response": {
-      "body": { "referer": "https://example.com/page" },
-      "headers": {},
-      "status_code": 200
-    },
-    "handler": { "body_schema": null, "method": "GET", "route": "/headers/referer" },
-    "request": { "path": "/headers/referer" }
-  }
-}
+{"http":{"expected_response":{"body":{"referer":"https://example.com/page"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/headers/referer"},"request":{"path":"/headers/referer"}}}

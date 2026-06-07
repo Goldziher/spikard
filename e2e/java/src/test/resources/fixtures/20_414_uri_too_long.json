@@ -1,7 +1,1 @@
-{
-  "http": {
-    "expected_response": { "body": {}, "headers": {}, "status_code": 200 },
-    "handler": { "body_schema": null, "method": "GET", "route": "/data" },
-    "request": { "path": "/data?skip_template_expansion=true" }
-  }
-}
+{"http":{"expected_response":{"body":{},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/data"},"request":{"path":"/data?skip_template_expansion=true"}}}

@@ -1,15 +1,1 @@
-{
-  "http": {
-    "expected_response": {
-      "body": {
-        "components": {
-          "securitySchemes": { "bearerAuth": { "scheme": "bearer", "type": "http" } }
-        }
-      },
-      "headers": {},
-      "status_code": 200
-    },
-    "handler": { "body_schema": null, "method": "GET", "route": "/openapi.json" },
-    "request": { "path": "/openapi.json" }
-  }
-}
+{"http":{"expected_response":{"body":{"components":{"securitySchemes":{"bearerAuth":{"scheme":"bearer","type":"http"}}}},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/openapi.json"},"request":{"path":"/openapi.json"}}}

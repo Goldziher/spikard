@@ -15,7 +15,7 @@ defmodule Spikard.App do
   @doc """
   Create a new application with the default server configuration.
   """
-  def new(options \\ []) do
+  def new(_options \\ []) do
     %__MODULE__{
       registrations: []
     }
@@ -24,7 +24,7 @@ defmodule Spikard.App do
   @doc """
   Set the server configuration.
   """
-  def config(self, config) do
+  def config(%__MODULE__{} = self, config) do
     self = %__MODULE__{self | config: config}
     self
   end
@@ -36,7 +36,7 @@ defmodule Spikard.App do
 
   Returns an error if route construction fails or if the handler registration fails.
   """
-  def route(self, builder, handler) do
+  def route(%__MODULE__{} = self, builder, handler) do
     # Wrap handler closure in a process if it's not already one
     handler_pid =
       case handler do
@@ -51,7 +51,6 @@ defmodule Spikard.App do
     entry = {"route", {builder}, handler_pid}
     %__MODULE__{self | registrations: [entry | self.registrations]}
   end
-
   # HandlerWrapper GenServer: wraps a closure for use as a handler
   defmodule HandlerWrapper do
     use GenServer
@@ -236,7 +235,6 @@ defmodule Spikard.App do
       trace(app, path, handler)
     end
   end
-
   # GenServer for dispatching trait_call messages from Rust.
   defmodule App.Handler do
     use GenServer
@@ -262,6 +260,7 @@ defmodule Spikard.App do
 
       {:noreply, registrations}
     end
+
 
     defp decode_args_and_dispatch(method, args_json, registrations) do
       # Find handler entry for the method

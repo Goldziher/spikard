@@ -1,11 +1,1 @@
-{
-  "http": {
-    "expected_response": {
-      "body": { "timestamp": "2025-10-30T14:30:00Z" },
-      "headers": {},
-      "status_code": 200
-    },
-    "handler": { "body_schema": null, "method": "GET", "route": "/bookings/{timestamp}" },
-    "request": { "path": "/bookings/2025-10-30T14:30:00Z" }
-  }
-}
+{"http":{"expected_response":{"body":{"timestamp":"2025-10-30T14:30:00Z"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/bookings/{timestamp}"},"request":{"path":"/bookings/2025-10-30T14:30:00Z"}}}

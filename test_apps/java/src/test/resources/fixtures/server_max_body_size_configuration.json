@@ -1,15 +1,1 @@
-{
-  "http": {
-    "expected_response": { "body": { "received": 1 }, "headers": {}, "status_code": 200 },
-    "handler": {
-      "body_schema": {
-        "properties": { "data": { "type": "string" } },
-        "required": ["data"],
-        "type": "object"
-      },
-      "method": "POST",
-      "route": "/upload"
-    },
-    "request": { "path": "/upload" }
-  }
-}
+{"http":{"expected_response":{"body":{"received":1},"headers":{},"status_code":200},"handler":{"body_schema":{"properties":{"data":{"type":"string"}},"required":["data"],"type":"object"},"method":"POST","route":"/upload"},"request":{"path":"/upload"}}}

@@ -1,15 +1,1 @@
-{
-  "http": {
-    "expected_response": {
-      "body": null,
-      "headers": {
-        "Access-Control-Allow-Headers": "X-Custom-Header",
-        "Access-Control-Allow-Methods": "POST",
-        "Access-Control-Allow-Origin": "https://example.com"
-      },
-      "status_code": 204
-    },
-    "handler": { "body_schema": null, "method": "POST", "route": "/api/data" },
-    "request": { "path": "/api/data" }
-  }
-}
+{"http":{"expected_response":{"body":null,"headers":{"Access-Control-Allow-Headers":"X-Custom-Header","Access-Control-Allow-Methods":"POST","Access-Control-Allow-Origin":"https://example.com"},"status_code":204},"handler":{"body_schema":null,"method":"POST","route":"/api/data"},"request":{"path":"/api/data"}}}

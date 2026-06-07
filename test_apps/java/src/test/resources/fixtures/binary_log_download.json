@@ -1,11 +1,1 @@
-{
-  "http": {
-    "expected_response": {
-      "body": "LOG:\\u0000\\u0001\\u0002\\u0003|TAIL|\\u0007\\n",
-      "headers": { "content-type": "application/octet-stream" },
-      "status_code": 200
-    },
-    "handler": { "body_schema": null, "method": "GET", "route": "/stream/logfile" },
-    "request": { "path": "/stream/logfile" }
-  }
-}
+{"http":{"expected_response":{"body":"LOG:\\u0000\\u0001\\u0002\\u0003|TAIL|\\u0007\\n","headers":{"content-type":"application/octet-stream"},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/stream/logfile"},"request":{"path":"/stream/logfile"}}}

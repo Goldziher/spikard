@@ -1,11 +1,1 @@
-{
-  "http": {
-    "expected_response": {
-      "body": { "error": "multipart/form-data requires 'boundary' parameter" },
-      "headers": {},
-      "status_code": 400
-    },
-    "handler": { "body_schema": null, "method": "POST", "route": "/upload" },
-    "request": { "path": "/upload" }
-  }
-}
+{"http":{"expected_response":{"body":{"error":"multipart/form-data requires 'boundary' parameter"},"headers":{},"status_code":400},"handler":{"body_schema":null,"method":"POST","route":"/upload"},"request":{"path":"/upload"}}}

@@ -1,7 +1,1 @@
-{
-  "http": {
-    "expected_response": { "body": null, "headers": {}, "status_code": 404 },
-    "handler": { "body_schema": null, "method": "GET", "route": "/openapi.json" },
-    "request": { "path": "/openapi.json" }
-  }
-}
+{"http":{"expected_response":{"body":null,"headers":{},"status_code":404},"handler":{"body_schema":null,"method":"GET","route":"/openapi.json"},"request":{"path":"/openapi.json"}}}

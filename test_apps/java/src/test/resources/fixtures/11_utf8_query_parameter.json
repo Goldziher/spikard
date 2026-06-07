@@ -1,7 +1,1 @@
-{
-  "http": {
-    "expected_response": { "body": { "term": "café" }, "headers": {}, "status_code": 200 },
-    "handler": { "body_schema": null, "method": "GET", "route": "/search" },
-    "request": { "path": "/search" }
-  }
-}
+{"http":{"expected_response":{"body":{"term":"café"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/search"},"request":{"path":"/search"}}}

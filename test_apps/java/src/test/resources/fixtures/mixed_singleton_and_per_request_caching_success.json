@@ -1,11 +1,1 @@
-{
-  "http": {
-    "expected_response": {
-      "body": { "app_name": "MyApp", "context_id": "<<uuid>>", "pool_id": "<<uuid>>" },
-      "headers": {},
-      "status_code": 200
-    },
-    "handler": { "body_schema": null, "method": "GET", "route": "/api/mixed-caching" },
-    "request": { "path": "/api/mixed-caching" }
-  }
-}
+{"http":{"expected_response":{"body":{"app_name":"MyApp","context_id":"<<uuid>>","pool_id":"<<uuid>>"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/api/mixed-caching"},"request":{"path":"/api/mixed-caching"}}}

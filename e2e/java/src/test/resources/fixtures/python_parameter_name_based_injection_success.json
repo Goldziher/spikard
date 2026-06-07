@@ -1,11 +1,1 @@
-{
-  "http": {
-    "expected_response": {
-      "body": { "cache_status": "ready", "db_status": "connected" },
-      "headers": {},
-      "status_code": 200
-    },
-    "handler": { "body_schema": null, "method": "GET", "route": "/api/python-name-inject" },
-    "request": { "path": "/api/python-name-inject" }
-  }
-}
+{"http":{"expected_response":{"body":{"cache_status":"ready","db_status":"connected"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/api/python-name-inject"},"request":{"path":"/api/python-name-inject"}}}

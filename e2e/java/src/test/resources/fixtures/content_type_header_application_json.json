@@ -1,11 +1,1 @@
-{
-  "http": {
-    "expected_response": {
-      "body": { "content_type": "application/json" },
-      "headers": {},
-      "status_code": 200
-    },
-    "handler": { "body_schema": null, "method": "GET", "route": "/headers/content-type" },
-    "request": { "path": "/headers/content-type" }
-  }
-}
+{"http":{"expected_response":{"body":{"content_type":"application/json"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/headers/content-type"},"request":{"path":"/headers/content-type"}}}

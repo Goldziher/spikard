@@ -1,11 +1,1 @@
-{
-  "http": {
-    "expected_response": {
-      "body": { "id": "e8b5a51d-11c8-3310-a6ab-367563f20686" },
-      "headers": {},
-      "status_code": 200
-    },
-    "handler": { "body_schema": null, "method": "GET", "route": "/items/{id}" },
-    "request": { "path": "/items/e8b5a51d-11c8-3310-a6ab-367563f20686" }
-  }
-}
+{"http":{"expected_response":{"body":{"id":"e8b5a51d-11c8-3310-a6ab-367563f20686"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/items/{id}"},"request":{"path":"/items/e8b5a51d-11c8-3310-a6ab-367563f20686"}}}
