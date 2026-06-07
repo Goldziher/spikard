@@ -4,7 +4,7 @@ requires = [ "maturin>=1,<2" ]
 
 [project]
 name = "spikard"
-version = "0.15.6rc9"
+version = "0.15.6rc10"
 description = "Rust-centric multi-language HTTP framework with polyglot bindings"
 keywords = [ "framework", "http", "polyglot", "rust", "web" ]
 license = "MIT"
@@ -36,9 +36,7 @@ python-packages = [ "spikard" ]
 # platforms without a precompiled wheel (e.g. Alpine/musl). Without this
 # the workspace [patch.crates-io] (when present) points at a path that is
 # missing from the tarball and the source build fails.
-include = [
-  { path = "../../crates/spikard/**/*", format = "sdist" },
-]
+include = [ { path = "../../crates/spikard/**/*", format = "sdist" } ]
 
 [tool.ruff]
 target-version = "py310"
@@ -101,5 +99,10 @@ overrides = [
   # sees only the static-type discrepancy. Disable the four error codes the
   # discrepancy raises until the codegen emits matching `_to_rust_*` calls and
   # casts the return values.
-  { module = "spikard.api", disable_error_code = [ "call-arg", "arg-type", "return-value", "attr-defined" ] },
+  { module = "spikard.api", disable_error_code = [
+    "call-arg",
+    "arg-type",
+    "return-value",
+    "attr-defined",
+  ] },
 ]

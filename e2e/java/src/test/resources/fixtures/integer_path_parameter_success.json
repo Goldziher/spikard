@@ -1,1 +1,7 @@
-{"http":{"expected_response":{"body":{"item_id":42},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/path/int/{item_id}"},"request":{"path":"/path/int/42"}}}
+{
+  "http": {
+    "expected_response": { "body": { "item_id": 42 }, "headers": {}, "status_code": 200 },
+    "handler": { "body_schema": null, "method": "GET", "route": "/path/int/{item_id}" },
+    "request": { "path": "/path/int/42" }
+  }
+}

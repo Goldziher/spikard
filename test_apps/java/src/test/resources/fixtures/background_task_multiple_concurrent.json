@@ -1,1 +1,28 @@
-{"http":{"expected_response":{"body":{"queued":3,"status":"all_queued"},"headers":{},"status_code":202},"handler":{"body_schema":{"properties":{"tasks":{"items":{"properties":{"id":{"type":"string"},"payload":{"type":"string"}},"required":["id","payload"],"type":"object"},"type":"array"}},"required":["tasks"],"type":"object"},"method":"POST","route":"/background/batch"},"request":{"path":"/background/batch"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "queued": 3, "status": "all_queued" },
+      "headers": {},
+      "status_code": 202
+    },
+    "handler": {
+      "body_schema": {
+        "properties": {
+          "tasks": {
+            "items": {
+              "properties": { "id": { "type": "string" }, "payload": { "type": "string" } },
+              "required": ["id", "payload"],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": ["tasks"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/background/batch"
+    },
+    "request": { "path": "/background/batch" }
+  }
+}

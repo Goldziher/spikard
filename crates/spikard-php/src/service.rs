@@ -85,7 +85,6 @@ impl spikard::Handler for PhpHandlerBridge {
         })
     }
 }
-
 /// Drive `spikard::App::run` from PHP.
 ///
 /// Each entry in `registrations` is an array of `[method_name, metadata_array, callable]`
@@ -93,7 +92,6 @@ impl spikard::Handler for PhpHandlerBridge {
 #[php_function]
 pub fn app_run(registrations: &Bound<'_, Zval>) -> PhpResult<()> {
     let mut owner = spikard::App::new();
-
     // Register all handlers with the owner
     if let Ok(reg_arr) = registrations.try_into::<Vec<Zval>>() {
         for entry in reg_arr {
@@ -155,7 +153,6 @@ pub fn app_run(registrations: &Bound<'_, Zval>) -> PhpResult<()> {
 #[php_function]
 pub fn app_into_router(registrations: &Bound<'_, Zval>) -> PhpResult<()> {
     let mut owner = spikard::App::new();
-
     // Register all handlers with the owner
     if let Ok(reg_arr) = registrations.try_into::<Vec<Zval>>() {
         for entry in reg_arr {

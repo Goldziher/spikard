@@ -69,13 +69,26 @@ impl App {
     }
 
     #[frb(sync)]
+    pub fn config(&mut self, config: ServerConfig) -> &mut Self {
+        let mut guard = self.inner.blocking_lock();
+        // Take-modify-replace: works for both consume-self builders (returning
+        // `Self`) and `&mut self` builders (returning `&mut Self`). For the
+        // mutate-in-place case the mutated value is the same `inner` we put back;
+        // for the consuming case the new value is the configurator's return.
+        if let Some(inner) = guard.take() {
+            *guard = Some(inner.config(config.into()));
+        }
+        drop(guard);
+        self
+    }
+
+    #[frb(sync)]
     pub fn route(
         &mut self,
         builder: RouteBuilder,
-        handler: impl Fn(String) -> DartFnFuture<String> + Send + Sync + 'static,
+        cb: impl Fn(String) -> DartFnFuture<String> + Send + Sync + 'static,
     ) -> i32 {
-        let bridge: std::sync::Arc<dyn spikard_http::Handler> =
-            std::sync::Arc::new(crate::DartHandlerHandler::new(handler));
+        let bridge: std::sync::Arc<dyn spikard_http::Handler> = std::sync::Arc::new(crate::DartHandlerHandler::new(cb));
         let mut guard = self.inner.blocking_lock();
         if let Some(inner) = guard.as_mut() {
             inner.route(builder.inner, bridge);
@@ -86,93 +99,65 @@ impl App {
     }
 
     #[frb(sync)]
-    pub fn get(
-        &mut self,
-        path: String,
-        handler: impl Fn(String) -> DartFnFuture<String> + Send + Sync + 'static,
-    ) -> i32 {
+    pub fn get(&mut self, path: String, cb: impl Fn(String) -> DartFnFuture<String> + Send + Sync + 'static) -> i32 {
         let inner = spikard::RouteBuilder::new(spikard::Method::Get, path);
-        self.route(RouteBuilder { inner }, handler)
+        self.route(RouteBuilder { inner }, cb)
     }
 
     #[frb(sync)]
-    pub fn post(
-        &mut self,
-        path: String,
-        handler: impl Fn(String) -> DartFnFuture<String> + Send + Sync + 'static,
-    ) -> i32 {
+    pub fn post(&mut self, path: String, cb: impl Fn(String) -> DartFnFuture<String> + Send + Sync + 'static) -> i32 {
         let inner = spikard::RouteBuilder::new(spikard::Method::Post, path);
-        self.route(RouteBuilder { inner }, handler)
+        self.route(RouteBuilder { inner }, cb)
     }
 
     #[frb(sync)]
-    pub fn put(
-        &mut self,
-        path: String,
-        handler: impl Fn(String) -> DartFnFuture<String> + Send + Sync + 'static,
-    ) -> i32 {
+    pub fn put(&mut self, path: String, cb: impl Fn(String) -> DartFnFuture<String> + Send + Sync + 'static) -> i32 {
         let inner = spikard::RouteBuilder::new(spikard::Method::Put, path);
-        self.route(RouteBuilder { inner }, handler)
+        self.route(RouteBuilder { inner }, cb)
     }
 
     #[frb(sync)]
-    pub fn patch(
-        &mut self,
-        path: String,
-        handler: impl Fn(String) -> DartFnFuture<String> + Send + Sync + 'static,
-    ) -> i32 {
+    pub fn patch(&mut self, path: String, cb: impl Fn(String) -> DartFnFuture<String> + Send + Sync + 'static) -> i32 {
         let inner = spikard::RouteBuilder::new(spikard::Method::Patch, path);
-        self.route(RouteBuilder { inner }, handler)
+        self.route(RouteBuilder { inner }, cb)
     }
 
     #[frb(sync)]
-    pub fn delete(
-        &mut self,
-        path: String,
-        handler: impl Fn(String) -> DartFnFuture<String> + Send + Sync + 'static,
-    ) -> i32 {
+    pub fn delete(&mut self, path: String, cb: impl Fn(String) -> DartFnFuture<String> + Send + Sync + 'static) -> i32 {
         let inner = spikard::RouteBuilder::new(spikard::Method::Delete, path);
-        self.route(RouteBuilder { inner }, handler)
+        self.route(RouteBuilder { inner }, cb)
     }
 
     #[frb(sync)]
-    pub fn head(
-        &mut self,
-        path: String,
-        handler: impl Fn(String) -> DartFnFuture<String> + Send + Sync + 'static,
-    ) -> i32 {
+    pub fn head(&mut self, path: String, cb: impl Fn(String) -> DartFnFuture<String> + Send + Sync + 'static) -> i32 {
         let inner = spikard::RouteBuilder::new(spikard::Method::Head, path);
-        self.route(RouteBuilder { inner }, handler)
+        self.route(RouteBuilder { inner }, cb)
     }
 
     #[frb(sync)]
     pub fn options(
         &mut self,
         path: String,
-        handler: impl Fn(String) -> DartFnFuture<String> + Send + Sync + 'static,
+        cb: impl Fn(String) -> DartFnFuture<String> + Send + Sync + 'static,
     ) -> i32 {
         let inner = spikard::RouteBuilder::new(spikard::Method::Options, path);
-        self.route(RouteBuilder { inner }, handler)
+        self.route(RouteBuilder { inner }, cb)
     }
 
     #[frb(sync)]
     pub fn connect(
         &mut self,
         path: String,
-        handler: impl Fn(String) -> DartFnFuture<String> + Send + Sync + 'static,
+        cb: impl Fn(String) -> DartFnFuture<String> + Send + Sync + 'static,
     ) -> i32 {
         let inner = spikard::RouteBuilder::new(spikard::Method::Connect, path);
-        self.route(RouteBuilder { inner }, handler)
+        self.route(RouteBuilder { inner }, cb)
     }
 
     #[frb(sync)]
-    pub fn trace(
-        &mut self,
-        path: String,
-        handler: impl Fn(String) -> DartFnFuture<String> + Send + Sync + 'static,
-    ) -> i32 {
+    pub fn trace(&mut self, path: String, cb: impl Fn(String) -> DartFnFuture<String> + Send + Sync + 'static) -> i32 {
         let inner = spikard::RouteBuilder::new(spikard::Method::Trace, path);
-        self.route(RouteBuilder { inner }, handler)
+        self.route(RouteBuilder { inner }, cb)
     }
 
     pub async fn run(&mut self) -> Result<(), String> {

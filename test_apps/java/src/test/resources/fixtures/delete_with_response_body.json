@@ -1,1 +1,11 @@
-{"http":{"expected_response":{"body":{"id":1,"message":"Item deleted successfully","name":"Deleted Item"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"DELETE","route":"/items/{id}"},"request":{"path":"/items/1"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "id": 1, "message": "Item deleted successfully", "name": "Deleted Item" },
+      "headers": {},
+      "status_code": 200
+    },
+    "handler": { "body_schema": null, "method": "DELETE", "route": "/items/{id}" },
+    "request": { "path": "/items/1" }
+  }
+}

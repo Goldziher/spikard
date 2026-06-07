@@ -1,1 +1,28 @@
-{"http":{"expected_response":{"body":{"detail":"1 validation error in request","errors":[{"input":{},"loc":["body","file"],"msg":"Field required","type":"missing"}],"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"},"headers":{},"status_code":422},"handler":{"body_schema":{"additionalProperties":false,"properties":{"file":{"format":"binary","type":"string"}},"required":["file"],"type":"object"},"method":"POST","route":"/files/required"},"request":{"path":"/files/required"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "detail": "1 validation error in request",
+        "errors": [
+          { "input": {}, "loc": ["body", "file"], "msg": "Field required", "type": "missing" }
+        ],
+        "status": 422,
+        "title": "Request Validation Failed",
+        "type": "https://spikard.dev/errors/validation-error"
+      },
+      "headers": {},
+      "status_code": 422
+    },
+    "handler": {
+      "body_schema": {
+        "additionalProperties": false,
+        "properties": { "file": { "format": "binary", "type": "string" } },
+        "required": ["file"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/files/required"
+    },
+    "request": { "path": "/files/required" }
+  }
+}

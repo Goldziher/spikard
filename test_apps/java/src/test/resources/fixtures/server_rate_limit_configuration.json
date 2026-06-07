@@ -1,1 +1,7 @@
-{"http":{"expected_response":{"body":{"limited":false},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/limited"},"request":{"path":"/limited"}}}
+{
+  "http": {
+    "expected_response": { "body": { "limited": false }, "headers": {}, "status_code": 200 },
+    "handler": { "body_schema": null, "method": "GET", "route": "/limited" },
+    "request": { "path": "/limited" }
+  }
+}

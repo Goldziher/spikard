@@ -37,46 +37,37 @@ class RouteBuilder internal constructor(internal val inner: dev.spikard.RouteBui
     fun handlerName(name: String): RouteBuilder {
         return inner.handlerName(name)
     }
-
     // Provide a raw JSON schema for the request body.
     fun requestSchemaJson(schema: Any): RouteBuilder {
         return inner.requestSchemaJson(MAPPER.writeValueAsString(schema))
     }
-
     // Provide a raw JSON schema for the response body.
     fun responseSchemaJson(schema: Any): RouteBuilder {
         return inner.responseSchemaJson(MAPPER.writeValueAsString(schema))
     }
-
     // Provide a raw JSON schema for request parameters.
     fun paramsSchemaJson(schema: Any): RouteBuilder {
         return inner.paramsSchemaJson(MAPPER.writeValueAsString(schema))
     }
-
     // Provide multipart file parameter configuration.
     fun fileParamsJson(schema: Any): RouteBuilder {
         return inner.fileParamsJson(MAPPER.writeValueAsString(schema))
     }
-
     // Attach a CORS configuration for this route.
     fun cors(cors: CorsConfig): RouteBuilder {
         return inner.cors(cors)
     }
-
     // Attach a compression configuration for this route.
     fun compression(compression: CompressionConfig): RouteBuilder {
         return inner.compression(compression)
     }
-
     // Mark the route as synchronous.
     fun sync(): RouteBuilder {
         return inner.sync()
     }
-
     // Declare the dependency keys that must be resolved before this handler runs.
     fun handlerDependencies(dependencies: List<String>): RouteBuilder {
         return inner.handlerDependencies(dependencies)
     }
-
     override fun close() { inner.close() }
 }

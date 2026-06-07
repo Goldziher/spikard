@@ -46,7 +46,8 @@ let package = Package(
     ),
     .target(
       name: "Spikard", dependencies: ["RustBridge"],
-      path: "Sources/Spikard"),
+      path: "Sources/Spikard",
+      exclude: ["LICENSE"]),
     .testTarget(
       name: "SpikardTests", dependencies: ["Spikard"],
       path: "Tests/SpikardTests"),

@@ -7,7 +7,7 @@ set -euo pipefail
 
 # Version override: pass as $1 to test an arbitrary tag; defaults to the
 # alef-pinned version from `[crates.e2e.registry.packages.php].version`.
-VERSION="${1:-0.15.6-rc.9}"
+VERSION="${1:-0.15.6-rc.10}"
 
 # PIE >= 1.3.7 supports the array-form `php-ext.download-url-method`
 # our composer.json emits; 1.4.0+ is preferred. Download PIE if we don't
@@ -43,7 +43,7 @@ EXT_DIR="$(php -r 'echo ini_get("extension_dir");')"
 test -f "$EXT_DIR/spikard_php.so" || test -f "$EXT_DIR/spikard_php.dylib" || test -f "$EXT_DIR/spikard_php.dll"
 
 # Load it explicitly for the smoke test (the verify-install action runs
-# phpunit with this same `-dextension=` flag in CI).
+# phpunit with this same `-d extension=` flag in CI).
 if ! php -dextension=spikard_php -m | grep -qi spikard_php; then
   echo "::error::spikard_php extension failed to load after PIE install" >&2
   exit 1

@@ -1,1 +1,37 @@
-{"http":{"expected_response":{"body":{"detail":"1 validation error in request","errors":[{"input":123,"loc":["body","tags","2"],"msg":"Input should be a valid unknown","type":"type_error"}],"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"},"headers":{},"status_code":422},"handler":{"body_schema":{"additionalProperties":false,"properties":{"name":{"type":"string"},"price":{"type":"number"},"tags":{"items":{"type":"string"},"type":"array"}},"required":["name","price","tags"],"type":"object"},"method":"POST","route":"/items/"},"request":{"path":"/items/"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "detail": "1 validation error in request",
+        "errors": [
+          {
+            "input": 123,
+            "loc": ["body", "tags", "2"],
+            "msg": "Input should be a valid unknown",
+            "type": "type_error"
+          }
+        ],
+        "status": 422,
+        "title": "Request Validation Failed",
+        "type": "https://spikard.dev/errors/validation-error"
+      },
+      "headers": {},
+      "status_code": 422
+    },
+    "handler": {
+      "body_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "price": { "type": "number" },
+          "tags": { "items": { "type": "string" }, "type": "array" }
+        },
+        "required": ["name", "price", "tags"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/items/"
+    },
+    "request": { "path": "/items/" }
+  }
+}

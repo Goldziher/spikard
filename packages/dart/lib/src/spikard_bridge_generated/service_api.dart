@@ -11,58 +11,60 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<App>>
 abstract class App implements RustOpaqueInterface {
+  void config({required ServerConfig config});
+
   int connect({
     required String path,
-    required FutureOr<String> Function(String) handler,
+    required FutureOr<String> Function(String) cb,
   });
 
   int delete({
     required String path,
-    required FutureOr<String> Function(String) handler,
+    required FutureOr<String> Function(String) cb,
   });
 
   int get_({
     required String path,
-    required FutureOr<String> Function(String) handler,
+    required FutureOr<String> Function(String) cb,
   });
 
   int head({
     required String path,
-    required FutureOr<String> Function(String) handler,
+    required FutureOr<String> Function(String) cb,
   });
 
   factory App() => RustLib.instance.api.crateServiceApiAppNew();
 
   int options({
     required String path,
-    required FutureOr<String> Function(String) handler,
+    required FutureOr<String> Function(String) cb,
   });
 
   int patch({
     required String path,
-    required FutureOr<String> Function(String) handler,
+    required FutureOr<String> Function(String) cb,
   });
 
   int post({
     required String path,
-    required FutureOr<String> Function(String) handler,
+    required FutureOr<String> Function(String) cb,
   });
 
   int put({
     required String path,
-    required FutureOr<String> Function(String) handler,
+    required FutureOr<String> Function(String) cb,
   });
 
   int route({
     required RouteBuilder builder,
-    required FutureOr<String> Function(String) handler,
+    required FutureOr<String> Function(String) cb,
   });
 
   Future<void> run();
 
   int trace({
     required String path,
-    required FutureOr<String> Function(String) handler,
+    required FutureOr<String> Function(String) cb,
   });
 }
 

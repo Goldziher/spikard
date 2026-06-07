@@ -2,7 +2,7 @@
 title: "WebAssembly API Reference"
 ---
 
-## WebAssembly API Reference <span class="version-badge">v0.15.6-rc.9</span>
+## WebAssembly API Reference <span class="version-badge">v0.15.6-rc.10</span>
 
 ### Functions
 
@@ -19,7 +19,7 @@ A `QueryOnlyConfig` with default settings
 **Signature:**
 
 ```typescript
-function schemaQueryOnly(): QueryOnlyConfig
+function schemaQueryOnly(): QueryOnlyConfig;
 ```
 
 **Returns:** `QueryOnlyConfig`
@@ -39,7 +39,7 @@ A `QueryMutationConfig` with default settings
 **Signature:**
 
 ```typescript
-function schemaQueryMutation(): QueryMutationConfig
+function schemaQueryMutation(): QueryMutationConfig;
 ```
 
 **Returns:** `QueryMutationConfig`
@@ -59,7 +59,7 @@ A `FullSchemaConfig` with default settings
 **Signature:**
 
 ```typescript
-function schemaFull(): FullSchemaConfig
+function schemaFull(): FullSchemaConfig;
 ```
 
 **Returns:** `FullSchemaConfig`
@@ -72,10 +72,10 @@ function schemaFull(): FullSchemaConfig
 
 API Key authentication configuration
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `keys` | `Array<string>` | — | Valid API keys |
-| `headerName` | `string` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
+| Field        | Type            | Default                | Description                              |
+| ------------ | --------------- | ---------------------- | ---------------------------------------- |
+| `keys`       | `Array<string>` | —                      | Valid API keys                           |
+| `headerName` | `string`        | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
 
 ---
 
@@ -83,10 +83,10 @@ API Key authentication configuration
 
 AsyncAPI HTTP endpoint configuration
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `enabled` | `boolean` | — | Enable AsyncAPI endpoints (default: false) |
-| `spec` | `unknown \| null` | `null` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+| Field     | Type              | Default | Description                                                   |
+| --------- | ----------------- | ------- | ------------------------------------------------------------- |
+| `enabled` | `boolean`         | —       | Enable AsyncAPI endpoints (default: false)                    |
+| `spec`    | `unknown \| null` | `null`  | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 
@@ -94,12 +94,12 @@ AsyncAPI HTTP endpoint configuration
 
 Compression configuration shared across runtimes
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `gzip` | `boolean` | `true` | Enable gzip compression |
-| `brotli` | `boolean` | `true` | Enable brotli compression |
-| `minSize` | `number` | — | Minimum response size to compress (bytes) |
-| `quality` | `number` | — | Compression quality (0-11 for brotli, 0-9 for gzip) |
+| Field     | Type      | Default | Description                                         |
+| --------- | --------- | ------- | --------------------------------------------------- |
+| `gzip`    | `boolean` | `true`  | Enable gzip compression                             |
+| `brotli`  | `boolean` | `true`  | Enable brotli compression                           |
+| `minSize` | `number`  | —       | Minimum response size to compress (bytes)           |
+| `quality` | `number`  | —       | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
 ### Methods
 
@@ -117,11 +117,11 @@ static default(): CompressionConfig
 
 Contact information
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `name` | `string \| null` | `null` | Name of the contact person or organisation. |
-| `email` | `string \| null` | `null` | Contact email address. |
-| `url` | `string \| null` | `null` | URL pointing to the contact information page. |
+| Field   | Type             | Default | Description                                   |
+| ------- | ---------------- | ------- | --------------------------------------------- |
+| `name`  | `string \| null` | `null`  | Name of the contact person or organisation.   |
+| `email` | `string \| null` | `null`  | Contact email address.                        |
+| `url`   | `string \| null` | `null`  | URL pointing to the contact information page. |
 
 ---
 
@@ -129,16 +129,16 @@ Contact information
 
 CORS configuration for a route
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `allowedOrigins` | `Array<string>` | `[]` | Allowed origins |
-| `allowedMethods` | `Array<string>` | `[]` | Allowed methods |
-| `allowedHeaders` | `Array<string>` | `[]` | Allowed headers |
-| `exposeHeaders` | `Array<string> \| null` | `null` | Expose headers |
-| `maxAge` | `number \| null` | `null` | Maximum age |
-| `allowCredentials` | `boolean \| null` | `null` | Allow credentials |
-| `methodsJoinedCache` | `string` | — | Methods joined cache |
-| `headersJoinedCache` | `string` | — | Headers joined cache |
+| Field                | Type                    | Default | Description          |
+| -------------------- | ----------------------- | ------- | -------------------- |
+| `allowedOrigins`     | `Array<string>`         | `[]`    | Allowed origins      |
+| `allowedMethods`     | `Array<string>`         | `[]`    | Allowed methods      |
+| `allowedHeaders`     | `Array<string>`         | `[]`    | Allowed headers      |
+| `exposeHeaders`      | `Array<string> \| null` | `null`  | Expose headers       |
+| `maxAge`             | `number \| null`        | `null`  | Maximum age          |
+| `allowCredentials`   | `boolean \| null`       | `null`  | Allow credentials    |
+| `methodsJoinedCache` | `string`                | —       | Methods joined cache |
+| `headersJoinedCache` | `string`                | —       | Headers joined cache |
 
 ### Methods
 
@@ -319,12 +319,12 @@ intoHandler(): Handler
 
 JSON-RPC server configuration
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `enabled` | `boolean` | `true` | Enable JSON-RPC endpoint |
-| `endpointPath` | `string` | — | HTTP endpoint path for JSON-RPC requests (default: "/rpc") |
-| `enableBatch` | `boolean` | — | Enable batch request processing (default: true) |
-| `maxBatchSize` | `number` | — | Maximum number of requests in a batch (default: 100) |
+| Field          | Type      | Default | Description                                                |
+| -------------- | --------- | ------- | ---------------------------------------------------------- |
+| `enabled`      | `boolean` | `true`  | Enable JSON-RPC endpoint                                   |
+| `endpointPath` | `string`  | —       | HTTP endpoint path for JSON-RPC requests (default: "/rpc") |
+| `enableBatch`  | `boolean` | —       | Enable batch request processing (default: true)            |
+| `maxBatchSize` | `number`  | —       | Maximum number of requests in a batch (default: 100)       |
 
 ### Methods
 
@@ -345,14 +345,14 @@ JSON-RPC method metadata for routes that support JSON-RPC
 This struct captures the metadata needed to expose HTTP routes as JSON-RPC methods,
 enabling discovery and documentation of RPC-compatible endpoints.
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `methodName` | `string` | — | The JSON-RPC method name (e.g., "user.create") |
-| `description` | `string \| null` | `null` | Optional description of what the method does |
-| `paramsSchema` | `unknown \| null` | `null` | Optional JSON Schema for method parameters |
-| `resultSchema` | `unknown \| null` | `null` | Optional JSON Schema for the result |
-| `deprecated` | `boolean` | `/* serde(default) */` | Whether this method is deprecated |
-| `tags` | `Array<string>` | `/* serde(default) */` | Tags for categorizing and grouping methods |
+| Field          | Type              | Default                | Description                                    |
+| -------------- | ----------------- | ---------------------- | ---------------------------------------------- |
+| `methodName`   | `string`          | —                      | The JSON-RPC method name (e.g., "user.create") |
+| `description`  | `string \| null`  | `null`                 | Optional description of what the method does   |
+| `paramsSchema` | `unknown \| null` | `null`                 | Optional JSON Schema for method parameters     |
+| `resultSchema` | `unknown \| null` | `null`                 | Optional JSON Schema for the result            |
+| `deprecated`   | `boolean`         | `/* serde(default) */` | Whether this method is deprecated              |
+| `tags`         | `Array<string>`   | `/* serde(default) */` | Tags for categorizing and grouping methods     |
 
 ---
 
@@ -360,13 +360,13 @@ enabling discovery and documentation of RPC-compatible endpoints.
 
 JWT authentication configuration
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `secret` | `string` | — | Secret key for JWT verification |
-| `algorithm` | `string` | `/* serde(default) */` | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
-| `audience` | `Array<string> \| null` | `null` | Required audience claim |
-| `issuer` | `string \| null` | `null` | Required issuer claim |
-| `leeway` | `number` | `/* serde(default) */` | Leeway for expiration checks (seconds) |
+| Field       | Type                    | Default                | Description                                           |
+| ----------- | ----------------------- | ---------------------- | ----------------------------------------------------- |
+| `secret`    | `string`                | —                      | Secret key for JWT verification                       |
+| `algorithm` | `string`                | `/* serde(default) */` | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
+| `audience`  | `Array<string> \| null` | `null`                 | Required audience claim                               |
+| `issuer`    | `string \| null`        | `null`                 | Required issuer claim                                 |
+| `leeway`    | `number`                | `/* serde(default) */` | Leeway for expiration checks (seconds)                |
 
 ---
 
@@ -374,10 +374,10 @@ JWT authentication configuration
 
 License information
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `name` | `string` | — | SPDX license identifier or display name (e.g. `"MIT"`). |
-| `url` | `string \| null` | `null` | URL to the full license text. |
+| Field  | Type             | Default | Description                                             |
+| ------ | ---------------- | ------- | ------------------------------------------------------- |
+| `name` | `string`         | —       | SPDX license identifier or display name (e.g. `"MIT"`). |
+| `url`  | `string \| null` | `null`  | URL to the full license text.                           |
 
 ---
 
@@ -385,19 +385,19 @@ License information
 
 OpenAPI configuration
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `enabled` | `boolean` | `false` | Enable OpenAPI generation (default: false for zero overhead) |
-| `title` | `string` | `"API"` | API title |
-| `version` | `string` | `"1.0.0"` | API version |
-| `description` | `string \| null` | `null` | API description (supports markdown) |
-| `swaggerUiPath` | `string` | — | Path to serve Swagger UI (default: "/docs") |
-| `redocPath` | `string` | — | Path to serve Redoc (default: "/redoc") |
-| `openapiJsonPath` | `string` | — | Path to serve OpenAPI JSON spec (default: "/openapi.json") |
-| `contact` | `ContactInfo \| null` | `null` | Contact information |
-| `license` | `LicenseInfo \| null` | `null` | License information |
-| `servers` | `Array<ServerInfo>` | `[]` | Server definitions |
-| `securitySchemes` | `Record<string, SecuritySchemeInfo>` | `{}` | Security schemes (auto-detected from middleware if not provided) |
+| Field             | Type                                 | Default   | Description                                                      |
+| ----------------- | ------------------------------------ | --------- | ---------------------------------------------------------------- |
+| `enabled`         | `boolean`                            | `false`   | Enable OpenAPI generation (default: false for zero overhead)     |
+| `title`           | `string`                             | `"API"`   | API title                                                        |
+| `version`         | `string`                             | `"1.0.0"` | API version                                                      |
+| `description`     | `string \| null`                     | `null`    | API description (supports markdown)                              |
+| `swaggerUiPath`   | `string`                             | —         | Path to serve Swagger UI (default: "/docs")                      |
+| `redocPath`       | `string`                             | —         | Path to serve Redoc (default: "/redoc")                          |
+| `openapiJsonPath` | `string`                             | —         | Path to serve OpenAPI JSON spec (default: "/openapi.json")       |
+| `contact`         | `ContactInfo \| null`                | `null`    | Contact information                                              |
+| `license`         | `LicenseInfo \| null`                | `null`    | License information                                              |
+| `servers`         | `Array<ServerInfo>`                  | `[]`      | Server definitions                                               |
+| `securitySchemes` | `Record<string, SecuritySchemeInfo>` | `{}`      | Security schemes (auto-detected from middleware if not provided) |
 
 ### Methods
 
@@ -415,9 +415,9 @@ static default(): OpenApiConfig
 
 Request body for `POST /asyncapi/parse`
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `spec` | `unknown` | — | Spec |
+| Field  | Type      | Default | Description |
+| ------ | --------- | ------- | ----------- |
+| `spec` | `unknown` | —       | Spec        |
 
 ---
 
@@ -425,14 +425,14 @@ Request body for `POST /asyncapi/parse`
 
 Full parse result returned by `POST /asyncapi/parse`
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `specVersion` | `string` | — | Spec version |
-| `title` | `string` | — | Title |
-| `apiVersion` | `string` | — | Api version |
-| `channels` | `Array<ParsedChannel>` | — | Channels |
-| `operations` | `Array<ParsedOperation>` | — | Operations |
-| `messages` | `Array<ParsedMessage>` | — | Messages |
+| Field         | Type                     | Default | Description  |
+| ------------- | ------------------------ | ------- | ------------ |
+| `specVersion` | `string`                 | —       | Spec version |
+| `title`       | `string`                 | —       | Title        |
+| `apiVersion`  | `string`                 | —       | Api version  |
+| `channels`    | `Array<ParsedChannel>`   | —       | Channels     |
+| `operations`  | `Array<ParsedOperation>` | —       | Operations   |
+| `messages`    | `Array<ParsedMessage>`   | —       | Messages     |
 
 ---
 
@@ -440,12 +440,12 @@ Full parse result returned by `POST /asyncapi/parse`
 
 A single channel extracted from an AsyncAPI spec
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `name` | `string` | — | Channel key from the spec (e.g. "chat/messages") |
-| `address` | `string` | — | Channel address / path |
-| `messages` | `Array<string>` | — | Message names declared on this channel |
-| `bindings` | `unknown \| null` | `null` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
+| Field      | Type              | Default | Description                                                           |
+| ---------- | ----------------- | ------- | --------------------------------------------------------------------- |
+| `name`     | `string`          | —       | Channel key from the spec (e.g. "chat/messages")                      |
+| `address`  | `string`          | —       | Channel address / path                                                |
+| `messages` | `Array<string>`   | —       | Message names declared on this channel                                |
+| `bindings` | `unknown \| null` | `null`  | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
 
@@ -453,10 +453,10 @@ A single channel extracted from an AsyncAPI spec
 
 A resolved message (name + JSON Schema)
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `name` | `string` | — | Message name |
-| `schema` | `unknown \| null` | `null` | Resolved JSON Schema for the message payload, if available |
+| Field    | Type              | Default | Description                                                |
+| -------- | ----------------- | ------- | ---------------------------------------------------------- |
+| `name`   | `string`          | —       | Message name                                               |
+| `schema` | `unknown \| null` | `null`  | Resolved JSON Schema for the message payload, if available |
 
 ---
 
@@ -464,11 +464,11 @@ A resolved message (name + JSON Schema)
 
 A single operation extracted from an AsyncAPI spec
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `name` | `string` | — | Operation name |
-| `action` | `string` | — | Operation action: "send" or "receive" |
-| `channel` | `string` | — | Channel reference (resolved to the channel name) |
+| Field     | Type     | Default | Description                                      |
+| --------- | -------- | ------- | ------------------------------------------------ |
+| `name`    | `string` | —       | Operation name                                   |
+| `action`  | `string` | —       | Operation action: "send" or "receive"            |
+| `channel` | `string` | —       | Channel reference (resolved to the channel name) |
 
 ---
 
@@ -481,7 +481,9 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ### Content-Type
+
 Responses using this struct should set:
+
 ```text
 Content-Type: application/problem+json
 ```
@@ -496,14 +498,14 @@ Content-Type: application/problem+json
 }
 ```
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `typeUri` | `string` | — | A URI reference that identifies the problem type. Defaults to "about:blank" when absent. Should be a stable, human-readable identifier for the problem type. |
-| `title` | `string` | — | A short, human-readable summary of the problem type. Should not change from occurrence to occurrence of the problem. |
-| `status` | `number` | — | The HTTP status code generated by the origin server. This is advisory; the actual HTTP status code takes precedence. |
-| `detail` | `string \| null` | `null` | A human-readable explanation specific to this occurrence of the problem. |
-| `instance` | `string \| null` | `null` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
-| `extensions` | `Record<string, unknown>` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
+| Field        | Type                      | Default | Description                                                                                                                                                  |
+| ------------ | ------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `typeUri`    | `string`                  | —       | A URI reference that identifies the problem type. Defaults to "about:blank" when absent. Should be a stable, human-readable identifier for the problem type. |
+| `title`      | `string`                  | —       | A short, human-readable summary of the problem type. Should not change from occurrence to occurrence of the problem.                                         |
+| `status`     | `number`                  | —       | The HTTP status code generated by the origin server. This is advisory; the actual HTTP status code takes precedence.                                         |
+| `detail`     | `string \| null`          | `null`  | A human-readable explanation specific to this occurrence of the problem.                                                                                     |
+| `instance`   | `string \| null`          | `null`  | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced.                         |
+| `extensions` | `Record<string, unknown>` | —       | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array.                                            |
 
 ### Methods
 
@@ -599,11 +601,11 @@ toJsonPretty(): string
 
 Rate limiting configuration shared across runtimes
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `perSecond` | `number` | `100` | Requests per second |
-| `burst` | `number` | `200` | Burst allowance |
-| `ipBased` | `boolean` | `true` | Use IP-based rate limiting |
+| Field       | Type      | Default | Description                |
+| ----------- | --------- | ------- | -------------------------- |
+| `perSecond` | `number`  | `100`   | Requests per second        |
+| `burst`     | `number`  | `200`   | Burst allowance            |
+| `ipBased`   | `boolean` | `true`  | Use IP-based rate limiting |
 
 ### Methods
 
@@ -625,11 +627,11 @@ static default(): RateLimitConfig
 
 HTTP Response with custom status code, headers, and content
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `content` | `unknown \| null` | `null` | Response body content |
-| `statusCode` | `number` | — | HTTP status code (defaults to 200) |
-| `headers` | `Record<string, string>` | `{}` | Response headers |
+| Field        | Type                     | Default | Description                        |
+| ------------ | ------------------------ | ------- | ---------------------------------- |
+| `content`    | `unknown \| null`        | `null`  | Response body content              |
+| `statusCode` | `number`                 | —       | HTTP status code (defaults to 200) |
+| `headers`    | `Record<string, string>` | `{}`    | Response headers                   |
 
 ### Methods
 
@@ -667,29 +669,29 @@ static default(): Response
 
 Server configuration
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `host` | `string` | `"127.0.0.1"` | Host to bind to |
-| `port` | `number` | `8000` | Port to bind to |
-| `workers` | `number` | `1` | Number of Tokio runtime worker threads used by binding-managed server runtimes |
-| `enableRequestId` | `boolean` | `false` | Enable request ID generation and propagation |
-| `maxBodySize` | `number \| null` | `null` | Maximum request body size in bytes (None = unlimited, not recommended) |
-| `requestTimeout` | `number \| null` | `null` | Request timeout in seconds (None = no timeout) |
-| `compression` | `CompressionConfig \| null` | `null` | Enable compression middleware |
-| `rateLimit` | `RateLimitConfig \| null` | `null` | Enable rate limiting |
-| `jwtAuth` | `JwtConfig \| null` | `null` | JWT authentication configuration |
-| `apiKeyAuth` | `ApiKeyConfig \| null` | `null` | API Key authentication configuration |
-| `staticFiles` | `Array<StaticFilesConfig>` | `[]` | Static file serving configuration |
-| `gracefulShutdown` | `boolean` | `true` | Enable graceful shutdown on SIGTERM/SIGINT |
-| `shutdownTimeout` | `number` | `30` | Graceful shutdown timeout (seconds) |
-| `asyncapi` | `AsyncApiConfig \| null` | `null` | AsyncAPI HTTP endpoint configuration |
-| `openapi` | `OpenApiConfig \| null` | `null` | OpenAPI documentation configuration |
-| `jsonrpc` | `JsonRpcConfig \| null` | `null` | JSON-RPC configuration |
-| `grpc` | `GrpcConfig \| null` | `null` | gRPC configuration |
-| `lifecycleHooks` | `string \| null` | `null` | Lifecycle hooks for request/response processing |
-| `backgroundTasks` | `BackgroundTaskConfig` | — | Background task executor configuration |
-| `enableHttpTrace` | `boolean` | `false` | Enable per-request HTTP tracing (tower-http `TraceLayer`) |
-| `diContainer` | `string \| null` | `null` | Dependency injection container (requires 'di' feature) |
+| Field              | Type                        | Default       | Description                                                                    |
+| ------------------ | --------------------------- | ------------- | ------------------------------------------------------------------------------ |
+| `host`             | `string`                    | `"127.0.0.1"` | Host to bind to                                                                |
+| `port`             | `number`                    | `8000`        | Port to bind to                                                                |
+| `workers`          | `number`                    | `1`           | Number of Tokio runtime worker threads used by binding-managed server runtimes |
+| `enableRequestId`  | `boolean`                   | `false`       | Enable request ID generation and propagation                                   |
+| `maxBodySize`      | `number \| null`            | `null`        | Maximum request body size in bytes (None = unlimited, not recommended)         |
+| `requestTimeout`   | `number \| null`            | `null`        | Request timeout in seconds (None = no timeout)                                 |
+| `compression`      | `CompressionConfig \| null` | `null`        | Enable compression middleware                                                  |
+| `rateLimit`        | `RateLimitConfig \| null`   | `null`        | Enable rate limiting                                                           |
+| `jwtAuth`          | `JwtConfig \| null`         | `null`        | JWT authentication configuration                                               |
+| `apiKeyAuth`       | `ApiKeyConfig \| null`      | `null`        | API Key authentication configuration                                           |
+| `staticFiles`      | `Array<StaticFilesConfig>`  | `[]`          | Static file serving configuration                                              |
+| `gracefulShutdown` | `boolean`                   | `true`        | Enable graceful shutdown on SIGTERM/SIGINT                                     |
+| `shutdownTimeout`  | `number`                    | `30`          | Graceful shutdown timeout (seconds)                                            |
+| `asyncapi`         | `AsyncApiConfig \| null`    | `null`        | AsyncAPI HTTP endpoint configuration                                           |
+| `openapi`          | `OpenApiConfig \| null`     | `null`        | OpenAPI documentation configuration                                            |
+| `jsonrpc`          | `JsonRpcConfig \| null`     | `null`        | JSON-RPC configuration                                                         |
+| `grpc`             | `GrpcConfig \| null`        | `null`        | gRPC configuration                                                             |
+| `lifecycleHooks`   | `string \| null`            | `null`        | Lifecycle hooks for request/response processing                                |
+| `backgroundTasks`  | `BackgroundTaskConfig`      | —             | Background task executor configuration                                         |
+| `enableHttpTrace`  | `boolean`                   | `false`       | Enable per-request HTTP tracing (tower-http `TraceLayer`)                      |
+| `diContainer`      | `string \| null`            | `null`        | Dependency injection container (requires 'di' feature)                         |
 
 ### Methods
 
@@ -707,10 +709,10 @@ static default(): ServerConfig
 
 Server information
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `url` | `string` | — | Base URL of the server (e.g. `"<https://api.example.com/v1"`>). |
-| `description` | `string \| null` | `null` | Optional human-readable description of the server environment. |
+| Field         | Type             | Default | Description                                                     |
+| ------------- | ---------------- | ------- | --------------------------------------------------------------- |
+| `url`         | `string`         | —       | Base URL of the server (e.g. `"<https://api.example.com/v1"`>). |
+| `description` | `string \| null` | `null`  | Optional human-readable description of the server environment.  |
 
 ---
 
@@ -776,9 +778,9 @@ graphqlSubscription(query: string, variables: unknown, operationName: string): G
 
 A single Server-Sent Event.
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `data` | `string` | — | The data field of the event. |
+| Field  | Type     | Default | Description                  |
+| ------ | -------- | ------- | ---------------------------- |
+| `data` | `string` | —       | The data field of the event. |
 
 ---
 
@@ -786,12 +788,12 @@ A single Server-Sent Event.
 
 Request body for `POST /asyncapi/validate`
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `spec` | `unknown` | — | Spec |
-| `channel` | `string` | — | Channel |
-| `message` | `string` | — | Message |
-| `payload` | `unknown` | — | Payload |
+| Field     | Type      | Default | Description |
+| --------- | --------- | ------- | ----------- |
+| `spec`    | `unknown` | —       | Spec        |
+| `channel` | `string`  | —       | Channel     |
+| `message` | `string`  | —       | Message     |
+| `payload` | `unknown` | —       | Payload     |
 
 ---
 
@@ -799,10 +801,10 @@ Request body for `POST /asyncapi/validate`
 
 Response body for `POST /asyncapi/validate`
 
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `valid` | `boolean` | — | Valid |
-| `errors` | `Array<string>` | — | Errors |
+| Field    | Type            | Default | Description |
+| -------- | --------------- | ------- | ----------- |
+| `valid`  | `boolean`       | —       | Valid       |
+| `errors` | `Array<string>` | —       | Errors      |
 
 ---
 
@@ -812,17 +814,17 @@ Response body for `POST /asyncapi/validate`
 
 HTTP method
 
-| Value | Description |
-|-------|-------------|
-| `Get` | Get |
-| `Post` | Post |
-| `Put` | Put |
-| `Patch` | Patch |
-| `Delete` | Delete |
-| `Head` | Head |
-| `Options` | Options |
-| `Connect` | Connect |
-| `Trace` | Trace |
+| Value     | Description |
+| --------- | ----------- |
+| `Get`     | Get         |
+| `Post`    | Post        |
+| `Put`     | Put         |
+| `Patch`   | Patch       |
+| `Delete`  | Delete      |
+| `Head`    | Head        |
+| `Options` | Options     |
+| `Connect` | Connect     |
+| `Trace`   | Trace       |
 
 ---
 
@@ -830,10 +832,10 @@ HTTP method
 
 Security scheme types
 
-| Value | Description |
-|-------|-------------|
-| `Http` | Http — Fields: `scheme`: `string`, `bearerFormat`: `string` |
-| `ApiKey` | Api key — Fields: `location`: `string`, `name`: `string` |
+| Value    | Description                                                 |
+| -------- | ----------------------------------------------------------- |
+| `Http`   | Http — Fields: `scheme`: `string`, `bearerFormat`: `string` |
+| `ApiKey` | Api key — Fields: `location`: `string`, `name`: `string`    |
 
 ---
 
@@ -845,10 +847,10 @@ Error type for application builder operations.
 
 Errors are thrown as plain `Error` objects with descriptive messages.
 
-| Variant | Description |
-|---------|-------------|
-| `Route` | Route registration failed. |
-| `Server` | Server/router construction failed. |
+| Variant  | Description                                     |
+| -------- | ----------------------------------------------- |
+| `Route`  | Route registration failed.                      |
+| `Server` | Server/router construction failed.              |
 | `Decode` | Failed to extract DTO from the request context. |
 
 ---
@@ -862,23 +864,23 @@ converted to structured HTTP responses matching the project's error fixtures.
 
 Errors are thrown as plain `Error` objects with descriptive messages.
 
-| Variant | Description |
-|---------|-------------|
-| `ExecutionError` | Error during schema execution Occurs when the GraphQL executor encounters a runtime error during query execution. |
-| `SchemaBuildError` | Error during schema building Occurs when schema construction fails due to invalid definitions or conflicts. |
-| `RequestHandlingError` | Error during request handling Occurs when the HTTP request cannot be properly handled or parsed. |
-| `SerializationError` | Serialization error Occurs during JSON serialization/deserialization of GraphQL values. |
-| `JsonError` | JSON parsing error Occurs when JSON input cannot be parsed. |
-| `ValidationError` | GraphQL validation error Occurs when a GraphQL query fails schema validation. |
-| `ParseError` | GraphQL parse error Occurs when the GraphQL query string cannot be parsed. |
-| `AuthenticationError` | Authentication error Occurs when request authentication fails. |
-| `AuthorizationError` | Authorization error Occurs when user lacks required permissions. |
-| `NotFound` | Not found error Occurs when a requested resource is not found. |
-| `RateLimitExceeded` | Rate limit error Occurs when rate limit is exceeded. |
-| `InvalidInput` | Invalid input error with validation details Occurs during input validation with detailed error information. |
-| `ComplexityLimitExceeded` | Query complexity limit exceeded Occurs when a GraphQL query exceeds the configured complexity limit. |
-| `DepthLimitExceeded` | Query depth limit exceeded Occurs when a GraphQL query exceeds the configured depth limit. |
-| `InternalError` | Internal server error Occurs when an unexpected internal error happens. |
+| Variant                   | Description                                                                                                       |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `ExecutionError`          | Error during schema execution Occurs when the GraphQL executor encounters a runtime error during query execution. |
+| `SchemaBuildError`        | Error during schema building Occurs when schema construction fails due to invalid definitions or conflicts.       |
+| `RequestHandlingError`    | Error during request handling Occurs when the HTTP request cannot be properly handled or parsed.                  |
+| `SerializationError`      | Serialization error Occurs during JSON serialization/deserialization of GraphQL values.                           |
+| `JsonError`               | JSON parsing error Occurs when JSON input cannot be parsed.                                                       |
+| `ValidationError`         | GraphQL validation error Occurs when a GraphQL query fails schema validation.                                     |
+| `ParseError`              | GraphQL parse error Occurs when the GraphQL query string cannot be parsed.                                        |
+| `AuthenticationError`     | Authentication error Occurs when request authentication fails.                                                    |
+| `AuthorizationError`      | Authorization error Occurs when user lacks required permissions.                                                  |
+| `NotFound`                | Not found error Occurs when a requested resource is not found.                                                    |
+| `RateLimitExceeded`       | Rate limit error Occurs when rate limit is exceeded.                                                              |
+| `InvalidInput`            | Invalid input error with validation details Occurs during input validation with detailed error information.       |
+| `ComplexityLimitExceeded` | Query complexity limit exceeded Occurs when a GraphQL query exceeds the configured complexity limit.              |
+| `DepthLimitExceeded`      | Query depth limit exceeded Occurs when a GraphQL query exceeds the configured depth limit.                        |
+| `InternalError`           | Internal server error Occurs when an unexpected internal error happens.                                           |
 
 ---
 
@@ -888,11 +890,11 @@ Error type for schema building operations
 
 Errors are thrown as plain `Error` objects with descriptive messages.
 
-| Variant | Description |
-|---------|-------------|
-| `BuildingFailed` | Generic schema building error |
-| `ValidationError` | Configuration validation error |
-| `ComplexityLimitExceeded` | Complexity limit exceeded |
-| `DepthLimitExceeded` | Depth limit exceeded |
+| Variant                   | Description                    |
+| ------------------------- | ------------------------------ |
+| `BuildingFailed`          | Generic schema building error  |
+| `ValidationError`         | Configuration validation error |
+| `ComplexityLimitExceeded` | Complexity limit exceeded      |
+| `DepthLimitExceeded`      | Depth limit exceeded           |
 
 ---

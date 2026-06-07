@@ -1,1 +1,7 @@
-{"http":{"expected_response":{"body":{"term":"hi there"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/search"},"request":{"path":"/search?term=hi%20there"}}}
+{
+  "http": {
+    "expected_response": { "body": { "term": "hi there" }, "headers": {}, "status_code": 200 },
+    "handler": { "body_schema": null, "method": "GET", "route": "/search" },
+    "request": { "path": "/search?term=hi%20there" }
+  }
+}

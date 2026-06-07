@@ -1,1 +1,24 @@
-{"http":{"expected_response":{"body":{"detail":"1 validation error in request","errors":[{"ctx":{"multiple_of":5,"value":17},"loc":["query","quantity"],"msg":"Value must be a multiple of 5","type":"validation_error"}],"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"},"headers":{},"status_code":422},"handler":{"body_schema":null,"method":"GET","route":"/items"},"request":{"path":"/items"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "detail": "1 validation error in request",
+        "errors": [
+          {
+            "ctx": { "multiple_of": 5, "value": 17 },
+            "loc": ["query", "quantity"],
+            "msg": "Value must be a multiple of 5",
+            "type": "validation_error"
+          }
+        ],
+        "status": 422,
+        "title": "Request Validation Failed",
+        "type": "https://spikard.dev/errors/validation-error"
+      },
+      "headers": {},
+      "status_code": 422
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/items" },
+    "request": { "path": "/items" }
+  }
+}

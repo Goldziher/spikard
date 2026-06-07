@@ -31,14 +31,12 @@ import kotlinx.coroutines.withContext
 @Suppress("TooManyFunctions")
 class App internal constructor(internal val inner: dev.spikard.App) : AutoCloseable {
     constructor() : this(dev.spikard.App())
-
     // Register a route using the provided builder and handler function.
     //
     // # Errors
     //
     // Returns an error if route construction fails or if the handler registration fails.
     fun route(handler: (String) -> String, builder: RouteBuilder): Int = inner.registerAppRoute(Callable { request -> handler(request) }, builder.inner)
-
     // Register a GET route at the given path.
     fun get(handler: (String) -> String, path: String): Int {
         return route(handler, RouteBuilder(dev.spikard.RouteBuilder.create(Method.Get, path)))
@@ -90,6 +88,5 @@ class App internal constructor(internal val inner: dev.spikard.App) : AutoClosea
     //
     // Returns an error if server construction or execution fails.
     suspend fun run() = withContext(Dispatchers.IO) { inner.run() }
-
     override fun close() { inner.close() }
 }

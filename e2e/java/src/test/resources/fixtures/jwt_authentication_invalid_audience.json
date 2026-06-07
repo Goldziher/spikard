@@ -1,1 +1,16 @@
-{"http":{"expected_response":{"body":{"detail":"Token audience is invalid","status":401,"title":"JWT validation failed","type":"https://spikard.dev/errors/unauthorized"},"headers":{},"status_code":401},"handler":{"body_schema":null,"method":"GET","route":"/protected/user"},"request":{"path":"/protected/user"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "detail": "Token audience is invalid",
+        "status": 401,
+        "title": "JWT validation failed",
+        "type": "https://spikard.dev/errors/unauthorized"
+      },
+      "headers": {},
+      "status_code": 401
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/protected/user" },
+    "request": { "path": "/protected/user" }
+  }
+}

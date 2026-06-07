@@ -1,1 +1,15 @@
-{"http":{"expected_response":{"body":{"value":123000},"headers":{},"status_code":201},"handler":{"body_schema":{"properties":{"value":{"minimum":0,"type":"number"}},"required":["value"],"type":"object"},"method":"POST","route":"/calculate"},"request":{"path":"/calculate"}}}
+{
+  "http": {
+    "expected_response": { "body": { "value": 123000 }, "headers": {}, "status_code": 201 },
+    "handler": {
+      "body_schema": {
+        "properties": { "value": { "minimum": 0, "type": "number" } },
+        "required": ["value"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/calculate"
+    },
+    "request": { "path": "/calculate" }
+  }
+}

@@ -1,12 +1,17 @@
 {
   "name": "@spikard/node",
-  "version": "0.15.6-rc.9",
+  "version": "0.15.6-rc.10",
   "description": "Rust-centric multi-language HTTP framework with polyglot bindings",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Goldziher/spikard.git"
   },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "*.node"
+  ],
   "main": "index.js",
   "types": "index.d.ts",
   "exports": {
@@ -16,20 +21,30 @@
       "default": "./index.js"
     }
   },
-  "files": ["index.js", "index.d.ts", "*.node"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "npx --yes @napi-rs/cli@^3.6.2 build --platform --release",
+    "artifacts": "npx --yes @napi-rs/cli@^3.6.2 artifacts",
+    "prepublishOnly": "npx --yes @napi-rs/cli@^3.6.2 prepublish -t npm --skip-optional-publish"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^3.6.2"
+  },
   "optionalDependencies": {
-    "@spikard/node-linux-x64-gnu": "0.15.6-rc.9",
-    "@spikard/node-linux-arm64-gnu": "0.15.6-rc.9",
-    "@spikard/node-linux-x64-musl": "0.15.6-rc.9",
-    "@spikard/node-linux-arm64-musl": "0.15.6-rc.9",
-    "@spikard/node-darwin-x64": "0.15.6-rc.9",
-    "@spikard/node-darwin-arm64": "0.15.6-rc.9",
-    "@spikard/node-win32-x64-msvc": "0.15.6-rc.9",
-    "@spikard/node-win32-arm64-msvc": "0.15.6-rc.9"
+    "@spikard/node-darwin-arm64": "0.15.6-rc.10",
+    "@spikard/node-darwin-x64": "0.15.6-rc.10",
+    "@spikard/node-linux-arm64-gnu": "0.15.6-rc.10",
+    "@spikard/node-linux-arm64-musl": "0.15.6-rc.10",
+    "@spikard/node-linux-x64-gnu": "0.15.6-rc.10",
+    "@spikard/node-linux-x64-musl": "0.15.6-rc.10",
+    "@spikard/node-win32-arm64-msvc": "0.15.6-rc.10",
+    "@spikard/node-win32-x64-msvc": "0.15.6-rc.10"
   },
   "napi": {
-    "packageName": "@spikard/node",
     "binaryName": "spikard-node",
+    "packageName": "@spikard/node",
     "targets": [
       "x86_64-unknown-linux-gnu",
       "aarch64-unknown-linux-gnu",
@@ -41,12 +56,7 @@
       "aarch64-pc-windows-msvc"
     ]
   },
-  "scripts": {
-    "build": "napi build --platform --release",
-    "artifacts": "napi artifacts",
-    "prepublishOnly": "napi prepublish -t npm --skip-optional-publish"
-  },
-  "engines": { "node": ">= 18" },
-  "publishConfig": { "access": "public" },
-  "devDependencies": { "@napi-rs/cli": "^3.6.2" }
+  "engines": {
+    "node": ">= 18"
+  }
 }

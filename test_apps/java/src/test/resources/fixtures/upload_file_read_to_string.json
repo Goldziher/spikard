@@ -1,1 +1,11 @@
-{"http":{"expected_response":{"body":{"as_string":true,"content":"Hello, World!","filename":"text.txt"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"POST","route":"/upload/string"},"request":{"path":"/upload/string"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "as_string": true, "content": "Hello, World!", "filename": "text.txt" },
+      "headers": {},
+      "status_code": 200
+    },
+    "handler": { "body_schema": null, "method": "POST", "route": "/upload/string" },
+    "request": { "path": "/upload/string" }
+  }
+}

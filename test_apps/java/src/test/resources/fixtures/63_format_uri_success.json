@@ -1,1 +1,11 @@
-{"http":{"expected_response":{"body":{"url":"https://example.com/path?query=value"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/redirect"},"request":{"path":"/redirect"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "url": "https://example.com/path?query=value" },
+      "headers": {},
+      "status_code": 200
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/redirect" },
+    "request": { "path": "/redirect" }
+  }
+}

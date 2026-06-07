@@ -30,5 +30,18 @@
     "support-nts": true,
     "download-url-method": "pre-packaged-binary"
   },
-  "keywords": ["framework", "http", "polyglot", "rust", "web"]
+  "keywords": [
+    "framework",
+    "http",
+    "polyglot",
+    "rust",
+    "web"
+  ],
+  "extra": {
+    "pie": {
+      "binary": {
+        "url-template": "https://github.com/Goldziher/spikard/releases/download/{Version}/php_spikard_php-{Version}_php{PhpVersion}-{Arch}-{OS}-{Libc}-{TSMode}.tgz"
+      }
+    }
+  }
 }

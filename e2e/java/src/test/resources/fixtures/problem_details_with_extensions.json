@@ -1,1 +1,25 @@
-{"http":{"expected_response":{"body":{"detail":"Validation failed","extensions":{"error_code":"VALIDATION_001","timestamp":null,"trace_id":null},"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"},"headers":{},"status_code":422},"handler":{"body_schema":{"properties":{"data":{"type":"string"}},"required":["data"],"type":"object"},"method":"POST","route":"/api/resource"},"request":{"path":"/api/resource"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "detail": "Validation failed",
+        "extensions": { "error_code": "VALIDATION_001", "timestamp": null, "trace_id": null },
+        "status": 422,
+        "title": "Request Validation Failed",
+        "type": "https://spikard.dev/errors/validation-error"
+      },
+      "headers": {},
+      "status_code": 422
+    },
+    "handler": {
+      "body_schema": {
+        "properties": { "data": { "type": "string" } },
+        "required": ["data"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/api/resource"
+    },
+    "request": { "path": "/api/resource" }
+  }
+}

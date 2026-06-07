@@ -1,1 +1,20 @@
-{"http":{"expected_response":{"body":{"order_id":"c892496f-b1fd-4b91-bdb8-b46f92df1716","service_id":1,"user_id":"abc","version":1.0},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/{version}/{service_id}/{user_id}/{order_id}"},"request":{"path":"/1.0/1/abc/c892496f-b1fd-4b91-bdb8-b46f92df1716"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "order_id": "c892496f-b1fd-4b91-bdb8-b46f92df1716",
+        "service_id": 1,
+        "user_id": "abc",
+        "version": 1.0
+      },
+      "headers": {},
+      "status_code": 200
+    },
+    "handler": {
+      "body_schema": null,
+      "method": "GET",
+      "route": "/{version}/{service_id}/{user_id}/{order_id}"
+    },
+    "request": { "path": "/1.0/1/abc/c892496f-b1fd-4b91-bdb8-b46f92df1716" }
+  }
+}

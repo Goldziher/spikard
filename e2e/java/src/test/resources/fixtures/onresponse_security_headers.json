@@ -1,1 +1,16 @@
-{"http":{"expected_response":{"body":{"message":"Response with security headers"},"headers":{"Strict-Transport-Security":"max-age=31536000; includeSubDomains","X-Content-Type-Options":"nosniff","X-Frame-Options":"DENY","X-XSS-Protection":"1; mode=block"},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/api/test-security-headers"},"request":{"path":"/api/test-security-headers"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "message": "Response with security headers" },
+      "headers": {
+        "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "X-XSS-Protection": "1; mode=block"
+      },
+      "status_code": 200
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/api/test-security-headers" },
+    "request": { "path": "/api/test-security-headers" }
+  }
+}

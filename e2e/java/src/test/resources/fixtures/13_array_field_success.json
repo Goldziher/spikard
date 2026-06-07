@@ -1,1 +1,19 @@
-{"http":{"expected_response":{"body":{"tags":["python","rust","typescript"]},"headers":{},"status_code":201},"handler":{"body_schema":{"properties":{"tags":{"items":{"type":"string"},"minItems":1,"type":"array"}},"required":["tags"],"type":"object"},"method":"POST","route":"/register"},"request":{"path":"/register"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "tags": ["python", "rust", "typescript"] },
+      "headers": {},
+      "status_code": 201
+    },
+    "handler": {
+      "body_schema": {
+        "properties": { "tags": { "items": { "type": "string" }, "minItems": 1, "type": "array" } },
+        "required": ["tags"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/register"
+    },
+    "request": { "path": "/register" }
+  }
+}

@@ -1,1 +1,38 @@
-{"http":{"expected_response":{"body":{"detail":"1 validation error in request","errors":[{"input":"not a number","loc":["body","price"],"msg":"Input should be a valid number, unable to parse string as a number","type":"float_parsing"}],"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"},"headers":{},"status_code":422},"handler":{"body_schema":{"additionalProperties":false,"properties":{"description":{"type":"string"},"name":{"type":"string"},"price":{"type":"number"},"tax":{"type":"number"}},"required":["name","description","price","tax"],"type":"object"},"method":"POST","route":"/items/"},"request":{"path":"/items/"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "detail": "1 validation error in request",
+        "errors": [
+          {
+            "input": "not a number",
+            "loc": ["body", "price"],
+            "msg": "Input should be a valid number, unable to parse string as a number",
+            "type": "float_parsing"
+          }
+        ],
+        "status": 422,
+        "title": "Request Validation Failed",
+        "type": "https://spikard.dev/errors/validation-error"
+      },
+      "headers": {},
+      "status_code": 422
+    },
+    "handler": {
+      "body_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "description": { "type": "string" },
+          "name": { "type": "string" },
+          "price": { "type": "number" },
+          "tax": { "type": "number" }
+        },
+        "required": ["name", "description", "price", "tax"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/items/"
+    },
+    "request": { "path": "/items/" }
+  }
+}

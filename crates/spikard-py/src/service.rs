@@ -8,7 +8,6 @@ use serde_json;
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
-
 /// Generated pyo3 bridge for the `Handler` contract.
 ///
 /// Wraps a Python callable (sync or async) so it can be used
@@ -36,7 +35,6 @@ impl PyHandlerBridge {
 // SAFETY: Py<PyAny> is Send+Sync when we never alias it without the GIL.
 unsafe impl Send for PyHandlerBridge {}
 unsafe impl Sync for PyHandlerBridge {}
-
 impl spikard::Handler for PyHandlerBridge {
     fn call(
         &self,
@@ -100,7 +98,6 @@ impl spikard::Handler for PyHandlerBridge {
         })
     }
 }
-
 /// Drive `spikard::App::run` from Python.
 ///
 /// Each entry in `registrations` is a `(method_name, metadata_tuple, callable)` triple
@@ -138,7 +135,6 @@ pub fn app_run(_py: Python<'_>, registrations: &Bound<'_, PyList>) -> PyResult<(
         .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
     Ok(())
 }
-
 /// Drive `spikard::App::into_router` from Python.
 ///
 /// Each entry in `registrations` is a `(method_name, metadata_tuple, callable)` triple

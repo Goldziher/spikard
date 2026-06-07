@@ -3,7 +3,6 @@
 use std::ffi::{c_char, c_void, CStr, CString};
 use std::panic;
 use std::sync::Arc;
-
 /// FFI handler bridge for the `Handler` contract.
 ///
 /// Wraps a C callback function pointer so it can be called from Rust async code.
@@ -19,7 +18,6 @@ pub struct FfiHandlerBridge {
 // must be safe to call from async Rust code.
 unsafe impl Send for FfiHandlerBridge {}
 unsafe impl Sync for FfiHandlerBridge {}
-
 impl spikard::Handler for FfiHandlerBridge {
     fn call(
         &self,
@@ -76,7 +74,6 @@ impl spikard::Handler for FfiHandlerBridge {
         })
     }
 }
-
 /// Opaque handle to a App service instance.
 /// Allocated by spikard_app_new(), freed by spikard_app_free().
 #[repr(C)]
@@ -111,7 +108,6 @@ pub extern "C" fn spikard_app_free(ptr: *mut AppOpaque) {
         }
     }
 }
-
 /// Register a handler callback for method 'route'.
 ///
 /// # Safety
@@ -132,7 +128,7 @@ pub extern "C" fn spikard_app_register_route(
         return 1; // Error: null pointer
     }
     if builder.is_null() {
-        return 1; // Error: null pointer
+        return 1; // Error: null pointer;
     }
 
     // SAFETY: pointer was produced by the matching opaque `_new`/builder export and is consumed here.
@@ -150,7 +146,6 @@ pub extern "C" fn spikard_app_register_route(
         Err(_) => 1, // Error
     }
 }
-
 /// Register a GET route at the given path.
 ///
 /// # Safety
@@ -171,7 +166,7 @@ pub extern "C" fn spikard_app_get(
         return 1; // Error: null pointer
     }
     if path.is_null() {
-        return 1; // Error: null pointer
+        return 1; // Error: null pointer;
     }
 
     let path = if path.is_null() {
@@ -195,7 +190,6 @@ pub extern "C" fn spikard_app_get(
         Err(_) => 1, // Error
     }
 }
-
 /// Register a POST route at the given path.
 ///
 /// # Safety
@@ -216,7 +210,7 @@ pub extern "C" fn spikard_app_post(
         return 1; // Error: null pointer
     }
     if path.is_null() {
-        return 1; // Error: null pointer
+        return 1; // Error: null pointer;
     }
 
     let path = if path.is_null() {
@@ -240,7 +234,6 @@ pub extern "C" fn spikard_app_post(
         Err(_) => 1, // Error
     }
 }
-
 /// Register a PUT route at the given path.
 ///
 /// # Safety
@@ -261,7 +254,7 @@ pub extern "C" fn spikard_app_put(
         return 1; // Error: null pointer
     }
     if path.is_null() {
-        return 1; // Error: null pointer
+        return 1; // Error: null pointer;
     }
 
     let path = if path.is_null() {
@@ -285,7 +278,6 @@ pub extern "C" fn spikard_app_put(
         Err(_) => 1, // Error
     }
 }
-
 /// Register a PATCH route at the given path.
 ///
 /// # Safety
@@ -306,7 +298,7 @@ pub extern "C" fn spikard_app_patch(
         return 1; // Error: null pointer
     }
     if path.is_null() {
-        return 1; // Error: null pointer
+        return 1; // Error: null pointer;
     }
 
     let path = if path.is_null() {
@@ -330,7 +322,6 @@ pub extern "C" fn spikard_app_patch(
         Err(_) => 1, // Error
     }
 }
-
 /// Register a DELETE route at the given path.
 ///
 /// # Safety
@@ -351,7 +342,7 @@ pub extern "C" fn spikard_app_delete(
         return 1; // Error: null pointer
     }
     if path.is_null() {
-        return 1; // Error: null pointer
+        return 1; // Error: null pointer;
     }
 
     let path = if path.is_null() {
@@ -375,7 +366,6 @@ pub extern "C" fn spikard_app_delete(
         Err(_) => 1, // Error
     }
 }
-
 /// Register a HEAD route at the given path.
 ///
 /// # Safety
@@ -396,7 +386,7 @@ pub extern "C" fn spikard_app_head(
         return 1; // Error: null pointer
     }
     if path.is_null() {
-        return 1; // Error: null pointer
+        return 1; // Error: null pointer;
     }
 
     let path = if path.is_null() {
@@ -420,7 +410,6 @@ pub extern "C" fn spikard_app_head(
         Err(_) => 1, // Error
     }
 }
-
 /// Register an OPTIONS route at the given path.
 ///
 /// # Safety
@@ -441,7 +430,7 @@ pub extern "C" fn spikard_app_options(
         return 1; // Error: null pointer
     }
     if path.is_null() {
-        return 1; // Error: null pointer
+        return 1; // Error: null pointer;
     }
 
     let path = if path.is_null() {
@@ -465,7 +454,6 @@ pub extern "C" fn spikard_app_options(
         Err(_) => 1, // Error
     }
 }
-
 /// Register a CONNECT route at the given path.
 ///
 /// # Safety
@@ -486,7 +474,7 @@ pub extern "C" fn spikard_app_connect(
         return 1; // Error: null pointer
     }
     if path.is_null() {
-        return 1; // Error: null pointer
+        return 1; // Error: null pointer;
     }
 
     let path = if path.is_null() {
@@ -510,7 +498,6 @@ pub extern "C" fn spikard_app_connect(
         Err(_) => 1, // Error
     }
 }
-
 /// Register a TRACE route at the given path.
 ///
 /// # Safety
@@ -531,7 +518,7 @@ pub extern "C" fn spikard_app_trace(
         return 1; // Error: null pointer
     }
     if path.is_null() {
-        return 1; // Error: null pointer
+        return 1; // Error: null pointer;
     }
 
     let path = if path.is_null() {
@@ -555,7 +542,30 @@ pub extern "C" fn spikard_app_trace(
         Err(_) => 1, // Error
     }
 }
+/// Configure the service via 'config'.
+///
+/// # Safety
+/// - `owner` must be a valid pointer returned by `spikard_app_new()` and not yet freed.
+/// - `owner` is consumed by this call and must not be used or freed afterwards.
+/// - Returns a new owner pointer on success, null on failure.
+#[no_mangle]
+pub extern "C" fn spikard_app_config(owner: *mut AppOpaque, config: *mut spikard::ServerConfig) -> *mut AppOpaque {
+    if owner.is_null() {
+        return std::ptr::null_mut();
+    }
+    if config.is_null() {
+        return std::ptr::null_mut();
+    }
 
+    // SAFETY: pointer was produced by the matching opaque `_new`/builder export and is consumed here.
+    let config = unsafe { *Box::from_raw(config) };
+
+    // SAFETY: owner was allocated by _new() (Box::into_raw) and is consumed here.
+    let mut owner = unsafe { Box::from_raw(owner) };
+    let inner = *owner.inner;
+    owner.inner = Box::new(inner.config(config));
+    Box::into_raw(owner)
+}
 /// Run the service entrypoint 'run'.
 ///
 /// # Safety
@@ -576,7 +586,6 @@ pub extern "C" fn spikard_app_ep_run(owner: *mut AppOpaque) -> i32 {
         Err(_) => 1,
     }
 }
-
 /// Run the service entrypoint 'into_router'.
 ///
 /// # Safety

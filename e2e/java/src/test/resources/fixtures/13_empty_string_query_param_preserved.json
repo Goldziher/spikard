@@ -1,1 +1,7 @@
-{"http":{"expected_response":{"body":{"filter":""},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/items"},"request":{"path":"/items?filter="}}}
+{
+  "http": {
+    "expected_response": { "body": { "filter": "" }, "headers": {}, "status_code": 200 },
+    "handler": { "body_schema": null, "method": "GET", "route": "/items" },
+    "request": { "path": "/items?filter=" }
+  }
+}

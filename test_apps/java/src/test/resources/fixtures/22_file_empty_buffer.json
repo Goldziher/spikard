@@ -1,1 +1,24 @@
-{"http":{"expected_response":{"body":{"detail":"1 validation error in request","errors":[{"ctx":{"buffer_size":0},"loc":["files","file"],"msg":"File buffer is empty","type":"validation_error"}],"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"},"headers":{},"status_code":422},"handler":{"body_schema":null,"method":"POST","route":"/upload"},"request":{"path":"/upload"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "detail": "1 validation error in request",
+        "errors": [
+          {
+            "ctx": { "buffer_size": 0 },
+            "loc": ["files", "file"],
+            "msg": "File buffer is empty",
+            "type": "validation_error"
+          }
+        ],
+        "status": 422,
+        "title": "Request Validation Failed",
+        "type": "https://spikard.dev/errors/validation-error"
+      },
+      "headers": {},
+      "status_code": 422
+    },
+    "handler": { "body_schema": null, "method": "POST", "route": "/upload" },
+    "request": { "path": "/upload" }
+  }
+}

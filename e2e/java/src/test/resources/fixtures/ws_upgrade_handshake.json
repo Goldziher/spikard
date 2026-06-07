@@ -1,1 +1,15 @@
-{"http":{"expected_response":{"body":null,"headers":{"Connection":"Upgrade","Sec-WebSocket-Accept":"s3pPLMBiTxaQ9kYGzzhZRbK+xOo=","Upgrade":"websocket"},"status_code":101},"handler":{"body_schema":null,"method":"GET","route":"/ws"},"request":{"path":"/ws"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": null,
+      "headers": {
+        "Connection": "Upgrade",
+        "Sec-WebSocket-Accept": "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=",
+        "Upgrade": "websocket"
+      },
+      "status_code": 101
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/ws" },
+    "request": { "path": "/ws" }
+  }
+}

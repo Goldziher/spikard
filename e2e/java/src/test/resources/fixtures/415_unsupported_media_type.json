@@ -1,1 +1,16 @@
-{"http":{"expected_response":{"body":{"detail":"Unsupported media type","status":415,"title":"Unsupported Media Type","type":"https://spikard.dev/errors/unsupported-media-type"},"headers":{},"status_code":415},"handler":{"body_schema":{"type":"string"},"method":"POST","route":"/items/"},"request":{"path":"/items/"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "detail": "Unsupported media type",
+        "status": 415,
+        "title": "Unsupported Media Type",
+        "type": "https://spikard.dev/errors/unsupported-media-type"
+      },
+      "headers": {},
+      "status_code": 415
+    },
+    "handler": { "body_schema": { "type": "string" }, "method": "POST", "route": "/items/" },
+    "request": { "path": "/items/" }
+  }
+}

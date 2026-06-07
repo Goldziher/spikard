@@ -1,1 +1,19 @@
-{"http":{"expected_response":{"body":{"detail":"1 validation error in request","errors":[{"input":null,"loc":["query","query"],"msg":"Field required","type":"missing"}],"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"},"headers":{},"status_code":422},"handler":{"body_schema":null,"method":"GET","route":"/query/int"},"request":{"path":"/query/int"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "detail": "1 validation error in request",
+        "errors": [
+          { "input": null, "loc": ["query", "query"], "msg": "Field required", "type": "missing" }
+        ],
+        "status": 422,
+        "title": "Request Validation Failed",
+        "type": "https://spikard.dev/errors/validation-error"
+      },
+      "headers": {},
+      "status_code": 422
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/query/int" },
+    "request": { "path": "/query/int" }
+  }
+}

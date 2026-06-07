@@ -1,1 +1,20 @@
-{"http":{"expected_response":{"body":null,"headers":{"content-type":"application/json"},"status_code":202},"handler":{"body_schema":{"additionalProperties":false,"properties":{"event":{"type":"string"}},"required":["event"],"type":"object"},"method":"POST","route":"/background/events"},"request":{"path":"/background/events"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": null,
+      "headers": { "content-type": "application/json" },
+      "status_code": 202
+    },
+    "handler": {
+      "body_schema": {
+        "additionalProperties": false,
+        "properties": { "event": { "type": "string" } },
+        "required": ["event"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/background/events"
+    },
+    "request": { "path": "/background/events" }
+  }
+}

@@ -1,1 +1,37 @@
-{"http":{"expected_response":{"body":{"detail":"1 validation error in request","errors":[{"input":{"name":"John Doe"},"loc":["body"],"msg":"{\"name\":\"John Doe\"} is not valid under any of the schemas listed in the 'anyOf' keyword","type":"validation_error"}],"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"},"headers":{},"status_code":422},"handler":{"body_schema":{"anyOf":[{"required":["email"]},{"required":["phone"]}],"properties":{"email":{"format":"email","type":"string"},"name":{"type":"string"},"phone":{"type":"string"}},"required":["name"],"type":"object"},"method":"POST","route":"/contact"},"request":{"path":"/contact"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "detail": "1 validation error in request",
+        "errors": [
+          {
+            "input": { "name": "John Doe" },
+            "loc": ["body"],
+            "msg": "{\"name\":\"John Doe\"} is not valid under any of the schemas listed in the 'anyOf' keyword",
+            "type": "validation_error"
+          }
+        ],
+        "status": 422,
+        "title": "Request Validation Failed",
+        "type": "https://spikard.dev/errors/validation-error"
+      },
+      "headers": {},
+      "status_code": 422
+    },
+    "handler": {
+      "body_schema": {
+        "anyOf": [{ "required": ["email"] }, { "required": ["phone"] }],
+        "properties": {
+          "email": { "format": "email", "type": "string" },
+          "name": { "type": "string" },
+          "phone": { "type": "string" }
+        },
+        "required": ["name"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/contact"
+    },
+    "request": { "path": "/contact" }
+  }
+}

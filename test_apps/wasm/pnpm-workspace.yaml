@@ -3,3 +3,5 @@ packages:
 allowBuilds:
   esbuild: true
   tree-sitter: true
+minimumReleaseAgeExclude:
+  - "@spikard/node-wasm@0.15.6-rc.10"

@@ -14,15 +14,15 @@ readme = "README.md"
 
 [package.metadata.cargo-machete]
 ignored = [
-    "anyhow",
-    "h2",
-    "http-body",
-    "jiff",
-    "prost",
-    "prost-types",
-    "tokio-stream",
-    "utoipa-redoc",
-    "utoipa-swagger-ui",
+  "anyhow",
+  "h2",
+  "http-body",
+  "jiff",
+  "prost",
+  "prost-types",
+  "tokio-stream",
+  "utoipa-redoc",
+  "utoipa-swagger-ui",
 ]
 
 [features]
@@ -54,15 +54,15 @@ tungstenite = "0.29"
 # Explicitly list every axum feature we need on wasm; skip `tokio` which enables tokio/net.
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 axum = { version = "0.8", default-features = false, features = [
-    "form",
-    "http1",
-    "json",
-    "matched-path",
-    "multipart",
-    "original-uri",
-    "query",
-    "tower-log",
-    "tracing",
+  "form",
+  "http1",
+  "json",
+  "matched-path",
+  "multipart",
+  "original-uri",
+  "query",
+  "tower-log",
+  "tracing",
 ] }
 # getrandom requires the "wasm_js" feature on wasm32-unknown-unknown to use the Web Crypto API
 getrandom = { version = "0.4", features = ["wasm_js"] }

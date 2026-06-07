@@ -81,8 +81,20 @@ module AppHarness
   # test orchestrator can verify connectivity. Port binding is handled by
   # the application's ServerConfig (which may be environment-configured or
   # set via bindings that expose a config method).
-  port = 8000
-  puts "HARNESS_PORT=#{port}"
-  STDOUT.flush
-  APP.run
+  port = Integer(ENV.fetch("HARNESS_PORT", "8000"))
+  attempts = 0
+
+  begin
+    ENV["PORT"] = port.to_s
+    ENV["HARNESS_PORT"] = port.to_s
+    puts "HARNESS_PORT=#{port}"
+    STDOUT.flush
+    APP.run
+  rescue Errno::EADDRINUSE
+    attempts += 1
+    raise if attempts >= 10
+
+    port = rand(40000..60000)
+    retry
+  end
 end

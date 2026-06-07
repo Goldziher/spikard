@@ -1,1 +1,11 @@
-{"http":{"expected_response":{"body":null,"headers":{"Content-Type":"text/event-stream"},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/events/data"},"request":{"path":"/events/data"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": null,
+      "headers": { "Content-Type": "text/event-stream" },
+      "status_code": 200
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/events/data" },
+    "request": { "path": "/events/data" }
+  }
+}

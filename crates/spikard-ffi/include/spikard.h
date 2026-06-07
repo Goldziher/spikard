@@ -2790,6 +2790,17 @@ int32_t spikard_app_trace(struct SPIKARDAppOpaque *owner,
                           const char *path);
 
 /**
+ * Configure the service via 'config'.
+ *
+ * # Safety
+ * - `owner` must be a valid pointer returned by `spikard_app_new()` and not yet freed.
+ * - `owner` is consumed by this call and must not be used or freed afterwards.
+ * - Returns a new owner pointer on success, null on failure.
+ */
+struct SPIKARDAppOpaque *spikard_app_config(struct SPIKARDAppOpaque *owner,
+                                            SPIKARDServerConfig *config);
+
+/**
  * Run the service entrypoint 'run'.
  *
  * # Safety

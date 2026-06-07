@@ -1,1 +1,11 @@
-{"http":{"expected_response":{"body":{"accept_language":"en-US,en;q=0.9"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/headers/accept-language"},"request":{"path":"/headers/accept-language"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "accept_language": "en-US,en;q=0.9" },
+      "headers": {},
+      "status_code": 200
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/headers/accept-language" },
+    "request": { "path": "/headers/accept-language" }
+  }
+}

@@ -1,1 +1,16 @@
-{"http":{"expected_response":{"body":{"detail":"Expected 'Authorization: Bearer <token>'","status":401,"title":"Missing or invalid Authorization header","type":"https://spikard.dev/errors/unauthorized"},"headers":{},"status_code":401},"handler":{"body_schema":null,"method":"GET","route":"/protected/user"},"request":{"path":"/protected/user"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "detail": "Expected 'Authorization: Bearer <token>'",
+        "status": 401,
+        "title": "Missing or invalid Authorization header",
+        "type": "https://spikard.dev/errors/unauthorized"
+      },
+      "headers": {},
+      "status_code": 401
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/protected/user" },
+    "request": { "path": "/protected/user" }
+  }
+}

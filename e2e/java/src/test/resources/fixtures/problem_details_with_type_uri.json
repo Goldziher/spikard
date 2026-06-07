@@ -1,1 +1,33 @@
-{"http":{"expected_response":{"body":{"detail":"1 validation error in request","errors":[{"ctx":{"ge":1},"input":-5,"loc":["body","value"],"msg":"Input should be greater than or equal to 1","type":"greater_than_equal"}],"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"},"headers":{},"status_code":422},"handler":{"body_schema":{"properties":{"value":{"minimum":1,"type":"integer"}},"required":["value"],"type":"object"},"method":"POST","route":"/validate"},"request":{"path":"/validate"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "detail": "1 validation error in request",
+        "errors": [
+          {
+            "ctx": { "ge": 1 },
+            "input": -5,
+            "loc": ["body", "value"],
+            "msg": "Input should be greater than or equal to 1",
+            "type": "greater_than_equal"
+          }
+        ],
+        "status": 422,
+        "title": "Request Validation Failed",
+        "type": "https://spikard.dev/errors/validation-error"
+      },
+      "headers": {},
+      "status_code": 422
+    },
+    "handler": {
+      "body_schema": {
+        "properties": { "value": { "minimum": 1, "type": "integer" } },
+        "required": ["value"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/validate"
+    },
+    "request": { "path": "/validate" }
+  }
+}

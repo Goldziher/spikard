@@ -7,14 +7,12 @@ const c = @cImport(@cInclude("spikard.h"));
 /// Owns an opaque C pointer to the service instance.
 pub const App = struct {
     owner: ?*anyopaque,
-
     /// Create a new App instance.
     pub fn init() App {
         return .{
             .owner = @ptrCast(c.spikard_app_new()),
         };
     }
-
     /// Free the App instance.
     pub fn deinit(self: *App) void {
         if (self.owner) |owner_ptr| {
@@ -22,13 +20,13 @@ pub const App = struct {
             self.owner = null;
         }
     }
-
     /// Register a handler for method 'route'.
     pub fn route(
         self: *App,
         callback: *const fn (*anyopaque, [*:0]const u8) callconv(.C) [*:0]u8,
         context: *anyopaque,
-        builder: *RouteBuilder) c_int {
+        builder: *RouteBuilder
+    ) c_int {
         const owner_ptr = self.owner orelse return 1;
 
         return c.spikard_app_register_route(
@@ -38,13 +36,13 @@ pub const App = struct {
             builder._handle
         );
     }
-
     /// Register a GET route at the given path..
     pub fn get(
         self: *App,
         callback: *const fn (*anyopaque, [*:0]const u8) callconv(.C) [*:0]u8,
         context: *anyopaque,
-        path: [*:0]const u8) c_int {
+        path: [*:0]const u8
+    ) c_int {
         const owner_ptr = self.owner orelse return 1;
 
         return c.spikard_app_get(
@@ -54,13 +52,13 @@ pub const App = struct {
             path
         );
     }
-
     /// Register a POST route at the given path..
     pub fn post(
         self: *App,
         callback: *const fn (*anyopaque, [*:0]const u8) callconv(.C) [*:0]u8,
         context: *anyopaque,
-        path: [*:0]const u8) c_int {
+        path: [*:0]const u8
+    ) c_int {
         const owner_ptr = self.owner orelse return 1;
 
         return c.spikard_app_post(
@@ -70,13 +68,13 @@ pub const App = struct {
             path
         );
     }
-
     /// Register a PUT route at the given path..
     pub fn put(
         self: *App,
         callback: *const fn (*anyopaque, [*:0]const u8) callconv(.C) [*:0]u8,
         context: *anyopaque,
-        path: [*:0]const u8) c_int {
+        path: [*:0]const u8
+    ) c_int {
         const owner_ptr = self.owner orelse return 1;
 
         return c.spikard_app_put(
@@ -86,13 +84,13 @@ pub const App = struct {
             path
         );
     }
-
     /// Register a PATCH route at the given path..
     pub fn patch(
         self: *App,
         callback: *const fn (*anyopaque, [*:0]const u8) callconv(.C) [*:0]u8,
         context: *anyopaque,
-        path: [*:0]const u8) c_int {
+        path: [*:0]const u8
+    ) c_int {
         const owner_ptr = self.owner orelse return 1;
 
         return c.spikard_app_patch(
@@ -102,13 +100,13 @@ pub const App = struct {
             path
         );
     }
-
     /// Register a DELETE route at the given path..
     pub fn delete(
         self: *App,
         callback: *const fn (*anyopaque, [*:0]const u8) callconv(.C) [*:0]u8,
         context: *anyopaque,
-        path: [*:0]const u8) c_int {
+        path: [*:0]const u8
+    ) c_int {
         const owner_ptr = self.owner orelse return 1;
 
         return c.spikard_app_delete(
@@ -118,13 +116,13 @@ pub const App = struct {
             path
         );
     }
-
     /// Register a HEAD route at the given path..
     pub fn head(
         self: *App,
         callback: *const fn (*anyopaque, [*:0]const u8) callconv(.C) [*:0]u8,
         context: *anyopaque,
-        path: [*:0]const u8) c_int {
+        path: [*:0]const u8
+    ) c_int {
         const owner_ptr = self.owner orelse return 1;
 
         return c.spikard_app_head(
@@ -134,13 +132,13 @@ pub const App = struct {
             path
         );
     }
-
     /// Register an OPTIONS route at the given path..
     pub fn options(
         self: *App,
         callback: *const fn (*anyopaque, [*:0]const u8) callconv(.C) [*:0]u8,
         context: *anyopaque,
-        path: [*:0]const u8) c_int {
+        path: [*:0]const u8
+    ) c_int {
         const owner_ptr = self.owner orelse return 1;
 
         return c.spikard_app_options(
@@ -150,13 +148,13 @@ pub const App = struct {
             path
         );
     }
-
     /// Register a CONNECT route at the given path..
     pub fn connect(
         self: *App,
         callback: *const fn (*anyopaque, [*:0]const u8) callconv(.C) [*:0]u8,
         context: *anyopaque,
-        path: [*:0]const u8) c_int {
+        path: [*:0]const u8
+    ) c_int {
         const owner_ptr = self.owner orelse return 1;
 
         return c.spikard_app_connect(
@@ -166,13 +164,13 @@ pub const App = struct {
             path
         );
     }
-
     /// Register a TRACE route at the given path..
     pub fn trace(
         self: *App,
         callback: *const fn (*anyopaque, [*:0]const u8) callconv(.C) [*:0]u8,
         context: *anyopaque,
-        path: [*:0]const u8) c_int {
+        path: [*:0]const u8
+    ) c_int {
         const owner_ptr = self.owner orelse return 1;
 
         return c.spikard_app_trace(
@@ -182,7 +180,6 @@ pub const App = struct {
             path
         );
     }
-
     /// Run the service entrypoint 'run'.
     pub fn run(self: *App) c_int {
         const owner_ptr = self.owner orelse return 1;
@@ -190,7 +187,6 @@ pub const App = struct {
             @ptrCast(owner_ptr)
         );
     }
-
     /// Run the service entrypoint 'into_router'.
     pub fn into_router(self: *App) c_int {
         const owner_ptr = self.owner orelse return 1;
@@ -198,5 +194,4 @@ pub const App = struct {
             @ptrCast(owner_ptr)
         );
     }
-
 };

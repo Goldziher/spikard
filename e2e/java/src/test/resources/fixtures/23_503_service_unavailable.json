@@ -1,1 +1,14 @@
-{"http":{"expected_response":{"body":{"error":"Service Unavailable","message":"The service is temporarily unavailable. Please try again later."},"headers":{"Retry-After":"0"},"status_code":503},"handler":{"body_schema":null,"method":"GET","route":"/data"},"request":{"path":"/data"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "error": "Service Unavailable",
+        "message": "The service is temporarily unavailable. Please try again later."
+      },
+      "headers": { "Retry-After": "0" },
+      "status_code": 503
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/data" },
+    "request": { "path": "/data" }
+  }
+}

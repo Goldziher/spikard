@@ -1,1 +1,20 @@
-{"http":{"expected_response":{"body":{"message":"Cookie set with domain"},"headers":{},"status_code":200},"handler":{"body_schema":{"additionalProperties":false,"properties":{"value":{"type":"string"}},"required":["value"],"type":"object"},"method":"POST","route":"/cookies/set-with-domain"},"request":{"path":"/cookies/set-with-domain"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "message": "Cookie set with domain" },
+      "headers": {},
+      "status_code": 200
+    },
+    "handler": {
+      "body_schema": {
+        "additionalProperties": false,
+        "properties": { "value": { "type": "string" } },
+        "required": ["value"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/cookies/set-with-domain"
+    },
+    "request": { "path": "/cookies/set-with-domain" }
+  }
+}

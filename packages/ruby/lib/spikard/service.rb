@@ -10,6 +10,12 @@ module Spikard
       @registrations = []
     end
 
+    def config(config)
+      # Set the server configuration.
+      @config = config
+      self
+    end
+
     def route(builder, &block)
       # Register a route using the provided builder and handler function.
       #
@@ -97,7 +103,5 @@ module Spikard
       # Returns an error if server or router construction fails.
       Spikard.app_into_router(@registrations)
     end
-
   end
-
 end

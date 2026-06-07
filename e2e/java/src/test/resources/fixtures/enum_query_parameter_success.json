@@ -1,1 +1,7 @@
-{"http":{"expected_response":{"body":{"model":"alexnet"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/query/enum"},"request":{"path":"/query/enum"}}}
+{
+  "http": {
+    "expected_response": { "body": { "model": "alexnet" }, "headers": {}, "status_code": 200 },
+    "handler": { "body_schema": null, "method": "GET", "route": "/query/enum" },
+    "request": { "path": "/query/enum" }
+  }
+}

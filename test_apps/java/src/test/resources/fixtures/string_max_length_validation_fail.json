@@ -1,1 +1,37 @@
-{"http":{"expected_response":{"body":{"detail":"1 validation error in request","errors":[{"ctx":{"max_length":50},"input":"This is a very long name that exceeds the maximum length","loc":["body","name"],"msg":"String should have at most 50 characters","type":"string_too_long"}],"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"},"headers":{},"status_code":422},"handler":{"body_schema":{"additionalProperties":false,"properties":{"name":{"maxLength":50,"type":"string"},"price":{"type":"number"}},"required":["name","price"],"type":"object"},"method":"POST","route":"/items/validated"},"request":{"path":"/items/validated"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "detail": "1 validation error in request",
+        "errors": [
+          {
+            "ctx": { "max_length": 50 },
+            "input": "This is a very long name that exceeds the maximum length",
+            "loc": ["body", "name"],
+            "msg": "String should have at most 50 characters",
+            "type": "string_too_long"
+          }
+        ],
+        "status": 422,
+        "title": "Request Validation Failed",
+        "type": "https://spikard.dev/errors/validation-error"
+      },
+      "headers": {},
+      "status_code": 422
+    },
+    "handler": {
+      "body_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "name": { "maxLength": 50, "type": "string" },
+          "price": { "type": "number" }
+        },
+        "required": ["name", "price"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/items/validated"
+    },
+    "request": { "path": "/items/validated" }
+  }
+}

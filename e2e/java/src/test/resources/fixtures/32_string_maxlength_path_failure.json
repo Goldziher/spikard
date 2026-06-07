@@ -1,1 +1,24 @@
-{"http":{"expected_response":{"body":{"detail":"1 validation error in request","errors":[{"ctx":{"actual_length":42,"max_length":20},"loc":["path","username"],"msg":"String length must not exceed 20","type":"validation_error"}],"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"},"headers":{},"status_code":422},"handler":{"body_schema":null,"method":"GET","route":"/users/{username}"},"request":{"path":"/users/this_username_is_way_too_long_to_be_valid"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "detail": "1 validation error in request",
+        "errors": [
+          {
+            "ctx": { "actual_length": 42, "max_length": 20 },
+            "loc": ["path", "username"],
+            "msg": "String length must not exceed 20",
+            "type": "validation_error"
+          }
+        ],
+        "status": 422,
+        "title": "Request Validation Failed",
+        "type": "https://spikard.dev/errors/validation-error"
+      },
+      "headers": {},
+      "status_code": 422
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/users/{username}" },
+    "request": { "path": "/users/this_username_is_way_too_long_to_be_valid" }
+  }
+}

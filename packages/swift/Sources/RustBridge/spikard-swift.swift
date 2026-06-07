@@ -64,6 +64,9 @@ public func schemaFull() -> FullSchemaConfig {
 public func appRawPtr(_ client: AppRefMut) -> UInt {
     __swift_bridge__$app_raw_ptr(client.ptr)
 }
+public func config(_ client: AppRefMut) {
+    __swift_bridge__$config(client.ptr)
+}
 public func run(_ client: AppRefMut) -> RustString {
     RustString(ptr: __swift_bridge__$run(client.ptr))
 }
@@ -162,6 +165,126 @@ public func methodFromJson<GenericIntoRustString: IntoRustString>(_ json: Generi
 }
 public func securitySchemeInfoFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> SecuritySchemeInfo {
     try { let val = __swift_bridge__$security_scheme_info_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return SecuritySchemeInfo(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func __alef_phantom_vec_upload_file() -> RustVec<UploadFile> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_upload_file())
+}
+public func __alef_phantom_vec_graph_ql_route_config() -> RustVec<GraphQLRouteConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_graph_ql_route_config())
+}
+public func __alef_phantom_vec_schema_config() -> RustVec<SchemaConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_schema_config())
+}
+public func __alef_phantom_vec_query_only_config() -> RustVec<QueryOnlyConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_query_only_config())
+}
+public func __alef_phantom_vec_query_mutation_config() -> RustVec<QueryMutationConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_query_mutation_config())
+}
+public func __alef_phantom_vec_full_schema_config() -> RustVec<FullSchemaConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_full_schema_config())
+}
+public func __alef_phantom_vec_background_task_config() -> RustVec<BackgroundTaskConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_background_task_config())
+}
+public func __alef_phantom_vec_background_job_metadata() -> RustVec<BackgroundJobMetadata> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_background_job_metadata())
+}
+public func __alef_phantom_vec_cors_config() -> RustVec<CorsConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_cors_config())
+}
+public func __alef_phantom_vec_compression_config() -> RustVec<CompressionConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_compression_config())
+}
+public func __alef_phantom_vec_rate_limit_config() -> RustVec<RateLimitConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_rate_limit_config())
+}
+public func __alef_phantom_vec_grpc_config() -> RustVec<GrpcConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_grpc_config())
+}
+public func __alef_phantom_vec_json_rpc_config() -> RustVec<JsonRpcConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_json_rpc_config())
+}
+public func __alef_phantom_vec_open_api_config() -> RustVec<OpenApiConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_open_api_config())
+}
+public func __alef_phantom_vec_response() -> RustVec<Response> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_response())
+}
+public func __alef_phantom_vec_sse_event() -> RustVec<SseEvent> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_sse_event())
+}
+public func __alef_phantom_vec_jwt_config() -> RustVec<JwtConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_jwt_config())
+}
+public func __alef_phantom_vec_api_key_config() -> RustVec<ApiKeyConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_api_key_config())
+}
+public func __alef_phantom_vec_static_files_config() -> RustVec<StaticFilesConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_static_files_config())
+}
+public func __alef_phantom_vec_server_config() -> RustVec<ServerConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_server_config())
+}
+public func __alef_phantom_vec_route_builder() -> RustVec<RouteBuilder> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_route_builder())
+}
+public func __alef_phantom_vec_json_rpc_method_info() -> RustVec<JsonRpcMethodInfo> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_json_rpc_method_info())
+}
+public func __alef_phantom_vec_problem_details() -> RustVec<ProblemDetails> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_problem_details())
+}
+public func __alef_phantom_vec_async_api_config() -> RustVec<AsyncApiConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_async_api_config())
+}
+public func __alef_phantom_vec_parsed_channel() -> RustVec<ParsedChannel> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_parsed_channel())
+}
+public func __alef_phantom_vec_parsed_operation() -> RustVec<ParsedOperation> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_parsed_operation())
+}
+public func __alef_phantom_vec_parsed_message() -> RustVec<ParsedMessage> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_parsed_message())
+}
+public func __alef_phantom_vec_parse_result() -> RustVec<ParseResult> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_parse_result())
+}
+public func __alef_phantom_vec_parse_request() -> RustVec<ParseRequest> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_parse_request())
+}
+public func __alef_phantom_vec_validation_response() -> RustVec<ValidationResponse> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_validation_response())
+}
+public func __alef_phantom_vec_validate_request() -> RustVec<ValidateRequest> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_validate_request())
+}
+public func __alef_phantom_vec_contact_info() -> RustVec<ContactInfo> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_contact_info())
+}
+public func __alef_phantom_vec_license_info() -> RustVec<LicenseInfo> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_license_info())
+}
+public func __alef_phantom_vec_server_info() -> RustVec<ServerInfo> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_server_info())
+}
+public func __alef_phantom_vec_testing_sse_event() -> RustVec<TestingSseEvent> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_testing_sse_event())
+}
+public func __alef_phantom_vec_handler_result() -> RustVec<HandlerResult> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_handler_result())
+}
+public func __alef_phantom_vec_request() -> RustVec<Request> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_request())
+}
+public func __alef_phantom_vec_request_data() -> RustVec<RequestData> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_request_data())
+}
+public func __alef_phantom_vec_method() -> RustVec<Method> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_method())
+}
+public func __alef_phantom_vec_security_scheme_info() -> RustVec<SecuritySchemeInfo> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_security_scheme_info())
 }
 
 public class UploadFile: UploadFileRefMut {

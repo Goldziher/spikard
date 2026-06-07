@@ -9,8 +9,4 @@ pin_style = "major"
 [scan]
 # Only ever touch spikard's own workflows — never vendored/dependency workflows
 # (node_modules, bundled gems, composer vendor trees, etc.).
-exclude = [
-  "node_modules/**",
-  "**/node_modules/**",
-  "**/vendor/**",
-]
+exclude = ["node_modules/**", "**/node_modules/**", "**/vendor/**"]

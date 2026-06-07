@@ -16,13 +16,11 @@ internal static partial class NativeMethods {
     /// </summary>
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate IntPtr HandlerCallback(IntPtr ctx, IntPtr requestJson);
-
     [DllImport("spikard_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern IntPtr spikard_app_new();
 
     [DllImport("spikard_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern void spikard_app_free(IntPtr ptr);
-
     [DllImport("spikard_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern int spikard_app_register_route(
         IntPtr owner,
@@ -30,7 +28,6 @@ internal static partial class NativeMethods {
         IntPtr ctx,
         IntPtr builder
     );
-
     [DllImport("spikard_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern int spikard_app_get(
         IntPtr owner,
@@ -38,7 +35,6 @@ internal static partial class NativeMethods {
         IntPtr ctx,
         string path
     );
-
     [DllImport("spikard_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern int spikard_app_post(
         IntPtr owner,
@@ -46,7 +42,6 @@ internal static partial class NativeMethods {
         IntPtr ctx,
         string path
     );
-
     [DllImport("spikard_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern int spikard_app_put(
         IntPtr owner,
@@ -54,7 +49,6 @@ internal static partial class NativeMethods {
         IntPtr ctx,
         string path
     );
-
     [DllImport("spikard_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern int spikard_app_patch(
         IntPtr owner,
@@ -62,7 +56,6 @@ internal static partial class NativeMethods {
         IntPtr ctx,
         string path
     );
-
     [DllImport("spikard_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern int spikard_app_delete(
         IntPtr owner,
@@ -70,7 +63,6 @@ internal static partial class NativeMethods {
         IntPtr ctx,
         string path
     );
-
     [DllImport("spikard_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern int spikard_app_head(
         IntPtr owner,
@@ -78,7 +70,6 @@ internal static partial class NativeMethods {
         IntPtr ctx,
         string path
     );
-
     [DllImport("spikard_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern int spikard_app_options(
         IntPtr owner,
@@ -86,7 +77,6 @@ internal static partial class NativeMethods {
         IntPtr ctx,
         string path
     );
-
     [DllImport("spikard_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern int spikard_app_connect(
         IntPtr owner,
@@ -94,7 +84,6 @@ internal static partial class NativeMethods {
         IntPtr ctx,
         string path
     );
-
     [DllImport("spikard_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern int spikard_app_trace(
         IntPtr owner,
@@ -102,17 +91,14 @@ internal static partial class NativeMethods {
         IntPtr ctx,
         string path
     );
-
     [DllImport("spikard_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern int spikard_app_ep_run(
         IntPtr owner
     );
-
     [DllImport("spikard_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern int spikard_app_ep_into_router(
         IntPtr owner
     );
-
 }
 
 }

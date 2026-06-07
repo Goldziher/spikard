@@ -1,1 +1,7 @@
-{"http":{"expected_response":{"body":{"item_id":2},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/path/param-lt-gt/{item_id}"},"request":{"path":"/path/param-lt-gt/2"}}}
+{
+  "http": {
+    "expected_response": { "body": { "item_id": 2 }, "headers": {}, "status_code": 200 },
+    "handler": { "body_schema": null, "method": "GET", "route": "/path/param-lt-gt/{item_id}" },
+    "request": { "path": "/path/param-lt-gt/2" }
+  }
+}

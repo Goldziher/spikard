@@ -1,1 +1,23 @@
-{"http":{"expected_response":{"body":null,"headers":{"content-type":"application/grpc","grpc-encoding":"gzip","grpc-status":"0"},"status_code":200},"handler":{"body_schema":{"properties":{"request":{"type":"string"}},"required":["request"],"type":"object"},"method":"POST","route":"/api.Service/GetCompressedData"},"request":{"path":"/api.Service/GetCompressedData"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": null,
+      "headers": {
+        "content-type": "application/grpc",
+        "grpc-encoding": "gzip",
+        "grpc-status": "0"
+      },
+      "status_code": 200
+    },
+    "handler": {
+      "body_schema": {
+        "properties": { "request": { "type": "string" } },
+        "required": ["request"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/api.Service/GetCompressedData"
+    },
+    "request": { "path": "/api.Service/GetCompressedData" }
+  }
+}

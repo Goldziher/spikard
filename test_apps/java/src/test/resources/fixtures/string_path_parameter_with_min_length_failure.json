@@ -1,1 +1,25 @@
-{"http":{"expected_response":{"body":{"detail":"1 validation error in request","errors":[{"ctx":{"min_length":3},"input":"fo","loc":["path","item_id"],"msg":"String should have at least 3 characters","type":"string_too_short"}],"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"},"headers":{},"status_code":422},"handler":{"body_schema":null,"method":"GET","route":"/path/param-minlength/{item_id}"},"request":{"path":"/path/param-minlength/fo"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "detail": "1 validation error in request",
+        "errors": [
+          {
+            "ctx": { "min_length": 3 },
+            "input": "fo",
+            "loc": ["path", "item_id"],
+            "msg": "String should have at least 3 characters",
+            "type": "string_too_short"
+          }
+        ],
+        "status": 422,
+        "title": "Request Validation Failed",
+        "type": "https://spikard.dev/errors/validation-error"
+      },
+      "headers": {},
+      "status_code": 422
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/path/param-minlength/{item_id}" },
+    "request": { "path": "/path/param-minlength/fo" }
+  }
+}

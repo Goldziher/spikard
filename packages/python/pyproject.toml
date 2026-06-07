@@ -4,7 +4,7 @@ requires = [ "maturin>=1,<2" ]
 
 [project]
 name = "spikard"
-version = "0.15.6rc9"
+version = "0.15.6rc10"
 description = "Rust-centric multi-language HTTP framework with polyglot bindings"
 keywords = [ "framework", "http", "polyglot", "rust", "web" ]
 license = "MIT"
@@ -26,6 +26,7 @@ homepage = "https://github.com/Goldziher/spikard"
 dev = [ "mypy>=1.19", "ruff>=0.14.8" ]
 
 [tool.maturin]
+profile = "release"
 module-name = "spikard._spikard"
 manifest-path = "../../crates/spikard-py/Cargo.toml"
 # abi3-py310 produces a single wheel per platform that loads on Python 3.10+,
@@ -94,5 +95,10 @@ overrides = [
   # sees only the static-type discrepancy. Disable the four error codes the
   # discrepancy raises until the codegen emits matching `_to_rust_*` calls and
   # casts the return values.
-  { module = "spikard.api", disable_error_code = [ "call-arg", "arg-type", "return-value", "attr-defined" ] },
+  { module = "spikard.api", disable_error_code = [
+    "call-arg",
+    "arg-type",
+    "return-value",
+    "attr-defined",
+  ] },
 ]

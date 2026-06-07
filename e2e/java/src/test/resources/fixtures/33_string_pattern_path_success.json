@@ -1,1 +1,11 @@
-{"http":{"expected_response":{"body":{"owner":"spikard-labs","repo":"spikard-http"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/repos/{owner}/{repo}"},"request":{"path":"/repos/spikard-labs/spikard-http"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "owner": "spikard-labs", "repo": "spikard-http" },
+      "headers": {},
+      "status_code": 200
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/repos/{owner}/{repo}" },
+    "request": { "path": "/repos/spikard-labs/spikard-http" }
+  }
+}

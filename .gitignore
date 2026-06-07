@@ -43,6 +43,9 @@ Cargo.lock
 
 # --- Logs and temp ---
 *.log
+**/*.log
+**/logs/
+**/test_output.log
 *.bak
 *.temp
 *.tmp
@@ -79,6 +82,11 @@ __pycache__/
 **/.dart_tool/
 **/.build/
 **/.swiftpm/
+**/Package.resolved
+**/*.xcodeproj/
+**/*.xcworkspace/
+**/DerivedData/
+**/xcuserdata/
 **/.zig-cache/
 **/zig-cache/
 **/zig-out/

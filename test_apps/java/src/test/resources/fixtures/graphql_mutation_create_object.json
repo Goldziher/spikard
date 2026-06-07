@@ -1,1 +1,23 @@
-{"http":{"expected_response":{"body":{"data":{"createUser":{"email":"carol@example.com","id":"new-user-id","name":"Carol"}}},"headers":{},"status_code":200},"handler":{"body_schema":{"properties":{"query":{"type":"string"},"variables":{"type":"object"}},"required":["query"],"type":"object"},"method":"POST","route":"/graphql"},"request":{"path":"/graphql"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "data": {
+          "createUser": { "email": "carol@example.com", "id": "new-user-id", "name": "Carol" }
+        }
+      },
+      "headers": {},
+      "status_code": 200
+    },
+    "handler": {
+      "body_schema": {
+        "properties": { "query": { "type": "string" }, "variables": { "type": "object" } },
+        "required": ["query"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/graphql"
+    },
+    "request": { "path": "/graphql" }
+  }
+}

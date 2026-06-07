@@ -1,1 +1,36 @@
-{"http":{"expected_response":{"body":{"test1":{"content":"<file1 content>","content_type":"text/plain","filename":"test1.txt","size":15},"test2":{"content":"<file2 content>","content_type":"text/plain","filename":"test2.txt","size":15}},"headers":{},"status_code":200},"handler":{"body_schema":{"additionalProperties":false,"properties":{"test1":{"format":"binary","type":"string"},"test2":{"format":"binary","type":"string"}},"required":["test1","test2"],"type":"object"},"method":"POST","route":"/"},"request":{"path":"/"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "test1": {
+          "content": "<file1 content>",
+          "content_type": "text/plain",
+          "filename": "test1.txt",
+          "size": 15
+        },
+        "test2": {
+          "content": "<file2 content>",
+          "content_type": "text/plain",
+          "filename": "test2.txt",
+          "size": 15
+        }
+      },
+      "headers": {},
+      "status_code": 200
+    },
+    "handler": {
+      "body_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "test1": { "format": "binary", "type": "string" },
+          "test2": { "format": "binary", "type": "string" }
+        },
+        "required": ["test1", "test2"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/"
+    },
+    "request": { "path": "/" }
+  }
+}

@@ -1,1 +1,11 @@
-{"http":{"expected_response":{"body":{"session_id":"<<uuid>>","status":"completed"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/api/cleanup-test"},"request":{"path":"/api/cleanup-test"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "session_id": "<<uuid>>", "status": "completed" },
+      "headers": {},
+      "status_code": 200
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/api/cleanup-test" },
+    "request": { "path": "/api/cleanup-test" }
+  }
+}

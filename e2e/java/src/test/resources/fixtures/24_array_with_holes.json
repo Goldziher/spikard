@@ -1,1 +1,21 @@
-{"http":{"expected_response":{"body":{"error":"Failed to parse URL-encoded form data: missing index, expected: 1 got 2"},"headers":{},"status_code":400},"handler":{"body_schema":{"properties":{"items":{"items":{"type":"string"},"type":"array"}},"required":["items"],"type":"object"},"method":"POST","route":"/items"},"request":{"path":"/items"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "error": "Failed to parse URL-encoded form data: missing index, expected: 1 got 2"
+      },
+      "headers": {},
+      "status_code": 400
+    },
+    "handler": {
+      "body_schema": {
+        "properties": { "items": { "items": { "type": "string" }, "type": "array" } },
+        "required": ["items"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/items"
+    },
+    "request": { "path": "/items" }
+  }
+}

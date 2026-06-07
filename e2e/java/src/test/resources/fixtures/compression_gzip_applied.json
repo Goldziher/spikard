@@ -1,1 +1,14 @@
-{"http":{"expected_response":{"body":{"message":"Compressed payload","payload":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},"headers":{"content-encoding":"gzip","vary":"Accept-Encoding"},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/compression/gzip"},"request":{"path":"/compression/gzip"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "message": "Compressed payload",
+        "payload": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "headers": { "content-encoding": "gzip", "vary": "Accept-Encoding" },
+      "status_code": 200
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/compression/gzip" },
+    "request": { "path": "/compression/gzip" }
+  }
+}

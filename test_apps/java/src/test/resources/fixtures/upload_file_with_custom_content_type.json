@@ -1,1 +1,11 @@
-{"http":{"expected_response":{"body":{"content_type":"application/json","filename":"data.json","size":16},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"POST","route":"/upload/typed"},"request":{"path":"/upload/typed"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "content_type": "application/json", "filename": "data.json", "size": 16 },
+      "headers": {},
+      "status_code": 200
+    },
+    "handler": { "body_schema": null, "method": "POST", "route": "/upload/typed" },
+    "request": { "path": "/upload/typed" }
+  }
+}

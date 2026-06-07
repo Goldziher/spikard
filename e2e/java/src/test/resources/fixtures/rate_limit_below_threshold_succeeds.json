@@ -1,1 +1,11 @@
-{"http":{"expected_response":{"body":{"request":"under-limit","status":"ok"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/rate-limit/basic"},"request":{"path":"/rate-limit/basic"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "request": "under-limit", "status": "ok" },
+      "headers": {},
+      "status_code": 200
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/rate-limit/basic" },
+    "request": { "path": "/rate-limit/basic" }
+  }
+}

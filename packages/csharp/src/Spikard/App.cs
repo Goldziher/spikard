@@ -15,15 +15,22 @@ public class App {
 
     private IntPtr _handle;
     private static readonly Dictionary<IntPtr, GCHandle> _registeredCallbacks = new();
+    // A single static delegate instance bridges the native callback. Held in a static field so the
+    // marshalled function pointer outlives every registration (a transient delegate would be collected).
     private static readonly NativeMethods.HandlerCallback _handlerCallback = HandlerTrampoline;
-
     /// <summary>
     /// Create a new App.
     /// </summary>
     public App() {
         _handle = NativeMethods.spikard_app_new();
     }
-
+    /// <summary>
+    /// Configure config.
+    /// </summary>
+    public App config(string config) {
+        // Store configuration if needed
+        return this;
+    }
     /// <summary>
     /// Register a handler for route.
     /// </summary>
@@ -48,7 +55,6 @@ public class App {
         }
         return result;
     }
-
     /// <summary>
     /// Register a GET route at the given path.
     /// </summary>
@@ -72,7 +78,6 @@ public class App {
         }
         return result;
     }
-
     /// <summary>
     /// Register a POST route at the given path.
     /// </summary>
@@ -96,7 +101,6 @@ public class App {
         }
         return result;
     }
-
     /// <summary>
     /// Register a PUT route at the given path.
     /// </summary>
@@ -120,7 +124,6 @@ public class App {
         }
         return result;
     }
-
     /// <summary>
     /// Register a PATCH route at the given path.
     /// </summary>
@@ -144,7 +147,6 @@ public class App {
         }
         return result;
     }
-
     /// <summary>
     /// Register a DELETE route at the given path.
     /// </summary>
@@ -168,7 +170,6 @@ public class App {
         }
         return result;
     }
-
     /// <summary>
     /// Register a HEAD route at the given path.
     /// </summary>
@@ -192,7 +193,6 @@ public class App {
         }
         return result;
     }
-
     /// <summary>
     /// Register an OPTIONS route at the given path.
     /// </summary>
@@ -216,7 +216,6 @@ public class App {
         }
         return result;
     }
-
     /// <summary>
     /// Register a CONNECT route at the given path.
     /// </summary>
@@ -240,7 +239,6 @@ public class App {
         }
         return result;
     }
-
     /// <summary>
     /// Register a TRACE route at the given path.
     /// </summary>
@@ -264,7 +262,6 @@ public class App {
         }
         return result;
     }
-
     /// <summary>
     /// run.
     /// </summary>
@@ -273,7 +270,6 @@ public class App {
             _handle
         );
     }
-
     /// <summary>
     /// into_router.
     /// </summary>
@@ -282,7 +278,6 @@ public class App {
             _handle
         );
     }
-
     public void Dispose() {
         if (_handle != IntPtr.Zero) {
             NativeMethods.spikard_app_free(_handle);
@@ -298,7 +293,6 @@ public class App {
             }
         }
     }
-
     /// <summary>
     /// Unmanaged callback trampoline that recovers the GC handle and invokes the handler.
     /// </summary>
@@ -320,7 +314,6 @@ public class App {
         }
         return IntPtr.Zero;
     }
-
 }
 
 }

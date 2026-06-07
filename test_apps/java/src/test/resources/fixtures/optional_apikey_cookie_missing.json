@@ -1,1 +1,11 @@
-{"http":{"expected_response":{"body":{"msg":"Create an account first"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/users/me"},"request":{"path":"/users/me"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "msg": "Create an account first" },
+      "headers": {},
+      "status_code": 200
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/users/me" },
+    "request": { "path": "/users/me" }
+  }
+}

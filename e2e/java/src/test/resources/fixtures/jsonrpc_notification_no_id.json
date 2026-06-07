@@ -1,1 +1,19 @@
-{"http":{"expected_response":{"body":null,"headers":{},"status_code":204},"handler":{"body_schema":{"properties":{"jsonrpc":{"type":"string"},"method":{"type":"string"},"params":{"type":"object"}},"required":["jsonrpc","method"],"type":"object"},"method":"POST","route":"/rpc"},"request":{"path":"/rpc"}}}
+{
+  "http": {
+    "expected_response": { "body": null, "headers": {}, "status_code": 204 },
+    "handler": {
+      "body_schema": {
+        "properties": {
+          "jsonrpc": { "type": "string" },
+          "method": { "type": "string" },
+          "params": { "type": "object" }
+        },
+        "required": ["jsonrpc", "method"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/rpc"
+    },
+    "request": { "path": "/rpc" }
+  }
+}

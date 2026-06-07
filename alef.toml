@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.23.16"
+alef_version = "0.23.26"
 languages = [
   "python",
   "node",
@@ -80,7 +80,11 @@ suppress_validation_codes = [
 
 [[crates.source_crates]]
 name = "spikard"
-sources = ["crates/spikard/src/lib.rs", "crates/spikard/src/upload.rs", "crates/spikard/src/testing.rs"]
+sources = [
+  "crates/spikard/src/lib.rs",
+  "crates/spikard/src/upload.rs",
+  "crates/spikard/src/testing.rs",
+]
 
 [[crates.source_crates]]
 name = "spikard-core"
@@ -1195,7 +1199,7 @@ name = "spikard"
 # so alef's stale-hash detection emits a fallback comment instead of using this
 # string verbatim. Refresh after the first real spikard zig package release via
 # `alef sync-versions` (which auto-populates from the published tarball).
-hash = "spikard-0.15.6-rc.9-PLACEHOLDER1234567890abcdefABCDEF0987654321"
+hash = "spikard-0.15.6-rc.10-PLACEHOLDER1234567890abcdefABCDEF0987654321"
 
 [crates.e2e.registry.packages.wasm]
 name = "@spikard/node-wasm"

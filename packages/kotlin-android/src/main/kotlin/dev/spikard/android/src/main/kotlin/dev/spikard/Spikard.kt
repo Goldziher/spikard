@@ -32,7 +32,6 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
 object Spikard {
     /// Jackson module that marshals ByteArray as a JSON array of unsigned bytes,
     /// matching how Rust serde encodes Vec<u8> on the wire.
@@ -98,7 +97,6 @@ object Spikard {
         val resultJson = SpikardBridge.nativeSchemaQueryOnly()
         return mapper.readValue(resultJson, QueryOnlyConfig::class.java)
     }
-
     /**
      * Create a simple schema configuration with only Query type.
      *
@@ -110,7 +108,6 @@ object Spikard {
      */
     suspend fun schemaQueryOnlyAsync(): QueryOnlyConfig =
         withContext(Dispatchers.IO) { schemaQueryOnly() }
-
     /**
      * Create a schema configuration with Query and Mutation types.
      *
@@ -124,7 +121,6 @@ object Spikard {
         val resultJson = SpikardBridge.nativeSchemaQueryMutation()
         return mapper.readValue(resultJson, QueryMutationConfig::class.java)
     }
-
     /**
      * Create a schema configuration with Query and Mutation types.
      *
@@ -136,7 +132,6 @@ object Spikard {
      */
     suspend fun schemaQueryMutationAsync(): QueryMutationConfig =
         withContext(Dispatchers.IO) { schemaQueryMutation() }
-
     /**
      * Create a schema configuration with all three root types.
      *
@@ -150,7 +145,6 @@ object Spikard {
         val resultJson = SpikardBridge.nativeSchemaFull()
         return mapper.readValue(resultJson, FullSchemaConfig::class.java)
     }
-
     /**
      * Create a schema configuration with all three root types.
      *
@@ -162,5 +156,4 @@ object Spikard {
      */
     suspend fun schemaFullAsync(): FullSchemaConfig =
         withContext(Dispatchers.IO) { schemaFull() }
-
 }

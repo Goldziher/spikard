@@ -49,6 +49,17 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("start harness: %v", err))
 	}
 
+	code := runHarnessTests(m, cmd, stdin, stdout)
+	os.Exit(code)
+}
+
+// runHarnessTests executes the test suite and cleans up harness resources.
+// This helper avoids 'exitAfterDefer' linter violations by letting
+// implicit resource cleanup happen before TestMain calls os.Exit.
+func runHarnessTests(m *testing.M, cmd *exec.Cmd, stdin io.WriteCloser, stdout io.ReadCloser) int {
+	// Drain stdout so the pipe doesn't block.
+	go func() { _, _ = io.Copy(io.Discard, stdout) }()
+
 	// Poll TCP port 8012 until harness is ready (15s timeout).
 	host := "127.0.0.1"
 	port := "8012"
@@ -69,9 +80,6 @@ func TestMain(m *testing.M) {
 	}
 
 	os.Setenv("SUT_URL", sutURL)
-	// Drain stdout so the pipe doesn't block.
-	go func() { _, _ = io.Copy(io.Discard, stdout) }()
-
 	code := m.Run()
 
 	// Cleanup: close stdin and wait for harness.
@@ -79,5 +87,5 @@ func TestMain(m *testing.M) {
 	_ = cmd.Process.Signal(os.Interrupt)
 	_ = cmd.Wait()
 
-	os.Exit(code)
+	return code
 }

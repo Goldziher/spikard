@@ -1,1 +1,37 @@
-{"http":{"expected_response":{"body":{"detail":"1 validation error in request","errors":[{"ctx":{"expected":"'electronics', 'clothing' or 'books'"},"input":"furniture","loc":["body","category"],"msg":"Input should be 'electronics', 'clothing' or 'books'","type":"enum"}],"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"},"headers":{},"status_code":422},"handler":{"body_schema":{"additionalProperties":false,"properties":{"category":{"enum":["electronics","clothing","books"],"type":"string"},"name":{"type":"string"}},"required":["name","category"],"type":"object"},"method":"POST","route":"/items/"},"request":{"path":"/items/"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "detail": "1 validation error in request",
+        "errors": [
+          {
+            "ctx": { "expected": "'electronics', 'clothing' or 'books'" },
+            "input": "furniture",
+            "loc": ["body", "category"],
+            "msg": "Input should be 'electronics', 'clothing' or 'books'",
+            "type": "enum"
+          }
+        ],
+        "status": 422,
+        "title": "Request Validation Failed",
+        "type": "https://spikard.dev/errors/validation-error"
+      },
+      "headers": {},
+      "status_code": 422
+    },
+    "handler": {
+      "body_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "category": { "enum": ["electronics", "clothing", "books"], "type": "string" },
+          "name": { "type": "string" }
+        },
+        "required": ["name", "category"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/items/"
+    },
+    "request": { "path": "/items/" }
+  }
+}

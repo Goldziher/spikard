@@ -1,1 +1,25 @@
-{"http":{"expected_response":{"body":{"detail":"Dependency type mismatch","errors":[{"actual_type":"string","dependency_key":"config","expected_type":"object","msg":"Dependency 'config' type mismatch: expected object, got string","type":"type_mismatch"}],"status":500,"title":"Dependency Resolution Failed","type":"https://spikard.dev/errors/dependency-error"},"headers":{},"status_code":500},"handler":{"body_schema":null,"method":"GET","route":"/api/type-mismatch"},"request":{"path":"/api/type-mismatch"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "detail": "Dependency type mismatch",
+        "errors": [
+          {
+            "actual_type": "string",
+            "dependency_key": "config",
+            "expected_type": "object",
+            "msg": "Dependency 'config' type mismatch: expected object, got string",
+            "type": "type_mismatch"
+          }
+        ],
+        "status": 500,
+        "title": "Dependency Resolution Failed",
+        "type": "https://spikard.dev/errors/dependency-error"
+      },
+      "headers": {},
+      "status_code": 500
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/api/type-mismatch" },
+    "request": { "path": "/api/type-mismatch" }
+  }
+}

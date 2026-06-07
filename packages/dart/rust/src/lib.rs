@@ -1649,6 +1649,194 @@ impl From<CompressionConfig> for spikard::CompressionConfig {
     }
 }
 
+// From<T> for SourceT conversions for service-configurator mirror parameter types.
+
+impl From<BackgroundTaskConfig> for spikard::BackgroundTaskConfig {
+    fn from(v: BackgroundTaskConfig) -> Self {
+        spikard::BackgroundTaskConfig {
+            max_queue_size: v.max_queue_size as _,
+            max_concurrent_tasks: v.max_concurrent_tasks as _,
+            drain_timeout_secs: v.drain_timeout_secs as _,
+        }
+    }
+}
+
+impl From<RateLimitConfig> for spikard::RateLimitConfig {
+    fn from(v: RateLimitConfig) -> Self {
+        spikard::RateLimitConfig {
+            per_second: v.per_second as _,
+            burst: v.burst as _,
+            ip_based: v.ip_based as _,
+        }
+    }
+}
+
+impl From<GrpcConfig> for spikard::GrpcConfig {
+    fn from(v: GrpcConfig) -> Self {
+        spikard::GrpcConfig {
+            enabled: v.enabled as _,
+            max_message_size: v.max_message_size as _,
+            enable_compression: v.enable_compression as _,
+            request_timeout: v.request_timeout.map(|x| x as _),
+            max_concurrent_streams: v.max_concurrent_streams as _,
+            enable_keepalive: v.enable_keepalive as _,
+            keepalive_interval: v.keepalive_interval as _,
+            keepalive_timeout: v.keepalive_timeout as _,
+            max_stream_response_bytes: v.max_stream_response_bytes.map(|x| x as _),
+        }
+    }
+}
+
+impl From<JsonRpcConfig> for spikard::JsonRpcConfig {
+    fn from(v: JsonRpcConfig) -> Self {
+        spikard::JsonRpcConfig {
+            enabled: v.enabled as _,
+            endpoint_path: v.endpoint_path.into(),
+            enable_batch: v.enable_batch as _,
+            max_batch_size: v.max_batch_size as _,
+        }
+    }
+}
+
+impl From<OpenApiConfig> for spikard::OpenApiConfig {
+    fn from(v: OpenApiConfig) -> Self {
+        spikard::OpenApiConfig {
+            enabled: v.enabled as _,
+            title: v.title.into(),
+            version: v.version.into(),
+            description: v.description.map(Into::into),
+            swagger_ui_path: v.swagger_ui_path.into(),
+            redoc_path: v.redoc_path.into(),
+            openapi_json_path: v.openapi_json_path.into(),
+            contact: v.contact.map(Into::into),
+            license: v.license.map(Into::into),
+            servers: v.servers.into_iter().map(Into::into).collect(),
+            security_schemes: v
+                .security_schemes
+                .into_iter()
+                .map(|(k, v)| (k.into(), v.into()))
+                .collect(),
+        }
+    }
+}
+
+impl From<JwtConfig> for spikard::JwtConfig {
+    fn from(v: JwtConfig) -> Self {
+        spikard::JwtConfig {
+            secret: v.secret.into(),
+            algorithm: v.algorithm.into(),
+            audience: v.audience.map(|vec| vec.into_iter().map(Into::into).collect()),
+            issuer: v.issuer.map(Into::into),
+            leeway: v.leeway as _,
+        }
+    }
+}
+
+impl From<ApiKeyConfig> for spikard::ApiKeyConfig {
+    fn from(v: ApiKeyConfig) -> Self {
+        spikard::ApiKeyConfig {
+            keys: v.keys.into_iter().map(Into::into).collect(),
+            header_name: v.header_name.into(),
+        }
+    }
+}
+
+impl From<StaticFilesConfig> for spikard::StaticFilesConfig {
+    fn from(v: StaticFilesConfig) -> Self {
+        spikard::StaticFilesConfig {
+            directory: v.directory.into(),
+            route_prefix: v.route_prefix.into(),
+            index_file: v.index_file as _,
+            cache_control: v.cache_control.map(Into::into),
+        }
+    }
+}
+
+#[allow(clippy::needless_update)]
+impl From<ServerConfig> for spikard::ServerConfig {
+    fn from(v: ServerConfig) -> Self {
+        spikard::ServerConfig {
+            host: v.host.into(),
+            port: v.port as _,
+            workers: v.workers as _,
+            enable_request_id: v.enable_request_id as _,
+            max_body_size: v.max_body_size.map(|x| x as _),
+            request_timeout: v.request_timeout.map(|x| x as _),
+            compression: v.compression.map(Into::into),
+            rate_limit: v.rate_limit.map(Into::into),
+            jwt_auth: v.jwt_auth.map(Into::into),
+            api_key_auth: v.api_key_auth.map(Into::into),
+            static_files: v.static_files.into_iter().map(Into::into).collect(),
+            graceful_shutdown: v.graceful_shutdown as _,
+            shutdown_timeout: v.shutdown_timeout as _,
+            asyncapi: v.asyncapi.map(Into::into),
+            openapi: v.openapi.map(Into::into),
+            jsonrpc: v.jsonrpc.map(Into::into),
+            grpc: v.grpc.map(Into::into),
+            lifecycle_hooks: Default::default(),
+            background_tasks: v.background_tasks.into(),
+            enable_http_trace: v.enable_http_trace as _,
+            di_container: Default::default(),
+            ..Default::default()
+        }
+    }
+}
+
+impl From<AsyncApiConfig> for spikard_http::AsyncApiConfig {
+    fn from(v: AsyncApiConfig) -> Self {
+        spikard_http::AsyncApiConfig {
+            enabled: v.enabled as _,
+            spec: v.spec.as_deref().and_then(|s| serde_json::from_str(s).ok()),
+        }
+    }
+}
+
+impl From<ContactInfo> for spikard_http::ContactInfo {
+    fn from(v: ContactInfo) -> Self {
+        spikard_http::ContactInfo {
+            name: v.name.map(Into::into),
+            email: v.email.map(Into::into),
+            url: v.url.map(Into::into),
+        }
+    }
+}
+
+impl From<LicenseInfo> for spikard_http::LicenseInfo {
+    fn from(v: LicenseInfo) -> Self {
+        spikard_http::LicenseInfo {
+            name: v.name.into(),
+            url: v.url.map(Into::into),
+        }
+    }
+}
+
+impl From<ServerInfo> for spikard_http::ServerInfo {
+    fn from(v: ServerInfo) -> Self {
+        spikard_http::ServerInfo {
+            url: v.url.into(),
+            description: v.description.map(Into::into),
+        }
+    }
+}
+
+impl From<SecuritySchemeInfo> for spikard_http::SecuritySchemeInfo {
+    fn from(v: SecuritySchemeInfo) -> Self {
+        match v {
+            SecuritySchemeInfo::Http { scheme, bearer_format } => spikard_http::SecuritySchemeInfo::Http {
+                scheme,
+                bearer_format: if bearer_format.is_empty() {
+                    None
+                } else {
+                    Some(bearer_format)
+                },
+            },
+            SecuritySchemeInfo::ApiKey { location, name } => {
+                spikard_http::SecuritySchemeInfo::ApiKey { location, name }
+            }
+        }
+    }
+}
+
 /// Create a simple schema configuration with only Query type.
 ///
 /// This is a convenience function for schemas that only have queries.

@@ -35,7 +35,6 @@ class GraphQLRouteConfig internal constructor(internal val inner: dev.spikard.Gr
     fun path(path: String): GraphQLRouteConfig {
         return inner.path(path)
     }
-
     // Set the HTTP method for the GraphQL endpoint
     //
     // # Arguments
@@ -44,7 +43,6 @@ class GraphQLRouteConfig internal constructor(internal val inner: dev.spikard.Gr
     fun method(method: String): GraphQLRouteConfig {
         return inner.method(method)
     }
-
     // Enable or disable the GraphQL Playground UI
     //
     // # Arguments
@@ -53,7 +51,6 @@ class GraphQLRouteConfig internal constructor(internal val inner: dev.spikard.Gr
     fun enablePlayground(enable: Boolean): GraphQLRouteConfig {
         return inner.enablePlayground(enable)
     }
-
     // Set a custom description for documentation
     //
     // # Arguments
@@ -62,26 +59,21 @@ class GraphQLRouteConfig internal constructor(internal val inner: dev.spikard.Gr
     fun description(description: String): GraphQLRouteConfig {
         return inner.description(description)
     }
-
     // Get the configured path
     fun getPath(): String {
         return inner.getPath()
     }
-
     // Get the configured method
     fun getMethod(): String {
         return inner.getMethod()
     }
-
     // Check if playground is enabled
     fun isPlaygroundEnabled(): Boolean {
         return inner.isPlaygroundEnabled()
     }
-
     // Get the description if set
     fun getDescription(): String? {
         return inner.getDescription().orElse(null)
     }
-
     override fun close() { inner.close() }
 }

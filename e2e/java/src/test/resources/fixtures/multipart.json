@@ -16,9 +16,7 @@
             }
           },
           "additionalProperties": false,
-          "required": [
-            "test"
-          ]
+          "required": ["test"]
         }
       },
       "request": {
@@ -91,10 +89,7 @@
             }
           },
           "additionalProperties": false,
-          "required": [
-            "test1",
-            "test2"
-          ]
+          "required": ["test1", "test2"]
         }
       },
       "request": {
@@ -147,9 +142,7 @@
             }
           },
           "additionalProperties": false,
-          "required": [
-            "file"
-          ]
+          "required": ["file"]
         }
       },
       "request": {
@@ -190,9 +183,7 @@
             }
           },
           "additionalProperties": false,
-          "required": [
-            "test2"
-          ]
+          "required": ["test2"]
         }
       },
       "request": {
@@ -209,18 +200,9 @@
             "content": "<file2 content>",
             "content_type": "text/plain",
             "headers": [
-              [
-                "content-disposition",
-                "form-data; name=\"test2\"; filename=\"test2.txt\""
-              ],
-              [
-                "content-type",
-                "text/plain"
-              ],
-              [
-                "x-custom",
-                "f2"
-              ]
+              ["content-disposition", "form-data; name=\"test2\"; filename=\"test2.txt\""],
+              ["content-type", "text/plain"],
+              ["x-custom", "f2"]
             ]
           }
         }
@@ -244,9 +226,7 @@
             }
           },
           "additionalProperties": false,
-          "required": [
-            "test1"
-          ]
+          "required": ["test1"]
         }
       },
       "request": {
@@ -288,9 +268,7 @@
             }
           },
           "additionalProperties": false,
-          "required": [
-            "files"
-          ]
+          "required": ["files"]
         }
       },
       "request": {
@@ -316,11 +294,7 @@
               "content_type": "text/plain"
             }
           ],
-          "tags": [
-            "python",
-            "rust",
-            "web"
-          ]
+          "tags": ["python", "rust", "web"]
         }
       }
     }
@@ -370,9 +344,7 @@
             }
           },
           "additionalProperties": false,
-          "required": [
-            "file"
-          ]
+          "required": ["file"]
         }
       },
       "request": {
@@ -411,9 +383,7 @@
             }
           },
           "additionalProperties": false,
-          "required": [
-            "files"
-          ]
+          "required": ["files"]
         }
       },
       "request": {
@@ -425,10 +395,7 @@
       "expected_response": {
         "status_code": 200,
         "body": {
-          "filenames": [
-            "file1.txt",
-            "file2.txt"
-          ],
+          "filenames": ["file1.txt", "file2.txt"],
           "total_size": 35
         }
       }
@@ -451,9 +418,7 @@
             }
           },
           "additionalProperties": false,
-          "required": [
-            "file"
-          ]
+          "required": ["file"]
         }
       },
       "request": {
@@ -488,9 +453,7 @@
             }
           },
           "additionalProperties": false,
-          "required": [
-            "image"
-          ]
+          "required": ["image"]
         }
       },
       "request": {
@@ -526,9 +489,7 @@
             }
           },
           "additionalProperties": false,
-          "required": [
-            "document"
-          ]
+          "required": ["document"]
         }
       },
       "request": {
@@ -602,11 +563,7 @@
           "files": {
             "file": {
               "required": true,
-              "content_type": [
-                "image/jpeg",
-                "image/png",
-                "image/gif"
-              ]
+              "content_type": ["image/jpeg", "image/png", "image/gif"]
             }
           }
         }
@@ -627,10 +584,7 @@
           "errors": [
             {
               "type": "validation_error",
-              "loc": [
-                "files",
-                "file"
-              ],
+              "loc": ["files", "file"],
               "msg": "Invalid content type 'application/x-sh'. Allowed types: image/jpeg, image/png, image/gif"
             }
           ]
@@ -638,10 +592,7 @@
         "validation_errors": [
           {
             "type": "validation_error",
-            "loc": [
-              "files",
-              "file"
-            ],
+            "loc": ["files", "file"],
             "msg": "Invalid content type 'application/x-sh'. Allowed types: image/jpeg, image/png, image/gif"
           }
         ]
@@ -664,9 +615,7 @@
               "format": "binary"
             }
           },
-          "required": [
-            "file"
-          ],
+          "required": ["file"],
           "additionalProperties": false
         }
       },
@@ -686,10 +635,7 @@
           "errors": [
             {
               "type": "missing",
-              "loc": [
-                "body",
-                "file"
-              ],
+              "loc": ["body", "file"],
               "msg": "Field required",
               "input": []
             }
@@ -710,9 +656,7 @@
           "files": {
             "image": {
               "required": true,
-              "content_type": [
-                "image/png"
-              ],
+              "content_type": ["image/png"],
               "validate_magic_numbers": true
             }
           }
@@ -726,15 +670,7 @@
         "status_code": 201
       }
     },
-    "tags": [
-      "multipart",
-      "file",
-      "magic_number",
-      "png",
-      "security",
-      "validation",
-      "success"
-    ]
+    "tags": ["multipart", "file", "magic_number", "png", "security", "validation", "success"]
   },
   {
     "id": "18_file_magic_number_jpeg_success",
@@ -748,9 +684,7 @@
           "files": {
             "image": {
               "required": true,
-              "content_type": [
-                "image/jpeg"
-              ],
+              "content_type": ["image/jpeg"],
               "validate_magic_numbers": true
             }
           }
@@ -764,15 +698,7 @@
         "status_code": 201
       }
     },
-    "tags": [
-      "multipart",
-      "file",
-      "magic_number",
-      "jpeg",
-      "security",
-      "validation",
-      "success"
-    ]
+    "tags": ["multipart", "file", "magic_number", "jpeg", "security", "validation", "success"]
   },
   {
     "id": "19_file_mime_spoofing_png_as_jpeg",
@@ -786,9 +712,7 @@
           "files": {
             "image": {
               "required": true,
-              "content_type": [
-                "image/jpeg"
-              ],
+              "content_type": ["image/jpeg"],
               "validate_magic_numbers": true
             }
           }
@@ -808,10 +732,7 @@
           "errors": [
             {
               "type": "validation_error",
-              "loc": [
-                "files",
-                "image"
-              ],
+              "loc": ["files", "image"],
               "msg": "File type mismatch: MIME type is image/jpeg but magic numbers indicate image/png",
               "ctx": {
                 "declared_mime": "image/jpeg",
@@ -823,15 +744,7 @@
         }
       }
     },
-    "tags": [
-      "multipart",
-      "file",
-      "magic_number",
-      "spoofing",
-      "security",
-      "validation",
-      "error"
-    ]
+    "tags": ["multipart", "file", "magic_number", "spoofing", "security", "validation", "error"]
   },
   {
     "id": "20_file_mime_spoofing_jpeg_as_png",
@@ -845,9 +758,7 @@
           "files": {
             "image": {
               "required": true,
-              "content_type": [
-                "image/png"
-              ],
+              "content_type": ["image/png"],
               "validate_magic_numbers": true
             }
           }
@@ -867,10 +778,7 @@
           "errors": [
             {
               "type": "validation_error",
-              "loc": [
-                "files",
-                "image"
-              ],
+              "loc": ["files", "image"],
               "msg": "File type mismatch: MIME type is image/png but magic numbers indicate image/jpeg",
               "ctx": {
                 "declared_mime": "image/png",
@@ -882,15 +790,7 @@
         }
       }
     },
-    "tags": [
-      "multipart",
-      "file",
-      "magic_number",
-      "spoofing",
-      "security",
-      "validation",
-      "error"
-    ]
+    "tags": ["multipart", "file", "magic_number", "spoofing", "security", "validation", "error"]
   },
   {
     "id": "21_file_pdf_magic_number_success",
@@ -904,9 +804,7 @@
           "files": {
             "document": {
               "required": true,
-              "content_type": [
-                "application/pdf"
-              ],
+              "content_type": ["application/pdf"],
               "validate_magic_numbers": true
             }
           }
@@ -920,15 +818,7 @@
         "status_code": 201
       }
     },
-    "tags": [
-      "multipart",
-      "file",
-      "magic_number",
-      "pdf",
-      "security",
-      "validation",
-      "success"
-    ]
+    "tags": ["multipart", "file", "magic_number", "pdf", "security", "validation", "success"]
   },
   {
     "id": "22_file_empty_buffer",
@@ -961,10 +851,7 @@
           "errors": [
             {
               "type": "validation_error",
-              "loc": [
-                "files",
-                "file"
-              ],
+              "loc": ["files", "file"],
               "msg": "File buffer is empty",
               "ctx": {
                 "buffer_size": 0
@@ -974,13 +861,6 @@
         }
       }
     },
-    "tags": [
-      "multipart",
-      "file",
-      "empty",
-      "edge_case",
-      "validation",
-      "error"
-    ]
+    "tags": ["multipart", "file", "empty", "edge_case", "validation", "error"]
   }
 ]

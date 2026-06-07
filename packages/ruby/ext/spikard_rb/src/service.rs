@@ -6,7 +6,6 @@ use magnus::{
     value::{InnerValue, Opaque},
 };
 use std::sync::Arc;
-
 /// Generated Magnus bridge for the `Handler` contract.
 ///
 /// Wraps a Ruby proc so it can be used as `Arc<dyn Handler>`
@@ -57,7 +56,6 @@ impl spikard::Handler for RbHandlerBridge {
         })
     }
 }
-
 /// Call a Ruby proc with the GVL acquired via rb_sys.
 /// Called from within a `rb_thread_call_without_gvl` callback (same OS thread).
 fn call_ruby_proc_with_gvl(
@@ -165,7 +163,6 @@ extern "C" fn ruby_proc_gvl_callback(data: *mut std::ffi::c_void) -> *mut std::f
     }
     std::ptr::null_mut()
 }
-
 /// Drive `spikard::App::run` from Ruby.
 ///
 /// Each entry in `registrations` is a `[method_name, metadata_array, proc]` triple
@@ -225,7 +222,6 @@ pub fn app_run(registrations: Value) -> magnus::error::Result<()> {
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?,
                 )
                 .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-
                 let path: String = meta_array
                     .entry::<String>(0)
                     .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
@@ -243,7 +239,6 @@ pub fn app_run(registrations: Value) -> magnus::error::Result<()> {
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?,
                 )
                 .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-
                 let path: String = meta_array
                     .entry::<String>(0)
                     .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
@@ -261,7 +256,6 @@ pub fn app_run(registrations: Value) -> magnus::error::Result<()> {
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?,
                 )
                 .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-
                 let path: String = meta_array
                     .entry::<String>(0)
                     .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
@@ -279,7 +273,6 @@ pub fn app_run(registrations: Value) -> magnus::error::Result<()> {
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?,
                 )
                 .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-
                 let path: String = meta_array
                     .entry::<String>(0)
                     .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
@@ -297,7 +290,6 @@ pub fn app_run(registrations: Value) -> magnus::error::Result<()> {
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?,
                 )
                 .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-
                 let path: String = meta_array
                     .entry::<String>(0)
                     .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
@@ -315,7 +307,6 @@ pub fn app_run(registrations: Value) -> magnus::error::Result<()> {
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?,
                 )
                 .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-
                 let path: String = meta_array
                     .entry::<String>(0)
                     .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
@@ -333,7 +324,6 @@ pub fn app_run(registrations: Value) -> magnus::error::Result<()> {
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?,
                 )
                 .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-
                 let path: String = meta_array
                     .entry::<String>(0)
                     .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
@@ -351,7 +341,6 @@ pub fn app_run(registrations: Value) -> magnus::error::Result<()> {
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?,
                 )
                 .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-
                 let path: String = meta_array
                     .entry::<String>(0)
                     .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
@@ -369,7 +358,6 @@ pub fn app_run(registrations: Value) -> magnus::error::Result<()> {
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?,
                 )
                 .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-
                 let path: String = meta_array
                     .entry::<String>(0)
                     .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
@@ -445,7 +433,6 @@ pub fn app_run(registrations: Value) -> magnus::error::Result<()> {
         .map_err(|e| magnus::Error::new(ruby.exception_runtime_error(), e.to_string()))?;
     Ok(())
 }
-
 /// Drive `spikard::App::into_router` from Ruby.
 ///
 /// Each entry in `registrations` is a `[method_name, metadata_array, proc]` triple
@@ -505,7 +492,6 @@ pub fn app_into_router(registrations: Value) -> magnus::error::Result<()> {
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?,
                 )
                 .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-
                 let path: String = meta_array
                     .entry::<String>(0)
                     .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
@@ -523,7 +509,6 @@ pub fn app_into_router(registrations: Value) -> magnus::error::Result<()> {
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?,
                 )
                 .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-
                 let path: String = meta_array
                     .entry::<String>(0)
                     .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
@@ -541,7 +526,6 @@ pub fn app_into_router(registrations: Value) -> magnus::error::Result<()> {
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?,
                 )
                 .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-
                 let path: String = meta_array
                     .entry::<String>(0)
                     .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
@@ -559,7 +543,6 @@ pub fn app_into_router(registrations: Value) -> magnus::error::Result<()> {
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?,
                 )
                 .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-
                 let path: String = meta_array
                     .entry::<String>(0)
                     .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
@@ -577,7 +560,6 @@ pub fn app_into_router(registrations: Value) -> magnus::error::Result<()> {
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?,
                 )
                 .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-
                 let path: String = meta_array
                     .entry::<String>(0)
                     .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
@@ -595,7 +577,6 @@ pub fn app_into_router(registrations: Value) -> magnus::error::Result<()> {
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?,
                 )
                 .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-
                 let path: String = meta_array
                     .entry::<String>(0)
                     .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
@@ -613,7 +594,6 @@ pub fn app_into_router(registrations: Value) -> magnus::error::Result<()> {
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?,
                 )
                 .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-
                 let path: String = meta_array
                     .entry::<String>(0)
                     .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
@@ -631,7 +611,6 @@ pub fn app_into_router(registrations: Value) -> magnus::error::Result<()> {
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?,
                 )
                 .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-
                 let path: String = meta_array
                     .entry::<String>(0)
                     .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
@@ -649,7 +628,6 @@ pub fn app_into_router(registrations: Value) -> magnus::error::Result<()> {
                         .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?,
                 )
                 .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;
-
                 let path: String = meta_array
                     .entry::<String>(0)
                     .map_err(|e| magnus::Error::new(ruby.exception_type_error(), e.to_string()))?;

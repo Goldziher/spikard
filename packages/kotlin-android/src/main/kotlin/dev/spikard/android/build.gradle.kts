@@ -81,7 +81,7 @@ mavenPublishing {
     coordinates(
         groupId = "dev.spikard",
         artifactId = "spikard-android",
-        version = "0.15.6-rc.9",
+        version = "0.15.6-rc.10",
     )
 
     pom {

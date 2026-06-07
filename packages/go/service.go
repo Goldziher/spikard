@@ -18,7 +18,6 @@ import (
 	"sync"
 	"unsafe"
 )
-
 // ──────────────────────────────────────────── Service Definitions ──
 
 // Service: App
@@ -28,15 +27,11 @@ import (
 //     AppOpaque* owner,
 //     char* (*callback)(void*, const char*),
 //     void* context,
-//     void* builder
-// );
+//     void* builder// );
 // extern void spikard_app_ep_run(
-//     AppOpaque* owner
-// );
+//     AppOpaque* owner// );
 // extern const char* spikard_app_ep_into_router(
-//     AppOpaque* owner
-// );
-
+//     AppOpaque* owner// );
 // ──────────────────────────────────────────── Handler Registry ──
 
 // HandlerFunc is the signature for Go handler functions.
@@ -100,7 +95,6 @@ func service_handler_callback(ctx unsafe.Pointer, reqCStr *C.char) *C.char {
 	cResp := C.CString(string(respJSON))
 	return cResp
 }
-
 // ──────────────────────────────────────────── Go Service API ──
 
 // App is a wrapper around the native service.
@@ -110,7 +104,6 @@ type App struct {
 	owner unsafe.Pointer // *SPIKARDAppOpaque from C
 	mu    sync.Mutex
 }
-
 // NewApp creates a new App instance.
 func NewApp() (*App, error) {
 	owner := unsafe.Pointer(C.spikard_app_new())
@@ -119,7 +112,6 @@ func NewApp() (*App, error) {
 	}
 	return &App{owner: owner}, nil
 }
-
 // Close frees the App instance.
 func (s *App) Close() {
 	s.mu.Lock()
@@ -129,7 +121,6 @@ func (s *App) Close() {
 		s.owner = nil
 	}
 }
-
 // RegisterRoute registers a handler for the route registration.
 //
 // Register a route using the provided builder and handler function.
@@ -137,13 +128,12 @@ func (s *App) Close() {
 // # Errors
 //
 // Returns an error if route construction fails or if the handler registration fails.
-func (s *App) RegisterRoute(handler HandlerFunc, builder *RouteBuilder)  error {
+func (s *App) RegisterRoute(handler HandlerFunc, builder *RouteBuilder) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.owner == nil {
 		return errors.New("service is closed")
 	}
-
 	ctxID := registerHandler(handler)
 	ret := C.spikard_app_register_route(
 		(*C.SPIKARDAppOpaque)(s.owner),
@@ -158,17 +148,15 @@ func (s *App) RegisterRoute(handler HandlerFunc, builder *RouteBuilder)  error {
 	}
 	return nil
 }
-
 // Get() registers a handler via the get variant.
 //
 // Register a GET route at the given path.
-func (s *App) Get(handler HandlerFunc, path string)  error {
+func (s *App) Get(handler HandlerFunc, path string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.owner == nil {
 		return errors.New("service is closed")
 	}
-
 	ctxID := registerHandler(handler)
 	ret := C.spikard_app_get(
 		(*C.SPIKARDAppOpaque)(s.owner),
@@ -183,17 +171,15 @@ func (s *App) Get(handler HandlerFunc, path string)  error {
 	}
 	return nil
 }
-
 // Post() registers a handler via the post variant.
 //
 // Register a POST route at the given path.
-func (s *App) Post(handler HandlerFunc, path string)  error {
+func (s *App) Post(handler HandlerFunc, path string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.owner == nil {
 		return errors.New("service is closed")
 	}
-
 	ctxID := registerHandler(handler)
 	ret := C.spikard_app_post(
 		(*C.SPIKARDAppOpaque)(s.owner),
@@ -208,17 +194,15 @@ func (s *App) Post(handler HandlerFunc, path string)  error {
 	}
 	return nil
 }
-
 // Put() registers a handler via the put variant.
 //
 // Register a PUT route at the given path.
-func (s *App) Put(handler HandlerFunc, path string)  error {
+func (s *App) Put(handler HandlerFunc, path string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.owner == nil {
 		return errors.New("service is closed")
 	}
-
 	ctxID := registerHandler(handler)
 	ret := C.spikard_app_put(
 		(*C.SPIKARDAppOpaque)(s.owner),
@@ -233,17 +217,15 @@ func (s *App) Put(handler HandlerFunc, path string)  error {
 	}
 	return nil
 }
-
 // Patch() registers a handler via the patch variant.
 //
 // Register a PATCH route at the given path.
-func (s *App) Patch(handler HandlerFunc, path string)  error {
+func (s *App) Patch(handler HandlerFunc, path string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.owner == nil {
 		return errors.New("service is closed")
 	}
-
 	ctxID := registerHandler(handler)
 	ret := C.spikard_app_patch(
 		(*C.SPIKARDAppOpaque)(s.owner),
@@ -258,17 +240,15 @@ func (s *App) Patch(handler HandlerFunc, path string)  error {
 	}
 	return nil
 }
-
 // Delete() registers a handler via the delete variant.
 //
 // Register a DELETE route at the given path.
-func (s *App) Delete(handler HandlerFunc, path string)  error {
+func (s *App) Delete(handler HandlerFunc, path string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.owner == nil {
 		return errors.New("service is closed")
 	}
-
 	ctxID := registerHandler(handler)
 	ret := C.spikard_app_delete(
 		(*C.SPIKARDAppOpaque)(s.owner),
@@ -283,17 +263,15 @@ func (s *App) Delete(handler HandlerFunc, path string)  error {
 	}
 	return nil
 }
-
 // Head() registers a handler via the head variant.
 //
 // Register a HEAD route at the given path.
-func (s *App) Head(handler HandlerFunc, path string)  error {
+func (s *App) Head(handler HandlerFunc, path string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.owner == nil {
 		return errors.New("service is closed")
 	}
-
 	ctxID := registerHandler(handler)
 	ret := C.spikard_app_head(
 		(*C.SPIKARDAppOpaque)(s.owner),
@@ -308,17 +286,15 @@ func (s *App) Head(handler HandlerFunc, path string)  error {
 	}
 	return nil
 }
-
 // Options() registers a handler via the options variant.
 //
 // Register an OPTIONS route at the given path.
-func (s *App) Options(handler HandlerFunc, path string)  error {
+func (s *App) Options(handler HandlerFunc, path string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.owner == nil {
 		return errors.New("service is closed")
 	}
-
 	ctxID := registerHandler(handler)
 	ret := C.spikard_app_options(
 		(*C.SPIKARDAppOpaque)(s.owner),
@@ -333,17 +309,15 @@ func (s *App) Options(handler HandlerFunc, path string)  error {
 	}
 	return nil
 }
-
 // Connect() registers a handler via the connect variant.
 //
 // Register a CONNECT route at the given path.
-func (s *App) Connect(handler HandlerFunc, path string)  error {
+func (s *App) Connect(handler HandlerFunc, path string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.owner == nil {
 		return errors.New("service is closed")
 	}
-
 	ctxID := registerHandler(handler)
 	ret := C.spikard_app_connect(
 		(*C.SPIKARDAppOpaque)(s.owner),
@@ -358,17 +332,15 @@ func (s *App) Connect(handler HandlerFunc, path string)  error {
 	}
 	return nil
 }
-
 // Trace() registers a handler via the trace variant.
 //
 // Register a TRACE route at the given path.
-func (s *App) Trace(handler HandlerFunc, path string)  error {
+func (s *App) Trace(handler HandlerFunc, path string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.owner == nil {
 		return errors.New("service is closed")
 	}
-
 	ctxID := registerHandler(handler)
 	ret := C.spikard_app_trace(
 		(*C.SPIKARDAppOpaque)(s.owner),
@@ -383,7 +355,28 @@ func (s *App) Trace(handler HandlerFunc, path string)  error {
 	}
 	return nil
 }
+// Config() configures the service via 'config'.
+//
+// Set the server configuration.
+func (s *App) Config(config *ServerConfig) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.owner == nil {
+		return errors.New("service is closed")
+	}
+	new_owner := C.spikard_app_config(
+		(*C.SPIKARDAppOpaque)(s.owner)
+,
+		(*C.SPIKARDServerConfig)(unsafe.Pointer(config.ptr))
+,
+	)
 
+	if new_owner == nil {
+		return errors.New("configurator failed")
+	}
+	s.owner = unsafe.Pointer(new_owner)
+	return nil
+}
 // Run() runs the service's run entrypoint.
 //
 // Run the HTTP server using the configured routes.
@@ -397,7 +390,6 @@ func (s *App) Run() error {
 	if s.owner == nil {
 		return errors.New("service is closed")
 	}
-
 	ret := C.spikard_app_ep_run(
 		(*C.SPIKARDAppOpaque)(s.owner),
 	)
@@ -420,7 +412,6 @@ func (s *App) IntoRouter() error {
 	if s.owner == nil {
 		return errors.New("service is closed")
 	}
-
 	ret := C.spikard_app_ep_into_router(
 		(*C.SPIKARDAppOpaque)(s.owner),
 	)

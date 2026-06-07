@@ -1,1 +1,11 @@
-{"http":{"expected_response":{"body":{"adapter":"postgresql","user_id":42},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/api/ruby-kwargs"},"request":{"path":"/api/ruby-kwargs"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "adapter": "postgresql", "user_id": 42 },
+      "headers": {},
+      "status_code": 200
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/api/ruby-kwargs" },
+    "request": { "path": "/api/ruby-kwargs" }
+  }
+}

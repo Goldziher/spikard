@@ -4,7 +4,6 @@ use napi::bindgen_prelude::*;
 use napi::threadsafe_function::ThreadsafeFunction;
 use napi_derive::napi;
 use std::sync::Arc;
-
 /// Generated NAPI bridge for the `Handler` contract.
 ///
 /// Wraps a JavaScript callable (async) via ThreadsafeFunction
@@ -24,7 +23,6 @@ impl HandlerBridge {
 // where the NAPI env is valid (within the async task spawned by call_async).
 unsafe impl Send for HandlerBridge {}
 unsafe impl Sync for HandlerBridge {}
-
 impl spikard::Handler for HandlerBridge {
     fn call(
         &self,
@@ -51,7 +49,6 @@ impl spikard::Handler for HandlerBridge {
         })
     }
 }
-
 /// Drive `spikard::App::into_router` from JavaScript.
 ///
 /// Each entry in `registrations` is a `[method_name, metadata, callback]` triple
@@ -65,7 +62,6 @@ pub async fn app_into_router(
     )>,
 ) -> napi::Result<()> {
     let mut owner = spikard::App::new();
-
     for (method_name, _metadata, handler_fn) in registrations {
         match method_name.as_str() {
             _ => {}
@@ -100,7 +96,6 @@ impl JsApp {
             .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
         Ok(())
     }
-
     /// Register a handler via the `post` variant shortcut.
     ///
     /// Register a POST route at the given path.
@@ -119,7 +114,6 @@ impl JsApp {
             .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
         Ok(())
     }
-
     /// Register a handler via the `put` variant shortcut.
     ///
     /// Register a PUT route at the given path.
@@ -138,7 +132,6 @@ impl JsApp {
             .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
         Ok(())
     }
-
     /// Register a handler via the `patch` variant shortcut.
     ///
     /// Register a PATCH route at the given path.
@@ -157,7 +150,6 @@ impl JsApp {
             .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
         Ok(())
     }
-
     /// Register a handler via the `delete` variant shortcut.
     ///
     /// Register a DELETE route at the given path.
@@ -176,7 +168,6 @@ impl JsApp {
             .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
         Ok(())
     }
-
     /// Register a handler via the `head` variant shortcut.
     ///
     /// Register a HEAD route at the given path.
@@ -195,7 +186,6 @@ impl JsApp {
             .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
         Ok(())
     }
-
     /// Register a handler via the `options` variant shortcut.
     ///
     /// Register an OPTIONS route at the given path.
@@ -214,7 +204,6 @@ impl JsApp {
             .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
         Ok(())
     }
-
     /// Register a handler via the `connect` variant shortcut.
     ///
     /// Register a CONNECT route at the given path.
@@ -233,7 +222,6 @@ impl JsApp {
             .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
         Ok(())
     }
-
     /// Register a handler via the `trace` variant shortcut.
     ///
     /// Register a TRACE route at the given path.
@@ -252,7 +240,6 @@ impl JsApp {
             .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
         Ok(())
     }
-
     /// Call the `run` entrypoint on the inner service.
     ///
     /// Run the HTTP server using the configured routes.
@@ -272,7 +259,6 @@ impl JsApp {
             .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
         Ok(())
     }
-
     /// Call the `into_router` entrypoint on the inner service.
     ///
     /// Build the underlying Axum router.

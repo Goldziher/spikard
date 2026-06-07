@@ -1,1 +1,25 @@
-{"http":{"expected_response":{"body":{"description":null,"name":"Item","price":42.0,"tax":null},"headers":{},"status_code":200},"handler":{"body_schema":{"additionalProperties":false,"properties":{"description":{"type":"null"},"name":{"type":"string"},"price":{"type":"number"},"tax":{"type":"null"}},"required":["name","price","description","tax"],"type":"object"},"method":"POST","route":"/items/"},"request":{"path":"/items/"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "description": null, "name": "Item", "price": 42.0, "tax": null },
+      "headers": {},
+      "status_code": 200
+    },
+    "handler": {
+      "body_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "description": { "type": "null" },
+          "name": { "type": "string" },
+          "price": { "type": "number" },
+          "tax": { "type": "null" }
+        },
+        "required": ["name", "price", "description", "tax"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/items/"
+    },
+    "request": { "path": "/items/" }
+  }
+}

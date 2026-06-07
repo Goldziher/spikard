@@ -18,7 +18,6 @@ mod atoms {
 }
 
 static REPLY_ID_COUNTER: AtomicU64 = AtomicU64::new(0);
-
 type TraitReplySender = tokio::sync::oneshot::Sender<String>;
 type TraitReplyMap = Mutex<HashMap<u64, TraitReplySender>>;
 
@@ -36,7 +35,6 @@ pub fn complete_trait_call(reply_id: u64, response_json: String) -> Atom {
     }
     atoms::ok()
 }
-
 /// Generated rustler bridge for the `Handler` contract.
 ///
 /// Wraps an Elixir GenServer pid so it can be used
@@ -112,7 +110,6 @@ impl spikard::Handler for ElixirHandlerBridge {
         })
     }
 }
-
 /// Drive `spikard::App::run` from Elixir.
 ///
 /// This NIF is scheduled on the dirty CPU scheduler to avoid blocking
@@ -124,7 +121,7 @@ impl spikard::Handler for ElixirHandlerBridge {
 ///   where `handler` is an Elixir function/closure that accepts request JSON and returns response JSON.
 ///
 /// # Returns
-/// `:ok` or `{{:error, reason}}` after the entrypoint completes.
+/// `:ok` or `{:error, reason}` after the entrypoint completes.
 #[rustler::nif(schedule = "DirtyCpu")]
 pub fn app_run(registrations: rustler::Term<'_>) -> NifResult<Atom> {
     // Parse registrations from Elixir term
@@ -161,7 +158,6 @@ pub fn app_run(registrations: rustler::Term<'_>) -> NifResult<Atom> {
         Err(_e) => Err(NifError::Atom("error")),
     }
 }
-
 /// Drive `spikard::App::into_router` from Elixir.
 ///
 /// This NIF is scheduled on the dirty CPU scheduler to avoid blocking
@@ -173,7 +169,7 @@ pub fn app_run(registrations: rustler::Term<'_>) -> NifResult<Atom> {
 ///   where `handler` is an Elixir function/closure that accepts request JSON and returns response JSON.
 ///
 /// # Returns
-/// `:ok` or `{{:error, reason}}` after the entrypoint completes.
+/// `:ok` or `{:error, reason}` after the entrypoint completes.
 #[rustler::nif(schedule = "DirtyCpu")]
 pub fn app_into_router(registrations: rustler::Term<'_>) -> NifResult<Atom> {
     // Parse registrations from Elixir term
@@ -207,7 +203,6 @@ pub fn app_into_router(registrations: rustler::Term<'_>) -> NifResult<Atom> {
         Err(_e) => Err(NifError::Atom("error")),
     }
 }
-
 /// Registration variant `get` for the `route` base method.
 ///
 /// This NIF pre-builds the wrapper and delegates to the base registration.
@@ -238,7 +233,6 @@ pub fn app_get(registrations: rustler::Term<'_>, path: String, handler: rustler:
 
     Ok(atoms::ok())
 }
-
 /// Registration variant `post` for the `route` base method.
 ///
 /// This NIF pre-builds the wrapper and delegates to the base registration.
@@ -269,7 +263,6 @@ pub fn app_post(registrations: rustler::Term<'_>, path: String, handler: rustler
 
     Ok(atoms::ok())
 }
-
 /// Registration variant `put` for the `route` base method.
 ///
 /// This NIF pre-builds the wrapper and delegates to the base registration.
@@ -300,7 +293,6 @@ pub fn app_put(registrations: rustler::Term<'_>, path: String, handler: rustler:
 
     Ok(atoms::ok())
 }
-
 /// Registration variant `patch` for the `route` base method.
 ///
 /// This NIF pre-builds the wrapper and delegates to the base registration.
@@ -331,7 +323,6 @@ pub fn app_patch(registrations: rustler::Term<'_>, path: String, handler: rustle
 
     Ok(atoms::ok())
 }
-
 /// Registration variant `delete` for the `route` base method.
 ///
 /// This NIF pre-builds the wrapper and delegates to the base registration.
@@ -362,7 +353,6 @@ pub fn app_delete(registrations: rustler::Term<'_>, path: String, handler: rustl
 
     Ok(atoms::ok())
 }
-
 /// Registration variant `head` for the `route` base method.
 ///
 /// This NIF pre-builds the wrapper and delegates to the base registration.
@@ -393,7 +383,6 @@ pub fn app_head(registrations: rustler::Term<'_>, path: String, handler: rustler
 
     Ok(atoms::ok())
 }
-
 /// Registration variant `options` for the `route` base method.
 ///
 /// This NIF pre-builds the wrapper and delegates to the base registration.
@@ -424,7 +413,6 @@ pub fn app_options(registrations: rustler::Term<'_>, path: String, handler: rust
 
     Ok(atoms::ok())
 }
-
 /// Registration variant `connect` for the `route` base method.
 ///
 /// This NIF pre-builds the wrapper and delegates to the base registration.
@@ -455,7 +443,6 @@ pub fn app_connect(registrations: rustler::Term<'_>, path: String, handler: rust
 
     Ok(atoms::ok())
 }
-
 /// Registration variant `trace` for the `route` base method.
 ///
 /// This NIF pre-builds the wrapper and delegates to the base registration.

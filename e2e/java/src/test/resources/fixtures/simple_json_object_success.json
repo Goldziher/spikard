@@ -1,1 +1,25 @@
-{"http":{"expected_response":{"body":{"description":"A very nice Item","name":"Foo","price":35.4,"tax":3.2},"headers":{},"status_code":200},"handler":{"body_schema":{"additionalProperties":false,"properties":{"description":{"type":"string"},"name":{"type":"string"},"price":{"type":"number"},"tax":{"type":"number"}},"required":["name","description","price","tax"],"type":"object"},"method":"POST","route":"/items/"},"request":{"path":"/items/"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "description": "A very nice Item", "name": "Foo", "price": 35.4, "tax": 3.2 },
+      "headers": {},
+      "status_code": 200
+    },
+    "handler": {
+      "body_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "description": { "type": "string" },
+          "name": { "type": "string" },
+          "price": { "type": "number" },
+          "tax": { "type": "number" }
+        },
+        "required": ["name", "description", "price", "tax"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/items/"
+    },
+    "request": { "path": "/items/" }
+  }
+}

@@ -1,1 +1,19 @@
-{"http":{"expected_response":{"body":{"description":"","username":"johndoe"},"headers":{},"status_code":200},"handler":{"body_schema":{"properties":{"description":{"type":"string"},"username":{"type":"string"}},"required":["username"],"type":"object"},"method":"POST","route":"/form/"},"request":{"path":"/form/"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "description": "", "username": "johndoe" },
+      "headers": {},
+      "status_code": 200
+    },
+    "handler": {
+      "body_schema": {
+        "properties": { "description": { "type": "string" }, "username": { "type": "string" } },
+        "required": ["username"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/form/"
+    },
+    "request": { "path": "/form/" }
+  }
+}

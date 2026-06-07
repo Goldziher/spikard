@@ -47,7 +47,6 @@ public class App implements AutoCloseable {
         String responseStr = handler.handle(requestStr);
         return arena.allocateFrom(responseStr);
     }
-
     /**
      * Create a new App.
      * Invokes C FFI: spikard_app_new()
@@ -67,7 +66,6 @@ public class App implements AutoCloseable {
             throw new RuntimeException("Failed to invoke constructor", e);
         }
     }
-
     /**
      * Register a handler for route.
      * Invokes C FFI: spikard_app_register_route
@@ -108,22 +106,19 @@ public class App implements AutoCloseable {
                 ValueLayout.JAVA_INT,  // return: int
                 ValueLayout.ADDRESS,   // owner: *mut opaque
                 ValueLayout.ADDRESS    // callback: upcall stub
-,
-                ValueLayout.ADDRESS    // builder param
+                , ValueLayout.ADDRESS    // builder param
             );
             MethodHandle regHandle = LINKER.downcallHandle(regAddr, regDesc);
 
             return (int) regHandle.invokeExact(
                 ownerHandle,     // owner
                 upcallStub       // callback
-,
-                builder.handle()    // opaque handle
+                , builder.handle()    // opaque handle
             );
         } catch (Throwable e) {
             throw new RuntimeException("Failed to register handler", e);
         }
     }
-
 
     /**
      * Register a GET route at the given path.
@@ -670,12 +665,12 @@ public class App implements AutoCloseable {
                 ValueLayout.ADDRESS       // owner: *mut opaque
             );
             MethodHandle epHandle = LINKER.downcallHandle(epAddr, epDesc);
-            epHandle.invoke(ownerHandle);
+epHandle.invoke(ownerHandle            );
+
         } catch (Throwable e) {
             throw new RuntimeException("Failed to invoke entrypoint", e);
         }
     }
-
     /**
      * into_router.
      * Invokes C FFI: spikard_app_ep_into_router
@@ -690,12 +685,12 @@ public class App implements AutoCloseable {
                 ValueLayout.ADDRESS       // owner: *mut opaque
             );
             MethodHandle epHandle = LINKER.downcallHandle(epAddr, epDesc);
-            return (long) epHandle.invoke(ownerHandle);
+return (long) epHandle.invoke(ownerHandle            );
+
         } catch (Throwable e) {
             throw new RuntimeException("Failed to invoke entrypoint", e);
         }
     }
-
     @Override
     public void close() {
         try {
