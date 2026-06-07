@@ -356,6 +356,11 @@ tasks:
     cmds:
       - alef test --e2e --lang csharp
 
+  kotlin:e2e:
+    desc: "Run Kotlin e2e tests via alef"
+    cmds:
+      - alef test --e2e --lang kotlin
+
   kotlin-android:e2e:
     desc: "Run Kotlin/Android e2e tests via alef"
     cmds:
