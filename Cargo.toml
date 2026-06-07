@@ -9,12 +9,12 @@ members = [
   "crates/spikard-graphql",
   "crates/spikard-http",
   "crates/spikard-node",
-  "crates/spikard-php",
   "crates/spikard-py",
   "crates/spikard-wasm",
   "packages/swift/rust",
 ]
 exclude = [
+  "crates/spikard-php",
   "e2e/*",
   "examples/*",
   "packages/dart/rust",
