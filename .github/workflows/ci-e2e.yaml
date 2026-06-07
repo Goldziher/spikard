@@ -182,6 +182,13 @@ jobs:
       - name: Install Task
         uses: kreuzberg-dev/actions/install-task@v1
 
+      - name: Build and bundle Go native library
+        if: matrix.language == 'go'
+        run: |
+          cargo build -p spikard-ffi --release
+          mkdir -p packages/go/.lib/linux-amd64
+          cp target/release/libspikard_ffi.so packages/go/.lib/linux-amd64/libspikard_ffi.so
+
       - name: Build Go harness
         if: matrix.language == 'go'
         run: cd e2e/go && go build -o cmd/harness/harness ./cmd/harness/
