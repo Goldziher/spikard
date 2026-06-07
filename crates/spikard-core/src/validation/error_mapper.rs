@@ -53,58 +53,55 @@ pub enum ErrorCondition {
 impl ErrorCondition {
     /// Determine the error condition from schema path and error message
     #[must_use]
-    #[allow(clippy::ignored_unit_patterns)]
     pub fn from_schema_error(schema_path_str: &str, error_msg: &str) -> Self {
-        match () {
-            () if schema_path_str.contains("minLength") => Self::StringTooShort { min_length: None },
-            () if schema_path_str.contains("maxLength") => Self::StringTooLong { max_length: None },
-            () if schema_path_str.contains("exclusiveMinimum")
-                || (error_msg.contains("less than or equal to") && error_msg.contains("minimum")) =>
-            {
-                Self::GreaterThan { value: None }
+        if schema_path_str.contains("minLength") {
+            Self::StringTooShort { min_length: None }
+        } else if schema_path_str.contains("maxLength") {
+            Self::StringTooLong { max_length: None }
+        } else if schema_path_str.contains("exclusiveMinimum")
+            || (error_msg.contains("less than or equal to") && error_msg.contains("minimum"))
+        {
+            Self::GreaterThan { value: None }
+        } else if schema_path_str.contains("minimum") || error_msg.contains("less than the minimum") {
+            Self::GreaterThanEqual { value: None }
+        } else if schema_path_str.contains("exclusiveMaximum")
+            || (error_msg.contains("greater than or equal to") && error_msg.contains("maximum"))
+        {
+            Self::LessThan { value: None }
+        } else if schema_path_str.contains("maximum") || error_msg.contains("greater than the maximum") {
+            Self::LessThanEqual { value: None }
+        } else if schema_path_str.contains("enum") || error_msg.contains("is not one of") {
+            Self::Enum { values: None }
+        } else if schema_path_str.contains("pattern") || error_msg.contains("does not match") {
+            Self::StringPatternMismatch { pattern: None }
+        } else if schema_path_str.contains("format") {
+            if error_msg.contains("email") {
+                Self::EmailFormat
+            } else if error_msg.contains("uuid") {
+                Self::UuidFormat
+            } else if error_msg.contains("date-time") {
+                Self::DatetimeFormat
+            } else if error_msg.contains("date") {
+                Self::DateFormat
+            } else {
+                Self::FormatError
             }
-            () if schema_path_str.contains("minimum") || error_msg.contains("less than the minimum") => {
-                Self::GreaterThanEqual { value: None }
-            }
-            () if schema_path_str.contains("exclusiveMaximum")
-                || (error_msg.contains("greater than or equal to") && error_msg.contains("maximum")) =>
-            {
-                Self::LessThan { value: None }
-            }
-            () if schema_path_str.contains("maximum") || error_msg.contains("greater than the maximum") => {
-                Self::LessThanEqual { value: None }
-            }
-            () if schema_path_str.contains("enum") || error_msg.contains("is not one of") => {
-                Self::Enum { values: None }
-            }
-            () if schema_path_str.contains("pattern") || error_msg.contains("does not match") => {
-                Self::StringPatternMismatch { pattern: None }
-            }
-            () if schema_path_str.contains("format") => {
-                if error_msg.contains("email") {
-                    Self::EmailFormat
-                } else if error_msg.contains("uuid") {
-                    Self::UuidFormat
-                } else if error_msg.contains("date-time") {
-                    Self::DatetimeFormat
-                } else if error_msg.contains("date") {
-                    Self::DateFormat
-                } else {
-                    Self::FormatError
-                }
-            }
-            _ if schema_path_str.contains("/type") => Self::TypeMismatch {
+        } else if schema_path_str.contains("/type") {
+            Self::TypeMismatch {
                 expected_type: "unknown".to_string(),
-            },
-            _ if schema_path_str.ends_with("/required") => Self::Missing,
-            _ if schema_path_str.contains("/additionalProperties")
-                || error_msg.contains("Additional properties are not allowed") =>
-            {
-                Self::AdditionalProperties { field: String::new() }
             }
-            _ if schema_path_str.contains("/minItems") => Self::TooFewItems { min_items: None },
-            _ if schema_path_str.contains("/maxItems") => Self::TooManyItems,
-            _ => Self::ValidationError,
+        } else if schema_path_str.ends_with("/required") {
+            Self::Missing
+        } else if schema_path_str.contains("/additionalProperties")
+            || error_msg.contains("Additional properties are not allowed")
+        {
+            Self::AdditionalProperties { field: String::new() }
+        } else if schema_path_str.contains("/minItems") {
+            Self::TooFewItems { min_items: None }
+        } else if schema_path_str.contains("/maxItems") {
+            Self::TooManyItems
+        } else {
+            Self::ValidationError
         }
     }
 
@@ -168,6 +165,10 @@ impl ErrorMapper {
     /// # Panics
     /// Panics if accessing `.last()` on an empty vector for enum values extraction.
     #[must_use]
+    // reason: too_many_lines — exhaustive match over all error variants is inherently long;
+    // option_if_let_else — chained if-let reads clearer than map_or_else for complex arms;
+    // redundant_closure_for_method_calls — some closures wrap methods with extra args;
+    // uninlined_format_args — several format strings kept separate for readability.
     #[allow(
         clippy::too_many_lines,
         clippy::option_if_let_else,

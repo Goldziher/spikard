@@ -92,7 +92,6 @@ pub fn strip_type_hints(route_path: &str) -> String {
 /// - `datetime` → `{"type": "string", "format": "date-time"}`
 /// - `path` → `{"type": "string"}` (wildcard capture)
 #[must_use]
-#[allow(clippy::match_same_arms)]
 pub fn type_hint_to_schema(type_hint: &str) -> Value {
     match type_hint {
         "uuid" => json!({
@@ -101,9 +100,6 @@ pub fn type_hint_to_schema(type_hint: &str) -> Value {
         }),
         "int" | "integer" => json!({
             "type": "integer"
-        }),
-        "str" | "string" | "path" => json!({
-            "type": "string"
         }),
         "float" | "number" => json!({
             "type": "number"
@@ -235,7 +231,6 @@ pub fn merge_parameter_schemas(auto_schema: &Value, explicit_schema: &Value) -> 
     result
 }
 
-#[allow(clippy::literal_string_with_formatting_args)]
 #[cfg(test)]
 mod tests {
     use super::*;

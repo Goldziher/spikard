@@ -11,10 +11,6 @@ use std::sync::Arc;
 #[cfg(test)]
 use std::collections::HashMap;
 
-/// Core in-process route handler callback type used by router metadata APIs.
-#[allow(dead_code)]
-pub(crate) type RouteHandler = Arc<dyn Fn() -> String + Send + Sync>;
-
 /// JSON-RPC method metadata for routes that support JSON-RPC
 ///
 /// This struct captures the metadata needed to expose HTTP routes as JSON-RPC methods,
@@ -123,6 +119,10 @@ impl Default for Route {
     }
 }
 
+fn is_empty_schema(schema: &Value) -> bool {
+    matches!(schema, Value::Object(map) if map.is_empty())
+}
+
 impl Route {
     /// Create a route from metadata, using schema registry for deduplication
     ///
@@ -135,13 +135,8 @@ impl Route {
     ///
     /// The schema registry ensures each unique schema is compiled only once, improving
     /// startup performance and memory usage for applications with many routes.
-    #[allow(clippy::items_after_statements)]
     pub fn from_metadata(metadata: RouteMetadata, registry: &SchemaRegistry) -> Result<Self, String> {
         let method = metadata.method.parse()?;
-
-        fn is_empty_schema(schema: &Value) -> bool {
-            matches!(schema, Value::Object(map) if map.is_empty())
-        }
 
         let request_validator = metadata
             .request_schema

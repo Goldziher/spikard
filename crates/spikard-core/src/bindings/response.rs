@@ -17,8 +17,7 @@ pub struct RawResponse {
 impl RawResponse {
     /// Construct a new response.
     #[must_use]
-    #[allow(clippy::missing_const_for_fn)]
-    pub fn new(status: u16, headers: HashMap<String, String>, body: Vec<u8>) -> Self {
+    pub const fn new(status: u16, headers: HashMap<String, String>, body: Vec<u8>) -> Self {
         Self { status, headers, body }
     }
 

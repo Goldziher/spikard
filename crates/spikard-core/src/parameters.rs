@@ -239,6 +239,8 @@ impl ParameterValidator {
     ///
     /// # Errors
     /// Returns a validation error if parameter validation fails.
+    // reason: too_many_lines — multi-source parameter validation (query/path/header/cookie)
+    // with per-type coercion cannot be meaningfully split without losing context.
     #[allow(clippy::too_many_lines)]
     pub fn validate_and_extract(
         &self,
@@ -326,6 +328,8 @@ impl ParameterValidator {
                     };
                     let (item_type, item_format) = self.array_item_type_and_format(&param_def.name);
 
+                    // reason: option_if_let_else — the Some arm has a loop with early-return
+                    // logic that does not fit neatly into a closure.
                     #[allow(clippy::option_if_let_else)]
                     let coerced_items = match array_value.as_array() {
                         Some(items) => {
@@ -384,7 +388,8 @@ impl ParameterValidator {
                 continue;
             }
 
-            let raw_value_string = self.raw_value_for_error(param_def, raw_query_params, path_params, headers, cookies);
+            let raw_value_string =
+                Self::raw_value_for_error(param_def, raw_query_params, path_params, headers, cookies);
 
             if param_def.required && raw_value_string.is_none() {
                 let source_str = match param_def.source {
@@ -485,9 +490,13 @@ impl ParameterValidator {
                                 if param_def.source == ParameterSource::Header {
                                     error.loc[1].clone_from(&param_def.error_key);
                                 }
-                                if let Some(raw_value) =
-                                    self.raw_value_for_error(param_def, raw_query_params, path_params, headers, cookies)
-                                {
+                                if let Some(raw_value) = Self::raw_value_for_error(
+                                    param_def,
+                                    raw_query_params,
+                                    path_params,
+                                    headers,
+                                    cookies,
+                                ) {
                                     error.input = Value::String(raw_value.to_string());
                                 }
                             }
@@ -501,16 +510,13 @@ impl ParameterValidator {
         }
     }
 
-    #[allow(clippy::unused_self)]
     fn raw_value_for_error<'a>(
-        &self,
         param_def: &ParameterDef,
         raw_query_params: &'a HashMap<String, Vec<String>>,
         path_params: &'a HashMap<String, String>,
         headers: &'a HashMap<String, String>,
         cookies: &'a HashMap<String, String>,
     ) -> Option<&'a str> {
-        #[allow(clippy::too_many_arguments)]
         match param_def.source {
             ParameterSource::Query => raw_query_params
                 .get(&param_def.lookup_key)

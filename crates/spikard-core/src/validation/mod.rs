@@ -65,55 +65,50 @@ impl SchemaValidator {
         self.preprocess_value_with_schema(data, &self.schema)
     }
 
+    // reason: &self is needed to make recursive calls; the method carries schema state
+    // and may gain direct field access in future without breaking callers.
     #[allow(clippy::only_used_in_recursion, clippy::self_only_used_in_recursion)]
     fn preprocess_value_with_schema(&self, data: &Value, schema: &Value) -> Value {
         if let Some(schema_obj) = schema.as_object() {
             let is_string_type = schema_obj.get("type").and_then(|t| t.as_str()) == Some("string");
             let is_binary_format = schema_obj.get("format").and_then(|f| f.as_str()) == Some("binary");
 
-            #[allow(clippy::collapsible_if)]
             if is_string_type && is_binary_format {
-                if let Some(data_obj) = data.as_object() {
-                    if data_obj.contains_key("filename")
-                        && data_obj.contains_key("content")
-                        && data_obj.contains_key("size")
-                        && data_obj.contains_key("content_type")
-                    {
-                        return data_obj.get("content").unwrap_or(&Value::Null).clone();
-                    }
+                if let Some(data_obj) = data.as_object()
+                    && data_obj.contains_key("filename")
+                    && data_obj.contains_key("content")
+                    && data_obj.contains_key("size")
+                    && data_obj.contains_key("content_type")
+                {
+                    return data_obj.get("content").unwrap_or(&Value::Null).clone();
                 }
                 return data.clone();
             }
 
-            #[allow(clippy::collapsible_if)]
-            if schema_obj.get("type").and_then(|t| t.as_str()) == Some("array") {
-                if let Some(items_schema) = schema_obj.get("items") {
-                    if let Some(data_array) = data.as_array() {
-                        let processed_array: Vec<Value> = data_array
-                            .iter()
-                            .map(|item| self.preprocess_value_with_schema(item, items_schema))
-                            .collect();
-                        return Value::Array(processed_array);
-                    }
-                }
+            if schema_obj.get("type").and_then(|t| t.as_str()) == Some("array")
+                && let Some(items_schema) = schema_obj.get("items")
+                && let Some(data_array) = data.as_array()
+            {
+                let processed_array: Vec<Value> = data_array
+                    .iter()
+                    .map(|item| self.preprocess_value_with_schema(item, items_schema))
+                    .collect();
+                return Value::Array(processed_array);
             }
 
-            #[allow(clippy::collapsible_if)]
-            if schema_obj.get("type").and_then(|t| t.as_str()) == Some("object") {
-                if let Some(properties) = schema_obj.get("properties").and_then(|p| p.as_object()) {
-                    if let Some(data_obj) = data.as_object() {
-                        let mut processed_obj = serde_json::Map::new();
-                        for (key, value) in data_obj {
-                            if let Some(prop_schema) = properties.get(key) {
-                                processed_obj
-                                    .insert(key.clone(), self.preprocess_value_with_schema(value, prop_schema));
-                            } else {
-                                processed_obj.insert(key.clone(), value.clone());
-                            }
-                        }
-                        return Value::Object(processed_obj);
+            if schema_obj.get("type").and_then(|t| t.as_str()) == Some("object")
+                && let Some(properties) = schema_obj.get("properties").and_then(|p| p.as_object())
+                && let Some(data_obj) = data.as_object()
+            {
+                let mut processed_obj = serde_json::Map::new();
+                for (key, value) in data_obj {
+                    if let Some(prop_schema) = properties.get(key) {
+                        processed_obj.insert(key.clone(), self.preprocess_value_with_schema(value, prop_schema));
+                    } else {
+                        processed_obj.insert(key.clone(), value.clone());
                     }
                 }
+                return Value::Object(processed_obj);
             }
         }
 
@@ -127,6 +122,9 @@ impl SchemaValidator {
     ///
     /// # Too Many Lines
     /// This function is complex due to error mapping logic.
+    // reason: option_if_let_else — deeply nested closures harm readability here;
+    // uninlined_format_args — several format strings use variables that must remain
+    // separate for clarity; too_many_lines — error-mapping pipeline is inherently long.
     #[allow(clippy::option_if_let_else, clippy::uninlined_format_args, clippy::too_many_lines)]
     pub fn validate(&self, data: &Value) -> Result<(), ValidationError> {
         let processed_data = self.preprocess_binary_fields(data);
@@ -233,6 +231,8 @@ impl SchemaValidator {
                         ErrorCondition::TypeMismatch { expected_type }
                     }
                     ErrorCondition::AdditionalProperties { .. } => {
+                        // reason: param_name is borrowed in the if-branch via unwrap_or(&param_name);
+                        // the else-branch therefore cannot move out of param_name and must clone.
                         #[allow(clippy::redundant_clone)]
                         let unexpected_field = if param_name.contains('/') {
                             param_name.split('/').next_back().unwrap_or(&param_name).to_string()
