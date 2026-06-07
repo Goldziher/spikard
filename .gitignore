@@ -10,6 +10,7 @@ vendor/
 node_modules/
 .venv/
 .venv-codex/
+e2e/go/cmd/harness/harness
 
 # --- Compiled binaries and modules ---
 *.so
