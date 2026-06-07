@@ -5,6 +5,9 @@ use ext_php_rs::types::{ZendCallable, Zval};
 use std::panic::AssertUnwindSafe;
 use std::sync::Arc;
 
+// Import the Method enum so it's part of this crate's module tree
+pub use crate::method_enum::MethodEnum;
+
 thread_local! {
     static PHP_HANDLER_REGISTRY: std::cell::RefCell<Vec<ZendCallable<'static>>> =
         const { std::cell::RefCell::new(Vec::new()) };
