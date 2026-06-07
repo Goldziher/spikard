@@ -182,6 +182,17 @@ jobs:
       - name: Install Task
         uses: kreuzberg-dev/actions/install-task@v1
 
+      - name: Build Go harness
+        if: matrix.language == 'go'
+        run: cd e2e/go && go build -o cmd/harness/harness ./cmd/harness/
+
+      - name: Build and bundle Java native library
+        if: matrix.language == 'java'
+        run: |
+          cargo build -p spikard-ffi --release
+          mkdir -p packages/java/src/main/resources/natives/linux-x86_64
+          cp target/release/libspikard_ffi.so packages/java/src/main/resources/natives/linux-x86_64/libspikard_ffi.so
+
       - name: Generate E2E suites
         run: task e2e:generate
 
