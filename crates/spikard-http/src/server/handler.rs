@@ -231,77 +231,75 @@ impl Handler for ValidatingHandler {
         let parameter_validator = &self.parameter_validator;
 
         Box::pin(async move {
-            let is_json_body = request_data.body.is_null()
-                && request_data.raw_body.is_some()
-                && request_data
-                    .headers
-                    .get("content-type")
-                    .is_some_and(|ct| crate::middleware::validation::is_json_like_str(ct));
+            let content_type = request_data.headers.get("content-type").map(String::as_str);
+            // gRPC requests carry binary protobuf payloads. JSON schema validation is
+            // inapplicable: the body is framed binary data, not JSON. Skip body parsing
+            // and schema validation entirely so the handler receives the raw bytes.
+            let is_grpc = content_type.is_some_and(crate::middleware::validation::is_grpc_str);
 
-            if is_json_body
-                && request_validator.is_none()
-                && !inner.prefers_raw_json_body()
+            // Body parsing runs whether or not a request validator is registered: a route
+            // without a validator still needs its multipart/urlencoded body materialized so
+            // the handler can inspect named parts. The previous validator-gated dispatch
+            // caused 500s on Ruby file-upload tests whose routes had no schema attached.
+            if !is_grpc
+                && request_data.body.is_null()
                 && let Some(raw_bytes) = request_data.raw_body.as_ref()
             {
-                request_data.body = Arc::new(serde_json::from_slice::<Value>(raw_bytes).map_err(|_| {
-                    let problem = ProblemDetails::bad_request("Invalid JSON in request body");
-                    let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
-                    (axum::http::StatusCode::BAD_REQUEST, body)
-                })?);
+                let header_is_multipart = content_type.is_some_and(crate::middleware::validation::is_multipart_str);
+                // Header-missing/malformed fallback: some HTTP clients (notably the
+                // Ruby Net::HTTP-based multipart wrapper) post a multipart payload
+                // without setting a proper Content-Type header (or set one that omits
+                // the boundary). Sniff the body for the leading `--<boundary>` marker;
+                // if found, synthesise the Content-Type with the recovered boundary so
+                // `parse_multipart_body` succeeds. Header-driven dispatch remains the
+                // fast path.
+                let sniffed_boundary = if !header_is_multipart {
+                    looks_like_multipart(raw_bytes)
+                        .then(|| extract_boundary_from_body(raw_bytes))
+                        .flatten()
+                } else {
+                    None
+                };
+                let synth_ct = sniffed_boundary.map(|b| format!("multipart/form-data; boundary={}", b));
+
+                let is_form_urlencoded =
+                    content_type.is_some_and(crate::middleware::validation::is_form_urlencoded_str);
+                let is_json_like = content_type.is_some_and(crate::middleware::validation::is_json_like_str);
+                let has_multipart = header_is_multipart || synth_ct.is_some();
+
+                // When no validator is attached and the handler prefers a raw body (or raw
+                // JSON), skip parsing entirely so the original bytes reach the handler.
+                let should_parse = request_validator.is_some()
+                    || has_multipart
+                    || is_form_urlencoded
+                    || (is_json_like && !inner.prefers_raw_json_body());
+
+                if should_parse {
+                    let parsed = if header_is_multipart {
+                        parse_multipart_body(raw_bytes, content_type.unwrap_or("")).await?
+                    } else if let Some(ref ct) = synth_ct {
+                        parse_multipart_body(raw_bytes, ct).await?
+                    } else if is_form_urlencoded {
+                        serde_qs::from_bytes::<Value>(raw_bytes)
+                            .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid form body: {}", e)))?
+                    } else {
+                        serde_json::from_slice::<Value>(raw_bytes).map_err(|_| {
+                            let problem = ProblemDetails::bad_request("Invalid JSON in request body");
+                            let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
+                            (axum::http::StatusCode::BAD_REQUEST, body)
+                        })?
+                    };
+                    request_data.body = Arc::new(parsed);
+                }
             }
 
-            if let Some(validator) = request_validator {
-                let content_type = request_data.headers.get("content-type").map(String::as_str);
-                // gRPC requests carry binary protobuf payloads. JSON schema validation is
-                // inapplicable: the body is framed binary data, not JSON. Skip body parsing
-                // and schema validation entirely so the handler receives the raw bytes.
-                let is_grpc = content_type.is_some_and(crate::middleware::validation::is_grpc_str);
-                if !is_grpc {
-                    if request_data.body.is_null()
-                        && let Some(raw_bytes) = request_data.raw_body.as_ref()
-                    {
-                        let header_is_multipart =
-                            content_type.is_some_and(crate::middleware::validation::is_multipart_str);
-                        // Header-missing/malformed fallback: some HTTP clients (notably the
-                        // Ruby Net::HTTP-based multipart wrapper) post a multipart payload
-                        // without setting a proper Content-Type header (or set one that omits
-                        // the boundary). Sniff the body for the leading `--<boundary>` marker;
-                        // if found, synthesise the Content-Type with the recovered boundary so
-                        // `parse_multipart_body` succeeds. Header-driven dispatch remains the
-                        // fast path.
-                        let sniffed_boundary = if !header_is_multipart {
-                            looks_like_multipart(raw_bytes)
-                                .then(|| extract_boundary_from_body(raw_bytes))
-                                .flatten()
-                        } else {
-                            None
-                        };
-                        let synth_ct = sniffed_boundary.map(|b| format!("multipart/form-data; boundary={}", b));
-
-                        let parsed = if header_is_multipart {
-                            parse_multipart_body(raw_bytes, content_type.unwrap_or("")).await?
-                        } else if let Some(ref ct) = synth_ct {
-                            parse_multipart_body(raw_bytes, ct).await?
-                        } else if content_type.is_some_and(crate::middleware::validation::is_form_urlencoded_str) {
-                            serde_qs::from_bytes::<Value>(raw_bytes).map_err(|e| {
-                                (axum::http::StatusCode::BAD_REQUEST, format!("Invalid form body: {}", e))
-                            })?
-                        } else {
-                            serde_json::from_slice::<Value>(raw_bytes).map_err(|_| {
-                                let problem = ProblemDetails::bad_request("Invalid JSON in request body");
-                                let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
-                                (axum::http::StatusCode::BAD_REQUEST, body)
-                            })?
-                        };
-                        request_data.body = Arc::new(parsed);
-                    }
-
-                    if let Err(errors) = validator.validate(&request_data.body) {
-                        let problem = ProblemDetails::from_validation_error(&errors);
-                        let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
-                        return Err((problem.status_code(), body));
-                    }
-                }
+            if let Some(validator) = request_validator
+                && !is_grpc
+                && let Err(errors) = validator.validate(&request_data.body)
+            {
+                let problem = ProblemDetails::from_validation_error(&errors);
+                let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
+                return Err((problem.status_code(), body));
             }
 
             if let Some(validator) = parameter_validator
@@ -1948,6 +1946,138 @@ mod tests {
         assert_eq!(parsed["doc"]["content"], "hi there");
         assert_eq!(parsed["doc"]["content_type"], "text/plain");
         assert_eq!(parsed["doc"]["size"], 8);
+    }
+
+    /// Routes without a schema validator must still parse multipart bodies so the
+    /// handler receives named parts instead of a null body. Reproduces the Ruby
+    /// optional/PDF file-upload tests that 500'd before this dispatch was lifted
+    /// out of the validator guard.
+    #[tokio::test]
+    async fn test_multipart_body_parsed_without_request_validator() {
+        let route = spikard_core::Route {
+            method: spikard_core::http::Method::Post,
+            path: "/upload".to_string(),
+            handler_name: "upload_handler".to_string(),
+            request_validator: None,
+            response_validator: None,
+            parameter_validator: None,
+            file_params: None,
+            is_async: true,
+            cors: None,
+            expects_json_body: false,
+            #[cfg(feature = "di")]
+            handler_dependencies: vec![],
+            jsonrpc_method: None,
+            compression: None,
+        };
+
+        let boundary = "TestBoundary1234";
+        let body = format!(
+            "--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"optional.txt\"\r\nContent-Type: text/plain\r\n\r\noptional file content here\r\n\
+             --{boundary}--\r\n"
+        );
+
+        let mut headers = HashMap::new();
+        headers.insert(
+            "content-type".to_string(),
+            format!("multipart/form-data; boundary={boundary}"),
+        );
+
+        let request_data = RequestData {
+            path_params: Arc::new(HashMap::new()),
+            query_params: Arc::new(serde_json::json!({})),
+            validated_params: None,
+            raw_query_params: Arc::new(HashMap::new()),
+            body: Arc::new(Value::Null),
+            raw_body: Some(bytes::Bytes::from(body.into_bytes())),
+            headers: Arc::new(headers),
+            cookies: Arc::new(HashMap::new()),
+            method: "POST".to_string(),
+            path: "/upload".to_string(),
+            #[cfg(feature = "di")]
+            dependencies: None,
+        };
+
+        let inner = Arc::new(SuccessEchoHandler);
+        let validator_handler = ValidatingHandler::new(inner, &route);
+
+        let request = axum::http::Request::builder()
+            .method("POST")
+            .uri("/upload")
+            .body(Body::empty())
+            .unwrap();
+
+        let response = validator_handler
+            .call(request, request_data)
+            .await
+            .expect("multipart without validator must reach handler");
+        let body_bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        let parsed: Value = serde_json::from_slice(&body_bytes).unwrap();
+        assert_eq!(parsed["file"]["filename"], "optional.txt");
+        assert_eq!(parsed["file"]["content"], "optional file content here");
+        assert_eq!(parsed["file"]["content_type"], "text/plain");
+    }
+
+    /// Ruby Net::HTTP sets Content-Type to application/json for multipart payloads
+    /// when no explicit boundary header is provided. Body-sniff fallback must recover
+    /// the boundary from the leading `--<boundary>` marker so the handler still sees
+    /// parsed parts. Reproduces the rc.11 ruby multipart_spec 500.
+    #[tokio::test]
+    async fn test_multipart_body_sniffed_without_validator_and_wrong_content_type() {
+        let route = spikard_core::Route {
+            method: spikard_core::http::Method::Post,
+            path: "/upload".to_string(),
+            handler_name: "upload_handler".to_string(),
+            request_validator: None,
+            response_validator: None,
+            parameter_validator: None,
+            file_params: None,
+            is_async: true,
+            cors: None,
+            expects_json_body: false,
+            #[cfg(feature = "di")]
+            handler_dependencies: vec![],
+            jsonrpc_method: None,
+            compression: None,
+        };
+
+        let body = "--alef-boundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"optional.txt\"\r\nContent-Type: text/plain\r\n\r\noptional file content here\r\n--alef-boundary--\r\n";
+
+        let mut headers = HashMap::new();
+        headers.insert("content-type".to_string(), "application/json".to_string());
+
+        let request_data = RequestData {
+            path_params: Arc::new(HashMap::new()),
+            query_params: Arc::new(serde_json::json!({})),
+            validated_params: None,
+            raw_query_params: Arc::new(HashMap::new()),
+            body: Arc::new(Value::Null),
+            raw_body: Some(bytes::Bytes::from(body.as_bytes().to_vec())),
+            headers: Arc::new(headers),
+            cookies: Arc::new(HashMap::new()),
+            method: "POST".to_string(),
+            path: "/upload".to_string(),
+            #[cfg(feature = "di")]
+            dependencies: None,
+        };
+
+        let inner = Arc::new(SuccessEchoHandler);
+        let validator_handler = ValidatingHandler::new(inner, &route);
+
+        let request = axum::http::Request::builder()
+            .method("POST")
+            .uri("/upload")
+            .body(Body::empty())
+            .unwrap();
+
+        let response = validator_handler
+            .call(request, request_data)
+            .await
+            .expect("sniffed multipart should reach handler");
+        let body_bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        let parsed: Value = serde_json::from_slice(&body_bytes).unwrap();
+        assert_eq!(parsed["file"]["filename"], "optional.txt");
+        assert_eq!(parsed["file"]["content"], "optional file content here");
     }
 
     /// Test for malformed multipart body - returns 400
