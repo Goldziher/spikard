@@ -7,7 +7,7 @@ set -euo pipefail
 
 # Version override: pass as $1 to test an arbitrary tag; defaults to the
 # alef-pinned version from `[crates.e2e.registry.packages.php].version`.
-VERSION="${1:-0.15.6-rc.12}"
+VERSION="${1:-0.15.6-rc.13}"
 
 # PIE >= 1.3.7 supports the array-form `php-ext.download-url-method`
 # our composer.json emits; 1.4.0+ is preferred. Download PIE if we don't
@@ -35,19 +35,14 @@ else
   PIE="pie"
 fi
 
-# Install the extension binary into the running PHP's extension dir, but skip
-# the install when the extension is already present — re-running this script
-# would otherwise trigger PIE re-install and a subsequent "Module ... is
-# already loaded" error from the verification step below when php.ini also
-# carries the extension= line from a previous run.
+# Install the extension binary into the running PHP's extension dir.
+# Always run PIE — an existence-only skip leaves a stale .so from a prior rc
+# (different ABI / missing symbols) in $EXT_DIR, which then fails the verification
+# step below. PIE itself is idempotent: re-installing overwrites the existing
+# binary cleanly. The php.ini-append guard below prevents duplicate `extension=`
+# lines so the verification step doesn't trip on "Module already loaded".
 EXT_DIR="$(php -r 'echo ini_get("extension_dir");')"
-if [[ -f "$EXT_DIR/spikard_php.so" ]] \
-  || [[ -f "$EXT_DIR/spikard_php.dylib" ]] \
-  || [[ -f "$EXT_DIR/spikard_php.dll" ]]; then
-  echo "spikard_php extension already installed in $EXT_DIR; skipping pie install."
-else
-  "$PIE" install "goldziher/spikard:$VERSION" --skip-enable-extension
-fi
+"$PIE" install "goldziher/spikard:$VERSION" --skip-enable-extension
 
 # Verify the .so/.dylib/.dll exists after install (or was already present).
 test -f "$EXT_DIR/spikard_php.so" || test -f "$EXT_DIR/spikard_php.dylib" || test -f "$EXT_DIR/spikard_php.dll"

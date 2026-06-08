@@ -340,6 +340,11 @@ typedef struct SPIKARDWebSocketMessage SPIKARDWebSocketMessage;
 /**
  * Opaque handle to a App service instance.
  * Allocated by spikard_app_new(), freed by spikard_app_free().
+ *
+ * `inner` is `Option<Box<…>>` so a `Finalize` entrypoint can `.take()` the
+ * owner out without invalidating the C pointer. Consumers must still call
+ * `spikard_app_free()` after a `Finalize` returns to release the opaque
+ * shell; the shell drops trivially when `inner` is `None`.
  */
 typedef struct SPIKARDAppOpaque {
   SPIKARDApp *inner;
@@ -2616,6 +2621,7 @@ struct SPIKARDAppOpaque *spikard_app_new(void);
  * - `ptr` must have been allocated by spikard_app_new().
  * - After this call, `ptr` is invalid and must not be dereferenced.
  * - Calling this twice on the same pointer causes undefined behavior.
+ * - Safe to call even after a `Finalize` entrypoint has emptied `inner`.
  */
 void spikard_app_free(struct SPIKARDAppOpaque *ptr);
 
@@ -2794,8 +2800,9 @@ int32_t spikard_app_trace(struct SPIKARDAppOpaque *owner,
  *
  * # Safety
  * - `owner` must be a valid pointer returned by `spikard_app_new()` and not yet freed.
- * - `owner` is consumed by this call and must not be used or freed afterwards.
- * - Returns a new owner pointer on success, null on failure.
+ * - The same `owner` pointer is returned on success — the caller does **not**
+ *   need to swap the handle they hold. Returns `null` on failure (the original
+ *   handle is still valid in that case but should be inspected for usability).
  */
 struct SPIKARDAppOpaque *spikard_app_config(struct SPIKARDAppOpaque *owner,
                                             SPIKARDServerConfig *config);
@@ -2805,7 +2812,10 @@ struct SPIKARDAppOpaque *spikard_app_config(struct SPIKARDAppOpaque *owner,
  *
  * # Safety
  * - `owner` must be a valid pointer returned by `spikard_app_new()` and not yet freed.
- * - `owner` is consumed by this call; it must not be used or freed afterwards.
+ * - The inner owner value is moved out by this call and the opaque shell is left
+ *   with `inner = None`. The caller may still invoke `()`
+ *   afterwards to release the shell; subsequent registration/configurator calls
+ *   on the same pointer will fail with the null-return error code.
  */
 int32_t spikard_app_ep_run(struct SPIKARDAppOpaque *owner);
 
@@ -2814,7 +2824,10 @@ int32_t spikard_app_ep_run(struct SPIKARDAppOpaque *owner);
  *
  * # Safety
  * - `owner` must be a valid pointer returned by `spikard_app_new()` and not yet freed.
- * - `owner` is consumed by this call; it must not be used or freed afterwards.
+ * - The inner owner value is moved out by this call and the opaque shell is left
+ *   with `inner = None`. The caller may still invoke `()`
+ *   afterwards to release the shell; subsequent registration/configurator calls
+ *   on the same pointer will fail with the null-return error code.
  */
 int32_t spikard_app_ep_into_router(struct SPIKARDAppOpaque *owner);
 

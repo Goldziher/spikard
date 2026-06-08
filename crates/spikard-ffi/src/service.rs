@@ -76,9 +76,14 @@ impl spikard::Handler for FfiHandlerBridge {
 }
 /// Opaque handle to a App service instance.
 /// Allocated by spikard_app_new(), freed by spikard_app_free().
+///
+/// `inner` is `Option<Box<…>>` so a `Finalize` entrypoint can `.take()` the
+/// owner out without invalidating the C pointer. Consumers must still call
+/// `spikard_app_free()` after a `Finalize` returns to release the opaque
+/// shell; the shell drops trivially when `inner` is `None`.
 #[repr(C)]
 pub struct AppOpaque {
-    inner: Box<spikard::App>,
+    inner: Option<Box<spikard::App>>,
 }
 
 /// Allocate a new App instance.
@@ -89,7 +94,9 @@ pub struct AppOpaque {
 #[no_mangle]
 pub extern "C" fn spikard_app_new() -> *mut AppOpaque {
     let owner = spikard::App::new();
-    Box::into_raw(Box::new(AppOpaque { inner: Box::new(owner) }))
+    Box::into_raw(Box::new(AppOpaque {
+        inner: Some(Box::new(owner)),
+    }))
 }
 
 /// Free a App instance allocated by spikard_app_new().
@@ -98,6 +105,7 @@ pub extern "C" fn spikard_app_new() -> *mut AppOpaque {
 /// - `ptr` must have been allocated by spikard_app_new().
 /// - After this call, `ptr` is invalid and must not be dereferenced.
 /// - Calling this twice on the same pointer causes undefined behavior.
+/// - Safe to call even after a `Finalize` entrypoint has emptied `inner`.
 #[no_mangle]
 pub extern "C" fn spikard_app_free(ptr: *mut AppOpaque) {
     if !ptr.is_null() {
@@ -139,8 +147,10 @@ pub extern "C" fn spikard_app_register_route(
 
     // SAFETY: owner was allocated by _new() and is valid until freed.
     match unsafe {
-        let owner_ref = &mut (*owner).inner;
-        owner_ref.route(builder, handler)
+        match (*owner).inner.as_mut() {
+            Some(owner_ref) => owner_ref.route(builder, handler),
+            None => return 1, // Error: service already consumed
+        }
     } {
         Ok(_) => 0,  // Success
         Err(_) => 1, // Error
@@ -183,8 +193,10 @@ pub extern "C" fn spikard_app_get(
 
     // SAFETY: owner was allocated by _new() and is valid until freed.
     match unsafe {
-        let owner_ref = &mut (*owner).inner;
-        owner_ref.route(builder, handler)
+        match (*owner).inner.as_mut() {
+            Some(owner_ref) => owner_ref.route(builder, handler),
+            None => return 1, // Error: service already consumed
+        }
     } {
         Ok(_) => 0,  // Success
         Err(_) => 1, // Error
@@ -227,8 +239,10 @@ pub extern "C" fn spikard_app_post(
 
     // SAFETY: owner was allocated by _new() and is valid until freed.
     match unsafe {
-        let owner_ref = &mut (*owner).inner;
-        owner_ref.route(builder, handler)
+        match (*owner).inner.as_mut() {
+            Some(owner_ref) => owner_ref.route(builder, handler),
+            None => return 1, // Error: service already consumed
+        }
     } {
         Ok(_) => 0,  // Success
         Err(_) => 1, // Error
@@ -271,8 +285,10 @@ pub extern "C" fn spikard_app_put(
 
     // SAFETY: owner was allocated by _new() and is valid until freed.
     match unsafe {
-        let owner_ref = &mut (*owner).inner;
-        owner_ref.route(builder, handler)
+        match (*owner).inner.as_mut() {
+            Some(owner_ref) => owner_ref.route(builder, handler),
+            None => return 1, // Error: service already consumed
+        }
     } {
         Ok(_) => 0,  // Success
         Err(_) => 1, // Error
@@ -315,8 +331,10 @@ pub extern "C" fn spikard_app_patch(
 
     // SAFETY: owner was allocated by _new() and is valid until freed.
     match unsafe {
-        let owner_ref = &mut (*owner).inner;
-        owner_ref.route(builder, handler)
+        match (*owner).inner.as_mut() {
+            Some(owner_ref) => owner_ref.route(builder, handler),
+            None => return 1, // Error: service already consumed
+        }
     } {
         Ok(_) => 0,  // Success
         Err(_) => 1, // Error
@@ -359,8 +377,10 @@ pub extern "C" fn spikard_app_delete(
 
     // SAFETY: owner was allocated by _new() and is valid until freed.
     match unsafe {
-        let owner_ref = &mut (*owner).inner;
-        owner_ref.route(builder, handler)
+        match (*owner).inner.as_mut() {
+            Some(owner_ref) => owner_ref.route(builder, handler),
+            None => return 1, // Error: service already consumed
+        }
     } {
         Ok(_) => 0,  // Success
         Err(_) => 1, // Error
@@ -403,8 +423,10 @@ pub extern "C" fn spikard_app_head(
 
     // SAFETY: owner was allocated by _new() and is valid until freed.
     match unsafe {
-        let owner_ref = &mut (*owner).inner;
-        owner_ref.route(builder, handler)
+        match (*owner).inner.as_mut() {
+            Some(owner_ref) => owner_ref.route(builder, handler),
+            None => return 1, // Error: service already consumed
+        }
     } {
         Ok(_) => 0,  // Success
         Err(_) => 1, // Error
@@ -447,8 +469,10 @@ pub extern "C" fn spikard_app_options(
 
     // SAFETY: owner was allocated by _new() and is valid until freed.
     match unsafe {
-        let owner_ref = &mut (*owner).inner;
-        owner_ref.route(builder, handler)
+        match (*owner).inner.as_mut() {
+            Some(owner_ref) => owner_ref.route(builder, handler),
+            None => return 1, // Error: service already consumed
+        }
     } {
         Ok(_) => 0,  // Success
         Err(_) => 1, // Error
@@ -491,8 +515,10 @@ pub extern "C" fn spikard_app_connect(
 
     // SAFETY: owner was allocated by _new() and is valid until freed.
     match unsafe {
-        let owner_ref = &mut (*owner).inner;
-        owner_ref.route(builder, handler)
+        match (*owner).inner.as_mut() {
+            Some(owner_ref) => owner_ref.route(builder, handler),
+            None => return 1, // Error: service already consumed
+        }
     } {
         Ok(_) => 0,  // Success
         Err(_) => 1, // Error
@@ -535,8 +561,10 @@ pub extern "C" fn spikard_app_trace(
 
     // SAFETY: owner was allocated by _new() and is valid until freed.
     match unsafe {
-        let owner_ref = &mut (*owner).inner;
-        owner_ref.route(builder, handler)
+        match (*owner).inner.as_mut() {
+            Some(owner_ref) => owner_ref.route(builder, handler),
+            None => return 1, // Error: service already consumed
+        }
     } {
         Ok(_) => 0,  // Success
         Err(_) => 1, // Error
@@ -546,8 +574,9 @@ pub extern "C" fn spikard_app_trace(
 ///
 /// # Safety
 /// - `owner` must be a valid pointer returned by `spikard_app_new()` and not yet freed.
-/// - `owner` is consumed by this call and must not be used or freed afterwards.
-/// - Returns a new owner pointer on success, null on failure.
+/// - The same `owner` pointer is returned on success — the caller does **not**
+///   need to swap the handle they hold. Returns `null` on failure (the original
+///   handle is still valid in that case but should be inspected for usability).
 #[no_mangle]
 pub extern "C" fn spikard_app_config(owner: *mut AppOpaque, config: *mut spikard::ServerConfig) -> *mut AppOpaque {
     if owner.is_null() {
@@ -560,26 +589,39 @@ pub extern "C" fn spikard_app_config(owner: *mut AppOpaque, config: *mut spikard
     // SAFETY: pointer was produced by the matching opaque `_new`/builder export and is consumed here.
     let config = unsafe { *Box::from_raw(config) };
 
-    // SAFETY: owner was allocated by _new() (Box::into_raw) and is consumed here.
-    let mut owner = unsafe { Box::from_raw(owner) };
-    let inner = *owner.inner;
-    owner.inner = Box::new(inner.config(config));
-    Box::into_raw(owner)
+    // SAFETY: owner was allocated by _new() and is valid until freed.
+    // Take the inner box out, transform it, and put the result back. The opaque
+    // shell stays at the same address so the caller's handle remains valid.
+    unsafe {
+        let inner = match (*owner).inner.take() {
+            Some(boxed) => *boxed,
+            None => return std::ptr::null_mut(),
+        };
+        (*owner).inner = Some(Box::new(inner.config(config)));
+    }
+    owner
 }
 /// Run the service entrypoint 'run'.
 ///
 /// # Safety
 /// - `owner` must be a valid pointer returned by `spikard_app_new()` and not yet freed.
-/// - `owner` is consumed by this call; it must not be used or freed afterwards.
+/// - The inner owner value is moved out by this call and the opaque shell is left
+///   with `inner = None`. The caller may still invoke `()`
+///   afterwards to release the shell; subsequent registration/configurator calls
+///   on the same pointer will fail with the null-return error code.
 #[no_mangle]
 pub extern "C" fn spikard_app_ep_run(owner: *mut AppOpaque) -> i32 {
     if owner.is_null() {
         return 1;
     }
 
-    // SAFETY: owner was allocated by _new() (Box::into_raw) and is consumed here.
-    let owner = unsafe { Box::from_raw(owner) };
-    let inner = *owner.inner;
+    // SAFETY: owner was allocated by _new() and is valid until freed.
+    // Move the inner owner out; leave `None` behind so the consumer's deferred
+    // `_free` call drops the empty shell instead of touching a moved-from box.
+    let inner = match unsafe { (*owner).inner.take() } {
+        Some(boxed) => *boxed,
+        None => return 1,
+    };
     let rt = tokio::runtime::Runtime::new().expect("failed to create tokio runtime");
     match rt.block_on(inner.run()) {
         Ok(_) => 0,
@@ -590,16 +632,23 @@ pub extern "C" fn spikard_app_ep_run(owner: *mut AppOpaque) -> i32 {
 ///
 /// # Safety
 /// - `owner` must be a valid pointer returned by `spikard_app_new()` and not yet freed.
-/// - `owner` is consumed by this call; it must not be used or freed afterwards.
+/// - The inner owner value is moved out by this call and the opaque shell is left
+///   with `inner = None`. The caller may still invoke `()`
+///   afterwards to release the shell; subsequent registration/configurator calls
+///   on the same pointer will fail with the null-return error code.
 #[no_mangle]
 pub extern "C" fn spikard_app_ep_into_router(owner: *mut AppOpaque) -> i32 {
     if owner.is_null() {
         return 1;
     }
 
-    // SAFETY: owner was allocated by _new() (Box::into_raw) and is consumed here.
-    let owner = unsafe { Box::from_raw(owner) };
-    let inner = *owner.inner;
+    // SAFETY: owner was allocated by _new() and is valid until freed.
+    // Move the inner owner out; leave `None` behind so the consumer's deferred
+    // `_free` call drops the empty shell instead of touching a moved-from box.
+    let inner = match unsafe { (*owner).inner.take() } {
+        Some(boxed) => *boxed,
+        None => return 1,
+    };
     match inner.into_router() {
         Ok(_) => 0,
         Err(_) => 1,
