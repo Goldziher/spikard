@@ -35,11 +35,21 @@ else
   PIE="pie"
 fi
 
-# Install the extension binary into the running PHP's extension dir.
-"$PIE" install "goldziher/spikard:$VERSION" --skip-enable-extension
-
-# Verify the .so loads.
+# Install the extension binary into the running PHP's extension dir, but skip
+# the install when the extension is already present — re-running this script
+# would otherwise trigger PIE re-install and a subsequent "Module ... is
+# already loaded" error from the verification step below when php.ini also
+# carries the extension= line from a previous run.
 EXT_DIR="$(php -r 'echo ini_get("extension_dir");')"
+if [[ -f "$EXT_DIR/spikard_php.so" ]] \
+  || [[ -f "$EXT_DIR/spikard_php.dylib" ]] \
+  || [[ -f "$EXT_DIR/spikard_php.dll" ]]; then
+  echo "spikard_php extension already installed in $EXT_DIR; skipping pie install."
+else
+  "$PIE" install "goldziher/spikard:$VERSION" --skip-enable-extension
+fi
+
+# Verify the .so/.dylib/.dll exists after install (or was already present).
 test -f "$EXT_DIR/spikard_php.so" || test -f "$EXT_DIR/spikard_php.dylib" || test -f "$EXT_DIR/spikard_php.dll"
 
 # Enable the extension in php.ini (PIE with --skip-enable-extension doesn't do this automatically).
@@ -65,8 +75,13 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   export PIE_INSTALLED_EXTENSION_PATH="$EXT_DIR/spikard_php.dylib"
 fi
 
-# Verify the extension loads via explicit `-d` flag (same mechanism run_tests.php uses).
-if ! php -d extension=spikard_php -m | grep -qi "spikard_php"; then
+# Verify the extension loads. If php.ini already enables it (from this run or a
+# prior one), `php -m` alone reports it loaded and adding `-d extension=` would
+# raise "Module ... is already loaded". Only fall back to the explicit `-d`
+# flag when the extension is not auto-loaded by php.ini.
+if php -m 2>/dev/null | grep -qi "spikard_php"; then
+  echo "spikard_php extension loaded via php.ini"
+elif ! php -d extension=spikard_php -m | grep -qi "spikard_php"; then
   echo "::error::spikard_php extension failed to load after PIE install" >&2
   exit 1
 fi
