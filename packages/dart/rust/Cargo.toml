@@ -13,14 +13,14 @@ ignored = ["axum", "spikard", "spikard-core", "spikard-graphql", "spikard-http"]
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-spikard = { path = "../../../crates/spikard", features = ["di"] }
+axum = { default-features = false, version = "0.8" }
 flutter_rust_bridge = "=2.12.0"
 serde_json = "1"
-tokio = { version = "1", features = ["rt-multi-thread", "sync"] }
-axum = { default-features = false, version = "0.8" }
+spikard = { path = "../../../crates/spikard", features = ["di"] }
 spikard-core = { path = "../../../crates/spikard-core" }
 spikard-graphql = { path = "../../../crates/spikard-graphql" }
 spikard-http = { path = "../../../crates/spikard-http" }
+tokio = { version = "1", features = ["rt-multi-thread", "sync"] }
 
 [lints.rust]
 # flutter_rust_bridge uses #[cfg(frb_expand)] internally during macro expansion.

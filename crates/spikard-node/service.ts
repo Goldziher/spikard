@@ -1,7 +1,8 @@
 // Auto-generated service API class
 
-import type { JsObject, Method, RequestData, Response, RouteBuilder, ServerConfig } from "../index";
-import { app_run } from "../index";
+import type { ServerConfig } from "./index";
+import { Method, RouteBuilder } from "./index";
+import { appIntoRouter } from "./index";
 /**
  * Spikard application builder.
  */
@@ -22,7 +23,7 @@ export class App {
   /**
    * Set the server configuration.
    */
-  config(config: ServerConfig): this {
+  config(_config: ServerConfig): this {
     return this;
   }
   /**
@@ -50,8 +51,11 @@ export class App {
    */
   get(path: string, handler: (...args: any[]) => any): this;
   get(path: string): (fn: (...args: any[]) => any) => (...args: any[]) => any;
-  get(path: string, handler?: (...args: any[]) => any): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
-    const builder = new RouteBuilder(Method.Get, path);
+  get(
+    path: string,
+    handler?: (...args: any[]) => any,
+  ): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
+    const builder = RouteBuilder.new(Method.Get, path);
     if (handler !== undefined) {
       this._registrations.push(["route", [builder], handler]);
       return this;
@@ -66,8 +70,11 @@ export class App {
    */
   post(path: string, handler: (...args: any[]) => any): this;
   post(path: string): (fn: (...args: any[]) => any) => (...args: any[]) => any;
-  post(path: string, handler?: (...args: any[]) => any): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
-    const builder = new RouteBuilder(Method.Post, path);
+  post(
+    path: string,
+    handler?: (...args: any[]) => any,
+  ): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
+    const builder = RouteBuilder.new(Method.Post, path);
     if (handler !== undefined) {
       this._registrations.push(["route", [builder], handler]);
       return this;
@@ -82,8 +89,11 @@ export class App {
    */
   put(path: string, handler: (...args: any[]) => any): this;
   put(path: string): (fn: (...args: any[]) => any) => (...args: any[]) => any;
-  put(path: string, handler?: (...args: any[]) => any): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
-    const builder = new RouteBuilder(Method.Put, path);
+  put(
+    path: string,
+    handler?: (...args: any[]) => any,
+  ): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
+    const builder = RouteBuilder.new(Method.Put, path);
     if (handler !== undefined) {
       this._registrations.push(["route", [builder], handler]);
       return this;
@@ -98,8 +108,11 @@ export class App {
    */
   patch(path: string, handler: (...args: any[]) => any): this;
   patch(path: string): (fn: (...args: any[]) => any) => (...args: any[]) => any;
-  patch(path: string, handler?: (...args: any[]) => any): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
-    const builder = new RouteBuilder(Method.Patch, path);
+  patch(
+    path: string,
+    handler?: (...args: any[]) => any,
+  ): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
+    const builder = RouteBuilder.new(Method.Patch, path);
     if (handler !== undefined) {
       this._registrations.push(["route", [builder], handler]);
       return this;
@@ -114,8 +127,11 @@ export class App {
    */
   delete(path: string, handler: (...args: any[]) => any): this;
   delete(path: string): (fn: (...args: any[]) => any) => (...args: any[]) => any;
-  delete(path: string, handler?: (...args: any[]) => any): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
-    const builder = new RouteBuilder(Method.Delete, path);
+  delete(
+    path: string,
+    handler?: (...args: any[]) => any,
+  ): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
+    const builder = RouteBuilder.new(Method.Delete, path);
     if (handler !== undefined) {
       this._registrations.push(["route", [builder], handler]);
       return this;
@@ -130,8 +146,11 @@ export class App {
    */
   head(path: string, handler: (...args: any[]) => any): this;
   head(path: string): (fn: (...args: any[]) => any) => (...args: any[]) => any;
-  head(path: string, handler?: (...args: any[]) => any): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
-    const builder = new RouteBuilder(Method.Head, path);
+  head(
+    path: string,
+    handler?: (...args: any[]) => any,
+  ): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
+    const builder = RouteBuilder.new(Method.Head, path);
     if (handler !== undefined) {
       this._registrations.push(["route", [builder], handler]);
       return this;
@@ -146,8 +165,11 @@ export class App {
    */
   options(path: string, handler: (...args: any[]) => any): this;
   options(path: string): (fn: (...args: any[]) => any) => (...args: any[]) => any;
-  options(path: string, handler?: (...args: any[]) => any): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
-    const builder = new RouteBuilder(Method.Options, path);
+  options(
+    path: string,
+    handler?: (...args: any[]) => any,
+  ): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
+    const builder = RouteBuilder.new(Method.Options, path);
     if (handler !== undefined) {
       this._registrations.push(["route", [builder], handler]);
       return this;
@@ -162,8 +184,11 @@ export class App {
    */
   connect(path: string, handler: (...args: any[]) => any): this;
   connect(path: string): (fn: (...args: any[]) => any) => (...args: any[]) => any;
-  connect(path: string, handler?: (...args: any[]) => any): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
-    const builder = new RouteBuilder(Method.Connect, path);
+  connect(
+    path: string,
+    handler?: (...args: any[]) => any,
+  ): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
+    const builder = RouteBuilder.new(Method.Connect, path);
     if (handler !== undefined) {
       this._registrations.push(["route", [builder], handler]);
       return this;
@@ -178,8 +203,11 @@ export class App {
    */
   trace(path: string, handler: (...args: any[]) => any): this;
   trace(path: string): (fn: (...args: any[]) => any) => (...args: any[]) => any;
-  trace(path: string, handler?: (...args: any[]) => any): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
-    const builder = new RouteBuilder(Method.Trace, path);
+  trace(
+    path: string,
+    handler?: (...args: any[]) => any,
+  ): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
+    const builder = RouteBuilder.new(Method.Trace, path);
     if (handler !== undefined) {
       this._registrations.push(["route", [builder], handler]);
       return this;
@@ -196,7 +224,7 @@ export class App {
    *
    * Returns an error if server or router construction fails.
    */
-  into_router(): string {
-    return app_into_router(this._registrations);
+  into_router(): Promise<void> {
+    return appIntoRouter(this._registrations);
   }
 }

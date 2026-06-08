@@ -42,6 +42,22 @@ fi
 EXT_DIR="$(php -r 'echo ini_get("extension_dir");')"
 test -f "$EXT_DIR/spikard_php.so" || test -f "$EXT_DIR/spikard_php.dylib" || test -f "$EXT_DIR/spikard_php.dll"
 
+# Enable the extension in php.ini (PIE with --skip-enable-extension doesn't do this automatically).
+# Find the loaded php.ini, check if already enabled, and append if missing.
+PHP_INI="$(php --ini 2>&1 | grep -m1 'Loaded Configuration File:' | awk '{print $NF}')"
+if [[ -z "$PHP_INI" ]]; then
+  echo "::warning::Could not locate php.ini; extension may not be auto-loaded by default" >&2
+else
+  if [[ ! -f "$PHP_INI" ]]; then
+    echo "::warning::php.ini at $PHP_INI not found; extension may not be auto-loaded by default" >&2
+  else
+    # Guard against duplicate: check if extension line already exists (uncommented).
+    if ! grep -q "^extension=spikard_php" "$PHP_INI"; then
+      echo "extension=spikard_php" >> "$PHP_INI"
+    fi
+  fi
+fi
+
 # Export the installed extension path for downstream test runners (composer test).
 # The test app's run_tests.php checks for PIE_INSTALLED_EXTENSION_PATH and loads the extension via `-d`.
 export PIE_INSTALLED_EXTENSION_PATH="$EXT_DIR/spikard_php.so"
@@ -50,8 +66,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 fi
 
 # Verify the extension loads via explicit `-d` flag (same mechanism run_tests.php uses).
-# Note: The extension internally registers as "ts-pack-core-php" despite the filename.
-if ! php -d extension=spikard_php -m | grep -qi "ts-pack-core-php"; then
+if ! php -d extension=spikard_php -m | grep -qi "spikard_php"; then
   echo "::error::spikard_php extension failed to load after PIE install" >&2
   exit 1
 fi

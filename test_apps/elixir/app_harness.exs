@@ -31,7 +31,6 @@ app = Enum.reduce(fixtures, app, fn {fixture_id, fixture}, app_acc ->
     app_acc
   else
     handler = Map.get(http, "handler", %{})
-    route = Map.get(handler, "route", "/")
     method_str = Map.get(handler, "method", "GET") |> String.upcase()
     body_schema = Map.get(handler, "body_schema")
     expected = Map.get(http, "expected_response", %{})
