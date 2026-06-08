@@ -4,7 +4,6 @@ default_install_hook_types:
 exclude: ^docs/snippets/|vendor/|node_modules/|target/|invalid*|dist/|artifacts/|test_documents/|test_apps/|scripts/ci/|^e2e/|\.cache/|\.venv/
 
 repos:
-  # Commit message linting
   - repo: https://github.com/Goldziher/gitfluff
     rev: v0.8.0
     hooks:
@@ -12,53 +11,13 @@ repos:
         args: ["--write"]
         stages: [commit-msg]
 
-  # Shared kreuzberg-dev polyglot hooks
   - repo: https://github.com/kreuzberg-dev/pre-commit-hooks
     rev: v2.1.6
     hooks:
-      # AI governance
-      - id: ai-rulez-generate
+      # Alef verification
+      - id: alef-verify
 
-      # File safety
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-merge-conflict
-      - id: check-added-large-files
-        exclude: uv.lock
-      - id: detect-private-key
-      - id: check-case-conflict
-      - id: check-executables-have-shebangs
-      - id: check-shebang-scripts-are-executable
-      - id: mixed-line-ending
-      - id: typos
-        args: ["--force-exclude"]
-      - id: check-json
-      - id: check-yaml
-        args: ["--allow-multiple-documents", "--unsafe"]
-      - id: check-toml
-
-      # GitHub Actions
-      - id: actionlint
-      - id: gh-actions-updater
-
-      # Shell
-      - id: shfmt
-        args: ["-w", "-i", "2"]
-      - id: shellcheck
-        args: ["-x"]
-
-      # Markdown
-      - id: rumdl-fmt
-        exclude: ^templates/
-      - id: markdownlint-rumdl-strict
-      - id: textlint
-        files: ^docs/.*\.md$
-        exclude: ^docs/(reference/|snippets/)
-        args: ["--fix", "--config", ".textlintrc.json"]
-
-      # Rust — cargo-check dropped in v2.0.0; cargo-clippy with -D warnings supersedes it
-      - id: cargo-fmt
-        args: ["--all"]
+      # Cargo / Rust
       - id: cargo-clippy
         args:
           [
@@ -103,10 +62,36 @@ repos:
         # files are subject to the cap. Shrink this list when files are split.
         exclude: ^(crates/spikard-cli/src/codegen/graphql/generators/ruby\.rs|crates/spikard-cli/src/codegen/graphql/spec_parser\.rs|crates/spikard-cli/src/codegen/php\.rs|crates/spikard-cli/src/codegen/protobuf/generators/python\.rs|crates/spikard-cli/src/codegen/python\.rs|crates/spikard-cli/src/codegen/quality/validator\.rs|crates/spikard-cli/src/codegen/ruby\.rs|crates/spikard-cli/src/mcp/server\.rs|crates/spikard-core/src/lifecycle\.rs|crates/spikard-core/src/parameters\.rs|crates/spikard-core/src/request_data\.rs|crates/spikard-ffi/src/lib\.rs|crates/spikard-http/src/background\.rs|crates/spikard-http/src/cors\.rs|crates/spikard-http/src/di_handler\.rs|crates/spikard-http/src/handler_trait\.rs|crates/spikard-http/src/jsonrpc/protocol\.rs|crates/spikard-http/src/jsonrpc/router\.rs|crates/spikard-http/src/lifecycle\.rs|crates/spikard-http/src/openapi/schema_conversion\.rs|crates/spikard-http/src/server/grpc_routing\.rs|crates/spikard-http/src/server/handler\.rs|crates/spikard-http/src/server/mod\.rs|crates/spikard-http/src/sse\.rs|crates/spikard-http/src/websocket\.rs|crates/spikard-node/src/lib\.rs|crates/spikard-php/src/lib\.rs|crates/spikard-py/src/lib\.rs|crates/spikard-wasm/src/lib\.rs|packages/dart/rust/src/frb_generated\.rs|packages/dart/rust/src/lib\.rs|packages/elixir/lib/lib\.rs|packages/ruby/ext/spikard_rb/src/lib\.rs|packages/swift/rust/src/lib\.rs)$
 
-      # Python
-      - id: pyproject-fmt
+      # Linters and checks
+      - id: ai-rulez-generate
+
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        exclude: uv.lock
+      - id: detect-private-key
+      - id: check-case-conflict
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: typos
+        args: ["--force-exclude"]
+      - id: check-json
+      - id: check-yaml
+        args: ["--allow-multiple-documents", "--unsafe"]
+      - id: check-toml
+
+      - id: actionlint
+      - id: gh-actions-updater
+
+      - id: shellcheck
+        args: ["-x"]
+
+      - id: markdownlint-rumdl-strict
+      - id: textlint
+        files: ^docs/.*\.md$
+        exclude: ^docs/(reference/|snippets/)
+        args: ["--fix", "--config", ".textlintrc.json"]
+
       - id: ruff
-      - id: ruff-format
       - id: mypy
         files: ^(packages/python|tools|scripts)/.*\.py$
         exclude: "e2e/|tests/|scripts/publish/"
@@ -115,7 +100,6 @@ repos:
 
       # JS/TS — preserve any commented-out exclusions verbatim (e.g. tsdoc-lint)
       - id: oxlint
-      - id: oxfmt
       - id: tsc-typecheck
       # tsdoc-lint disabled: the generated TypeScript/WASM wrappers use oxlint
       # and oxfmt, and the shared hook expects an eslint toolchain that this
@@ -125,8 +109,6 @@ repos:
       #   exclude: \.d\.ts$
 
       # Go — preserve any commented-out exclusions verbatim (e.g. godoc-lint)
-      - id: go-fmt
-        exclude: ^(e2e/|test_apps/|tools/|packages/go/)
       - id: golangci-lint
         exclude: ^(e2e/|test_apps/|tools/|packages/go/)
       - id: govulncheck
@@ -139,8 +121,6 @@ repos:
       #   env:
       #     KREUZBERG_GO_MOD_DIRS: "packages/go"
 
-      # Java
-      - id: palantir-java-format
       - id: checkstyle
       - id: pmd
       - id: cpd
@@ -151,7 +131,6 @@ repos:
       - id: javadoc-lint
         files: ^packages/java/src/main/java/dev/spikard/.*\.java$
 
-      # Kotlin
       # ktfmt disabled: ktfmt 0.62 formats Gradle Kotlin scripts with
       # indentation that ktlint 1.8 rejects. Use ktlint as the single Kotlin
       # formatter/linter for this package.
@@ -165,8 +144,6 @@ repos:
       - id: kotlin-dokka
 
       # Ruby — preserve any commented-out exclusions verbatim (e.g. yard-coverage)
-      - id: rubocop
-        files: ^packages/ruby/.*\.rb$
       - id: rubocop-lint
         files: ^packages/ruby/.*\.(rb|rbs)$
       - id: steep
@@ -177,27 +154,17 @@ repos:
       #   files: ^packages/ruby/lib/.*\.rb$
       #   exclude: ^packages/ruby/lib/spikard/native\.rb$
 
-      # C#
-      - id: dotnet-format
-        files: ^packages/csharp/.*\.cs$
       - id: dotnet-format-check
         files: ^packages/csharp/.*\.cs$
       - id: cs-xmldoc-lint
         files: ^packages/csharp/src/Spikard/.*\.cs$
 
-      # PHP
-      - id: php-cs-fixer
-        files: ^packages/php/.*\.php$
-        exclude: ^packages/php/stubs/
       - id: phpstan
         files: ^packages/php/(src|tests)/.*\.php$
         args: ["analyse", "--no-progress", "--configuration", "packages/php/phpstan.neon"]
       - id: phpdoc-lint
         files: ^packages/php/src/.*\.php$
 
-      # Elixir
-      - id: mix-format
-        files: ^packages/elixir/
       - id: mix-credo
         files: ^packages/elixir/
       - id: ex-doc-coverage
@@ -207,33 +174,52 @@ repos:
           MIX_ENV: "dev"
           SPIKARD_BUILD: "1"
 
-      # Dart
-      - id: dart-format
-        files: ^packages/dart/.*\.dart$
+      - id: swiftlint
+        files: ^packages/swift/.*\.swift$
+      - id: swift-doc-coverage
+        files: ^packages/swift/Sources/Spikard/.*\.swift$
       - id: dart-analyze
         files: ^packages/dart/.*\.dart$
       - id: dart-doc-lint
         files: ^packages/dart/lib/.*\.dart$
         exclude: ^packages/dart/lib/src/spikard_bridge_generated/
 
-      # Zig
-      - id: zig-fmt
-        files: ^packages/zig/.*\.zig$
       - id: zig-build-check
         files: ^packages/zig/.*\.zig$
       - id: zig-doc-lint
         files: ^packages/zig/src/.*\.zig$
 
-      # Alef bindings (this repo consumes alef-generated bindings)
-      - id: alef-verify
-      - id: alef-sync-versions
       - id: alef-docs-fresh
       - id: alef-snippets-validate
 
-      # Swift — preserved from prior config
+      # Formatters
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: shfmt
+        args: ["-w", "-i", "2"]
+      - id: rumdl-fmt
+        exclude: ^templates/
+      - id: cargo-fmt
+        args: ["--all"]
+      - id: pyproject-fmt
+      - id: ruff-format
+      - id: oxfmt
+      - id: go-fmt
+        exclude: ^(e2e/|test_apps/|tools/|packages/go/)
+      - id: palantir-java-format
+      - id: rubocop
+        files: ^packages/ruby/.*\.rb$
+      - id: dotnet-format
+        files: ^packages/csharp/.*\.cs$
+      - id: php-cs-fixer
+        files: ^packages/php/.*\.php$
+        exclude: ^packages/php/stubs/
+      - id: mix-format
+        files: ^packages/elixir/
       - id: swift-format
         files: ^packages/swift/.*\.swift$
-      - id: swiftlint
-        files: ^packages/swift/.*\.swift$
-      - id: swift-doc-coverage
-        files: ^packages/swift/Sources/Spikard/.*\.swift$
+      - id: dart-format
+        files: ^packages/dart/.*\.dart$
+      - id: zig-fmt
+        files: ^packages/zig/.*\.zig$
