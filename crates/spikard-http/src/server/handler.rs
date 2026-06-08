@@ -43,6 +43,71 @@ fn extract_boundary(content_type: &str) -> Option<String> {
     None
 }
 
+/// Detect a multipart body by sniffing for the leading `--<boundary>` marker.
+///
+/// Returns `true` when the first non-empty line of the body begins with `--`
+/// followed by at least one boundary-token character. RFC 7578 multipart
+/// payloads always start this way, so the check has no false negatives for
+/// well-formed bodies; it has rare false positives (a body that legitimately
+/// begins with `--…`), but the downstream parser will return a structured
+/// 400 in that case rather than misrouting the request.
+///
+/// This is a fallback used when the `Content-Type` header is missing or does
+/// not contain the boundary — notably the Ruby Net::HTTP `multipart-post`
+/// client wraps its boundary in an unusual format that some test wrappers
+/// strip during fixture replay. Header-driven dispatch is preferred.
+fn looks_like_multipart(raw_bytes: &bytes::Bytes) -> bool {
+    let mut iter = raw_bytes.iter();
+    while let Some(&b) = iter.next() {
+        if b == b'\r' || b == b'\n' {
+            continue;
+        }
+        if b != b'-' {
+            return false;
+        }
+        return matches!(iter.next(), Some(b'-'))
+            && iter
+                .next()
+                .is_some_and(|&c| c != b'\r' && c != b'\n' && c != b' ' && c != b'\t');
+    }
+    false
+}
+
+/// Extract the boundary token from the leading `--<boundary>` line of a
+/// multipart body, suitable for synthesising a Content-Type when the header
+/// did not carry the boundary parameter.
+///
+/// Returns `None` when the body does not begin with a CRLF-terminated
+/// `--<boundary>` line. The returned token excludes the leading `--` and
+/// trailing CRLF.
+fn extract_boundary_from_body(raw_bytes: &bytes::Bytes) -> Option<String> {
+    let bytes = raw_bytes.as_ref();
+    // Skip any leading CRLFs.
+    let mut start = 0usize;
+    while start < bytes.len() && (bytes[start] == b'\r' || bytes[start] == b'\n') {
+        start += 1;
+    }
+    // Require leading `--`.
+    if bytes.get(start)? != &b'-' || bytes.get(start + 1)? != &b'-' {
+        return None;
+    }
+    let token_start = start + 2;
+    // Read up to the next CR / LF / space — token characters per RFC 2046.
+    let mut end = token_start;
+    while end < bytes.len() {
+        let c = bytes[end];
+        if c == b'\r' || c == b'\n' || c == b' ' || c == b'\t' {
+            break;
+        }
+        end += 1;
+    }
+    if end == token_start {
+        return None;
+    }
+    let token = std::str::from_utf8(&bytes[token_start..end]).ok()?.to_string();
+    if token.is_empty() { None } else { Some(token) }
+}
+
 /// Parse a `multipart/form-data` body into a `serde_json::Value::Object`.
 ///
 /// Field mapping:
@@ -195,8 +260,28 @@ impl Handler for ValidatingHandler {
                     if request_data.body.is_null()
                         && let Some(raw_bytes) = request_data.raw_body.as_ref()
                     {
-                        let parsed = if content_type.is_some_and(crate::middleware::validation::is_multipart_str) {
+                        let header_is_multipart =
+                            content_type.is_some_and(crate::middleware::validation::is_multipart_str);
+                        // Header-missing/malformed fallback: some HTTP clients (notably the
+                        // Ruby Net::HTTP-based multipart wrapper) post a multipart payload
+                        // without setting a proper Content-Type header (or set one that omits
+                        // the boundary). Sniff the body for the leading `--<boundary>` marker;
+                        // if found, synthesise the Content-Type with the recovered boundary so
+                        // `parse_multipart_body` succeeds. Header-driven dispatch remains the
+                        // fast path.
+                        let sniffed_boundary = if !header_is_multipart {
+                            looks_like_multipart(raw_bytes)
+                                .then(|| extract_boundary_from_body(raw_bytes))
+                                .flatten()
+                        } else {
+                            None
+                        };
+                        let synth_ct = sniffed_boundary.map(|b| format!("multipart/form-data; boundary={}", b));
+
+                        let parsed = if header_is_multipart {
                             parse_multipart_body(raw_bytes, content_type.unwrap_or("")).await?
+                        } else if let Some(ref ct) = synth_ct {
+                            parse_multipart_body(raw_bytes, ct).await?
                         } else if content_type.is_some_and(crate::middleware::validation::is_form_urlencoded_str) {
                             serde_qs::from_bytes::<Value>(raw_bytes).map_err(|e| {
                                 (axum::http::StatusCode::BAD_REQUEST, format!("Invalid form body: {}", e))
