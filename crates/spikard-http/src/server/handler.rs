@@ -239,21 +239,27 @@ impl Handler for ValidatingHandler {
 
             // Body parsing runs whether or not a request validator is registered: a route
             // without a validator still needs its multipart/urlencoded body materialized so
-            // the handler can inspect named parts. The previous validator-gated dispatch
-            // caused 500s on Ruby file-upload tests whose routes had no schema attached.
+            // the handler can inspect named parts (e.g. Ruby file-upload tests whose routes
+            // have no schema). The dispatch only triggers when we are confident in the
+            // payload shape — a `multipart/form-data` header with no boundary parameter and
+            // no sniffable boundary in the body leaves `body` null so the handler can
+            // inspect the raw bytes directly (preserves Python/Rust upload-test behaviour
+            // where the SUT consumes raw bytes from a no-validator route).
             if !is_grpc
                 && request_data.body.is_null()
                 && let Some(raw_bytes) = request_data.raw_body.as_ref()
             {
                 let header_is_multipart = content_type.is_some_and(crate::middleware::validation::is_multipart_str);
+                let header_boundary_present =
+                    header_is_multipart && extract_boundary(content_type.unwrap_or("")).is_some();
                 // Header-missing/malformed fallback: some HTTP clients (notably the
                 // Ruby Net::HTTP-based multipart wrapper) post a multipart payload
                 // without setting a proper Content-Type header (or set one that omits
                 // the boundary). Sniff the body for the leading `--<boundary>` marker;
                 // if found, synthesise the Content-Type with the recovered boundary so
-                // `parse_multipart_body` succeeds. Header-driven dispatch remains the
-                // fast path.
-                let sniffed_boundary = if !header_is_multipart {
+                // `parse_multipart_body` succeeds. Header-driven dispatch with a real
+                // boundary parameter remains the fast path.
+                let sniffed_boundary = if !header_boundary_present {
                     looks_like_multipart(raw_bytes)
                         .then(|| extract_boundary_from_body(raw_bytes))
                         .flatten()
@@ -265,30 +271,43 @@ impl Handler for ValidatingHandler {
                 let is_form_urlencoded =
                     content_type.is_some_and(crate::middleware::validation::is_form_urlencoded_str);
                 let is_json_like = content_type.is_some_and(crate::middleware::validation::is_json_like_str);
-                let has_multipart = header_is_multipart || synth_ct.is_some();
+                let has_multipart_boundary = header_boundary_present || synth_ct.is_some();
 
-                // When no validator is attached and the handler prefers a raw body (or raw
-                // JSON), skip parsing entirely so the original bytes reach the handler.
-                let should_parse = request_validator.is_some()
-                    || has_multipart
-                    || is_form_urlencoded
-                    || (is_json_like && !inner.prefers_raw_json_body());
-
-                if should_parse {
-                    let parsed = if header_is_multipart {
-                        parse_multipart_body(raw_bytes, content_type.unwrap_or("")).await?
-                    } else if let Some(ref ct) = synth_ct {
-                        parse_multipart_body(raw_bytes, ct).await?
-                    } else if is_form_urlencoded {
-                        serde_qs::from_bytes::<Value>(raw_bytes)
-                            .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid form body: {}", e)))?
+                // Parse only when we know which parser applies. Falls back to leaving
+                // `body` null (handler reads raw_body) otherwise — this is what preserves
+                // the no-validator + multipart-without-boundary path for SUT harnesses
+                // that intentionally exercise raw-bytes handling.
+                let parsed = if has_multipart_boundary {
+                    let ct = if header_boundary_present {
+                        content_type.unwrap_or("").to_owned()
                     } else {
-                        serde_json::from_slice::<Value>(raw_bytes).map_err(|_| {
-                            let problem = ProblemDetails::bad_request("Invalid JSON in request body");
-                            let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
-                            (axum::http::StatusCode::BAD_REQUEST, body)
-                        })?
+                        synth_ct.unwrap()
                     };
+                    Some(parse_multipart_body(raw_bytes, &ct).await?)
+                } else if is_form_urlencoded {
+                    Some(
+                        serde_qs::from_bytes::<Value>(raw_bytes)
+                            .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid form body: {}", e)))?,
+                    )
+                } else if is_json_like && (request_validator.is_some() || !inner.prefers_raw_json_body()) {
+                    Some(serde_json::from_slice::<Value>(raw_bytes).map_err(|_| {
+                        let problem = ProblemDetails::bad_request("Invalid JSON in request body");
+                        let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
+                        (axum::http::StatusCode::BAD_REQUEST, body)
+                    })?)
+                } else if request_validator.is_some() {
+                    // Validator present but unknown content type — fall back to JSON parse
+                    // so schema validation still runs over a structured body.
+                    Some(serde_json::from_slice::<Value>(raw_bytes).map_err(|_| {
+                        let problem = ProblemDetails::bad_request("Invalid JSON in request body");
+                        let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
+                        (axum::http::StatusCode::BAD_REQUEST, body)
+                    })?)
+                } else {
+                    None
+                };
+
+                if let Some(parsed) = parsed {
                     request_data.body = Arc::new(parsed);
                 }
             }
@@ -2078,6 +2097,73 @@ mod tests {
         let parsed: Value = serde_json::from_slice(&body_bytes).unwrap();
         assert_eq!(parsed["file"]["filename"], "optional.txt");
         assert_eq!(parsed["file"]["content"], "optional file content here");
+    }
+
+    /// Routes without a validator and a `multipart/form-data` header lacking a
+    /// boundary parameter must NOT attempt to parse the body — the SUT in
+    /// Python/Rust upload e2e tests sends exactly that shape and expects to read
+    /// raw bytes itself. Regression for rc.12 CI E2E where the no-validator
+    /// path attempted parse_multipart_body with no boundary and 400'd.
+    #[tokio::test]
+    async fn test_multipart_header_without_boundary_no_validator_leaves_body_null() {
+        let route = spikard_core::Route {
+            method: spikard_core::http::Method::Post,
+            path: "/upload".to_string(),
+            handler_name: "upload_handler".to_string(),
+            request_validator: None,
+            response_validator: None,
+            parameter_validator: None,
+            file_params: None,
+            is_async: true,
+            cors: None,
+            expects_json_body: false,
+            #[cfg(feature = "di")]
+            handler_dependencies: vec![],
+            jsonrpc_method: None,
+            compression: None,
+        };
+
+        let mut headers = HashMap::new();
+        headers.insert("content-type".to_string(), "multipart/form-data".to_string());
+
+        let request_data = RequestData {
+            path_params: Arc::new(HashMap::new()),
+            query_params: Arc::new(serde_json::json!({})),
+            validated_params: None,
+            raw_query_params: Arc::new(HashMap::new()),
+            body: Arc::new(Value::Null),
+            raw_body: Some(bytes::Bytes::from(
+                br#"{"file":{"content":"raw","filename":"f.txt"}}"#.to_vec(),
+            )),
+            headers: Arc::new(headers),
+            cookies: Arc::new(HashMap::new()),
+            method: "POST".to_string(),
+            path: "/upload".to_string(),
+            #[cfg(feature = "di")]
+            dependencies: None,
+        };
+
+        let inner = Arc::new(SuccessEchoHandler);
+        let validator_handler = ValidatingHandler::new(inner, &route);
+
+        let request = axum::http::Request::builder()
+            .method("POST")
+            .uri("/upload")
+            .body(Body::empty())
+            .unwrap();
+
+        let response = validator_handler
+            .call(request, request_data)
+            .await
+            .expect("handler must run even when body cannot be parsed without a boundary");
+        assert_eq!(response.status(), StatusCode::OK);
+        let body_bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        let parsed: Value = serde_json::from_slice(&body_bytes).unwrap();
+        // Body was left null; echo handler returns null body
+        assert!(
+            parsed.is_null(),
+            "no-validator no-boundary multipart must reach handler with null body, got: {parsed:?}"
+        );
     }
 
     /// Test for malformed multipart body - returns 400
