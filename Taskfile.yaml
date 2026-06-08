@@ -749,6 +749,62 @@ tasks:
       - mix deps.get
       - mix test
 
+  test-apps:go:
+    desc: "Run Go published package test app"
+    dir: test_apps/go
+    cmds:
+      - go test ./...
+
+  test-apps:java:
+    desc: "Run Java published package test app"
+    dir: test_apps/java
+    cmds:
+      - ./mvnw test
+
+  test-apps:csharp:
+    desc: "Run C# published package test app"
+    dir: test_apps/csharp
+    cmds:
+      - dotnet test
+
+  test-apps:dart:
+    desc: "Run Dart published package test app"
+    dir: test_apps/dart
+    cmds:
+      - dart pub get
+      - dart test
+
+  test-apps:swift:
+    desc: "Run Swift published package test app"
+    dir: test_apps/swift_e2e
+    cmds:
+      - swift test
+
+  test-apps:zig:
+    desc: "Run Zig published package test app"
+    dir: test_apps/zig
+    cmds:
+      - zig build test
+
+  test-apps:wasm:
+    desc: "Run WASM published package test app"
+    dir: test_apps/wasm
+    cmds:
+      - pnpm install --ignore-workspace
+      - pnpm test
+
+  test-apps:kotlin:
+    desc: "Run Kotlin published package test app"
+    dir: test_apps/kotlin
+    cmds:
+      - ./gradlew test
+
+  test-apps:kotlin_android:
+    desc: "Run Kotlin Android published package test app"
+    dir: test_apps/kotlin_android
+    cmds:
+      - ./gradlew test
+
   test-apps:all:
     desc: "Run all published package test apps"
     cmds:
@@ -758,6 +814,15 @@ tasks:
       - task: test-apps:php
       - task: test-apps:rust
       - task: test-apps:elixir
+      - task: test-apps:go
+      - task: test-apps:java
+      - task: test-apps:csharp
+      - task: test-apps:dart
+      - task: test-apps:swift
+      - task: test-apps:zig
+      - task: test-apps:wasm
+      - task: test-apps:kotlin
+      - task: test-apps:kotlin_android
 
   test-apps:update-versions:
     desc: "Update all test app package versions"
