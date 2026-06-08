@@ -86,7 +86,7 @@ repos:
         args: ["-x"]
 
       - id: markdownlint-rumdl-strict
-        exclude: ^docs/reference/
+        exclude: ^(docs/|CONTRIBUTING\.md$|CHANGELOG\.md$|(crates|packages)/[^/]+/README\.md$|templates/readme/|testing_data/|skills/|README\.md$|\.ai-rulez/)
       - id: textlint
         files: ^docs/.*\.md$
         exclude: ^docs/(reference/|snippets/)

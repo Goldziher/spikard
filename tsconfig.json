@@ -39,6 +39,8 @@
     "e2e/node",
     "e2e/wasm",
     "test_apps/node",
-    "test_apps/wasm"
+    "test_apps/wasm",
+    "crates/spikard-node",
+    "crates/spikard-wasm"
   ]
 }
