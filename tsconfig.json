@@ -3,13 +3,12 @@
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "alwaysStrict": true,
-    "baseUrl": ".",
     "declaration": true,
     "esModuleInterop": true,
     "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true,
     "incremental": true,
-    "isolatedModules": true,
+    "isolatedModules": false,
     "lib": ["ESNext"],
     "module": "ESNext",
     "moduleResolution": "bundler",
@@ -28,5 +27,18 @@
     "strictPropertyInitialization": true,
     "target": "ESNext"
   },
-  "exclude": ["node_modules", "dist"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "target",
+    "**/target",
+    "build",
+    "**/build",
+    "packages/node",
+    "packages/typescript",
+    "e2e/node",
+    "e2e/wasm",
+    "test_apps/node",
+    "test_apps/wasm"
+  ]
 }

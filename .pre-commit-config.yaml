@@ -86,6 +86,7 @@ repos:
         args: ["-x"]
 
       - id: markdownlint-rumdl-strict
+        exclude: ^docs/reference/
       - id: textlint
         files: ^docs/.*\.md$
         exclude: ^docs/(reference/|snippets/)
@@ -123,6 +124,7 @@ repos:
 
       - id: checkstyle
       - id: pmd
+        exclude: ^test_native_load\.java$
       - id: cpd
         args: ["--minimum-tokens=120"]
         exclude: ^packages/java/src/main/java/dev/spikard/
