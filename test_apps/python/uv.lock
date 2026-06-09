@@ -114,13 +114,13 @@ wheels = [
 
 [[package]]
 name = "spikard"
-version = "0.15.6rc10"
+version = "0.15.6rc18"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/ab/46/c1d4458f52e92878726cfd1f38694e41f1e7f8f1e9029a5a5d2696c2cbf6/spikard-0.15.6rc10.tar.gz", hash = "sha256:2895991fe5c8c5b5adf7ecc53df34687e4ab9b5073de026a7ee0849b0db1a4db", size = 90436, upload-time = "2026-06-07T11:09:06.925Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/37/85/7c8731a78549fbb5e0d47d73ec389261641434c536b98b88535b7c403a02/spikard-0.15.6rc18.tar.gz", hash = "sha256:3bca00482e7b8092edadce74d0377d0538bf21445ea03fc1dd862347ce560a58", size = 86338, upload-time = "2026-06-09T11:20:52.341Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8b/37/1f4c31545abddc3b610eadc0a84e119e60577c30ef63e4c20829f7771af5/spikard-0.15.6rc10-cp310-abi3-macosx_14_0_arm64.whl", hash = "sha256:620fec697ea74d51a4adc63ad8776b39454049024ff31bda18e1463e556a9a45", size = 5153613, upload-time = "2026-06-07T11:09:01.922Z" },
-    { url = "https://files.pythonhosted.org/packages/0a/5f/e66268203c3b68d2da34404194c0da5428af97da72f8f01466ef4f263dd3/spikard-0.15.6rc10-cp310-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:e8dac0969b86f76c3d147fb5ace937bc7c76ad9dc9e314fd5492added1e3125a", size = 5744310, upload-time = "2026-06-07T11:09:05.709Z" },
-    { url = "https://files.pythonhosted.org/packages/73/c8/f6425108f821e5cb928b7adb35e02db458be5819c96d4b324ec005925b37/spikard-0.15.6rc10-cp310-abi3-win_amd64.whl", hash = "sha256:a6485f66b769211e5dfd511dd3dab7139db50ae6ba07ebf48ff5fde11b09e50d", size = 6126834, upload-time = "2026-06-07T11:09:03.875Z" },
+    { url = "https://files.pythonhosted.org/packages/f0/1c/3e4b56d496a4a8ad31449a8d1ceb3ec8e8969adb0962b52b100d1da6af09/spikard-0.15.6rc18-cp310-abi3-macosx_14_0_arm64.whl", hash = "sha256:6969d9be86430ca19edda0adbbc7630165304ec7ece985fadffba7866c6535a5", size = 5151066, upload-time = "2026-06-09T11:20:53.418Z" },
+    { url = "https://files.pythonhosted.org/packages/f8/8b/08b9f3af484b5a6bcf2503879cc20337127c950118da47af516c331608e4/spikard-0.15.6rc18-cp310-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:215c283ee4f572bc95bbc3b74420057aa25c1bfcfe1d5639318cab90cda6f80c", size = 5743786, upload-time = "2026-06-09T11:20:54.888Z" },
+    { url = "https://files.pythonhosted.org/packages/85/38/59dcbff48143b1722a6982c9a3715e57d677c2e312f3e665f0ddf36e75b1/spikard-0.15.6rc18-cp310-abi3-win_amd64.whl", hash = "sha256:4399fbea7612b2498f7f386c7c20973e6e45d03fdbe588db84731ee061a230f1", size = 6123944, upload-time = "2026-06-09T11:20:56.222Z" },
 ]
 
 [[package]]
@@ -139,7 +139,7 @@ requires-dist = [
     { name = "pytest", specifier = ">=7.4" },
     { name = "pytest-asyncio", specifier = ">=0.23" },
     { name = "pytest-timeout", specifier = ">=2.1" },
-    { name = "spikard", specifier = "==0.15.6rc10" },
+    { name = "spikard", specifier = "==0.15.6rc18" },
 ]
 
 [[package]]

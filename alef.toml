@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.23.60"
+alef_version = "0.23.62"
 languages = [
   "python",
   "node",
@@ -561,9 +561,15 @@ methods = [
   # wrapper (it would consume the Arc<Mutex<App>> inner); configuration is wired via
   # `ServerConfig` builder + `App::new(config)` in the binding-side service entrypoint.
   "App.config",
-  # `App.run(self) -> Result<(), AppError>` consumes `self` by value and is async;
-  # bindings drive the server through `App.serve` / `ServerConfig` instead. Same
-  # non-delegatable shape as `App.config` from the napi `&self` perspective.
+  # `App.run(self) -> Result<(), AppError>` consumes `self` by value, so the
+  # standard alef per-type-method generator cannot auto-delegate it through the
+  # napi `&self` wrapper — it would emit a `compile_error!` placeholder body.
+  # Listing the method here suppresses that placeholder. Since alef v0.23.62
+  # service entrypoints declared under `[[crates.services.entrypoints]]` ignore
+  # `exclude.methods` for their three emission sites (free-function shim,
+  # wrapper class method, and import line), `app_run(registrations: ...)` and
+  # the wrapper's `async run()` method are still emitted via the
+  # registration-replay path so the e2e harness can drive the server.
   "App.run",
   # `are_headers_allowed` in `crates/spikard-http/src/cors.rs` is a PRIVATE free
   # function. The alef extractor still associates it with `CorsConfig` via name
@@ -1199,7 +1205,7 @@ name = "spikard"
 # so alef's stale-hash detection emits a fallback comment instead of using this
 # string verbatim. Refresh after the first real spikard zig package release via
 # `alef sync-versions` (which auto-populates from the published tarball).
-hash = "spikard-0.15.6-rc.18-PLACEHOLDER1234567890abcdefABCDEF0987654321"
+hash = "spikard-0.15.6-rc.19-PLACEHOLDER1234567890abcdefABCDEF0987654321"
 
 [crates.e2e.registry.packages.wasm]
 name = "@spikard/node-wasm"

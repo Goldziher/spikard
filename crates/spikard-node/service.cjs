@@ -2,7 +2,7 @@
 
 const { ServerConfig } = require("./index");
 const { Method, RouteBuilder } = require("./index");
-const { appIntoRouter } = require("./index");
+const { appIntoRouter, appRun } = require("./index");
 /**
  * Spikard application builder.
  */
@@ -171,6 +171,16 @@ class App {
       this._registrations.push(["route", [builder], fn]);
       return fn;
     };
+  }
+  /**
+   * Run the HTTP server using the configured routes.
+   *
+   * # Errors
+   *
+   * Returns an error if server construction or execution fails.
+   */
+  async run() {
+    return await appRun(this._registrations);
   }
   /**
    * Build the underlying Axum router.

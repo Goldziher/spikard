@@ -2,7 +2,7 @@
 
 import type { ServerConfig } from "./index";
 import { Method, RouteBuilder } from "./index";
-import { appIntoRouter } from "./index";
+import { appIntoRouter, appRun } from "./index";
 /**
  * Spikard application builder.
  */
@@ -216,6 +216,16 @@ export class App {
       this._registrations.push(["route", [builder], fn]);
       return fn;
     };
+  }
+  /**
+   * Run the HTTP server using the configured routes.
+   *
+   * # Errors
+   *
+   * Returns an error if server construction or execution fails.
+   */
+  async run(): Promise<void> {
+    return await appRun(this._registrations);
   }
   /**
    * Build the underlying Axum router.
