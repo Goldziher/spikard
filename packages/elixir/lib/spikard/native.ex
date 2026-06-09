@@ -14,7 +14,7 @@ defmodule Spikard.Native do
       "aarch64-apple-darwin",
       "aarch64-unknown-linux-gnu",
       "x86_64-unknown-linux-gnu",
-      "x86_64-pc-windows-gnu"
+      "x86_64-pc-windows-msvc"
     ],
     nif_versions: ["2.16", "2.17"],
     force_build: System.get_env("SPIKARD_BUILD") in ["1", "true"] or Mix.env() in [:dev]
