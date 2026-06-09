@@ -4,7 +4,7 @@ defmodule Spikard.MixProject do
   def project do
     [
       app: :spikard,
-      version: "0.15.6-rc.20",
+      version: "0.15.6-rc.21",
       elixir: "~> 1.14",
       rustler_crates: [
         spikard_nif: [
@@ -13,7 +13,7 @@ defmodule Spikard.MixProject do
             "aarch64-apple-darwin",
             "aarch64-unknown-linux-gnu",
             "x86_64-unknown-linux-gnu",
-            "x86_64-pc-windows-msvc"
+            "x86_64-pc-windows-gnu"
           ]
         ]
       ],

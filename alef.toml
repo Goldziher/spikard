@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.23.63"
+alef_version = "0.23.64"
 languages = [
   "python",
   "node",
@@ -200,6 +200,12 @@ exclude_types = ["TestClient"]
 [crates.elixir]
 app_name = "spikard"
 features = ["di"]
+targets = [
+  "aarch64-apple-darwin",
+  "aarch64-unknown-linux-gnu",
+  "x86_64-unknown-linux-gnu",
+  "x86_64-pc-windows-msvc"
+]
 # Alef bug (track upstream):
 # - UploadFile: alef emits a local elixir-side UploadFile struct AND From impls
 #   that pass the local type to spikard::UploadFile::from, producing a type
@@ -1205,7 +1211,7 @@ name = "spikard"
 # so alef's stale-hash detection emits a fallback comment instead of using this
 # string verbatim. Refresh after the first real spikard zig package release via
 # `alef sync-versions` (which auto-populates from the published tarball).
-hash = "spikard-0.15.6-rc.20-PLACEHOLDER1234567890abcdefABCDEF0987654321"
+hash = "spikard-0.15.6-rc.21-PLACEHOLDER1234567890abcdefABCDEF0987654321"
 
 [crates.e2e.registry.packages.wasm]
 name = "@spikard/node-wasm"

@@ -1,6 +1,6 @@
 name: spikard
 description: Rust-centric multi-language HTTP framework with polyglot bindings
-version: 0.15.6-rc.20
+version: 0.15.6-rc.21
 repository: https://github.com/Goldziher/spikard
 homepage: https://github.com/Goldziher/spikard
 environment:

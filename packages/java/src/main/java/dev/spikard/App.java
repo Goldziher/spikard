@@ -66,57 +66,6 @@ public class App implements AutoCloseable {
       throw new RuntimeException("Failed to invoke constructor", e);
     }
   }
-
-  /**
-   * Configure the server with a ServerConfig.
-   * Invokes C FFI: spikard_app_config
-   *
-   * @param config the server configuration
-   * @return this App for chaining
-   */
-  public App config(ServerConfig config) {
-    try {
-      String jsonStr = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(config);
-      MemorySegment jsonSegment = arena.allocateFrom(jsonStr);
-      MemorySegment fromJsonAddr = LOOKUP
-          .find("spikard_server_config_from_json")
-          .or(() -> LOOKUP.find("_spikard_server_config_from_json"))
-          .orElseThrow();
-      FunctionDescriptor fromJsonDesc =
-          FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS);
-      MethodHandle fromJsonHandle = LINKER.downcallHandle(fromJsonAddr, fromJsonDesc);
-      MemorySegment configPtr = (MemorySegment) fromJsonHandle.invoke(jsonSegment);
-      if (configPtr == null) {
-        throw new RuntimeException("Failed to deserialize ServerConfig from JSON");
-      }
-      try {
-        MemorySegment appConfigAddr = LOOKUP
-            .find("spikard_app_config")
-            .or(() -> LOOKUP.find("_spikard_app_config"))
-            .orElseThrow();
-        FunctionDescriptor appConfigDesc =
-            FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS);
-        MethodHandle appConfigHandle = LINKER.downcallHandle(appConfigAddr, appConfigDesc);
-        MemorySegment result = (MemorySegment) appConfigHandle.invoke(ownerHandle, configPtr);
-        if (result == null) {
-          throw new RuntimeException("Failed to configure app");
-        }
-        this.ownerHandle = result;
-      } finally {
-        MemorySegment freeAddr = LOOKUP
-            .find("spikard_server_config_free")
-            .or(() -> LOOKUP.find("_spikard_server_config_free"))
-            .orElseThrow();
-        FunctionDescriptor freeDesc = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS);
-        MethodHandle freeHandle = LINKER.downcallHandle(freeAddr, freeDesc);
-        freeHandle.invoke(configPtr);
-      }
-      return this;
-    } catch (Throwable e) {
-      throw new RuntimeException("Failed to configure server", e);
-    }
-  }
-
   /**
    * Register a handler for route.
    * Invokes C FFI: spikard_app_register_route
