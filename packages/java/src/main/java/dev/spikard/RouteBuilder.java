@@ -29,7 +29,7 @@ public class RouteBuilder implements AutoCloseable {
   public RouteBuilder handlerName(final String name) throws SpikardRsException {
     java.util.Objects.requireNonNull(name, "name must not be null");
     try {
-      Arena arena = Arena.ofShared();
+      Arena arena = Arena.ofAuto();
       var cName = arena.allocateFrom(name);
       // CPD-OFF — FFI opaque-handle return, no JSON deserialization needed.
       MemorySegment resultPtr =
@@ -156,7 +156,7 @@ public class RouteBuilder implements AutoCloseable {
   public RouteBuilder cors(final CorsConfig cors) throws SpikardRsException {
     java.util.Objects.requireNonNull(cors, "cors must not be null");
     try {
-      Arena arena = Arena.ofShared();
+      Arena arena = Arena.ofAuto();
       String cCorsJson = STREAM_MAPPER.writeValueAsString(cors);
       var cCorsJsonSeg = arena.allocateFrom(cCorsJson);
       MemorySegment cCors =
@@ -196,7 +196,7 @@ public class RouteBuilder implements AutoCloseable {
   public RouteBuilder compression(final CompressionConfig compression) throws SpikardRsException {
     java.util.Objects.requireNonNull(compression, "compression must not be null");
     try {
-      Arena arena = Arena.ofShared();
+      Arena arena = Arena.ofAuto();
       String cCompressionJson = STREAM_MAPPER.writeValueAsString(compression);
       var cCompressionJsonSeg = arena.allocateFrom(cCompressionJson);
       MemorySegment cCompression = (MemorySegment)
@@ -280,7 +280,7 @@ public class RouteBuilder implements AutoCloseable {
     java.util.Objects.requireNonNull(method, "method must not be null");
     java.util.Objects.requireNonNull(path, "path must not be null");
     try {
-      Arena arena = Arena.ofShared();
+      Arena arena = Arena.ofAuto();
       var cMethod = method.ordinal();
       var cPath = arena.allocateFrom(path);
       var handle = (MemorySegment) NativeLib.SPIKARD_ROUTE_BUILDER_NEW.invoke(cMethod, cPath);

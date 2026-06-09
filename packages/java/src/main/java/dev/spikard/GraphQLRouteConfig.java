@@ -32,7 +32,7 @@ public class GraphQLRouteConfig implements AutoCloseable {
   public GraphQLRouteConfig path(final String path) throws SpikardRsException {
     java.util.Objects.requireNonNull(path, "path must not be null");
     try {
-      Arena arena = Arena.ofShared();
+      Arena arena = Arena.ofAuto();
       var cPath = arena.allocateFrom(path);
       // CPD-OFF — FFI opaque-handle return, no JSON deserialization needed.
       MemorySegment resultPtr =
@@ -60,7 +60,7 @@ public class GraphQLRouteConfig implements AutoCloseable {
   public GraphQLRouteConfig method(final String method) throws SpikardRsException {
     java.util.Objects.requireNonNull(method, "method must not be null");
     try {
-      Arena arena = Arena.ofShared();
+      Arena arena = Arena.ofAuto();
       var cMethod = arena.allocateFrom(method);
       // CPD-OFF — FFI opaque-handle return, no JSON deserialization needed.
       MemorySegment resultPtr = (MemorySegment)
@@ -113,7 +113,7 @@ public class GraphQLRouteConfig implements AutoCloseable {
   public GraphQLRouteConfig description(final String description) throws SpikardRsException {
     java.util.Objects.requireNonNull(description, "description must not be null");
     try {
-      Arena arena = Arena.ofShared();
+      Arena arena = Arena.ofAuto();
       var cDescription = arena.allocateFrom(description);
       // CPD-OFF — FFI opaque-handle return, no JSON deserialization needed.
       MemorySegment resultPtr = (MemorySegment)
