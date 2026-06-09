@@ -1199,7 +1199,7 @@ name = "spikard"
 # so alef's stale-hash detection emits a fallback comment instead of using this
 # string verbatim. Refresh after the first real spikard zig package release via
 # `alef sync-versions` (which auto-populates from the published tarball).
-hash = "spikard-0.15.6-rc.14-PLACEHOLDER1234567890abcdefABCDEF0987654321"
+hash = "spikard-0.15.6-rc.15-PLACEHOLDER1234567890abcdefABCDEF0987654321"
 
 [crates.e2e.registry.packages.wasm]
 name = "@spikard/node-wasm"

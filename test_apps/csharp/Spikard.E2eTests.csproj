@@ -15,6 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Spikard" Version="0.15.6-rc.14" />
+    <PackageReference Include="Spikard" Version="0.15.6-rc.15" />
   </ItemGroup>
 </Project>
