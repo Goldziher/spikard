@@ -183,3 +183,5 @@ class App {
     return appIntoRouter(this._registrations);
   }
 }
+
+module.exports = { App };

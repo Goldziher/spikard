@@ -228,3 +228,5 @@ export class App {
     return appIntoRouter(this._registrations);
   }
 }
+
+export { App };
