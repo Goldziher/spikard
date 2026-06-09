@@ -733,6 +733,11 @@ tasks:
     desc: "Run PHP published package test app"
     dir: test_apps/php
     cmds:
+      # The PHP harness bootstrap spawns `mock-server` from
+      # test_apps/rust/target/release/. Make sure that binary exists before
+      # PHPUnit runs; otherwise every HTTP fixture test fails with
+      # `cURL error 7: Failed to connect to localhost port 8080`.
+      - cd ../rust && cargo build --release --bin mock-server
       - composer install --no-interaction
       - composer test
 
@@ -740,7 +745,12 @@ tasks:
     desc: "Run Rust published package test app"
     dir: test_apps/rust
     cmds:
-      - cargo test --locked
+      # The generated `test_apps/rust/Cargo.toml` is version-bumped by
+      # `task version:set`, but the lock file is not — `cargo test --locked`
+      # then fails with `cannot update the lock file because --locked was
+      # passed`. Drop `--locked` so the lock follows the manifest; the
+      # crates.io index is the source of truth either way.
+      - cargo test
 
   test-apps:elixir:
     desc: "Run Elixir published package test app"
