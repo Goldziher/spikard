@@ -4,7 +4,7 @@ defmodule Spikard.MixProject do
   def project do
     [
       app: :spikard,
-      version: "0.15.6-rc.15",
+      version: "0.15.6-rc.16",
       elixir: "~> 1.14",
       rustler_crates: [
         spikard_nif: [

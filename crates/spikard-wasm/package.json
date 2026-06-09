@@ -1,6 +1,6 @@
 {
   "name": "@spikard/node-wasm",
-  "version": "0.15.6-rc.15",
+  "version": "0.15.6-rc.16",
   "private": false,
   "description": "Rust-centric multi-language HTTP framework with polyglot bindings",
   "license": "MIT",
@@ -9,19 +9,19 @@
     "url": "https://github.com/Goldziher/spikard",
     "directory": "crates/spikard-wasm"
   },
-  "publishConfig": {
-    "access": "public"
-  },
-  "type": "module",
   "files": [
     "pkg",
     "*.wasm",
     "*.d.ts",
     "README.md"
   ],
+  "type": "module",
   "main": "pkg/nodejs/spikard_wasm.js",
   "module": "pkg/web/spikard_wasm.js",
   "types": "pkg/nodejs/spikard_wasm.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "wasm-pack build --target nodejs --out-dir pkg/nodejs",
     "build:ci": "wasm-pack build --release --target nodejs --out-dir pkg/nodejs",

@@ -9,7 +9,6 @@ import json
 import sys
 
 from spikard import App
-from spikard import ServerConfig
 from spikard._spikard import RouteBuilder
 from spikard._spikard import Method
 
@@ -46,6 +45,7 @@ for fixture_id, fixture in _FIXTURES.items():
             # SUT's Response deserialization layout. Args are path parameters
             # (e.g., id={id}), which we ignore.
             return {"status_code": status, "content": body, "headers": dict(headers)}
+
         return handler_fn
 
     # Register the handler at /fixtures/<fixture_id>{route}
@@ -69,6 +69,7 @@ for fixture_id, fixture in _FIXTURES.items():
     middleware = handler.get("middleware") or {}
     if middleware:
         from spikard._spikard import CorsConfig  # noqa: PLC0415
+
         _MIDDLEWARE_DISPATCH = {
             "cors": (CorsConfig, "cors"),
         }
@@ -121,31 +122,22 @@ for fixture_id, fixture in _FIXTURES.items():
                 is_origin_allowed = origin in allowed_origins
                 is_method_allowed = not request_method or request_method.upper() in [m.upper() for m in allowed_methods]
                 headers_array = [h.strip().upper() for h in request_headers.split(",")] if request_headers else []
-                are_headers_allowed = all(
-                    h in [ah.upper() for ah in allowed_headers] for h in headers_array
-                )
+                are_headers_allowed = all(h in [ah.upper() for ah in allowed_headers] for h in headers_array)
 
                 if not is_origin_allowed or not is_method_allowed or not are_headers_allowed:
-                    return {
-                        "status_code": 403,
-                        "content": None,
-                        "headers": {}
-                    }
+                    return {"status_code": 403, "content": None, "headers": {}}
 
                 cors_headers = {
                     "Access-Control-Allow-Origin": origin,
                     "Access-Control-Allow-Methods": request_method or ", ".join(allowed_methods),
-                    "Access-Control-Allow-Headers": request_headers or ", ".join(allowed_headers)
+                    "Access-Control-Allow-Headers": request_headers or ", ".join(allowed_headers),
                 }
 
                 if cors_cfg.get("max_age"):
                     cors_headers["Access-Control-Max-Age"] = str(cors_cfg["max_age"])
 
-                return {
-                    "status_code": 204,
-                    "content": None,
-                    "headers": cors_headers
-                }
+                return {"status_code": 204, "content": None, "headers": cors_headers}
+
             return cors_handler_fn
 
         # Register the OPTIONS handler
