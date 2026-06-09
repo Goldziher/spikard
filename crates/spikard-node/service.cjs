@@ -42,7 +42,7 @@ class App {
   /**
    * Register a route callback directly.
    */
-  register_route(builder, handler) {
+  registerRoute(builder, handler) {
     this._registrations.push(["route", [builder], handler]);
     return this;
   }

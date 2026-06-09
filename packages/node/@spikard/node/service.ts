@@ -42,7 +42,7 @@ export class App {
   /**
    * Register a route callback directly.
    */
-  register_route(builder: RouteBuilder, handler: (...args: any[]) => any): this {
+  registerRoute(builder: RouteBuilder, handler: (...args: any[]) => any): this {
     this._registrations.push(["route", [builder], handler]);
     return this;
   }
