@@ -90,6 +90,7 @@ __pycache__/
 **/DerivedData/
 **/xcuserdata/
 **/.zig-cache/
+**/zig-pkg/
 **/zig-cache/
 **/zig-out/
 **/.gradle/
