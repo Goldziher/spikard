@@ -453,6 +453,59 @@ func (s *App) StartBackground(host string, port uint16) (*ServerHandle, error) {
 		return nil, errors.New("service is closed")
 	}
 
+	// Configure the server with the provided host and port.
+	hostCopy := host
+	portCopy := port
+	workers := uint(1)
+	maxBodySize := uint(10 * 1024 * 1024)
+	enableReqID := false
+	gracefulShutdown := true
+	shutdownTimeout := uint64(30)
+	enableHTTPTrace := false
+	maxQueue := uint(1024)
+	maxConcurrent := uint(128)
+	drainTimeout := uint64(30)
+
+	config := &ServerConfig{
+		Host:             &hostCopy,
+		Port:             &portCopy,
+		Workers:          &workers,
+		EnableRequestID:  enableReqID,
+		MaxBodySize:      &maxBodySize,
+		GracefulShutdown: &gracefulShutdown,
+		ShutdownTimeout:  &shutdownTimeout,
+		EnableHTTPTrace:  enableHTTPTrace,
+		BackgroundTasks: BackgroundTaskConfig{
+			MaxQueueSize:       &maxQueue,
+			MaxConcurrentTasks: &maxConcurrent,
+			DrainTimeoutSecs:   &drainTimeout,
+		},
+	}
+
+	// Ensure static_files is present in JSON even if empty (for Rust compatibility).
+	c_configJSON, _ := json.Marshal(config)
+	var m map[string]interface{}
+	json.Unmarshal(c_configJSON, &m)
+	if _, has := m["static_files"]; !has {
+		m["static_files"] = []interface{}{}
+	}
+	c_configJSON, _ = json.Marshal(m)
+
+	c_str := C.CString(string(c_configJSON))
+	defer C.free(unsafe.Pointer(c_str))
+	c_config := C.spikard_server_config_from_json(c_str)
+	if c_config == nil {
+		errCode := C.spikard_last_error_code()
+		errMsg := C.GoString(C.spikard_last_error_context())
+		return nil, fmt.Errorf("configure host/port: ServerConfig config failed: error code %d: %s", errCode, errMsg)
+	}
+
+	new_owner := C.spikard_app_config((*C.SPIKARDAppOpaque)(s.owner), c_config)
+	if new_owner == nil {
+		return nil, errors.New("configure host/port: app config failed")
+	}
+	s.owner = unsafe.Pointer(new_owner)
+
 	// Spawn Run in a goroutine. The C entrypoint will block there,
 	// and we exit this function once the socket is bound.
 	go func() {
