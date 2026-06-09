@@ -73,8 +73,6 @@ abstract class DartHandlerHandler implements RustOpaqueInterface {
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
   /// Create a bridge from a Dart callable.
   static Future<DartHandlerHandler> newInstance({
-    required FutureOr<String> Function(String) handler,
-  }) => RustLib.instance.api.crateServiceApiDartHandlerHandlerNew(
-    handler: handler,
-  );
+    required FutureOr<String> Function(String) cb,
+  }) => RustLib.instance.api.crateServiceApiDartHandlerHandlerNew(cb: cb);
 }
