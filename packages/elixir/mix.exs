@@ -4,7 +4,7 @@ defmodule Spikard.MixProject do
   def project do
     [
       app: :spikard,
-      version: "0.15.6-rc.13",
+      version: "0.15.6-rc.14",
       elixir: "~> 1.14",
       rustler_crates: [
         spikard_nif: [
@@ -27,8 +27,7 @@ defmodule Spikard.MixProject do
     [
       licenses: ["MIT"],
       links: %{"GitHub" => "https://github.com/Goldziher/spikard"},
-      files:
-        ~w(lib .formatter.exs mix.exs README* checksum-*.exs native/spikard_nif/Cargo.toml native/spikard_nif/Cargo.lock native/spikard_nif/src)
+      files: ~w(lib .formatter.exs mix.exs README* checksum-*.exs native/spikard_nif/Cargo.toml native/spikard_nif/Cargo.lock)
     ]
   end
 

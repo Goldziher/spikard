@@ -86,7 +86,7 @@ Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC code
 **Gradle:**
 
 ```gradle
-implementation 'dev.spikard:spikard:0.15.6-rc.13'
+implementation 'dev.spikard:spikard:0.15.6-rc.14'
 ```
 
 **Maven:**
@@ -95,7 +95,7 @@ implementation 'dev.spikard:spikard:0.15.6-rc.13'
 <dependency>
     <groupId>dev.spikard</groupId>
     <artifactId>spikard</artifactId>
-    <version>0.15.6-rc.13</version>
+    <version>0.15.6-rc.14</version>
 </dependency>
 ```
 

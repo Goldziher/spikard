@@ -32,6 +32,7 @@ e2e/go/cmd/harness/harness
 *.egg-info/
 *.tsbuildinfo
 *.rs.bk
+*.rlib
 
 # --- Lock files: workspace members must not have their own ---
 **/pnpm-lock.yaml
