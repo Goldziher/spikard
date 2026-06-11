@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@spikard/node':
-        specifier: ^0.15.6-rc.18
-        version: 0.15.6-rc.18
+        specifier: ^0.15.6-rc.21
+        version: 0.15.6-rc.21
       '@types/node':
         specifier: ^22.10.2
         version: 22.19.20
@@ -139,8 +139,8 @@ packages:
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
 
-  '@spikard/node@0.15.6-rc.18':
-    resolution: {integrity: sha512-Iw1b2wgCKQLg01d/KRklzXhVCt/9x2C8TquiAfivu8svThZ1+Mb2TfZ9F7Yl/3q8kZpvO7Kc4IjNmcN78FYFWA==}
+  '@spikard/node@0.15.6-rc.21':
+    resolution: {integrity: sha512-2ePB30VbnYU5cj7zuXm8/fpkN32yZaw9V/1LpZORdIaCGs6IlBQUTpWCvHCHSBR4fvZItl8/fC//wHtID4ClOg==}
     engines: {node: '>= 18'}
 
   '@standard-schema/spec@1.1.0':
@@ -536,7 +536,7 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.1': {}
 
-  '@spikard/node@0.15.6-rc.18': {}
+  '@spikard/node@0.15.6-rc.21': {}
 
   '@standard-schema/spec@1.1.0': {}
 

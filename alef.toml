@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.23.64"
+alef_version = "0.24.2"
 languages = [
   "python",
   "node",
@@ -200,7 +200,7 @@ exclude_types = ["TestClient"]
 [crates.elixir]
 app_name = "spikard"
 features = ["di"]
-targets = [
+nif_targets = [
   "aarch64-apple-darwin",
   "aarch64-unknown-linux-gnu",
   "x86_64-unknown-linux-gnu",

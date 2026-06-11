@@ -7,7 +7,7 @@ import { appIntoRouter, appRun } from "./index";
  * Spikard application builder.
  */
 export class App {
-  private _registrations: Array<[string, any[], (...args: any[]) => any]> = [];
+  private readonly _app: JsApp;
   /**
    * Create a new App instance.
    */
@@ -18,7 +18,7 @@ export class App {
    * Create a new application with the default server configuration.
    */
   constructor() {
-    // Constructor initialization (parameters stored for future use)
+    this._app = new JsApp();
   }
   /**
    * Set the server configuration.
@@ -35,7 +35,7 @@ export class App {
    */
   route(builder: RouteBuilder): (fn: (...args: any[]) => any) => (...args: any[]) => any {
     return (fn: (...args: any[]) => any) => {
-      this._registrations.push(["route", [builder], fn]);
+      this._app.route([builder], fn);
       return fn;
     };
   }
@@ -43,7 +43,7 @@ export class App {
    * Register a route callback directly.
    */
   registerRoute(builder: RouteBuilder, handler: (...args: any[]) => any): this {
-    this._registrations.push(["route", [builder], handler]);
+    this._app.route([builder], handler);
     return this;
   }
   /**
@@ -57,11 +57,11 @@ export class App {
   ): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
     const builder = RouteBuilder.new(Method.Get, path);
     if (handler !== undefined) {
-      this._registrations.push(["route", [builder], handler]);
+      this._app.get(path, handler);
       return this;
     }
     return (fn: (...args: any[]) => any) => {
-      this._registrations.push(["route", [builder], fn]);
+      this._app.get(path, fn);
       return fn;
     };
   }
@@ -76,11 +76,11 @@ export class App {
   ): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
     const builder = RouteBuilder.new(Method.Post, path);
     if (handler !== undefined) {
-      this._registrations.push(["route", [builder], handler]);
+      this._app.post(path, handler);
       return this;
     }
     return (fn: (...args: any[]) => any) => {
-      this._registrations.push(["route", [builder], fn]);
+      this._app.post(path, fn);
       return fn;
     };
   }
@@ -95,11 +95,11 @@ export class App {
   ): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
     const builder = RouteBuilder.new(Method.Put, path);
     if (handler !== undefined) {
-      this._registrations.push(["route", [builder], handler]);
+      this._app.put(path, handler);
       return this;
     }
     return (fn: (...args: any[]) => any) => {
-      this._registrations.push(["route", [builder], fn]);
+      this._app.put(path, fn);
       return fn;
     };
   }
@@ -114,11 +114,11 @@ export class App {
   ): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
     const builder = RouteBuilder.new(Method.Patch, path);
     if (handler !== undefined) {
-      this._registrations.push(["route", [builder], handler]);
+      this._app.patch(path, handler);
       return this;
     }
     return (fn: (...args: any[]) => any) => {
-      this._registrations.push(["route", [builder], fn]);
+      this._app.patch(path, fn);
       return fn;
     };
   }
@@ -133,11 +133,11 @@ export class App {
   ): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
     const builder = RouteBuilder.new(Method.Delete, path);
     if (handler !== undefined) {
-      this._registrations.push(["route", [builder], handler]);
+      this._app.delete(path, handler);
       return this;
     }
     return (fn: (...args: any[]) => any) => {
-      this._registrations.push(["route", [builder], fn]);
+      this._app.delete(path, fn);
       return fn;
     };
   }
@@ -152,11 +152,11 @@ export class App {
   ): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
     const builder = RouteBuilder.new(Method.Head, path);
     if (handler !== undefined) {
-      this._registrations.push(["route", [builder], handler]);
+      this._app.head(path, handler);
       return this;
     }
     return (fn: (...args: any[]) => any) => {
-      this._registrations.push(["route", [builder], fn]);
+      this._app.head(path, fn);
       return fn;
     };
   }
@@ -171,11 +171,11 @@ export class App {
   ): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
     const builder = RouteBuilder.new(Method.Options, path);
     if (handler !== undefined) {
-      this._registrations.push(["route", [builder], handler]);
+      this._app.options(path, handler);
       return this;
     }
     return (fn: (...args: any[]) => any) => {
-      this._registrations.push(["route", [builder], fn]);
+      this._app.options(path, fn);
       return fn;
     };
   }
@@ -190,11 +190,11 @@ export class App {
   ): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
     const builder = RouteBuilder.new(Method.Connect, path);
     if (handler !== undefined) {
-      this._registrations.push(["route", [builder], handler]);
+      this._app.connect(path, handler);
       return this;
     }
     return (fn: (...args: any[]) => any) => {
-      this._registrations.push(["route", [builder], fn]);
+      this._app.connect(path, fn);
       return fn;
     };
   }
@@ -209,11 +209,11 @@ export class App {
   ): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
     const builder = RouteBuilder.new(Method.Trace, path);
     if (handler !== undefined) {
-      this._registrations.push(["route", [builder], handler]);
+      this._app.trace(path, handler);
       return this;
     }
     return (fn: (...args: any[]) => any) => {
-      this._registrations.push(["route", [builder], fn]);
+      this._app.trace(path, fn);
       return fn;
     };
   }
@@ -225,7 +225,7 @@ export class App {
    * Returns an error if server construction or execution fails.
    */
   async run(): Promise<void> {
-    return await appRun(this._registrations);
+    return await this._app.run();
   }
   /**
    * Build the underlying Axum router.
@@ -235,7 +235,7 @@ export class App {
    * Returns an error if server or router construction fails.
    */
   into_router(): Promise<void> {
-    return appIntoRouter(this._registrations);
+    return this._app.intoRouter();
   }
 }
 

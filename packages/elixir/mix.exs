@@ -13,7 +13,7 @@ defmodule Spikard.MixProject do
             "aarch64-apple-darwin",
             "aarch64-unknown-linux-gnu",
             "x86_64-unknown-linux-gnu",
-            "x86_64-pc-windows-gnu"
+            "x86_64-pc-windows-msvc"
           ]
         ]
       ],
@@ -27,7 +27,8 @@ defmodule Spikard.MixProject do
     [
       licenses: ["MIT"],
       links: %{"GitHub" => "https://github.com/Goldziher/spikard"},
-      files: ~w(lib .formatter.exs mix.exs README* checksum-*.exs native/spikard_nif/Cargo.toml native/spikard_nif/Cargo.lock)
+      files:
+        ~w(lib .formatter.exs mix.exs README* checksum-*.exs native/spikard_nif/Cargo.toml native/spikard_nif/Cargo.lock)
     ]
   end
 
