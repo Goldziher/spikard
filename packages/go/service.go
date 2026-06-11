@@ -15,7 +15,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"sync"
+	"time"
 	"unsafe"
 )
 // ──────────────────────────────────────────── Service Definitions ──
@@ -447,18 +449,37 @@ func (h *ServerHandle) Stop() error {
 // It blocks until the TCP socket is bound, so the server is guaranteed to be accepting
 // connections when this call returns.
 func (s *App) StartBackground(host string, port uint16) (*ServerHandle, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if s.owner == nil {
-		return nil, errors.New("service is closed")
+	// Configure the service with the requested host and port before starting.
+	hostPtr := host
+	portPtr := port
+	if err := s.Config(&ServerConfig{Host: &hostPtr, Port: &portPtr}); err != nil {
+		return nil, err
 	}
 
-	// Spawn Run in a goroutine. The C entrypoint will block there,
-	// and we exit this function once the socket is bound.
+	// Lock to check ownership and then spawn Run in a goroutine.
+	s.mu.Lock()
+	if s.owner == nil {
+		s.mu.Unlock()
+		return nil, errors.New("service is closed")
+	}
+	s.mu.Unlock()
+
+	// Spawn Run in a goroutine.
 	go func() {
 		_ = s.Run()
 	}()
 
-	// Return immediately with a handle for shutdown.
+	// Poll TCP socket until it's bound or timeout (5 seconds).
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", host, port), 100*time.Millisecond)
+		if err == nil {
+			conn.Close()
+			break
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	// Return a handle for shutdown.
 	return &ServerHandle{service: s}, nil
 }
