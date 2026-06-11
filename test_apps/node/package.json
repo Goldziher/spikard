@@ -7,7 +7,7 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@spikard/node": "^0.15.6-rc.21",
+    "@spikard/node": "^0.15.6-rc.22",
     "@types/node": "^22.10.2",
     "vitest": "^4.1.5"
   }

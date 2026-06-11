@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.6-rc.22] - 2026-06-11
+
 ### Fixed
 
-- Java native library bundling now works on all platforms. The `maven-antrun-plugin` in `packages/java/pom.xml` and e2e `pom.xml.jinja` now uses reliable Java system property matching (`os.name` and `os.arch`) instead of unreliable antrun `<os family>` conditions which failed on macOS. Previously on macOS, the library was incorrectly placed in `src/main/resources/natives/linux-arm64/` instead of `macos-arm64/`, causing `UnsatisfiedLinkError: Failed to load spikard_ffi native library. Expected resource: /natives/macos-arm64/libspikard_ffi.dylib` at runtime. Both main library and e2e JAR builds now correctly copy the native library to `src/main/resources/natives/{rid}/` (RID = os-arch, e.g. `macos-arm64`) before packaging, and `NativeLib.java` successfully extracts and loads it via `System.load()`. <!-- java-native-bundle-r3 -->
+- Regenerated against [alef v0.24.8](https://github.com/kreuzberg-dev/alef/releases/tag/v0.24.8), which bundles fixes for the CI E2E reds that have been stable since rc.10: Java `App.config(host, port)` now generated and called from the e2e harness (fixes "Harness did not become reachable at 127.0.0.1:8000"); Swift `App.config(host:port:)` bridge emitted and invoked before `app.run()` (fixes nil `URLResponse`); Go cgo `StartBackground` plumbs host/port through `Config(...)` and polls socket-bind before returning (fixes "connection refused"); Dart FRB post-build rewriter is scope-aware and no longer corrupts inherited `BaseHandler.executeSync` calls (~62 generated methods); Ruby e2e tests now emit `_req.body = ...` for multipart fixtures; NAPI base registration accepts `&JsRouteBuilder` wrapper and unwraps to the core type so napi-rs can synthesize `FromNapiValue`, with TS wrappers calling positional `this._app.route(builder, fn)` instead of `[builder]`.
+- Elixir publish workflow now uploads NIF artifacts with the correct glob `spikard_nif-*.tar.gz` (was `libspikard_nif-*.tar.gz`). The `build-elixir-natives@v1` action emits the artifact without the `lib` prefix, so the previous glob never matched, leaving the GitHub release with no NIF assets. `rustler_precompiled` then 404'd on every install, surfacing as `(ArgumentError) could not load module Spikard.App due to reason :nofile` at runtime even though the Hex publish job itself succeeded.
 
 ## [0.15.6-rc.9] - 2026-05-27
 

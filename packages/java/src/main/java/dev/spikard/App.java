@@ -20,749 +20,815 @@ import java.lang.invoke.MethodType;
 @SuppressWarnings("PMD")
 public class App implements AutoCloseable {
 
-    private MemorySegment ownerHandle;
-    private final Arena arena = Arena.ofShared();
+  private MemorySegment ownerHandle;
+  private final Arena arena = Arena.ofShared();
 
-    private static final Linker LINKER = Linker.nativeLinker();
-    private static final SymbolLookup LOOKUP = SymbolLookup.loaderLookup();
+  private static final Linker LINKER = Linker.nativeLinker();
+  private static final SymbolLookup LOOKUP = SymbolLookup.loaderLookup();
 
-    static {
-        // Force NativeLib static initialization to load the native library
-        // This ensures all FFI symbols are available before we try to look them up.
-        // NativeLib is a package-private class, but accessing its class forces
-        // its static initializer to run and load the native library.
-        try {
-            Class.forName("dev.spikard.NativeLib");
-        } catch (ClassNotFoundException ignored) {
-            // NativeLib not available; native library may be pre-loaded
-        }
+  static {
+    // Force NativeLib static initialization to load the native library
+    // This ensures all FFI symbols are available before we try to look them up.
+    // NativeLib is a package-private class, but accessing its class forces
+    // its static initializer to run and load the native library.
+    try {
+      Class.forName("dev.spikard.NativeLib");
+    } catch (ClassNotFoundException ignored) {
+      // NativeLib not available; native library may be pre-loaded
     }
+  }
 
-    // Adapter for handler upcalls: marshals C pointers <-> Java strings
-    private static MemorySegment invokeHandlerWithMarshal(
-            MemorySegment contextPtr,
-            MemorySegment requestPtr,
-            Callable handler,
-            Arena arena) throws Throwable {
-        String requestStr = requestPtr.getString(0);
-        String responseStr = handler.handle(requestStr);
-        return arena.allocateFrom(responseStr);
+  // Adapter for handler upcalls: marshals C pointers <-> Java strings
+  private static MemorySegment invokeHandlerWithMarshal(
+      MemorySegment contextPtr, MemorySegment requestPtr, Callable handler, Arena arena)
+      throws Throwable {
+    String requestStr = requestPtr.getString(0);
+    String responseStr = handler.handle(requestStr);
+    return arena.allocateFrom(responseStr);
+  }
+  /**
+   * Create a new App.
+   * Invokes C FFI: spikard_app_new()
+   */
+  public App() {
+    try {
+      MemorySegment addr = LOOKUP
+          .find("spikard_app_new")
+          .or(() -> LOOKUP.find("_spikard_app_new"))
+          .orElseThrow();
+      FunctionDescriptor desc = FunctionDescriptor.of(ValueLayout.ADDRESS);
+      MethodHandle handle = LINKER.downcallHandle(addr, desc);
+      this.ownerHandle = (MemorySegment) handle.invoke();
+      if (this.ownerHandle == null) {
+        throw new RuntimeException("Failed to allocate service instance");
+      }
+    } catch (Throwable e) {
+      throw new RuntimeException("Failed to invoke constructor", e);
     }
-    /**
-     * Create a new App.
-     * Invokes C FFI: spikard_app_new()
-     */
-    public App() {
-        try {
-            MemorySegment addr = LOOKUP.find("spikard_app_new")
-                .or(() -> LOOKUP.find("_spikard_app_new"))
-                .orElseThrow();
-            FunctionDescriptor desc = FunctionDescriptor.of(ValueLayout.ADDRESS);
-            MethodHandle handle = LINKER.downcallHandle(addr, desc);
-            this.ownerHandle = (MemorySegment) handle.invoke();
-            if (this.ownerHandle == null) {
-                throw new RuntimeException("Failed to allocate service instance");
-            }
-        } catch (Throwable e) {
-            throw new RuntimeException("Failed to invoke constructor", e);
-        }
+  }
+  /**
+   * Register a handler for route.
+   * Invokes C FFI: spikard_app_register_route
+   *
+   * @param handler functional interface receiving JSON request, returning JSON response
+   * @param builder RouteBuilder
+   * @return 0 on success, non-zero error code on failure
+   */
+  public int registerAppRoute(Callable handler, RouteBuilder builder) {
+    try {
+      // Wrap Java handler in an upcall stub for C to invoke
+      MethodHandles.Lookup lookup = MethodHandles.lookup();
+      MethodHandle mh = lookup.findVirtual(
+          Callable.class, "handle", MethodType.methodType(String.class, String.class));
+      MethodHandle boundMh = mh.bindTo(handler);
+
+      // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
+      FunctionDescriptor upcallDesc = FunctionDescriptor.of(
+          ValueLayout.ADDRESS, // return: *mut c_char
+          ValueLayout.ADDRESS, // param 0: *mut c_void (context)
+          ValueLayout.ADDRESS // param 1: *const c_char (request JSON)
+          );
+
+      // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
+      // Marshals C pointers <-> Java strings via Arena
+      MethodHandle baseMh = lookup.findStatic(
+          App.class,
+          "invokeHandlerWithMarshal",
+          MethodType.methodType(
+              MemorySegment.class,
+              MemorySegment.class,
+              MemorySegment.class,
+              Callable.class,
+              Arena.class));
+      MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
+
+      MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
+
+      // Get register downcall handle
+      MemorySegment regAddr = LOOKUP
+          .find("spikard_app_register_route")
+          .or(() -> LOOKUP.find("_spikard_app_register_route"))
+          .orElseThrow();
+      FunctionDescriptor regDesc = FunctionDescriptor.of(
+          ValueLayout.JAVA_INT, // return: int
+          ValueLayout.ADDRESS, // owner: *mut opaque
+          ValueLayout.ADDRESS // callback: upcall stub
+          ,
+          ValueLayout.ADDRESS // builder param
+          );
+      MethodHandle regHandle = LINKER.downcallHandle(regAddr, regDesc);
+
+      return (int) regHandle.invokeExact(
+          ownerHandle, // owner
+          upcallStub // callback
+          ,
+          builder.handle() // opaque handle
+          );
+    } catch (Throwable e) {
+      throw new RuntimeException("Failed to register handler", e);
     }
-    /**
-     * Register a handler for route.
-     * Invokes C FFI: spikard_app_register_route
-     *
-     * @param handler functional interface receiving JSON request, returning JSON response
-     * @param builder RouteBuilder
-     * @return 0 on success, non-zero error code on failure
-     */
-    public int registerAppRoute(Callable handler, RouteBuilder builder) {
-        try {
-            // Wrap Java handler in an upcall stub for C to invoke
-            MethodHandles.Lookup lookup = MethodHandles.lookup();
-            MethodHandle mh = lookup.findVirtual(Callable.class, "handle",
-                MethodType.methodType(String.class, String.class));
-            MethodHandle boundMh = mh.bindTo(handler);
+  }
 
-            // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
-            FunctionDescriptor upcallDesc = FunctionDescriptor.of(
-                ValueLayout.ADDRESS,  // return: *mut c_char
-                ValueLayout.ADDRESS,  // param 0: *mut c_void (context)
-                ValueLayout.ADDRESS   // param 1: *const c_char (request JSON)
-            );
+  /**
+   * Register a GET route at the given path.
+   *
+   * Invokes C FFI: spikard_app_register_route_get
+   *
+   * @param path route path
+   * @param handler functional interface receiving JSON request, returning JSON response
+   * @return 0 on success, non-zero error code on failure
+   */
+  public int get(String path, Callable handler) {
+    try {
+      // Build upcall stub from handler
+      MethodHandles.Lookup lookup = MethodHandles.lookup();
+      MethodHandle mh = lookup.findVirtual(
+          Callable.class, "handle", MethodType.methodType(String.class, String.class));
+      MethodHandle boundMh = mh.bindTo(handler);
 
-            // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
-            // Marshals C pointers <-> Java strings via Arena
-            MethodHandle baseMh = lookup.findStatic(App.class, "invokeHandlerWithMarshal",
-                MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
-            );
-            MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
+      // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
+      FunctionDescriptor upcallDesc = FunctionDescriptor.of(
+          ValueLayout.ADDRESS, // return: *mut c_char
+          ValueLayout.ADDRESS, // param 0: *mut c_void (context)
+          ValueLayout.ADDRESS // param 1: *const c_char (request JSON)
+          );
 
-            MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
+      // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
+      // Marshals C pointers <-> Java strings via Arena
+      MethodHandle baseMh = lookup.findStatic(
+          this.getClass(),
+          "invokeHandlerWithMarshal",
+          MethodType.methodType(
+              MemorySegment.class,
+              MemorySegment.class,
+              MemorySegment.class,
+              Callable.class,
+              Arena.class));
+      MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
 
-            // Get register downcall handle
-            MemorySegment regAddr = LOOKUP.find("spikard_app_register_route")
-                .or(() -> LOOKUP.find("_spikard_app_register_route"))
-                .orElseThrow();
-            FunctionDescriptor regDesc = FunctionDescriptor.of(
-                ValueLayout.JAVA_INT,  // return: int
-                ValueLayout.ADDRESS,   // owner: *mut opaque
-                ValueLayout.ADDRESS    // callback: upcall stub
-                , ValueLayout.ADDRESS    // builder param
-            );
-            MethodHandle regHandle = LINKER.downcallHandle(regAddr, regDesc);
+      MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
-            return (int) regHandle.invokeExact(
-                ownerHandle,     // owner
-                upcallStub       // callback
-                , builder.handle()    // opaque handle
-            );
-        } catch (Throwable e) {
-            throw new RuntimeException("Failed to register handler", e);
-        }
+      // Get variant registration downcall handle
+      MemorySegment varAddr = LOOKUP
+          .find("spikard_app_register_route_get")
+          .or(() -> LOOKUP.find("_spikard_app_register_route_get"))
+          .orElseThrow();
+
+      FunctionDescriptor varDesc = FunctionDescriptor.of(
+          ValueLayout.JAVA_INT, // return: int
+          ValueLayout.ADDRESS, // owner: *mut opaque
+          ValueLayout.ADDRESS, // callback: upcall stub
+          ValueLayout.ADDRESS // path: *const c_char
+          );
+
+      MethodHandle varHandle = LINKER.downcallHandle(varAddr, varDesc);
+
+      Object[] args = new Object[] {
+        ownerHandle, // owner
+        upcallStub, // callback
+        path // path
+      };
+      return (int) varHandle.invokeExact(args);
+    } catch (Throwable e) {
+      throw new RuntimeException("Failed to register get handler", e);
     }
+  }
 
-    /**
-     * Register a GET route at the given path.
-     *
-     * Invokes C FFI: spikard_app_register_route_get
-     *
-     * @param path route path
-     * @param handler functional interface receiving JSON request, returning JSON response
-     * @return 0 on success, non-zero error code on failure
-     */
-    public int get(String path, Callable handler) {
-        try {
-            // Build upcall stub from handler
-            MethodHandles.Lookup lookup = MethodHandles.lookup();
-            MethodHandle mh = lookup.findVirtual(Callable.class, "handle",
-                MethodType.methodType(String.class, String.class));
-            MethodHandle boundMh = mh.bindTo(handler);
+  /**
+   * Register a POST route at the given path.
+   *
+   * Invokes C FFI: spikard_app_register_route_post
+   *
+   * @param path route path
+   * @param handler functional interface receiving JSON request, returning JSON response
+   * @return 0 on success, non-zero error code on failure
+   */
+  public int post(String path, Callable handler) {
+    try {
+      // Build upcall stub from handler
+      MethodHandles.Lookup lookup = MethodHandles.lookup();
+      MethodHandle mh = lookup.findVirtual(
+          Callable.class, "handle", MethodType.methodType(String.class, String.class));
+      MethodHandle boundMh = mh.bindTo(handler);
 
-            // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
-            FunctionDescriptor upcallDesc = FunctionDescriptor.of(
-                ValueLayout.ADDRESS,  // return: *mut c_char
-                ValueLayout.ADDRESS,  // param 0: *mut c_void (context)
-                ValueLayout.ADDRESS   // param 1: *const c_char (request JSON)
-            );
+      // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
+      FunctionDescriptor upcallDesc = FunctionDescriptor.of(
+          ValueLayout.ADDRESS, // return: *mut c_char
+          ValueLayout.ADDRESS, // param 0: *mut c_void (context)
+          ValueLayout.ADDRESS // param 1: *const c_char (request JSON)
+          );
 
-            // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
-            // Marshals C pointers <-> Java strings via Arena
-            MethodHandle baseMh = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
-                MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
-            );
-            MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
+      // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
+      // Marshals C pointers <-> Java strings via Arena
+      MethodHandle baseMh = lookup.findStatic(
+          this.getClass(),
+          "invokeHandlerWithMarshal",
+          MethodType.methodType(
+              MemorySegment.class,
+              MemorySegment.class,
+              MemorySegment.class,
+              Callable.class,
+              Arena.class));
+      MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
 
-            MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
+      MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
-            // Get variant registration downcall handle
-            MemorySegment varAddr = LOOKUP.find("spikard_app_register_route_get")
-                .or(() -> LOOKUP.find("_spikard_app_register_route_get"))
-                .orElseThrow();
+      // Get variant registration downcall handle
+      MemorySegment varAddr = LOOKUP
+          .find("spikard_app_register_route_post")
+          .or(() -> LOOKUP.find("_spikard_app_register_route_post"))
+          .orElseThrow();
 
-            FunctionDescriptor varDesc = FunctionDescriptor.of(
-                ValueLayout.JAVA_INT,  // return: int
-                ValueLayout.ADDRESS,   // owner: *mut opaque
-                ValueLayout.ADDRESS,   // callback: upcall stub
-                ValueLayout.ADDRESS    // path: *const c_char
-            );
+      FunctionDescriptor varDesc = FunctionDescriptor.of(
+          ValueLayout.JAVA_INT, // return: int
+          ValueLayout.ADDRESS, // owner: *mut opaque
+          ValueLayout.ADDRESS, // callback: upcall stub
+          ValueLayout.ADDRESS // path: *const c_char
+          );
 
-            MethodHandle varHandle = LINKER.downcallHandle(varAddr, varDesc);
+      MethodHandle varHandle = LINKER.downcallHandle(varAddr, varDesc);
 
-            Object[] args = new Object[] {
-                ownerHandle,     // owner
-                upcallStub,      // callback
-                path             // path
-            };
-            return (int) varHandle.invokeExact(args);
-        } catch (Throwable e) {
-            throw new RuntimeException("Failed to register get handler", e);
-        }
+      Object[] args = new Object[] {
+        ownerHandle, // owner
+        upcallStub, // callback
+        path // path
+      };
+      return (int) varHandle.invokeExact(args);
+    } catch (Throwable e) {
+      throw new RuntimeException("Failed to register post handler", e);
     }
+  }
 
+  /**
+   * Register a PUT route at the given path.
+   *
+   * Invokes C FFI: spikard_app_register_route_put
+   *
+   * @param path route path
+   * @param handler functional interface receiving JSON request, returning JSON response
+   * @return 0 on success, non-zero error code on failure
+   */
+  public int put(String path, Callable handler) {
+    try {
+      // Build upcall stub from handler
+      MethodHandles.Lookup lookup = MethodHandles.lookup();
+      MethodHandle mh = lookup.findVirtual(
+          Callable.class, "handle", MethodType.methodType(String.class, String.class));
+      MethodHandle boundMh = mh.bindTo(handler);
 
-    /**
-     * Register a POST route at the given path.
-     *
-     * Invokes C FFI: spikard_app_register_route_post
-     *
-     * @param path route path
-     * @param handler functional interface receiving JSON request, returning JSON response
-     * @return 0 on success, non-zero error code on failure
-     */
-    public int post(String path, Callable handler) {
-        try {
-            // Build upcall stub from handler
-            MethodHandles.Lookup lookup = MethodHandles.lookup();
-            MethodHandle mh = lookup.findVirtual(Callable.class, "handle",
-                MethodType.methodType(String.class, String.class));
-            MethodHandle boundMh = mh.bindTo(handler);
+      // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
+      FunctionDescriptor upcallDesc = FunctionDescriptor.of(
+          ValueLayout.ADDRESS, // return: *mut c_char
+          ValueLayout.ADDRESS, // param 0: *mut c_void (context)
+          ValueLayout.ADDRESS // param 1: *const c_char (request JSON)
+          );
 
-            // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
-            FunctionDescriptor upcallDesc = FunctionDescriptor.of(
-                ValueLayout.ADDRESS,  // return: *mut c_char
-                ValueLayout.ADDRESS,  // param 0: *mut c_void (context)
-                ValueLayout.ADDRESS   // param 1: *const c_char (request JSON)
-            );
+      // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
+      // Marshals C pointers <-> Java strings via Arena
+      MethodHandle baseMh = lookup.findStatic(
+          this.getClass(),
+          "invokeHandlerWithMarshal",
+          MethodType.methodType(
+              MemorySegment.class,
+              MemorySegment.class,
+              MemorySegment.class,
+              Callable.class,
+              Arena.class));
+      MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
 
-            // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
-            // Marshals C pointers <-> Java strings via Arena
-            MethodHandle baseMh = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
-                MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
-            );
-            MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
+      MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
-            MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
+      // Get variant registration downcall handle
+      MemorySegment varAddr = LOOKUP
+          .find("spikard_app_register_route_put")
+          .or(() -> LOOKUP.find("_spikard_app_register_route_put"))
+          .orElseThrow();
 
-            // Get variant registration downcall handle
-            MemorySegment varAddr = LOOKUP.find("spikard_app_register_route_post")
-                .or(() -> LOOKUP.find("_spikard_app_register_route_post"))
-                .orElseThrow();
+      FunctionDescriptor varDesc = FunctionDescriptor.of(
+          ValueLayout.JAVA_INT, // return: int
+          ValueLayout.ADDRESS, // owner: *mut opaque
+          ValueLayout.ADDRESS, // callback: upcall stub
+          ValueLayout.ADDRESS // path: *const c_char
+          );
 
-            FunctionDescriptor varDesc = FunctionDescriptor.of(
-                ValueLayout.JAVA_INT,  // return: int
-                ValueLayout.ADDRESS,   // owner: *mut opaque
-                ValueLayout.ADDRESS,   // callback: upcall stub
-                ValueLayout.ADDRESS    // path: *const c_char
-            );
+      MethodHandle varHandle = LINKER.downcallHandle(varAddr, varDesc);
 
-            MethodHandle varHandle = LINKER.downcallHandle(varAddr, varDesc);
-
-            Object[] args = new Object[] {
-                ownerHandle,     // owner
-                upcallStub,      // callback
-                path             // path
-            };
-            return (int) varHandle.invokeExact(args);
-        } catch (Throwable e) {
-            throw new RuntimeException("Failed to register post handler", e);
-        }
+      Object[] args = new Object[] {
+        ownerHandle, // owner
+        upcallStub, // callback
+        path // path
+      };
+      return (int) varHandle.invokeExact(args);
+    } catch (Throwable e) {
+      throw new RuntimeException("Failed to register put handler", e);
     }
+  }
 
+  /**
+   * Register a PATCH route at the given path.
+   *
+   * Invokes C FFI: spikard_app_register_route_patch
+   *
+   * @param path route path
+   * @param handler functional interface receiving JSON request, returning JSON response
+   * @return 0 on success, non-zero error code on failure
+   */
+  public int patch(String path, Callable handler) {
+    try {
+      // Build upcall stub from handler
+      MethodHandles.Lookup lookup = MethodHandles.lookup();
+      MethodHandle mh = lookup.findVirtual(
+          Callable.class, "handle", MethodType.methodType(String.class, String.class));
+      MethodHandle boundMh = mh.bindTo(handler);
 
-    /**
-     * Register a PUT route at the given path.
-     *
-     * Invokes C FFI: spikard_app_register_route_put
-     *
-     * @param path route path
-     * @param handler functional interface receiving JSON request, returning JSON response
-     * @return 0 on success, non-zero error code on failure
-     */
-    public int put(String path, Callable handler) {
-        try {
-            // Build upcall stub from handler
-            MethodHandles.Lookup lookup = MethodHandles.lookup();
-            MethodHandle mh = lookup.findVirtual(Callable.class, "handle",
-                MethodType.methodType(String.class, String.class));
-            MethodHandle boundMh = mh.bindTo(handler);
+      // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
+      FunctionDescriptor upcallDesc = FunctionDescriptor.of(
+          ValueLayout.ADDRESS, // return: *mut c_char
+          ValueLayout.ADDRESS, // param 0: *mut c_void (context)
+          ValueLayout.ADDRESS // param 1: *const c_char (request JSON)
+          );
 
-            // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
-            FunctionDescriptor upcallDesc = FunctionDescriptor.of(
-                ValueLayout.ADDRESS,  // return: *mut c_char
-                ValueLayout.ADDRESS,  // param 0: *mut c_void (context)
-                ValueLayout.ADDRESS   // param 1: *const c_char (request JSON)
-            );
+      // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
+      // Marshals C pointers <-> Java strings via Arena
+      MethodHandle baseMh = lookup.findStatic(
+          this.getClass(),
+          "invokeHandlerWithMarshal",
+          MethodType.methodType(
+              MemorySegment.class,
+              MemorySegment.class,
+              MemorySegment.class,
+              Callable.class,
+              Arena.class));
+      MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
 
-            // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
-            // Marshals C pointers <-> Java strings via Arena
-            MethodHandle baseMh = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
-                MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
-            );
-            MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
+      MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
-            MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
+      // Get variant registration downcall handle
+      MemorySegment varAddr = LOOKUP
+          .find("spikard_app_register_route_patch")
+          .or(() -> LOOKUP.find("_spikard_app_register_route_patch"))
+          .orElseThrow();
 
-            // Get variant registration downcall handle
-            MemorySegment varAddr = LOOKUP.find("spikard_app_register_route_put")
-                .or(() -> LOOKUP.find("_spikard_app_register_route_put"))
-                .orElseThrow();
+      FunctionDescriptor varDesc = FunctionDescriptor.of(
+          ValueLayout.JAVA_INT, // return: int
+          ValueLayout.ADDRESS, // owner: *mut opaque
+          ValueLayout.ADDRESS, // callback: upcall stub
+          ValueLayout.ADDRESS // path: *const c_char
+          );
 
-            FunctionDescriptor varDesc = FunctionDescriptor.of(
-                ValueLayout.JAVA_INT,  // return: int
-                ValueLayout.ADDRESS,   // owner: *mut opaque
-                ValueLayout.ADDRESS,   // callback: upcall stub
-                ValueLayout.ADDRESS    // path: *const c_char
-            );
+      MethodHandle varHandle = LINKER.downcallHandle(varAddr, varDesc);
 
-            MethodHandle varHandle = LINKER.downcallHandle(varAddr, varDesc);
-
-            Object[] args = new Object[] {
-                ownerHandle,     // owner
-                upcallStub,      // callback
-                path             // path
-            };
-            return (int) varHandle.invokeExact(args);
-        } catch (Throwable e) {
-            throw new RuntimeException("Failed to register put handler", e);
-        }
+      Object[] args = new Object[] {
+        ownerHandle, // owner
+        upcallStub, // callback
+        path // path
+      };
+      return (int) varHandle.invokeExact(args);
+    } catch (Throwable e) {
+      throw new RuntimeException("Failed to register patch handler", e);
     }
+  }
 
+  /**
+   * Register a DELETE route at the given path.
+   *
+   * Invokes C FFI: spikard_app_register_route_delete
+   *
+   * @param path route path
+   * @param handler functional interface receiving JSON request, returning JSON response
+   * @return 0 on success, non-zero error code on failure
+   */
+  public int delete(String path, Callable handler) {
+    try {
+      // Build upcall stub from handler
+      MethodHandles.Lookup lookup = MethodHandles.lookup();
+      MethodHandle mh = lookup.findVirtual(
+          Callable.class, "handle", MethodType.methodType(String.class, String.class));
+      MethodHandle boundMh = mh.bindTo(handler);
 
-    /**
-     * Register a PATCH route at the given path.
-     *
-     * Invokes C FFI: spikard_app_register_route_patch
-     *
-     * @param path route path
-     * @param handler functional interface receiving JSON request, returning JSON response
-     * @return 0 on success, non-zero error code on failure
-     */
-    public int patch(String path, Callable handler) {
-        try {
-            // Build upcall stub from handler
-            MethodHandles.Lookup lookup = MethodHandles.lookup();
-            MethodHandle mh = lookup.findVirtual(Callable.class, "handle",
-                MethodType.methodType(String.class, String.class));
-            MethodHandle boundMh = mh.bindTo(handler);
+      // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
+      FunctionDescriptor upcallDesc = FunctionDescriptor.of(
+          ValueLayout.ADDRESS, // return: *mut c_char
+          ValueLayout.ADDRESS, // param 0: *mut c_void (context)
+          ValueLayout.ADDRESS // param 1: *const c_char (request JSON)
+          );
 
-            // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
-            FunctionDescriptor upcallDesc = FunctionDescriptor.of(
-                ValueLayout.ADDRESS,  // return: *mut c_char
-                ValueLayout.ADDRESS,  // param 0: *mut c_void (context)
-                ValueLayout.ADDRESS   // param 1: *const c_char (request JSON)
-            );
+      // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
+      // Marshals C pointers <-> Java strings via Arena
+      MethodHandle baseMh = lookup.findStatic(
+          this.getClass(),
+          "invokeHandlerWithMarshal",
+          MethodType.methodType(
+              MemorySegment.class,
+              MemorySegment.class,
+              MemorySegment.class,
+              Callable.class,
+              Arena.class));
+      MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
 
-            // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
-            // Marshals C pointers <-> Java strings via Arena
-            MethodHandle baseMh = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
-                MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
-            );
-            MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
+      MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
-            MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
+      // Get variant registration downcall handle
+      MemorySegment varAddr = LOOKUP
+          .find("spikard_app_register_route_delete")
+          .or(() -> LOOKUP.find("_spikard_app_register_route_delete"))
+          .orElseThrow();
 
-            // Get variant registration downcall handle
-            MemorySegment varAddr = LOOKUP.find("spikard_app_register_route_patch")
-                .or(() -> LOOKUP.find("_spikard_app_register_route_patch"))
-                .orElseThrow();
+      FunctionDescriptor varDesc = FunctionDescriptor.of(
+          ValueLayout.JAVA_INT, // return: int
+          ValueLayout.ADDRESS, // owner: *mut opaque
+          ValueLayout.ADDRESS, // callback: upcall stub
+          ValueLayout.ADDRESS // path: *const c_char
+          );
 
-            FunctionDescriptor varDesc = FunctionDescriptor.of(
-                ValueLayout.JAVA_INT,  // return: int
-                ValueLayout.ADDRESS,   // owner: *mut opaque
-                ValueLayout.ADDRESS,   // callback: upcall stub
-                ValueLayout.ADDRESS    // path: *const c_char
-            );
+      MethodHandle varHandle = LINKER.downcallHandle(varAddr, varDesc);
 
-            MethodHandle varHandle = LINKER.downcallHandle(varAddr, varDesc);
-
-            Object[] args = new Object[] {
-                ownerHandle,     // owner
-                upcallStub,      // callback
-                path             // path
-            };
-            return (int) varHandle.invokeExact(args);
-        } catch (Throwable e) {
-            throw new RuntimeException("Failed to register patch handler", e);
-        }
+      Object[] args = new Object[] {
+        ownerHandle, // owner
+        upcallStub, // callback
+        path // path
+      };
+      return (int) varHandle.invokeExact(args);
+    } catch (Throwable e) {
+      throw new RuntimeException("Failed to register delete handler", e);
     }
+  }
 
+  /**
+   * Register a HEAD route at the given path.
+   *
+   * Invokes C FFI: spikard_app_register_route_head
+   *
+   * @param path route path
+   * @param handler functional interface receiving JSON request, returning JSON response
+   * @return 0 on success, non-zero error code on failure
+   */
+  public int head(String path, Callable handler) {
+    try {
+      // Build upcall stub from handler
+      MethodHandles.Lookup lookup = MethodHandles.lookup();
+      MethodHandle mh = lookup.findVirtual(
+          Callable.class, "handle", MethodType.methodType(String.class, String.class));
+      MethodHandle boundMh = mh.bindTo(handler);
 
-    /**
-     * Register a DELETE route at the given path.
-     *
-     * Invokes C FFI: spikard_app_register_route_delete
-     *
-     * @param path route path
-     * @param handler functional interface receiving JSON request, returning JSON response
-     * @return 0 on success, non-zero error code on failure
-     */
-    public int delete(String path, Callable handler) {
-        try {
-            // Build upcall stub from handler
-            MethodHandles.Lookup lookup = MethodHandles.lookup();
-            MethodHandle mh = lookup.findVirtual(Callable.class, "handle",
-                MethodType.methodType(String.class, String.class));
-            MethodHandle boundMh = mh.bindTo(handler);
+      // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
+      FunctionDescriptor upcallDesc = FunctionDescriptor.of(
+          ValueLayout.ADDRESS, // return: *mut c_char
+          ValueLayout.ADDRESS, // param 0: *mut c_void (context)
+          ValueLayout.ADDRESS // param 1: *const c_char (request JSON)
+          );
 
-            // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
-            FunctionDescriptor upcallDesc = FunctionDescriptor.of(
-                ValueLayout.ADDRESS,  // return: *mut c_char
-                ValueLayout.ADDRESS,  // param 0: *mut c_void (context)
-                ValueLayout.ADDRESS   // param 1: *const c_char (request JSON)
-            );
+      // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
+      // Marshals C pointers <-> Java strings via Arena
+      MethodHandle baseMh = lookup.findStatic(
+          this.getClass(),
+          "invokeHandlerWithMarshal",
+          MethodType.methodType(
+              MemorySegment.class,
+              MemorySegment.class,
+              MemorySegment.class,
+              Callable.class,
+              Arena.class));
+      MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
 
-            // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
-            // Marshals C pointers <-> Java strings via Arena
-            MethodHandle baseMh = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
-                MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
-            );
-            MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
+      MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
-            MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
+      // Get variant registration downcall handle
+      MemorySegment varAddr = LOOKUP
+          .find("spikard_app_register_route_head")
+          .or(() -> LOOKUP.find("_spikard_app_register_route_head"))
+          .orElseThrow();
 
-            // Get variant registration downcall handle
-            MemorySegment varAddr = LOOKUP.find("spikard_app_register_route_delete")
-                .or(() -> LOOKUP.find("_spikard_app_register_route_delete"))
-                .orElseThrow();
+      FunctionDescriptor varDesc = FunctionDescriptor.of(
+          ValueLayout.JAVA_INT, // return: int
+          ValueLayout.ADDRESS, // owner: *mut opaque
+          ValueLayout.ADDRESS, // callback: upcall stub
+          ValueLayout.ADDRESS // path: *const c_char
+          );
 
-            FunctionDescriptor varDesc = FunctionDescriptor.of(
-                ValueLayout.JAVA_INT,  // return: int
-                ValueLayout.ADDRESS,   // owner: *mut opaque
-                ValueLayout.ADDRESS,   // callback: upcall stub
-                ValueLayout.ADDRESS    // path: *const c_char
-            );
+      MethodHandle varHandle = LINKER.downcallHandle(varAddr, varDesc);
 
-            MethodHandle varHandle = LINKER.downcallHandle(varAddr, varDesc);
-
-            Object[] args = new Object[] {
-                ownerHandle,     // owner
-                upcallStub,      // callback
-                path             // path
-            };
-            return (int) varHandle.invokeExact(args);
-        } catch (Throwable e) {
-            throw new RuntimeException("Failed to register delete handler", e);
-        }
+      Object[] args = new Object[] {
+        ownerHandle, // owner
+        upcallStub, // callback
+        path // path
+      };
+      return (int) varHandle.invokeExact(args);
+    } catch (Throwable e) {
+      throw new RuntimeException("Failed to register head handler", e);
     }
+  }
 
+  /**
+   * Register an OPTIONS route at the given path.
+   *
+   * Invokes C FFI: spikard_app_register_route_options
+   *
+   * @param path route path
+   * @param handler functional interface receiving JSON request, returning JSON response
+   * @return 0 on success, non-zero error code on failure
+   */
+  public int options(String path, Callable handler) {
+    try {
+      // Build upcall stub from handler
+      MethodHandles.Lookup lookup = MethodHandles.lookup();
+      MethodHandle mh = lookup.findVirtual(
+          Callable.class, "handle", MethodType.methodType(String.class, String.class));
+      MethodHandle boundMh = mh.bindTo(handler);
 
-    /**
-     * Register a HEAD route at the given path.
-     *
-     * Invokes C FFI: spikard_app_register_route_head
-     *
-     * @param path route path
-     * @param handler functional interface receiving JSON request, returning JSON response
-     * @return 0 on success, non-zero error code on failure
-     */
-    public int head(String path, Callable handler) {
-        try {
-            // Build upcall stub from handler
-            MethodHandles.Lookup lookup = MethodHandles.lookup();
-            MethodHandle mh = lookup.findVirtual(Callable.class, "handle",
-                MethodType.methodType(String.class, String.class));
-            MethodHandle boundMh = mh.bindTo(handler);
+      // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
+      FunctionDescriptor upcallDesc = FunctionDescriptor.of(
+          ValueLayout.ADDRESS, // return: *mut c_char
+          ValueLayout.ADDRESS, // param 0: *mut c_void (context)
+          ValueLayout.ADDRESS // param 1: *const c_char (request JSON)
+          );
 
-            // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
-            FunctionDescriptor upcallDesc = FunctionDescriptor.of(
-                ValueLayout.ADDRESS,  // return: *mut c_char
-                ValueLayout.ADDRESS,  // param 0: *mut c_void (context)
-                ValueLayout.ADDRESS   // param 1: *const c_char (request JSON)
-            );
+      // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
+      // Marshals C pointers <-> Java strings via Arena
+      MethodHandle baseMh = lookup.findStatic(
+          this.getClass(),
+          "invokeHandlerWithMarshal",
+          MethodType.methodType(
+              MemorySegment.class,
+              MemorySegment.class,
+              MemorySegment.class,
+              Callable.class,
+              Arena.class));
+      MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
 
-            // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
-            // Marshals C pointers <-> Java strings via Arena
-            MethodHandle baseMh = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
-                MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
-            );
-            MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
+      MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
-            MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
+      // Get variant registration downcall handle
+      MemorySegment varAddr = LOOKUP
+          .find("spikard_app_register_route_options")
+          .or(() -> LOOKUP.find("_spikard_app_register_route_options"))
+          .orElseThrow();
 
-            // Get variant registration downcall handle
-            MemorySegment varAddr = LOOKUP.find("spikard_app_register_route_head")
-                .or(() -> LOOKUP.find("_spikard_app_register_route_head"))
-                .orElseThrow();
+      FunctionDescriptor varDesc = FunctionDescriptor.of(
+          ValueLayout.JAVA_INT, // return: int
+          ValueLayout.ADDRESS, // owner: *mut opaque
+          ValueLayout.ADDRESS, // callback: upcall stub
+          ValueLayout.ADDRESS // path: *const c_char
+          );
 
-            FunctionDescriptor varDesc = FunctionDescriptor.of(
-                ValueLayout.JAVA_INT,  // return: int
-                ValueLayout.ADDRESS,   // owner: *mut opaque
-                ValueLayout.ADDRESS,   // callback: upcall stub
-                ValueLayout.ADDRESS    // path: *const c_char
-            );
+      MethodHandle varHandle = LINKER.downcallHandle(varAddr, varDesc);
 
-            MethodHandle varHandle = LINKER.downcallHandle(varAddr, varDesc);
-
-            Object[] args = new Object[] {
-                ownerHandle,     // owner
-                upcallStub,      // callback
-                path             // path
-            };
-            return (int) varHandle.invokeExact(args);
-        } catch (Throwable e) {
-            throw new RuntimeException("Failed to register head handler", e);
-        }
+      Object[] args = new Object[] {
+        ownerHandle, // owner
+        upcallStub, // callback
+        path // path
+      };
+      return (int) varHandle.invokeExact(args);
+    } catch (Throwable e) {
+      throw new RuntimeException("Failed to register options handler", e);
     }
+  }
 
+  /**
+   * Register a CONNECT route at the given path.
+   *
+   * Invokes C FFI: spikard_app_register_route_connect
+   *
+   * @param path route path
+   * @param handler functional interface receiving JSON request, returning JSON response
+   * @return 0 on success, non-zero error code on failure
+   */
+  public int connect(String path, Callable handler) {
+    try {
+      // Build upcall stub from handler
+      MethodHandles.Lookup lookup = MethodHandles.lookup();
+      MethodHandle mh = lookup.findVirtual(
+          Callable.class, "handle", MethodType.methodType(String.class, String.class));
+      MethodHandle boundMh = mh.bindTo(handler);
 
-    /**
-     * Register an OPTIONS route at the given path.
-     *
-     * Invokes C FFI: spikard_app_register_route_options
-     *
-     * @param path route path
-     * @param handler functional interface receiving JSON request, returning JSON response
-     * @return 0 on success, non-zero error code on failure
-     */
-    public int options(String path, Callable handler) {
-        try {
-            // Build upcall stub from handler
-            MethodHandles.Lookup lookup = MethodHandles.lookup();
-            MethodHandle mh = lookup.findVirtual(Callable.class, "handle",
-                MethodType.methodType(String.class, String.class));
-            MethodHandle boundMh = mh.bindTo(handler);
+      // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
+      FunctionDescriptor upcallDesc = FunctionDescriptor.of(
+          ValueLayout.ADDRESS, // return: *mut c_char
+          ValueLayout.ADDRESS, // param 0: *mut c_void (context)
+          ValueLayout.ADDRESS // param 1: *const c_char (request JSON)
+          );
 
-            // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
-            FunctionDescriptor upcallDesc = FunctionDescriptor.of(
-                ValueLayout.ADDRESS,  // return: *mut c_char
-                ValueLayout.ADDRESS,  // param 0: *mut c_void (context)
-                ValueLayout.ADDRESS   // param 1: *const c_char (request JSON)
-            );
+      // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
+      // Marshals C pointers <-> Java strings via Arena
+      MethodHandle baseMh = lookup.findStatic(
+          this.getClass(),
+          "invokeHandlerWithMarshal",
+          MethodType.methodType(
+              MemorySegment.class,
+              MemorySegment.class,
+              MemorySegment.class,
+              Callable.class,
+              Arena.class));
+      MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
 
-            // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
-            // Marshals C pointers <-> Java strings via Arena
-            MethodHandle baseMh = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
-                MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
-            );
-            MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
+      MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
-            MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
+      // Get variant registration downcall handle
+      MemorySegment varAddr = LOOKUP
+          .find("spikard_app_register_route_connect")
+          .or(() -> LOOKUP.find("_spikard_app_register_route_connect"))
+          .orElseThrow();
 
-            // Get variant registration downcall handle
-            MemorySegment varAddr = LOOKUP.find("spikard_app_register_route_options")
-                .or(() -> LOOKUP.find("_spikard_app_register_route_options"))
-                .orElseThrow();
+      FunctionDescriptor varDesc = FunctionDescriptor.of(
+          ValueLayout.JAVA_INT, // return: int
+          ValueLayout.ADDRESS, // owner: *mut opaque
+          ValueLayout.ADDRESS, // callback: upcall stub
+          ValueLayout.ADDRESS // path: *const c_char
+          );
 
-            FunctionDescriptor varDesc = FunctionDescriptor.of(
-                ValueLayout.JAVA_INT,  // return: int
-                ValueLayout.ADDRESS,   // owner: *mut opaque
-                ValueLayout.ADDRESS,   // callback: upcall stub
-                ValueLayout.ADDRESS    // path: *const c_char
-            );
+      MethodHandle varHandle = LINKER.downcallHandle(varAddr, varDesc);
 
-            MethodHandle varHandle = LINKER.downcallHandle(varAddr, varDesc);
-
-            Object[] args = new Object[] {
-                ownerHandle,     // owner
-                upcallStub,      // callback
-                path             // path
-            };
-            return (int) varHandle.invokeExact(args);
-        } catch (Throwable e) {
-            throw new RuntimeException("Failed to register options handler", e);
-        }
+      Object[] args = new Object[] {
+        ownerHandle, // owner
+        upcallStub, // callback
+        path // path
+      };
+      return (int) varHandle.invokeExact(args);
+    } catch (Throwable e) {
+      throw new RuntimeException("Failed to register connect handler", e);
     }
+  }
 
+  /**
+   * Register a TRACE route at the given path.
+   *
+   * Invokes C FFI: spikard_app_register_route_trace
+   *
+   * @param path route path
+   * @param handler functional interface receiving JSON request, returning JSON response
+   * @return 0 on success, non-zero error code on failure
+   */
+  public int trace(String path, Callable handler) {
+    try {
+      // Build upcall stub from handler
+      MethodHandles.Lookup lookup = MethodHandles.lookup();
+      MethodHandle mh = lookup.findVirtual(
+          Callable.class, "handle", MethodType.methodType(String.class, String.class));
+      MethodHandle boundMh = mh.bindTo(handler);
 
-    /**
-     * Register a CONNECT route at the given path.
-     *
-     * Invokes C FFI: spikard_app_register_route_connect
-     *
-     * @param path route path
-     * @param handler functional interface receiving JSON request, returning JSON response
-     * @return 0 on success, non-zero error code on failure
-     */
-    public int connect(String path, Callable handler) {
-        try {
-            // Build upcall stub from handler
-            MethodHandles.Lookup lookup = MethodHandles.lookup();
-            MethodHandle mh = lookup.findVirtual(Callable.class, "handle",
-                MethodType.methodType(String.class, String.class));
-            MethodHandle boundMh = mh.bindTo(handler);
+      // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
+      FunctionDescriptor upcallDesc = FunctionDescriptor.of(
+          ValueLayout.ADDRESS, // return: *mut c_char
+          ValueLayout.ADDRESS, // param 0: *mut c_void (context)
+          ValueLayout.ADDRESS // param 1: *const c_char (request JSON)
+          );
 
-            // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
-            FunctionDescriptor upcallDesc = FunctionDescriptor.of(
-                ValueLayout.ADDRESS,  // return: *mut c_char
-                ValueLayout.ADDRESS,  // param 0: *mut c_void (context)
-                ValueLayout.ADDRESS   // param 1: *const c_char (request JSON)
-            );
+      // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
+      // Marshals C pointers <-> Java strings via Arena
+      MethodHandle baseMh = lookup.findStatic(
+          this.getClass(),
+          "invokeHandlerWithMarshal",
+          MethodType.methodType(
+              MemorySegment.class,
+              MemorySegment.class,
+              MemorySegment.class,
+              Callable.class,
+              Arena.class));
+      MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
 
-            // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
-            // Marshals C pointers <-> Java strings via Arena
-            MethodHandle baseMh = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
-                MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
-            );
-            MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
+      MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
 
-            MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
+      // Get variant registration downcall handle
+      MemorySegment varAddr = LOOKUP
+          .find("spikard_app_register_route_trace")
+          .or(() -> LOOKUP.find("_spikard_app_register_route_trace"))
+          .orElseThrow();
 
-            // Get variant registration downcall handle
-            MemorySegment varAddr = LOOKUP.find("spikard_app_register_route_connect")
-                .or(() -> LOOKUP.find("_spikard_app_register_route_connect"))
-                .orElseThrow();
+      FunctionDescriptor varDesc = FunctionDescriptor.of(
+          ValueLayout.JAVA_INT, // return: int
+          ValueLayout.ADDRESS, // owner: *mut opaque
+          ValueLayout.ADDRESS, // callback: upcall stub
+          ValueLayout.ADDRESS // path: *const c_char
+          );
 
-            FunctionDescriptor varDesc = FunctionDescriptor.of(
-                ValueLayout.JAVA_INT,  // return: int
-                ValueLayout.ADDRESS,   // owner: *mut opaque
-                ValueLayout.ADDRESS,   // callback: upcall stub
-                ValueLayout.ADDRESS    // path: *const c_char
-            );
+      MethodHandle varHandle = LINKER.downcallHandle(varAddr, varDesc);
 
-            MethodHandle varHandle = LINKER.downcallHandle(varAddr, varDesc);
-
-            Object[] args = new Object[] {
-                ownerHandle,     // owner
-                upcallStub,      // callback
-                path             // path
-            };
-            return (int) varHandle.invokeExact(args);
-        } catch (Throwable e) {
-            throw new RuntimeException("Failed to register connect handler", e);
-        }
+      Object[] args = new Object[] {
+        ownerHandle, // owner
+        upcallStub, // callback
+        path // path
+      };
+      return (int) varHandle.invokeExact(args);
+    } catch (Throwable e) {
+      throw new RuntimeException("Failed to register trace handler", e);
     }
+  }
 
+  /**
+   * run.
+   * Invokes C FFI: spikard_app_ep_run
+   */
+  public void run() {
+    try {
+      MemorySegment epAddr = LOOKUP
+          .find("spikard_app_ep_run")
+          .or(() -> LOOKUP.find("_spikard_app_ep_run"))
+          .orElseThrow();
+      FunctionDescriptor epDesc = FunctionDescriptor.of(
+          ValueLayout.JAVA_INT, // return int (status)
+          ValueLayout.ADDRESS // owner: *mut opaque
+          );
+      MethodHandle epHandle = LINKER.downcallHandle(epAddr, epDesc);
+      epHandle.invoke(ownerHandle);
 
-    /**
-     * Register a TRACE route at the given path.
-     *
-     * Invokes C FFI: spikard_app_register_route_trace
-     *
-     * @param path route path
-     * @param handler functional interface receiving JSON request, returning JSON response
-     * @return 0 on success, non-zero error code on failure
-     */
-    public int trace(String path, Callable handler) {
-        try {
-            // Build upcall stub from handler
-            MethodHandles.Lookup lookup = MethodHandles.lookup();
-            MethodHandle mh = lookup.findVirtual(Callable.class, "handle",
-                MethodType.methodType(String.class, String.class));
-            MethodHandle boundMh = mh.bindTo(handler);
-
-            // Build C FFI signature: (context: ADDRESS, request: ADDRESS) -> ADDRESS
-            FunctionDescriptor upcallDesc = FunctionDescriptor.of(
-                ValueLayout.ADDRESS,  // return: *mut c_char
-                ValueLayout.ADDRESS,  // param 0: *mut c_void (context)
-                ValueLayout.ADDRESS   // param 1: *const c_char (request JSON)
-            );
-
-            // Create adapter: (context_ptr: ADDRESS, request_ptr: ADDRESS) -> response_ptr: ADDRESS
-            // Marshals C pointers <-> Java strings via Arena
-            MethodHandle baseMh = lookup.findStatic(this.getClass(), "invokeHandlerWithMarshal",
-                MethodType.methodType(MemorySegment.class, MemorySegment.class, MemorySegment.class, Callable.class, Arena.class)
-            );
-            MethodHandle adapter = MethodHandles.insertArguments(baseMh, 2, handler, arena);
-
-            MemorySegment upcallStub = LINKER.upcallStub(adapter, upcallDesc, arena);
-
-            // Get variant registration downcall handle
-            MemorySegment varAddr = LOOKUP.find("spikard_app_register_route_trace")
-                .or(() -> LOOKUP.find("_spikard_app_register_route_trace"))
-                .orElseThrow();
-
-            FunctionDescriptor varDesc = FunctionDescriptor.of(
-                ValueLayout.JAVA_INT,  // return: int
-                ValueLayout.ADDRESS,   // owner: *mut opaque
-                ValueLayout.ADDRESS,   // callback: upcall stub
-                ValueLayout.ADDRESS    // path: *const c_char
-            );
-
-            MethodHandle varHandle = LINKER.downcallHandle(varAddr, varDesc);
-
-            Object[] args = new Object[] {
-                ownerHandle,     // owner
-                upcallStub,      // callback
-                path             // path
-            };
-            return (int) varHandle.invokeExact(args);
-        } catch (Throwable e) {
-            throw new RuntimeException("Failed to register trace handler", e);
-        }
+    } catch (Throwable e) {
+      throw new RuntimeException("Failed to invoke entrypoint", e);
     }
+  }
+  /**
+   * into_router.
+   * Invokes C FFI: spikard_app_ep_into_router
+   */
+  public long into_router() {
+    try {
+      MemorySegment epAddr = LOOKUP
+          .find("spikard_app_ep_into_router")
+          .or(() -> LOOKUP.find("_spikard_app_ep_into_router"))
+          .orElseThrow();
+      FunctionDescriptor epDesc = FunctionDescriptor.of(
+          ValueLayout.ADDRESS, // return *mut opaque or int status
+          ValueLayout.ADDRESS // owner: *mut opaque
+          );
+      MethodHandle epHandle = LINKER.downcallHandle(epAddr, epDesc);
+      return (long) epHandle.invoke(ownerHandle);
 
-
-    /**
-     * run.
-     * Invokes C FFI: spikard_app_ep_run
-     */
-    public void run() {
-        try {
-            MemorySegment epAddr = LOOKUP.find("spikard_app_ep_run")
-                .or(() -> LOOKUP.find("_spikard_app_ep_run"))
-                .orElseThrow();
-            FunctionDescriptor epDesc = FunctionDescriptor.of(
-                ValueLayout.JAVA_INT,    // return int (status)
-                ValueLayout.ADDRESS       // owner: *mut opaque
-            );
-            MethodHandle epHandle = LINKER.downcallHandle(epAddr, epDesc);
-epHandle.invoke(ownerHandle            );
-
-        } catch (Throwable e) {
-            throw new RuntimeException("Failed to invoke entrypoint", e);
-        }
+    } catch (Throwable e) {
+      throw new RuntimeException("Failed to invoke entrypoint", e);
     }
-    /**
-     * into_router.
-     * Invokes C FFI: spikard_app_ep_into_router
-     */
-    public long into_router() {
-        try {
-            MemorySegment epAddr = LOOKUP.find("spikard_app_ep_into_router")
-                .or(() -> LOOKUP.find("_spikard_app_ep_into_router"))
-                .orElseThrow();
-            FunctionDescriptor epDesc = FunctionDescriptor.of(
-                ValueLayout.ADDRESS,     // return *mut opaque or int status
-                ValueLayout.ADDRESS       // owner: *mut opaque
-            );
-            MethodHandle epHandle = LINKER.downcallHandle(epAddr, epDesc);
-return (long) epHandle.invoke(ownerHandle            );
+  }
+  /**
+   * Configure the service with a host and port.
+   * Creates a ServerConfig from JSON and applies it via the C FFI.
+   */
+  public void config(String host, int port) {
+    try {
+      // Build ServerConfig JSON from host and port
+      String configJson =
+          String.format("{\"host\": \"%s\", \"port\": %d}", host.replace("\"", "\\\""), port);
 
-        } catch (Throwable e) {
-            throw new RuntimeException("Failed to invoke entrypoint", e);
-        }
+      // Allocate and populate the config JSON string in the shared arena
+      MemorySegment configSegment = arena.allocateFrom(configJson);
+
+      // Look up the C function to create ServerConfig from JSON
+      MemorySegment createAddr = LOOKUP
+          .find("spikard_server_config_from_json")
+          .or(() -> LOOKUP.find("_spikard_server_config_from_json"))
+          .orElseThrow();
+      FunctionDescriptor createDesc = FunctionDescriptor.of(
+          ValueLayout.ADDRESS // return: ServerConfig*
+          ,
+          ValueLayout.ADDRESS // param: config JSON string
+          );
+      MethodHandle createHandle = LINKER.downcallHandle(createAddr, createDesc);
+      MemorySegment configHandle = (MemorySegment) createHandle.invoke(configSegment);
+
+      if (configHandle == null || configHandle.address() == 0) {
+        throw new RuntimeException("Failed to create ServerConfig from JSON");
+      }
+
+      // Look up the C function to apply config to the service
+      MemorySegment applyAddr = LOOKUP
+          .find("spikard_app_config")
+          .or(() -> LOOKUP.find("_spikard_app_config"))
+          .orElseThrow();
+      FunctionDescriptor applyDesc = FunctionDescriptor.of(
+          ValueLayout.ADDRESS, // return: *mut opaque (updated owner)
+          ValueLayout.ADDRESS, // owner: *mut opaque
+          ValueLayout.ADDRESS // config: ServerConfig*
+          );
+      MethodHandle applyHandle = LINKER.downcallHandle(applyAddr, applyDesc);
+      ownerHandle = (MemorySegment) applyHandle.invoke(ownerHandle, configHandle);
+
+      // Free the ServerConfig handle
+      MemorySegment freeAddr = LOOKUP
+          .find("spikard_server_config_free")
+          .or(() -> LOOKUP.find("_spikard_server_config_free"))
+          .orElseThrow();
+      FunctionDescriptor freeDesc = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS);
+      MethodHandle freeHandle = LINKER.downcallHandle(freeAddr, freeDesc);
+      freeHandle.invoke(configHandle);
+
+    } catch (Throwable e) {
+      throw new RuntimeException("Failed to configure host and port", e);
     }
-    /**
-     * Configure the service with a host and port.
-     * Creates a ServerConfig from JSON and applies it via the C FFI.
-     */
-    public void config(String host, int port) {
-        try {
-            // Build ServerConfig JSON from host and port
-            String configJson = String.format(
-                "{\"host\": \"%s\", \"port\": %d}",
-                host.replace("\"", "\\\""),
-                port
-            );
+  }
 
-            // Allocate and populate the config JSON string in the shared arena
-            MemorySegment configSegment = arena.allocateUtf8String(configJson);
-
-            // Look up the C function to create ServerConfig from JSON
-            MemorySegment createAddr = LOOKUP.find("spikard_server_config_from_json")
-                .or(() -> LOOKUP.find("_spikard_server_config_from_json"))
-                .orElseThrow();
-            FunctionDescriptor createDesc = FunctionDescriptor.of(
-                ValueLayout.ADDRESS   // return: ServerConfig*
-                , ValueLayout.ADDRESS  // param: config JSON string
-            );
-            MethodHandle createHandle = LINKER.downcallHandle(createAddr, createDesc);
-            MemorySegment configHandle = (MemorySegment) createHandle.invoke(configSegment);
-
-            if (configHandle == null || configHandle.address() == 0) {
-                throw new RuntimeException("Failed to create ServerConfig from JSON");
-            }
-
-            // Look up the C function to apply config to the service
-            MemorySegment applyAddr = LOOKUP.find("spikard_app_config")
-                .or(() -> LOOKUP.find("_spikard_app_config"))
-                .orElseThrow();
-            FunctionDescriptor applyDesc = FunctionDescriptor.of(
-                ValueLayout.ADDRESS,   // return: *mut opaque (updated owner)
-                ValueLayout.ADDRESS,   // owner: *mut opaque
-                ValueLayout.ADDRESS    // config: ServerConfig*
-            );
-            MethodHandle applyHandle = LINKER.downcallHandle(applyAddr, applyDesc);
-            ownerHandle = (MemorySegment) applyHandle.invoke(ownerHandle, configHandle);
-
-            // Free the ServerConfig handle
-            MemorySegment freeAddr = LOOKUP.find("spikard_server_config_free")
-                .or(() -> LOOKUP.find("_spikard_server_config_free"))
-                .orElseThrow();
-            FunctionDescriptor freeDesc = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS);
-            MethodHandle freeHandle = LINKER.downcallHandle(freeAddr, freeDesc);
-            freeHandle.invoke(configHandle);
-
-        } catch (Throwable e) {
-            throw new RuntimeException("Failed to configure host and port", e);
-        }
+  @Override
+  public void close() {
+    try {
+      MemorySegment freeAddr = LOOKUP
+          .find("spikard_app_free")
+          .or(() -> LOOKUP.find("_spikard_app_free"))
+          .orElseThrow();
+      FunctionDescriptor freeDesc = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS);
+      MethodHandle freeHandle = LINKER.downcallHandle(freeAddr, freeDesc);
+      if (ownerHandle != null) {
+        freeHandle.invoke(ownerHandle);
+        ownerHandle = null;
+      }
+      arena.close();
+    } catch (Throwable e) {
+      throw new RuntimeException("Failed to close service", e);
     }
-
-    @Override
-    public void close() {
-        try {
-            MemorySegment freeAddr = LOOKUP.find("spikard_app_free")
-                .or(() -> LOOKUP.find("_spikard_app_free"))
-                .orElseThrow();
-            FunctionDescriptor freeDesc = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS);
-            MethodHandle freeHandle = LINKER.downcallHandle(freeAddr, freeDesc);
-            if (ownerHandle != null) {
-                freeHandle.invoke(ownerHandle);
-                ownerHandle = null;
-            }
-            arena.close();
-        } catch (Throwable e) {
-            throw new RuntimeException("Failed to close service", e);
-        }
-    }
+  }
 }

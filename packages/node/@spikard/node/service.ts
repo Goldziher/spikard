@@ -51,7 +51,10 @@ export class App {
    */
   get(path: string, handler: (...args: any[]) => any): this;
   get(path: string): (fn: (...args: any[]) => any) => (...args: any[]) => any;
-  get(path: string, handler?: (...args: any[]) => any): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
+  get(
+    path: string,
+    handler?: (...args: any[]) => any,
+  ): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
     const builder = RouteBuilder.new(Method.Get, path);
     if (handler !== undefined) {
       this._app.get(path, handler);
@@ -67,7 +70,10 @@ export class App {
    */
   post(path: string, handler: (...args: any[]) => any): this;
   post(path: string): (fn: (...args: any[]) => any) => (...args: any[]) => any;
-  post(path: string, handler?: (...args: any[]) => any): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
+  post(
+    path: string,
+    handler?: (...args: any[]) => any,
+  ): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
     const builder = RouteBuilder.new(Method.Post, path);
     if (handler !== undefined) {
       this._app.post(path, handler);
@@ -83,7 +89,10 @@ export class App {
    */
   put(path: string, handler: (...args: any[]) => any): this;
   put(path: string): (fn: (...args: any[]) => any) => (...args: any[]) => any;
-  put(path: string, handler?: (...args: any[]) => any): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
+  put(
+    path: string,
+    handler?: (...args: any[]) => any,
+  ): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
     const builder = RouteBuilder.new(Method.Put, path);
     if (handler !== undefined) {
       this._app.put(path, handler);
@@ -99,7 +108,10 @@ export class App {
    */
   patch(path: string, handler: (...args: any[]) => any): this;
   patch(path: string): (fn: (...args: any[]) => any) => (...args: any[]) => any;
-  patch(path: string, handler?: (...args: any[]) => any): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
+  patch(
+    path: string,
+    handler?: (...args: any[]) => any,
+  ): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
     const builder = RouteBuilder.new(Method.Patch, path);
     if (handler !== undefined) {
       this._app.patch(path, handler);
@@ -115,7 +127,10 @@ export class App {
    */
   delete(path: string, handler: (...args: any[]) => any): this;
   delete(path: string): (fn: (...args: any[]) => any) => (...args: any[]) => any;
-  delete(path: string, handler?: (...args: any[]) => any): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
+  delete(
+    path: string,
+    handler?: (...args: any[]) => any,
+  ): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
     const builder = RouteBuilder.new(Method.Delete, path);
     if (handler !== undefined) {
       this._app.delete(path, handler);
@@ -131,7 +146,10 @@ export class App {
    */
   head(path: string, handler: (...args: any[]) => any): this;
   head(path: string): (fn: (...args: any[]) => any) => (...args: any[]) => any;
-  head(path: string, handler?: (...args: any[]) => any): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
+  head(
+    path: string,
+    handler?: (...args: any[]) => any,
+  ): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
     const builder = RouteBuilder.new(Method.Head, path);
     if (handler !== undefined) {
       this._app.head(path, handler);
@@ -147,7 +165,10 @@ export class App {
    */
   options(path: string, handler: (...args: any[]) => any): this;
   options(path: string): (fn: (...args: any[]) => any) => (...args: any[]) => any;
-  options(path: string, handler?: (...args: any[]) => any): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
+  options(
+    path: string,
+    handler?: (...args: any[]) => any,
+  ): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
     const builder = RouteBuilder.new(Method.Options, path);
     if (handler !== undefined) {
       this._app.options(path, handler);
@@ -163,7 +184,10 @@ export class App {
    */
   connect(path: string, handler: (...args: any[]) => any): this;
   connect(path: string): (fn: (...args: any[]) => any) => (...args: any[]) => any;
-  connect(path: string, handler?: (...args: any[]) => any): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
+  connect(
+    path: string,
+    handler?: (...args: any[]) => any,
+  ): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
     const builder = RouteBuilder.new(Method.Connect, path);
     if (handler !== undefined) {
       this._app.connect(path, handler);
@@ -179,7 +203,10 @@ export class App {
    */
   trace(path: string, handler: (...args: any[]) => any): this;
   trace(path: string): (fn: (...args: any[]) => any) => (...args: any[]) => any;
-  trace(path: string, handler?: (...args: any[]) => any): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
+  trace(
+    path: string,
+    handler?: (...args: any[]) => any,
+  ): this | ((fn: (...args: any[]) => any) => (...args: any[]) => any) {
     const builder = RouteBuilder.new(Method.Trace, path);
     if (handler !== undefined) {
       this._app.trace(path, handler);

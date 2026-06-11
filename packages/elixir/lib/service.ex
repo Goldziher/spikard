@@ -51,6 +51,7 @@ defmodule Spikard.App do
     entry = {"route", {builder}, handler_pid}
     %__MODULE__{self | registrations: [entry | self.registrations]}
   end
+
   # HandlerWrapper GenServer: wraps a closure for use as a handler
   defmodule HandlerWrapper do
     use GenServer
@@ -235,6 +236,7 @@ defmodule Spikard.App do
       trace(app, path, handler)
     end
   end
+
   # GenServer for dispatching trait_call messages from Rust.
   defmodule App.Handler do
     use GenServer
@@ -260,7 +262,6 @@ defmodule Spikard.App do
 
       {:noreply, registrations}
     end
-
 
     defp decode_args_and_dispatch(method, args_json, registrations) do
       # Find handler entry for the method

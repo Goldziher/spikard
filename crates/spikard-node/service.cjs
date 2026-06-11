@@ -7,7 +7,7 @@ const { appIntoRouter, appRun } = require("./index");
  * Spikard application builder.
  */
 class App {
-  readonly _app ;
+  readonly _app;
   /**
    * Create a new App instance.
    */
