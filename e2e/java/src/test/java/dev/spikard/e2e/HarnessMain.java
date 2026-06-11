@@ -106,6 +106,9 @@ public class HarnessMain {
                 }
             }
 
+            // Configure the app to bind to the effective host and port
+            app.config(effectiveHost, effectivePort);
+
             // Optionally emit the harness port for debugging, but the test runner
             // does not rely on this message due to Java process-pipe buffering.
             // Instead, tests use TCP polling against the configured default port.

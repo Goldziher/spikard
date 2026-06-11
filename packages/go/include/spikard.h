@@ -310,7 +310,7 @@ typedef struct SPIKARDTestingSseEvent SPIKARDTestingSseEvent;
  * use spikard::UploadFile;
  * use serde::Deserialize;
  *
- * #[derive(Deserialize)]
+ * #`derive(Deserialize)`
  * struct UploadRequest {
  *     file: UploadFile,
  *     description: String,

@@ -7,7 +7,7 @@ const { appIntoRouter, appRun } = require("./index");
  * Spikard application builder.
  */
 class App {
-  readonly _app;
+  readonly _app ;
   /**
    * Create a new App instance.
    */
@@ -35,7 +35,7 @@ class App {
    */
   route(builder) {
     return (fn) => {
-      this._app.route([builder], fn);
+      this._app.route(builder, fn);
       return fn;
     };
   }
@@ -43,7 +43,7 @@ class App {
    * Register a route callback directly.
    */
   registerRoute(builder, handler) {
-    this._app.route([builder], handler);
+    this._app.route(builder, handler);
     return this;
   }
   /**

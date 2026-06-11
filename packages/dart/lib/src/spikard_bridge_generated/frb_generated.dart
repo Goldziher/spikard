@@ -6,8 +6,6 @@
 import 'dart:ffi';
 import 'dart:isolate';
 import 'dart:io';
-import 'dart:core' as _DartCore;
-import 'dart:core';
 import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
@@ -24,95 +22,29 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
   RustLib._();
 
-  /// Resolve the prebuilt native library from environment variable,
-  /// package-relative location, or defer to flutter_rust_bridge's default loader.
-  /// Returns `null` to defer to flutter_rust_bridge's default loader.
+  /// Resolve the prebuilt native library from this package's own installed
+  /// location so the load works from any working directory and under hardened
+  /// runtimes. Returns `null` to defer to flutter_rust_bridge's default loader.
   ///
-  /// Checks in order:
-  /// 1. FRB_DART_LOAD_EXTERNAL_LIBRARY_NATIVE_LIB_DIR environment variable
-  ///    (allows test harnesses to point to development build paths)
-  /// 2. Package-installed location with RID subdirectory (lib/src/native/<rid>/)
-  ///    (for published pub.dev packages with platform-specific bundled native libraries)
-  /// 3. Package-installed location (lib/src/spikard_bridge_generated/)
-  ///    (legacy fallback for development or packages without per-platform binaries)
-  /// 4. Returns null (flutter_rust_bridge falls back to its default loader)
+  /// Published pub.dev packages stage natives under `lib/src/native/<rid>/`
+  /// (e.g. `macos-arm64`, `linux-x64`). For local FRB-dev builds the dylib is
+  /// emitted into `lib/src/spikard_bridge_generated/`; that
+  /// path is searched as a fallback.
   static Future<ExternalLibrary?> _alefResolveExternalLibrary() async {
     try {
-      const candidates = <String>[
-        // macOS: framework bundle (preferred modern packaging)
-        'spikard_dart.framework/spikard_dart',
-        // macOS: bare dylib fallback
-        'libspikard_dart.dylib',
-        // Linux
-        'libspikard_dart.so',
-        // Windows
-        'spikard_dart.dll',
-      ];
-
-      // Check FRB_DART_LOAD_EXTERNAL_LIBRARY_NATIVE_LIB_DIR env var first.
-      // This allows test harnesses to override library location for development.
-      final envDir =
-          Platform.environment['FRB_DART_LOAD_EXTERNAL_LIBRARY_NATIVE_LIB_DIR'];
-      if (envDir != null && envDir.isNotEmpty) {
-        final libDir = Directory(envDir);
-        if (libDir.existsSync()) {
-          for (final candidate in candidates) {
-            final libPath = '$envDir/$candidate';
-            if (File(libPath).existsSync()) {
-              return ExternalLibrary.open(libPath);
-            }
-          }
-        }
-      }
-
-      // Compute RID (runtime identifier) from platform and architecture using Abi.current().
-      // This is more reliable than parsing Platform.version.
-      String? computeRid() {
-        final abi = Abi.current();
-        final os = Platform.operatingSystem;
-
-        // Map from (os, Abi) to RID string.
-        String? ridFromAbi() {
-          if (os == 'linux') {
-            if (abi == Abi.linuxX64) return 'linux-x64';
-            if (abi == Abi.linuxArm64) return 'linux-arm64';
-          } else if (os == 'macos') {
-            if (abi == Abi.macosX64) return 'macos-x64';
-            if (abi == Abi.macosArm64) return 'macos-arm64';
-          } else if (os == 'windows') {
-            if (abi == Abi.windowsX64) return 'windows-x64';
-            if (abi == Abi.windowsArm64) return 'windows-arm64';
-          }
-          return null;
-        }
-
-        return ridFromAbi();
-      }
-
-      final rid = computeRid();
-      if (rid != null) {
-        final packageRoot = await Isolate.resolvePackageUri(
-          _DartCore.Uri.parse('package:spikard/spikard.dart'),
-        );
-        if (packageRoot != null) {
-          final ridDir = packageRoot.resolve('src/native/$rid/');
-          for (final candidate in candidates) {
-            final libPath = ridDir.resolve(candidate).toFilePath();
-            if (File(libPath).existsSync()) {
-              return ExternalLibrary.open(libPath);
-            }
-          }
-        }
-      }
-
-      // Check legacy package-installed location as fallback.
       final packageRoot = await Isolate.resolvePackageUri(
-        _DartCore.Uri.parse('package:spikard/spikard.dart'),
+        Uri.parse('package:spikard/spikard.dart'),
       );
-      if (packageRoot != null) {
-        final libDir = packageRoot.resolve('src/spikard_bridge_generated/');
-        for (final candidate in candidates) {
-          final libPath = libDir.resolve(candidate).toFilePath();
+      if (packageRoot == null) return null;
+      final libNames = _alefHostLibNames();
+      final searchDirs = <Uri>[
+        if (_alefHostRid() != null)
+          packageRoot.resolve('src/native/${_alefHostRid()}/'),
+        packageRoot.resolve('src/spikard_bridge_generated/'),
+      ];
+      for (final dir in searchDirs) {
+        for (final name in libNames) {
+          final libPath = dir.resolve(name).toFilePath();
           if (File(libPath).existsSync()) {
             return ExternalLibrary.open(libPath);
           }
@@ -122,6 +54,34 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
       // Fall through to the default loader on any resolution failure.
     }
     return null;
+  }
+
+  /// Map the host platform to the pub.dev native staging RID. Returns `null`
+  /// for unrecognized host triples so the FRB-dev fallback path runs instead.
+  static String? _alefHostRid() {
+    final abi = Abi.current();
+    if (abi == Abi.macosArm64) return 'macos-arm64';
+    if (abi == Abi.macosX64) return 'macos-x64';
+    if (abi == Abi.linuxArm64) return 'linux-arm64';
+    if (abi == Abi.linuxX64) return 'linux-x64';
+    if (abi == Abi.windowsArm64) return 'windows-arm64';
+    if (abi == Abi.windowsX64) return 'windows-x64';
+    return null;
+  }
+
+  static List<String> _alefHostLibNames() {
+    // The Dart-binding Rust crate is `{stem}-dart` (per the cargo manifest
+    // template), which produces a cdylib named `lib{stem}_dart.{ext}` on Unix
+    // and `{stem}_dart.dll` on Windows. On macOS, pub.dev-published packages
+    // may ship the binary as a Framework bundle (preferred modern packaging)
+    // — list that first so the loader finds it before the bare dylib.
+    if (Platform.isMacOS)
+      return const [
+        'spikard_dart.framework/spikard_dart',
+        'libspikard_dart.dylib',
+      ];
+    if (Platform.isWindows) return const ['spikard_dart.dll'];
+    return const ['libspikard_dart.so'];
   }
 
   /// Initialize flutter_rust_bridge
@@ -568,8 +528,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required String path,
     required FutureOr<String> Function(String) cb,
   }) {
-    return handler.executeSync(
-      SyncTask(
+    return SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
@@ -590,8 +549,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         constMeta: kCrateServiceApiAppConnectConstMeta,
         argValues: [that, path, cb],
         apiImpl: this,
-      ),
-    );
+      ).executeSync();
   }
 
   TaskConstMeta get kCrateServiceApiAppConnectConstMeta => const TaskConstMeta(
@@ -605,8 +563,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required String path,
     required FutureOr<String> Function(String) cb,
   }) {
-    return handler.executeSync(
-      SyncTask(
+    return SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
@@ -627,8 +584,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         constMeta: kCrateServiceApiAppDeleteConstMeta,
         argValues: [that, path, cb],
         apiImpl: this,
-      ),
-    );
+      ).executeSync();
   }
 
   TaskConstMeta get kCrateServiceApiAppDeleteConstMeta => const TaskConstMeta(
@@ -642,8 +598,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required String path,
     required FutureOr<String> Function(String) cb,
   }) {
-    return handler.executeSync(
-      SyncTask(
+    return SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
@@ -664,8 +619,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         constMeta: kCrateServiceApiAppGetConstMeta,
         argValues: [that, path, cb],
         apiImpl: this,
-      ),
-    );
+      ).executeSync();
   }
 
   TaskConstMeta get kCrateServiceApiAppGetConstMeta => const TaskConstMeta(
@@ -679,8 +633,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required String path,
     required FutureOr<String> Function(String) cb,
   }) {
-    return handler.executeSync(
-      SyncTask(
+    return SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
@@ -701,8 +654,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         constMeta: kCrateServiceApiAppHeadConstMeta,
         argValues: [that, path, cb],
         apiImpl: this,
-      ),
-    );
+      ).executeSync();
   }
 
   TaskConstMeta get kCrateServiceApiAppHeadConstMeta => const TaskConstMeta(
@@ -739,8 +691,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required String path,
     required FutureOr<String> Function(String) cb,
   }) {
-    return handler.executeSync(
-      SyncTask(
+    return SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
@@ -761,8 +712,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         constMeta: kCrateServiceApiAppOptionsConstMeta,
         argValues: [that, path, cb],
         apiImpl: this,
-      ),
-    );
+      ).executeSync();
   }
 
   TaskConstMeta get kCrateServiceApiAppOptionsConstMeta => const TaskConstMeta(
@@ -776,8 +726,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required String path,
     required FutureOr<String> Function(String) cb,
   }) {
-    return handler.executeSync(
-      SyncTask(
+    return SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
@@ -798,8 +747,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         constMeta: kCrateServiceApiAppPatchConstMeta,
         argValues: [that, path, cb],
         apiImpl: this,
-      ),
-    );
+      ).executeSync();
   }
 
   TaskConstMeta get kCrateServiceApiAppPatchConstMeta => const TaskConstMeta(
@@ -813,8 +761,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required String path,
     required FutureOr<String> Function(String) cb,
   }) {
-    return handler.executeSync(
-      SyncTask(
+    return SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
@@ -835,8 +782,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         constMeta: kCrateServiceApiAppPostConstMeta,
         argValues: [that, path, cb],
         apiImpl: this,
-      ),
-    );
+      ).executeSync();
   }
 
   TaskConstMeta get kCrateServiceApiAppPostConstMeta => const TaskConstMeta(
@@ -850,8 +796,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required String path,
     required FutureOr<String> Function(String) cb,
   }) {
-    return handler.executeSync(
-      SyncTask(
+    return SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
@@ -872,8 +817,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         constMeta: kCrateServiceApiAppPutConstMeta,
         argValues: [that, path, cb],
         apiImpl: this,
-      ),
-    );
+      ).executeSync();
   }
 
   TaskConstMeta get kCrateServiceApiAppPutConstMeta => const TaskConstMeta(
@@ -887,8 +831,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required RouteBuilder builder,
     required FutureOr<String> Function(String) cb,
   }) {
-    return handler.executeSync(
-      SyncTask(
+    return SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
@@ -912,8 +855,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         constMeta: kCrateServiceApiAppRouteConstMeta,
         argValues: [that, builder, cb],
         apiImpl: this,
-      ),
-    );
+      ).executeSync();
   }
 
   TaskConstMeta get kCrateServiceApiAppRouteConstMeta => const TaskConstMeta(
@@ -958,8 +900,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required String path,
     required FutureOr<String> Function(String) cb,
   }) {
-    return handler.executeSync(
-      SyncTask(
+    return SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
@@ -980,8 +921,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         constMeta: kCrateServiceApiAppTraceConstMeta,
         argValues: [that, path, cb],
         apiImpl: this,
-      ),
-    );
+      ).executeSync();
   }
 
   TaskConstMeta get kCrateServiceApiAppTraceConstMeta => const TaskConstMeta(
@@ -993,8 +933,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Future<DartHandlerHandler> crateServiceApiDartHandlerHandlerNew({
     required FutureOr<String> Function(String) cb,
   }) {
-    return handler.executeNormal(
-      NormalTask(
+    return NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_DartFn_Inputs_String_Output_String_AnyhowException(
@@ -1016,8 +955,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         constMeta: kCrateServiceApiDartHandlerHandlerNewConstMeta,
         argValues: [cb],
         apiImpl: this,
-      ),
-    );
+      ).executeNormal();
   }
 
   TaskConstMeta get kCrateServiceApiDartHandlerHandlerNewConstMeta =>

@@ -134,7 +134,75 @@ tasks.register("verifyAarPublished") {
     }
 }
 
+// Build host JNI library for JVM unit tests (macOS/Linux/Windows).
+// The generated Kotlin Bridge object calls System.loadLibrary("spikard_jni") for JVM
+// unit tests running on developer machines. This task builds the host-platform binary
+// and stages it into src/test/resources/host-jni/<platform>/ for the test loader.
+// Set alef.skipHostJni=true to disable this (e.g., in CI where only AAR validation is needed).
+tasks.register("buildHostJni", Exec::class) {
+    if (project.properties["alef.skipHostJni"] != "true") {
+        val jniCargoPath = "../../crates/spikard-jni/Cargo.toml"
+        description = "Build host-platform JNI library from ../../crates/spikard-jni"
+        commandLine("cargo", "build", "--release", "--manifest-path", jniCargoPath)
+        errorOutput = System.err
+    } else {
+        description = "Build host JNI (disabled via alef.skipHostJni=true)"
+        commandLine("true")
+    }
+}
+
+tasks.register("copyHostJni", Copy::class) {
+    if (project.properties["alef.skipHostJni"] != "true") {
+        description = "Copy host JNI library to test resources"
+        dependsOn("buildHostJni")
+
+        val hostPlatform = if (System.getProperty("os.name").lowercase().contains("mac")) {
+            "darwin"
+        } else if (System.getProperty("os.name").lowercase().contains("win")) {
+            "windows"
+        } else {
+            "linux"
+        }
+        val jniCargoPath = "../../crates/spikard-jni/Cargo.toml"
+        val crateDir = jniCargoPath.substringBeforeLast("/Cargo.toml")
+        val workspaceTarget = file("../../target/release")
+        val crateTarget = file(crateDir).resolve("target/release")
+        val buildDir = if (workspaceTarget.exists()) workspaceTarget else crateTarget
+
+        val libName = when (hostPlatform) {
+            "darwin" -> "libspikard_jni.dylib"
+            "windows" -> "spikard_jni.dll"
+            else -> "libspikard_jni.so"
+        }
+
+        from(buildDir) {
+            include(libName)
+        }
+        into(layout.projectDirectory.dir("src/test/resources/host-jni/$hostPlatform"))
+    }
+}
+
 tasks.withType<Test> {
     useJUnitPlatform()
     dependsOn("verifyAarPublished")
+    if (project.properties["alef.skipHostJni"] != "true") {
+        val hostPlatform = if (System.getProperty("os.name").lowercase().contains("mac")) {
+            "darwin"
+        } else if (System.getProperty("os.name").lowercase().contains("win")) {
+            "windows"
+        } else {
+            "linux"
+        }
+        systemProperty(
+            "java.library.path",
+            project.layout.projectDirectory.dir("src/test/resources/host-jni/$hostPlatform").asFile.absolutePath
+        )
+        dependsOn("copyHostJni")
+    }
+}
+
+tasks.matching { it.name.startsWith("processDebug") || it.name.startsWith("processRelease") }.configureEach {
+    if (project.properties["alef.skipHostJni"] != "true" && name.contains("UnitTestJavaRes")) {
+        dependsOn("copyHostJni")
+    }
 }
