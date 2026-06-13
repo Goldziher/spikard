@@ -1,0 +1,2 @@
+{"ts_micros":1781337521962930,"tool":"list_files","params_hash":"b199a06ebc6853af","resp_bytes":53,"elapsed_ms":1,"est_tokens_saved":0,"saved_baseline":"no_baseline"}
+{"ts_micros":1781340424961880,"tool":"search_symbols","params_hash":"6b3edfff1b5b25ad","resp_bytes":42,"elapsed_ms":0,"est_tokens_saved":0,"saved_baseline":"grep_plus_read_top_hits"}

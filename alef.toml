@@ -424,46 +424,58 @@ callback_contract = "Handler"
 name = "get"
 fixed = { method = "Get" }
 doc = "Register a GET route at the given path."
+# Per-language emission style and handler-shape overrides.
+# Parsed by alef when RegistrationVariantSpec.languages is wired; ignored by
+# earlier versions. All verb variants share the same per-language overrides.
+languages = { python = { style = "decorator", handler_shape = "introspect_params" }, node = { style = "verb_decorator", handler_shape = "context_object" }, ruby = { style = "verb_decorator", handler_shape = "request_response" }, php = { style = "verb_decorator", handler_shape = "request_response" }, elixir = { style = "dsl", handler_shape = "context_object" }, go = { style = "verb_decorator", handler_shape = "request_response" }, java = { style = "verb_decorator", handler_shape = "context_object" }, csharp = { style = "attribute", handler_shape = "introspect_params", method_prefix = "Map" }, kotlin = { style = "dsl", handler_shape = "context_object" }, kotlin_android = { style = "dsl", handler_shape = "context_object" }, dart = { style = "verb_decorator", handler_shape = "request_response" }, swift = { style = "verb_decorator", handler_shape = "context_object" }, zig = { style = "verb_decorator", handler_shape = "request_response" } }
 
 [[crates.services.registrations.variants]]
 name = "post"
 fixed = { method = "Post" }
 doc = "Register a POST route at the given path."
+languages = { python = { style = "decorator", handler_shape = "introspect_params" }, node = { style = "verb_decorator", handler_shape = "context_object" }, ruby = { style = "verb_decorator", handler_shape = "request_response" }, php = { style = "verb_decorator", handler_shape = "request_response" }, elixir = { style = "dsl", handler_shape = "context_object" }, go = { style = "verb_decorator", handler_shape = "request_response" }, java = { style = "verb_decorator", handler_shape = "context_object" }, csharp = { style = "attribute", handler_shape = "introspect_params", method_prefix = "Map" }, kotlin = { style = "dsl", handler_shape = "context_object" }, kotlin_android = { style = "dsl", handler_shape = "context_object" }, dart = { style = "verb_decorator", handler_shape = "request_response" }, swift = { style = "verb_decorator", handler_shape = "context_object" }, zig = { style = "verb_decorator", handler_shape = "request_response" } }
 
 [[crates.services.registrations.variants]]
 name = "put"
 fixed = { method = "Put" }
 doc = "Register a PUT route at the given path."
+languages = { python = { style = "decorator", handler_shape = "introspect_params" }, node = { style = "verb_decorator", handler_shape = "context_object" }, ruby = { style = "verb_decorator", handler_shape = "request_response" }, php = { style = "verb_decorator", handler_shape = "request_response" }, elixir = { style = "dsl", handler_shape = "context_object" }, go = { style = "verb_decorator", handler_shape = "request_response" }, java = { style = "verb_decorator", handler_shape = "context_object" }, csharp = { style = "attribute", handler_shape = "introspect_params", method_prefix = "Map" }, kotlin = { style = "dsl", handler_shape = "context_object" }, kotlin_android = { style = "dsl", handler_shape = "context_object" }, dart = { style = "verb_decorator", handler_shape = "request_response" }, swift = { style = "verb_decorator", handler_shape = "context_object" }, zig = { style = "verb_decorator", handler_shape = "request_response" } }
 
 [[crates.services.registrations.variants]]
 name = "patch"
 fixed = { method = "Patch" }
 doc = "Register a PATCH route at the given path."
+languages = { python = { style = "decorator", handler_shape = "introspect_params" }, node = { style = "verb_decorator", handler_shape = "context_object" }, ruby = { style = "verb_decorator", handler_shape = "request_response" }, php = { style = "verb_decorator", handler_shape = "request_response" }, elixir = { style = "dsl", handler_shape = "context_object" }, go = { style = "verb_decorator", handler_shape = "request_response" }, java = { style = "verb_decorator", handler_shape = "context_object" }, csharp = { style = "attribute", handler_shape = "introspect_params", method_prefix = "Map" }, kotlin = { style = "dsl", handler_shape = "context_object" }, kotlin_android = { style = "dsl", handler_shape = "context_object" }, dart = { style = "verb_decorator", handler_shape = "request_response" }, swift = { style = "verb_decorator", handler_shape = "context_object" }, zig = { style = "verb_decorator", handler_shape = "request_response" } }
 
 [[crates.services.registrations.variants]]
 name = "delete"
 fixed = { method = "Delete" }
 doc = "Register a DELETE route at the given path."
+languages = { python = { style = "decorator", handler_shape = "introspect_params" }, node = { style = "verb_decorator", handler_shape = "context_object" }, ruby = { style = "verb_decorator", handler_shape = "request_response" }, php = { style = "verb_decorator", handler_shape = "request_response" }, elixir = { style = "dsl", handler_shape = "context_object" }, go = { style = "verb_decorator", handler_shape = "request_response" }, java = { style = "verb_decorator", handler_shape = "context_object" }, csharp = { style = "attribute", handler_shape = "introspect_params", method_prefix = "Map" }, kotlin = { style = "dsl", handler_shape = "context_object" }, kotlin_android = { style = "dsl", handler_shape = "context_object" }, dart = { style = "verb_decorator", handler_shape = "request_response" }, swift = { style = "verb_decorator", handler_shape = "context_object" }, zig = { style = "verb_decorator", handler_shape = "request_response" } }
 
 [[crates.services.registrations.variants]]
 name = "head"
 fixed = { method = "Head" }
 doc = "Register a HEAD route at the given path."
+languages = { python = { style = "decorator", handler_shape = "introspect_params" }, node = { style = "verb_decorator", handler_shape = "context_object" }, ruby = { style = "verb_decorator", handler_shape = "request_response" }, php = { style = "verb_decorator", handler_shape = "request_response" }, elixir = { style = "dsl", handler_shape = "context_object" }, go = { style = "verb_decorator", handler_shape = "request_response" }, java = { style = "verb_decorator", handler_shape = "context_object" }, csharp = { style = "attribute", handler_shape = "introspect_params", method_prefix = "Map" }, kotlin = { style = "dsl", handler_shape = "context_object" }, kotlin_android = { style = "dsl", handler_shape = "context_object" }, dart = { style = "verb_decorator", handler_shape = "request_response" }, swift = { style = "verb_decorator", handler_shape = "context_object" }, zig = { style = "verb_decorator", handler_shape = "request_response" } }
 
 [[crates.services.registrations.variants]]
 name = "options"
 fixed = { method = "Options" }
 doc = "Register an OPTIONS route at the given path."
+languages = { python = { style = "decorator", handler_shape = "introspect_params" }, node = { style = "verb_decorator", handler_shape = "context_object" }, ruby = { style = "verb_decorator", handler_shape = "request_response" }, php = { style = "verb_decorator", handler_shape = "request_response" }, elixir = { style = "dsl", handler_shape = "context_object" }, go = { style = "verb_decorator", handler_shape = "request_response" }, java = { style = "verb_decorator", handler_shape = "context_object" }, csharp = { style = "attribute", handler_shape = "introspect_params", method_prefix = "Map" }, kotlin = { style = "dsl", handler_shape = "context_object" }, kotlin_android = { style = "dsl", handler_shape = "context_object" }, dart = { style = "verb_decorator", handler_shape = "request_response" }, swift = { style = "verb_decorator", handler_shape = "context_object" }, zig = { style = "verb_decorator", handler_shape = "request_response" } }
 
 [[crates.services.registrations.variants]]
 name = "connect"
 fixed = { method = "Connect" }
 doc = "Register a CONNECT route at the given path."
+languages = { python = { style = "decorator", handler_shape = "introspect_params" }, node = { style = "verb_decorator", handler_shape = "context_object" }, ruby = { style = "verb_decorator", handler_shape = "request_response" }, php = { style = "verb_decorator", handler_shape = "request_response" }, elixir = { style = "dsl", handler_shape = "context_object" }, go = { style = "verb_decorator", handler_shape = "request_response" }, java = { style = "verb_decorator", handler_shape = "context_object" }, csharp = { style = "attribute", handler_shape = "introspect_params", method_prefix = "Map" }, kotlin = { style = "dsl", handler_shape = "context_object" }, kotlin_android = { style = "dsl", handler_shape = "context_object" }, dart = { style = "verb_decorator", handler_shape = "request_response" }, swift = { style = "verb_decorator", handler_shape = "context_object" }, zig = { style = "verb_decorator", handler_shape = "request_response" } }
 
 [[crates.services.registrations.variants]]
 name = "trace"
 fixed = { method = "Trace" }
 doc = "Register a TRACE route at the given path."
+languages = { python = { style = "decorator", handler_shape = "introspect_params" }, node = { style = "verb_decorator", handler_shape = "context_object" }, ruby = { style = "verb_decorator", handler_shape = "request_response" }, php = { style = "verb_decorator", handler_shape = "request_response" }, elixir = { style = "dsl", handler_shape = "context_object" }, go = { style = "verb_decorator", handler_shape = "request_response" }, java = { style = "verb_decorator", handler_shape = "context_object" }, csharp = { style = "attribute", handler_shape = "introspect_params", method_prefix = "Map" }, kotlin = { style = "dsl", handler_shape = "context_object" }, kotlin_android = { style = "dsl", handler_shape = "context_object" }, dart = { style = "verb_decorator", handler_shape = "request_response" }, swift = { style = "verb_decorator", handler_shape = "context_object" }, zig = { style = "verb_decorator", handler_shape = "request_response" } }
 
 [[crates.services.entrypoints]]
 method = "run"
@@ -486,6 +498,101 @@ dispatch_extra_params = ["_request: spikard::Request<spikard::Body>"]
 wire_param_name = "request_data"
 dispatch_return_type = "spikard::HandlerResult"
 response_adapter = "spikard::handler_result_from_response"
+
+# ---------------------------------------------------------------------------
+# Lifecycle hooks — pipeline callbacks registered on the App owner.
+# Backends emit `app.on_<name>(fn)` registration methods (or the idiomatic
+# language equivalent) for each entry.
+# ---------------------------------------------------------------------------
+
+[[crates.lifecycle_hooks]]
+name = "on_request"
+callback_contract = "RequestHook"
+doc = "Called before any other processing for each inbound request."
+is_async = true
+
+[[crates.lifecycle_hooks]]
+name = "pre_validation"
+callback_contract = "RequestHook"
+doc = "Called after parsing but before parameter validation."
+is_async = true
+
+[[crates.lifecycle_hooks]]
+name = "pre_handler"
+callback_contract = "RequestHook"
+doc = "Called after validation but before invoking the route handler."
+is_async = true
+
+[[crates.lifecycle_hooks]]
+name = "on_response"
+callback_contract = "ResponseHook"
+doc = "Called after the handler returns but before the response is serialized."
+is_async = true
+
+[[crates.lifecycle_hooks]]
+name = "on_error"
+callback_contract = "ErrorHook"
+doc = "Called when a handler returns an error."
+is_async = true
+
+# ---------------------------------------------------------------------------
+# WebSocket route registration — first-class IR entry that avoids Arc<dyn Trait>
+# RPITIT incompatibility by naming a concrete wrapper struct.
+# ---------------------------------------------------------------------------
+
+[[crates.websocket_routes]]
+handler_wrapper_type = "WebSocketHandlerWrapper"
+socket_type = "WebSocketConnection"
+doc = "Register a WebSocket upgrade handler at the given path."
+
+# ---------------------------------------------------------------------------
+# SSE route registration — first-class IR entry using a concrete producer wrapper.
+# ---------------------------------------------------------------------------
+
+[[crates.sse_routes]]
+producer_wrapper_type = "SseProducerWrapper"
+event_type = "SseEvent"
+doc = "Register an SSE event producer at the given path."
+
+# ---------------------------------------------------------------------------
+# Cross-binding error types — emitted as native exception/error classes in
+# every language with RFC 9457 ProblemDetails serialization.
+# ---------------------------------------------------------------------------
+
+[[crates.error_types]]
+name = "NotFoundError"
+http_status = 404
+doc = "Raised when the requested resource does not exist."
+
+[[crates.error_types]]
+name = "ValidationError"
+http_status = 422
+doc = "Raised when input validation fails. Carries a list of field errors per RFC 9457."
+
+[[crates.error_types]]
+name = "UnauthorizedError"
+http_status = 401
+doc = "Raised when the request lacks valid authentication credentials."
+
+[[crates.error_types]]
+name = "ForbiddenError"
+http_status = 403
+doc = "Raised when the authenticated user lacks permission for the requested action."
+
+[[crates.error_types]]
+name = "RateLimitedError"
+http_status = 429
+doc = "Raised when the client exceeds the configured request rate limit."
+
+[[crates.error_types]]
+name = "ConflictError"
+http_status = 409
+doc = "Raised when the request conflicts with the current state of the resource."
+
+[[crates.error_types]]
+name = "InternalError"
+http_status = 500
+doc = "Raised when the server encounters an unexpected failure."
 
 [crates.output]
 python = "crates/spikard-py/src/"
