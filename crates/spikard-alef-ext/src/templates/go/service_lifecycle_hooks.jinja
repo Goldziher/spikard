@@ -1,0 +1,14 @@
+// Lifecycle hook registration methods.
+{% for hook in hooks %}
+
+// {{ hook.name_pascal }} registers a lifecycle hook to be called {{ hook.doc | default(value="") }}.
+func (s *{{ service_name }}) {{ hook.name_pascal }}(fn {{ hook.callback_type }}) error {
+	if s.owner == nil {
+		return errors.New("service is closed")
+	}
+	// Register the hook function in the native layer.
+	// The FFI call marshals the Go function pointer and binds it.
+	return s.register{{ hook.name_pascal }}Hook(fn)
+}
+
+{% endfor %}

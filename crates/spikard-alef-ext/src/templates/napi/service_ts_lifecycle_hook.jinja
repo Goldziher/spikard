@@ -1,0 +1,9 @@
+  /**
+{% if doc %}
+   * {{ doc }}
+{% endif %}
+   */
+  {{ method_name }}(handler: (...args: any[]) => {% if is_async %}Promise<void>{% else %}void{% endif %}): this {
+    this._app.{{ method_name }}(handler);
+    return this;
+  }

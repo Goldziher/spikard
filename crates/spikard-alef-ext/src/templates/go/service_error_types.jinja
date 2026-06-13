@@ -1,0 +1,35 @@
+// Error types for the service.
+// Each error type implements the error interface and provides HTTP status codes.
+{% for error_type in error_types %}
+
+// {{ error_type.name }} is raised when {{ error_type.doc | default(value="an error occurs") }}.
+type {{ error_type.name }} struct {
+	Message string
+	Code    int
+}
+
+// Error implements the error interface.
+func (e *{{ error_type.name }}) Error() string {
+	return e.Message
+}
+
+// StatusCode returns the HTTP status code for this error.
+func (e *{{ error_type.name }}) StatusCode() int {
+	return {{ error_type.http_status }}
+}
+
+// ToProblemDetails converts the error to RFC 9457 ProblemDetails format.
+func (e *{{ error_type.name }}) ToProblemDetails() map[string]interface{} {
+	details := map[string]interface{}{
+		"status": e.StatusCode(),
+		"title":  "{{ error_type.name }}",
+	}
+	if e.Message != "" {
+		details["detail"] = e.Message
+	}
+	{% if error_type.problem_details_type %}
+	details["type"] = "{{ error_type.problem_details_type }}"
+	{% endif %}
+	return details
+}
+{% endfor %}

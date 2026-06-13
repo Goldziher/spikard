@@ -1,0 +1,34 @@
+
+// Error type constructor for {{ error_pascal }}
+// Status: {{ status_code }}, ProblemDetails type: "{{ problem_details_type }}"
+#[no_mangle]
+pub unsafe extern "system" fn {{ symbol }}(
+    env: jni::JNIEnv,
+    _class: jni::objects::JClass,
+    message: jni::objects::JString,
+) -> jni::objects::JObject {
+    catch_exc_and_return!(env; {
+        let msg: String = env.get_string(&message)?.into();
+
+        // Create the exception instance on the Java side
+        // The Java class {{ error_name }} is expected to have a constructor
+        // accepting (String message, int statusCode, String problemDetailsType)
+        let error_class = env.find_class("{{ error_class_path }}")?;
+
+        let constructor_sig = "(Ljava/lang/String;ILjava/lang/String;)V";
+        let constructor_id = env.get_method_id(&error_class, "<init>", constructor_sig)?;
+
+        let msg_jstr = env.new_string(&msg)?;
+        let problem_type_str = env.new_string("{{ problem_details_type }}")?;
+
+        let args = [
+            jni::objects::JValue::from(msg_jstr),
+            jni::objects::JValue::from({{ status_code }}),
+            jni::objects::JValue::from(problem_type_str),
+        ];
+
+        let instance = env.new_object_unchecked(&error_class, constructor_id, &args)?;
+
+        instance.into()
+    })
+}

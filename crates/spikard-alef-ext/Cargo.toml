@@ -1,0 +1,20 @@
+[package]
+name = "spikard-alef-ext"
+version = "0.15.6-rc.23"
+edition = "2024"
+authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
+license = "MIT"
+repository = "https://github.com/Goldziher/spikard"
+description = "Alef HTTP extension for the spikard polyglot framework"
+
+[dependencies]
+alef = { path = "../../../kreuzberg-dev/alef" }
+anyhow = "1"
+heck = "0.5"
+minijinja = "2"
+serde = { version = "1.0", features = ["derive"] }
+toml = "1.1"
+tracing = "0.1"
+
+[lints]
+workspace = true

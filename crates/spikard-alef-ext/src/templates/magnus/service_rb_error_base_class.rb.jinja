@@ -1,0 +1,18 @@
+class Error < StandardError
+  attr_reader :status_code, :problem_details_type
+
+  def initialize(message = nil, status_code: nil, problem_details_type: nil)
+    super(message)
+    @status_code = status_code
+    @problem_details_type = problem_details_type
+  end
+
+  def to_problem_details
+    {
+      type: @problem_details_type || "about:blank",
+      title: self.class.name.split("::").last,
+      status: @status_code || 500,
+      detail: message
+    }
+  end
+end

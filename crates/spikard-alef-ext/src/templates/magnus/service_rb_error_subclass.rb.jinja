@@ -1,0 +1,5 @@
+class {{ class_name }} < Error
+{{ doc_comment }}  def initialize(message = nil)
+    super(message, status_code: {{ http_status }}, problem_details_type: {{ problem_details_type }})
+  end
+end

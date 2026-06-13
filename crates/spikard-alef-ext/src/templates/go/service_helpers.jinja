@@ -1,0 +1,34 @@
+// Helper functions for request/response handling in chi-style HTTP handlers.
+
+// PathParam extracts a path parameter from a chi router request.
+// It looks up the parameter by name from the request context.
+func PathParam(r *http.Request, name string) string {
+	// chi stores path parameters in the request context.
+	// chi.URLParam reads the value by name.
+	return chi.URLParam(r, name)
+}
+
+// QueryParam extracts a query parameter from the request.
+func QueryParam(r *http.Request, name string) string {
+	return r.URL.Query().Get(name)
+}
+
+// HeaderParam extracts a header value from the request.
+func HeaderParam(r *http.Request, name string) string {
+	return r.Header.Get(name)
+}
+
+// BindJSON unmarshals the request body into the provided interface.
+func BindJSON(r *http.Request, v interface{}) error {
+	defer r.Body.Close()
+	decoder := json.NewDecoder(r.Body)
+	return decoder.Decode(v)
+}
+
+// RespondJSON marshals the value to JSON and writes it to the response.
+func RespondJSON(w http.ResponseWriter, status int, v interface{}) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	encoder := json.NewEncoder(w)
+	return encoder.Encode(v)
+}

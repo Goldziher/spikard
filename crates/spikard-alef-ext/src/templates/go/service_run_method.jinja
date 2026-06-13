@@ -1,0 +1,41 @@
+// Run starts the HTTP server with the given configuration.
+// This method blocks until the server exits or an error occurs.
+func (s *{{ service_name }}) Run(config Config) error {
+	if s.owner == nil {
+		return errors.New("service is closed")
+	}
+
+	// Set defaults if not provided.
+	if config.Host == "" {
+		config.Host = "0.0.0.0"
+	}
+	if config.Port == 0 {
+		config.Port = 8000
+	}
+
+	// Marshal config to C.
+	configJSON, err := json.Marshal(config)
+	if err != nil {
+		return fmt.Errorf("marshal config: %w", err)
+	}
+
+	// Call the C entrypoint with config.
+	addr := fmt.Sprintf("%s:%d", config.Host, config.Port)
+	cAddr := C.CString(addr)
+	defer C.free(unsafe.Pointer(cAddr))
+
+	cConfig := C.CString(string(configJSON))
+	defer C.free(unsafe.Pointer(cConfig))
+
+	ret := C.{{ service_lower }}_{{ service_snake }}_run(
+		(*C.{{ upper_prefix }}{{ service_name }}Opaque)(s.owner),
+		cAddr,
+		cConfig,
+	)
+
+	if ret != 0 {
+		return fmt.Errorf("run failed with code %d", ret)
+	}
+
+	return nil
+}

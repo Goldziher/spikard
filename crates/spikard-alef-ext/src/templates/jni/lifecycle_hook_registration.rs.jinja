@@ -1,0 +1,33 @@
+// Lifecycle hook registration for {{ service_pascal }}.{{ hook_name }}
+#[no_mangle]
+pub unsafe extern "system" fn {{ symbol }}(
+    env: jni::JNIEnv,
+    _class: jni::objects::JClass,
+    owner_handle: jni::sys::jlong,
+    callback: jni::objects::JObject,
+) -> jni::sys::jint {
+    catch_exc_and_return!(env; {
+        let owner_ref = &*(owner_handle as *const {{ opaque_name }});
+        let env = env;
+
+        // Cache method ID for callback dispatch
+        let callback_class = env.get_object_class(&callback)?;
+        let method_id = env.get_method_id(&callback_class, "handle", "(L{{ core_import }}/RequestData;)L{{ core_import }}/Response;")?;
+
+        // Store the global reference and method ID for later invocation
+        let callback_global = env.new_global_ref(&callback)?;
+
+        // Create bridge instance
+        let bridge = {{ bridge_name }} {
+            jvm: env.get_java_vm()?,
+            callback_handle: callback_global,
+            method_id,
+        };
+
+        // Register the hook callback in the service owner
+        // The native runtime will invoke this callback at the appropriate pipeline phase
+        owner_ref.inner.register_{{ hook_name }}_hook(std::sync::Arc::new(bridge));
+
+        0
+    })
+}

@@ -1,0 +1,4 @@
+    def {{ method_name }}(&block)
+{{ doc_comment }}      @lifecycle_hooks.push(["{{ method_name }}", block])
+      self
+    end

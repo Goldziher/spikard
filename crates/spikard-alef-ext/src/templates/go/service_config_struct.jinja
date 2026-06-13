@@ -1,0 +1,68 @@
+// Config holds server configuration for the {{ service_name }} service.
+type Config struct {
+	// Host address to bind on (default: "0.0.0.0").
+	Host string
+	// Port to listen on (default: 8000).
+	Port int
+	// Number of worker threads (0 = auto).
+	Workers int
+	// Enable gzip/brotli compression.
+	Compression bool
+	// CORS configuration.
+	Cors *CorsConfig
+	// Rate limit configuration.
+	RateLimit *RateLimitConfig
+	// Request timeout duration.
+	RequestTimeout time.Duration
+	// Maximum body size in bytes.
+	MaxBodySize int64
+	// JWT authentication config.
+	JwtAuth *JwtAuthConfig
+	// API key authentication config.
+	ApiKeyAuth *ApiKeyAuthConfig
+	// Static files serving configuration.
+	StaticFiles *StaticFilesConfig
+	// Enable request ID generation.
+	EnableRequestId bool
+	// Enable HTTP tracing.
+	EnableHttpTrace bool
+	// Graceful shutdown enabled.
+	GracefulShutdown bool
+	// Graceful shutdown timeout.
+	ShutdownTimeout time.Duration
+}
+
+// CorsConfig holds CORS settings.
+type CorsConfig struct {
+	AllowOrigins []string
+	AllowMethods []string
+	AllowHeaders []string
+	ExposeHeaders []string
+	AllowCredentials bool
+	MaxAge int
+}
+
+// RateLimitConfig holds rate limiting settings.
+type RateLimitConfig struct {
+	RequestsPerSecond int
+	BurstSize int
+}
+
+// JwtAuthConfig holds JWT authentication settings.
+type JwtAuthConfig struct {
+	Secret string
+	Audience string
+	Issuer string
+}
+
+// ApiKeyAuthConfig holds API key authentication settings.
+type ApiKeyAuthConfig struct {
+	HeaderName string
+	ValidKeys []string
+}
+
+// StaticFilesConfig holds static file serving settings.
+type StaticFilesConfig struct {
+	Directory string
+	PathPrefix string
+}
