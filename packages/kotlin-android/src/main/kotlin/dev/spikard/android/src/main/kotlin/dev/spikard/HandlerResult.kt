@@ -26,5 +26,5 @@
 package dev.spikard
 
 class HandlerResult internal constructor(internal val handle: Long) : AutoCloseable {
-    override fun close() { SpikardConverterBridge.nativeFreeHandlerResult(handle) }
+    override fun close() { SpikardBridge.nativeFreeHandlerResult(handle) }
 }

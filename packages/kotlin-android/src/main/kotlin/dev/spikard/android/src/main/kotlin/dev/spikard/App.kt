@@ -27,5 +27,5 @@ package dev.spikard
 
 /** Spikard application builder. */
 class App internal constructor(internal val handle: Long) : AutoCloseable {
-    override fun close() { SpikardConverterBridge.nativeFreeApp(handle) }
+    override fun close() { SpikardBridge.nativeFreeApp(handle) }
 }

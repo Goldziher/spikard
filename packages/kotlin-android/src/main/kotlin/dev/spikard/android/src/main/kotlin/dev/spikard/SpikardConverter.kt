@@ -96,7 +96,7 @@ object SpikardConverter {
      * A `QueryOnlyConfig` with default settings
      */
     fun schemaQueryOnly(): QueryOnlyConfig {
-        val resultJson = SpikardConverterBridge.nativeSchemaQueryOnly()
+        val resultJson = SpikardBridge.nativeSchemaQueryOnly()
         return mapper.readValue(resultJson, QueryOnlyConfig::class.java)
     }
     /**
@@ -120,7 +120,7 @@ object SpikardConverter {
      * A `QueryMutationConfig` with default settings
      */
     fun schemaQueryMutation(): QueryMutationConfig {
-        val resultJson = SpikardConverterBridge.nativeSchemaQueryMutation()
+        val resultJson = SpikardBridge.nativeSchemaQueryMutation()
         return mapper.readValue(resultJson, QueryMutationConfig::class.java)
     }
     /**
@@ -144,7 +144,7 @@ object SpikardConverter {
      * A `FullSchemaConfig` with default settings
      */
     fun schemaFull(): FullSchemaConfig {
-        val resultJson = SpikardConverterBridge.nativeSchemaFull()
+        val resultJson = SpikardBridge.nativeSchemaFull()
         return mapper.readValue(resultJson, FullSchemaConfig::class.java)
     }
     /**

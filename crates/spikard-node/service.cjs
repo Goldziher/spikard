@@ -7,8 +7,8 @@ const { appIntoRouter, appRun } = require("./index");
  * Spikard application builder.
  */
 class App {
-  readonly _app;
-  _config;
+  readonly _app ;
+  _config ;
 
   /**
    * Create a new App instance.
@@ -235,5 +235,3 @@ class App {
 }
 
 module.exports = { App };
-
-export const Spikard = App;

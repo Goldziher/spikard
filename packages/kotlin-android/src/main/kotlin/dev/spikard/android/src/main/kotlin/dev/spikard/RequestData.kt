@@ -26,5 +26,5 @@
 package dev.spikard
 
 class RequestData internal constructor(internal val handle: Long) : AutoCloseable {
-    override fun close() { SpikardConverterBridge.nativeFreeRequestData(handle) }
+    override fun close() { SpikardBridge.nativeFreeRequestData(handle) }
 }
