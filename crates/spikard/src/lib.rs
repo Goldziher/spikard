@@ -113,6 +113,68 @@ impl App {
         self
     }
 
+    /// Register an `on_request` lifecycle hook (runs before validation and handler dispatch).
+    pub fn on_request(
+        &mut self,
+        hook: Arc<dyn LifecycleHook<axum::http::Request<Body>, axum::http::Response<Body>>>,
+    ) -> &mut Self {
+        self.ensure_lifecycle_hooks().add_on_request(hook);
+        self
+    }
+
+    /// Register a `pre_validation` lifecycle hook (runs after `on_request`, before validation).
+    pub fn pre_validation(
+        &mut self,
+        hook: Arc<dyn LifecycleHook<axum::http::Request<Body>, axum::http::Response<Body>>>,
+    ) -> &mut Self {
+        self.ensure_lifecycle_hooks().add_pre_validation(hook);
+        self
+    }
+
+    /// Register a `pre_handler` lifecycle hook (runs after validation, before the handler).
+    pub fn pre_handler(
+        &mut self,
+        hook: Arc<dyn LifecycleHook<axum::http::Request<Body>, axum::http::Response<Body>>>,
+    ) -> &mut Self {
+        self.ensure_lifecycle_hooks().add_pre_handler(hook);
+        self
+    }
+
+    /// Register an `on_response` lifecycle hook (runs after a successful handler response).
+    pub fn on_response(
+        &mut self,
+        hook: Arc<dyn LifecycleHook<axum::http::Request<Body>, axum::http::Response<Body>>>,
+    ) -> &mut Self {
+        self.ensure_lifecycle_hooks().add_on_response(hook);
+        self
+    }
+
+    /// Register an `on_error` lifecycle hook (runs when the handler returns an error).
+    pub fn on_error(
+        &mut self,
+        hook: Arc<dyn LifecycleHook<axum::http::Request<Body>, axum::http::Response<Body>>>,
+    ) -> &mut Self {
+        self.ensure_lifecycle_hooks().add_on_error(hook);
+        self
+    }
+
+    /// Retrieve a mutable reference to the `LifecycleHooks`, creating it if absent.
+    /// Registration always happens before `run()`, so the Arc is never shared here.
+    fn ensure_lifecycle_hooks(&mut self) -> &mut LifecycleHooks {
+        if self.config.lifecycle_hooks.is_none() {
+            self.config.lifecycle_hooks = Some(Arc::new(LifecycleHooks::new()));
+        }
+        // Fast path: we hold the only reference.
+        if Arc::get_mut(self.config.lifecycle_hooks.as_mut().unwrap()).is_some() {
+            return Arc::get_mut(self.config.lifecycle_hooks.as_mut().unwrap()).unwrap();
+        }
+        // Slow path: reclaim the inner value from the shared Arc so we can mutate it.
+        let hooks = Arc::try_unwrap(self.config.lifecycle_hooks.take().unwrap())
+            .unwrap_or_else(|_| panic!("lifecycle_hooks Arc is shared during App construction"));
+        self.config.lifecycle_hooks = Some(Arc::new(hooks));
+        Arc::get_mut(self.config.lifecycle_hooks.as_mut().unwrap()).unwrap()
+    }
+
     /// Register a route using the provided builder and handler function.
     ///
     /// # Errors
