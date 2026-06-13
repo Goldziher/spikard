@@ -224,7 +224,7 @@ tasks:
   alef:generate:
     desc: "Regenerate all Alef-managed outputs without formatting or building"
     cmds:
-      - alef all --clean --format=false
+      - cargo run -p spikard-alef --release -- all --clean --format=false
       - cmd: |
           # Invoke cargo build for spikard-dart to trigger FRB codegen and the
           # fix_handler_executor_calls() rewrite. This is necessary because alef's
@@ -240,32 +240,32 @@ tasks:
   alef:verify:
     desc: "Check Alef-generated files are up to date"
     cmds:
-      - alef verify --exit-code
+      - cargo run -p spikard-alef --release -- verify --exit-code
 
   alef:build:
     desc: "Build all language bindings"
     cmds:
-      - alef build
+      - cargo run -p spikard-alef --release -- build
 
   alef:format:
     desc: "Format Alef-managed generated output"
     cmds:
-      - alef fmt
+      - cargo run -p spikard-alef --release -- fmt
 
   alef:sync:
     desc: "Sync version from Cargo.toml to all manifests"
     cmds:
-      - alef sync-versions
+      - cargo run -p spikard-alef --release -- sync-versions
 
   alef:docs:
     desc: "Generate API reference documentation"
     cmds:
-      - alef docs
+      - cargo run -p spikard-alef --release -- docs
 
   alef:extract:
     desc: "Extract API surface from Rust source"
     cmds:
-      - alef extract
+      - cargo run -p spikard-alef --release -- extract
 
   alef:scaffold:
     desc: "Generate package scaffolding (Cargo.toml, pyproject.toml, etc.)"
