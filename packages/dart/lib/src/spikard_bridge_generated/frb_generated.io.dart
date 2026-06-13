@@ -11,1520 +11,779 @@ import 'lib.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart';
 import 'service_api.dart';
 
-abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
-  RustLibApiImplPlatform({
-    required super.handler,
-    required super.wire,
-    required super.generalizedFrbRustBinding,
-    required super.portManager,
-  });
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_AppPtr => wire
-      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAppPtr;
-
-  CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_DartHandlerHandlerPtr => wire
-      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandlerPtr;
-
-  CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_GraphQlRouteConfigPtr => wire
-      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfigPtr;
-
-  CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_RouteBuilderPtr => wire
-      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilderPtr;
-
-  CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_TestClientPtr => wire
-      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClientPtr;
-
-  @protected
-  AnyhowException dco_decode_AnyhowException(dynamic raw);
-
-  @protected
-  App
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
-    dynamic raw,
-  );
-
-  @protected
-  DartHandlerHandler
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler(
-    dynamic raw,
-  );
-
-  @protected
-  GraphQlRouteConfig
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(
-    dynamic raw,
-  );
-
-  @protected
-  RouteBuilder
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
-    dynamic raw,
-  );
-
-  @protected
-  TestClient
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(
-    dynamic raw,
-  );
-
-  @protected
-  App
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
-    dynamic raw,
-  );
-
-  @protected
-  GraphQlRouteConfig
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(
-    dynamic raw,
-  );
-
-  @protected
-  TestClient
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(
-    dynamic raw,
-  );
-
-  @protected
-  FutureOr<String> Function(String)
-  dco_decode_DartFn_Inputs_String_Output_String_AnyhowException(dynamic raw);
-
-  @protected
-  Object dco_decode_DartOpaque(dynamic raw);
-
-  @protected
-  Map<String, String> dco_decode_Map_String_String_None(dynamic raw);
-
-  @protected
-  Map<String, SecuritySchemeInfo>
-  dco_decode_Map_String_security_scheme_info_None(dynamic raw);
-
-  @protected
-  App
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
-    dynamic raw,
-  );
-
-  @protected
-  DartHandlerHandler
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler(
-    dynamic raw,
-  );
 
-  @protected
-  GraphQlRouteConfig
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(
-    dynamic raw,
-  );
 
-  @protected
-  RouteBuilder
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
-    dynamic raw,
-  );
 
-  @protected
-  TestClient
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(
-    dynamic raw,
-  );
+                abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
+                  RustLibApiImplPlatform({
+                    required super.handler,
+                    required super.wire,
+                    required super.generalizedFrbRustBinding,
+                    required super.portManager,
+                  });
 
-  @protected
-  String dco_decode_String(dynamic raw);
+                  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_AppPtr => wire._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAppPtr;
 
-  @protected
-  ApiKeyConfig dco_decode_api_key_config(dynamic raw);
+CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_DartHandlerHandlerPtr => wire._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandlerPtr;
 
-  @protected
-  AppError dco_decode_app_error(dynamic raw);
+CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_GraphQlRouteConfigPtr => wire._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfigPtr;
 
-  @protected
-  AsyncApiConfig dco_decode_async_api_config(dynamic raw);
+CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_RouteBuilderPtr => wire._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilderPtr;
 
-  @protected
-  BackgroundJobMetadata dco_decode_background_job_metadata(dynamic raw);
+CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_TestClientPtr => wire._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClientPtr;
 
-  @protected
-  BackgroundTaskConfig dco_decode_background_task_config(dynamic raw);
 
-  @protected
-  bool dco_decode_bool(dynamic raw);
 
-  @protected
-  ApiKeyConfig dco_decode_box_autoadd_api_key_config(dynamic raw);
+                  @protected AnyhowException dco_decode_AnyhowException(dynamic raw);
 
-  @protected
-  AsyncApiConfig dco_decode_box_autoadd_async_api_config(dynamic raw);
+@protected App dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(dynamic raw);
 
-  @protected
-  bool dco_decode_box_autoadd_bool(dynamic raw);
+@protected DartHandlerHandler dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler(dynamic raw);
 
-  @protected
-  CompressionConfig dco_decode_box_autoadd_compression_config(dynamic raw);
+@protected GraphQlRouteConfig dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(dynamic raw);
 
-  @protected
-  ContactInfo dco_decode_box_autoadd_contact_info(dynamic raw);
+@protected RouteBuilder dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(dynamic raw);
 
-  @protected
-  CorsConfig dco_decode_box_autoadd_cors_config(dynamic raw);
+@protected TestClient dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(dynamic raw);
 
-  @protected
-  GraphQLError dco_decode_box_autoadd_graph_ql_error(dynamic raw);
+@protected App dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(dynamic raw);
 
-  @protected
-  GrpcConfig dco_decode_box_autoadd_grpc_config(dynamic raw);
+@protected GraphQlRouteConfig dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(dynamic raw);
 
-  @protected
-  PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw);
+@protected TestClient dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(dynamic raw);
 
-  @protected
-  JsonRpcConfig dco_decode_box_autoadd_json_rpc_config(dynamic raw);
+@protected FutureOr<String> Function(String) dco_decode_DartFn_Inputs_String_Output_String_AnyhowException(dynamic raw);
 
-  @protected
-  JwtConfig dco_decode_box_autoadd_jwt_config(dynamic raw);
+@protected Object dco_decode_DartOpaque(dynamic raw);
 
-  @protected
-  LicenseInfo dco_decode_box_autoadd_license_info(dynamic raw);
+@protected Map<String, String> dco_decode_Map_String_String_None(dynamic raw);
 
-  @protected
-  OpenApiConfig dco_decode_box_autoadd_open_api_config(dynamic raw);
+@protected Map<String, SecuritySchemeInfo> dco_decode_Map_String_security_scheme_info_None(dynamic raw);
 
-  @protected
-  RateLimitConfig dco_decode_box_autoadd_rate_limit_config(dynamic raw);
+@protected App dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(dynamic raw);
 
-  @protected
-  ServerConfig dco_decode_box_autoadd_server_config(dynamic raw);
+@protected DartHandlerHandler dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler(dynamic raw);
 
-  @protected
-  CompressionConfig dco_decode_compression_config(dynamic raw);
+@protected GraphQlRouteConfig dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(dynamic raw);
 
-  @protected
-  ContactInfo dco_decode_contact_info(dynamic raw);
+@protected RouteBuilder dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(dynamic raw);
 
-  @protected
-  CorsConfig dco_decode_cors_config(dynamic raw);
+@protected TestClient dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(dynamic raw);
 
-  @protected
-  FullSchemaConfig dco_decode_full_schema_config(dynamic raw);
+@protected String dco_decode_String(dynamic raw);
 
-  @protected
-  GraphQLError dco_decode_graph_ql_error(dynamic raw);
+@protected ApiKeyConfig dco_decode_api_key_config(dynamic raw);
 
-  @protected
-  GraphQLSubscriptionSnapshot dco_decode_graph_ql_subscription_snapshot(
-    dynamic raw,
-  );
+@protected AppError dco_decode_app_error(dynamic raw);
 
-  @protected
-  GrpcConfig dco_decode_grpc_config(dynamic raw);
+@protected AsyncApiConfig dco_decode_async_api_config(dynamic raw);
 
-  @protected
-  int dco_decode_i_32(dynamic raw);
+@protected BackgroundJobMetadata dco_decode_background_job_metadata(dynamic raw);
 
-  @protected
-  PlatformInt64 dco_decode_i_64(dynamic raw);
+@protected BackgroundTaskConfig dco_decode_background_task_config(dynamic raw);
 
-  @protected
-  PlatformInt64 dco_decode_isize(dynamic raw);
+@protected bool dco_decode_bool(dynamic raw);
 
-  @protected
-  JsonRpcConfig dco_decode_json_rpc_config(dynamic raw);
+@protected ApiKeyConfig dco_decode_box_autoadd_api_key_config(dynamic raw);
 
-  @protected
-  JsonRpcMethodInfo dco_decode_json_rpc_method_info(dynamic raw);
+@protected AsyncApiConfig dco_decode_box_autoadd_async_api_config(dynamic raw);
 
-  @protected
-  JwtConfig dco_decode_jwt_config(dynamic raw);
+@protected bool dco_decode_box_autoadd_bool(dynamic raw);
 
-  @protected
-  LicenseInfo dco_decode_license_info(dynamic raw);
+@protected CompressionConfig dco_decode_box_autoadd_compression_config(dynamic raw);
 
-  @protected
-  List<String> dco_decode_list_String(dynamic raw);
+@protected ContactInfo dco_decode_box_autoadd_contact_info(dynamic raw);
 
-  @protected
-  List<ParsedChannel> dco_decode_list_parsed_channel(dynamic raw);
+@protected CorsConfig dco_decode_box_autoadd_cors_config(dynamic raw);
 
-  @protected
-  List<ParsedMessage> dco_decode_list_parsed_message(dynamic raw);
+@protected GraphQLError dco_decode_box_autoadd_graph_ql_error(dynamic raw);
 
-  @protected
-  List<ParsedOperation> dco_decode_list_parsed_operation(dynamic raw);
+@protected GrpcConfig dco_decode_box_autoadd_grpc_config(dynamic raw);
 
-  @protected
-  Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
+@protected PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw);
 
-  @protected
-  List<(String, SecuritySchemeInfo)>
-  dco_decode_list_record_string_security_scheme_info(dynamic raw);
+@protected JsonRpcConfig dco_decode_box_autoadd_json_rpc_config(dynamic raw);
 
-  @protected
-  List<(String, String)> dco_decode_list_record_string_string(dynamic raw);
+@protected JwtConfig dco_decode_box_autoadd_jwt_config(dynamic raw);
 
-  @protected
-  List<ServerInfo> dco_decode_list_server_info(dynamic raw);
+@protected LicenseInfo dco_decode_box_autoadd_license_info(dynamic raw);
 
-  @protected
-  List<StaticFilesConfig> dco_decode_list_static_files_config(dynamic raw);
+@protected OpenApiConfig dco_decode_box_autoadd_open_api_config(dynamic raw);
 
-  @protected
-  Method dco_decode_method(dynamic raw);
+@protected RateLimitConfig dco_decode_box_autoadd_rate_limit_config(dynamic raw);
 
-  @protected
-  OpenApiConfig dco_decode_open_api_config(dynamic raw);
+@protected ServerConfig dco_decode_box_autoadd_server_config(dynamic raw);
 
-  @protected
-  String? dco_decode_opt_String(dynamic raw);
+@protected CompressionConfig dco_decode_compression_config(dynamic raw);
 
-  @protected
-  ApiKeyConfig? dco_decode_opt_box_autoadd_api_key_config(dynamic raw);
+@protected ContactInfo dco_decode_contact_info(dynamic raw);
 
-  @protected
-  AsyncApiConfig? dco_decode_opt_box_autoadd_async_api_config(dynamic raw);
+@protected CorsConfig dco_decode_cors_config(dynamic raw);
 
-  @protected
-  bool? dco_decode_opt_box_autoadd_bool(dynamic raw);
+@protected FullSchemaConfig dco_decode_full_schema_config(dynamic raw);
 
-  @protected
-  CompressionConfig? dco_decode_opt_box_autoadd_compression_config(dynamic raw);
+@protected GraphQLError dco_decode_graph_ql_error(dynamic raw);
 
-  @protected
-  ContactInfo? dco_decode_opt_box_autoadd_contact_info(dynamic raw);
+@protected GraphQLSubscriptionSnapshot dco_decode_graph_ql_subscription_snapshot(dynamic raw);
 
-  @protected
-  GrpcConfig? dco_decode_opt_box_autoadd_grpc_config(dynamic raw);
+@protected GrpcConfig dco_decode_grpc_config(dynamic raw);
 
-  @protected
-  PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw);
+@protected int dco_decode_i_32(dynamic raw);
 
-  @protected
-  JsonRpcConfig? dco_decode_opt_box_autoadd_json_rpc_config(dynamic raw);
+@protected PlatformInt64 dco_decode_i_64(dynamic raw);
 
-  @protected
-  JwtConfig? dco_decode_opt_box_autoadd_jwt_config(dynamic raw);
+@protected PlatformInt64 dco_decode_isize(dynamic raw);
 
-  @protected
-  LicenseInfo? dco_decode_opt_box_autoadd_license_info(dynamic raw);
+@protected JsonRpcConfig dco_decode_json_rpc_config(dynamic raw);
 
-  @protected
-  OpenApiConfig? dco_decode_opt_box_autoadd_open_api_config(dynamic raw);
+@protected JsonRpcMethodInfo dco_decode_json_rpc_method_info(dynamic raw);
 
-  @protected
-  RateLimitConfig? dco_decode_opt_box_autoadd_rate_limit_config(dynamic raw);
+@protected JwtConfig dco_decode_jwt_config(dynamic raw);
 
-  @protected
-  List<String>? dco_decode_opt_list_String(dynamic raw);
+@protected LicenseInfo dco_decode_license_info(dynamic raw);
 
-  @protected
-  ParseResult dco_decode_parse_result(dynamic raw);
+@protected List<String> dco_decode_list_String(dynamic raw);
 
-  @protected
-  ParsedChannel dco_decode_parsed_channel(dynamic raw);
+@protected List<ParsedChannel> dco_decode_list_parsed_channel(dynamic raw);
 
-  @protected
-  ParsedMessage dco_decode_parsed_message(dynamic raw);
+@protected List<ParsedMessage> dco_decode_list_parsed_message(dynamic raw);
 
-  @protected
-  ParsedOperation dco_decode_parsed_operation(dynamic raw);
+@protected List<ParsedOperation> dco_decode_list_parsed_operation(dynamic raw);
 
-  @protected
-  ProblemDetails dco_decode_problem_details(dynamic raw);
+@protected Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
-  @protected
-  QueryMutationConfig dco_decode_query_mutation_config(dynamic raw);
+@protected List<(String,SecuritySchemeInfo)> dco_decode_list_record_string_security_scheme_info(dynamic raw);
 
-  @protected
-  QueryOnlyConfig dco_decode_query_only_config(dynamic raw);
+@protected List<(String,String)> dco_decode_list_record_string_string(dynamic raw);
 
-  @protected
-  RateLimitConfig dco_decode_rate_limit_config(dynamic raw);
+@protected List<ServerInfo> dco_decode_list_server_info(dynamic raw);
 
-  @protected
-  (String, SecuritySchemeInfo) dco_decode_record_string_security_scheme_info(
-    dynamic raw,
-  );
+@protected List<StaticFilesConfig> dco_decode_list_static_files_config(dynamic raw);
 
-  @protected
-  (String, String) dco_decode_record_string_string(dynamic raw);
+@protected Method dco_decode_method(dynamic raw);
 
-  @protected
-  Response dco_decode_response(dynamic raw);
+@protected OpenApiConfig dco_decode_open_api_config(dynamic raw);
 
-  @protected
-  ResponseSnapshot dco_decode_response_snapshot(dynamic raw);
+@protected String? dco_decode_opt_String(dynamic raw);
 
-  @protected
-  SchemaConfig dco_decode_schema_config(dynamic raw);
+@protected ApiKeyConfig? dco_decode_opt_box_autoadd_api_key_config(dynamic raw);
 
-  @protected
-  SchemaError dco_decode_schema_error(dynamic raw);
+@protected AsyncApiConfig? dco_decode_opt_box_autoadd_async_api_config(dynamic raw);
 
-  @protected
-  SecuritySchemeInfo dco_decode_security_scheme_info(dynamic raw);
+@protected bool? dco_decode_opt_box_autoadd_bool(dynamic raw);
 
-  @protected
-  ServerConfig dco_decode_server_config(dynamic raw);
+@protected CompressionConfig? dco_decode_opt_box_autoadd_compression_config(dynamic raw);
 
-  @protected
-  ServerInfo dco_decode_server_info(dynamic raw);
+@protected ContactInfo? dco_decode_opt_box_autoadd_contact_info(dynamic raw);
 
-  @protected
-  SnapshotError dco_decode_snapshot_error(dynamic raw);
+@protected GrpcConfig? dco_decode_opt_box_autoadd_grpc_config(dynamic raw);
 
-  @protected
-  SseEvent dco_decode_sse_event(dynamic raw);
+@protected PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw);
 
-  @protected
-  StaticFilesConfig dco_decode_static_files_config(dynamic raw);
+@protected JsonRpcConfig? dco_decode_opt_box_autoadd_json_rpc_config(dynamic raw);
 
-  @protected
-  int dco_decode_u_8(dynamic raw);
+@protected JwtConfig? dco_decode_opt_box_autoadd_jwt_config(dynamic raw);
 
-  @protected
-  void dco_decode_unit(dynamic raw);
+@protected LicenseInfo? dco_decode_opt_box_autoadd_license_info(dynamic raw);
 
-  @protected
-  UploadFile dco_decode_upload_file(dynamic raw);
+@protected OpenApiConfig? dco_decode_opt_box_autoadd_open_api_config(dynamic raw);
 
-  @protected
-  BigInt dco_decode_usize(dynamic raw);
+@protected RateLimitConfig? dco_decode_opt_box_autoadd_rate_limit_config(dynamic raw);
 
-  @protected
-  WebSocketMessage dco_decode_web_socket_message(dynamic raw);
+@protected List<String>? dco_decode_opt_list_String(dynamic raw);
 
-  @protected
-  AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
+@protected ParseResult dco_decode_parse_result(dynamic raw);
 
-  @protected
-  App
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
-    SseDeserializer deserializer,
-  );
+@protected ParsedChannel dco_decode_parsed_channel(dynamic raw);
 
-  @protected
-  DartHandlerHandler
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler(
-    SseDeserializer deserializer,
-  );
+@protected ParsedMessage dco_decode_parsed_message(dynamic raw);
 
-  @protected
-  GraphQlRouteConfig
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(
-    SseDeserializer deserializer,
-  );
+@protected ParsedOperation dco_decode_parsed_operation(dynamic raw);
 
-  @protected
-  RouteBuilder
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
-    SseDeserializer deserializer,
-  );
+@protected ProblemDetails dco_decode_problem_details(dynamic raw);
 
-  @protected
-  TestClient
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(
-    SseDeserializer deserializer,
-  );
+@protected QueryMutationConfig dco_decode_query_mutation_config(dynamic raw);
 
-  @protected
-  App
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
-    SseDeserializer deserializer,
-  );
+@protected QueryOnlyConfig dco_decode_query_only_config(dynamic raw);
 
-  @protected
-  GraphQlRouteConfig
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(
-    SseDeserializer deserializer,
-  );
+@protected RateLimitConfig dco_decode_rate_limit_config(dynamic raw);
 
-  @protected
-  TestClient
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(
-    SseDeserializer deserializer,
-  );
+@protected (String,SecuritySchemeInfo) dco_decode_record_string_security_scheme_info(dynamic raw);
 
-  @protected
-  Object sse_decode_DartOpaque(SseDeserializer deserializer);
+@protected (String,String) dco_decode_record_string_string(dynamic raw);
 
-  @protected
-  Map<String, String> sse_decode_Map_String_String_None(
-    SseDeserializer deserializer,
-  );
+@protected Response dco_decode_response(dynamic raw);
 
-  @protected
-  Map<String, SecuritySchemeInfo>
-  sse_decode_Map_String_security_scheme_info_None(SseDeserializer deserializer);
+@protected ResponseSnapshot dco_decode_response_snapshot(dynamic raw);
 
-  @protected
-  App
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
-    SseDeserializer deserializer,
-  );
+@protected SchemaConfig dco_decode_schema_config(dynamic raw);
 
-  @protected
-  DartHandlerHandler
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler(
-    SseDeserializer deserializer,
-  );
+@protected SchemaError dco_decode_schema_error(dynamic raw);
 
-  @protected
-  GraphQlRouteConfig
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(
-    SseDeserializer deserializer,
-  );
+@protected SecuritySchemeInfo dco_decode_security_scheme_info(dynamic raw);
 
-  @protected
-  RouteBuilder
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
-    SseDeserializer deserializer,
-  );
+@protected ServerConfig dco_decode_server_config(dynamic raw);
 
-  @protected
-  TestClient
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(
-    SseDeserializer deserializer,
-  );
+@protected ServerInfo dco_decode_server_info(dynamic raw);
 
-  @protected
-  String sse_decode_String(SseDeserializer deserializer);
+@protected SnapshotError dco_decode_snapshot_error(dynamic raw);
 
-  @protected
-  ApiKeyConfig sse_decode_api_key_config(SseDeserializer deserializer);
+@protected SseEvent dco_decode_sse_event(dynamic raw);
 
-  @protected
-  AppError sse_decode_app_error(SseDeserializer deserializer);
+@protected StaticFilesConfig dco_decode_static_files_config(dynamic raw);
 
-  @protected
-  AsyncApiConfig sse_decode_async_api_config(SseDeserializer deserializer);
+@protected int dco_decode_u_8(dynamic raw);
 
-  @protected
-  BackgroundJobMetadata sse_decode_background_job_metadata(
-    SseDeserializer deserializer,
-  );
+@protected void dco_decode_unit(dynamic raw);
 
-  @protected
-  BackgroundTaskConfig sse_decode_background_task_config(
-    SseDeserializer deserializer,
-  );
+@protected UploadFile dco_decode_upload_file(dynamic raw);
 
-  @protected
-  bool sse_decode_bool(SseDeserializer deserializer);
+@protected BigInt dco_decode_usize(dynamic raw);
 
-  @protected
-  ApiKeyConfig sse_decode_box_autoadd_api_key_config(
-    SseDeserializer deserializer,
-  );
+@protected WebSocketMessage dco_decode_web_socket_message(dynamic raw);
 
-  @protected
-  AsyncApiConfig sse_decode_box_autoadd_async_api_config(
-    SseDeserializer deserializer,
-  );
+@protected AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
 
-  @protected
-  bool sse_decode_box_autoadd_bool(SseDeserializer deserializer);
+@protected App sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(SseDeserializer deserializer);
 
-  @protected
-  CompressionConfig sse_decode_box_autoadd_compression_config(
-    SseDeserializer deserializer,
-  );
+@protected DartHandlerHandler sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler(SseDeserializer deserializer);
 
-  @protected
-  ContactInfo sse_decode_box_autoadd_contact_info(SseDeserializer deserializer);
+@protected GraphQlRouteConfig sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(SseDeserializer deserializer);
 
-  @protected
-  CorsConfig sse_decode_box_autoadd_cors_config(SseDeserializer deserializer);
+@protected RouteBuilder sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(SseDeserializer deserializer);
 
-  @protected
-  GraphQLError sse_decode_box_autoadd_graph_ql_error(
-    SseDeserializer deserializer,
-  );
+@protected TestClient sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(SseDeserializer deserializer);
 
-  @protected
-  GrpcConfig sse_decode_box_autoadd_grpc_config(SseDeserializer deserializer);
+@protected App sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(SseDeserializer deserializer);
 
-  @protected
-  PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer);
+@protected GraphQlRouteConfig sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(SseDeserializer deserializer);
 
-  @protected
-  JsonRpcConfig sse_decode_box_autoadd_json_rpc_config(
-    SseDeserializer deserializer,
-  );
+@protected TestClient sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(SseDeserializer deserializer);
 
-  @protected
-  JwtConfig sse_decode_box_autoadd_jwt_config(SseDeserializer deserializer);
+@protected Object sse_decode_DartOpaque(SseDeserializer deserializer);
 
-  @protected
-  LicenseInfo sse_decode_box_autoadd_license_info(SseDeserializer deserializer);
+@protected Map<String, String> sse_decode_Map_String_String_None(SseDeserializer deserializer);
 
-  @protected
-  OpenApiConfig sse_decode_box_autoadd_open_api_config(
-    SseDeserializer deserializer,
-  );
+@protected Map<String, SecuritySchemeInfo> sse_decode_Map_String_security_scheme_info_None(SseDeserializer deserializer);
 
-  @protected
-  RateLimitConfig sse_decode_box_autoadd_rate_limit_config(
-    SseDeserializer deserializer,
-  );
+@protected App sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(SseDeserializer deserializer);
 
-  @protected
-  ServerConfig sse_decode_box_autoadd_server_config(
-    SseDeserializer deserializer,
-  );
+@protected DartHandlerHandler sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler(SseDeserializer deserializer);
 
-  @protected
-  CompressionConfig sse_decode_compression_config(SseDeserializer deserializer);
+@protected GraphQlRouteConfig sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(SseDeserializer deserializer);
 
-  @protected
-  ContactInfo sse_decode_contact_info(SseDeserializer deserializer);
+@protected RouteBuilder sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(SseDeserializer deserializer);
 
-  @protected
-  CorsConfig sse_decode_cors_config(SseDeserializer deserializer);
+@protected TestClient sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(SseDeserializer deserializer);
 
-  @protected
-  FullSchemaConfig sse_decode_full_schema_config(SseDeserializer deserializer);
+@protected String sse_decode_String(SseDeserializer deserializer);
 
-  @protected
-  GraphQLError sse_decode_graph_ql_error(SseDeserializer deserializer);
+@protected ApiKeyConfig sse_decode_api_key_config(SseDeserializer deserializer);
 
-  @protected
-  GraphQLSubscriptionSnapshot sse_decode_graph_ql_subscription_snapshot(
-    SseDeserializer deserializer,
-  );
+@protected AppError sse_decode_app_error(SseDeserializer deserializer);
 
-  @protected
-  GrpcConfig sse_decode_grpc_config(SseDeserializer deserializer);
+@protected AsyncApiConfig sse_decode_async_api_config(SseDeserializer deserializer);
 
-  @protected
-  int sse_decode_i_32(SseDeserializer deserializer);
+@protected BackgroundJobMetadata sse_decode_background_job_metadata(SseDeserializer deserializer);
 
-  @protected
-  PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
+@protected BackgroundTaskConfig sse_decode_background_task_config(SseDeserializer deserializer);
 
-  @protected
-  PlatformInt64 sse_decode_isize(SseDeserializer deserializer);
+@protected bool sse_decode_bool(SseDeserializer deserializer);
 
-  @protected
-  JsonRpcConfig sse_decode_json_rpc_config(SseDeserializer deserializer);
+@protected ApiKeyConfig sse_decode_box_autoadd_api_key_config(SseDeserializer deserializer);
 
-  @protected
-  JsonRpcMethodInfo sse_decode_json_rpc_method_info(
-    SseDeserializer deserializer,
-  );
+@protected AsyncApiConfig sse_decode_box_autoadd_async_api_config(SseDeserializer deserializer);
 
-  @protected
-  JwtConfig sse_decode_jwt_config(SseDeserializer deserializer);
+@protected bool sse_decode_box_autoadd_bool(SseDeserializer deserializer);
 
-  @protected
-  LicenseInfo sse_decode_license_info(SseDeserializer deserializer);
+@protected CompressionConfig sse_decode_box_autoadd_compression_config(SseDeserializer deserializer);
 
-  @protected
-  List<String> sse_decode_list_String(SseDeserializer deserializer);
+@protected ContactInfo sse_decode_box_autoadd_contact_info(SseDeserializer deserializer);
 
-  @protected
-  List<ParsedChannel> sse_decode_list_parsed_channel(
-    SseDeserializer deserializer,
-  );
+@protected CorsConfig sse_decode_box_autoadd_cors_config(SseDeserializer deserializer);
 
-  @protected
-  List<ParsedMessage> sse_decode_list_parsed_message(
-    SseDeserializer deserializer,
-  );
+@protected GraphQLError sse_decode_box_autoadd_graph_ql_error(SseDeserializer deserializer);
 
-  @protected
-  List<ParsedOperation> sse_decode_list_parsed_operation(
-    SseDeserializer deserializer,
-  );
+@protected GrpcConfig sse_decode_box_autoadd_grpc_config(SseDeserializer deserializer);
 
-  @protected
-  Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
+@protected PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer);
 
-  @protected
-  List<(String, SecuritySchemeInfo)>
-  sse_decode_list_record_string_security_scheme_info(
-    SseDeserializer deserializer,
-  );
+@protected JsonRpcConfig sse_decode_box_autoadd_json_rpc_config(SseDeserializer deserializer);
 
-  @protected
-  List<(String, String)> sse_decode_list_record_string_string(
-    SseDeserializer deserializer,
-  );
+@protected JwtConfig sse_decode_box_autoadd_jwt_config(SseDeserializer deserializer);
 
-  @protected
-  List<ServerInfo> sse_decode_list_server_info(SseDeserializer deserializer);
+@protected LicenseInfo sse_decode_box_autoadd_license_info(SseDeserializer deserializer);
 
-  @protected
-  List<StaticFilesConfig> sse_decode_list_static_files_config(
-    SseDeserializer deserializer,
-  );
+@protected OpenApiConfig sse_decode_box_autoadd_open_api_config(SseDeserializer deserializer);
 
-  @protected
-  Method sse_decode_method(SseDeserializer deserializer);
+@protected RateLimitConfig sse_decode_box_autoadd_rate_limit_config(SseDeserializer deserializer);
 
-  @protected
-  OpenApiConfig sse_decode_open_api_config(SseDeserializer deserializer);
+@protected ServerConfig sse_decode_box_autoadd_server_config(SseDeserializer deserializer);
 
-  @protected
-  String? sse_decode_opt_String(SseDeserializer deserializer);
+@protected CompressionConfig sse_decode_compression_config(SseDeserializer deserializer);
 
-  @protected
-  ApiKeyConfig? sse_decode_opt_box_autoadd_api_key_config(
-    SseDeserializer deserializer,
-  );
+@protected ContactInfo sse_decode_contact_info(SseDeserializer deserializer);
 
-  @protected
-  AsyncApiConfig? sse_decode_opt_box_autoadd_async_api_config(
-    SseDeserializer deserializer,
-  );
+@protected CorsConfig sse_decode_cors_config(SseDeserializer deserializer);
 
-  @protected
-  bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer);
+@protected FullSchemaConfig sse_decode_full_schema_config(SseDeserializer deserializer);
 
-  @protected
-  CompressionConfig? sse_decode_opt_box_autoadd_compression_config(
-    SseDeserializer deserializer,
-  );
+@protected GraphQLError sse_decode_graph_ql_error(SseDeserializer deserializer);
 
-  @protected
-  ContactInfo? sse_decode_opt_box_autoadd_contact_info(
-    SseDeserializer deserializer,
-  );
+@protected GraphQLSubscriptionSnapshot sse_decode_graph_ql_subscription_snapshot(SseDeserializer deserializer);
 
-  @protected
-  GrpcConfig? sse_decode_opt_box_autoadd_grpc_config(
-    SseDeserializer deserializer,
-  );
+@protected GrpcConfig sse_decode_grpc_config(SseDeserializer deserializer);
 
-  @protected
-  PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer);
+@protected int sse_decode_i_32(SseDeserializer deserializer);
 
-  @protected
-  JsonRpcConfig? sse_decode_opt_box_autoadd_json_rpc_config(
-    SseDeserializer deserializer,
-  );
+@protected PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
 
-  @protected
-  JwtConfig? sse_decode_opt_box_autoadd_jwt_config(
-    SseDeserializer deserializer,
-  );
+@protected PlatformInt64 sse_decode_isize(SseDeserializer deserializer);
 
-  @protected
-  LicenseInfo? sse_decode_opt_box_autoadd_license_info(
-    SseDeserializer deserializer,
-  );
+@protected JsonRpcConfig sse_decode_json_rpc_config(SseDeserializer deserializer);
 
-  @protected
-  OpenApiConfig? sse_decode_opt_box_autoadd_open_api_config(
-    SseDeserializer deserializer,
-  );
+@protected JsonRpcMethodInfo sse_decode_json_rpc_method_info(SseDeserializer deserializer);
 
-  @protected
-  RateLimitConfig? sse_decode_opt_box_autoadd_rate_limit_config(
-    SseDeserializer deserializer,
-  );
+@protected JwtConfig sse_decode_jwt_config(SseDeserializer deserializer);
 
-  @protected
-  List<String>? sse_decode_opt_list_String(SseDeserializer deserializer);
+@protected LicenseInfo sse_decode_license_info(SseDeserializer deserializer);
 
-  @protected
-  ParseResult sse_decode_parse_result(SseDeserializer deserializer);
+@protected List<String> sse_decode_list_String(SseDeserializer deserializer);
 
-  @protected
-  ParsedChannel sse_decode_parsed_channel(SseDeserializer deserializer);
+@protected List<ParsedChannel> sse_decode_list_parsed_channel(SseDeserializer deserializer);
 
-  @protected
-  ParsedMessage sse_decode_parsed_message(SseDeserializer deserializer);
+@protected List<ParsedMessage> sse_decode_list_parsed_message(SseDeserializer deserializer);
 
-  @protected
-  ParsedOperation sse_decode_parsed_operation(SseDeserializer deserializer);
+@protected List<ParsedOperation> sse_decode_list_parsed_operation(SseDeserializer deserializer);
 
-  @protected
-  ProblemDetails sse_decode_problem_details(SseDeserializer deserializer);
+@protected Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
-  @protected
-  QueryMutationConfig sse_decode_query_mutation_config(
-    SseDeserializer deserializer,
-  );
+@protected List<(String,SecuritySchemeInfo)> sse_decode_list_record_string_security_scheme_info(SseDeserializer deserializer);
 
-  @protected
-  QueryOnlyConfig sse_decode_query_only_config(SseDeserializer deserializer);
+@protected List<(String,String)> sse_decode_list_record_string_string(SseDeserializer deserializer);
 
-  @protected
-  RateLimitConfig sse_decode_rate_limit_config(SseDeserializer deserializer);
+@protected List<ServerInfo> sse_decode_list_server_info(SseDeserializer deserializer);
 
-  @protected
-  (String, SecuritySchemeInfo) sse_decode_record_string_security_scheme_info(
-    SseDeserializer deserializer,
-  );
+@protected List<StaticFilesConfig> sse_decode_list_static_files_config(SseDeserializer deserializer);
 
-  @protected
-  (String, String) sse_decode_record_string_string(
-    SseDeserializer deserializer,
-  );
+@protected Method sse_decode_method(SseDeserializer deserializer);
 
-  @protected
-  Response sse_decode_response(SseDeserializer deserializer);
+@protected OpenApiConfig sse_decode_open_api_config(SseDeserializer deserializer);
 
-  @protected
-  ResponseSnapshot sse_decode_response_snapshot(SseDeserializer deserializer);
+@protected String? sse_decode_opt_String(SseDeserializer deserializer);
 
-  @protected
-  SchemaConfig sse_decode_schema_config(SseDeserializer deserializer);
+@protected ApiKeyConfig? sse_decode_opt_box_autoadd_api_key_config(SseDeserializer deserializer);
 
-  @protected
-  SchemaError sse_decode_schema_error(SseDeserializer deserializer);
+@protected AsyncApiConfig? sse_decode_opt_box_autoadd_async_api_config(SseDeserializer deserializer);
 
-  @protected
-  SecuritySchemeInfo sse_decode_security_scheme_info(
-    SseDeserializer deserializer,
-  );
+@protected bool? sse_decode_opt_box_autoadd_bool(SseDeserializer deserializer);
 
-  @protected
-  ServerConfig sse_decode_server_config(SseDeserializer deserializer);
+@protected CompressionConfig? sse_decode_opt_box_autoadd_compression_config(SseDeserializer deserializer);
 
-  @protected
-  ServerInfo sse_decode_server_info(SseDeserializer deserializer);
+@protected ContactInfo? sse_decode_opt_box_autoadd_contact_info(SseDeserializer deserializer);
 
-  @protected
-  SnapshotError sse_decode_snapshot_error(SseDeserializer deserializer);
+@protected GrpcConfig? sse_decode_opt_box_autoadd_grpc_config(SseDeserializer deserializer);
 
-  @protected
-  SseEvent sse_decode_sse_event(SseDeserializer deserializer);
+@protected PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer);
 
-  @protected
-  StaticFilesConfig sse_decode_static_files_config(
-    SseDeserializer deserializer,
-  );
+@protected JsonRpcConfig? sse_decode_opt_box_autoadd_json_rpc_config(SseDeserializer deserializer);
 
-  @protected
-  int sse_decode_u_8(SseDeserializer deserializer);
+@protected JwtConfig? sse_decode_opt_box_autoadd_jwt_config(SseDeserializer deserializer);
 
-  @protected
-  void sse_decode_unit(SseDeserializer deserializer);
+@protected LicenseInfo? sse_decode_opt_box_autoadd_license_info(SseDeserializer deserializer);
 
-  @protected
-  UploadFile sse_decode_upload_file(SseDeserializer deserializer);
+@protected OpenApiConfig? sse_decode_opt_box_autoadd_open_api_config(SseDeserializer deserializer);
 
-  @protected
-  BigInt sse_decode_usize(SseDeserializer deserializer);
+@protected RateLimitConfig? sse_decode_opt_box_autoadd_rate_limit_config(SseDeserializer deserializer);
 
-  @protected
-  WebSocketMessage sse_decode_web_socket_message(SseDeserializer deserializer);
+@protected List<String>? sse_decode_opt_list_String(SseDeserializer deserializer);
 
-  @protected
-  void sse_encode_AnyhowException(
-    AnyhowException self,
-    SseSerializer serializer,
-  );
+@protected ParseResult sse_decode_parse_result(SseDeserializer deserializer);
 
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
-    App self,
-    SseSerializer serializer,
-  );
+@protected ParsedChannel sse_decode_parsed_channel(SseDeserializer deserializer);
 
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler(
-    DartHandlerHandler self,
-    SseSerializer serializer,
-  );
+@protected ParsedMessage sse_decode_parsed_message(SseDeserializer deserializer);
 
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(
-    GraphQlRouteConfig self,
-    SseSerializer serializer,
-  );
+@protected ParsedOperation sse_decode_parsed_operation(SseDeserializer deserializer);
 
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
-    RouteBuilder self,
-    SseSerializer serializer,
-  );
+@protected ProblemDetails sse_decode_problem_details(SseDeserializer deserializer);
 
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(
-    TestClient self,
-    SseSerializer serializer,
-  );
+@protected QueryMutationConfig sse_decode_query_mutation_config(SseDeserializer deserializer);
 
-  @protected
-  void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
-    App self,
-    SseSerializer serializer,
-  );
+@protected QueryOnlyConfig sse_decode_query_only_config(SseDeserializer deserializer);
 
-  @protected
-  void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(
-    GraphQlRouteConfig self,
-    SseSerializer serializer,
-  );
+@protected RateLimitConfig sse_decode_rate_limit_config(SseDeserializer deserializer);
 
-  @protected
-  void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(
-    TestClient self,
-    SseSerializer serializer,
-  );
+@protected (String,SecuritySchemeInfo) sse_decode_record_string_security_scheme_info(SseDeserializer deserializer);
 
-  @protected
-  void sse_encode_DartFn_Inputs_String_Output_String_AnyhowException(
-    FutureOr<String> Function(String) self,
-    SseSerializer serializer,
-  );
+@protected (String,String) sse_decode_record_string_string(SseDeserializer deserializer);
 
-  @protected
-  void sse_encode_DartOpaque(Object self, SseSerializer serializer);
+@protected Response sse_decode_response(SseDeserializer deserializer);
 
-  @protected
-  void sse_encode_Map_String_String_None(
-    Map<String, String> self,
-    SseSerializer serializer,
-  );
+@protected ResponseSnapshot sse_decode_response_snapshot(SseDeserializer deserializer);
 
-  @protected
-  void sse_encode_Map_String_security_scheme_info_None(
-    Map<String, SecuritySchemeInfo> self,
-    SseSerializer serializer,
-  );
+@protected SchemaConfig sse_decode_schema_config(SseDeserializer deserializer);
 
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
-    App self,
-    SseSerializer serializer,
-  );
+@protected SchemaError sse_decode_schema_error(SseDeserializer deserializer);
 
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler(
-    DartHandlerHandler self,
-    SseSerializer serializer,
-  );
+@protected SecuritySchemeInfo sse_decode_security_scheme_info(SseDeserializer deserializer);
 
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(
-    GraphQlRouteConfig self,
-    SseSerializer serializer,
-  );
+@protected ServerConfig sse_decode_server_config(SseDeserializer deserializer);
 
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
-    RouteBuilder self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(
-    TestClient self,
-    SseSerializer serializer,
-  );
+@protected ServerInfo sse_decode_server_info(SseDeserializer deserializer);
 
-  @protected
-  void sse_encode_String(String self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_api_key_config(ApiKeyConfig self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_app_error(AppError self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_async_api_config(
-    AsyncApiConfig self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_background_job_metadata(
-    BackgroundJobMetadata self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_background_task_config(
-    BackgroundTaskConfig self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_bool(bool self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_box_autoadd_api_key_config(
-    ApiKeyConfig self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_box_autoadd_async_api_config(
-    AsyncApiConfig self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_box_autoadd_bool(bool self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_box_autoadd_compression_config(
-    CompressionConfig self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_box_autoadd_contact_info(
-    ContactInfo self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_box_autoadd_cors_config(
-    CorsConfig self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_box_autoadd_graph_ql_error(
-    GraphQLError self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_box_autoadd_grpc_config(
-    GrpcConfig self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_box_autoadd_i_64(
-    PlatformInt64 self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_box_autoadd_json_rpc_config(
-    JsonRpcConfig self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_box_autoadd_jwt_config(
-    JwtConfig self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_box_autoadd_license_info(
-    LicenseInfo self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_box_autoadd_open_api_config(
-    OpenApiConfig self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_box_autoadd_rate_limit_config(
-    RateLimitConfig self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_box_autoadd_server_config(
-    ServerConfig self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_compression_config(
-    CompressionConfig self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_contact_info(ContactInfo self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_cors_config(CorsConfig self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_full_schema_config(
-    FullSchemaConfig self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_graph_ql_error(GraphQLError self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_graph_ql_subscription_snapshot(
-    GraphQLSubscriptionSnapshot self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_grpc_config(GrpcConfig self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_i_32(int self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_isize(PlatformInt64 self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_json_rpc_config(JsonRpcConfig self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_json_rpc_method_info(
-    JsonRpcMethodInfo self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_jwt_config(JwtConfig self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_license_info(LicenseInfo self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_list_String(List<String> self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_list_parsed_channel(
-    List<ParsedChannel> self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_list_parsed_message(
-    List<ParsedMessage> self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_list_parsed_operation(
-    List<ParsedOperation> self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_list_prim_u_8_strict(
-    Uint8List self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_list_record_string_security_scheme_info(
-    List<(String, SecuritySchemeInfo)> self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_list_record_string_string(
-    List<(String, String)> self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_list_server_info(
-    List<ServerInfo> self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_list_static_files_config(
-    List<StaticFilesConfig> self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_method(Method self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_open_api_config(OpenApiConfig self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_opt_String(String? self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_opt_box_autoadd_api_key_config(
-    ApiKeyConfig? self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_opt_box_autoadd_async_api_config(
-    AsyncApiConfig? self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_opt_box_autoadd_compression_config(
-    CompressionConfig? self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_opt_box_autoadd_contact_info(
-    ContactInfo? self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_opt_box_autoadd_grpc_config(
-    GrpcConfig? self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_opt_box_autoadd_i_64(
-    PlatformInt64? self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_opt_box_autoadd_json_rpc_config(
-    JsonRpcConfig? self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_opt_box_autoadd_jwt_config(
-    JwtConfig? self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_opt_box_autoadd_license_info(
-    LicenseInfo? self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_opt_box_autoadd_open_api_config(
-    OpenApiConfig? self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_opt_box_autoadd_rate_limit_config(
-    RateLimitConfig? self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_opt_list_String(List<String>? self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_parse_result(ParseResult self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_parsed_channel(ParsedChannel self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_parsed_message(ParsedMessage self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_parsed_operation(
-    ParsedOperation self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_problem_details(
-    ProblemDetails self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_query_mutation_config(
-    QueryMutationConfig self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_query_only_config(
-    QueryOnlyConfig self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_rate_limit_config(
-    RateLimitConfig self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_record_string_security_scheme_info(
-    (String, SecuritySchemeInfo) self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_record_string_string(
-    (String, String) self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_response(Response self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_response_snapshot(
-    ResponseSnapshot self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_schema_config(SchemaConfig self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_schema_error(SchemaError self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_security_scheme_info(
-    SecuritySchemeInfo self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_server_config(ServerConfig self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_server_info(ServerInfo self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_snapshot_error(SnapshotError self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_sse_event(SseEvent self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_static_files_config(
-    StaticFilesConfig self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_u_8(int self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_unit(void self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_upload_file(UploadFile self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_usize(BigInt self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_web_socket_message(
-    WebSocketMessage self,
-    SseSerializer serializer,
-  );
-}
+@protected SnapshotError sse_decode_snapshot_error(SseDeserializer deserializer);
+
+@protected SseEvent sse_decode_sse_event(SseDeserializer deserializer);
+
+@protected StaticFilesConfig sse_decode_static_files_config(SseDeserializer deserializer);
+
+@protected int sse_decode_u_8(SseDeserializer deserializer);
+
+@protected void sse_decode_unit(SseDeserializer deserializer);
+
+@protected UploadFile sse_decode_upload_file(SseDeserializer deserializer);
+
+@protected BigInt sse_decode_usize(SseDeserializer deserializer);
+
+@protected WebSocketMessage sse_decode_web_socket_message(SseDeserializer deserializer);
+
+@protected void sse_encode_AnyhowException(AnyhowException self, SseSerializer serializer);
+
+@protected void sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(App self, SseSerializer serializer);
+
+@protected void sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler(DartHandlerHandler self, SseSerializer serializer);
+
+@protected void sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(GraphQlRouteConfig self, SseSerializer serializer);
+
+@protected void sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(RouteBuilder self, SseSerializer serializer);
+
+@protected void sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(TestClient self, SseSerializer serializer);
+
+@protected void sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(App self, SseSerializer serializer);
+
+@protected void sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(GraphQlRouteConfig self, SseSerializer serializer);
+
+@protected void sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(TestClient self, SseSerializer serializer);
+
+@protected void sse_encode_DartFn_Inputs_String_Output_String_AnyhowException(FutureOr<String> Function(String) self, SseSerializer serializer);
+
+@protected void sse_encode_DartOpaque(Object self, SseSerializer serializer);
+
+@protected void sse_encode_Map_String_String_None(Map<String, String> self, SseSerializer serializer);
+
+@protected void sse_encode_Map_String_security_scheme_info_None(Map<String, SecuritySchemeInfo> self, SseSerializer serializer);
+
+@protected void sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(App self, SseSerializer serializer);
+
+@protected void sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler(DartHandlerHandler self, SseSerializer serializer);
+
+@protected void sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(GraphQlRouteConfig self, SseSerializer serializer);
+
+@protected void sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(RouteBuilder self, SseSerializer serializer);
+
+@protected void sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(TestClient self, SseSerializer serializer);
+
+@protected void sse_encode_String(String self, SseSerializer serializer);
+
+@protected void sse_encode_api_key_config(ApiKeyConfig self, SseSerializer serializer);
+
+@protected void sse_encode_app_error(AppError self, SseSerializer serializer);
+
+@protected void sse_encode_async_api_config(AsyncApiConfig self, SseSerializer serializer);
+
+@protected void sse_encode_background_job_metadata(BackgroundJobMetadata self, SseSerializer serializer);
+
+@protected void sse_encode_background_task_config(BackgroundTaskConfig self, SseSerializer serializer);
+
+@protected void sse_encode_bool(bool self, SseSerializer serializer);
+
+@protected void sse_encode_box_autoadd_api_key_config(ApiKeyConfig self, SseSerializer serializer);
+
+@protected void sse_encode_box_autoadd_async_api_config(AsyncApiConfig self, SseSerializer serializer);
+
+@protected void sse_encode_box_autoadd_bool(bool self, SseSerializer serializer);
+
+@protected void sse_encode_box_autoadd_compression_config(CompressionConfig self, SseSerializer serializer);
+
+@protected void sse_encode_box_autoadd_contact_info(ContactInfo self, SseSerializer serializer);
+
+@protected void sse_encode_box_autoadd_cors_config(CorsConfig self, SseSerializer serializer);
+
+@protected void sse_encode_box_autoadd_graph_ql_error(GraphQLError self, SseSerializer serializer);
+
+@protected void sse_encode_box_autoadd_grpc_config(GrpcConfig self, SseSerializer serializer);
+
+@protected void sse_encode_box_autoadd_i_64(PlatformInt64 self, SseSerializer serializer);
+
+@protected void sse_encode_box_autoadd_json_rpc_config(JsonRpcConfig self, SseSerializer serializer);
+
+@protected void sse_encode_box_autoadd_jwt_config(JwtConfig self, SseSerializer serializer);
+
+@protected void sse_encode_box_autoadd_license_info(LicenseInfo self, SseSerializer serializer);
+
+@protected void sse_encode_box_autoadd_open_api_config(OpenApiConfig self, SseSerializer serializer);
+
+@protected void sse_encode_box_autoadd_rate_limit_config(RateLimitConfig self, SseSerializer serializer);
+
+@protected void sse_encode_box_autoadd_server_config(ServerConfig self, SseSerializer serializer);
+
+@protected void sse_encode_compression_config(CompressionConfig self, SseSerializer serializer);
+
+@protected void sse_encode_contact_info(ContactInfo self, SseSerializer serializer);
+
+@protected void sse_encode_cors_config(CorsConfig self, SseSerializer serializer);
+
+@protected void sse_encode_full_schema_config(FullSchemaConfig self, SseSerializer serializer);
+
+@protected void sse_encode_graph_ql_error(GraphQLError self, SseSerializer serializer);
+
+@protected void sse_encode_graph_ql_subscription_snapshot(GraphQLSubscriptionSnapshot self, SseSerializer serializer);
+
+@protected void sse_encode_grpc_config(GrpcConfig self, SseSerializer serializer);
+
+@protected void sse_encode_i_32(int self, SseSerializer serializer);
+
+@protected void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
+
+@protected void sse_encode_isize(PlatformInt64 self, SseSerializer serializer);
+
+@protected void sse_encode_json_rpc_config(JsonRpcConfig self, SseSerializer serializer);
+
+@protected void sse_encode_json_rpc_method_info(JsonRpcMethodInfo self, SseSerializer serializer);
+
+@protected void sse_encode_jwt_config(JwtConfig self, SseSerializer serializer);
+
+@protected void sse_encode_license_info(LicenseInfo self, SseSerializer serializer);
+
+@protected void sse_encode_list_String(List<String> self, SseSerializer serializer);
+
+@protected void sse_encode_list_parsed_channel(List<ParsedChannel> self, SseSerializer serializer);
+
+@protected void sse_encode_list_parsed_message(List<ParsedMessage> self, SseSerializer serializer);
+
+@protected void sse_encode_list_parsed_operation(List<ParsedOperation> self, SseSerializer serializer);
+
+@protected void sse_encode_list_prim_u_8_strict(Uint8List self, SseSerializer serializer);
+
+@protected void sse_encode_list_record_string_security_scheme_info(List<(String,SecuritySchemeInfo)> self, SseSerializer serializer);
+
+@protected void sse_encode_list_record_string_string(List<(String,String)> self, SseSerializer serializer);
+
+@protected void sse_encode_list_server_info(List<ServerInfo> self, SseSerializer serializer);
+
+@protected void sse_encode_list_static_files_config(List<StaticFilesConfig> self, SseSerializer serializer);
+
+@protected void sse_encode_method(Method self, SseSerializer serializer);
+
+@protected void sse_encode_open_api_config(OpenApiConfig self, SseSerializer serializer);
+
+@protected void sse_encode_opt_String(String? self, SseSerializer serializer);
+
+@protected void sse_encode_opt_box_autoadd_api_key_config(ApiKeyConfig? self, SseSerializer serializer);
+
+@protected void sse_encode_opt_box_autoadd_async_api_config(AsyncApiConfig? self, SseSerializer serializer);
+
+@protected void sse_encode_opt_box_autoadd_bool(bool? self, SseSerializer serializer);
+
+@protected void sse_encode_opt_box_autoadd_compression_config(CompressionConfig? self, SseSerializer serializer);
+
+@protected void sse_encode_opt_box_autoadd_contact_info(ContactInfo? self, SseSerializer serializer);
+
+@protected void sse_encode_opt_box_autoadd_grpc_config(GrpcConfig? self, SseSerializer serializer);
+
+@protected void sse_encode_opt_box_autoadd_i_64(PlatformInt64? self, SseSerializer serializer);
+
+@protected void sse_encode_opt_box_autoadd_json_rpc_config(JsonRpcConfig? self, SseSerializer serializer);
+
+@protected void sse_encode_opt_box_autoadd_jwt_config(JwtConfig? self, SseSerializer serializer);
+
+@protected void sse_encode_opt_box_autoadd_license_info(LicenseInfo? self, SseSerializer serializer);
+
+@protected void sse_encode_opt_box_autoadd_open_api_config(OpenApiConfig? self, SseSerializer serializer);
+
+@protected void sse_encode_opt_box_autoadd_rate_limit_config(RateLimitConfig? self, SseSerializer serializer);
+
+@protected void sse_encode_opt_list_String(List<String>? self, SseSerializer serializer);
+
+@protected void sse_encode_parse_result(ParseResult self, SseSerializer serializer);
+
+@protected void sse_encode_parsed_channel(ParsedChannel self, SseSerializer serializer);
+
+@protected void sse_encode_parsed_message(ParsedMessage self, SseSerializer serializer);
+
+@protected void sse_encode_parsed_operation(ParsedOperation self, SseSerializer serializer);
+
+@protected void sse_encode_problem_details(ProblemDetails self, SseSerializer serializer);
+
+@protected void sse_encode_query_mutation_config(QueryMutationConfig self, SseSerializer serializer);
+
+@protected void sse_encode_query_only_config(QueryOnlyConfig self, SseSerializer serializer);
+
+@protected void sse_encode_rate_limit_config(RateLimitConfig self, SseSerializer serializer);
+
+@protected void sse_encode_record_string_security_scheme_info((String,SecuritySchemeInfo) self, SseSerializer serializer);
+
+@protected void sse_encode_record_string_string((String,String) self, SseSerializer serializer);
+
+@protected void sse_encode_response(Response self, SseSerializer serializer);
+
+@protected void sse_encode_response_snapshot(ResponseSnapshot self, SseSerializer serializer);
+
+@protected void sse_encode_schema_config(SchemaConfig self, SseSerializer serializer);
+
+@protected void sse_encode_schema_error(SchemaError self, SseSerializer serializer);
+
+@protected void sse_encode_security_scheme_info(SecuritySchemeInfo self, SseSerializer serializer);
+
+@protected void sse_encode_server_config(ServerConfig self, SseSerializer serializer);
+
+@protected void sse_encode_server_info(ServerInfo self, SseSerializer serializer);
+
+@protected void sse_encode_snapshot_error(SnapshotError self, SseSerializer serializer);
+
+@protected void sse_encode_sse_event(SseEvent self, SseSerializer serializer);
+
+@protected void sse_encode_static_files_config(StaticFilesConfig self, SseSerializer serializer);
+
+@protected void sse_encode_u_8(int self, SseSerializer serializer);
+
+@protected void sse_encode_unit(void self, SseSerializer serializer);
+
+@protected void sse_encode_upload_file(UploadFile self, SseSerializer serializer);
+
+@protected void sse_encode_usize(BigInt self, SseSerializer serializer);
+
+@protected void sse_encode_web_socket_message(WebSocketMessage self, SseSerializer serializer);
+                }
+
+
 
 // Section: wire_class
 
-class RustLibWire implements BaseWire {
-  factory RustLibWire.fromExternalLibrary(ExternalLibrary lib) =>
-      RustLibWire(lib.ffiDynamicLibrary);
 
-  /// Holds the symbol lookup function.
-  final ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName)
-  _lookup;
+        class RustLibWire implements BaseWire {
 
-  /// The symbols are looked up in [dynamicLibrary].
-  RustLibWire(ffi.DynamicLibrary dynamicLibrary)
-    : _lookup = dynamicLibrary.lookup;
+            factory RustLibWire.fromExternalLibrary(ExternalLibrary lib) =>
+              RustLibWire(lib.ffiDynamicLibrary);
 
-  void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
-      ptr,
-    );
-  }
+            /// Holds the symbol lookup function.
+            final ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName)
+                _lookup;
 
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAppPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_spikard_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp',
-      );
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp =
-      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAppPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+            /// The symbols are looked up in [dynamicLibrary].
+            RustLibWire(ffi.DynamicLibrary dynamicLibrary)
+                : _lookup = dynamicLibrary.lookup;
 
-  void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
-      ptr,
-    );
-  }
 
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAppPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_spikard_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp',
-      );
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp =
-      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAppPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+            void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
+              ffi.Pointer<ffi.Void> ptr,
+            ) {
+              return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
+                ptr,
+              );
+            }
 
-  void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler(
-      ptr,
-    );
-  }
+            late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAppPtr = _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('frbgen_spikard_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp');
+            late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp = _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAppPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandlerPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_spikard_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler',
-      );
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler =
-      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandlerPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+            void rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
+              ffi.Pointer<ffi.Void> ptr,
+            ) {
+              return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
+                ptr,
+              );
+            }
 
-  void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler(
-      ptr,
-    );
-  }
+            late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAppPtr = _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('frbgen_spikard_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp');
+            late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp = _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAppPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandlerPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_spikard_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler',
-      );
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler =
-      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandlerPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+            void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler(
+              ffi.Pointer<ffi.Void> ptr,
+            ) {
+              return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler(
+                ptr,
+              );
+            }
 
-  void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(
-      ptr,
-    );
-  }
+            late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandlerPtr = _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('frbgen_spikard_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler');
+            late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler = _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandlerPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfigPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_spikard_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig',
-      );
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig =
-      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfigPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+            void rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler(
+              ffi.Pointer<ffi.Void> ptr,
+            ) {
+              return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler(
+                ptr,
+              );
+            }
 
-  void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(
-      ptr,
-    );
-  }
+            late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandlerPtr = _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('frbgen_spikard_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler');
+            late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler = _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandlerPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfigPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_spikard_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig',
-      );
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig =
-      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfigPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+            void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(
+              ffi.Pointer<ffi.Void> ptr,
+            ) {
+              return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(
+                ptr,
+              );
+            }
 
-  void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
-      ptr,
-    );
-  }
+            late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfigPtr = _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('frbgen_spikard_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig');
+            late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig = _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfigPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilderPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_spikard_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder',
-      );
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder =
-      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilderPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+            void rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(
+              ffi.Pointer<ffi.Void> ptr,
+            ) {
+              return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(
+                ptr,
+              );
+            }
 
-  void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
-      ptr,
-    );
-  }
+            late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfigPtr = _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('frbgen_spikard_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig');
+            late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig = _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfigPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilderPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_spikard_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder',
-      );
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder =
-      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilderPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+            void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
+              ffi.Pointer<ffi.Void> ptr,
+            ) {
+              return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
+                ptr,
+              );
+            }
 
-  void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(
-      ptr,
-    );
-  }
+            late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilderPtr = _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('frbgen_spikard_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder');
+            late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder = _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilderPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClientPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_spikard_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient',
-      );
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient =
-      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClientPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+            void rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
+              ffi.Pointer<ffi.Void> ptr,
+            ) {
+              return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
+                ptr,
+              );
+            }
 
-  void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(
-      ptr,
-    );
-  }
+            late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilderPtr = _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('frbgen_spikard_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder');
+            late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder = _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilderPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClientPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_spikard_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient',
-      );
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient =
-      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClientPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-}
+            void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(
+              ffi.Pointer<ffi.Void> ptr,
+            ) {
+              return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(
+                ptr,
+              );
+            }
+
+            late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClientPtr = _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('frbgen_spikard_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient');
+            late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient = _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClientPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+            void rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(
+              ffi.Pointer<ffi.Void> ptr,
+            ) {
+              return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(
+                ptr,
+              );
+            }
+
+            late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClientPtr = _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>('frbgen_spikard_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient');
+            late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient = _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClientPtr.asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+        }
