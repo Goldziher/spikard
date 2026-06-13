@@ -4,11 +4,11 @@
 // To verify freshness: alef verify --exit-code
 package dev.spikard;
 
-import java.util.List;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import java.util.List;
 
 /**
  * Full parse result returned by {@code POST /asyncapi/parse}
@@ -22,79 +22,74 @@ public record ParseResult(
     @JsonProperty("api_version") String apiVersion,
     @JsonProperty("channels") List<ParsedChannel> channels,
     @JsonProperty("operations") List<ParsedOperation> operations,
-    @JsonProperty("messages") List<ParsedMessage> messages
-) {
-    public static Builder builder() {
-        return new Builder();
+    @JsonProperty("messages") List<ParsedMessage> messages) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    @JsonProperty("spec_version")
+    private String specVersion = "";
+
+    private String title = "";
+
+    @JsonProperty("api_version")
+    private String apiVersion = "";
+
+    private List<ParsedChannel> channels = List.of();
+    private List<ParsedOperation> operations = List.of();
+    private List<ParsedMessage> messages = List.of();
+
+    /** Sets the specVersion field. */
+    @JsonProperty("spec_version")
+    public Builder withSpecVersion(final String value) {
+      this.specVersion = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-        @JsonProperty("spec_version")
-private String specVersion = "";
-private String title = "";
-        @JsonProperty("api_version")
-private String apiVersion = "";
-private List<ParsedChannel> channels = List.of();
-private List<ParsedOperation> operations = List.of();
-private List<ParsedMessage> messages = List.of();
-
-        /** Sets the specVersion field. */
-        @JsonProperty("spec_version")
-        public Builder withSpecVersion(final String value) {
-            this.specVersion = value;
-            return this;
-        }
-
-        /** Sets the title field. */
-        @JsonProperty("title")
-        public Builder withTitle(final String value) {
-            this.title = value;
-            return this;
-        }
-
-        /** Sets the apiVersion field. */
-        @JsonProperty("api_version")
-        public Builder withApiVersion(final String value) {
-            this.apiVersion = value;
-            return this;
-        }
-
-        /** Sets the channels field. */
-        @JsonProperty("channels")
-        public Builder withChannels(final List<ParsedChannel> value) {
-            this.channels = value;
-            return this;
-        }
-
-        /** Sets the operations field. */
-        @JsonProperty("operations")
-        public Builder withOperations(final List<ParsedOperation> value) {
-            this.operations = value;
-            return this;
-        }
-
-        /** Sets the messages field. */
-        @JsonProperty("messages")
-        public Builder withMessages(final List<ParsedMessage> value) {
-            this.messages = value;
-            return this;
-        }
-
-        /** Builds the ParseResult instance. */
-        public ParseResult build() {
-            return new ParseResult(
-                specVersion,
-                title,
-                apiVersion,
-                channels,
-                operations,
-                messages
-            );
-        }
+    /** Sets the title field. */
+    @JsonProperty("title")
+    public Builder withTitle(final String value) {
+      this.title = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the apiVersion field. */
+    @JsonProperty("api_version")
+    public Builder withApiVersion(final String value) {
+      this.apiVersion = value;
+      return this;
+    }
+
+    /** Sets the channels field. */
+    @JsonProperty("channels")
+    public Builder withChannels(final List<ParsedChannel> value) {
+      this.channels = value;
+      return this;
+    }
+
+    /** Sets the operations field. */
+    @JsonProperty("operations")
+    public Builder withOperations(final List<ParsedOperation> value) {
+      this.operations = value;
+      return this;
+    }
+
+    /** Sets the messages field. */
+    @JsonProperty("messages")
+    public Builder withMessages(final List<ParsedMessage> value) {
+      this.messages = value;
+      return this;
+    }
+
+    /** Builds the ParseResult instance. */
+    public ParseResult build() {
+      return new ParseResult(specVersion, title, apiVersion, channels, operations, messages);
+    }
+  }
+  // CPD-ON
 }

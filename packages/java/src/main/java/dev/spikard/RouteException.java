@@ -6,13 +6,13 @@ package dev.spikard;
  * Route registration failed.
  */
 public class RouteException extends AppErrorException {
-    /** Creates a new RouteException with the given message. */
-    public RouteException(final String message) {
-        super(message);
-    }
+  /** Creates a new RouteException with the given message. */
+  public RouteException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new RouteException with the given message and cause. */
-    public RouteException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new RouteException with the given message and cause. */
+  public RouteException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

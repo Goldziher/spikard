@@ -4,11 +4,11 @@
 // To verify freshness: alef verify --exit-code
 package dev.spikard;
 
-import java.util.List;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -21,59 +21,53 @@ public record ParsedChannel(
     @JsonProperty("name") String name,
     @JsonProperty("address") String address,
     @JsonProperty("messages") List<String> messages,
-    @Nullable @JsonProperty("bindings") Object bindings
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("bindings") Object bindings) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String name = "";
+    private String address = "";
+    private List<String> messages = List.of();
+    private Object bindings = null;
+
+    /** Sets the name field. */
+    @JsonProperty("name")
+    public Builder withName(final String value) {
+      this.name = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String name = "";
-private String address = "";
-private List<String> messages = List.of();
-private Object bindings = null;
-
-        /** Sets the name field. */
-        @JsonProperty("name")
-        public Builder withName(final String value) {
-            this.name = value;
-            return this;
-        }
-
-        /** Sets the address field. */
-        @JsonProperty("address")
-        public Builder withAddress(final String value) {
-            this.address = value;
-            return this;
-        }
-
-        /** Sets the messages field. */
-        @JsonProperty("messages")
-        public Builder withMessages(final List<String> value) {
-            this.messages = value;
-            return this;
-        }
-
-        /** Sets the bindings field. */
-        @JsonProperty("bindings")
-        public Builder withBindings(final @Nullable Object value) {
-            this.bindings = value;
-            return this;
-        }
-
-        /** Builds the ParsedChannel instance. */
-        public ParsedChannel build() {
-            return new ParsedChannel(
-                name,
-                address,
-                messages,
-                bindings
-            );
-        }
+    /** Sets the address field. */
+    @JsonProperty("address")
+    public Builder withAddress(final String value) {
+      this.address = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the messages field. */
+    @JsonProperty("messages")
+    public Builder withMessages(final List<String> value) {
+      this.messages = value;
+      return this;
+    }
+
+    /** Sets the bindings field. */
+    @JsonProperty("bindings")
+    public Builder withBindings(final @Nullable Object value) {
+      this.bindings = value;
+      return this;
+    }
+
+    /** Builds the ParsedChannel instance. */
+    public ParsedChannel build() {
+      return new ParsedChannel(name, address, messages, bindings);
+    }
+  }
+  // CPD-ON
 }

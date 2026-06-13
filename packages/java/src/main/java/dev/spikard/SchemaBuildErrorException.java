@@ -8,13 +8,13 @@ package dev.spikard;
  * Occurs when schema construction fails due to invalid definitions or conflicts.
  */
 public class SchemaBuildErrorException extends GraphQLErrorException {
-    /** Creates a new SchemaBuildErrorException with the given message. */
-    public SchemaBuildErrorException(final String message) {
-        super(message);
-    }
+  /** Creates a new SchemaBuildErrorException with the given message. */
+  public SchemaBuildErrorException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new SchemaBuildErrorException with the given message and cause. */
-    public SchemaBuildErrorException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new SchemaBuildErrorException with the given message and cause. */
+  public SchemaBuildErrorException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

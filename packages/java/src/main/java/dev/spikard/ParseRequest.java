@@ -10,5 +10,5 @@ import java.util.Map;
  * Request body for {@code POST /asyncapi/parse}
  */
 @SuppressWarnings("PMD")
-public record ParseRequest(@com.fasterxml.jackson.annotation.JsonAnyGetter Map<String, Object> spec) {
-}
+public record ParseRequest(
+    @com.fasterxml.jackson.annotation.JsonAnyGetter Map<String, Object> spec) {}

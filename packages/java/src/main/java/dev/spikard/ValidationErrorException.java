@@ -8,13 +8,13 @@ package dev.spikard;
  * Occurs when a GraphQL query fails schema validation.
  */
 public class ValidationErrorException extends GraphQLErrorException {
-    /** Creates a new ValidationErrorException with the given message. */
-    public ValidationErrorException(final String message) {
-        super(message);
-    }
+  /** Creates a new ValidationErrorException with the given message. */
+  public ValidationErrorException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new ValidationErrorException with the given message and cause. */
-    public ValidationErrorException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new ValidationErrorException with the given message and cause. */
+  public ValidationErrorException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

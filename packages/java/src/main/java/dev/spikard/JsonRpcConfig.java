@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.spikard;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -20,65 +20,63 @@ public record JsonRpcConfig(
     @Nullable @JsonProperty("enabled") Boolean enabled,
     @Nullable @JsonProperty("endpoint_path") String endpointPath,
     @Nullable @JsonProperty("enable_batch") Boolean enableBatch,
-    @Nullable @JsonProperty("max_batch_size") Long maxBatchSize
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("max_batch_size") Long maxBatchSize) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private Boolean enabled = null;
+
+    @JsonProperty("endpoint_path")
+    private String endpointPath = null;
+
+    @JsonProperty("enable_batch")
+    private Boolean enableBatch = null;
+
+    @JsonProperty("max_batch_size")
+    private Long maxBatchSize = null;
+
+    /** Sets the enabled field. */
+    @JsonProperty("enabled")
+    public Builder withEnabled(final @Nullable Boolean value) {
+      this.enabled = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private Boolean enabled = null;
-        @JsonProperty("endpoint_path")
-private String endpointPath = null;
-        @JsonProperty("enable_batch")
-private Boolean enableBatch = null;
-        @JsonProperty("max_batch_size")
-private Long maxBatchSize = null;
-
-        /** Sets the enabled field. */
-        @JsonProperty("enabled")
-        public Builder withEnabled(final @Nullable Boolean value) {
-            this.enabled = value;
-            return this;
-        }
-
-        /** Sets the endpointPath field. */
-        @JsonProperty("endpoint_path")
-        public Builder withEndpointPath(final @Nullable String value) {
-            this.endpointPath = value;
-            return this;
-        }
-
-        /** Sets the enableBatch field. */
-        @JsonProperty("enable_batch")
-        public Builder withEnableBatch(final @Nullable Boolean value) {
-            this.enableBatch = value;
-            return this;
-        }
-
-        /** Sets the maxBatchSize field. */
-        @JsonProperty("max_batch_size")
-        public Builder withMaxBatchSize(final @Nullable Long value) {
-            this.maxBatchSize = value;
-            return this;
-        }
-
-        /** Builds the JsonRpcConfig instance. */
-        public JsonRpcConfig build() {
-            return new JsonRpcConfig(
-                enabled,
-                endpointPath,
-                enableBatch,
-                maxBatchSize
-            );
-        }
+    /** Sets the endpointPath field. */
+    @JsonProperty("endpoint_path")
+    public Builder withEndpointPath(final @Nullable String value) {
+      this.endpointPath = value;
+      return this;
     }
-    // CPD-ON
-    public static JsonRpcConfig defaultInstance() {
-        throw new UnsupportedOperationException("defaultInstance is not yet bridged via JNI; use the Builder instead.");
+
+    /** Sets the enableBatch field. */
+    @JsonProperty("enable_batch")
+    public Builder withEnableBatch(final @Nullable Boolean value) {
+      this.enableBatch = value;
+      return this;
     }
+
+    /** Sets the maxBatchSize field. */
+    @JsonProperty("max_batch_size")
+    public Builder withMaxBatchSize(final @Nullable Long value) {
+      this.maxBatchSize = value;
+      return this;
+    }
+
+    /** Builds the JsonRpcConfig instance. */
+    public JsonRpcConfig build() {
+      return new JsonRpcConfig(enabled, endpointPath, enableBatch, maxBatchSize);
+    }
+  }
+  // CPD-ON
+  public static JsonRpcConfig defaultInstance() {
+    throw new UnsupportedOperationException(
+        "defaultInstance is not yet bridged via JNI; use the Builder instead.");
+  }
 }

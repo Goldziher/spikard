@@ -4,11 +4,11 @@
 // To verify freshness: alef verify --exit-code
 package dev.spikard;
 
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import java.util.Map;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -43,114 +43,113 @@ public record ProblemDetails(
     @JsonProperty("status") short status,
     @Nullable @JsonProperty("detail") String detail,
     @Nullable @JsonProperty("instance") String instance,
-    @JsonProperty("extensions") Map<String, Object> extensions
-) {
-    public static Builder builder() {
-        return new Builder();
+    @JsonProperty("extensions") Map<String, Object> extensions) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    @JsonProperty("type")
+    private String typeUri = "";
+
+    private String title = "";
+    private short status = 0;
+    private String detail = null;
+    private String instance = null;
+    private Map<String, Object> extensions = Map.of();
+
+    /** Sets the typeUri field. */
+    @JsonProperty("type")
+    public Builder withTypeUri(final String value) {
+      this.typeUri = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-        @JsonProperty("type")
-private String typeUri = "";
-private String title = "";
-private short status = 0;
-private String detail = null;
-private String instance = null;
-private Map<String, Object> extensions = Map.of();
-
-        /** Sets the typeUri field. */
-        @JsonProperty("type")
-        public Builder withTypeUri(final String value) {
-            this.typeUri = value;
-            return this;
-        }
-
-        /** Sets the title field. */
-        @JsonProperty("title")
-        public Builder withTitle(final String value) {
-            this.title = value;
-            return this;
-        }
-
-        /** Sets the status field. */
-        @JsonProperty("status")
-        public Builder withStatus(final short value) {
-            this.status = value;
-            return this;
-        }
-
-        /** Sets the detail field. */
-        @JsonProperty("detail")
-        public Builder withDetail(final @Nullable String value) {
-            this.detail = value;
-            return this;
-        }
-
-        /** Sets the instance field. */
-        @JsonProperty("instance")
-        public Builder withInstance(final @Nullable String value) {
-            this.instance = value;
-            return this;
-        }
-
-        /** Sets the extensions field. */
-        @JsonProperty("extensions")
-        public Builder withExtensions(final Map<String, Object> value) {
-            this.extensions = value;
-            return this;
-        }
-
-        /** Builds the ProblemDetails instance. */
-        public ProblemDetails build() {
-            return new ProblemDetails(
-                typeUri,
-                title,
-                status,
-                detail,
-                instance,
-                extensions
-            );
-        }
+    /** Sets the title field. */
+    @JsonProperty("title")
+    public Builder withTitle(final String value) {
+      this.title = value;
+      return this;
     }
-    // CPD-ON
-    /**
-     * Set the detail field
-     */
-    public ProblemDetails withDetail(String detail) {
-        throw new UnsupportedOperationException("withDetail is not yet bridged via JNI; reconstruct via Builder.");
+
+    /** Sets the status field. */
+    @JsonProperty("status")
+    public Builder withStatus(final short value) {
+      this.status = value;
+      return this;
     }
-    /**
-     * Set the instance field
-     */
-    public ProblemDetails withInstance(String instance) {
-        throw new UnsupportedOperationException("withInstance is not yet bridged via JNI; reconstruct via Builder.");
+
+    /** Sets the detail field. */
+    @JsonProperty("detail")
+    public Builder withDetail(final @Nullable String value) {
+      this.detail = value;
+      return this;
     }
-    /**
-     * Create a not found error
-     */
-    public static ProblemDetails notFound(String detail) {
-        throw new UnsupportedOperationException("notFound is not yet bridged via JNI; use the Builder instead.");
+
+    /** Sets the instance field. */
+    @JsonProperty("instance")
+    public Builder withInstance(final @Nullable String value) {
+      this.instance = value;
+      return this;
     }
-    /**
-     * Create a method not allowed error
-     */
-    public static ProblemDetails methodNotAllowed(String detail) {
-        throw new UnsupportedOperationException("methodNotAllowed is not yet bridged via JNI; use the Builder instead.");
+
+    /** Sets the extensions field. */
+    @JsonProperty("extensions")
+    public Builder withExtensions(final Map<String, Object> value) {
+      this.extensions = value;
+      return this;
     }
-    /**
-     * Create an internal server error
-     */
-    public static ProblemDetails internalServerError(String detail) {
-        throw new UnsupportedOperationException("internalServerError is not yet bridged via JNI; use the Builder instead.");
+
+    /** Builds the ProblemDetails instance. */
+    public ProblemDetails build() {
+      return new ProblemDetails(typeUri, title, status, detail, instance, extensions);
     }
-    /**
-     * Create a bad request error
-     */
-    public static ProblemDetails badRequest(String detail) {
-        throw new UnsupportedOperationException("badRequest is not yet bridged via JNI; use the Builder instead.");
-    }
+  }
+  // CPD-ON
+  /**
+   * Set the detail field
+   */
+  public ProblemDetails withDetail(String detail) {
+    throw new UnsupportedOperationException(
+        "withDetail is not yet bridged via JNI; reconstruct via Builder.");
+  }
+  /**
+   * Set the instance field
+   */
+  public ProblemDetails withInstance(String instance) {
+    throw new UnsupportedOperationException(
+        "withInstance is not yet bridged via JNI; reconstruct via Builder.");
+  }
+  /**
+   * Create a not found error
+   */
+  public static ProblemDetails notFound(String detail) {
+    throw new UnsupportedOperationException(
+        "notFound is not yet bridged via JNI; use the Builder instead.");
+  }
+  /**
+   * Create a method not allowed error
+   */
+  public static ProblemDetails methodNotAllowed(String detail) {
+    throw new UnsupportedOperationException(
+        "methodNotAllowed is not yet bridged via JNI; use the Builder instead.");
+  }
+  /**
+   * Create an internal server error
+   */
+  public static ProblemDetails internalServerError(String detail) {
+    throw new UnsupportedOperationException(
+        "internalServerError is not yet bridged via JNI; use the Builder instead.");
+  }
+  /**
+   * Create a bad request error
+   */
+  public static ProblemDetails badRequest(String detail) {
+    throw new UnsupportedOperationException(
+        "badRequest is not yet bridged via JNI; use the Builder instead.");
+  }
 }

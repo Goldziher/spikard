@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.spikard;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -18,41 +18,37 @@ import org.jspecify.annotations.Nullable;
 @SuppressWarnings("PMD")
 public record LicenseInfo(
     @JsonProperty("name") String name,
-    @Nullable @JsonProperty("url") String url
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("url") String url) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String name = "";
+    private String url = null;
+
+    /** Sets the name field. */
+    @JsonProperty("name")
+    public Builder withName(final String value) {
+      this.name = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String name = "";
-private String url = null;
-
-        /** Sets the name field. */
-        @JsonProperty("name")
-        public Builder withName(final String value) {
-            this.name = value;
-            return this;
-        }
-
-        /** Sets the url field. */
-        @JsonProperty("url")
-        public Builder withUrl(final @Nullable String value) {
-            this.url = value;
-            return this;
-        }
-
-        /** Builds the LicenseInfo instance. */
-        public LicenseInfo build() {
-            return new LicenseInfo(
-                name,
-                url
-            );
-        }
+    /** Sets the url field. */
+    @JsonProperty("url")
+    public Builder withUrl(final @Nullable String value) {
+      this.url = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Builds the LicenseInfo instance. */
+    public LicenseInfo build() {
+      return new LicenseInfo(name, url);
+    }
+  }
+  // CPD-ON
 }

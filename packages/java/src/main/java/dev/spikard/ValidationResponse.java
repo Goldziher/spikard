@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.spikard;
 
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.List;
 
 /**
  * Response body for {@code POST /asyncapi/validate}
@@ -13,6 +13,4 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 @SuppressWarnings("PMD")
 public record ValidationResponse(
     boolean valid,
-    @JsonInclude(JsonInclude.Include.NON_NULL) List<String> errors
-) {
-}
+    @JsonInclude(JsonInclude.Include.NON_NULL) List<String> errors) {}

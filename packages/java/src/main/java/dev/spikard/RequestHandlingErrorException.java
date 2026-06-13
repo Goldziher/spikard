@@ -8,13 +8,13 @@ package dev.spikard;
  * Occurs when the HTTP request cannot be properly handled or parsed.
  */
 public class RequestHandlingErrorException extends GraphQLErrorException {
-    /** Creates a new RequestHandlingErrorException with the given message. */
-    public RequestHandlingErrorException(final String message) {
-        super(message);
-    }
+  /** Creates a new RequestHandlingErrorException with the given message. */
+  public RequestHandlingErrorException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new RequestHandlingErrorException with the given message and cause. */
-    public RequestHandlingErrorException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new RequestHandlingErrorException with the given message and cause. */
+  public RequestHandlingErrorException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

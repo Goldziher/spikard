@@ -6,13 +6,13 @@ package dev.spikard;
  * Failed to extract DTO from the request context.
  */
 public class DecodeException extends AppErrorException {
-    /** Creates a new DecodeException with the given message. */
-    public DecodeException(final String message) {
-        super(message);
-    }
+  /** Creates a new DecodeException with the given message. */
+  public DecodeException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new DecodeException with the given message and cause. */
-    public DecodeException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new DecodeException with the given message and cause. */
+  public DecodeException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

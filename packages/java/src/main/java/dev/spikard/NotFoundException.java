@@ -8,13 +8,13 @@ package dev.spikard;
  * Occurs when a requested resource is not found.
  */
 public class NotFoundException extends GraphQLErrorException {
-    /** Creates a new NotFoundException with the given message. */
-    public NotFoundException(final String message) {
-        super(message);
-    }
+  /** Creates a new NotFoundException with the given message. */
+  public NotFoundException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new NotFoundException with the given message and cause. */
-    public NotFoundException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new NotFoundException with the given message and cause. */
+  public NotFoundException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

@@ -8,13 +8,13 @@ package dev.spikard;
  * Occurs when a GraphQL query exceeds the configured depth limit.
  */
 public class DepthLimitExceededException extends GraphQLErrorException {
-    /** Creates a new DepthLimitExceededException with the given message. */
-    public DepthLimitExceededException(final String message) {
-        super(message);
-    }
+  /** Creates a new DepthLimitExceededException with the given message. */
+  public DepthLimitExceededException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new DepthLimitExceededException with the given message and cause. */
-    public DepthLimitExceededException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new DepthLimitExceededException with the given message and cause. */
+  public DepthLimitExceededException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

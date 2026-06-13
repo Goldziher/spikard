@@ -8,13 +8,13 @@ package dev.spikard;
  * Occurs during JSON serialization/deserialization of GraphQL values.
  */
 public class SerializationErrorException extends GraphQLErrorException {
-    /** Creates a new SerializationErrorException with the given message. */
-    public SerializationErrorException(final String message) {
-        super(message);
-    }
+  /** Creates a new SerializationErrorException with the given message. */
+  public SerializationErrorException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new SerializationErrorException with the given message and cause. */
-    public SerializationErrorException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new SerializationErrorException with the given message and cause. */
+  public SerializationErrorException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

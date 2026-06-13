@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.spikard;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -18,41 +18,37 @@ import org.jspecify.annotations.Nullable;
 @SuppressWarnings("PMD")
 public record ParsedMessage(
     @JsonProperty("name") String name,
-    @Nullable @JsonProperty("schema") Object schema
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("schema") Object schema) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String name = "";
+    private Object schema = null;
+
+    /** Sets the name field. */
+    @JsonProperty("name")
+    public Builder withName(final String value) {
+      this.name = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String name = "";
-private Object schema = null;
-
-        /** Sets the name field. */
-        @JsonProperty("name")
-        public Builder withName(final String value) {
-            this.name = value;
-            return this;
-        }
-
-        /** Sets the schema field. */
-        @JsonProperty("schema")
-        public Builder withSchema(final @Nullable Object value) {
-            this.schema = value;
-            return this;
-        }
-
-        /** Builds the ParsedMessage instance. */
-        public ParsedMessage build() {
-            return new ParsedMessage(
-                name,
-                schema
-            );
-        }
+    /** Sets the schema field. */
+    @JsonProperty("schema")
+    public Builder withSchema(final @Nullable Object value) {
+      this.schema = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Builds the ParsedMessage instance. */
+    public ParsedMessage build() {
+      return new ParsedMessage(name, schema);
+    }
+  }
+  // CPD-ON
 }

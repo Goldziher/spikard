@@ -12,44 +12,43 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 @SuppressWarnings("PMD")
 public enum Method {
-    Get("get"),
-    Post("post"),
-    Put("put"),
-    Patch("patch"),
-    Delete("delete"),
-    Head("head"),
-    Options("options"),
-    Connect("connect"),
-    Trace("trace");
+  Get("get"),
+  Post("post"),
+  Put("put"),
+  Patch("patch"),
+  Delete("delete"),
+  Head("head"),
+  Options("options"),
+  Connect("connect"),
+  Trace("trace");
 
+  /** The string value. */
+  private final String value;
 
-    /** The string value. */
-    private final String value;
+  Method(final String value) {
+    this.value = value;
+  }
 
-    Method(final String value) {
-        this.value = value;
+  /** Returns the string value. */
+  @JsonValue
+  public String getValue() {
+    return value;
+  }
+
+  /** Creates an instance from a string value. */
+  @JsonCreator
+  public static Method fromValue(final String value) {
+    for (Method e : values()) {
+      if (e.value.equalsIgnoreCase(value)) {
+        return e;
+      }
     }
+    throw new IllegalArgumentException("Unknown Method value: " + value);
+  }
 
-    /** Returns the string value. */
-    @JsonValue
-    public String getValue() {
-        return value;
-    }
-
-    /** Creates an instance from a string value. */
-    @JsonCreator
-    public static Method fromValue(final String value) {
-        for (Method e : values()) {
-            if (e.value.equalsIgnoreCase(value)) {
-                return e;
-            }
-        }
-        throw new IllegalArgumentException("Unknown Method value: " + value);
-    }
-
-    /** Returns the wire-format string value (matches JSON serialization). */
-    @Override
-    public String toString() {
-        return value;
-    }
+  /** Returns the wire-format string value (matches JSON serialization). */
+  @Override
+  public String toString() {
+    return value;
+  }
 }

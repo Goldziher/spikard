@@ -4,11 +4,11 @@
 // To verify freshness: alef verify --exit-code
 package dev.spikard;
 
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import java.util.Map;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -20,54 +20,52 @@ import org.jspecify.annotations.Nullable;
 public record Response(
     @Nullable @JsonProperty("content") Object content,
     @JsonProperty("status_code") short statusCode,
-    @JsonProperty("headers") Map<String, String> headers
-) {
-    public static Builder builder() {
-        return new Builder();
+    @JsonProperty("headers") Map<String, String> headers) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private Object content = null;
+
+    @JsonProperty("status_code")
+    private short statusCode = 0;
+
+    private Map<String, String> headers = Map.of();
+
+    /** Sets the content field. */
+    @JsonProperty("content")
+    public Builder withContent(final @Nullable Object value) {
+      this.content = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private Object content = null;
-        @JsonProperty("status_code")
-private short statusCode = 0;
-private Map<String, String> headers = Map.of();
-
-        /** Sets the content field. */
-        @JsonProperty("content")
-        public Builder withContent(final @Nullable Object value) {
-            this.content = value;
-            return this;
-        }
-
-        /** Sets the statusCode field. */
-        @JsonProperty("status_code")
-        public Builder withStatusCode(final short value) {
-            this.statusCode = value;
-            return this;
-        }
-
-        /** Sets the headers field. */
-        @JsonProperty("headers")
-        public Builder withHeaders(final Map<String, String> value) {
-            this.headers = value;
-            return this;
-        }
-
-        /** Builds the Response instance. */
-        public Response build() {
-            return new Response(
-                content,
-                statusCode,
-                headers
-            );
-        }
+    /** Sets the statusCode field. */
+    @JsonProperty("status_code")
+    public Builder withStatusCode(final short value) {
+      this.statusCode = value;
+      return this;
     }
-    // CPD-ON
-    public static Response defaultInstance() {
-        throw new UnsupportedOperationException("defaultInstance is not yet bridged via JNI; use the Builder instead.");
+
+    /** Sets the headers field. */
+    @JsonProperty("headers")
+    public Builder withHeaders(final Map<String, String> value) {
+      this.headers = value;
+      return this;
     }
+
+    /** Builds the Response instance. */
+    public Response build() {
+      return new Response(content, statusCode, headers);
+    }
+  }
+  // CPD-ON
+  public static Response defaultInstance() {
+    throw new UnsupportedOperationException(
+        "defaultInstance is not yet bridged via JNI; use the Builder instead.");
+  }
 }

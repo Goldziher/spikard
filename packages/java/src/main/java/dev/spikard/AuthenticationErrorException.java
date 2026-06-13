@@ -8,13 +8,13 @@ package dev.spikard;
  * Occurs when request authentication fails.
  */
 public class AuthenticationErrorException extends GraphQLErrorException {
-    /** Creates a new AuthenticationErrorException with the given message. */
-    public AuthenticationErrorException(final String message) {
-        super(message);
-    }
+  /** Creates a new AuthenticationErrorException with the given message. */
+  public AuthenticationErrorException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new AuthenticationErrorException with the given message and cause. */
-    public AuthenticationErrorException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new AuthenticationErrorException with the given message and cause. */
+  public AuthenticationErrorException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

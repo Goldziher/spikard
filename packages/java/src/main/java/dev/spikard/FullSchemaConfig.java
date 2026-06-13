@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.spikard;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -19,56 +19,54 @@ import org.jspecify.annotations.Nullable;
 public record FullSchemaConfig(
     @JsonProperty("introspection_enabled") boolean introspectionEnabled,
     @Nullable @JsonProperty("complexity_limit") Long complexityLimit,
-    @Nullable @JsonProperty("depth_limit") Long depthLimit
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("depth_limit") Long depthLimit) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    @JsonProperty("introspection_enabled")
+    private boolean introspectionEnabled = true;
+
+    @JsonProperty("complexity_limit")
+    private Long complexityLimit = null;
+
+    @JsonProperty("depth_limit")
+    private Long depthLimit = null;
+
+    /** Sets the introspectionEnabled field. */
+    @JsonProperty("introspection_enabled")
+    public Builder withIntrospectionEnabled(final boolean value) {
+      this.introspectionEnabled = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-        @JsonProperty("introspection_enabled")
-private boolean introspectionEnabled = true;
-        @JsonProperty("complexity_limit")
-private Long complexityLimit = null;
-        @JsonProperty("depth_limit")
-private Long depthLimit = null;
-
-        /** Sets the introspectionEnabled field. */
-        @JsonProperty("introspection_enabled")
-        public Builder withIntrospectionEnabled(final boolean value) {
-            this.introspectionEnabled = value;
-            return this;
-        }
-
-        /** Sets the complexityLimit field. */
-        @JsonProperty("complexity_limit")
-        public Builder withComplexityLimit(final @Nullable long value) {
-            this.complexityLimit = value;
-            return this;
-        }
-
-        /** Sets the depthLimit field. */
-        @JsonProperty("depth_limit")
-        public Builder withDepthLimit(final @Nullable long value) {
-            this.depthLimit = value;
-            return this;
-        }
-
-        /** Builds the FullSchemaConfig instance. */
-        public FullSchemaConfig build() {
-            return new FullSchemaConfig(
-                introspectionEnabled,
-                complexityLimit,
-                depthLimit
-            );
-        }
+    /** Sets the complexityLimit field. */
+    @JsonProperty("complexity_limit")
+    public Builder withComplexityLimit(final @Nullable long value) {
+      this.complexityLimit = value;
+      return this;
     }
-    // CPD-ON
-    public static FullSchemaConfig defaultInstance() {
-        throw new UnsupportedOperationException("defaultInstance is not yet bridged via JNI; use the Builder instead.");
+
+    /** Sets the depthLimit field. */
+    @JsonProperty("depth_limit")
+    public Builder withDepthLimit(final @Nullable long value) {
+      this.depthLimit = value;
+      return this;
     }
+
+    /** Builds the FullSchemaConfig instance. */
+    public FullSchemaConfig build() {
+      return new FullSchemaConfig(introspectionEnabled, complexityLimit, depthLimit);
+    }
+  }
+  // CPD-ON
+  public static FullSchemaConfig defaultInstance() {
+    throw new UnsupportedOperationException(
+        "defaultInstance is not yet bridged via JNI; use the Builder instead.");
+  }
 }

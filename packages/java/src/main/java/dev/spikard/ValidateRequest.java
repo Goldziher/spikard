@@ -8,5 +8,4 @@ package dev.spikard;
  * Request body for {@code POST /asyncapi/validate}
  */
 @SuppressWarnings("PMD")
-public record ValidateRequest(Object spec, String channel, String message, Object payload) {
-}
+public record ValidateRequest(Object spec, String channel, String message, Object payload) {}

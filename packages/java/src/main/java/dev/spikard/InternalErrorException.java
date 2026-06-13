@@ -8,13 +8,13 @@ package dev.spikard;
  * Occurs when an unexpected internal error happens.
  */
 public class InternalErrorException extends GraphQLErrorException {
-    /** Creates a new InternalErrorException with the given message. */
-    public InternalErrorException(final String message) {
-        super(message);
-    }
+  /** Creates a new InternalErrorException with the given message. */
+  public InternalErrorException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new InternalErrorException with the given message and cause. */
-    public InternalErrorException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new InternalErrorException with the given message and cause. */
+  public InternalErrorException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

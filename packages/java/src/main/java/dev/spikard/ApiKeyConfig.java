@@ -4,11 +4,11 @@
 // To verify freshness: alef verify --exit-code
 package dev.spikard;
 
-import java.util.List;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -19,42 +19,39 @@ import org.jspecify.annotations.Nullable;
 @SuppressWarnings("PMD")
 public record ApiKeyConfig(
     @JsonProperty("keys") List<String> keys,
-    @Nullable @JsonProperty("header_name") String headerName
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("header_name") String headerName) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private List<String> keys = List.of();
+
+    @JsonProperty("header_name")
+    private String headerName = null;
+
+    /** Sets the keys field. */
+    @JsonProperty("keys")
+    public Builder withKeys(final List<String> value) {
+      this.keys = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private List<String> keys = List.of();
-        @JsonProperty("header_name")
-private String headerName = null;
-
-        /** Sets the keys field. */
-        @JsonProperty("keys")
-        public Builder withKeys(final List<String> value) {
-            this.keys = value;
-            return this;
-        }
-
-        /** Sets the headerName field. */
-        @JsonProperty("header_name")
-        public Builder withHeaderName(final @Nullable String value) {
-            this.headerName = value;
-            return this;
-        }
-
-        /** Builds the ApiKeyConfig instance. */
-        public ApiKeyConfig build() {
-            return new ApiKeyConfig(
-                keys,
-                headerName
-            );
-        }
+    /** Sets the headerName field. */
+    @JsonProperty("header_name")
+    public Builder withHeaderName(final @Nullable String value) {
+      this.headerName = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Builds the ApiKeyConfig instance. */
+    public ApiKeyConfig build() {
+      return new ApiKeyConfig(keys, headerName);
+    }
+  }
+  // CPD-ON
 }

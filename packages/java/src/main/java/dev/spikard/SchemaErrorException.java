@@ -6,13 +6,13 @@ package dev.spikard;
  * Error type for schema building operations
  */
 public class SchemaErrorException extends Exception {
-    /** Creates a new SchemaErrorException with the given message. */
-    public SchemaErrorException(final String message) {
-        super(message);
-    }
+  /** Creates a new SchemaErrorException with the given message. */
+  public SchemaErrorException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new SchemaErrorException with the given message and cause. */
-    public SchemaErrorException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new SchemaErrorException with the given message and cause. */
+  public SchemaErrorException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

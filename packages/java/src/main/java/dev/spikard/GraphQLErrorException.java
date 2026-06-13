@@ -9,70 +9,80 @@ package dev.spikard;
  * converted to structured HTTP responses matching the project's error fixtures.
  */
 public class GraphQLErrorException extends Exception {
-    private final int statusCode;
-    private final boolean isTransient;
-    private final String errorType;
+  private final int statusCode;
+  private final boolean isTransient;
+  private final String errorType;
 
-    /** Creates a new GraphQLErrorException with the given message. */
-    public GraphQLErrorException(final String message) {
-        super(message);
-        this.statusCode = 0;
-        this.isTransient = false;
-        this.errorType = "";
-    }
+  /** Creates a new GraphQLErrorException with the given message. */
+  public GraphQLErrorException(final String message) {
+    super(message);
+    this.statusCode = 0;
+    this.isTransient = false;
+    this.errorType = "";
+  }
 
-    /** Creates a new GraphQLErrorException with the given message and cause. */
-    public GraphQLErrorException(final String message, final Throwable cause) {
-        super(message, cause);
-        this.statusCode = 0;
-        this.isTransient = false;
-        this.errorType = "";
-    }
+  /** Creates a new GraphQLErrorException with the given message and cause. */
+  public GraphQLErrorException(final String message, final Throwable cause) {
+    super(message, cause);
+    this.statusCode = 0;
+    this.isTransient = false;
+    this.errorType = "";
+  }
 
-    /** Creates a new GraphQLErrorException with the given message and all introspection fields. */
-    public GraphQLErrorException(final String message, final int statusCode, final boolean isTransient, final String errorType) {
-        super(message);
-        this.statusCode = statusCode;
-        this.isTransient = isTransient;
-        this.errorType = errorType;
-    }
+  /** Creates a new GraphQLErrorException with the given message and all introspection fields. */
+  public GraphQLErrorException(
+      final String message,
+      final int statusCode,
+      final boolean isTransient,
+      final String errorType) {
+    super(message);
+    this.statusCode = statusCode;
+    this.isTransient = isTransient;
+    this.errorType = errorType;
+  }
 
-    /** Convert error to HTTP status code
+  /** Convert error to HTTP status code
+   *
+   * Maps GraphQL error types to appropriate HTTP status codes:
+   * - 400: Bad Request for parse/request-handling errors
+   * - 401: Unauthorized for authentication errors
+   * - 403: Forbidden for authorization errors
+   * - 404: Not Found for resource not found
+   * - 422: Unprocessable Entity for validation failures
+   * - 429: Too Many Requests for rate limit errors
+   * - 500: Internal Server Error for schema/serialization/internal errors
+   * - 200: OK for GraphQL execution errors returned in GraphQL response body
+   *
+   * # Examples
+   *
+   * ```ignore
+   * use spikard_graphql::error::GraphQLError;
+   *
+   * let error = GraphQLError::AuthenticationError("Invalid token".to_string());
+   * assert_eq!(error.status_code(), 401);
+   *
+   * let error = GraphQLError::ExecutionError("Query failed".to_string());
+   * assert_eq!(error.status_code(), 200); // GraphQL spec: errors return 200 with errors in body
+   * ``` */
+  public int getStatusCode() {
+    return this.statusCode;
+  }
 
-Maps GraphQL error types to appropriate HTTP status codes:
-- 400: Bad Request for parse/request-handling errors
-- 401: Unauthorized for authentication errors
-- 403: Forbidden for authorization errors
-- 404: Not Found for resource not found
-- 422: Unprocessable Entity for validation failures
-- 429: Too Many Requests for rate limit errors
-- 500: Internal Server Error for schema/serialization/internal errors
-- 200: OK for GraphQL execution errors returned in GraphQL response body
+  /** Whether the error condition is transient and may succeed on retry.
+   *
+   * Returns true for upstream/infrastructure failures (rate limit, internal
+   * error) and false for client-input errors (validation, parse, auth).
+   * Bindings forward this signal to retry/back-off logic. */
+  public boolean isTransient() {
+    return this.isTransient;
+  }
 
-# Examples
-
-```ignore
-use spikard_graphql::error::GraphQLError;
-
-let error = GraphQLError::AuthenticationError("Invalid token".to_string());
-assert_eq!(error.status_code(), 401);
-
-let error = GraphQLError::ExecutionError("Query failed".to_string());
-assert_eq!(error.status_code(), 200); // GraphQL spec: errors return 200 with errors in body
-``` */
-    public int getStatusCode() { return this.statusCode; }
-
-    /** Whether the error condition is transient and may succeed on retry.
-
-Returns true for upstream/infrastructure failures (rate limit, internal
-error) and false for client-input errors (validation, parse, auth).
-Bindings forward this signal to retry/back-off logic. */
-    public boolean isTransient() { return this.isTransient; }
-
-    /** Stable machine-readable error type identifier (`SCREAMING_SNAKE_CASE`).
-
-Public alias for the same codes returned by [`Self::error_code`], kept
-available to bindings that surface the identifier alongside the
-human-readable message. */
-    public String getErrorType() { return this.errorType; }
+  /** Stable machine-readable error type identifier (`SCREAMING_SNAKE_CASE`).
+   *
+   * Public alias for the same codes returned by [`Self::error_code`], kept
+   * available to bindings that surface the identifier alongside the
+   * human-readable message. */
+  public String getErrorType() {
+    return this.errorType;
+  }
 }

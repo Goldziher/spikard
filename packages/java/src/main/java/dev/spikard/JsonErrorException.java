@@ -8,13 +8,13 @@ package dev.spikard;
  * Occurs when JSON input cannot be parsed.
  */
 public class JsonErrorException extends GraphQLErrorException {
-    /** Creates a new JsonErrorException with the given message. */
-    public JsonErrorException(final String message) {
-        super(message);
-    }
+  /** Creates a new JsonErrorException with the given message. */
+  public JsonErrorException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new JsonErrorException with the given message and cause. */
-    public JsonErrorException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new JsonErrorException with the given message and cause. */
+  public JsonErrorException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

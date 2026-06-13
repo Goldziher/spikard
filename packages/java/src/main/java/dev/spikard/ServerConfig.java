@@ -4,11 +4,11 @@
 // To verify freshness: alef verify --exit-code
 package dev.spikard;
 
-import java.util.List;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -37,213 +37,232 @@ public record ServerConfig(
     @Nullable @JsonProperty("jsonrpc") JsonRpcConfig jsonrpc,
     @Nullable @JsonProperty("grpc") GrpcConfig grpc,
     @JsonProperty("background_tasks") BackgroundTaskConfig backgroundTasks,
-    @JsonProperty("enable_http_trace") boolean enableHttpTrace
-) {
-    public static Builder builder() {
-        return new Builder();
+    @JsonProperty("enable_http_trace") boolean enableHttpTrace) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public ServerConfig {
+    if (port == 0) {
+      port = 8000;
     }
-    public ServerConfig{
-        if (port == 0) { port = 8000; }
-        if (workers == 0) { workers = 1; }
-        if (shutdownTimeout == 0) { shutdownTimeout = 30; }
+    if (workers == 0) {
+      workers = 1;
+    }
+    if (shutdownTimeout == 0) {
+      shutdownTimeout = 30;
+    }
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String host = "127.0.0.1";
+    private short port = 0;
+    private long workers = 0;
+
+    @JsonProperty("enable_request_id")
+    private boolean enableRequestId = false;
+
+    @JsonProperty("max_body_size")
+    private Long maxBodySize = null;
+
+    @JsonProperty("request_timeout")
+    private Long requestTimeout = null;
+
+    private CompressionConfig compression = null;
+
+    @JsonProperty("rate_limit")
+    private RateLimitConfig rateLimit = null;
+
+    @JsonProperty("jwt_auth")
+    private JwtConfig jwtAuth = null;
+
+    @JsonProperty("api_key_auth")
+    private ApiKeyConfig apiKeyAuth = null;
+
+    @JsonProperty("static_files")
+    private List<StaticFilesConfig> staticFiles = List.of();
+
+    @JsonProperty("graceful_shutdown")
+    private boolean gracefulShutdown = true;
+
+    @JsonProperty("shutdown_timeout")
+    private long shutdownTimeout = 0;
+
+    private AsyncApiConfig asyncapi = null;
+    private OpenApiConfig openapi = null;
+    private JsonRpcConfig jsonrpc = null;
+    private GrpcConfig grpc = null;
+
+    @JsonProperty("background_tasks")
+    private BackgroundTaskConfig backgroundTasks = null;
+
+    @JsonProperty("enable_http_trace")
+    private boolean enableHttpTrace = false;
+
+    /** Sets the host field. */
+    @JsonProperty("host")
+    public Builder withHost(final String value) {
+      this.host = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String host = "127.0.0.1";
-private short port = 0;
-private long workers = 0;
-        @JsonProperty("enable_request_id")
-private boolean enableRequestId = false;
-        @JsonProperty("max_body_size")
-private Long maxBodySize = null;
-        @JsonProperty("request_timeout")
-private Long requestTimeout = null;
-private CompressionConfig compression = null;
-        @JsonProperty("rate_limit")
-private RateLimitConfig rateLimit = null;
-        @JsonProperty("jwt_auth")
-private JwtConfig jwtAuth = null;
-        @JsonProperty("api_key_auth")
-private ApiKeyConfig apiKeyAuth = null;
-        @JsonProperty("static_files")
-private List<StaticFilesConfig> staticFiles = List.of();
-        @JsonProperty("graceful_shutdown")
-private boolean gracefulShutdown = true;
-        @JsonProperty("shutdown_timeout")
-private long shutdownTimeout = 0;
-private AsyncApiConfig asyncapi = null;
-private OpenApiConfig openapi = null;
-private JsonRpcConfig jsonrpc = null;
-private GrpcConfig grpc = null;
-        @JsonProperty("background_tasks")
-private BackgroundTaskConfig backgroundTasks = null;
-        @JsonProperty("enable_http_trace")
-private boolean enableHttpTrace = false;
-
-        /** Sets the host field. */
-        @JsonProperty("host")
-        public Builder withHost(final String value) {
-            this.host = value;
-            return this;
-        }
-
-        /** Sets the port field. */
-        @JsonProperty("port")
-        public Builder withPort(final short value) {
-            this.port = value;
-            return this;
-        }
-
-        /** Sets the workers field. */
-        @JsonProperty("workers")
-        public Builder withWorkers(final long value) {
-            this.workers = value;
-            return this;
-        }
-
-        /** Sets the enableRequestId field. */
-        @JsonProperty("enable_request_id")
-        public Builder withEnableRequestId(final boolean value) {
-            this.enableRequestId = value;
-            return this;
-        }
-
-        /** Sets the maxBodySize field. */
-        @JsonProperty("max_body_size")
-        public Builder withMaxBodySize(final @Nullable long value) {
-            this.maxBodySize = value;
-            return this;
-        }
-
-        /** Sets the requestTimeout field. */
-        @JsonProperty("request_timeout")
-        public Builder withRequestTimeout(final @Nullable long value) {
-            this.requestTimeout = value;
-            return this;
-        }
-
-        /** Sets the compression field. */
-        @JsonProperty("compression")
-        public Builder withCompression(final @Nullable CompressionConfig value) {
-            this.compression = value;
-            return this;
-        }
-
-        /** Sets the rateLimit field. */
-        @JsonProperty("rate_limit")
-        public Builder withRateLimit(final @Nullable RateLimitConfig value) {
-            this.rateLimit = value;
-            return this;
-        }
-
-        /** Sets the jwtAuth field. */
-        @JsonProperty("jwt_auth")
-        public Builder withJwtAuth(final @Nullable JwtConfig value) {
-            this.jwtAuth = value;
-            return this;
-        }
-
-        /** Sets the apiKeyAuth field. */
-        @JsonProperty("api_key_auth")
-        public Builder withApiKeyAuth(final @Nullable ApiKeyConfig value) {
-            this.apiKeyAuth = value;
-            return this;
-        }
-
-        /** Sets the staticFiles field. */
-        @JsonProperty("static_files")
-        public Builder withStaticFiles(final List<StaticFilesConfig> value) {
-            this.staticFiles = value;
-            return this;
-        }
-
-        /** Sets the gracefulShutdown field. */
-        @JsonProperty("graceful_shutdown")
-        public Builder withGracefulShutdown(final boolean value) {
-            this.gracefulShutdown = value;
-            return this;
-        }
-
-        /** Sets the shutdownTimeout field. */
-        @JsonProperty("shutdown_timeout")
-        public Builder withShutdownTimeout(final long value) {
-            this.shutdownTimeout = value;
-            return this;
-        }
-
-        /** Sets the asyncapi field. */
-        @JsonProperty("asyncapi")
-        public Builder withAsyncapi(final @Nullable AsyncApiConfig value) {
-            this.asyncapi = value;
-            return this;
-        }
-
-        /** Sets the openapi field. */
-        @JsonProperty("openapi")
-        public Builder withOpenapi(final @Nullable OpenApiConfig value) {
-            this.openapi = value;
-            return this;
-        }
-
-        /** Sets the jsonrpc field. */
-        @JsonProperty("jsonrpc")
-        public Builder withJsonrpc(final @Nullable JsonRpcConfig value) {
-            this.jsonrpc = value;
-            return this;
-        }
-
-        /** Sets the grpc field. */
-        @JsonProperty("grpc")
-        public Builder withGrpc(final @Nullable GrpcConfig value) {
-            this.grpc = value;
-            return this;
-        }
-
-        /** Sets the backgroundTasks field. */
-        @JsonProperty("background_tasks")
-        public Builder withBackgroundTasks(final BackgroundTaskConfig value) {
-            this.backgroundTasks = value;
-            return this;
-        }
-
-        /** Sets the enableHttpTrace field. */
-        @JsonProperty("enable_http_trace")
-        public Builder withEnableHttpTrace(final boolean value) {
-            this.enableHttpTrace = value;
-            return this;
-        }
-
-        /** Builds the ServerConfig instance. */
-        public ServerConfig build() {
-            return new ServerConfig(
-                host,
-                port,
-                workers,
-                enableRequestId,
-                maxBodySize,
-                requestTimeout,
-                compression,
-                rateLimit,
-                jwtAuth,
-                apiKeyAuth,
-                staticFiles,
-                gracefulShutdown,
-                shutdownTimeout,
-                asyncapi,
-                openapi,
-                jsonrpc,
-                grpc,
-                backgroundTasks,
-                enableHttpTrace
-            );
-        }
+    /** Sets the port field. */
+    @JsonProperty("port")
+    public Builder withPort(final short value) {
+      this.port = value;
+      return this;
     }
-    // CPD-ON
-    public static ServerConfig defaultInstance() {
-        throw new UnsupportedOperationException("defaultInstance is not yet bridged via JNI; use the Builder instead.");
+
+    /** Sets the workers field. */
+    @JsonProperty("workers")
+    public Builder withWorkers(final long value) {
+      this.workers = value;
+      return this;
     }
+
+    /** Sets the enableRequestId field. */
+    @JsonProperty("enable_request_id")
+    public Builder withEnableRequestId(final boolean value) {
+      this.enableRequestId = value;
+      return this;
+    }
+
+    /** Sets the maxBodySize field. */
+    @JsonProperty("max_body_size")
+    public Builder withMaxBodySize(final @Nullable long value) {
+      this.maxBodySize = value;
+      return this;
+    }
+
+    /** Sets the requestTimeout field. */
+    @JsonProperty("request_timeout")
+    public Builder withRequestTimeout(final @Nullable long value) {
+      this.requestTimeout = value;
+      return this;
+    }
+
+    /** Sets the compression field. */
+    @JsonProperty("compression")
+    public Builder withCompression(final @Nullable CompressionConfig value) {
+      this.compression = value;
+      return this;
+    }
+
+    /** Sets the rateLimit field. */
+    @JsonProperty("rate_limit")
+    public Builder withRateLimit(final @Nullable RateLimitConfig value) {
+      this.rateLimit = value;
+      return this;
+    }
+
+    /** Sets the jwtAuth field. */
+    @JsonProperty("jwt_auth")
+    public Builder withJwtAuth(final @Nullable JwtConfig value) {
+      this.jwtAuth = value;
+      return this;
+    }
+
+    /** Sets the apiKeyAuth field. */
+    @JsonProperty("api_key_auth")
+    public Builder withApiKeyAuth(final @Nullable ApiKeyConfig value) {
+      this.apiKeyAuth = value;
+      return this;
+    }
+
+    /** Sets the staticFiles field. */
+    @JsonProperty("static_files")
+    public Builder withStaticFiles(final List<StaticFilesConfig> value) {
+      this.staticFiles = value;
+      return this;
+    }
+
+    /** Sets the gracefulShutdown field. */
+    @JsonProperty("graceful_shutdown")
+    public Builder withGracefulShutdown(final boolean value) {
+      this.gracefulShutdown = value;
+      return this;
+    }
+
+    /** Sets the shutdownTimeout field. */
+    @JsonProperty("shutdown_timeout")
+    public Builder withShutdownTimeout(final long value) {
+      this.shutdownTimeout = value;
+      return this;
+    }
+
+    /** Sets the asyncapi field. */
+    @JsonProperty("asyncapi")
+    public Builder withAsyncapi(final @Nullable AsyncApiConfig value) {
+      this.asyncapi = value;
+      return this;
+    }
+
+    /** Sets the openapi field. */
+    @JsonProperty("openapi")
+    public Builder withOpenapi(final @Nullable OpenApiConfig value) {
+      this.openapi = value;
+      return this;
+    }
+
+    /** Sets the jsonrpc field. */
+    @JsonProperty("jsonrpc")
+    public Builder withJsonrpc(final @Nullable JsonRpcConfig value) {
+      this.jsonrpc = value;
+      return this;
+    }
+
+    /** Sets the grpc field. */
+    @JsonProperty("grpc")
+    public Builder withGrpc(final @Nullable GrpcConfig value) {
+      this.grpc = value;
+      return this;
+    }
+
+    /** Sets the backgroundTasks field. */
+    @JsonProperty("background_tasks")
+    public Builder withBackgroundTasks(final BackgroundTaskConfig value) {
+      this.backgroundTasks = value;
+      return this;
+    }
+
+    /** Sets the enableHttpTrace field. */
+    @JsonProperty("enable_http_trace")
+    public Builder withEnableHttpTrace(final boolean value) {
+      this.enableHttpTrace = value;
+      return this;
+    }
+
+    /** Builds the ServerConfig instance. */
+    public ServerConfig build() {
+      return new ServerConfig(
+          host,
+          port,
+          workers,
+          enableRequestId,
+          maxBodySize,
+          requestTimeout,
+          compression,
+          rateLimit,
+          jwtAuth,
+          apiKeyAuth,
+          staticFiles,
+          gracefulShutdown,
+          shutdownTimeout,
+          asyncapi,
+          openapi,
+          jsonrpc,
+          grpc,
+          backgroundTasks,
+          enableHttpTrace);
+    }
+  }
+  // CPD-ON
+  public static ServerConfig defaultInstance() {
+    throw new UnsupportedOperationException(
+        "defaultInstance is not yet bridged via JNI; use the Builder instead.");
+  }
 }

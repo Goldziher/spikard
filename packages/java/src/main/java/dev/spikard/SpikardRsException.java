@@ -7,23 +7,23 @@ package dev.spikard;
 /** Exception thrown by SpikardRs. */
 @SuppressWarnings({"checkstyle:LineLength", "PMD"})
 public class SpikardRsException extends Exception {
-    /** The error code. */
-    private final int code;
+  /** The error code. */
+  private final int code;
 
-    /** Creates a new SpikardRsException. */
-    public SpikardRsException(final int code, final String message) {
-        super(message);
-        this.code = code;
-    }
+  /** Creates a new SpikardRsException. */
+  public SpikardRsException(final int code, final String message) {
+    super(message);
+    this.code = code;
+  }
 
-    /** Creates a new SpikardRsException with a cause. */
-    public SpikardRsException(final String message, final Throwable cause) {
-        super(message, cause);
-        this.code = -1;
-    }
+  /** Creates a new SpikardRsException with a cause. */
+  public SpikardRsException(final String message, final Throwable cause) {
+    super(message, cause);
+    this.code = -1;
+  }
 
-    /** Returns the error code. */
-    public int getCode() {
-        return code;
-    }
+  /** Returns the error code. */
+  public int getCode() {
+    return code;
+  }
 }

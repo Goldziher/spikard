@@ -8,13 +8,13 @@ package dev.spikard;
  * Occurs when rate limit is exceeded.
  */
 public class RateLimitExceededException extends GraphQLErrorException {
-    /** Creates a new RateLimitExceededException with the given message. */
-    public RateLimitExceededException(final String message) {
-        super(message);
-    }
+  /** Creates a new RateLimitExceededException with the given message. */
+  public RateLimitExceededException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new RateLimitExceededException with the given message and cause. */
-    public RateLimitExceededException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new RateLimitExceededException with the given message and cause. */
+  public RateLimitExceededException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

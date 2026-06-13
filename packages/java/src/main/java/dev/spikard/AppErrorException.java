@@ -6,13 +6,13 @@ package dev.spikard;
  * Error type for application builder operations.
  */
 public class AppErrorException extends Exception {
-    /** Creates a new AppErrorException with the given message. */
-    public AppErrorException(final String message) {
-        super(message);
-    }
+  /** Creates a new AppErrorException with the given message. */
+  public AppErrorException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new AppErrorException with the given message and cause. */
-    public AppErrorException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new AppErrorException with the given message and cause. */
+  public AppErrorException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

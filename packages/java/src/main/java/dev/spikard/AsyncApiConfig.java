@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.spikard;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -18,41 +18,37 @@ import org.jspecify.annotations.Nullable;
 @SuppressWarnings("PMD")
 public record AsyncApiConfig(
     @JsonProperty("enabled") boolean enabled,
-    @Nullable @JsonProperty("spec") Object spec
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("spec") Object spec) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private boolean enabled = false;
+    private Object spec = null;
+
+    /** Sets the enabled field. */
+    @JsonProperty("enabled")
+    public Builder withEnabled(final boolean value) {
+      this.enabled = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private boolean enabled = false;
-private Object spec = null;
-
-        /** Sets the enabled field. */
-        @JsonProperty("enabled")
-        public Builder withEnabled(final boolean value) {
-            this.enabled = value;
-            return this;
-        }
-
-        /** Sets the spec field. */
-        @JsonProperty("spec")
-        public Builder withSpec(final @Nullable Object value) {
-            this.spec = value;
-            return this;
-        }
-
-        /** Builds the AsyncApiConfig instance. */
-        public AsyncApiConfig build() {
-            return new AsyncApiConfig(
-                enabled,
-                spec
-            );
-        }
+    /** Sets the spec field. */
+    @JsonProperty("spec")
+    public Builder withSpec(final @Nullable Object value) {
+      this.spec = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Builds the AsyncApiConfig instance. */
+    public AsyncApiConfig build() {
+      return new AsyncApiConfig(enabled, spec);
+    }
+  }
+  // CPD-ON
 }

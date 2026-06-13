@@ -8,5 +8,4 @@ package dev.spikard;
  * A single Server-Sent Event.
  */
 @SuppressWarnings("PMD")
-public record TestingSseEvent(String data) {
-}
+public record TestingSseEvent(String data) {}

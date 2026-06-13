@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.spikard;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -20,63 +20,60 @@ public record CompressionConfig(
     @Nullable @JsonProperty("gzip") Boolean gzip,
     @Nullable @JsonProperty("brotli") Boolean brotli,
     @Nullable @JsonProperty("min_size") Long minSize,
-    @Nullable @JsonProperty("quality") Integer quality
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("quality") Integer quality) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private Boolean gzip = null;
+    private Boolean brotli = null;
+
+    @JsonProperty("min_size")
+    private Long minSize = null;
+
+    private Integer quality = null;
+
+    /** Sets the gzip field. */
+    @JsonProperty("gzip")
+    public Builder withGzip(final @Nullable Boolean value) {
+      this.gzip = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private Boolean gzip = null;
-private Boolean brotli = null;
-        @JsonProperty("min_size")
-private Long minSize = null;
-private Integer quality = null;
-
-        /** Sets the gzip field. */
-        @JsonProperty("gzip")
-        public Builder withGzip(final @Nullable Boolean value) {
-            this.gzip = value;
-            return this;
-        }
-
-        /** Sets the brotli field. */
-        @JsonProperty("brotli")
-        public Builder withBrotli(final @Nullable Boolean value) {
-            this.brotli = value;
-            return this;
-        }
-
-        /** Sets the minSize field. */
-        @JsonProperty("min_size")
-        public Builder withMinSize(final @Nullable Long value) {
-            this.minSize = value;
-            return this;
-        }
-
-        /** Sets the quality field. */
-        @JsonProperty("quality")
-        public Builder withQuality(final @Nullable Integer value) {
-            this.quality = value;
-            return this;
-        }
-
-        /** Builds the CompressionConfig instance. */
-        public CompressionConfig build() {
-            return new CompressionConfig(
-                gzip,
-                brotli,
-                minSize,
-                quality
-            );
-        }
+    /** Sets the brotli field. */
+    @JsonProperty("brotli")
+    public Builder withBrotli(final @Nullable Boolean value) {
+      this.brotli = value;
+      return this;
     }
-    // CPD-ON
-    public static CompressionConfig defaultInstance() {
-        throw new UnsupportedOperationException("defaultInstance is not yet bridged via JNI; use the Builder instead.");
+
+    /** Sets the minSize field. */
+    @JsonProperty("min_size")
+    public Builder withMinSize(final @Nullable Long value) {
+      this.minSize = value;
+      return this;
     }
+
+    /** Sets the quality field. */
+    @JsonProperty("quality")
+    public Builder withQuality(final @Nullable Integer value) {
+      this.quality = value;
+      return this;
+    }
+
+    /** Builds the CompressionConfig instance. */
+    public CompressionConfig build() {
+      return new CompressionConfig(gzip, brotli, minSize, quality);
+    }
+  }
+  // CPD-ON
+  public static CompressionConfig defaultInstance() {
+    throw new UnsupportedOperationException(
+        "defaultInstance is not yet bridged via JNI; use the Builder instead.");
+  }
 }

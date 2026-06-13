@@ -8,13 +8,13 @@ package dev.spikard;
  * Occurs when the GraphQL executor encounters a runtime error during query execution.
  */
 public class ExecutionErrorException extends GraphQLErrorException {
-    /** Creates a new ExecutionErrorException with the given message. */
-    public ExecutionErrorException(final String message) {
-        super(message);
-    }
+  /** Creates a new ExecutionErrorException with the given message. */
+  public ExecutionErrorException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new ExecutionErrorException with the given message and cause. */
-    public ExecutionErrorException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new ExecutionErrorException with the given message and cause. */
+  public ExecutionErrorException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

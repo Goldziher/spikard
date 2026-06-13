@@ -6,13 +6,13 @@ package dev.spikard;
  * Server/router construction failed.
  */
 public class ServerException extends AppErrorException {
-    /** Creates a new ServerException with the given message. */
-    public ServerException(final String message) {
-        super(message);
-    }
+  /** Creates a new ServerException with the given message. */
+  public ServerException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new ServerException with the given message and cause. */
-    public ServerException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new ServerException with the given message and cause. */
+  public ServerException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

@@ -8,13 +8,13 @@ package dev.spikard;
  * Occurs when the GraphQL query string cannot be parsed.
  */
 public class ParseErrorException extends GraphQLErrorException {
-    /** Creates a new ParseErrorException with the given message. */
-    public ParseErrorException(final String message) {
-        super(message);
-    }
+  /** Creates a new ParseErrorException with the given message. */
+  public ParseErrorException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new ParseErrorException with the given message and cause. */
-    public ParseErrorException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new ParseErrorException with the given message and cause. */
+  public ParseErrorException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

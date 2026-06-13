@@ -14,21 +14,18 @@ import java.util.Optional;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", visible = false)
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = SecuritySchemeInfo.Http.class, name = "http"),
-    @JsonSubTypes.Type(value = SecuritySchemeInfo.ApiKey.class, name = "apiKey")
+  @JsonSubTypes.Type(value = SecuritySchemeInfo.Http.class, name = "http"),
+  @JsonSubTypes.Type(value = SecuritySchemeInfo.ApiKey.class, name = "apiKey")
 })
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 public sealed interface SecuritySchemeInfo {
 
-    record Http(
-        @JsonProperty("scheme") String scheme,
-        @JsonProperty("bearer_format") Optional<String> bearerFormat
-    ) implements SecuritySchemeInfo {
-    }
+  record Http(
+      @JsonProperty("scheme") String scheme,
+      @JsonProperty("bearer_format") Optional<String> bearerFormat)
+      implements SecuritySchemeInfo {}
 
-    record ApiKey(
-        @JsonProperty("location") String location,
-        @JsonProperty("name") String name
-    ) implements SecuritySchemeInfo {
-    }
+  record ApiKey(
+      @JsonProperty("location") String location,
+      @JsonProperty("name") String name) implements SecuritySchemeInfo {}
 }

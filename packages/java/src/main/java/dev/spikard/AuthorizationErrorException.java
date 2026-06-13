@@ -8,13 +8,13 @@ package dev.spikard;
  * Occurs when user lacks required permissions.
  */
 public class AuthorizationErrorException extends GraphQLErrorException {
-    /** Creates a new AuthorizationErrorException with the given message. */
-    public AuthorizationErrorException(final String message) {
-        super(message);
-    }
+  /** Creates a new AuthorizationErrorException with the given message. */
+  public AuthorizationErrorException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new AuthorizationErrorException with the given message and cause. */
-    public AuthorizationErrorException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new AuthorizationErrorException with the given message and cause. */
+  public AuthorizationErrorException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

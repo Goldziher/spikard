@@ -4,8 +4,8 @@
 // To verify freshness: alef verify --exit-code
 package dev.spikard;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.jspecify.annotations.Nullable;
@@ -15,45 +15,43 @@ import org.jspecify.annotations.Nullable;
 @SuppressWarnings("PMD")
 public record BackgroundJobMetadata(
     @JsonProperty("name") String name,
-    @Nullable @JsonProperty("request_id") String requestId
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("request_id") String requestId) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String name = "";
+
+    @JsonProperty("request_id")
+    private String requestId = null;
+
+    /** Sets the name field. */
+    @JsonProperty("name")
+    public Builder withName(final String value) {
+      this.name = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String name = "";
-        @JsonProperty("request_id")
-private String requestId = null;
-
-        /** Sets the name field. */
-        @JsonProperty("name")
-        public Builder withName(final String value) {
-            this.name = value;
-            return this;
-        }
-
-        /** Sets the requestId field. */
-        @JsonProperty("request_id")
-        public Builder withRequestId(final @Nullable String value) {
-            this.requestId = value;
-            return this;
-        }
-
-        /** Builds the BackgroundJobMetadata instance. */
-        public BackgroundJobMetadata build() {
-            return new BackgroundJobMetadata(
-                name,
-                requestId
-            );
-        }
+    /** Sets the requestId field. */
+    @JsonProperty("request_id")
+    public Builder withRequestId(final @Nullable String value) {
+      this.requestId = value;
+      return this;
     }
-    // CPD-ON
-    public static BackgroundJobMetadata defaultInstance() {
-        throw new UnsupportedOperationException("defaultInstance is not yet bridged via JNI; use the Builder instead.");
+
+    /** Builds the BackgroundJobMetadata instance. */
+    public BackgroundJobMetadata build() {
+      return new BackgroundJobMetadata(name, requestId);
     }
+  }
+  // CPD-ON
+  public static BackgroundJobMetadata defaultInstance() {
+    throw new UnsupportedOperationException(
+        "defaultInstance is not yet bridged via JNI; use the Builder instead.");
+  }
 }

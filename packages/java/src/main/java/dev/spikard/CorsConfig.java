@@ -4,11 +4,11 @@
 // To verify freshness: alef verify --exit-code
 package dev.spikard;
 
-import java.util.List;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -24,86 +24,85 @@ public record CorsConfig(
     @Nullable @JsonProperty("allowed_headers") List<String> allowedHeaders,
     @Nullable @JsonProperty("expose_headers") List<String> exposeHeaders,
     @Nullable @JsonProperty("max_age") Integer maxAge,
-    @Nullable @JsonProperty("allow_credentials") Boolean allowCredentials
-) {
-    public static Builder builder() {
-        return new Builder();
+    @Nullable @JsonProperty("allow_credentials") Boolean allowCredentials) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    @JsonProperty("allowed_origins")
+    private List<String> allowedOrigins = List.of();
+
+    @JsonProperty("allowed_methods")
+    private List<String> allowedMethods = List.of();
+
+    @JsonProperty("allowed_headers")
+    private List<String> allowedHeaders = null;
+
+    @JsonProperty("expose_headers")
+    private List<String> exposeHeaders = null;
+
+    @JsonProperty("max_age")
+    private Integer maxAge = null;
+
+    @JsonProperty("allow_credentials")
+    private Boolean allowCredentials = null;
+
+    /** Sets the allowedOrigins field. */
+    @JsonProperty("allowed_origins")
+    public Builder withAllowedOrigins(final List<String> value) {
+      this.allowedOrigins = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-        @JsonProperty("allowed_origins")
-private List<String> allowedOrigins = List.of();
-        @JsonProperty("allowed_methods")
-private List<String> allowedMethods = List.of();
-        @JsonProperty("allowed_headers")
-private List<String> allowedHeaders = null;
-        @JsonProperty("expose_headers")
-private List<String> exposeHeaders = null;
-        @JsonProperty("max_age")
-private Integer maxAge = null;
-        @JsonProperty("allow_credentials")
-private Boolean allowCredentials = null;
-
-        /** Sets the allowedOrigins field. */
-        @JsonProperty("allowed_origins")
-        public Builder withAllowedOrigins(final List<String> value) {
-            this.allowedOrigins = value;
-            return this;
-        }
-
-        /** Sets the allowedMethods field. */
-        @JsonProperty("allowed_methods")
-        public Builder withAllowedMethods(final List<String> value) {
-            this.allowedMethods = value;
-            return this;
-        }
-
-        /** Sets the allowedHeaders field. */
-        @JsonProperty("allowed_headers")
-        public Builder withAllowedHeaders(final @Nullable List<String> value) {
-            this.allowedHeaders = value;
-            return this;
-        }
-
-        /** Sets the exposeHeaders field. */
-        @JsonProperty("expose_headers")
-        public Builder withExposeHeaders(final @Nullable List<String> value) {
-            this.exposeHeaders = value;
-            return this;
-        }
-
-        /** Sets the maxAge field. */
-        @JsonProperty("max_age")
-        public Builder withMaxAge(final @Nullable int value) {
-            this.maxAge = value;
-            return this;
-        }
-
-        /** Sets the allowCredentials field. */
-        @JsonProperty("allow_credentials")
-        public Builder withAllowCredentials(final @Nullable boolean value) {
-            this.allowCredentials = value;
-            return this;
-        }
-
-        /** Builds the CorsConfig instance. */
-        public CorsConfig build() {
-            return new CorsConfig(
-                allowedOrigins,
-                allowedMethods,
-                allowedHeaders,
-                exposeHeaders,
-                maxAge,
-                allowCredentials
-            );
-        }
+    /** Sets the allowedMethods field. */
+    @JsonProperty("allowed_methods")
+    public Builder withAllowedMethods(final List<String> value) {
+      this.allowedMethods = value;
+      return this;
     }
-    // CPD-ON
-    public static CorsConfig defaultInstance() {
-        throw new UnsupportedOperationException("defaultInstance is not yet bridged via JNI; use the Builder instead.");
+
+    /** Sets the allowedHeaders field. */
+    @JsonProperty("allowed_headers")
+    public Builder withAllowedHeaders(final @Nullable List<String> value) {
+      this.allowedHeaders = value;
+      return this;
     }
+
+    /** Sets the exposeHeaders field. */
+    @JsonProperty("expose_headers")
+    public Builder withExposeHeaders(final @Nullable List<String> value) {
+      this.exposeHeaders = value;
+      return this;
+    }
+
+    /** Sets the maxAge field. */
+    @JsonProperty("max_age")
+    public Builder withMaxAge(final @Nullable int value) {
+      this.maxAge = value;
+      return this;
+    }
+
+    /** Sets the allowCredentials field. */
+    @JsonProperty("allow_credentials")
+    public Builder withAllowCredentials(final @Nullable boolean value) {
+      this.allowCredentials = value;
+      return this;
+    }
+
+    /** Builds the CorsConfig instance. */
+    public CorsConfig build() {
+      return new CorsConfig(
+          allowedOrigins, allowedMethods, allowedHeaders, exposeHeaders, maxAge, allowCredentials);
+    }
+  }
+  // CPD-ON
+  public static CorsConfig defaultInstance() {
+    throw new UnsupportedOperationException(
+        "defaultInstance is not yet bridged via JNI; use the Builder instead.");
+  }
 }

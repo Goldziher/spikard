@@ -4,11 +4,11 @@
 // To verify freshness: alef verify --exit-code
 package dev.spikard;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -25,71 +25,70 @@ public record UploadFile(
     @JsonProperty("filename") String filename,
     @Nullable @JsonProperty("content_type") String contentType,
     @Nullable @JsonProperty("size") Long size,
-    @JsonSerialize(using = ByteArrayToIntArraySerializer.class) @JsonProperty("content") byte[] content,
-    @Nullable @JsonProperty("content_encoding") String contentEncoding
-) {
-    public static Builder builder() {
-        return new Builder();
+
+    @JsonSerialize(using = ByteArrayToIntArraySerializer.class) @JsonProperty("content")
+    byte[] content,
+
+    @Nullable @JsonProperty("content_encoding") String contentEncoding) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  // CPD-OFF
+  @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+  @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
+  public static final class Builder {
+
+    private String filename = "";
+
+    @JsonProperty("content_type")
+    private String contentType = null;
+
+    private Long size = null;
+    private byte[] content = new byte[0];
+
+    @JsonProperty("content_encoding")
+    private String contentEncoding = null;
+
+    /** Sets the filename field. */
+    @JsonProperty("filename")
+    public Builder withFilename(final String value) {
+      this.filename = value;
+      return this;
     }
 
-    // CPD-OFF
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonPOJOBuilder(withPrefix = "with", buildMethodName = "build")
-    public static final class Builder {
-
-private String filename = "";
-        @JsonProperty("content_type")
-private String contentType = null;
-private Long size = null;
-private byte[] content = new byte[0];
-        @JsonProperty("content_encoding")
-private String contentEncoding = null;
-
-        /** Sets the filename field. */
-        @JsonProperty("filename")
-        public Builder withFilename(final String value) {
-            this.filename = value;
-            return this;
-        }
-
-        /** Sets the contentType field. */
-        @JsonProperty("content_type")
-        public Builder withContentType(final @Nullable String value) {
-            this.contentType = value;
-            return this;
-        }
-
-        /** Sets the size field. */
-        @JsonProperty("size")
-        public Builder withSize(final @Nullable long value) {
-            this.size = value;
-            return this;
-        }
-
-        /** Sets the content field. */
-        @JsonProperty("content")
-        public Builder withContent(final byte[] value) {
-            this.content = value;
-            return this;
-        }
-
-        /** Sets the contentEncoding field. */
-        @JsonProperty("content_encoding")
-        public Builder withContentEncoding(final @Nullable String value) {
-            this.contentEncoding = value;
-            return this;
-        }
-
-        /** Builds the UploadFile instance. */
-        public UploadFile build() {
-            return new UploadFile(
-                filename,
-                contentType,
-                size,
-                content,
-                contentEncoding
-            );
-        }
+    /** Sets the contentType field. */
+    @JsonProperty("content_type")
+    public Builder withContentType(final @Nullable String value) {
+      this.contentType = value;
+      return this;
     }
-    // CPD-ON
+
+    /** Sets the size field. */
+    @JsonProperty("size")
+    public Builder withSize(final @Nullable long value) {
+      this.size = value;
+      return this;
+    }
+
+    /** Sets the content field. */
+    @JsonProperty("content")
+    public Builder withContent(final byte[] value) {
+      this.content = value;
+      return this;
+    }
+
+    /** Sets the contentEncoding field. */
+    @JsonProperty("content_encoding")
+    public Builder withContentEncoding(final @Nullable String value) {
+      this.contentEncoding = value;
+      return this;
+    }
+
+    /** Builds the UploadFile instance. */
+    public UploadFile build() {
+      return new UploadFile(filename, contentType, size, content, contentEncoding);
+    }
+  }
+  // CPD-ON
 }

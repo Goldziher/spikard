@@ -8,13 +8,13 @@ package dev.spikard;
  * Occurs when a GraphQL query exceeds the configured complexity limit.
  */
 public class ComplexityLimitExceededException extends GraphQLErrorException {
-    /** Creates a new ComplexityLimitExceededException with the given message. */
-    public ComplexityLimitExceededException(final String message) {
-        super(message);
-    }
+  /** Creates a new ComplexityLimitExceededException with the given message. */
+  public ComplexityLimitExceededException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new ComplexityLimitExceededException with the given message and cause. */
-    public ComplexityLimitExceededException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new ComplexityLimitExceededException with the given message and cause. */
+  public ComplexityLimitExceededException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }

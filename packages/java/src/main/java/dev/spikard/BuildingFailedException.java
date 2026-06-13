@@ -6,13 +6,13 @@ package dev.spikard;
  * Generic schema building error
  */
 public class BuildingFailedException extends SchemaErrorException {
-    /** Creates a new BuildingFailedException with the given message. */
-    public BuildingFailedException(final String message) {
-        super(message);
-    }
+  /** Creates a new BuildingFailedException with the given message. */
+  public BuildingFailedException(final String message) {
+    super(message);
+  }
 
-    /** Creates a new BuildingFailedException with the given message and cause. */
-    public BuildingFailedException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
+  /** Creates a new BuildingFailedException with the given message and cause. */
+  public BuildingFailedException(final String message, final Throwable cause) {
+    super(message, cause);
+  }
 }
