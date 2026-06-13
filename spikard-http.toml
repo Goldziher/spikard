@@ -1,0 +1,98 @@
+# HTTP extension config — consumed by crates/spikard-alef-ext at generation time.
+# This file is read by HttpExtensionConfig::load_from_alef_toml() (which looks for
+# spikard-http.toml in the current working directory).
+#
+# The schema mirrors the former [[crates.lifecycle_hooks]], [[crates.websocket_routes]],
+# [[crates.sse_routes]], and [[crates.error_types]] blocks that lived in alef.toml
+# before the HTTP-domain IR was extracted into this extension.
+
+# ---------------------------------------------------------------------------
+# Lifecycle hooks
+# ---------------------------------------------------------------------------
+
+[[lifecycle_hooks]]
+name = "on_request"
+callback_contract = "RequestHook"
+doc = "Called before any other processing for each inbound request."
+is_async = true
+
+[[lifecycle_hooks]]
+name = "pre_validation"
+callback_contract = "RequestHook"
+doc = "Called after parsing but before parameter validation."
+is_async = true
+
+[[lifecycle_hooks]]
+name = "pre_handler"
+callback_contract = "RequestHook"
+doc = "Called after validation but before invoking the route handler."
+is_async = true
+
+[[lifecycle_hooks]]
+name = "on_response"
+callback_contract = "ResponseHook"
+doc = "Called after the handler returns but before the response is serialized."
+is_async = true
+
+[[lifecycle_hooks]]
+name = "on_error"
+callback_contract = "ErrorHook"
+doc = "Called when a handler returns an error."
+is_async = true
+
+# ---------------------------------------------------------------------------
+# WebSocket routes
+# ---------------------------------------------------------------------------
+
+[[websocket_routes]]
+handler_wrapper_type = "WebSocketHandlerWrapper"
+socket_type = "WebSocketConnection"
+doc = "Register a WebSocket upgrade handler at the given path."
+
+# ---------------------------------------------------------------------------
+# SSE routes
+# ---------------------------------------------------------------------------
+
+[[sse_routes]]
+producer_wrapper_type = "SseProducerWrapper"
+event_type = "SseEvent"
+doc = "Register an SSE event producer at the given path."
+
+# ---------------------------------------------------------------------------
+# Error types
+# ---------------------------------------------------------------------------
+
+[[error_types]]
+name = "NotFoundError"
+http_status = 404
+doc = "Raised when the requested resource does not exist."
+
+[[error_types]]
+name = "ValidationError"
+http_status = 422
+doc = "Raised when input validation fails. Carries a list of field errors per RFC 9457."
+
+[[error_types]]
+name = "UnauthorizedError"
+http_status = 401
+doc = "Raised when the request lacks valid authentication credentials."
+
+[[error_types]]
+name = "ForbiddenError"
+http_status = 403
+doc = "Raised when the authenticated user lacks permission for the requested action."
+
+[[error_types]]
+name = "RateLimitedError"
+http_status = 429
+doc = "Raised when the client exceeds the configured request rate limit."
+
+[[error_types]]
+name = "ConflictError"
+http_status = 409
+doc = "Raised when the request conflicts with the current state of the resource."
+
+[[error_types]]
+name = "InternalError"
+http_status = 500
+doc = "Raised when the server encounters an unexpected failure."

@@ -1,7 +1,7 @@
 default_install_hook_types:
   - pre-commit
   - commit-msg
-exclude: ^docs/snippets/|vendor/|node_modules/|target/|invalid*|dist/|artifacts/|test_documents/|test_apps/|scripts/ci/|^e2e/|\.cache/|\.venv/
+exclude: ^docs/snippets/|vendor/|node_modules/|target/|invalid*|dist/|artifacts/|test_documents/|test_apps/|scripts/ci/|^e2e/|\.cache/|\.venv/|service_http_additions\.
 
 repos:
   - repo: https://github.com/Goldziher/gitfluff
