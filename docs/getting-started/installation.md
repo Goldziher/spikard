@@ -1,6 +1,6 @@
 # Installation
 
-Spikard ships a Rust core plus bindings for Python, TypeScript/Node, Ruby, PHP, and Elixir. Install only what you need; every binding shares the same runtime behavior.
+Spikard ships a Rust core plus 15 language bindings. Install only what you need; every binding shares the same runtime behavior.
 
 ## Install by binding
 
@@ -10,13 +10,19 @@ Spikard ships a Rust core plus bindings for Python, TypeScript/Node, Ruby, PHP, 
     pip install spikard
     ```
 
+    Requires Python ≥ 3.10. Wheels ship for CPython 3.10–3.13 on Linux (amd64, arm64), macOS (amd64, arm64), and Windows.
+
 === "TypeScript / Node"
 
     ```bash
     npm install @spikard/node
     # or
     pnpm add @spikard/node
+    # or
+    yarn add @spikard/node
     ```
+
+    Requires Node ≥ 18. Prebuilt binaries available for Linux, macOS, and Windows.
 
 === "Ruby"
 
@@ -24,13 +30,15 @@ Spikard ships a Rust core plus bindings for Python, TypeScript/Node, Ruby, PHP, 
     gem install spikard
     ```
 
+    Requires Ruby ≥ 3.2. Precompiled gems available; source builds require Rust.
+
 === "PHP"
 
     ```bash
     composer require spikard/spikard
     ```
 
-    For CI or other non-interactive Composer runs, allow the package plugin first:
+    Requires PHP ≥ 8.2. For CI or non-interactive Composer runs:
 
     ```bash
     composer config allow-plugins.spikard/spikard true
@@ -42,16 +50,117 @@ Spikard ships a Rust core plus bindings for Python, TypeScript/Node, Ruby, PHP, 
     Add to your `mix.exs` dependencies:
 
     ```elixir
-    {:spikard, "~> 0.10"}
+    {:spikard, "~> 0.16"}
     ```
 
-    Normal installs use precompiled NIFs. You only need a Rust toolchain when forcing a source build, for example with `SPIKARD_BUILD=1`.
+    Requires Elixir ≥ 1.14, OTP ≥ 25. Precompiled NIFs available; source builds require Rust.
+
+=== "Go"
+
+    ```bash
+    go get github.com/spikard-dev/spikard/packages/go
+    ```
+
+    Requires Go ≥ 1.21.
+
+=== "Java"
+
+    Add to `pom.xml`:
+
+    ```xml
+    <dependency>
+        <groupId>dev.spikard</groupId>
+        <artifactId>spikard</artifactId>
+        <version>0.16.0</version>
+    </dependency>
+    ```
+
+    Requires Java ≥ 21.
+
+=== "C#"
+
+    ```bash
+    dotnet add package Spikard
+    ```
+
+    Requires .NET 9.0 or later (Core + Framework).
+
+=== "Kotlin"
+
+    Add to `build.gradle.kts`:
+
+    ```kotlin
+    implementation("dev.spikard:spikard-kt:0.16.0")
+    ```
+
+    Requires Kotlin ≥ 1.8.
+
+=== "Dart"
+
+    Add to `pubspec.yaml`:
+
+    ```yaml
+    dependencies:
+      spikard: ^0.16.0
+    ```
+
+    Requires Dart ≥ 3.0.
+
+=== "Swift"
+
+    Add to `Package.swift`:
+
+    ```swift
+    .package(url: "https://github.com/spikard-dev/spikard.git", from: "0.16.0")
+    ```
+
+    Requires Swift ≥ 5.9.
+
+=== "Zig"
+
+    Add to `build.zig.zon`:
+
+    ```zig
+    .spikard = .{
+        .url = "https://github.com/spikard-dev/spikard/archive/v0.16.0.tar.gz",
+        .hash = "...",
+    },
+    ```
+
+    Requires Zig 0.13 or later.
+
+=== "C"
+
+    Download the prebuilt C library and header from [GitHub Releases](https://github.com/spikard-dev/spikard/releases):
+
+    ```c
+    #include "spikard.h"
+    // Link against libspikard.so / libspikard.dylib / spikard.dll
+    ```
+
+=== "WebAssembly"
+
+    ```bash
+    npm install @spikard/wasm
+    ```
+
+    WASM provides client-side type stubs and serialization helpers for talking to a remote Spikard server. No server-side runtime.
+
+=== "R"
+
+    ```r
+    devtools::install_github("spikard-dev/spikard/packages/r")
+    ```
+
+    Requires R ≥ 4.1.
 
 === "Rust"
 
     ```bash
     cargo add spikard
     ```
+
+    Requires Rust ≥ 1.80.
 
 ## CLI
 

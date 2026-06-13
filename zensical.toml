@@ -29,6 +29,7 @@ nav = [
     { "Validation Engine" = "concepts/validation.md" },
     { "Middleware & Extensions" = "concepts/middleware.md" },
     { "Streaming & Async IO" = "concepts/streaming.md" },
+    { "Versioning & Stability" = "concepts/versioning.md" },
     { "Python Binding Architecture" = "python/architecture.md" },
   ] },
 
@@ -54,6 +55,11 @@ nav = [
   # Command Line
   { "CLI" = "cli/usage.md" },
 
+  # Migration & Bindings
+  { "Migration" = [
+    { "v0.15 → v0.16" = "migration/v0.15-to-v0.16.md" },
+  ] },
+
   # Language Bindings
   { "Bindings" = [
     { "Python" = "reference/api-python.md" },
@@ -76,6 +82,7 @@ nav = [
 
   # API Documentation
   { "API Reference" = [
+    { "Feature Parity" = "reference/feature-parity.md" },
     { "Types" = "reference/types.md" },
     { "Configuration" = "reference/configuration.md" },
     { "Errors" = "reference/errors.md" },

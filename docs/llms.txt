@@ -1,0 +1,78 @@
+# Spikard
+
+> Polyglot HTTP framework with a Rust core and first-class bindings for 15 languages: Python, TypeScript/Node, Ruby, PHP, Elixir, Go, Java, C#, Kotlin, Dart, Swift, Zig, C, WebAssembly, and R. Type-safe routing, middleware, validation, and lifecycle hooks across all platforms.
+
+## Get Started
+
+- [Installation](https://docs.spikard.dev/getting-started/installation/): Install the binding for your language.
+- [Quick Start](https://docs.spikard.dev/getting-started/quickstart/): Build and run your first app in 5 minutes.
+- [Init Command](https://docs.spikard.dev/getting-started/init-command/): Generate a project scaffold with `spikard init`.
+
+## Guides
+
+- [Routing Basics](https://docs.spikard.dev/guides/routing/): HTTP method handlers, path parameters, query strings.
+- [Requests & Responses](https://docs.spikard.dev/guides/requests/): Typed request/response APIs, body parsing, file uploads.
+- [Configuration](https://docs.spikard.dev/guides/configuration/): Server config, middleware setup, deployment options.
+- [Middleware](https://docs.spikard.dev/guides/middleware/): Built-in middleware (CORS, compression, rate limit) and custom handlers.
+- [Validation Flows](https://docs.spikard.dev/guides/validation/): Schema validation, error responses, constraint parsing.
+- [Dependency Injection](https://docs.spikard.dev/guides/dependency-injection/): Service registration and resolver patterns.
+- [Testing](https://docs.spikard.dev/guides/testing/): TestClient for in-process integration tests.
+- [Deployment](https://docs.spikard.dev/guides/deployment/): Docker, Kubernetes, serverless platforms.
+- [Code Generation](https://docs.spikard.dev/guides/code-generation/): OpenAPI, GraphQL, JSON-RPC schema handlers.
+- [Streaming & Real-Time](https://docs.spikard.dev/playbooks/streaming/): WebSocket, Server-sent events (SSE), chunked responses.
+
+## Concepts
+
+- [Architecture](https://docs.spikard.dev/concepts/architecture/): Workspace layout, binding strategy, FFI boundaries.
+- [Architecture Diagram](https://docs.spikard.dev/concepts/architecture-diagram/): Visual overview of core + 15 bindings.
+- [Runtime Model](https://docs.spikard.dev/concepts/runtime/): Async runtime, thread pools, lifecycle hooks.
+- [Validation Engine](https://docs.spikard.dev/concepts/validation/): Schema validation pipeline, error attribution.
+- [Middleware & Extensions](https://docs.spikard.dev/concepts/middleware/): Tower-http stack, hook lifecycle, composition.
+- [Streaming & Async IO](https://docs.spikard.dev/concepts/streaming/): WebSocket, SSE, chunked encoding patterns.
+- [Versioning & Stability](https://docs.spikard.dev/concepts/versioning/): Semver policy, C ABI guarantees, deprecation timeline.
+
+## Reference
+
+- [Feature Parity](https://docs.spikard.dev/reference/feature-parity/): Support matrix for WebSocket, SSE, gRPC, GraphQL, auth across all bindings.
+- [Types](https://docs.spikard.dev/reference/types/): Core request/response types, ServerConfig, exception hierarchy.
+- [Configuration](https://docs.spikard.dev/reference/configuration/): All ServerConfig fields with type, default, and override scope.
+- [Errors](https://docs.spikard.dev/reference/errors/): Exception types, error codes, ProblemDetails format.
+- [Python API](https://docs.spikard.dev/reference/api-python/): PyO3 binding, decorator syntax, Pydantic integration.
+- [TypeScript API](https://docs.spikard.dev/reference/api-typescript/): NAPI-RS binding, Hono-style Context, zod validation.
+- [Ruby API](https://docs.spikard.dev/reference/api-ruby/): Magnus binding, Sinatra-style block handlers.
+- [PHP API](https://docs.spikard.dev/reference/api-php/): ext-php-rs binding, attribute-based routing.
+- [Elixir API](https://docs.spikard.dev/reference/api-elixir/): Rustler binding, Plug.Router macros.
+- [Rust API](https://docs.spikard.dev/reference/api-rust/): Core Axum-based API.
+
+## Installation snippets
+
+- **Rust**: `cargo add spikard`
+- **Python**: `pip install spikard` (Python ≥ 3.10)
+- **TypeScript**: `npm install @spikard/node` or `pnpm add @spikard/node` (Node ≥ 18)
+- **Ruby**: `gem install spikard` (Ruby ≥ 3.2)
+- **PHP**: `composer require spikard/spikard` (PHP ≥ 8.2)
+- **Elixir**: `{:spikard, "~> 0.16"}` in mix.exs (Elixir ≥ 1.14)
+- **Go**: `go get github.com/spikard-dev/spikard/packages/go`
+- **Java**: Maven artifact `dev.spikard:spikard:0.16.0` (Java ≥ 25)
+- **C#**: `dotnet add package Spikard` (.NET 10)
+- **Kotlin**: `implementation("dev.spikard:spikard-kt:0.16.0")` (Kotlin ≥ 1.8)
+- **Dart**: `dart pub add spikard` (Dart ≥ 3.0)
+- **Swift**: `.package(url: "...", from: "0.16.0")` in Package.swift (Swift ≥ 5.9)
+- **Zig**: Add to build.zig.zon
+- **C**: spikard-ffi header + shared library from releases
+- **WASM**: `npm install @spikard/wasm`
+- **R**: `devtools::install_github("spikard-dev/spikard/packages/r")`
+
+## Migration
+
+- [v0.15 → v0.16](https://docs.spikard.dev/migration/v0.15-to-v0.16/): Breaking changes, handler signature updates, new exception hierarchy.
+
+## Ecosystem
+
+- [Kreuzberg](https://docs.kreuzberg.dev): Document intelligence — text, tables, metadata from 91+ file formats. Extraction API and SDKs.
+- [Kreuzberg Cloud](https://docs.kreuzberg.cloud): Managed SaaS API for document extraction with dashboards and observability.
+- [kreuzcrawl](https://docs.kreuzcrawl.kreuzberg.dev): Web crawler and scraper with HTML→Markdown and headless-Chrome fallback.
+- [html-to-markdown](https://docs.html-to-markdown.kreuzberg.dev): Fast HTML→Markdown conversion engine. 12 language bindings.
+- [liter-llm](https://docs.liter-llm.kreuzberg.dev): Universal LLM API client. 14 language bindings, 143+ LLM providers.
+- [tree-sitter-language-pack](https://docs.tree-sitter-language-pack.kreuzberg.dev): 306 tree-sitter grammars on demand plus code-intelligence primitives.
+- [alef](https://github.com/kreuzberg-dev/alef): The polyglot binding generator that powers Spikard and all Kreuzberg ecosystem projects.

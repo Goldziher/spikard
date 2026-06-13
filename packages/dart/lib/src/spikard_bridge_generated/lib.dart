@@ -8,18 +8,18 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'lib.freezed.dart';
 
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `HandlerResult`, `ParseRequest`, `RequestData`, `Request`, `TestingSseEvent`, `ValidateRequest`, `ValidationResponse`
+            // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `HandlerResult`, `ParseRequest`, `RequestData`, `Request`, `TestingSseEvent`, `ValidateRequest`, `ValidationResponse`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
 
-/// Create a simple schema configuration with only Query type.
+
+            /// Create a simple schema configuration with only Query type.
 ///
 /// This is a convenience function for schemas that only have queries.
 ///
 /// **Returns:**
 ///
 /// A `QueryOnlyConfig` with default settings
-Future<QueryOnlyConfig> schemaQueryOnly() =>
-    RustLib.instance.api.crateSchemaQueryOnly();
+Future<QueryOnlyConfig>  schemaQueryOnly() => RustLib.instance.api.crateSchemaQueryOnly();
 
 /// Create a schema configuration with Query and Mutation types.
 ///
@@ -28,8 +28,7 @@ Future<QueryOnlyConfig> schemaQueryOnly() =>
 /// **Returns:**
 ///
 /// A `QueryMutationConfig` with default settings
-Future<QueryMutationConfig> schemaQueryMutation() =>
-    RustLib.instance.api.crateSchemaQueryMutation();
+Future<QueryMutationConfig>  schemaQueryMutation() => RustLib.instance.api.crateSchemaQueryMutation();
 
 /// Create a schema configuration with all three root types.
 ///
@@ -38,610 +37,547 @@ Future<QueryMutationConfig> schemaQueryMutation() =>
 /// **Returns:**
 ///
 /// A `FullSchemaConfig` with default settings
-Future<FullSchemaConfig> schemaFull() => RustLib.instance.api.crateSchemaFull();
+Future<FullSchemaConfig>  schemaFull() => RustLib.instance.api.crateSchemaFull();
 
-Future<UploadFile> createUploadFileFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateUploadFileFromJson(json: json);
+Future<UploadFile>  createUploadFileFromJson({required String json }) => RustLib.instance.api.crateCreateUploadFileFromJson(json: json);
 
-Future<SchemaConfig> createSchemaConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateSchemaConfigFromJson(json: json);
+Future<SchemaConfig>  createSchemaConfigFromJson({required String json }) => RustLib.instance.api.crateCreateSchemaConfigFromJson(json: json);
 
-Future<QueryOnlyConfig> createQueryOnlyConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateQueryOnlyConfigFromJson(json: json);
+Future<QueryOnlyConfig>  createQueryOnlyConfigFromJson({required String json }) => RustLib.instance.api.crateCreateQueryOnlyConfigFromJson(json: json);
 
-Future<QueryMutationConfig> createQueryMutationConfigFromJson({
-  required String json,
-}) => RustLib.instance.api.crateCreateQueryMutationConfigFromJson(json: json);
+Future<QueryMutationConfig>  createQueryMutationConfigFromJson({required String json }) => RustLib.instance.api.crateCreateQueryMutationConfigFromJson(json: json);
 
-Future<FullSchemaConfig> createFullSchemaConfigFromJson({
-  required String json,
-}) => RustLib.instance.api.crateCreateFullSchemaConfigFromJson(json: json);
+Future<FullSchemaConfig>  createFullSchemaConfigFromJson({required String json }) => RustLib.instance.api.crateCreateFullSchemaConfigFromJson(json: json);
 
-Future<BackgroundTaskConfig> createBackgroundTaskConfigFromJson({
-  required String json,
-}) => RustLib.instance.api.crateCreateBackgroundTaskConfigFromJson(json: json);
+Future<BackgroundTaskConfig>  createBackgroundTaskConfigFromJson({required String json }) => RustLib.instance.api.crateCreateBackgroundTaskConfigFromJson(json: json);
 
-Future<BackgroundJobMetadata> createBackgroundJobMetadataFromJson({
-  required String json,
-}) => RustLib.instance.api.crateCreateBackgroundJobMetadataFromJson(json: json);
+Future<BackgroundJobMetadata>  createBackgroundJobMetadataFromJson({required String json }) => RustLib.instance.api.crateCreateBackgroundJobMetadataFromJson(json: json);
 
-Future<CorsConfig> createCorsConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateCorsConfigFromJson(json: json);
+Future<CorsConfig>  createCorsConfigFromJson({required String json }) => RustLib.instance.api.crateCreateCorsConfigFromJson(json: json);
 
-Future<CompressionConfig> createCompressionConfigFromJson({
-  required String json,
-}) => RustLib.instance.api.crateCreateCompressionConfigFromJson(json: json);
+Future<CompressionConfig>  createCompressionConfigFromJson({required String json }) => RustLib.instance.api.crateCreateCompressionConfigFromJson(json: json);
 
-Future<RateLimitConfig> createRateLimitConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateRateLimitConfigFromJson(json: json);
+Future<RateLimitConfig>  createRateLimitConfigFromJson({required String json }) => RustLib.instance.api.crateCreateRateLimitConfigFromJson(json: json);
 
-Future<GrpcConfig> createGrpcConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateGrpcConfigFromJson(json: json);
+Future<GrpcConfig>  createGrpcConfigFromJson({required String json }) => RustLib.instance.api.crateCreateGrpcConfigFromJson(json: json);
 
-Future<JsonRpcConfig> createJsonRpcConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateJsonRpcConfigFromJson(json: json);
+Future<JsonRpcConfig>  createJsonRpcConfigFromJson({required String json }) => RustLib.instance.api.crateCreateJsonRpcConfigFromJson(json: json);
 
-Future<OpenApiConfig> createOpenApiConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateOpenApiConfigFromJson(json: json);
+Future<OpenApiConfig>  createOpenApiConfigFromJson({required String json }) => RustLib.instance.api.crateCreateOpenApiConfigFromJson(json: json);
 
-Future<Response> createResponseFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateResponseFromJson(json: json);
+Future<Response>  createResponseFromJson({required String json }) => RustLib.instance.api.crateCreateResponseFromJson(json: json);
 
-Future<SseEvent> createSseEventFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateSseEventFromJson(json: json);
+Future<SseEvent>  createSseEventFromJson({required String json }) => RustLib.instance.api.crateCreateSseEventFromJson(json: json);
 
-Future<JwtConfig> createJwtConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateJwtConfigFromJson(json: json);
+Future<JwtConfig>  createJwtConfigFromJson({required String json }) => RustLib.instance.api.crateCreateJwtConfigFromJson(json: json);
 
-Future<ApiKeyConfig> createApiKeyConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateApiKeyConfigFromJson(json: json);
+Future<ApiKeyConfig>  createApiKeyConfigFromJson({required String json }) => RustLib.instance.api.crateCreateApiKeyConfigFromJson(json: json);
 
-Future<StaticFilesConfig> createStaticFilesConfigFromJson({
-  required String json,
-}) => RustLib.instance.api.crateCreateStaticFilesConfigFromJson(json: json);
+Future<StaticFilesConfig>  createStaticFilesConfigFromJson({required String json }) => RustLib.instance.api.crateCreateStaticFilesConfigFromJson(json: json);
 
-Future<ServerConfig> createServerConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateServerConfigFromJson(json: json);
+Future<ServerConfig>  createServerConfigFromJson({required String json }) => RustLib.instance.api.crateCreateServerConfigFromJson(json: json);
 
-Future<JsonRpcMethodInfo> createJsonRpcMethodInfoFromJson({
-  required String json,
-}) => RustLib.instance.api.crateCreateJsonRpcMethodInfoFromJson(json: json);
+Future<JsonRpcMethodInfo>  createJsonRpcMethodInfoFromJson({required String json }) => RustLib.instance.api.crateCreateJsonRpcMethodInfoFromJson(json: json);
 
-Future<ProblemDetails> createProblemDetailsFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateProblemDetailsFromJson(json: json);
+Future<ProblemDetails>  createProblemDetailsFromJson({required String json }) => RustLib.instance.api.crateCreateProblemDetailsFromJson(json: json);
 
-Future<AsyncApiConfig> createAsyncApiConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateAsyncApiConfigFromJson(json: json);
+Future<AsyncApiConfig>  createAsyncApiConfigFromJson({required String json }) => RustLib.instance.api.crateCreateAsyncApiConfigFromJson(json: json);
 
-Future<ParsedChannel> createParsedChannelFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateParsedChannelFromJson(json: json);
+Future<ParsedChannel>  createParsedChannelFromJson({required String json }) => RustLib.instance.api.crateCreateParsedChannelFromJson(json: json);
 
-Future<ParsedOperation> createParsedOperationFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateParsedOperationFromJson(json: json);
+Future<ParsedOperation>  createParsedOperationFromJson({required String json }) => RustLib.instance.api.crateCreateParsedOperationFromJson(json: json);
 
-Future<ParsedMessage> createParsedMessageFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateParsedMessageFromJson(json: json);
+Future<ParsedMessage>  createParsedMessageFromJson({required String json }) => RustLib.instance.api.crateCreateParsedMessageFromJson(json: json);
 
-Future<ParseResult> createParseResultFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateParseResultFromJson(json: json);
+Future<ParseResult>  createParseResultFromJson({required String json }) => RustLib.instance.api.crateCreateParseResultFromJson(json: json);
 
-Future<ContactInfo> createContactInfoFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateContactInfoFromJson(json: json);
+Future<ContactInfo>  createContactInfoFromJson({required String json }) => RustLib.instance.api.crateCreateContactInfoFromJson(json: json);
 
-Future<LicenseInfo> createLicenseInfoFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateLicenseInfoFromJson(json: json);
+Future<LicenseInfo>  createLicenseInfoFromJson({required String json }) => RustLib.instance.api.crateCreateLicenseInfoFromJson(json: json);
 
-Future<ServerInfo> createServerInfoFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateServerInfoFromJson(json: json);
+Future<ServerInfo>  createServerInfoFromJson({required String json }) => RustLib.instance.api.crateCreateServerInfoFromJson(json: json);
 
-Future<ResponseSnapshot> createResponseSnapshotFromJson({
-  required String json,
-}) => RustLib.instance.api.crateCreateResponseSnapshotFromJson(json: json);
+Future<ResponseSnapshot>  createResponseSnapshotFromJson({required String json }) => RustLib.instance.api.crateCreateResponseSnapshotFromJson(json: json);
 
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<GraphQLRouteConfig>>
-abstract class GraphQlRouteConfig implements RustOpaqueInterface {
-  static Future<GraphQlRouteConfig> default_() =>
-      RustLib.instance.api.crateGraphQlRouteConfigDefault();
+            
+                // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<GraphQLRouteConfig>>
+                abstract class GraphQlRouteConfig implements RustOpaqueInterface {
+                    static Future<GraphQlRouteConfig>  default_()=>RustLib.instance.api.crateGraphQlRouteConfigDefault();
 
-  Future<GraphQlRouteConfig> description({required String description});
 
-  Future<GraphQlRouteConfig> enablePlayground({required bool enable});
+ Future<GraphQlRouteConfig>  description({required String description });
 
-  Future<String?> getDescription();
 
-  Future<String> getMethod();
+ Future<GraphQlRouteConfig>  enablePlayground({required bool enable });
 
-  Future<String> getPath();
 
-  Future<bool> isPlaygroundEnabled();
+ Future<String?>  getDescription();
 
-  Future<GraphQlRouteConfig> method({required String method});
+
+ Future<String>  getMethod();
+
+
+ Future<String>  getPath();
+
+
+ Future<bool>  isPlaygroundEnabled();
+
+
+ Future<GraphQlRouteConfig>  method({required String method });
+
 
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
-  static Future<GraphQlRouteConfig> newInstance() =>
-      RustLib.instance.api.crateGraphQlRouteConfigNew();
+static Future<GraphQlRouteConfig>  newInstance()=>RustLib.instance.api.crateGraphQlRouteConfigNew();
 
-  Future<GraphQlRouteConfig> path({required String path});
-}
 
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<RouteBuilder>>
-abstract class RouteBuilder implements RustOpaqueInterface {
-  Future<RouteBuilder> compression({required CompressionConfig compression});
+ Future<GraphQlRouteConfig>  path({required String path });
 
-  Future<RouteBuilder> cors({required CorsConfig cors});
 
-  Future<RouteBuilder> fileParamsJson({required String schema});
 
-  Future<RouteBuilder> handlerDependencies({
-    required List<String> dependencies,
-  });
+                    
+                }
+                
 
-  Future<RouteBuilder> handlerName({required String name});
+
+                // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<RouteBuilder>>
+                abstract class RouteBuilder implements RustOpaqueInterface {
+                     Future<RouteBuilder>  compression({required CompressionConfig compression });
+
+
+ Future<RouteBuilder>  cors({required CorsConfig cors });
+
+
+ Future<RouteBuilder>  fileParamsJson({required String schema });
+
+
+ Future<RouteBuilder>  handlerDependencies({required List<String> dependencies });
+
+
+ Future<RouteBuilder>  handlerName({required String name });
+
 
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
-  static Future<RouteBuilder> newInstance({
-    required Method method,
-    required String path,
-  }) => RustLib.instance.api.crateRouteBuilderNew(method: method, path: path);
+static Future<RouteBuilder>  newInstance({required Method method , required String path })=>RustLib.instance.api.crateRouteBuilderNew(method: method, path: path);
 
-  Future<RouteBuilder> paramsSchemaJson({required String schema});
 
-  Future<RouteBuilder> requestSchemaJson({required String schema});
+ Future<RouteBuilder>  paramsSchemaJson({required String schema });
 
-  Future<RouteBuilder> responseSchemaJson({required String schema});
 
-  Future<RouteBuilder> sync_();
-}
+ Future<RouteBuilder>  requestSchemaJson({required String schema });
 
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TestClient>>
-abstract class TestClient implements RustOpaqueInterface {
-  Future<ResponseSnapshot> graphql({
-    required String query,
-    String? variables,
-    String? operationName,
-  });
 
-  Future<ResponseSnapshot> graphqlAt({
-    required String endpoint,
-    required String query,
-    String? variables,
-    String? operationName,
-  });
+ Future<RouteBuilder>  responseSchemaJson({required String schema });
 
-  Future<GraphQLSubscriptionSnapshot> graphqlSubscription({
-    required String query,
-    String? variables,
-    String? operationName,
-  });
 
-  Future<GraphQLSubscriptionSnapshot> graphqlSubscriptionAt({
-    required String endpoint,
-    required String query,
-    String? variables,
-    String? operationName,
-  });
-}
+ Future<RouteBuilder>  sync_();
+
+
+
+                    
+                }
+                
+
+
+                // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<TestClient>>
+                abstract class TestClient implements RustOpaqueInterface {
+                     Future<ResponseSnapshot>  graphql({required String query , String? variables , String? operationName });
+
+
+ Future<ResponseSnapshot>  graphqlAt({required String endpoint , required String query , String? variables , String? operationName });
+
+
+ Future<GraphQLSubscriptionSnapshot>  graphqlSubscription({required String query , String? variables , String? operationName });
+
+
+ Future<GraphQLSubscriptionSnapshot>  graphqlSubscriptionAt({required String endpoint , required String query , String? variables , String? operationName });
+
+
+
+                    
+                }
+                
 
 /// API Key authentication configuration
-class ApiKeyConfig {
-  /// Valid API keys
-  final List<String> keys;
+class ApiKeyConfig  {
+                /// Valid API keys
+final List<String> keys;
+/// Header name to check (e.g., "X-API-Key")
+final String headerName;
 
-  /// Header name to check (e.g., "X-API-Key")
-  final String headerName;
+                const ApiKeyConfig({required this.keys ,required this.headerName ,});
 
-  const ApiKeyConfig({required this.keys, required this.headerName});
+                
+                
 
-  @override
-  int get hashCode => keys.hashCode ^ headerName.hashCode;
+                
+        @override
+        int get hashCode => keys.hashCode^headerName.hashCode;
+        
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ApiKeyConfig &&
-          runtimeType == other.runtimeType &&
-          keys == other.keys &&
-          headerName == other.headerName;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is ApiKeyConfig &&
+                runtimeType == other.runtimeType
+                && keys == other.keys&& headerName == other.headerName;
+        
+            }
 
 @freezed
-sealed class AppError with _$AppError {
-  const AppError._();
+                sealed class AppError with _$AppError  {
+                    const AppError._();
 
-  /// Route registration failed.
-  const factory AppError.route({required String field0}) = AppError_Route;
+                     /// Route registration failed.
+const factory AppError.route({   required String field0 , }) = AppError_Route;
+ /// Server/router construction failed.
+const factory AppError.server({   required String field0 , }) = AppError_Server;
+ /// Failed to extract DTO from the request context.
+const factory AppError.decode({   required String field0 , }) = AppError_Decode;
 
-  /// Server/router construction failed.
-  const factory AppError.server({required String field0}) = AppError_Server;
+                    
 
-  /// Failed to extract DTO from the request context.
-  const factory AppError.decode({required String field0}) = AppError_Decode;
-}
+                    
+                }
 
 /// AsyncAPI HTTP endpoint configuration
-class AsyncApiConfig {
-  /// Enable AsyncAPI endpoints (default: false)
-  final bool enabled;
+class AsyncApiConfig  {
+                /// Enable AsyncAPI endpoints (default: false)
+final bool enabled;
+/// Pre-registered AsyncAPI spec to serve from GET /asyncapi.json
+final String? spec;
 
-  /// Pre-registered AsyncAPI spec to serve from GET /asyncapi.json
-  final String? spec;
+                const AsyncApiConfig({required this.enabled ,this.spec ,});
 
-  const AsyncApiConfig({required this.enabled, this.spec});
+                
+                
 
-  @override
-  int get hashCode => enabled.hashCode ^ spec.hashCode;
+                
+        @override
+        int get hashCode => enabled.hashCode^spec.hashCode;
+        
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is AsyncApiConfig &&
-          runtimeType == other.runtimeType &&
-          enabled == other.enabled &&
-          spec == other.spec;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is AsyncApiConfig &&
+                runtimeType == other.runtimeType
+                && enabled == other.enabled&& spec == other.spec;
+        
+            }
 
-class BackgroundJobMetadata {
-  final String name;
-  final String? requestId;
+class BackgroundJobMetadata  {
+                final String name;
+final String? requestId;
 
-  const BackgroundJobMetadata({required this.name, this.requestId});
+                const BackgroundJobMetadata({required this.name ,this.requestId ,});
 
-  @override
-  int get hashCode => name.hashCode ^ requestId.hashCode;
+                
+                
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is BackgroundJobMetadata &&
-          runtimeType == other.runtimeType &&
-          name == other.name &&
-          requestId == other.requestId;
-}
+                
+        @override
+        int get hashCode => name.hashCode^requestId.hashCode;
+        
+
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is BackgroundJobMetadata &&
+                runtimeType == other.runtimeType
+                && name == other.name&& requestId == other.requestId;
+        
+            }
 
 /// Configuration for in-process background task execution.
-class BackgroundTaskConfig {
-  final PlatformInt64 maxQueueSize;
-  final PlatformInt64 maxConcurrentTasks;
-  final PlatformInt64 drainTimeoutSecs;
+class BackgroundTaskConfig  {
+                final PlatformInt64 maxQueueSize;
+final PlatformInt64 maxConcurrentTasks;
+final PlatformInt64 drainTimeoutSecs;
 
-  const BackgroundTaskConfig({
-    required this.maxQueueSize,
-    required this.maxConcurrentTasks,
-    required this.drainTimeoutSecs,
-  });
+                const BackgroundTaskConfig({required this.maxQueueSize ,required this.maxConcurrentTasks ,required this.drainTimeoutSecs ,});
 
-  @override
-  int get hashCode =>
-      maxQueueSize.hashCode ^
-      maxConcurrentTasks.hashCode ^
-      drainTimeoutSecs.hashCode;
+                
+                
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is BackgroundTaskConfig &&
-          runtimeType == other.runtimeType &&
-          maxQueueSize == other.maxQueueSize &&
-          maxConcurrentTasks == other.maxConcurrentTasks &&
-          drainTimeoutSecs == other.drainTimeoutSecs;
-}
+                
+        @override
+        int get hashCode => maxQueueSize.hashCode^maxConcurrentTasks.hashCode^drainTimeoutSecs.hashCode;
+        
+
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is BackgroundTaskConfig &&
+                runtimeType == other.runtimeType
+                && maxQueueSize == other.maxQueueSize&& maxConcurrentTasks == other.maxConcurrentTasks&& drainTimeoutSecs == other.drainTimeoutSecs;
+        
+            }
 
 /// Compression configuration shared across runtimes
-class CompressionConfig {
-  /// Enable gzip compression
-  final bool gzip;
+class CompressionConfig  {
+                /// Enable gzip compression
+final bool gzip;
+/// Enable brotli compression
+final bool brotli;
+/// Minimum response size to compress (bytes)
+final PlatformInt64 minSize;
+/// Compression quality (0-11 for brotli, 0-9 for gzip)
+final PlatformInt64 quality;
 
-  /// Enable brotli compression
-  final bool brotli;
+                const CompressionConfig({required this.gzip ,required this.brotli ,required this.minSize ,required this.quality ,});
 
-  /// Minimum response size to compress (bytes)
-  final PlatformInt64 minSize;
+                
+                
 
-  /// Compression quality (0-11 for brotli, 0-9 for gzip)
-  final PlatformInt64 quality;
+                
+        @override
+        int get hashCode => gzip.hashCode^brotli.hashCode^minSize.hashCode^quality.hashCode;
+        
 
-  const CompressionConfig({
-    required this.gzip,
-    required this.brotli,
-    required this.minSize,
-    required this.quality,
-  });
-
-  @override
-  int get hashCode =>
-      gzip.hashCode ^ brotli.hashCode ^ minSize.hashCode ^ quality.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is CompressionConfig &&
-          runtimeType == other.runtimeType &&
-          gzip == other.gzip &&
-          brotli == other.brotli &&
-          minSize == other.minSize &&
-          quality == other.quality;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is CompressionConfig &&
+                runtimeType == other.runtimeType
+                && gzip == other.gzip&& brotli == other.brotli&& minSize == other.minSize&& quality == other.quality;
+        
+            }
 
 /// Contact information
-class ContactInfo {
-  /// Name of the contact person or organisation.
-  final String? name;
+class ContactInfo  {
+                /// Name of the contact person or organisation.
+final String? name;
+/// Contact email address.
+final String? email;
+/// URL pointing to the contact information page.
+final String? url;
 
-  /// Contact email address.
-  final String? email;
+                const ContactInfo({this.name ,this.email ,this.url ,});
 
-  /// URL pointing to the contact information page.
-  final String? url;
+                
+                
 
-  const ContactInfo({this.name, this.email, this.url});
+                
+        @override
+        int get hashCode => name.hashCode^email.hashCode^url.hashCode;
+        
 
-  @override
-  int get hashCode => name.hashCode ^ email.hashCode ^ url.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ContactInfo &&
-          runtimeType == other.runtimeType &&
-          name == other.name &&
-          email == other.email &&
-          url == other.url;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is ContactInfo &&
+                runtimeType == other.runtimeType
+                && name == other.name&& email == other.email&& url == other.url;
+        
+            }
 
 /// CORS configuration for a route
-class CorsConfig {
-  final List<String> allowedOrigins;
-  final List<String> allowedMethods;
-  final List<String> allowedHeaders;
-  final List<String>? exposeHeaders;
-  final PlatformInt64? maxAge;
-  final bool? allowCredentials;
+class CorsConfig  {
+                final List<String> allowedOrigins;
+final List<String> allowedMethods;
+final List<String> allowedHeaders;
+final List<String>? exposeHeaders;
+final PlatformInt64? maxAge;
+final bool? allowCredentials;
 
-  const CorsConfig({
-    required this.allowedOrigins,
-    required this.allowedMethods,
-    required this.allowedHeaders,
-    this.exposeHeaders,
-    this.maxAge,
-    this.allowCredentials,
-  });
+                const CorsConfig({required this.allowedOrigins ,required this.allowedMethods ,required this.allowedHeaders ,this.exposeHeaders ,this.maxAge ,this.allowCredentials ,});
 
-  @override
-  int get hashCode =>
-      allowedOrigins.hashCode ^
-      allowedMethods.hashCode ^
-      allowedHeaders.hashCode ^
-      exposeHeaders.hashCode ^
-      maxAge.hashCode ^
-      allowCredentials.hashCode;
+                
+                
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is CorsConfig &&
-          runtimeType == other.runtimeType &&
-          allowedOrigins == other.allowedOrigins &&
-          allowedMethods == other.allowedMethods &&
-          allowedHeaders == other.allowedHeaders &&
-          exposeHeaders == other.exposeHeaders &&
-          maxAge == other.maxAge &&
-          allowCredentials == other.allowCredentials;
-}
+                
+        @override
+        int get hashCode => allowedOrigins.hashCode^allowedMethods.hashCode^allowedHeaders.hashCode^exposeHeaders.hashCode^maxAge.hashCode^allowCredentials.hashCode;
+        
+
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is CorsConfig &&
+                runtimeType == other.runtimeType
+                && allowedOrigins == other.allowedOrigins&& allowedMethods == other.allowedMethods&& allowedHeaders == other.allowedHeaders&& exposeHeaders == other.exposeHeaders&& maxAge == other.maxAge&& allowCredentials == other.allowCredentials;
+        
+            }
 
 /// Configuration for fully-featured schemas with Query, Mutation, and Subscription types
-class FullSchemaConfig {
-  /// Enable introspection queries
-  final bool introspectionEnabled;
+class FullSchemaConfig  {
+                /// Enable introspection queries
+final bool introspectionEnabled;
+/// Maximum query complexity (None = unlimited)
+final PlatformInt64? complexityLimit;
+/// Maximum query depth (None = unlimited)
+final PlatformInt64? depthLimit;
 
-  /// Maximum query complexity (None = unlimited)
-  final PlatformInt64? complexityLimit;
+                const FullSchemaConfig({required this.introspectionEnabled ,this.complexityLimit ,this.depthLimit ,});
 
-  /// Maximum query depth (None = unlimited)
-  final PlatformInt64? depthLimit;
+                
+                
 
-  const FullSchemaConfig({
-    required this.introspectionEnabled,
-    this.complexityLimit,
-    this.depthLimit,
-  });
+                
+        @override
+        int get hashCode => introspectionEnabled.hashCode^complexityLimit.hashCode^depthLimit.hashCode;
+        
 
-  @override
-  int get hashCode =>
-      introspectionEnabled.hashCode ^
-      complexityLimit.hashCode ^
-      depthLimit.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is FullSchemaConfig &&
-          runtimeType == other.runtimeType &&
-          introspectionEnabled == other.introspectionEnabled &&
-          complexityLimit == other.complexityLimit &&
-          depthLimit == other.depthLimit;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is FullSchemaConfig &&
+                runtimeType == other.runtimeType
+                && introspectionEnabled == other.introspectionEnabled&& complexityLimit == other.complexityLimit&& depthLimit == other.depthLimit;
+        
+            }
 
 @freezed
-sealed class GraphQLError with _$GraphQLError {
-  const GraphQLError._();
+                sealed class GraphQLError with _$GraphQLError  {
+                    const GraphQLError._();
 
-  /// Error during schema execution
-  ///
-  /// Occurs when the GraphQL executor encounters a runtime error during query execution.
-  const factory GraphQLError.executionError({required String field0}) =
-      GraphQLError_ExecutionError;
+                     /// Error during schema execution
+///
+/// Occurs when the GraphQL executor encounters a runtime error during query execution.
+const factory GraphQLError.executionError({   required String field0 , }) = GraphQLError_ExecutionError;
+ /// Error during schema building
+///
+/// Occurs when schema construction fails due to invalid definitions or conflicts.
+const factory GraphQLError.schemaBuildError({   required String field0 , }) = GraphQLError_SchemaBuildError;
+ /// Error during request handling
+///
+/// Occurs when the HTTP request cannot be properly handled or parsed.
+const factory GraphQLError.requestHandlingError({   required String field0 , }) = GraphQLError_RequestHandlingError;
+ /// Serialization error
+///
+/// Occurs during JSON serialization/deserialization of GraphQL values.
+const factory GraphQLError.serializationError({   required String field0 , }) = GraphQLError_SerializationError;
+ /// JSON parsing error
+///
+/// Occurs when JSON input cannot be parsed.
+const factory GraphQLError.jsonError({   required String field0 , }) = GraphQLError_JsonError;
+ /// GraphQL validation error
+///
+/// Occurs when a GraphQL query fails schema validation.
+const factory GraphQLError.validationError({   required String field0 , }) = GraphQLError_ValidationError;
+ /// GraphQL parse error
+///
+/// Occurs when the GraphQL query string cannot be parsed.
+const factory GraphQLError.parseError({   required String field0 , }) = GraphQLError_ParseError;
+ /// Authentication error
+///
+/// Occurs when request authentication fails.
+const factory GraphQLError.authenticationError({   required String field0 , }) = GraphQLError_AuthenticationError;
+ /// Authorization error
+///
+/// Occurs when user lacks required permissions.
+const factory GraphQLError.authorizationError({   required String field0 , }) = GraphQLError_AuthorizationError;
+ /// Not found error
+///
+/// Occurs when a requested resource is not found.
+const factory GraphQLError.notFound({   required String field0 , }) = GraphQLError_NotFound;
+ /// Rate limit error
+///
+/// Occurs when rate limit is exceeded.
+const factory GraphQLError.rateLimitExceeded({   required String field0 , }) = GraphQLError_RateLimitExceeded;
+ /// Invalid input error with validation details
+///
+/// Occurs during input validation with detailed error information.
+const factory GraphQLError.invalidInput({   required String message , }) = GraphQLError_InvalidInput;
+ /// Query complexity limit exceeded
+///
+/// Occurs when a GraphQL query exceeds the configured complexity limit.
+const factory GraphQLError.complexityLimitExceeded() = GraphQLError_ComplexityLimitExceeded;
+ /// Query depth limit exceeded
+///
+/// Occurs when a GraphQL query exceeds the configured depth limit.
+const factory GraphQLError.depthLimitExceeded() = GraphQLError_DepthLimitExceeded;
+ /// Internal server error
+///
+/// Occurs when an unexpected internal error happens.
+const factory GraphQLError.internalError({   required String field0 , }) = GraphQLError_InternalError;
 
-  /// Error during schema building
-  ///
-  /// Occurs when schema construction fails due to invalid definitions or conflicts.
-  const factory GraphQLError.schemaBuildError({required String field0}) =
-      GraphQLError_SchemaBuildError;
+                    
 
-  /// Error during request handling
-  ///
-  /// Occurs when the HTTP request cannot be properly handled or parsed.
-  const factory GraphQLError.requestHandlingError({required String field0}) =
-      GraphQLError_RequestHandlingError;
+                    /// Stable machine-readable error type identifier (`SCREAMING_SNAKE_CASE`).
+///
+/// Public alias for the same codes returned by [`Self::error_code`], kept
+/// available to bindings that surface the identifier alongside the
+/// human-readable message.
+ Future<String>  errorType()=>RustLib.instance.api.crateGraphQlErrorErrorType(that: this, );
 
-  /// Serialization error
-  ///
-  /// Occurs during JSON serialization/deserialization of GraphQL values.
-  const factory GraphQLError.serializationError({required String field0}) =
-      GraphQLError_SerializationError;
 
-  /// JSON parsing error
-  ///
-  /// Occurs when JSON input cannot be parsed.
-  const factory GraphQLError.jsonError({required String field0}) =
-      GraphQLError_JsonError;
+/// Whether the error condition is transient and may succeed on retry.
+///
+/// Returns true for upstream/infrastructure failures (rate limit, internal
+/// error) and false for client-input errors (validation, parse, auth).
+/// Bindings forward this signal to retry/back-off logic.
+ Future<bool>  isTransient()=>RustLib.instance.api.crateGraphQlErrorIsTransient(that: this, );
 
-  /// GraphQL validation error
-  ///
-  /// Occurs when a GraphQL query fails schema validation.
-  const factory GraphQLError.validationError({required String field0}) =
-      GraphQLError_ValidationError;
 
-  /// GraphQL parse error
-  ///
-  /// Occurs when the GraphQL query string cannot be parsed.
-  const factory GraphQLError.parseError({required String field0}) =
-      GraphQLError_ParseError;
+/// Convert error to HTTP status code
+///
+/// Maps GraphQL error types to appropriate HTTP status codes:
+/// - 400: Bad Request for parse/request-handling errors
+/// - 401: Unauthorized for authentication errors
+/// - 403: Forbidden for authorization errors
+/// - 404: Not Found for resource not found
+/// - 422: Unprocessable Entity for validation failures
+/// - 429: Too Many Requests for rate limit errors
+/// - 500: Internal Server Error for schema/serialization/internal errors
+/// - 200: OK for GraphQL execution errors returned in GraphQL response body
+///
+/// # Examples
+///
+/// ```ignore
+/// use spikard_graphql::error::GraphQLError;
+///
+/// let error = GraphQLError::AuthenticationError("Invalid token".to_string());
+/// assert_eq!(error.status_code(), 401);
+///
+/// let error = GraphQLError::ExecutionError("Query failed".to_string());
+/// assert_eq!(error.status_code(), 200); // GraphQL spec: errors return 200 with errors in body
+/// ```
+ Future<PlatformInt64>  statusCode()=>RustLib.instance.api.crateGraphQlErrorStatusCode(that: this, );
 
-  /// Authentication error
-  ///
-  /// Occurs when request authentication fails.
-  const factory GraphQLError.authenticationError({required String field0}) =
-      GraphQLError_AuthenticationError;
 
-  /// Authorization error
-  ///
-  /// Occurs when user lacks required permissions.
-  const factory GraphQLError.authorizationError({required String field0}) =
-      GraphQLError_AuthorizationError;
-
-  /// Not found error
-  ///
-  /// Occurs when a requested resource is not found.
-  const factory GraphQLError.notFound({required String field0}) =
-      GraphQLError_NotFound;
-
-  /// Rate limit error
-  ///
-  /// Occurs when rate limit is exceeded.
-  const factory GraphQLError.rateLimitExceeded({required String field0}) =
-      GraphQLError_RateLimitExceeded;
-
-  /// Invalid input error with validation details
-  ///
-  /// Occurs during input validation with detailed error information.
-  const factory GraphQLError.invalidInput({required String message}) =
-      GraphQLError_InvalidInput;
-
-  /// Query complexity limit exceeded
-  ///
-  /// Occurs when a GraphQL query exceeds the configured complexity limit.
-  const factory GraphQLError.complexityLimitExceeded() =
-      GraphQLError_ComplexityLimitExceeded;
-
-  /// Query depth limit exceeded
-  ///
-  /// Occurs when a GraphQL query exceeds the configured depth limit.
-  const factory GraphQLError.depthLimitExceeded() =
-      GraphQLError_DepthLimitExceeded;
-
-  /// Internal server error
-  ///
-  /// Occurs when an unexpected internal error happens.
-  const factory GraphQLError.internalError({required String field0}) =
-      GraphQLError_InternalError;
-
-  /// Stable machine-readable error type identifier (`SCREAMING_SNAKE_CASE`).
-  ///
-  /// Public alias for the same codes returned by [`Self::error_code`], kept
-  /// available to bindings that surface the identifier alongside the
-  /// human-readable message.
-  Future<String> errorType() =>
-      RustLib.instance.api.crateGraphQlErrorErrorType(that: this);
-
-  /// Whether the error condition is transient and may succeed on retry.
-  ///
-  /// Returns true for upstream/infrastructure failures (rate limit, internal
-  /// error) and false for client-input errors (validation, parse, auth).
-  /// Bindings forward this signal to retry/back-off logic.
-  Future<bool> isTransient() =>
-      RustLib.instance.api.crateGraphQlErrorIsTransient(that: this);
-
-  /// Convert error to HTTP status code
-  ///
-  /// Maps GraphQL error types to appropriate HTTP status codes:
-  /// - 400: Bad Request for parse/request-handling errors
-  /// - 401: Unauthorized for authentication errors
-  /// - 403: Forbidden for authorization errors
-  /// - 404: Not Found for resource not found
-  /// - 422: Unprocessable Entity for validation failures
-  /// - 429: Too Many Requests for rate limit errors
-  /// - 500: Internal Server Error for schema/serialization/internal errors
-  /// - 200: OK for GraphQL execution errors returned in GraphQL response body
-  ///
-  /// # Examples
-  ///
-  /// ```ignore
-  /// use spikard_graphql::error::GraphQLError;
-  ///
-  /// let error = GraphQLError::AuthenticationError("Invalid token".to_string());
-  /// assert_eq!(error.status_code(), 401);
-  ///
-  /// let error = GraphQLError::ExecutionError("Query failed".to_string());
-  /// assert_eq!(error.status_code(), 200); // GraphQL spec: errors return 200 with errors in body
-  /// ```
-  Future<PlatformInt64> statusCode() =>
-      RustLib.instance.api.crateGraphQlErrorStatusCode(that: this);
-}
+                }
 
 /// Snapshot of a GraphQL subscription exchange over WebSocket.
-class GraphQLSubscriptionSnapshot {
-  /// Operation id used for the subscription request.
-  final String operationId;
+class GraphQLSubscriptionSnapshot  {
+                /// Operation id used for the subscription request.
+final String operationId;
+/// Whether the server acknowledged the GraphQL WebSocket connection.
+final bool acknowledged;
+/// First `next.payload` received for this subscription, if any.
+final String? event;
+/// GraphQL protocol errors emitted by the server.
+final List<String> errors;
+/// Whether a `complete` frame was observed for this operation.
+final bool completeReceived;
 
-  /// Whether the server acknowledged the GraphQL WebSocket connection.
-  final bool acknowledged;
+                const GraphQLSubscriptionSnapshot({required this.operationId ,required this.acknowledged ,this.event ,required this.errors ,required this.completeReceived ,});
 
-  /// First `next.payload` received for this subscription, if any.
-  final String? event;
+                
+                
 
-  /// GraphQL protocol errors emitted by the server.
-  final List<String> errors;
+                
+        @override
+        int get hashCode => operationId.hashCode^acknowledged.hashCode^event.hashCode^errors.hashCode^completeReceived.hashCode;
+        
 
-  /// Whether a `complete` frame was observed for this operation.
-  final bool completeReceived;
-
-  const GraphQLSubscriptionSnapshot({
-    required this.operationId,
-    required this.acknowledged,
-    this.event,
-    required this.errors,
-    required this.completeReceived,
-  });
-
-  @override
-  int get hashCode =>
-      operationId.hashCode ^
-      acknowledged.hashCode ^
-      event.hashCode ^
-      errors.hashCode ^
-      completeReceived.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is GraphQLSubscriptionSnapshot &&
-          runtimeType == other.runtimeType &&
-          operationId == other.operationId &&
-          acknowledged == other.acknowledged &&
-          event == other.event &&
-          errors == other.errors &&
-          completeReceived == other.completeReceived;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is GraphQLSubscriptionSnapshot &&
+                runtimeType == other.runtimeType
+                && operationId == other.operationId&& acknowledged == other.acknowledged&& event == other.event&& errors == other.errors&& completeReceived == other.completeReceived;
+        
+            }
 
 /// Configuration for gRPC support
 ///
@@ -676,147 +612,111 @@ class GraphQLSubscriptionSnapshot {
 /// config.max_message_size = 10 * 1024 * 1024; // 10MB per message
 /// config.max_concurrent_streams = 50; // Advised to HTTP/2 layer
 /// ```
-class GrpcConfig {
-  /// Enable gRPC support
-  final bool enabled;
+class GrpcConfig  {
+                /// Enable gRPC support
+final bool enabled;
+/// Maximum message size in bytes (for both sending and receiving)
+///
+/// This limit applies to individual messages in both unary and streaming RPCs.
+/// When a single message exceeds this size, the request is rejected with HTTP 413
+/// (Payload Too Large).
+///
+/// Default: 4MB (4194304 bytes)
+///
+/// # Note
+/// This limit does NOT apply to the total response size in streaming RPCs.
+/// For multi-message streams, the total response can exceed this limit as long
+/// as each individual message stays within the limit.
+final PlatformInt64 maxMessageSize;
+/// Enable gzip compression for gRPC messages
+final bool enableCompression;
+/// Timeout for gRPC requests in seconds (None = no timeout)
+final PlatformInt64? requestTimeout;
+/// Maximum number of concurrent streams per connection (HTTP/2 advisory)
+///
+/// This value is communicated to HTTP/2 clients as the server's flow control limit.
+/// The HTTP/2 transport layer enforces this limit automatically via SETTINGS frames
+/// and GOAWAY responses. Applications should NOT implement custom enforcement.
+///
+/// Default: 100 streams per connection
+///
+/// # Stream Limiting Strategy
+/// - **Per Connection**: This limit applies per HTTP/2 connection, not globally
+/// - **Transport Enforcement**: HTTP/2 handles all stream limiting; applications
+///   need not implement custom checks
+/// - **Streaming Requests**: In server streaming or bidi streaming, each logical
+///   RPC consumes one stream slot. Message ordering within a stream follows
+///   HTTP/2 frame ordering.
+final PlatformInt64 maxConcurrentStreams;
+/// Enable HTTP/2 keepalive
+final bool enableKeepalive;
+/// HTTP/2 keepalive interval in seconds
+final PlatformInt64 keepaliveInterval;
+/// HTTP/2 keepalive timeout in seconds
+final PlatformInt64 keepaliveTimeout;
+/// Total byte cap across an entire streaming response.
+///
+/// When `Some(n)`, the streaming adapter aborts the stream with
+/// `tonic::Status::resource_exhausted` once the cumulative encoded message
+/// bytes exceed `n`. The stream yields the error item and then terminates.
+///
+/// Per-message cap remains `max_message_size`. This limit applies to
+/// server-streaming and bidirectional-streaming RPCs only; unary RPCs are
+/// governed solely by `max_message_size`.
+///
+/// Default: `None` (unbounded total response size).
+final PlatformInt64? maxStreamResponseBytes;
 
-  /// Maximum message size in bytes (for both sending and receiving)
-  ///
-  /// This limit applies to individual messages in both unary and streaming RPCs.
-  /// When a single message exceeds this size, the request is rejected with HTTP 413
-  /// (Payload Too Large).
-  ///
-  /// Default: 4MB (4194304 bytes)
-  ///
-  /// # Note
-  /// This limit does NOT apply to the total response size in streaming RPCs.
-  /// For multi-message streams, the total response can exceed this limit as long
-  /// as each individual message stays within the limit.
-  final PlatformInt64 maxMessageSize;
+                const GrpcConfig({required this.enabled ,required this.maxMessageSize ,required this.enableCompression ,this.requestTimeout ,required this.maxConcurrentStreams ,required this.enableKeepalive ,required this.keepaliveInterval ,required this.keepaliveTimeout ,this.maxStreamResponseBytes ,});
 
-  /// Enable gzip compression for gRPC messages
-  final bool enableCompression;
+                
+                
 
-  /// Timeout for gRPC requests in seconds (None = no timeout)
-  final PlatformInt64? requestTimeout;
+                
+        @override
+        int get hashCode => enabled.hashCode^maxMessageSize.hashCode^enableCompression.hashCode^requestTimeout.hashCode^maxConcurrentStreams.hashCode^enableKeepalive.hashCode^keepaliveInterval.hashCode^keepaliveTimeout.hashCode^maxStreamResponseBytes.hashCode;
+        
 
-  /// Maximum number of concurrent streams per connection (HTTP/2 advisory)
-  ///
-  /// This value is communicated to HTTP/2 clients as the server's flow control limit.
-  /// The HTTP/2 transport layer enforces this limit automatically via SETTINGS frames
-  /// and GOAWAY responses. Applications should NOT implement custom enforcement.
-  ///
-  /// Default: 100 streams per connection
-  ///
-  /// # Stream Limiting Strategy
-  /// - **Per Connection**: This limit applies per HTTP/2 connection, not globally
-  /// - **Transport Enforcement**: HTTP/2 handles all stream limiting; applications
-  ///   need not implement custom checks
-  /// - **Streaming Requests**: In server streaming or bidi streaming, each logical
-  ///   RPC consumes one stream slot. Message ordering within a stream follows
-  ///   HTTP/2 frame ordering.
-  final PlatformInt64 maxConcurrentStreams;
-
-  /// Enable HTTP/2 keepalive
-  final bool enableKeepalive;
-
-  /// HTTP/2 keepalive interval in seconds
-  final PlatformInt64 keepaliveInterval;
-
-  /// HTTP/2 keepalive timeout in seconds
-  final PlatformInt64 keepaliveTimeout;
-
-  /// Total byte cap across an entire streaming response.
-  ///
-  /// When `Some(n)`, the streaming adapter aborts the stream with
-  /// `tonic::Status::resource_exhausted` once the cumulative encoded message
-  /// bytes exceed `n`. The stream yields the error item and then terminates.
-  ///
-  /// Per-message cap remains `max_message_size`. This limit applies to
-  /// server-streaming and bidirectional-streaming RPCs only; unary RPCs are
-  /// governed solely by `max_message_size`.
-  ///
-  /// Default: `None` (unbounded total response size).
-  final PlatformInt64? maxStreamResponseBytes;
-
-  const GrpcConfig({
-    required this.enabled,
-    required this.maxMessageSize,
-    required this.enableCompression,
-    this.requestTimeout,
-    required this.maxConcurrentStreams,
-    required this.enableKeepalive,
-    required this.keepaliveInterval,
-    required this.keepaliveTimeout,
-    this.maxStreamResponseBytes,
-  });
-
-  @override
-  int get hashCode =>
-      enabled.hashCode ^
-      maxMessageSize.hashCode ^
-      enableCompression.hashCode ^
-      requestTimeout.hashCode ^
-      maxConcurrentStreams.hashCode ^
-      enableKeepalive.hashCode ^
-      keepaliveInterval.hashCode ^
-      keepaliveTimeout.hashCode ^
-      maxStreamResponseBytes.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is GrpcConfig &&
-          runtimeType == other.runtimeType &&
-          enabled == other.enabled &&
-          maxMessageSize == other.maxMessageSize &&
-          enableCompression == other.enableCompression &&
-          requestTimeout == other.requestTimeout &&
-          maxConcurrentStreams == other.maxConcurrentStreams &&
-          enableKeepalive == other.enableKeepalive &&
-          keepaliveInterval == other.keepaliveInterval &&
-          keepaliveTimeout == other.keepaliveTimeout &&
-          maxStreamResponseBytes == other.maxStreamResponseBytes;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is GrpcConfig &&
+                runtimeType == other.runtimeType
+                && enabled == other.enabled&& maxMessageSize == other.maxMessageSize&& enableCompression == other.enableCompression&& requestTimeout == other.requestTimeout&& maxConcurrentStreams == other.maxConcurrentStreams&& enableKeepalive == other.enableKeepalive&& keepaliveInterval == other.keepaliveInterval&& keepaliveTimeout == other.keepaliveTimeout&& maxStreamResponseBytes == other.maxStreamResponseBytes;
+        
+            }
 
 /// JSON-RPC server configuration
-class JsonRpcConfig {
-  /// Enable JSON-RPC endpoint
-  final bool enabled;
+class JsonRpcConfig  {
+                /// Enable JSON-RPC endpoint
+final bool enabled;
+/// HTTP endpoint path for JSON-RPC requests (default: "/rpc")
+final String endpointPath;
+/// Enable batch request processing (default: true)
+final bool enableBatch;
+/// Maximum number of requests in a batch (default: 100)
+final PlatformInt64 maxBatchSize;
 
-  /// HTTP endpoint path for JSON-RPC requests (default: "/rpc")
-  final String endpointPath;
+                const JsonRpcConfig({required this.enabled ,required this.endpointPath ,required this.enableBatch ,required this.maxBatchSize ,});
 
-  /// Enable batch request processing (default: true)
-  final bool enableBatch;
+                
+                
 
-  /// Maximum number of requests in a batch (default: 100)
-  final PlatformInt64 maxBatchSize;
+                
+        @override
+        int get hashCode => enabled.hashCode^endpointPath.hashCode^enableBatch.hashCode^maxBatchSize.hashCode;
+        
 
-  const JsonRpcConfig({
-    required this.enabled,
-    required this.endpointPath,
-    required this.enableBatch,
-    required this.maxBatchSize,
-  });
-
-  @override
-  int get hashCode =>
-      enabled.hashCode ^
-      endpointPath.hashCode ^
-      enableBatch.hashCode ^
-      maxBatchSize.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is JsonRpcConfig &&
-          runtimeType == other.runtimeType &&
-          enabled == other.enabled &&
-          endpointPath == other.endpointPath &&
-          enableBatch == other.enableBatch &&
-          maxBatchSize == other.maxBatchSize;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is JsonRpcConfig &&
+                runtimeType == other.runtimeType
+                && enabled == other.enabled&& endpointPath == other.endpointPath&& enableBatch == other.enableBatch&& maxBatchSize == other.maxBatchSize;
+        
+            }
 
 /// JSON-RPC method metadata for routes that support JSON-RPC
 ///
@@ -848,334 +748,275 @@ class JsonRpcConfig {
 ///     tags: vec!["users".to_string()],
 /// };
 /// ```
-class JsonRpcMethodInfo {
-  /// The JSON-RPC method name (e.g., "user.create")
-  final String methodName;
+class JsonRpcMethodInfo  {
+                /// The JSON-RPC method name (e.g., "user.create")
+final String methodName;
+/// Optional description of what the method does
+final String? description;
+/// Optional JSON Schema for method parameters
+final String? paramsSchema;
+/// Optional JSON Schema for the result
+final String? resultSchema;
+/// Whether this method is deprecated
+final bool deprecated;
+/// Tags for categorizing and grouping methods
+final List<String> tags;
 
-  /// Optional description of what the method does
-  final String? description;
+                const JsonRpcMethodInfo({required this.methodName ,this.description ,this.paramsSchema ,this.resultSchema ,required this.deprecated ,required this.tags ,});
 
-  /// Optional JSON Schema for method parameters
-  final String? paramsSchema;
+                
+                
 
-  /// Optional JSON Schema for the result
-  final String? resultSchema;
+                
+        @override
+        int get hashCode => methodName.hashCode^description.hashCode^paramsSchema.hashCode^resultSchema.hashCode^deprecated.hashCode^tags.hashCode;
+        
 
-  /// Whether this method is deprecated
-  final bool deprecated;
-
-  /// Tags for categorizing and grouping methods
-  final List<String> tags;
-
-  const JsonRpcMethodInfo({
-    required this.methodName,
-    this.description,
-    this.paramsSchema,
-    this.resultSchema,
-    required this.deprecated,
-    required this.tags,
-  });
-
-  @override
-  int get hashCode =>
-      methodName.hashCode ^
-      description.hashCode ^
-      paramsSchema.hashCode ^
-      resultSchema.hashCode ^
-      deprecated.hashCode ^
-      tags.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is JsonRpcMethodInfo &&
-          runtimeType == other.runtimeType &&
-          methodName == other.methodName &&
-          description == other.description &&
-          paramsSchema == other.paramsSchema &&
-          resultSchema == other.resultSchema &&
-          deprecated == other.deprecated &&
-          tags == other.tags;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is JsonRpcMethodInfo &&
+                runtimeType == other.runtimeType
+                && methodName == other.methodName&& description == other.description&& paramsSchema == other.paramsSchema&& resultSchema == other.resultSchema&& deprecated == other.deprecated&& tags == other.tags;
+        
+            }
 
 /// JWT authentication configuration
-class JwtConfig {
-  /// Secret key for JWT verification
-  final String secret;
+class JwtConfig  {
+                /// Secret key for JWT verification
+final String secret;
+/// Required algorithm (HS256, HS384, HS512, RS256, etc.)
+final String algorithm;
+/// Required audience claim
+final List<String>? audience;
+/// Required issuer claim
+final String? issuer;
+/// Leeway for expiration checks (seconds)
+final PlatformInt64 leeway;
 
-  /// Required algorithm (HS256, HS384, HS512, RS256, etc.)
-  final String algorithm;
+                const JwtConfig({required this.secret ,required this.algorithm ,this.audience ,this.issuer ,required this.leeway ,});
 
-  /// Required audience claim
-  final List<String>? audience;
+                
+                
 
-  /// Required issuer claim
-  final String? issuer;
+                
+        @override
+        int get hashCode => secret.hashCode^algorithm.hashCode^audience.hashCode^issuer.hashCode^leeway.hashCode;
+        
 
-  /// Leeway for expiration checks (seconds)
-  final PlatformInt64 leeway;
-
-  const JwtConfig({
-    required this.secret,
-    required this.algorithm,
-    this.audience,
-    this.issuer,
-    required this.leeway,
-  });
-
-  @override
-  int get hashCode =>
-      secret.hashCode ^
-      algorithm.hashCode ^
-      audience.hashCode ^
-      issuer.hashCode ^
-      leeway.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is JwtConfig &&
-          runtimeType == other.runtimeType &&
-          secret == other.secret &&
-          algorithm == other.algorithm &&
-          audience == other.audience &&
-          issuer == other.issuer &&
-          leeway == other.leeway;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is JwtConfig &&
+                runtimeType == other.runtimeType
+                && secret == other.secret&& algorithm == other.algorithm&& audience == other.audience&& issuer == other.issuer&& leeway == other.leeway;
+        
+            }
 
 /// License information
-class LicenseInfo {
-  /// SPDX license identifier or display name (e.g. `"MIT"`).
-  final String name;
+class LicenseInfo  {
+                /// SPDX license identifier or display name (e.g. `"MIT"`).
+final String name;
+/// URL to the full license text.
+final String? url;
 
-  /// URL to the full license text.
-  final String? url;
+                const LicenseInfo({required this.name ,this.url ,});
 
-  const LicenseInfo({required this.name, this.url});
+                
+                
 
-  @override
-  int get hashCode => name.hashCode ^ url.hashCode;
+                
+        @override
+        int get hashCode => name.hashCode^url.hashCode;
+        
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is LicenseInfo &&
-          runtimeType == other.runtimeType &&
-          name == other.name &&
-          url == other.url;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is LicenseInfo &&
+                runtimeType == other.runtimeType
+                && name == other.name&& url == other.url;
+        
+            }
 
 /// HTTP method
-enum Method { get_, post, put, patch, delete, head, options, connect, trace }
+enum Method {
+                    get_,
+post,
+put,
+patch,
+delete,
+head,
+options,
+connect,
+trace,
+                    ;
+                    
+                }
 
 /// OpenAPI configuration
-class OpenApiConfig {
-  /// Enable OpenAPI generation (default: false for zero overhead)
-  final bool enabled;
+class OpenApiConfig  {
+                /// Enable OpenAPI generation (default: false for zero overhead)
+final bool enabled;
+/// API title
+final String title;
+/// API version
+final String version;
+/// API description (supports markdown)
+final String? description;
+/// Path to serve Swagger UI (default: "/docs")
+final String swaggerUiPath;
+/// Path to serve Redoc (default: "/redoc")
+final String redocPath;
+/// Path to serve OpenAPI JSON spec (default: "/openapi.json")
+final String openapiJsonPath;
+/// Contact information
+final ContactInfo? contact;
+/// License information
+final LicenseInfo? license;
+/// Server definitions
+final List<ServerInfo> servers;
+/// Security schemes (auto-detected from middleware if not provided)
+final Map<String, SecuritySchemeInfo> securitySchemes;
 
-  /// API title
-  final String title;
+                const OpenApiConfig({required this.enabled ,required this.title ,required this.version ,this.description ,required this.swaggerUiPath ,required this.redocPath ,required this.openapiJsonPath ,this.contact ,this.license ,required this.servers ,required this.securitySchemes ,});
 
-  /// API version
-  final String version;
+                
+                
 
-  /// API description (supports markdown)
-  final String? description;
+                
+        @override
+        int get hashCode => enabled.hashCode^title.hashCode^version.hashCode^description.hashCode^swaggerUiPath.hashCode^redocPath.hashCode^openapiJsonPath.hashCode^contact.hashCode^license.hashCode^servers.hashCode^securitySchemes.hashCode;
+        
 
-  /// Path to serve Swagger UI (default: "/docs")
-  final String swaggerUiPath;
-
-  /// Path to serve Redoc (default: "/redoc")
-  final String redocPath;
-
-  /// Path to serve OpenAPI JSON spec (default: "/openapi.json")
-  final String openapiJsonPath;
-
-  /// Contact information
-  final ContactInfo? contact;
-
-  /// License information
-  final LicenseInfo? license;
-
-  /// Server definitions
-  final List<ServerInfo> servers;
-
-  /// Security schemes (auto-detected from middleware if not provided)
-  final Map<String, SecuritySchemeInfo> securitySchemes;
-
-  const OpenApiConfig({
-    required this.enabled,
-    required this.title,
-    required this.version,
-    this.description,
-    required this.swaggerUiPath,
-    required this.redocPath,
-    required this.openapiJsonPath,
-    this.contact,
-    this.license,
-    required this.servers,
-    required this.securitySchemes,
-  });
-
-  @override
-  int get hashCode =>
-      enabled.hashCode ^
-      title.hashCode ^
-      version.hashCode ^
-      description.hashCode ^
-      swaggerUiPath.hashCode ^
-      redocPath.hashCode ^
-      openapiJsonPath.hashCode ^
-      contact.hashCode ^
-      license.hashCode ^
-      servers.hashCode ^
-      securitySchemes.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is OpenApiConfig &&
-          runtimeType == other.runtimeType &&
-          enabled == other.enabled &&
-          title == other.title &&
-          version == other.version &&
-          description == other.description &&
-          swaggerUiPath == other.swaggerUiPath &&
-          redocPath == other.redocPath &&
-          openapiJsonPath == other.openapiJsonPath &&
-          contact == other.contact &&
-          license == other.license &&
-          servers == other.servers &&
-          securitySchemes == other.securitySchemes;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is OpenApiConfig &&
+                runtimeType == other.runtimeType
+                && enabled == other.enabled&& title == other.title&& version == other.version&& description == other.description&& swaggerUiPath == other.swaggerUiPath&& redocPath == other.redocPath&& openapiJsonPath == other.openapiJsonPath&& contact == other.contact&& license == other.license&& servers == other.servers&& securitySchemes == other.securitySchemes;
+        
+            }
 
 /// Full parse result returned by `POST /asyncapi/parse`
-class ParseResult {
-  final String specVersion;
-  final String title;
-  final String apiVersion;
-  final List<ParsedChannel> channels;
-  final List<ParsedOperation> operations;
-  final List<ParsedMessage> messages;
+class ParseResult  {
+                final String specVersion;
+final String title;
+final String apiVersion;
+final List<ParsedChannel> channels;
+final List<ParsedOperation> operations;
+final List<ParsedMessage> messages;
 
-  const ParseResult({
-    required this.specVersion,
-    required this.title,
-    required this.apiVersion,
-    required this.channels,
-    required this.operations,
-    required this.messages,
-  });
+                const ParseResult({required this.specVersion ,required this.title ,required this.apiVersion ,required this.channels ,required this.operations ,required this.messages ,});
 
-  @override
-  int get hashCode =>
-      specVersion.hashCode ^
-      title.hashCode ^
-      apiVersion.hashCode ^
-      channels.hashCode ^
-      operations.hashCode ^
-      messages.hashCode;
+                
+                
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ParseResult &&
-          runtimeType == other.runtimeType &&
-          specVersion == other.specVersion &&
-          title == other.title &&
-          apiVersion == other.apiVersion &&
-          channels == other.channels &&
-          operations == other.operations &&
-          messages == other.messages;
-}
+                
+        @override
+        int get hashCode => specVersion.hashCode^title.hashCode^apiVersion.hashCode^channels.hashCode^operations.hashCode^messages.hashCode;
+        
+
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is ParseResult &&
+                runtimeType == other.runtimeType
+                && specVersion == other.specVersion&& title == other.title&& apiVersion == other.apiVersion&& channels == other.channels&& operations == other.operations&& messages == other.messages;
+        
+            }
 
 /// A single channel extracted from an AsyncAPI spec
-class ParsedChannel {
-  /// Channel key from the spec (e.g. "chat/messages")
-  final String name;
+class ParsedChannel  {
+                /// Channel key from the spec (e.g. "chat/messages")
+final String name;
+/// Channel address / path
+final String address;
+/// Message names declared on this channel
+final List<String> messages;
+/// Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility
+final String? bindings;
 
-  /// Channel address / path
-  final String address;
+                const ParsedChannel({required this.name ,required this.address ,required this.messages ,this.bindings ,});
 
-  /// Message names declared on this channel
-  final List<String> messages;
+                
+                
 
-  /// Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility
-  final String? bindings;
+                
+        @override
+        int get hashCode => name.hashCode^address.hashCode^messages.hashCode^bindings.hashCode;
+        
 
-  const ParsedChannel({
-    required this.name,
-    required this.address,
-    required this.messages,
-    this.bindings,
-  });
-
-  @override
-  int get hashCode =>
-      name.hashCode ^ address.hashCode ^ messages.hashCode ^ bindings.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ParsedChannel &&
-          runtimeType == other.runtimeType &&
-          name == other.name &&
-          address == other.address &&
-          messages == other.messages &&
-          bindings == other.bindings;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is ParsedChannel &&
+                runtimeType == other.runtimeType
+                && name == other.name&& address == other.address&& messages == other.messages&& bindings == other.bindings;
+        
+            }
 
 /// A resolved message (name + JSON Schema)
-class ParsedMessage {
-  /// Message name
-  final String name;
+class ParsedMessage  {
+                /// Message name
+final String name;
+/// Resolved JSON Schema for the message payload, if available
+final String? schema;
 
-  /// Resolved JSON Schema for the message payload, if available
-  final String? schema;
+                const ParsedMessage({required this.name ,this.schema ,});
 
-  const ParsedMessage({required this.name, this.schema});
+                
+                
 
-  @override
-  int get hashCode => name.hashCode ^ schema.hashCode;
+                
+        @override
+        int get hashCode => name.hashCode^schema.hashCode;
+        
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ParsedMessage &&
-          runtimeType == other.runtimeType &&
-          name == other.name &&
-          schema == other.schema;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is ParsedMessage &&
+                runtimeType == other.runtimeType
+                && name == other.name&& schema == other.schema;
+        
+            }
 
 /// A single operation extracted from an AsyncAPI spec
-class ParsedOperation {
-  /// Operation name
-  final String name;
+class ParsedOperation  {
+                /// Operation name
+final String name;
+/// Operation action: "send" or "receive"
+final String action;
+/// Channel reference (resolved to the channel name)
+final String channel;
 
-  /// Operation action: "send" or "receive"
-  final String action;
+                const ParsedOperation({required this.name ,required this.action ,required this.channel ,});
 
-  /// Channel reference (resolved to the channel name)
-  final String channel;
+                
+                
 
-  const ParsedOperation({
-    required this.name,
-    required this.action,
-    required this.channel,
-  });
+                
+        @override
+        int get hashCode => name.hashCode^action.hashCode^channel.hashCode;
+        
 
-  @override
-  int get hashCode => name.hashCode ^ action.hashCode ^ channel.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ParsedOperation &&
-          runtimeType == other.runtimeType &&
-          name == other.name &&
-          action == other.action &&
-          channel == other.channel;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is ParsedOperation &&
+                runtimeType == other.runtimeType
+                && name == other.name&& action == other.action&& channel == other.channel;
+        
+            }
 
 /// RFC 9457 Problem Details for HTTP APIs
 ///
@@ -1198,456 +1039,354 @@ class ParsedOperation {
 ///   "errors": [...]
 /// }
 /// ```
-class ProblemDetails {
-  /// A URI reference that identifies the problem type.
-  /// Defaults to "about:blank" when absent.
-  /// Should be a stable, human-readable identifier for the problem type.
-  final String typeUri;
+class ProblemDetails  {
+                /// A URI reference that identifies the problem type.
+/// Defaults to "about:blank" when absent.
+/// Should be a stable, human-readable identifier for the problem type.
+final String typeUri;
+/// A short, human-readable summary of the problem type.
+/// Should not change from occurrence to occurrence of the problem.
+final String title;
+/// The HTTP status code generated by the origin server.
+/// This is advisory; the actual HTTP status code takes precedence.
+final PlatformInt64 status;
+/// A human-readable explanation specific to this occurrence of the problem.
+final String? detail;
+/// A URI reference that identifies the specific occurrence of the problem.
+/// It may or may not yield further information if dereferenced.
+final String? instance;
+/// Extension members - problem-type-specific data.
+/// For validation errors, this typically contains an "errors" array.
+final Map<String, String> extensions;
 
-  /// A short, human-readable summary of the problem type.
-  /// Should not change from occurrence to occurrence of the problem.
-  final String title;
+                const ProblemDetails({required this.typeUri ,required this.title ,required this.status ,this.detail ,this.instance ,required this.extensions ,});
 
-  /// The HTTP status code generated by the origin server.
-  /// This is advisory; the actual HTTP status code takes precedence.
-  final PlatformInt64 status;
+                
+                
 
-  /// A human-readable explanation specific to this occurrence of the problem.
-  final String? detail;
+                
+        @override
+        int get hashCode => typeUri.hashCode^title.hashCode^status.hashCode^detail.hashCode^instance.hashCode^extensions.hashCode;
+        
 
-  /// A URI reference that identifies the specific occurrence of the problem.
-  /// It may or may not yield further information if dereferenced.
-  final String? instance;
-
-  /// Extension members - problem-type-specific data.
-  /// For validation errors, this typically contains an "errors" array.
-  final Map<String, String> extensions;
-
-  const ProblemDetails({
-    required this.typeUri,
-    required this.title,
-    required this.status,
-    this.detail,
-    this.instance,
-    required this.extensions,
-  });
-
-  @override
-  int get hashCode =>
-      typeUri.hashCode ^
-      title.hashCode ^
-      status.hashCode ^
-      detail.hashCode ^
-      instance.hashCode ^
-      extensions.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ProblemDetails &&
-          runtimeType == other.runtimeType &&
-          typeUri == other.typeUri &&
-          title == other.title &&
-          status == other.status &&
-          detail == other.detail &&
-          instance == other.instance &&
-          extensions == other.extensions;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is ProblemDetails &&
+                runtimeType == other.runtimeType
+                && typeUri == other.typeUri&& title == other.title&& status == other.status&& detail == other.detail&& instance == other.instance&& extensions == other.extensions;
+        
+            }
 
 /// Configuration for schemas with Query and Mutation types
-class QueryMutationConfig {
-  /// Enable introspection queries
-  final bool introspectionEnabled;
+class QueryMutationConfig  {
+                /// Enable introspection queries
+final bool introspectionEnabled;
+/// Maximum query complexity (None = unlimited)
+final PlatformInt64? complexityLimit;
+/// Maximum query depth (None = unlimited)
+final PlatformInt64? depthLimit;
 
-  /// Maximum query complexity (None = unlimited)
-  final PlatformInt64? complexityLimit;
+                const QueryMutationConfig({required this.introspectionEnabled ,this.complexityLimit ,this.depthLimit ,});
 
-  /// Maximum query depth (None = unlimited)
-  final PlatformInt64? depthLimit;
+                
+                
 
-  const QueryMutationConfig({
-    required this.introspectionEnabled,
-    this.complexityLimit,
-    this.depthLimit,
-  });
+                
+        @override
+        int get hashCode => introspectionEnabled.hashCode^complexityLimit.hashCode^depthLimit.hashCode;
+        
 
-  @override
-  int get hashCode =>
-      introspectionEnabled.hashCode ^
-      complexityLimit.hashCode ^
-      depthLimit.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is QueryMutationConfig &&
-          runtimeType == other.runtimeType &&
-          introspectionEnabled == other.introspectionEnabled &&
-          complexityLimit == other.complexityLimit &&
-          depthLimit == other.depthLimit;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is QueryMutationConfig &&
+                runtimeType == other.runtimeType
+                && introspectionEnabled == other.introspectionEnabled&& complexityLimit == other.complexityLimit&& depthLimit == other.depthLimit;
+        
+            }
 
 /// Configuration for schemas with only Query type
-class QueryOnlyConfig {
-  /// Enable introspection queries
-  final bool introspectionEnabled;
+class QueryOnlyConfig  {
+                /// Enable introspection queries
+final bool introspectionEnabled;
+/// Maximum query complexity (None = unlimited)
+final PlatformInt64? complexityLimit;
+/// Maximum query depth (None = unlimited)
+final PlatformInt64? depthLimit;
 
-  /// Maximum query complexity (None = unlimited)
-  final PlatformInt64? complexityLimit;
+                const QueryOnlyConfig({required this.introspectionEnabled ,this.complexityLimit ,this.depthLimit ,});
 
-  /// Maximum query depth (None = unlimited)
-  final PlatformInt64? depthLimit;
+                
+                
 
-  const QueryOnlyConfig({
-    required this.introspectionEnabled,
-    this.complexityLimit,
-    this.depthLimit,
-  });
+                
+        @override
+        int get hashCode => introspectionEnabled.hashCode^complexityLimit.hashCode^depthLimit.hashCode;
+        
 
-  @override
-  int get hashCode =>
-      introspectionEnabled.hashCode ^
-      complexityLimit.hashCode ^
-      depthLimit.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is QueryOnlyConfig &&
-          runtimeType == other.runtimeType &&
-          introspectionEnabled == other.introspectionEnabled &&
-          complexityLimit == other.complexityLimit &&
-          depthLimit == other.depthLimit;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is QueryOnlyConfig &&
+                runtimeType == other.runtimeType
+                && introspectionEnabled == other.introspectionEnabled&& complexityLimit == other.complexityLimit&& depthLimit == other.depthLimit;
+        
+            }
 
 /// Rate limiting configuration shared across runtimes
-class RateLimitConfig {
-  /// Requests per second
-  final PlatformInt64 perSecond;
+class RateLimitConfig  {
+                /// Requests per second
+final PlatformInt64 perSecond;
+/// Burst allowance
+final PlatformInt64 burst;
+/// Use IP-based rate limiting
+final bool ipBased;
 
-  /// Burst allowance
-  final PlatformInt64 burst;
+                const RateLimitConfig({required this.perSecond ,required this.burst ,required this.ipBased ,});
 
-  /// Use IP-based rate limiting
-  final bool ipBased;
+                
+                
 
-  const RateLimitConfig({
-    required this.perSecond,
-    required this.burst,
-    required this.ipBased,
-  });
+                
+        @override
+        int get hashCode => perSecond.hashCode^burst.hashCode^ipBased.hashCode;
+        
 
-  @override
-  int get hashCode => perSecond.hashCode ^ burst.hashCode ^ ipBased.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is RateLimitConfig &&
-          runtimeType == other.runtimeType &&
-          perSecond == other.perSecond &&
-          burst == other.burst &&
-          ipBased == other.ipBased;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is RateLimitConfig &&
+                runtimeType == other.runtimeType
+                && perSecond == other.perSecond&& burst == other.burst&& ipBased == other.ipBased;
+        
+            }
 
 /// HTTP Response with custom status code, headers, and content
-class Response {
-  /// Response body content
-  final String? content;
+class Response  {
+                /// Response body content
+final String? content;
+/// HTTP status code (defaults to 200)
+final PlatformInt64 statusCode;
+/// Response headers
+final Map<String, String> headers;
 
-  /// HTTP status code (defaults to 200)
-  final PlatformInt64 statusCode;
+                const Response({this.content ,required this.statusCode ,required this.headers ,});
 
-  /// Response headers
-  final Map<String, String> headers;
+                
+                
 
-  const Response({
-    this.content,
-    required this.statusCode,
-    required this.headers,
-  });
+                
+        @override
+        int get hashCode => content.hashCode^statusCode.hashCode^headers.hashCode;
+        
 
-  @override
-  int get hashCode => content.hashCode ^ statusCode.hashCode ^ headers.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Response &&
-          runtimeType == other.runtimeType &&
-          content == other.content &&
-          statusCode == other.statusCode &&
-          headers == other.headers;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is Response &&
+                runtimeType == other.runtimeType
+                && content == other.content&& statusCode == other.statusCode&& headers == other.headers;
+        
+            }
 
 /// Snapshot of an Axum response used by higher-level language bindings.
-class ResponseSnapshot {
-  /// HTTP status code.
-  final PlatformInt64 status;
+class ResponseSnapshot  {
+                /// HTTP status code.
+final PlatformInt64 status;
+/// Response headers (lowercase keys for predictable lookups).
+final Map<String, String> headers;
+/// Response body bytes (decoded for supported encodings).
+final Uint8List body;
 
-  /// Response headers (lowercase keys for predictable lookups).
-  final Map<String, String> headers;
+                const ResponseSnapshot({required this.status ,required this.headers ,required this.body ,});
 
-  /// Response body bytes (decoded for supported encodings).
-  final Uint8List body;
+                
+                
 
-  const ResponseSnapshot({
-    required this.status,
-    required this.headers,
-    required this.body,
-  });
+                
+        @override
+        int get hashCode => status.hashCode^headers.hashCode^body.hashCode;
+        
 
-  @override
-  int get hashCode => status.hashCode ^ headers.hashCode ^ body.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ResponseSnapshot &&
-          runtimeType == other.runtimeType &&
-          status == other.status &&
-          headers == other.headers &&
-          body == other.body;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is ResponseSnapshot &&
+                runtimeType == other.runtimeType
+                && status == other.status&& headers == other.headers&& body == other.body;
+        
+            }
 
 /// Configuration for GraphQL schema building.
 ///
 /// Encapsulates all schema-level configuration options including
 /// introspection control, complexity limits, and depth limits.
-class SchemaConfig {
-  /// Enable introspection queries
-  final bool introspectionEnabled;
+class SchemaConfig  {
+                /// Enable introspection queries
+final bool introspectionEnabled;
+/// Maximum query complexity (None = unlimited)
+final PlatformInt64? complexityLimit;
+/// Maximum query depth (None = unlimited)
+final PlatformInt64? depthLimit;
 
-  /// Maximum query complexity (None = unlimited)
-  final PlatformInt64? complexityLimit;
+                const SchemaConfig({required this.introspectionEnabled ,this.complexityLimit ,this.depthLimit ,});
 
-  /// Maximum query depth (None = unlimited)
-  final PlatformInt64? depthLimit;
+                
+                
 
-  const SchemaConfig({
-    required this.introspectionEnabled,
-    this.complexityLimit,
-    this.depthLimit,
-  });
+                
+        @override
+        int get hashCode => introspectionEnabled.hashCode^complexityLimit.hashCode^depthLimit.hashCode;
+        
 
-  @override
-  int get hashCode =>
-      introspectionEnabled.hashCode ^
-      complexityLimit.hashCode ^
-      depthLimit.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is SchemaConfig &&
-          runtimeType == other.runtimeType &&
-          introspectionEnabled == other.introspectionEnabled &&
-          complexityLimit == other.complexityLimit &&
-          depthLimit == other.depthLimit;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is SchemaConfig &&
+                runtimeType == other.runtimeType
+                && introspectionEnabled == other.introspectionEnabled&& complexityLimit == other.complexityLimit&& depthLimit == other.depthLimit;
+        
+            }
 
 @freezed
-sealed class SchemaError with _$SchemaError {
-  const SchemaError._();
+                sealed class SchemaError with _$SchemaError  {
+                    const SchemaError._();
 
-  /// Generic schema building error
-  const factory SchemaError.buildingFailed({required String field0}) =
-      SchemaError_BuildingFailed;
+                     /// Generic schema building error
+const factory SchemaError.buildingFailed({   required String field0 , }) = SchemaError_BuildingFailed;
+ /// Configuration validation error
+const factory SchemaError.validationError({   required String field0 , }) = SchemaError_ValidationError;
+ /// Complexity limit exceeded
+const factory SchemaError.complexityLimitExceeded({   required PlatformInt64 limit ,  required PlatformInt64 actual , }) = SchemaError_ComplexityLimitExceeded;
+ /// Depth limit exceeded
+const factory SchemaError.depthLimitExceeded({   required PlatformInt64 limit ,  required PlatformInt64 actual , }) = SchemaError_DepthLimitExceeded;
 
-  /// Configuration validation error
-  const factory SchemaError.validationError({required String field0}) =
-      SchemaError_ValidationError;
+                    
 
-  /// Complexity limit exceeded
-  const factory SchemaError.complexityLimitExceeded({
-    required PlatformInt64 limit,
-    required PlatformInt64 actual,
-  }) = SchemaError_ComplexityLimitExceeded;
-
-  /// Depth limit exceeded
-  const factory SchemaError.depthLimitExceeded({
-    required PlatformInt64 limit,
-    required PlatformInt64 actual,
-  }) = SchemaError_DepthLimitExceeded;
-}
+                    
+                }
 
 @freezed
-sealed class SecuritySchemeInfo with _$SecuritySchemeInfo {
-  const SecuritySchemeInfo._();
+                sealed class SecuritySchemeInfo with _$SecuritySchemeInfo  {
+                    const SecuritySchemeInfo._();
 
-  const factory SecuritySchemeInfo.http({
-    required String scheme,
-    required String bearerFormat,
-  }) = SecuritySchemeInfo_Http;
-  const factory SecuritySchemeInfo.apiKey({
-    required String location,
-    required String name,
-  }) = SecuritySchemeInfo_ApiKey;
-}
+                     const factory SecuritySchemeInfo.http({   required String scheme ,  required String bearerFormat , }) = SecuritySchemeInfo_Http;
+ const factory SecuritySchemeInfo.apiKey({   required String location ,  required String name , }) = SecuritySchemeInfo_ApiKey;
+
+                    
+
+                    
+                }
 
 /// Server configuration
-class ServerConfig {
-  /// Host to bind to
-  final String host;
+class ServerConfig  {
+                /// Host to bind to
+final String host;
+/// Port to bind to
+final PlatformInt64 port;
+/// Number of Tokio runtime worker threads used by binding-managed server runtimes
+final PlatformInt64 workers;
+/// Enable request ID generation and propagation
+final bool enableRequestId;
+/// Maximum request body size in bytes (None = unlimited, not recommended)
+final PlatformInt64? maxBodySize;
+/// Request timeout in seconds (None = no timeout)
+final PlatformInt64? requestTimeout;
+/// Enable compression middleware
+final CompressionConfig? compression;
+/// Enable rate limiting
+final RateLimitConfig? rateLimit;
+/// JWT authentication configuration
+final JwtConfig? jwtAuth;
+/// API Key authentication configuration
+final ApiKeyConfig? apiKeyAuth;
+/// Static file serving configuration
+final List<StaticFilesConfig> staticFiles;
+/// Enable graceful shutdown on SIGTERM/SIGINT
+final bool gracefulShutdown;
+/// Graceful shutdown timeout (seconds)
+final PlatformInt64 shutdownTimeout;
+/// AsyncAPI HTTP endpoint configuration
+final AsyncApiConfig? asyncapi;
+/// OpenAPI documentation configuration
+final OpenApiConfig? openapi;
+/// JSON-RPC configuration
+final JsonRpcConfig? jsonrpc;
+/// gRPC configuration
+final GrpcConfig? grpc;
+/// Background task executor configuration
+final BackgroundTaskConfig backgroundTasks;
+/// Enable per-request HTTP tracing (tower-http `TraceLayer`)
+final bool enableHttpTrace;
 
-  /// Port to bind to
-  final PlatformInt64 port;
+                const ServerConfig({required this.host ,required this.port ,required this.workers ,required this.enableRequestId ,this.maxBodySize ,this.requestTimeout ,this.compression ,this.rateLimit ,this.jwtAuth ,this.apiKeyAuth ,required this.staticFiles ,required this.gracefulShutdown ,required this.shutdownTimeout ,this.asyncapi ,this.openapi ,this.jsonrpc ,this.grpc ,required this.backgroundTasks ,required this.enableHttpTrace ,});
 
-  /// Number of Tokio runtime worker threads used by binding-managed server runtimes
-  final PlatformInt64 workers;
+                
+                
 
-  /// Enable request ID generation and propagation
-  final bool enableRequestId;
+                
+        @override
+        int get hashCode => host.hashCode^port.hashCode^workers.hashCode^enableRequestId.hashCode^maxBodySize.hashCode^requestTimeout.hashCode^compression.hashCode^rateLimit.hashCode^jwtAuth.hashCode^apiKeyAuth.hashCode^staticFiles.hashCode^gracefulShutdown.hashCode^shutdownTimeout.hashCode^asyncapi.hashCode^openapi.hashCode^jsonrpc.hashCode^grpc.hashCode^backgroundTasks.hashCode^enableHttpTrace.hashCode;
+        
 
-  /// Maximum request body size in bytes (None = unlimited, not recommended)
-  final PlatformInt64? maxBodySize;
-
-  /// Request timeout in seconds (None = no timeout)
-  final PlatformInt64? requestTimeout;
-
-  /// Enable compression middleware
-  final CompressionConfig? compression;
-
-  /// Enable rate limiting
-  final RateLimitConfig? rateLimit;
-
-  /// JWT authentication configuration
-  final JwtConfig? jwtAuth;
-
-  /// API Key authentication configuration
-  final ApiKeyConfig? apiKeyAuth;
-
-  /// Static file serving configuration
-  final List<StaticFilesConfig> staticFiles;
-
-  /// Enable graceful shutdown on SIGTERM/SIGINT
-  final bool gracefulShutdown;
-
-  /// Graceful shutdown timeout (seconds)
-  final PlatformInt64 shutdownTimeout;
-
-  /// AsyncAPI HTTP endpoint configuration
-  final AsyncApiConfig? asyncapi;
-
-  /// OpenAPI documentation configuration
-  final OpenApiConfig? openapi;
-
-  /// JSON-RPC configuration
-  final JsonRpcConfig? jsonrpc;
-
-  /// gRPC configuration
-  final GrpcConfig? grpc;
-
-  /// Background task executor configuration
-  final BackgroundTaskConfig backgroundTasks;
-
-  /// Enable per-request HTTP tracing (tower-http `TraceLayer`)
-  final bool enableHttpTrace;
-
-  const ServerConfig({
-    required this.host,
-    required this.port,
-    required this.workers,
-    required this.enableRequestId,
-    this.maxBodySize,
-    this.requestTimeout,
-    this.compression,
-    this.rateLimit,
-    this.jwtAuth,
-    this.apiKeyAuth,
-    required this.staticFiles,
-    required this.gracefulShutdown,
-    required this.shutdownTimeout,
-    this.asyncapi,
-    this.openapi,
-    this.jsonrpc,
-    this.grpc,
-    required this.backgroundTasks,
-    required this.enableHttpTrace,
-  });
-
-  @override
-  int get hashCode =>
-      host.hashCode ^
-      port.hashCode ^
-      workers.hashCode ^
-      enableRequestId.hashCode ^
-      maxBodySize.hashCode ^
-      requestTimeout.hashCode ^
-      compression.hashCode ^
-      rateLimit.hashCode ^
-      jwtAuth.hashCode ^
-      apiKeyAuth.hashCode ^
-      staticFiles.hashCode ^
-      gracefulShutdown.hashCode ^
-      shutdownTimeout.hashCode ^
-      asyncapi.hashCode ^
-      openapi.hashCode ^
-      jsonrpc.hashCode ^
-      grpc.hashCode ^
-      backgroundTasks.hashCode ^
-      enableHttpTrace.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ServerConfig &&
-          runtimeType == other.runtimeType &&
-          host == other.host &&
-          port == other.port &&
-          workers == other.workers &&
-          enableRequestId == other.enableRequestId &&
-          maxBodySize == other.maxBodySize &&
-          requestTimeout == other.requestTimeout &&
-          compression == other.compression &&
-          rateLimit == other.rateLimit &&
-          jwtAuth == other.jwtAuth &&
-          apiKeyAuth == other.apiKeyAuth &&
-          staticFiles == other.staticFiles &&
-          gracefulShutdown == other.gracefulShutdown &&
-          shutdownTimeout == other.shutdownTimeout &&
-          asyncapi == other.asyncapi &&
-          openapi == other.openapi &&
-          jsonrpc == other.jsonrpc &&
-          grpc == other.grpc &&
-          backgroundTasks == other.backgroundTasks &&
-          enableHttpTrace == other.enableHttpTrace;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is ServerConfig &&
+                runtimeType == other.runtimeType
+                && host == other.host&& port == other.port&& workers == other.workers&& enableRequestId == other.enableRequestId&& maxBodySize == other.maxBodySize&& requestTimeout == other.requestTimeout&& compression == other.compression&& rateLimit == other.rateLimit&& jwtAuth == other.jwtAuth&& apiKeyAuth == other.apiKeyAuth&& staticFiles == other.staticFiles&& gracefulShutdown == other.gracefulShutdown&& shutdownTimeout == other.shutdownTimeout&& asyncapi == other.asyncapi&& openapi == other.openapi&& jsonrpc == other.jsonrpc&& grpc == other.grpc&& backgroundTasks == other.backgroundTasks&& enableHttpTrace == other.enableHttpTrace;
+        
+            }
 
 /// Server information
-class ServerInfo {
-  /// Base URL of the server (e.g. `"https://api.example.com/v1"`).
-  final String url;
+class ServerInfo  {
+                /// Base URL of the server (e.g. `"https://api.example.com/v1"`).
+final String url;
+/// Optional human-readable description of the server environment.
+final String? description;
 
-  /// Optional human-readable description of the server environment.
-  final String? description;
+                const ServerInfo({required this.url ,this.description ,});
 
-  const ServerInfo({required this.url, this.description});
+                
+                
 
-  @override
-  int get hashCode => url.hashCode ^ description.hashCode;
+                
+        @override
+        int get hashCode => url.hashCode^description.hashCode;
+        
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ServerInfo &&
-          runtimeType == other.runtimeType &&
-          url == other.url &&
-          description == other.description;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is ServerInfo &&
+                runtimeType == other.runtimeType
+                && url == other.url&& description == other.description;
+        
+            }
 
 @freezed
-sealed class SnapshotError with _$SnapshotError {
-  const SnapshotError._();
+                sealed class SnapshotError with _$SnapshotError  {
+                    const SnapshotError._();
 
-  /// Response header could not be decoded to UTF-8.
-  const factory SnapshotError.invalidHeader({required String field0}) =
-      SnapshotError_InvalidHeader;
+                     /// Response header could not be decoded to UTF-8.
+const factory SnapshotError.invalidHeader({   required String field0 , }) = SnapshotError_InvalidHeader;
+ /// Body decompression failed.
+const factory SnapshotError.decompression({   required String field0 , }) = SnapshotError_Decompression;
 
-  /// Body decompression failed.
-  const factory SnapshotError.decompression({required String field0}) =
-      SnapshotError_Decompression;
-}
+                    
+
+                    
+                }
 
 /// An individual SSE event
 ///
@@ -1670,74 +1409,66 @@ sealed class SnapshotError with _$SnapshotError {
 /// id: event-123
 /// retry: 3000
 /// ```
-class SseEvent {
-  /// Event type (optional)
-  final String? eventType;
+class SseEvent  {
+                /// Event type (optional)
+final String? eventType;
+/// Event data (JSON value)
+final String data;
+/// Event ID (optional, for client-side reconnection)
+final String? id;
+/// Retry timeout in milliseconds (optional)
+final PlatformInt64? retry;
 
-  /// Event data (JSON value)
-  final String data;
+                const SseEvent({this.eventType ,required this.data ,this.id ,this.retry ,});
 
-  /// Event ID (optional, for client-side reconnection)
-  final String? id;
+                
+                
 
-  /// Retry timeout in milliseconds (optional)
-  final PlatformInt64? retry;
+                
+        @override
+        int get hashCode => eventType.hashCode^data.hashCode^id.hashCode^retry.hashCode;
+        
 
-  const SseEvent({this.eventType, required this.data, this.id, this.retry});
-
-  @override
-  int get hashCode =>
-      eventType.hashCode ^ data.hashCode ^ id.hashCode ^ retry.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is SseEvent &&
-          runtimeType == other.runtimeType &&
-          eventType == other.eventType &&
-          data == other.data &&
-          id == other.id &&
-          retry == other.retry;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is SseEvent &&
+                runtimeType == other.runtimeType
+                && eventType == other.eventType&& data == other.data&& id == other.id&& retry == other.retry;
+        
+            }
 
 /// Static file serving configuration
-class StaticFilesConfig {
-  /// Directory path to serve
-  final String directory;
+class StaticFilesConfig  {
+                /// Directory path to serve
+final String directory;
+/// URL path prefix (e.g., "/static")
+final String routePrefix;
+/// Fallback to index.html for directories
+final bool indexFile;
+/// Cache-Control header value
+final String? cacheControl;
 
-  /// URL path prefix (e.g., "/static")
-  final String routePrefix;
+                const StaticFilesConfig({required this.directory ,required this.routePrefix ,required this.indexFile ,this.cacheControl ,});
 
-  /// Fallback to index.html for directories
-  final bool indexFile;
+                
+                
 
-  /// Cache-Control header value
-  final String? cacheControl;
+                
+        @override
+        int get hashCode => directory.hashCode^routePrefix.hashCode^indexFile.hashCode^cacheControl.hashCode;
+        
 
-  const StaticFilesConfig({
-    required this.directory,
-    required this.routePrefix,
-    required this.indexFile,
-    this.cacheControl,
-  });
-
-  @override
-  int get hashCode =>
-      directory.hashCode ^
-      routePrefix.hashCode ^
-      indexFile.hashCode ^
-      cacheControl.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is StaticFilesConfig &&
-          runtimeType == other.runtimeType &&
-          directory == other.directory &&
-          routePrefix == other.routePrefix &&
-          indexFile == other.indexFile &&
-          cacheControl == other.cacheControl;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is StaticFilesConfig &&
+                runtimeType == other.runtimeType
+                && directory == other.directory&& routePrefix == other.routePrefix&& indexFile == other.indexFile&& cacheControl == other.cacheControl;
+        
+            }
 
 /// Represents an uploaded file from multipart/form-data requests.
 ///
@@ -1761,79 +1492,60 @@ class StaticFilesConfig {
 /// // let content = body.file.as_bytes();
 /// // let filename = &body.file.filename;
 /// ```
-class UploadFile {
-  /// Original filename from the client
-  final String filename;
+class UploadFile  {
+                /// Original filename from the client
+final String filename;
+/// MIME type of the uploaded file
+final String? contentType;
+/// Size of the file in bytes
+final PlatformInt64? size;
+/// File content (may be base64 encoded)
+final Uint8List content;
+/// Content encoding type
+final String? contentEncoding;
 
-  /// MIME type of the uploaded file
-  final String? contentType;
+                const UploadFile({required this.filename ,this.contentType ,this.size ,required this.content ,this.contentEncoding ,});
 
-  /// Size of the file in bytes
-  final PlatformInt64? size;
+                
+                
 
-  /// File content (may be base64 encoded)
-  final Uint8List content;
+                
+        @override
+        int get hashCode => filename.hashCode^contentType.hashCode^size.hashCode^content.hashCode^contentEncoding.hashCode;
+        
 
-  /// Content encoding type
-  final String? contentEncoding;
-
-  const UploadFile({
-    required this.filename,
-    this.contentType,
-    this.size,
-    required this.content,
-    this.contentEncoding,
-  });
-
-  @override
-  int get hashCode =>
-      filename.hashCode ^
-      contentType.hashCode ^
-      size.hashCode ^
-      content.hashCode ^
-      contentEncoding.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is UploadFile &&
-          runtimeType == other.runtimeType &&
-          filename == other.filename &&
-          contentType == other.contentType &&
-          size == other.size &&
-          content == other.content &&
-          contentEncoding == other.contentEncoding;
-}
+                
+        @override
+        bool operator ==(Object other) =>
+            identical(this, other) ||
+            other is UploadFile &&
+                runtimeType == other.runtimeType
+                && filename == other.filename&& contentType == other.contentType&& size == other.size&& content == other.content&& contentEncoding == other.contentEncoding;
+        
+            }
 
 @freezed
-sealed class WebSocketMessage with _$WebSocketMessage {
-  const WebSocketMessage._();
+                sealed class WebSocketMessage with _$WebSocketMessage  {
+                    const WebSocketMessage._();
 
-  /// A text message.
-  const factory WebSocketMessage.text({required String field0}) =
-      WebSocketMessage_Text;
+                     /// A text message.
+const factory WebSocketMessage.text({   required String field0 , }) = WebSocketMessage_Text;
+ /// A binary message.
+const factory WebSocketMessage.binary({   required Uint8List field0 , }) = WebSocketMessage_Binary;
+ /// A close message with a numeric close code (RFC 6455) and optional reason text.
+///
+/// Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received,
+/// 1006 Abnormal Closure.
+const factory WebSocketMessage.close({ /// RFC 6455 close code.
+  required PlatformInt64 code ,/// Optional human-readable reason string.
+  required String reason , }) = WebSocketMessage_Close;
+ /// A ping message.
+const factory WebSocketMessage.ping({   required Uint8List field0 , }) = WebSocketMessage_Ping;
+ /// A pong message.
+const factory WebSocketMessage.pong({   required Uint8List field0 , }) = WebSocketMessage_Pong;
 
-  /// A binary message.
-  const factory WebSocketMessage.binary({required Uint8List field0}) =
-      WebSocketMessage_Binary;
+                    
 
-  /// A close message with a numeric close code (RFC 6455) and optional reason text.
-  ///
-  /// Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received,
-  /// 1006 Abnormal Closure.
-  const factory WebSocketMessage.close({
-    /// RFC 6455 close code.
-    required PlatformInt64 code,
-
-    /// Optional human-readable reason string.
-    required String reason,
-  }) = WebSocketMessage_Close;
-
-  /// A ping message.
-  const factory WebSocketMessage.ping({required Uint8List field0}) =
-      WebSocketMessage_Ping;
-
-  /// A pong message.
-  const factory WebSocketMessage.pong({required Uint8List field0}) =
-      WebSocketMessage_Pong;
-}
+                    
+                }
+            
