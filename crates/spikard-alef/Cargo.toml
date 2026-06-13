@@ -1,0 +1,19 @@
+[package]
+name = "spikard-alef"
+version = "0.15.6-rc.23"
+edition = "2024"
+authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
+license = "MIT"
+repository = "https://github.com/Goldziher/spikard"
+description = "Alef CLI for spikard — registers the HTTP extension and delegates to alef"
+
+[[bin]]
+name = "spikard-alef"
+path = "src/main.rs"
+
+[dependencies]
+alef = { path = "../../../kreuzberg-dev/alef" }
+spikard-alef-ext = { path = "../spikard-alef-ext" }
+
+[lints]
+workspace = true
