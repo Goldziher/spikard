@@ -8,6 +8,8 @@ import { appIntoRouter, appRun } from "./index";
  */
 export class App {
   private readonly _app: JsApp;
+  private _config: ServerConfig | undefined;
+
   /**
    * Create a new App instance.
    */
@@ -23,7 +25,9 @@ export class App {
   /**
    * Set the server configuration.
    */
-  config(_config: ServerConfig): this {
+  config(config: ServerConfig): this {
+    this._config = config;
+
     return this;
   }
   /**

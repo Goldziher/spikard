@@ -8,6 +8,8 @@ const { appIntoRouter, appRun } = require("./index");
  */
 class App {
   readonly _app;
+  _config;
+
   /**
    * Create a new App instance.
    */
@@ -23,7 +25,9 @@ class App {
   /**
    * Set the server configuration.
    */
-  config(_config) {
+  config(config) {
+    this._config = config;
+
     return this;
   }
   /**
