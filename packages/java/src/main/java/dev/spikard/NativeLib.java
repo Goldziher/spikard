@@ -363,29 +363,25 @@ final class NativeLib {
 
   static final MethodHandle SPIKARD_GRAPH_QL_ROUTE_CONFIG_ENABLE_PLAYGROUND = LINKER.downcallHandle(
       LIB.find("spikard_graph_ql_route_config_enable_playground")
-          .or(
-              () -> LIB.find(
-                  "_spikard_graph_ql_route_config_enable_playground")) // Try underscore-prefixed
-                                                                       // variant for macOS
+          .or(() -> LIB.find(
+              "_spikard_graph_ql_route_config_enable_playground")) // Try underscore-prefixed
+          // variant for macOS
           .or(() -> LINKER
               .defaultLookup()
               .find(
                   "spikard_graph_ql_route_config_enable_playground")) // Fallback to default lookup
-          .or(
-              () -> LINKER
-                  .defaultLookup()
-                  .find(
-                      "_spikard_graph_ql_route_config_enable_playground")) // Fallback underscore
-                                                                           // variant
+          .or(() -> LINKER
+              .defaultLookup()
+              .find("_spikard_graph_ql_route_config_enable_playground")) // Fallback underscore
+          // variant
           .orElseThrow(),
       FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
   static final MethodHandle SPIKARD_GRAPH_QL_ROUTE_CONFIG_DESCRIPTION = LINKER.downcallHandle(
       LIB.find("spikard_graph_ql_route_config_description")
-          .or(
-              () -> LIB.find(
-                  "_spikard_graph_ql_route_config_description")) // Try underscore-prefixed variant
-                                                                 // for macOS
+          .or(() -> LIB.find(
+              "_spikard_graph_ql_route_config_description")) // Try underscore-prefixed variant
+          // for macOS
           .or(() -> LINKER
               .defaultLookup()
               .find("spikard_graph_ql_route_config_description")) // Fallback to default lookup
@@ -397,10 +393,9 @@ final class NativeLib {
 
   static final MethodHandle SPIKARD_GRAPH_QL_ROUTE_CONFIG_GET_PATH = LINKER.downcallHandle(
       LIB.find("spikard_graph_ql_route_config_get_path")
-          .or(
-              () -> LIB.find(
-                  "_spikard_graph_ql_route_config_get_path")) // Try underscore-prefixed variant for
-                                                              // macOS
+          .or(() -> LIB.find(
+              "_spikard_graph_ql_route_config_get_path")) // Try underscore-prefixed variant for
+          // macOS
           .or(() -> LINKER
               .defaultLookup()
               .find("spikard_graph_ql_route_config_get_path")) // Fallback to default lookup
@@ -412,10 +407,9 @@ final class NativeLib {
 
   static final MethodHandle SPIKARD_GRAPH_QL_ROUTE_CONFIG_GET_METHOD = LINKER.downcallHandle(
       LIB.find("spikard_graph_ql_route_config_get_method")
-          .or(
-              () -> LIB.find(
-                  "_spikard_graph_ql_route_config_get_method")) // Try underscore-prefixed variant
-                                                                // for macOS
+          .or(() -> LIB.find(
+              "_spikard_graph_ql_route_config_get_method")) // Try underscore-prefixed variant
+          // for macOS
           .or(() -> LINKER
               .defaultLookup()
               .find("spikard_graph_ql_route_config_get_method")) // Fallback to default lookup
@@ -428,32 +422,25 @@ final class NativeLib {
   static final MethodHandle SPIKARD_GRAPH_QL_ROUTE_CONFIG_IS_PLAYGROUND_ENABLED =
       LINKER.downcallHandle(
           LIB.find("spikard_graph_ql_route_config_is_playground_enabled")
-              .or(
-                  () -> LIB.find(
-                      "_spikard_graph_ql_route_config_is_playground_enabled")) // Try
-                                                                               // underscore-prefixed variant for macOS
-              .or(
-                  () -> LINKER
-                      .defaultLookup()
-                      .find(
-                          "spikard_graph_ql_route_config_is_playground_enabled")) // Fallback to
-                                                                                  // default lookup
-              .or(
-                  () -> LINKER
-                      .defaultLookup()
-                      .find(
-                          "_spikard_graph_ql_route_config_is_playground_enabled")) // Fallback
-                                                                                   // underscore
-                                                                                   // variant
+              .or(() -> LIB.find("_spikard_graph_ql_route_config_is_playground_enabled")) // Try
+              // underscore-prefixed variant for macOS
+              .or(() -> LINKER
+                  .defaultLookup()
+                  .find("spikard_graph_ql_route_config_is_playground_enabled")) // Fallback to
+              // default lookup
+              .or(() -> LINKER
+                  .defaultLookup()
+                  .find("_spikard_graph_ql_route_config_is_playground_enabled")) // Fallback
+              // underscore
+              // variant
               .orElseThrow(),
           FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS));
 
   static final MethodHandle SPIKARD_GRAPH_QL_ROUTE_CONFIG_GET_DESCRIPTION = LINKER.downcallHandle(
       LIB.find("spikard_graph_ql_route_config_get_description")
-          .or(
-              () -> LIB.find(
-                  "_spikard_graph_ql_route_config_get_description")) // Try underscore-prefixed
-                                                                     // variant for macOS
+          .or(() ->
+              LIB.find("_spikard_graph_ql_route_config_get_description")) // Try underscore-prefixed
+          // variant for macOS
           .or(() -> LINKER
               .defaultLookup()
               .find("spikard_graph_ql_route_config_get_description")) // Fallback to default lookup
@@ -492,10 +479,9 @@ final class NativeLib {
 
   static final MethodHandle SPIKARD_ROUTE_BUILDER_REQUEST_SCHEMA_JSON = LINKER.downcallHandle(
       LIB.find("spikard_route_builder_request_schema_json")
-          .or(
-              () -> LIB.find(
-                  "_spikard_route_builder_request_schema_json")) // Try underscore-prefixed variant
-                                                                 // for macOS
+          .or(() -> LIB.find(
+              "_spikard_route_builder_request_schema_json")) // Try underscore-prefixed variant
+          // for macOS
           .or(() -> LINKER
               .defaultLookup()
               .find("spikard_route_builder_request_schema_json")) // Fallback to default lookup
@@ -507,10 +493,9 @@ final class NativeLib {
 
   static final MethodHandle SPIKARD_ROUTE_BUILDER_RESPONSE_SCHEMA_JSON = LINKER.downcallHandle(
       LIB.find("spikard_route_builder_response_schema_json")
-          .or(
-              () -> LIB.find(
-                  "_spikard_route_builder_response_schema_json")) // Try underscore-prefixed variant
-                                                                  // for macOS
+          .or(() -> LIB.find(
+              "_spikard_route_builder_response_schema_json")) // Try underscore-prefixed variant
+          // for macOS
           .or(() -> LINKER
               .defaultLookup()
               .find("spikard_route_builder_response_schema_json")) // Fallback to default lookup
@@ -522,10 +507,9 @@ final class NativeLib {
 
   static final MethodHandle SPIKARD_ROUTE_BUILDER_PARAMS_SCHEMA_JSON = LINKER.downcallHandle(
       LIB.find("spikard_route_builder_params_schema_json")
-          .or(
-              () -> LIB.find(
-                  "_spikard_route_builder_params_schema_json")) // Try underscore-prefixed variant
-                                                                // for macOS
+          .or(() -> LIB.find(
+              "_spikard_route_builder_params_schema_json")) // Try underscore-prefixed variant
+          // for macOS
           .or(() -> LINKER
               .defaultLookup()
               .find("spikard_route_builder_params_schema_json")) // Fallback to default lookup
@@ -537,10 +521,9 @@ final class NativeLib {
 
   static final MethodHandle SPIKARD_ROUTE_BUILDER_FILE_PARAMS_JSON = LINKER.downcallHandle(
       LIB.find("spikard_route_builder_file_params_json")
-          .or(
-              () -> LIB.find(
-                  "_spikard_route_builder_file_params_json")) // Try underscore-prefixed variant for
-                                                              // macOS
+          .or(() -> LIB.find(
+              "_spikard_route_builder_file_params_json")) // Try underscore-prefixed variant for
+          // macOS
           .or(() -> LINKER
               .defaultLookup()
               .find("spikard_route_builder_file_params_json")) // Fallback to default lookup
@@ -591,10 +574,9 @@ final class NativeLib {
 
   static final MethodHandle SPIKARD_ROUTE_BUILDER_HANDLER_DEPENDENCIES = LINKER.downcallHandle(
       LIB.find("spikard_route_builder_handler_dependencies")
-          .or(
-              () -> LIB.find(
-                  "_spikard_route_builder_handler_dependencies")) // Try underscore-prefixed variant
-                                                                  // for macOS
+          .or(() -> LIB.find(
+              "_spikard_route_builder_handler_dependencies")) // Try underscore-prefixed variant
+          // for macOS
           .or(() -> LINKER
               .defaultLookup()
               .find("spikard_route_builder_handler_dependencies")) // Fallback to default lookup
