@@ -241,6 +241,7 @@ jobs:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
         with:
+          toolchain: "1.95"
           cache-key-prefix: publish-python-${{ matrix.os }}
       - uses: kreuzberg-dev/actions/build-python-wheels@v1
         with:
@@ -263,6 +264,8 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
       - uses: actions/setup-python@v6
         with:
           python-version: "3.14"
@@ -289,6 +292,8 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
       - uses: kreuzberg-dev/actions/setup-node-workspace@v1
         with:
           node-version: "24"
@@ -312,6 +317,8 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
       - uses: kreuzberg-dev/actions/setup-node-workspace@v1
         with:
           node-version: "24"
@@ -341,6 +348,8 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.4"
@@ -379,6 +388,8 @@ jobs:
         with:
           php-version: "8.4"
       - uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
       - uses: kreuzberg-dev/actions/build-php-extension@v1
         with:
           crate-name: spikard-php
@@ -397,6 +408,8 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
       - id: cli
         uses: kreuzberg-dev/actions/build-rust-cli@v1
         with:
@@ -421,6 +434,8 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
       - uses: kreuzberg-dev/actions/build-rust-ffi@v1
         with:
           crate-name: spikard-ffi
@@ -522,6 +537,7 @@ jobs:
           otp-version: "27"
       - uses: kreuzberg-dev/actions/setup-rust@v1
         with:
+          toolchain: "1.95"
           target: ${{ matrix.target }}
       - uses: kreuzberg-dev/actions/build-elixir-natives@v1
         env:
@@ -551,6 +567,8 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -613,6 +631,8 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
       - uses: kreuzberg-dev/actions/publish-crates@v1
         with:
           crates: "spikard-core spikard-http spikard-graphql spikard spikard-codegen spikard-cli spikard-ffi"
@@ -731,6 +751,8 @@ jobs:
           elixir-version: "1.18"
           otp-version: "27"
       - uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
       # Generate the RustlerPrecompiled checksum file (checksum-Elixir.Spikard.Native.exs)
       # by downloading the per-platform NIF tarballs that upload-release-assets attached
       # to the GitHub Release. mix.exs lists `checksum-*.exs` in its files: glob, so this

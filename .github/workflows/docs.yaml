@@ -51,6 +51,7 @@ jobs:
       - name: Setup Rust
         uses: kreuzberg-dev/actions/setup-rust@v1
         with:
+          toolchain: "1.95"
           cache-key-prefix: docs
 
       - name: Install Alef
