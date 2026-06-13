@@ -28,12 +28,6 @@ Style/StringLiteralsInInterpolation:
 Style/Documentation:
   Enabled: false
 
-# Generated service.rb defines Spikard::App alongside the Spikard::Errors
-# exception module per the alef magnus backend emission pattern. Splitting
-# them into separate files belongs upstream in the generator.
-Style/OneClassPerFile:
-  Enabled: false
-
 Layout/LineLength:
   Max: 120
   AllowedPatterns:
