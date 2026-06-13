@@ -95,6 +95,56 @@ Create a new application with the default server configuration.
 public static function new(): App
 ```
 
+#### onRequest()
+
+Register an `on_request` lifecycle hook (runs before validation and handler dispatch).
+
+**Signature:**
+
+```php
+public function onRequest(string $hook): App
+```
+
+#### preValidation()
+
+Register a `pre_validation` lifecycle hook (runs after `on_request`, before validation).
+
+**Signature:**
+
+```php
+public function preValidation(string $hook): App
+```
+
+#### preHandler()
+
+Register a `pre_handler` lifecycle hook (runs after validation, before the handler).
+
+**Signature:**
+
+```php
+public function preHandler(string $hook): App
+```
+
+#### onResponse()
+
+Register an `on_response` lifecycle hook (runs after a successful handler response).
+
+**Signature:**
+
+```php
+public function onResponse(string $hook): App
+```
+
+#### onError()
+
+Register an `on_error` lifecycle hook (runs when the handler returns an error).
+
+**Signature:**
+
+```php
+public function onError(string $hook): App
+```
+
 #### mergeAxumRouter()
 
 Attach an existing Axum router to this application, returning ownership.

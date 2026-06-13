@@ -95,6 +95,56 @@ Create a new application with the default server configuration.
 SpikardApp spikard_new();
 ```
 
+#### spikard_on_request()
+
+Register an `on_request` lifecycle hook (runs before validation and handler dispatch).
+
+**Signature:**
+
+```c
+SpikardApp spikard_on_request(const char* hook);
+```
+
+#### spikard_pre_validation()
+
+Register a `pre_validation` lifecycle hook (runs after `on_request`, before validation).
+
+**Signature:**
+
+```c
+SpikardApp spikard_pre_validation(const char* hook);
+```
+
+#### spikard_pre_handler()
+
+Register a `pre_handler` lifecycle hook (runs after validation, before the handler).
+
+**Signature:**
+
+```c
+SpikardApp spikard_pre_handler(const char* hook);
+```
+
+#### spikard_on_response()
+
+Register an `on_response` lifecycle hook (runs after a successful handler response).
+
+**Signature:**
+
+```c
+SpikardApp spikard_on_response(const char* hook);
+```
+
+#### spikard_on_error()
+
+Register an `on_error` lifecycle hook (runs when the handler returns an error).
+
+**Signature:**
+
+```c
+SpikardApp spikard_on_error(const char* hook);
+```
+
 #### spikard_merge_axum_router()
 
 Attach an existing Axum router to this application, returning ownership.

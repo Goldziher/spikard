@@ -654,9 +654,3 @@ pub extern "C" fn spikard_app_ep_into_router(owner: *mut AppOpaque) -> i32 {
         Err(_) => 1,
     }
 }
-
-// ─── Lifecycle hook and TestClient FFI ───────────────────────────────────────
-// Code is included from separate files to respect the per-file line-count ceiling.
-// The included files are NOT separate Rust modules; include! inlines them verbatim.
-include!("lifecycle_ffi.rs");
-include!("test_client_ffi.rs");

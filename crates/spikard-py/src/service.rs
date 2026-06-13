@@ -107,7 +107,7 @@ pub fn app_run(_py: Python<'_>, registrations: &Bound<'_, PyList>) -> PyResult<(
     let mut owner = spikard::App::new();
 
     for entry in registrations.iter() {
-        let tuple: &Bound<'_, PyTuple> = entry.downcast()?;
+        let tuple: &Bound<'_, PyTuple> = entry.cast()?;
         let method_name: String = tuple.get_item(0)?.extract()?;
         let callable = tuple.get_item(2)?;
 
@@ -116,7 +116,7 @@ pub fn app_run(_py: Python<'_>, registrations: &Bound<'_, PyList>) -> PyResult<(
                 let bridge = PyHandlerBridge::new(_py, &callable)?;
                 let handler: Arc<dyn spikard::Handler> = Arc::new(bridge);
                 let meta_item = tuple.get_item(1)?;
-                let meta: &Bound<'_, PyTuple> = meta_item.downcast()?;
+                let meta: &Bound<'_, PyTuple> = meta_item.cast()?;
                 let builder_binding: crate::RouteBuilder = meta.get_item(0)?.extract()?;
                 let builder: spikard::RouteBuilder = (*builder_binding.inner).clone();
                 owner
@@ -144,7 +144,7 @@ pub fn app_into_router(_py: Python<'_>, registrations: &Bound<'_, PyList>) -> Py
     let mut owner = spikard::App::new();
 
     for entry in registrations.iter() {
-        let tuple: &Bound<'_, PyTuple> = entry.downcast()?;
+        let tuple: &Bound<'_, PyTuple> = entry.cast()?;
         let method_name: String = tuple.get_item(0)?.extract()?;
         let callable = tuple.get_item(2)?;
 
@@ -153,7 +153,7 @@ pub fn app_into_router(_py: Python<'_>, registrations: &Bound<'_, PyList>) -> Py
                 let bridge = PyHandlerBridge::new(_py, &callable)?;
                 let handler: Arc<dyn spikard::Handler> = Arc::new(bridge);
                 let meta_item = tuple.get_item(1)?;
-                let meta: &Bound<'_, PyTuple> = meta_item.downcast()?;
+                let meta: &Bound<'_, PyTuple> = meta_item.cast()?;
                 let builder_binding: crate::RouteBuilder = meta.get_item(0)?.extract()?;
                 let builder: spikard::RouteBuilder = (*builder_binding.inner).clone();
                 owner

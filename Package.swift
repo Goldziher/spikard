@@ -33,7 +33,7 @@ let package = Package(
     // sibling RustBridge target below and link against this binary.
     .binaryTarget(
       name: "RustBridgeBinary",
-      url: "https://github.com/Goldziher/spikard/releases/download/v0.15.6-rc.23/Spikard-rs.artifactbundle.zip",
+      url: "https://github.com/Goldziher/spikard/releases/download/v__ALEF_SWIFT_VERSION__/Spikard-rs.artifactbundle.zip",
       checksum: "__ALEF_SWIFT_CHECKSUM__"
     ),
     // RustBridge: Swift wrapper module owning the swift-bridge generated

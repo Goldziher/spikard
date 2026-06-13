@@ -95,6 +95,56 @@ Create a new application with the default server configuration.
 public static App new()
 ```
 
+#### onRequest()
+
+Register an `on_request` lifecycle hook (runs before validation and handler dispatch).
+
+**Signature:**
+
+```java
+public App onRequest(String hook)
+```
+
+#### preValidation()
+
+Register a `pre_validation` lifecycle hook (runs after `on_request`, before validation).
+
+**Signature:**
+
+```java
+public App preValidation(String hook)
+```
+
+#### preHandler()
+
+Register a `pre_handler` lifecycle hook (runs after validation, before the handler).
+
+**Signature:**
+
+```java
+public App preHandler(String hook)
+```
+
+#### onResponse()
+
+Register an `on_response` lifecycle hook (runs after a successful handler response).
+
+**Signature:**
+
+```java
+public App onResponse(String hook)
+```
+
+#### onError()
+
+Register an `on_error` lifecycle hook (runs when the handler returns an error).
+
+**Signature:**
+
+```java
+public App onError(String hook)
+```
+
 #### mergeAxumRouter()
 
 Attach an existing Axum router to this application, returning ownership.

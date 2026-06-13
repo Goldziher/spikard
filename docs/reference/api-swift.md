@@ -95,6 +95,56 @@ Create a new application with the default server configuration.
 public static func new() -> App
 ```
 
+#### onRequest()
+
+Register an `on_request` lifecycle hook (runs before validation and handler dispatch).
+
+**Signature:**
+
+```swift
+public func onRequest(hook: String) -> App
+```
+
+#### preValidation()
+
+Register a `pre_validation` lifecycle hook (runs after `on_request`, before validation).
+
+**Signature:**
+
+```swift
+public func preValidation(hook: String) -> App
+```
+
+#### preHandler()
+
+Register a `pre_handler` lifecycle hook (runs after validation, before the handler).
+
+**Signature:**
+
+```swift
+public func preHandler(hook: String) -> App
+```
+
+#### onResponse()
+
+Register an `on_response` lifecycle hook (runs after a successful handler response).
+
+**Signature:**
+
+```swift
+public func onResponse(hook: String) -> App
+```
+
+#### onError()
+
+Register an `on_error` lifecycle hook (runs when the handler returns an error).
+
+**Signature:**
+
+```swift
+public func onError(hook: String) -> App
+```
+
 #### mergeAxumRouter()
 
 Attach an existing Axum router to this application, returning ownership.

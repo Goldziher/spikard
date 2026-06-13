@@ -95,6 +95,56 @@ Create a new application with the default server configuration.
 public App New()
 ```
 
+#### OnRequest()
+
+Register an `on_request` lifecycle hook (runs before validation and handler dispatch).
+
+**Signature:**
+
+```csharp
+public App OnRequest(string hook)
+```
+
+#### PreValidation()
+
+Register a `pre_validation` lifecycle hook (runs after `on_request`, before validation).
+
+**Signature:**
+
+```csharp
+public App PreValidation(string hook)
+```
+
+#### PreHandler()
+
+Register a `pre_handler` lifecycle hook (runs after validation, before the handler).
+
+**Signature:**
+
+```csharp
+public App PreHandler(string hook)
+```
+
+#### OnResponse()
+
+Register an `on_response` lifecycle hook (runs after a successful handler response).
+
+**Signature:**
+
+```csharp
+public App OnResponse(string hook)
+```
+
+#### OnError()
+
+Register an `on_error` lifecycle hook (runs when the handler returns an error).
+
+**Signature:**
+
+```csharp
+public App OnError(string hook)
+```
+
 #### MergeAxumRouter()
 
 Attach an existing Axum router to this application, returning ownership.

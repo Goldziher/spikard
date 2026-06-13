@@ -96,6 +96,56 @@ Create a new application with the default server configuration.
 def new() -> App
 ```
 
+#### on_request()
+
+Register an `on_request` lifecycle hook (runs before validation and handler dispatch).
+
+**Signature:**
+
+```python
+def on_request(self, hook: str) -> App
+```
+
+#### pre_validation()
+
+Register a `pre_validation` lifecycle hook (runs after `on_request`, before validation).
+
+**Signature:**
+
+```python
+def pre_validation(self, hook: str) -> App
+```
+
+#### pre_handler()
+
+Register a `pre_handler` lifecycle hook (runs after validation, before the handler).
+
+**Signature:**
+
+```python
+def pre_handler(self, hook: str) -> App
+```
+
+#### on_response()
+
+Register an `on_response` lifecycle hook (runs after a successful handler response).
+
+**Signature:**
+
+```python
+def on_response(self, hook: str) -> App
+```
+
+#### on_error()
+
+Register an `on_error` lifecycle hook (runs when the handler returns an error).
+
+**Signature:**
+
+```python
+def on_error(self, hook: str) -> App
+```
+
 #### merge_axum_router()
 
 Attach an existing Axum router to this application, returning ownership.

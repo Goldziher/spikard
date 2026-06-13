@@ -96,6 +96,56 @@ Create a new application with the default server configuration.
 fun new(): App
 ```
 
+#### onRequest()
+
+Register an `on_request` lifecycle hook (runs before validation and handler dispatch).
+
+**Signature:**
+
+```kotlin
+fun onRequest(hook: String): App
+```
+
+#### preValidation()
+
+Register a `pre_validation` lifecycle hook (runs after `on_request`, before validation).
+
+**Signature:**
+
+```kotlin
+fun preValidation(hook: String): App
+```
+
+#### preHandler()
+
+Register a `pre_handler` lifecycle hook (runs after validation, before the handler).
+
+**Signature:**
+
+```kotlin
+fun preHandler(hook: String): App
+```
+
+#### onResponse()
+
+Register an `on_response` lifecycle hook (runs after a successful handler response).
+
+**Signature:**
+
+```kotlin
+fun onResponse(hook: String): App
+```
+
+#### onError()
+
+Register an `on_error` lifecycle hook (runs when the handler returns an error).
+
+**Signature:**
+
+```kotlin
+fun onError(hook: String): App
+```
+
 #### mergeAxumRouter()
 
 Attach an existing Axum router to this application, returning ownership.

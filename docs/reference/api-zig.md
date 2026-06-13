@@ -95,6 +95,56 @@ Create a new application with the default server configuration.
 pub fn new() App
 ```
 
+#### onRequest()
+
+Register an `on_request` lifecycle hook (runs before validation and handler dispatch).
+
+**Signature:**
+
+```zig
+pub fn onRequest(self: *const App, hook: [:0]const u8) App
+```
+
+#### preValidation()
+
+Register a `pre_validation` lifecycle hook (runs after `on_request`, before validation).
+
+**Signature:**
+
+```zig
+pub fn preValidation(self: *const App, hook: [:0]const u8) App
+```
+
+#### preHandler()
+
+Register a `pre_handler` lifecycle hook (runs after validation, before the handler).
+
+**Signature:**
+
+```zig
+pub fn preHandler(self: *const App, hook: [:0]const u8) App
+```
+
+#### onResponse()
+
+Register an `on_response` lifecycle hook (runs after a successful handler response).
+
+**Signature:**
+
+```zig
+pub fn onResponse(self: *const App, hook: [:0]const u8) App
+```
+
+#### onError()
+
+Register an `on_error` lifecycle hook (runs when the handler returns an error).
+
+**Signature:**
+
+```zig
+pub fn onError(self: *const App, hook: [:0]const u8) App
+```
+
 #### mergeAxumRouter()
 
 Attach an existing Axum router to this application, returning ownership.
