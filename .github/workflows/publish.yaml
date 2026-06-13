@@ -282,8 +282,8 @@ jobs:
           name: python-sdist
           path: dist/python/*.tar.gz
 
-  build-node:
-    name: Build Node package
+  build-node-typescript-defs:
+    name: Generate Node TypeScript definitions
     needs: prepare
     if: ${{ needs.prepare.outputs.release_node == 'true' }}
     runs-on: ubuntu-latest
@@ -297,15 +297,104 @@ jobs:
       - uses: kreuzberg-dev/actions/setup-node-workspace@v1
         with:
           node-version: "24"
-      - uses: kreuzberg-dev/actions/build-node-napi@v1
-        with:
-          crate-dir: crates/spikard-node
-          build-command: pnpm exec napi build --platform --release
-          pack-tarball: "true"
+      - name: Generate TypeScript definitions
+        # napi build emits index.js + index.d.ts as a side effect; both are
+        # platform-agnostic (the platform binary lives in @spikard/node-<rid>).
+        # Generated once on linux-x86_64 and shared across publish-node staging.
+        # service.cjs is alef-generated source — committed in the repo, not
+        # produced by napi — so we copy it from the checkout, not from a build
+        # artifact.
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm install --filter ./crates/spikard-node...
+          pnpm --filter ./crates/spikard-node exec napi build --release
+          mkdir -p typescript-defs
+          cp crates/spikard-node/index.js \
+             crates/spikard-node/index.d.ts \
+             crates/spikard-node/service.cjs \
+             typescript-defs/
       - uses: actions/upload-artifact@v7
         with:
-          name: node-package
-          path: "*.tgz"
+          name: node-typescript-defs
+          path: typescript-defs/
+          retention-days: 14
+
+  build-node:
+    name: Build Node bindings (${{ matrix.target }})
+    needs: prepare
+    if: ${{ needs.prepare.outputs.release_node == 'true' }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {
+              os: macos-latest,
+              target: aarch64-apple-darwin,
+              rust_target: "",
+              use_napi_cross: false,
+            }
+          - {
+              os: macos-15-intel,
+              target: x86_64-apple-darwin,
+              rust_target: "",
+              use_napi_cross: false,
+            }
+          - {
+              os: ubuntu-latest,
+              target: x86_64-unknown-linux-gnu,
+              rust_target: "",
+              use_napi_cross: false,
+            }
+          - {
+              os: ubuntu-latest,
+              target: aarch64-unknown-linux-gnu,
+              rust_target: aarch64-unknown-linux-gnu,
+              use_napi_cross: true,
+            }
+          - {
+              os: windows-latest,
+              target: x86_64-pc-windows-msvc,
+              rust_target: "",
+              use_napi_cross: false,
+            }
+          - {
+              os: windows-latest,
+              target: aarch64-pc-windows-msvc,
+              rust_target: aarch64-pc-windows-msvc,
+              use_napi_cross: false,
+            }
+          # musl and armv7 targets deferred — napi-cross artifact path mismatch
+          # ("No dist dir found") blocks cross-compiled bindings in build-node-napi@v1.
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - name: Free disk space
+        if: runner.os == 'Linux'
+        uses: kreuzberg-dev/actions/free-disk-space-linux@v1
+      - uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
+          target: ${{ matrix.rust_target || matrix.target }}
+          cache-key-prefix: publish-node-${{ matrix.target }}
+      - uses: kreuzberg-dev/actions/setup-node-workspace@v1
+        with:
+          node-version: "24"
+      - name: Build native module
+        uses: kreuzberg-dev/actions/build-node-napi@v1
+        with:
+          crate-dir: crates/spikard-node
+          target: ${{ matrix.target }}
+          use-napi-cross: ${{ matrix.use_napi_cross }}
+          pack-target-tarball: node-bindings-${{ matrix.target }}.tar.gz
+      - uses: actions/upload-artifact@v7
+        with:
+          name: node-bindings-${{ matrix.target }}
+          path: node-bindings-${{ matrix.target }}.tar.gz
+          retention-days: 14
 
   build-wasm:
     name: Build WASM package
@@ -657,23 +746,85 @@ jobs:
 
   publish-node:
     name: Publish Node
-    needs: [prepare, check-registries, build-node]
-    if: ${{ !cancelled() && needs.prepare.outputs.release_node == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.npm_node_exists != 'true') }}
+    needs: [prepare, check-registries, build-node, build-node-typescript-defs]
+    if: ${{ !cancelled() && needs.prepare.outputs.release_node == 'true' && needs.build-node.result == 'success' && needs.build-node-typescript-defs.result == 'success' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.npm_node_exists != 'true') }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: actions/download-artifact@v8
         with:
-          name: node-package
-          path: dist/node
-      - uses: actions/setup-node@v6
+          pattern: node-bindings-*
+          path: node-artifacts
+          merge-multiple: true
+      - uses: actions/download-artifact@v8
+        with:
+          name: node-typescript-defs
+          path: typescript-defs
+      - uses: kreuzberg-dev/actions/setup-node-workspace@v1
         with:
           node-version: "24"
-          registry-url: "https://registry.npmjs.org"
-      - uses: kreuzberg-dev/actions/publish-npm@v1
+          registry-url: "https://registry.npmjs.org/"
+      - name: Stage platform packages and main package
+        # Per-platform Node artifact layout: one tarball per target staging
+        # crates/spikard-node/npm/<platform>/. The main package needs an
+        # optionalDependencies map listing every platform sub-package so
+        # npm install resolves the correct binary per host. publish-npm@v1
+        # operates on a single package dir, so the staging is inlined here.
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf crates/spikard-node/npm
+          mkdir -p crates/spikard-node/npm
+          for pkg in node-artifacts/*.tar.gz; do
+            tar -xzf "${pkg}" -C crates/spikard-node
+          done
+          cp typescript-defs/index.js \
+             typescript-defs/index.d.ts \
+             typescript-defs/service.cjs \
+             crates/spikard-node/
+
+          # Pack each platform sub-package as a tarball alongside the main one.
+          cd crates/spikard-node/npm
+          for dir in */; do
+            if [ -f "$dir/package.json" ]; then
+              (cd "$dir" && npm pack && mv ./*.tgz ..)
+            fi
+          done
+          cd ../../..
+
+          # Stamp main package optionalDependencies with the real platform
+          # sub-package versions we just built. alef pre-renders this map,
+          # but rewriting it here keeps the publish self-consistent even if
+          # the matrix is trimmed (e.g. musl excluded above).
+          tmp_pkg_json="$(mktemp)"
+          optional_deps_json='{}'
+          for platform_pkg_json in crates/spikard-node/npm/*/package.json; do
+            name="$(jq -r '.name // empty' "$platform_pkg_json")"
+            version="$(jq -r '.version // empty' "$platform_pkg_json")"
+            if [[ -z "$name" || -z "$version" ]]; then
+              echo "Invalid platform package.json: $platform_pkg_json" >&2
+              exit 1
+            fi
+            optional_deps_json="$(jq -c --arg n "$name" --arg v "$version" \
+              '. + {($n): $v}' <<<"$optional_deps_json")"
+          done
+          jq --argjson deps "$optional_deps_json" '.optionalDependencies = $deps' \
+            crates/spikard-node/package.json > "$tmp_pkg_json"
+          mv "$tmp_pkg_json" crates/spikard-node/package.json
+
+          # Pack the main package last so its optionalDependencies are baked in.
+          (cd crates/spikard-node && npm pack && mv ./*.tgz npm/)
+      - name: Publish platform sub-packages and main package
+        uses: kreuzberg-dev/actions/publish-npm@v1
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         with:
-          packages-dir: dist/node
+          packages-dir: crates/spikard-node/npm
           npm-tag: ${{ needs.prepare.outputs.npm_tag }}
           dry-run: ${{ needs.prepare.outputs.dry_run }}
 
