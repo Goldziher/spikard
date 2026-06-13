@@ -1,102 +1,5 @@
 # This file is generated. Do not edit.
 
-defmodule Spikard.Errors do
-  @moduledoc """
-  Spikard exception types.
-  """
-
-  @doc "Raised when the requested resource does not exist."
-  defmodule NotFoundError do
-    defexception [:message, :status_code, :problem_details]
-
-    def new(message, status_code \\ 404, problem_details \\ nil) do
-      %__MODULE__{
-        message: message,
-        status_code: status_code,
-        problem_details: problem_details
-      }
-    end
-  end
-
-  @doc "Raised when input validation fails. Carries a list of field errors per RFC 9457."
-  defmodule ValidationError do
-    defexception [:message, :status_code, :problem_details]
-
-    def new(message, status_code \\ 422, problem_details \\ nil) do
-      %__MODULE__{
-        message: message,
-        status_code: status_code,
-        problem_details: problem_details
-      }
-    end
-  end
-
-  @doc "Raised when the request lacks valid authentication credentials."
-  defmodule UnauthorizedError do
-    defexception [:message, :status_code, :problem_details]
-
-    def new(message, status_code \\ 401, problem_details \\ nil) do
-      %__MODULE__{
-        message: message,
-        status_code: status_code,
-        problem_details: problem_details
-      }
-    end
-  end
-
-  @doc "Raised when the authenticated user lacks permission for the requested action."
-  defmodule ForbiddenError do
-    defexception [:message, :status_code, :problem_details]
-
-    def new(message, status_code \\ 403, problem_details \\ nil) do
-      %__MODULE__{
-        message: message,
-        status_code: status_code,
-        problem_details: problem_details
-      }
-    end
-  end
-
-  @doc "Raised when the client exceeds the configured request rate limit."
-  defmodule RateLimitedError do
-    defexception [:message, :status_code, :problem_details]
-
-    def new(message, status_code \\ 429, problem_details \\ nil) do
-      %__MODULE__{
-        message: message,
-        status_code: status_code,
-        problem_details: problem_details
-      }
-    end
-  end
-
-  @doc "Raised when the request conflicts with the current state of the resource."
-  defmodule ConflictError do
-    defexception [:message, :status_code, :problem_details]
-
-    def new(message, status_code \\ 409, problem_details \\ nil) do
-      %__MODULE__{
-        message: message,
-        status_code: status_code,
-        problem_details: problem_details
-      }
-    end
-  end
-
-  @doc "Raised when the server encounters an unexpected failure."
-  defmodule InternalError do
-    defexception [:message, :status_code, :problem_details]
-
-    def new(message, status_code \\ 500, problem_details \\ nil) do
-      %__MODULE__{
-        message: message,
-        status_code: status_code,
-        problem_details: problem_details
-      }
-    end
-  end
-end
-
 defmodule Spikard.Conn do
   @moduledoc """
   HTTP request context passed to handlers.
@@ -236,7 +139,7 @@ defmodule Spikard.App do
     def handle_cast({:trait_call, _method, args_json, reply_id}, handler_fn) do
       case Jason.decode(args_json) do
         {:ok, args} ->
-          # Build Spikard.Conn from RequestData fields in args
+          # Build request context from RequestData fields in args
           try do
             conn = build_conn(args)
             response = handler_fn.(conn)
@@ -253,7 +156,7 @@ defmodule Spikard.App do
       {:noreply, handler_fn}
     end
 
-    # Convert RequestData JSON to Spikard.Conn struct
+    # Convert RequestData JSON to request context struct
     defp build_conn(args) do
       %Spikard.Conn{
         path_params: args["path_params"] || %{},
@@ -510,30 +413,5 @@ defmodule Spikard.App do
   """
   def into_router(self) do
     Native.app_into_router(self.registrations)
-  end
-
-  @doc "Called before any other processing for each inbound request."
-  def on_request(app, handler_fn) when is_function(handler_fn, 1) do
-    %__MODULE__{app | on_request: handler_fn}
-  end
-
-  @doc "Called after parsing but before parameter validation."
-  def pre_validation(app, handler_fn) when is_function(handler_fn, 1) do
-    %__MODULE__{app | pre_validation: handler_fn}
-  end
-
-  @doc "Called after validation but before invoking the route handler."
-  def pre_handler(app, handler_fn) when is_function(handler_fn, 1) do
-    %__MODULE__{app | pre_handler: handler_fn}
-  end
-
-  @doc "Called after the handler returns but before the response is serialized."
-  def on_response(app, handler_fn) when is_function(handler_fn, 1) do
-    %__MODULE__{app | on_response: handler_fn}
-  end
-
-  @doc "Called when a handler returns an error."
-  def on_error(app, handler_fn) when is_function(handler_fn, 1) do
-    %__MODULE__{app | on_error: handler_fn}
   end
 end

@@ -197,41 +197,6 @@ class App {
   into_router() {
     return this._app.intoRouter();
   }
-  /**
-   * Called before any other processing for each inbound request.
-   */
-  onRequest(handler) {
-    this._app.onRequest(handler);
-    return this;
-  }
-  /**
-   * Called after parsing but before parameter validation.
-   */
-  preValidation(handler) {
-    this._app.preValidation(handler);
-    return this;
-  }
-  /**
-   * Called after validation but before invoking the route handler.
-   */
-  preHandler(handler) {
-    this._app.preHandler(handler);
-    return this;
-  }
-  /**
-   * Called after the handler returns but before the response is serialized.
-   */
-  onResponse(handler) {
-    this._app.onResponse(handler);
-    return this;
-  }
-  /**
-   * Called when a handler returns an error.
-   */
-  onError(handler) {
-    this._app.onError(handler);
-    return this;
-  }
 }
 
 module.exports = { App };
