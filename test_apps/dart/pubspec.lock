@@ -301,10 +301,10 @@ packages:
     dependency: "direct main"
     description:
       name: spikard
-      sha256: "271f92b85b6cacbcf9aed9c1613ff7321d5d78e6312153a07a5d1b22775f4044"
+      sha256: "3e06f5fd788e601d616c83681c424b5e21a3cf8ecabc7c82552a659d56be2c6a"
       url: "https://pub.dev"
     source: hosted
-    version: "0.15.6-rc.4"
+    version: "0.15.6-rc.22"
   stack_trace:
     dependency: transitive
     description:

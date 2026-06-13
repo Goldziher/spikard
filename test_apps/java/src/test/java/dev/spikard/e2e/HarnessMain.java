@@ -27,10 +27,8 @@ public class HarnessMain {
                     effectivePort = 8000;
                 }
             } else {
-                // Discover an available port via ServerSocket probe
-                java.net.ServerSocket probe = new java.net.ServerSocket(0, 1, java.net.InetAddress.getByName(effectiveHost));
-                effectivePort = probe.getLocalPort();
-                probe.close();
+                // Fall back to the alef e2e default harness port
+                effectivePort = 8000;
             }
 
             // Create and configure the app

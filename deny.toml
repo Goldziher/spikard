@@ -72,6 +72,8 @@ feature-depth = 1
 ignore = [
   { id = "RUSTSEC-2024-0436", reason = "paste is a transitive dep via statrs->nalgebra->simba; no update path available yet" },
   { id = "RUSTSEC-2023-0071", reason = "rsa is a transitive dep via jsonwebtoken; no safe upgrade available yet" },
+  { id = "RUSTSEC-2026-0176", reason = "pyo3 0.28.3 nth/nth_back OOB read; pending alef PYO3 template_versions bump to 0.29" },
+  { id = "RUSTSEC-2026-0177", reason = "pyo3 0.28.3 PyCFunction::new_closure missing Sync bound; pending alef PYO3 template_versions bump to 0.29" },
 ]
 # If this is true, then cargo deny will use the git executable to fetch advisory database.
 # If this is false, then it uses a built-in git library.
