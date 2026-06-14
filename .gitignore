@@ -38,13 +38,19 @@ e2e/go/cmd/harness/harness
 **/pnpm-lock.yaml
 !pnpm-lock.yaml
 # Workspace root Cargo.lock IS committed per project convention; only
-# nested member/scaffold lockfiles are excluded here. The e2e/rust
-# crate is its own workspace (own Cargo.lock); committing it pins
-# transitive deps (e.g. alloc-no-stdlib) so CI cargo invocations
-# resolve to the same versions used locally.
+# nested member/scaffold lockfiles are excluded here. Sub-workspaces
+# with their own Cargo.toml + Cargo.lock are committed so CI cargo
+# invocations resolve to the same transitive deps as local builds
+# (e.g. alloc-no-stdlib 2.0.4 + alloc-stdlib 0.2.2 in the brotli
+# graph instead of the resolver picking the newer-but-incompatible
+# alloc-stdlib 0.2.3 which transitively pulls alloc-no-stdlib 3.0.0).
 **/Cargo.lock
 !/Cargo.lock
 !/e2e/rust/Cargo.lock
+!/packages/dart/rust/Cargo.lock
+!/packages/swift/rust/Cargo.lock
+!/crates/spikard-php/Cargo.lock
+!/test_apps/rust/Cargo.lock
 !packages/ruby/ext/spikard_rb/Cargo.lock
 # The Elixir NIF crate ships its Cargo.lock in the Hex source tarball
 # (mix.exs files list) so the package compiles standalone on consumers.
