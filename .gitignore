@@ -51,7 +51,7 @@ e2e/go/cmd/harness/harness
 !/packages/swift/rust/Cargo.lock
 !/crates/spikard-php/Cargo.lock
 !/test_apps/rust/Cargo.lock
-!packages/ruby/ext/spikard_rb/Cargo.lock
+!/packages/ruby/ext/spikard_rb/native/Cargo.lock
 # The Elixir NIF crate ships its Cargo.lock in the Hex source tarball
 # (mix.exs files list) so the package compiles standalone on consumers.
 !packages/elixir/native/spikard_nif/Cargo.lock

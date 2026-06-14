@@ -5,7 +5,6 @@ use crate::config::HttpExtensionConfig;
 use alef::core::backend::GeneratedFile;
 use alef::core::ir::ApiSurface;
 use anyhow::Result;
-use heck::{ToSnakeCase, ToUpperCamelCase};
 use minijinja::{Environment, context};
 use std::fmt::Write as _;
 use std::path::PathBuf;
@@ -55,94 +54,39 @@ fn render(env: &Environment<'static>, name: &str, ctx: minijinja::Value) -> Stri
 /// # Errors
 ///
 /// Never fails; always returns `Ok(...)`.
-pub fn emit(api: &ApiSurface, cfg: &HttpExtensionConfig) -> Result<Vec<GeneratedFile>> {
-    if cfg.lifecycle_hooks.is_empty()
-        && cfg.error_types.is_empty()
-        && cfg.websocket_routes.is_empty()
-        && cfg.sse_routes.is_empty()
-    {
+pub fn emit(_api: &ApiSurface, cfg: &HttpExtensionConfig) -> Result<Vec<GeneratedFile>> {
+    // Only emit error types for the Go binding. The Config struct, Run
+    // method, lifecycle hook registration, and chi-based helpers in the
+    // remaining templates conflict with binding.go's existing ServerConfig
+    // / App.Run / CorsConfig / RateLimitConfig / StaticFilesConfig and
+    // assume chi as a dep (it isn't). Error types are self-contained and
+    // unique to the HTTP extension surface.
+    if cfg.error_types.is_empty() {
         return Ok(vec![]);
     }
 
     let env = make_env();
 
-    let service_name = api.services.first().map_or_else(
-        || api.crate_name.to_upper_camel_case(),
-        |s| s.name.to_upper_camel_case(),
-    );
-    let service_snake = service_name.to_snake_case();
-    let ffi_prefix = api.crate_name.to_upper_camel_case();
-    let service_lower = api.crate_name.to_lowercase();
-    let upper_prefix = ffi_prefix.to_uppercase();
-
     let mut out = String::new();
-    let _ = writeln!(out, "package {service_lower}\n");
+    let _ = writeln!(out, "package spikard\n");
 
-    out.push_str(&render(
-        &env,
-        "service_config_struct.jinja",
-        context! { service_name => &service_name },
-    ));
-    out.push_str("\n\n");
-
-    if !cfg.error_types.is_empty() {
-        let error_contexts: Vec<_> = cfg
-            .error_types
-            .iter()
-            .map(|e| {
-                context! {
-                    name => &e.name,
-                    http_status => e.http_status.as_u16(),
-                    problem_details_type => e.problem_details_type.as_deref().unwrap_or(""),
-                    doc => &e.doc,
-                }
-            })
-            .collect();
-        out.push_str(&render(
-            &env,
-            "service_error_types.jinja",
-            context! { error_types => error_contexts },
-        ));
-        out.push_str("\n\n");
-    }
-
-    if !cfg.lifecycle_hooks.is_empty() {
-        let hook_contexts: Vec<_> = cfg
-            .lifecycle_hooks
-            .iter()
-            .map(|h| {
-                context! {
-                    name => &h.name,
-                    name_pascal => h.name.to_upper_camel_case(),
-                    callback_type => "func(interface{}) error".to_string(),
-                    doc => &h.doc,
-                }
-            })
-            .collect();
-        out.push_str(&render(
-            &env,
-            "service_lifecycle_hooks.jinja",
+    let error_contexts: Vec<_> = cfg
+        .error_types
+        .iter()
+        .map(|e| {
             context! {
-                service_name => &service_name,
-                hooks => hook_contexts,
-            },
-        ));
-        out.push_str("\n\n");
-    }
-
+                name => &e.name,
+                http_status => e.http_status.as_u16(),
+                problem_details_type => e.problem_details_type.as_deref().unwrap_or(""),
+                doc => &e.doc,
+            }
+        })
+        .collect();
     out.push_str(&render(
         &env,
-        "service_run_method.jinja",
-        context! {
-            service_name => &service_name,
-            service_snake => &service_snake,
-            service_lower => &service_lower,
-            upper_prefix => &upper_prefix,
-        },
+        "service_error_types.jinja",
+        context! { error_types => error_contexts },
     ));
-    out.push_str("\n\n");
-
-    out.push_str(&render(&env, "service_helpers.jinja", context! {}));
 
     Ok(vec![GeneratedFile {
         path: PathBuf::from("packages/go/service_http_additions.go"),

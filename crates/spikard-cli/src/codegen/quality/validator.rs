@@ -8,7 +8,25 @@ use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::Mutex;
 use tempfile::{Builder, NamedTempFile, TempDir, tempdir};
+
+/// Process-wide lock guarding every cargo invocation made by the quality
+/// validator. Multiple parallel cargo runs against the global `~/.cargo`
+/// registry cache contend on the package-cache file lock and silently
+/// timeout under heavy CI parallelism, producing intermittent
+/// `cannot create lock`/`Blocking waiting for file lock` failures across
+/// every Rust-target validator test. Serializing cargo invocations
+/// trades wall-clock for stability — the tests already run cargo
+/// sequentially per language matrix in CI, so the wider lock is a
+/// no-op outside of the test parallelism that causes the contention.
+static CARGO_VALIDATOR_LOCK: Mutex<()> = Mutex::new(());
+
+fn cargo_lock_guard() -> std::sync::MutexGuard<'static, ()> {
+    CARGO_VALIDATOR_LOCK
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+}
 
 /// Error types for quality validation operations
 #[derive(Debug)]
@@ -207,6 +225,7 @@ impl QualityValidator {
             }
             TargetLanguage::Rust => {
                 let project = self.write_temp_rust_project(code)?;
+                let _guard = cargo_lock_guard();
                 self.run_tool_in_dir(
                     "cargo",
                     &["check", "--manifest-path", project.manifest_path.to_str().unwrap()],
@@ -309,6 +328,7 @@ impl QualityValidator {
             }
             TargetLanguage::Rust => {
                 let project = self.write_temp_rust_project(code)?;
+                let _guard = cargo_lock_guard();
                 self.run_tool_in_dir(
                     "cargo",
                     &["check", "--manifest-path", project.manifest_path.to_str().unwrap()],
@@ -427,6 +447,7 @@ impl QualityValidator {
             }
             TargetLanguage::Rust => {
                 let project = self.write_temp_rust_project(code)?;
+                let _guard = cargo_lock_guard();
                 self.run_tool_in_dir(
                     "cargo",
                     &[

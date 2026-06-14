@@ -304,11 +304,14 @@ jobs:
         # service.cjs is alef-generated source — committed in the repo, not
         # produced by napi — so we copy it from the checkout, not from a build
         # artifact.
+        # `--platform` is required to make napi-rs 3.x emit the index.js JS
+        # shim alongside the binary; without it only the native module is
+        # produced and the cp step below fails with "No such file or directory".
         shell: bash
         run: |
           set -euo pipefail
           pnpm install --filter ./crates/spikard-node...
-          pnpm --filter ./crates/spikard-node exec napi build --release
+          pnpm --filter ./crates/spikard-node exec napi build --platform --release
           mkdir -p typescript-defs
           cp crates/spikard-node/index.js \
              crates/spikard-node/index.d.ts \
@@ -727,6 +730,41 @@ jobs:
           crates: "spikard-core spikard-http spikard-graphql spikard spikard-codegen spikard-cli spikard-ffi"
           version: ${{ needs.prepare.outputs.version }}
           dry-run: ${{ needs.prepare.outputs.dry_run }}
+      # Poll the crates.io sparse index for each workspace member that
+      # binding crates depend on. Without this, the binding-build jobs
+      # immediately run alef vendor's `cargo update -p <name>` + `cargo
+      # metadata --locked` validation against an index that hasn't seen
+      # the newly-published version yet, producing the misleading
+      # "workspace-member version not yet published — publish core
+      # crates first" error after publish-crates already succeeded.
+      - name: Wait for spikard-core indexing
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        uses: kreuzberg-dev/actions/wait-for-package@v1
+        with:
+          registry: cratesio
+          package: spikard-core
+          version: ${{ needs.prepare.outputs.version }}
+      - name: Wait for spikard-http indexing
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        uses: kreuzberg-dev/actions/wait-for-package@v1
+        with:
+          registry: cratesio
+          package: spikard-http
+          version: ${{ needs.prepare.outputs.version }}
+      - name: Wait for spikard-graphql indexing
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        uses: kreuzberg-dev/actions/wait-for-package@v1
+        with:
+          registry: cratesio
+          package: spikard-graphql
+          version: ${{ needs.prepare.outputs.version }}
+      - name: Wait for spikard indexing
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        uses: kreuzberg-dev/actions/wait-for-package@v1
+        with:
+          registry: cratesio
+          package: spikard
+          version: ${{ needs.prepare.outputs.version }}
 
   publish-pypi:
     name: Publish PyPI
