@@ -40,7 +40,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
     try {
       const candidates = <String>[
         // macOS: framework bundle (preferred modern packaging)
-        'spikard_dart.framework/spikard_dart',
+        'spikard_dart.framework',
         // macOS: bare dylib fallback
         'libspikard_dart.dylib',
         // Linux
@@ -48,6 +48,21 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
         // Windows
         'spikard_dart.dll',
       ];
+
+      // Helper to open a native library by absolute path.
+      // Normalizes path to absolute to avoid hardened-runtime "relative path rejected" errors.
+      ExternalLibrary? tryOpenAbsolute(String libPath) {
+        try {
+          final absPath = File(libPath).absolute.path;
+          return ExternalLibrary.open(absPath);
+        } catch (_) {
+          return null;
+        }
+      }
+
+      bool candidateExists(String libPath) {
+        return File(libPath).existsSync() || Directory(libPath).existsSync();
+      }
 
       // Check FRB_DART_LOAD_EXTERNAL_LIBRARY_NATIVE_LIB_DIR env var first.
       // This allows test harnesses to override library location for development.
@@ -58,8 +73,9 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
         if (libDir.existsSync()) {
           for (final candidate in candidates) {
             final libPath = '$envDir/$candidate';
-            if (File(libPath).existsSync()) {
-              return ExternalLibrary.open(libPath);
+            if (candidateExists(libPath)) {
+              final result = tryOpenAbsolute(libPath);
+              if (result != null) return result;
             }
           }
         }
@@ -98,8 +114,9 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
           final ridDir = packageRoot.resolve('src/native/$rid/');
           for (final candidate in candidates) {
             final libPath = ridDir.resolve(candidate).toFilePath();
-            if (File(libPath).existsSync()) {
-              return ExternalLibrary.open(libPath);
+            if (candidateExists(libPath)) {
+              final result = tryOpenAbsolute(libPath);
+              if (result != null) return result;
             }
           }
         }
@@ -113,8 +130,9 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
         final libDir = packageRoot.resolve('src/spikard_bridge_generated/');
         for (final candidate in candidates) {
           final libPath = libDir.resolve(candidate).toFilePath();
-          if (File(libPath).existsSync()) {
-            return ExternalLibrary.open(libPath);
+          if (candidateExists(libPath)) {
+            final result = tryOpenAbsolute(libPath);
+            if (result != null) return result;
           }
         }
       }
@@ -147,8 +165,9 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
           for (final root in searchRoots) {
             for (final candidate in candidates) {
               final libPath = '$root/$candidate';
-              if (File(libPath).existsSync()) {
-                return ExternalLibrary.open(libPath);
+              if (candidateExists(libPath)) {
+                final result = tryOpenAbsolute(libPath);
+                if (result != null) return result;
               }
             }
           }

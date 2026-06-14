@@ -31,6 +31,15 @@ inline fn _first_error(comptime E: type) E {
     return @field(E, fields[0].name);
 }
 
+/// Map the last FFI error to a typed error, logging the error message.
+/// Captures context from `_last_error()` before returning the first variant.
+inline fn _error_with_message(comptime E: type) E {
+    if (_last_error()) |msg| {
+        std.debug.print("FFI error: {s}\n", .{msg});
+    }
+    return _first_error(E);
+}
+
 /// Error type for application builder operations.
 pub const AppError = error{
     Route,

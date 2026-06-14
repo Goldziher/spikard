@@ -1,7 +1,7 @@
 //! Elixir (rustler) emission for HTTP extension: lifecycle hooks, error types.
 
 use crate::config::HttpExtensionConfig;
-use crate::ir::{ErrorTypeDef, LifecycleHookDef};
+use crate::ir::ErrorTypeDef;
 use alef::core::backend::GeneratedFile;
 use alef::core::ir::ApiSurface;
 use anyhow::Result;
@@ -16,29 +16,12 @@ fn prefixed_module(module_prefix: &str, module: &str) -> String {
     }
 }
 
-fn emit_lifecycle_hooks(hooks: &[LifecycleHookDef]) -> String {
-    if hooks.is_empty() {
-        return String::new();
-    }
-    let mut out = String::new();
-    for hook in hooks {
-        let method_name = &hook.name;
-        let doc = if hook.doc.is_empty() {
-            format!(
-                "Register a {} lifecycle hook.\n\nThe hook receives a request context and must return the context (possibly modified).",
-                hook.name.to_lowercase()
-            )
-        } else {
-            hook.doc.clone()
-        };
-        let doc = doc.replace('"', "\\\"");
-        let _ = write!(
-            out,
-            "  @doc \"{doc}\"\n  def {method_name}(app, handler_fn) when is_function(handler_fn, 1) do\n    %__MODULE__{{app | {method_name}: handler_fn}}\n  end\n\n"
-        );
-    }
-    out
-}
+// Lifecycle hook helpers are intentionally NOT emitted as a separate Elixir file:
+// 1. The fragment-style emission (top-level @doc/def) fails Elixir compilation.
+// 2. Wrapping in a defmodule would require the App struct to carry per-hook
+//    fields, which the alef rustler service.ex emitter does not yet declare.
+// Until the rustler service emitter exposes those fields (or accepts an
+// augment_surface injection point), this file is omitted.
 
 fn emit_error_types(types: &[ErrorTypeDef], module_prefix: &str) -> String {
     if types.is_empty() {
@@ -97,14 +80,8 @@ pub fn emit(api: &ApiSurface, cfg: &HttpExtensionConfig) -> Result<Vec<Generated
     let mut files = Vec::new();
     let prefix = module_prefix(api);
 
-    let hooks_content = emit_lifecycle_hooks(&cfg.lifecycle_hooks);
-    if !hooks_content.is_empty() {
-        files.push(GeneratedFile {
-            path: PathBuf::from("packages/elixir/lib/service_http_additions.ex"),
-            content: hooks_content,
-            generated_header: true,
-        });
-    }
+    // Lifecycle hook helper emission is deferred — see emit_lifecycle_hooks().
+    let _ = &cfg.lifecycle_hooks;
 
     let errors_content = emit_error_types(&cfg.error_types, &prefix);
     if !errors_content.is_empty() {
