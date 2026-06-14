@@ -130,6 +130,7 @@ benchmark-results/
 # --- AI / agent runtimes (per-tool generated dirs and files) ---
 .agents/
 .alef/
+.basemind/
 .claude/
 .codex/
 .cursorrules
