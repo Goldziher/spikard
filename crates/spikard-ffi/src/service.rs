@@ -1,4 +1,9 @@
-#![allow(clippy::too_many_arguments, unused_variables, unused_mut)]
+#![allow(
+    clippy::too_many_arguments,
+    clippy::not_unsafe_ptr_arg_deref,
+    unused_variables,
+    unused_mut
+)]
 
 use std::ffi::{c_char, c_void, CStr, CString};
 use std::panic;

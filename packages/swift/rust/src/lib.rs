@@ -14,7 +14,8 @@
     clippy::match_single_binding,
     clippy::redundant_closure,
     clippy::useless_conversion,
-    clippy::inherent_to_string
+    clippy::inherent_to_string,
+    clippy::new_without_default
 )]
 
 /// Process-wide tokio runtime shared across every swift-bridge async wrapper.
