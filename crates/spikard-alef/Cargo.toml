@@ -6,13 +6,14 @@ authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
 license = "MIT"
 repository = "https://github.com/Goldziher/spikard"
 description = "Alef CLI for spikard — registers the HTTP extension and delegates to alef"
+publish = false
 
 [[bin]]
 name = "spikard-alef"
 path = "src/main.rs"
 
 [dependencies]
-alef = { path = "../../../kreuzberg-dev/alef" }
+alef = { git = "https://github.com/kreuzberg-dev/alef", rev = "c2792a9f0336cb916505cf5983faf95ec3a8a19a" }
 spikard-alef-ext = { path = "../spikard-alef-ext" }
 
 [lints]

@@ -6,9 +6,10 @@ authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
 license = "MIT"
 repository = "https://github.com/Goldziher/spikard"
 description = "Alef HTTP extension for the spikard polyglot framework"
+publish = false
 
 [dependencies]
-alef = { path = "../../../kreuzberg-dev/alef" }
+alef = { git = "https://github.com/kreuzberg-dev/alef", rev = "c2792a9f0336cb916505cf5983faf95ec3a8a19a" }
 anyhow = "1"
 heck = "0.5"
 minijinja = "2"
