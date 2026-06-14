@@ -17,6 +17,15 @@ use spikard_cli::codegen::{
     generate_ruby_graphql, generate_rust_graphql, generate_typescript_graphql, parse_graphql_sdl_string,
 };
 
+/// Serializes Rust `validate_all` calls across the integration suite.
+///
+/// Each Rust-validation test spawns `cargo check` in its own temp dir, but
+/// all three share the host `CARGO_HOME` registry cache. Running them
+/// concurrently produces "Blocking waiting for file lock on package cache"
+/// failures in CI. The mutex is only acquired by Rust-target tests so
+/// other-language validations remain parallel.
+static RUST_CARGO_VALIDATION_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
 // ============================================================================
 // RUST CODE GENERATION TESTS
 // ============================================================================
@@ -144,6 +153,9 @@ fn test_rust_generated_graphql_validates() -> Result<()> {
     "#;
 
     let result = generate_rust_graphql(schema, "all")?;
+    let _guard = RUST_CARGO_VALIDATION_LOCK
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
     let report = QualityValidator::new(TargetLanguage::Rust)
         .validate_all(&result)
         .expect("Rust GraphQL validation should run");
@@ -174,6 +186,9 @@ fn test_rust_generated_graphql_with_interface_validates() -> Result<()> {
     "#;
 
     let result = generate_rust_graphql(schema, "all")?;
+    let _guard = RUST_CARGO_VALIDATION_LOCK
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
     let report = QualityValidator::new(TargetLanguage::Rust)
         .validate_all(&result)
         .expect("Rust GraphQL interface validation should run");
@@ -204,6 +219,9 @@ fn test_rust_generated_graphql_with_subscription_validates() -> Result<()> {
     "#;
 
     let result = generate_rust_graphql(schema, "all")?;
+    let _guard = RUST_CARGO_VALIDATION_LOCK
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
     let report = QualityValidator::new(TargetLanguage::Rust)
         .validate_all(&result)
         .expect("Rust GraphQL subscription validation should run");

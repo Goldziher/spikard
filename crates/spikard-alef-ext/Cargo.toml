@@ -9,7 +9,7 @@ description = "Alef HTTP extension for the spikard polyglot framework"
 publish = false
 
 [dependencies]
-alef = { git = "https://github.com/kreuzberg-dev/alef", rev = "c2792a9f0336cb916505cf5983faf95ec3a8a19a" }
+alef = { git = "https://github.com/kreuzberg-dev/alef", rev = "bf31ef529efbc97d7e2f5955538ea60679f4c98a" }
 anyhow = "1"
 heck = "0.5"
 minijinja = "2"

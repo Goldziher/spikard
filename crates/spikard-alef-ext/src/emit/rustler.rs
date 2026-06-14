@@ -44,8 +44,8 @@ fn emit_error_types(types: &[ErrorTypeDef], module_prefix: &str) -> String {
         };
 
         let escaped_doc = doc.replace('"', "\\\"");
-        let _ = writeln!(out, "  @doc \"{escaped_doc}\"");
         let _ = writeln!(out, "  defmodule {exception_name} do");
+        let _ = writeln!(out, "    @moduledoc \"{escaped_doc}\"");
         out.push_str("    defexception [:message, :status_code, :problem_details]\n\n");
         let _ = writeln!(
             out,
