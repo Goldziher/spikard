@@ -1,6 +1,6 @@
 [package]
 name = "spikard-alef"
-version = "0.15.6-rc.23"
+version = "0.15.6-rc.24"
 edition = "2024"
 authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
 license = "MIT"
@@ -13,7 +13,7 @@ name = "spikard-alef"
 path = "src/main.rs"
 
 [dependencies]
-alef = { git = "https://github.com/kreuzberg-dev/alef", rev = "bf31ef529efbc97d7e2f5955538ea60679f4c98a" }
+alef = { git = "https://github.com/kreuzberg-dev/alef", rev = "3d5ec76b225bce220547dd3bc8f30d42083b0784" }
 spikard-alef-ext = { path = "../spikard-alef-ext" }
 
 [lints]

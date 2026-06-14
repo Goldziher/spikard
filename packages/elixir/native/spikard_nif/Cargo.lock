@@ -2924,7 +2924,7 @@ dependencies = [
 
 [[package]]
 name = "spikard"
-version = "0.15.6-rc.23"
+version = "0.15.6-rc.24"
 dependencies = [
  "anyhow",
  "axum",
@@ -2942,7 +2942,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-core"
-version = "0.15.6-rc.23"
+version = "0.15.6-rc.24"
 dependencies = [
  "anyhow",
  "base64",
@@ -2966,7 +2966,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-graphql"
-version = "0.15.6-rc.23"
+version = "0.15.6-rc.24"
 dependencies = [
  "async-graphql",
  "axum",
@@ -2985,7 +2985,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-http"
-version = "0.15.6-rc.23"
+version = "0.15.6-rc.24"
 dependencies = [
  "ahash",
  "anyhow",
@@ -3038,7 +3038,7 @@ dependencies = [
 
 [[package]]
 name = "spikard_nif"
-version = "0.15.6-rc.23"
+version = "0.15.6-rc.24"
 dependencies = [
  "rustler",
  "serde",

@@ -187,7 +187,7 @@ jobs:
       - name: Build and bundle Go native library
         if: matrix.language == 'go'
         run: |
-          cargo build -p spikard-ffi --release
+          cargo build --locked -p spikard-ffi --release
           mkdir -p packages/go/.lib/linux-amd64
           cp target/release/libspikard_ffi.so packages/go/.lib/linux-amd64/libspikard_ffi.so
 
@@ -198,7 +198,7 @@ jobs:
       - name: Build and bundle Java native library
         if: matrix.language == 'java'
         run: |
-          cargo build -p spikard-ffi --release
+          cargo build --locked -p spikard-ffi --release
           mkdir -p packages/java/src/main/resources/natives/linux-x86_64
           cp target/release/libspikard_ffi.so packages/java/src/main/resources/natives/linux-x86_64/libspikard_ffi.so
 

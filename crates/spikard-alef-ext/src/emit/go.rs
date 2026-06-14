@@ -75,6 +75,7 @@ pub fn emit(api: &ApiSurface, cfg: &HttpExtensionConfig) -> Result<Vec<Generated
     let upper_prefix = ffi_prefix.to_uppercase();
 
     let mut out = String::new();
+    out.push_str(&format!("package {service_lower}\n\n"));
 
     out.push_str(&render(
         &env,

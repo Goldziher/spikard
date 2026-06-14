@@ -1,3 +1,5 @@
+package spikard
+
 // Config holds server configuration for the App service.
 type Config struct {
 	// Host address to bind on (default: "0.0.0.0").
