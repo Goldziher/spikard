@@ -23,6 +23,10 @@ concurrency:
   group: docs-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  CARGO_TERM_COLOR: always
+  MATURIN_PEP517_ARGS: "--locked"
+
 jobs:
   lint-prose:
     name: Lint prose

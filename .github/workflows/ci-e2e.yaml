@@ -40,6 +40,7 @@ env:
   RUST_BACKTRACE: short
   BUILD_PROFILE: ci
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  MATURIN_PEP517_ARGS: "--locked"
 
 permissions:
   contents: read

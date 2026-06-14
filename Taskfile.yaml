@@ -95,7 +95,7 @@ tasks:
   build:http:
     desc: "Build HTTP server binary"
     cmds:
-      - cargo build --release --package spikard-http
+      - cargo build --locked --release --package spikard-http
 
   # === Test ===
   test:
@@ -488,7 +488,7 @@ tasks:
   kotlin-android:test:
     desc: "Run Kotlin/Android binding tests"
     cmds:
-      - cargo build --release -p spikard-ffi
+      - cargo build --locked --release -p spikard-ffi
       - gradle test --no-daemon
     dir: packages/kotlin
 
@@ -507,7 +507,7 @@ tasks:
   dart:test:
     desc: "Run Dart binding tests"
     cmds:
-      - cargo build --release --manifest-path packages/dart/rust/Cargo.toml
+      - cargo build --locked --release --manifest-path packages/dart/rust/Cargo.toml
       - dart pub get
       - dart test
     dir: packages/dart
@@ -527,7 +527,7 @@ tasks:
   swift:test:
     desc: "Run Swift binding tests"
     cmds:
-      - cargo build --release -p spikard-ffi
+      - cargo build --locked --release -p spikard-ffi
       - swift test
     dir: packages/swift
 
