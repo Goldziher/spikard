@@ -7,6 +7,7 @@ use alef::core::ir::ApiSurface;
 use anyhow::Result;
 use heck::{ToSnakeCase, ToUpperCamelCase};
 use minijinja::{Environment, context};
+use std::fmt::Write as _;
 use std::path::PathBuf;
 
 fn make_env() -> Environment<'static> {
@@ -75,7 +76,7 @@ pub fn emit(api: &ApiSurface, cfg: &HttpExtensionConfig) -> Result<Vec<Generated
     let upper_prefix = ffi_prefix.to_uppercase();
 
     let mut out = String::new();
-    out.push_str(&format!("package {service_lower}\n\n"));
+    let _ = writeln!(out, "package {service_lower}\n");
 
     out.push_str(&render(
         &env,
