@@ -1289,6 +1289,12 @@ fn write_stub_file(path: &Path, contents: &str) -> Result<(), QualityError> {
 fn rust_temp_manifest() -> String {
     let spikard_path = workspace_root().join("crates/spikard");
 
+    // alloc-stdlib is pinned to =0.2.2 to keep alloc-no-stdlib at 2.0.4.
+    // brotli 8.0.3 pulls alloc-no-stdlib 2.0.4 directly, but the unbounded
+    // alloc-stdlib transitive (via brotli-decompressor) resolves to 0.2.3,
+    // which pulls alloc-no-stdlib 3.0.0. The graph then contains both
+    // versions and their incompatible Allocator<T> trait impls, breaking
+    // every brotli-touching crate the validator includes via spikard.
     format!(
         r#"[package]
 name = "spikard_codegen_validation"
@@ -1299,6 +1305,9 @@ edition = "2024"
 path = "src/lib.rs"
 
 [dependencies]
+alloc-no-stdlib = "=2.0.4"
+alloc-stdlib = "=0.2.2"
+brotli-decompressor = "=5.0.1"
 async-graphql = "7"
 async-trait = "0.1"
 axum = "0.8"
