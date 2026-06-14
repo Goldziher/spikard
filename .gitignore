@@ -37,7 +37,10 @@ e2e/go/cmd/harness/harness
 # --- Lock files: workspace members must not have their own ---
 **/pnpm-lock.yaml
 !pnpm-lock.yaml
-Cargo.lock
+# Workspace root Cargo.lock IS committed per project convention; only
+# nested member/scaffold lockfiles are excluded here.
+**/Cargo.lock
+!/Cargo.lock
 !packages/ruby/ext/spikard_rb/Cargo.lock
 # The Elixir NIF crate ships its Cargo.lock in the Hex source tarball
 # (mix.exs files list) so the package compiles standalone on consumers.
