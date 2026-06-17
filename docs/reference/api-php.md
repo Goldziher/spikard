@@ -22,6 +22,12 @@ A `QueryOnlyConfig` with default settings
 public static function schemaQueryOnly(): QueryOnlyConfig
 ```
 
+**Example:**
+
+```php
+$result = schemaQueryOnly();
+```
+
 **Returns:** `QueryOnlyConfig`
 
 ---
@@ -40,6 +46,12 @@ A `QueryMutationConfig` with default settings
 
 ```php
 public static function schemaQueryMutation(): QueryMutationConfig
+```
+
+**Example:**
+
+```php
+$result = schemaQueryMutation();
 ```
 
 **Returns:** `QueryMutationConfig`
@@ -62,6 +74,12 @@ A `FullSchemaConfig` with default settings
 public static function schemaFull(): FullSchemaConfig
 ```
 
+**Example:**
+
+```php
+$result = schemaFull();
+```
+
 **Returns:** `FullSchemaConfig`
 
 ---
@@ -76,134 +94,6 @@ API Key authentication configuration
 |-------|------|---------|-------------|
 | `keys` | `array<string>` | — | Valid API keys |
 | `headerName` | `string` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
-
----
-
-#### App
-
-Spikard application builder.
-
-### Methods
-
-#### new()
-
-Create a new application with the default server configuration.
-
-**Signature:**
-
-```php
-public static function new(): App
-```
-
-#### onRequest()
-
-Register an `on_request` lifecycle hook (runs before validation and handler dispatch).
-
-**Signature:**
-
-```php
-public function onRequest(string $hook): App
-```
-
-#### preValidation()
-
-Register a `pre_validation` lifecycle hook (runs after `on_request`, before validation).
-
-**Signature:**
-
-```php
-public function preValidation(string $hook): App
-```
-
-#### preHandler()
-
-Register a `pre_handler` lifecycle hook (runs after validation, before the handler).
-
-**Signature:**
-
-```php
-public function preHandler(string $hook): App
-```
-
-#### onResponse()
-
-Register an `on_response` lifecycle hook (runs after a successful handler response).
-
-**Signature:**
-
-```php
-public function onResponse(string $hook): App
-```
-
-#### onError()
-
-Register an `on_error` lifecycle hook (runs when the handler returns an error).
-
-**Signature:**
-
-```php
-public function onError(string $hook): App
-```
-
-#### mergeAxumRouter()
-
-Attach an existing Axum router to this application, returning ownership.
-
-**Signature:**
-
-```php
-public function mergeAxumRouter(string $router): App
-```
-
-#### attachAxumRouter()
-
-Attach an Axum router using a mutable reference for incremental configuration.
-
-**Signature:**
-
-```php
-public function attachAxumRouter(string $router): App
-```
-
-#### intoRouter()
-
-Build the underlying Axum router.
-
-**Errors:**
-
-Returns an error if server or router construction fails.
-
-**Signature:**
-
-```php
-public function intoRouter(): string
-```
-
-#### intoRouterAndConfig()
-
-Decompose the application into its Axum router and server configuration.
-
-This is the low-level escape hatch used by the C FFI layer to start the
-server on a background thread while retaining the bind address from the
-caller-supplied `ServerConfig`. Prefer `App::run` for normal use.
-
-**Errors:**
-
-Returns an error if router construction fails.
-
-**Signature:**
-
-```php
-public function intoRouterAndConfig(): string
-```
-
-#### default()
-
-**Signature:**
-
-```php
-public static function default(): App
-```
 
 ---
 
@@ -225,15 +115,23 @@ AsyncAPI HTTP endpoint configuration
 | `name` | `string` | — | The name |
 | `requestId` | `?string` | `null` | Request id |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```php
 public static function default(): BackgroundJobMetadata
 ```
+
+**Example:**
+
+```php
+$result = BackgroundJobMetadata::default();
+```
+
+**Returns:** `BackgroundJobMetadata`
 
 ---
 
@@ -247,15 +145,23 @@ Configuration for in-process background task execution.
 | `maxConcurrentTasks` | `int` | `128` | Maximum concurrent tasks |
 | `drainTimeoutSecs` | `int` | `30` | Drain timeout secs |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```php
 public static function default(): BackgroundTaskConfig
 ```
+
+**Example:**
+
+```php
+$result = BackgroundTaskConfig::default();
+```
+
+**Returns:** `BackgroundTaskConfig`
 
 ---
 
@@ -270,15 +176,23 @@ Compression configuration shared across runtimes
 | `minSize` | `int` | — | Minimum response size to compress (bytes) |
 | `quality` | `int` | — | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```php
 public static function default(): CompressionConfig
 ```
+
+**Example:**
+
+```php
+$result = CompressionConfig::default();
+```
+
+**Returns:** `CompressionConfig`
 
 ---
 
@@ -306,12 +220,10 @@ CORS configuration for a route
 | `exposeHeaders` | `?array<string>` | `null` | Expose headers |
 | `maxAge` | `?int` | `null` | Maximum age |
 | `allowCredentials` | `?bool` | `null` | Allow credentials |
-| `methodsJoinedCache` | `string` | — | Methods joined cache |
-| `headersJoinedCache` | `string` | — | Headers joined cache |
 
-### Methods
+##### Methods
 
-#### allowedMethodsJoined()
+###### allowedMethodsJoined()
 
 Get the cached joined methods string for preflight responses
 
@@ -321,7 +233,15 @@ Get the cached joined methods string for preflight responses
 public function allowedMethodsJoined(): string
 ```
 
-#### allowedHeadersJoined()
+**Example:**
+
+```php
+$result = $instance->allowedMethodsJoined();
+```
+
+**Returns:** `string`
+
+###### allowedHeadersJoined()
 
 Get the cached joined headers string for preflight responses
 
@@ -331,7 +251,15 @@ Get the cached joined headers string for preflight responses
 public function allowedHeadersJoined(): string
 ```
 
-#### isOriginAllowed()
+**Example:**
+
+```php
+$result = $instance->allowedHeadersJoined();
+```
+
+**Returns:** `string`
+
+###### isOriginAllowed()
 
 Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -341,7 +269,21 @@ Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 public function isOriginAllowed(string $origin): bool
 ```
 
-#### isMethodAllowed()
+**Example:**
+
+```php
+$result = $instance->isOriginAllowed("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `origin` | `string` | Yes | The origin |
+
+**Returns:** `bool`
+
+###### isMethodAllowed()
 
 Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -351,13 +293,35 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 public function isMethodAllowed(string $method): bool
 ```
 
-#### default()
+**Example:**
+
+```php
+$result = $instance->isMethodAllowed("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `string` | Yes | The method |
+
+**Returns:** `bool`
+
+###### default()
 
 **Signature:**
 
 ```php
 public static function default(): CorsConfig
 ```
+
+**Example:**
+
+```php
+$result = CorsConfig::default();
+```
+
+**Returns:** `CorsConfig`
 
 ---
 
@@ -371,15 +335,23 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 | `complexityLimit` | `?int` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `?int` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```php
 public static function default(): FullSchemaConfig
 ```
+
+**Example:**
+
+```php
+$result = FullSchemaConfig::default();
+```
+
+**Returns:** `FullSchemaConfig`
 
 ---
 
@@ -390,9 +362,9 @@ Configuration for GraphQL routes
 Provides a builder pattern for configuring GraphQL route parameters
 for the Spikard HTTP server's routing system.
 
-### Methods
+##### Methods
 
-#### new()
+###### new()
 
 Create a new GraphQL route configuration with defaults
 
@@ -408,7 +380,15 @@ Default values:
 public static function new(): GraphQlRouteConfig
 ```
 
-#### path()
+**Example:**
+
+```php
+$result = GraphQlRouteConfig::new();
+```
+
+**Returns:** `GraphQlRouteConfig`
+
+###### path()
 
 Set the HTTP path for the GraphQL endpoint
 
@@ -418,7 +398,21 @@ Set the HTTP path for the GraphQL endpoint
 public function path(string $path): GraphQlRouteConfig
 ```
 
-#### method()
+**Example:**
+
+```php
+$result = $instance->path("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `path` | `string` | Yes | The URL path (e.g., "/graphql", "/api/graphql") |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### method()
 
 Set the HTTP method for the GraphQL endpoint
 
@@ -428,7 +422,21 @@ Set the HTTP method for the GraphQL endpoint
 public function method(string $method): GraphQlRouteConfig
 ```
 
-#### enablePlayground()
+**Example:**
+
+```php
+$result = $instance->method("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `string` | Yes | The HTTP method (typically "POST") |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### enablePlayground()
 
 Enable or disable the GraphQL Playground UI
 
@@ -438,7 +446,21 @@ Enable or disable the GraphQL Playground UI
 public function enablePlayground(bool $enable): GraphQlRouteConfig
 ```
 
-#### description()
+**Example:**
+
+```php
+$result = $instance->enablePlayground(true);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `enable` | `bool` | Yes | Whether to enable playground |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### description()
 
 Set a custom description for documentation
 
@@ -448,7 +470,21 @@ Set a custom description for documentation
 public function description(string $description): GraphQlRouteConfig
 ```
 
-#### getPath()
+**Example:**
+
+```php
+$result = $instance->description("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `description` | `string` | Yes | Documentation string |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### getPath()
 
 Get the configured path
 
@@ -458,7 +494,15 @@ Get the configured path
 public function getPath(): string
 ```
 
-#### getMethod()
+**Example:**
+
+```php
+$result = $instance->getPath();
+```
+
+**Returns:** `string`
+
+###### getMethod()
 
 Get the configured method
 
@@ -468,7 +512,15 @@ Get the configured method
 public function getMethod(): string
 ```
 
-#### isPlaygroundEnabled()
+**Example:**
+
+```php
+$result = $instance->getMethod();
+```
+
+**Returns:** `string`
+
+###### isPlaygroundEnabled()
 
 Check if playground is enabled
 
@@ -478,7 +530,15 @@ Check if playground is enabled
 public function isPlaygroundEnabled(): bool
 ```
 
-#### getDescription()
+**Example:**
+
+```php
+$result = $instance->isPlaygroundEnabled();
+```
+
+**Returns:** `bool`
+
+###### getDescription()
 
 Get the description if set
 
@@ -488,13 +548,29 @@ Get the description if set
 public function getDescription(): ?string
 ```
 
-#### default()
+**Example:**
+
+```php
+$result = $instance->getDescription();
+```
+
+**Returns:** `?string`
+
+###### default()
 
 **Signature:**
 
 ```php
 public static function default(): GraphQlRouteConfig
 ```
+
+**Example:**
+
+```php
+$result = GraphQlRouteConfig::default();
+```
+
+**Returns:** `GraphQlRouteConfig`
 
 ---
 
@@ -552,9 +628,9 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `keepaliveTimeout` | `int` | — | HTTP/2 keepalive timeout in seconds |
 | `maxStreamResponseBytes` | `?int` | `null` | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic::Status::resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `null` (unbounded total response size). |
 
-### Methods
+#### Methods
 
-#### default()
+##### default()
 
 **Signature:**
 
@@ -562,110 +638,13 @@ concurrent stream limiting to the HTTP/2 transport layer:
 public static function default(): GrpcConfig
 ```
 
----
-
-#### Handler
-
-Handler trait that all language bindings must implement
-
-This trait is completely language-agnostic. Each binding (Python, Node, WASM)
-implements this trait to bridge their runtime to our HTTP server.
-
-### Methods
-
-#### call()
-
-Handle an HTTP request
-
-Takes the extracted request data and returns a future that resolves to either:
-
-- Ok(Response): A successful HTTP response
-- Err((StatusCode, String)): An error with status code and message
-
-**Signature:**
+**Example:**
 
 ```php
-public function call(Request $request, RequestData $requestData): HandlerResult
+$result = GrpcConfig::default();
 ```
 
-#### prefersRawJsonBody()
-
-Whether this handler prefers consuming `RequestData::raw_body` over the parsed
-`RequestData::body` for JSON requests.
-
-When `true`, the server may skip eager JSON parsing when there is no request-body
-schema validator attached to the route.
-
-**Signature:**
-
-```php
-public function prefersRawJsonBody(): bool
-```
-
-#### prefersParameterExtraction()
-
-Whether this handler wants to perform its own parameter validation/extraction (path/query/header/cookie).
-
-When `true`, the server will skip `ParameterValidator::validate_and_extract` in `ValidatingHandler`.
-This is useful for language bindings which need to transform validated parameters into
-language-specific values (e.g., Python kwargs) without duplicating work. When `false`,
-the server stores validated output in `RequestData::validated_params`.
-
-**Signature:**
-
-```php
-public function prefersParameterExtraction(): bool
-```
-
-#### wantsHeaders()
-
-Whether this handler needs the parsed headers map in `RequestData`.
-
-When `false`, the server may skip building `RequestData::headers` for requests without a body.
-(Requests with bodies still typically need `Content-Type` decisions.)
-
-**Signature:**
-
-```php
-public function wantsHeaders(): bool
-```
-
-#### wantsCookies()
-
-Whether this handler needs the parsed cookies map in `RequestData`.
-
-When `false`, the server may skip parsing cookies for requests without a body.
-
-**Signature:**
-
-```php
-public function wantsCookies(): bool
-```
-
-#### wantsRequestExtensions()
-
-Whether this handler needs `RequestData` stored in request extensions.
-
-When `false`, the server avoids inserting `RequestData` into extensions to
-skip cloning in hot paths.
-
-**Signature:**
-
-```php
-public function wantsRequestExtensions(): bool
-```
-
-#### staticResponse()
-
-Return a pre-built static response if this handler always produces the
-same output. When `Some`, the server bypasses the full middleware
-pipeline and serves the pre-built response directly.
-
-**Signature:**
-
-```php
-public function staticResponse(): ?StaticResponse
-```
+**Returns:** `GrpcConfig`
 
 ---
 
@@ -673,9 +652,9 @@ public function staticResponse(): ?StaticResponse
 
 Convert user-facing handler functions into the low-level `Handler` trait.
 
-### Methods
+##### Methods
 
-#### intoHandler()
+###### intoHandler()
 
 Convert this value into a shared request handler.
 
@@ -684,6 +663,14 @@ Convert this value into a shared request handler.
 ```php
 public function intoHandler(): Handler
 ```
+
+**Example:**
+
+```php
+$result = $instance->intoHandler();
+```
+
+**Returns:** `Handler`
 
 ---
 
@@ -698,15 +685,23 @@ JSON-RPC server configuration
 | `enableBatch` | `bool` | — | Enable batch request processing (default: true) |
 | `maxBatchSize` | `int` | — | Maximum number of requests in a batch (default: 100) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```php
 public static function default(): JsonRpcConfig
 ```
+
+**Example:**
+
+```php
+$result = JsonRpcConfig::default();
+```
+
+**Returns:** `JsonRpcConfig`
 
 ---
 
@@ -771,15 +766,23 @@ OpenAPI configuration
 | `servers` | `array<ServerInfo>` | `[]` | Server definitions |
 | `securitySchemes` | `array<string, SecuritySchemeInfo>` | `{}` | Security schemes (auto-detected from middleware if not provided) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```php
 public static function default(): OpenApiConfig
 ```
+
+**Example:**
+
+```php
+$result = OpenApiConfig::default();
+```
+
+**Returns:** `OpenApiConfig`
 
 ---
 
@@ -879,9 +882,9 @@ Content-Type: application/problem+json
 | `instance` | `?string` | `null` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
 | `extensions` | `array<string, mixed>` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
 
-### Methods
+#### Methods
 
-#### withDetail()
+##### withDetail()
 
 Set the detail field
 
@@ -891,7 +894,21 @@ Set the detail field
 public function withDetail(string $detail): ProblemDetails
 ```
 
-#### withInstance()
+**Example:**
+
+```php
+$result = $instance->withDetail("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `string` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### withInstance()
 
 Set the instance field
 
@@ -901,7 +918,21 @@ Set the instance field
 public function withInstance(string $instance): ProblemDetails
 ```
 
-#### notFound()
+**Example:**
+
+```php
+$result = $instance->withInstance("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `instance` | `string` | Yes | The instance |
+
+**Returns:** `ProblemDetails`
+
+###### notFound()
 
 Create a not found error
 
@@ -911,7 +942,21 @@ Create a not found error
 public static function notFound(string $detail): ProblemDetails
 ```
 
-#### methodNotAllowed()
+**Example:**
+
+```php
+$result = ProblemDetails::notFound("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `string` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### methodNotAllowed()
 
 Create a method not allowed error
 
@@ -921,7 +966,21 @@ Create a method not allowed error
 public static function methodNotAllowed(string $detail): ProblemDetails
 ```
 
-#### internalServerError()
+**Example:**
+
+```php
+$result = ProblemDetails::methodNotAllowed("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `string` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### internalServerError()
 
 Create an internal server error
 
@@ -931,7 +990,21 @@ Create an internal server error
 public static function internalServerError(string $detail): ProblemDetails
 ```
 
-#### badRequest()
+**Example:**
+
+```php
+$result = ProblemDetails::internalServerError("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `string` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### badRequest()
 
 Create a bad request error
 
@@ -941,7 +1014,21 @@ Create a bad request error
 public static function badRequest(string $detail): ProblemDetails
 ```
 
-#### toJson()
+**Example:**
+
+```php
+$result = ProblemDetails::badRequest("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `string` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### toJson()
 
 Serialize to JSON string
 
@@ -954,7 +1041,17 @@ Returns an error if the serialization fails.
 public function toJson(): string
 ```
 
-#### toJsonPretty()
+**Example:**
+
+```php
+$result = $instance->toJson();
+```
+
+**Returns:** `string`
+
+**Errors:** Throws `Error`.
+
+###### toJsonPretty()
 
 Serialize to pretty JSON string
 
@@ -966,6 +1063,16 @@ Returns an error if the serialization fails.
 ```php
 public function toJsonPretty(): string
 ```
+
+**Example:**
+
+```php
+$result = $instance->toJsonPretty();
+```
+
+**Returns:** `string`
+
+**Errors:** Throws `Error`.
 
 ---
 
@@ -979,15 +1086,23 @@ Configuration for schemas with Query and Mutation types
 | `complexityLimit` | `?int` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `?int` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```php
 public static function default(): QueryMutationConfig
 ```
+
+**Example:**
+
+```php
+$result = QueryMutationConfig::default();
+```
+
+**Returns:** `QueryMutationConfig`
 
 ---
 
@@ -1001,15 +1116,23 @@ Configuration for schemas with only Query type
 | `complexityLimit` | `?int` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `?int` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```php
 public static function default(): QueryOnlyConfig
 ```
+
+**Example:**
+
+```php
+$result = QueryOnlyConfig::default();
+```
+
+**Returns:** `QueryOnlyConfig`
 
 ---
 
@@ -1023,15 +1146,23 @@ Rate limiting configuration shared across runtimes
 | `burst` | `int` | `200` | Burst allowance |
 | `ipBased` | `bool` | `true` | Use IP-based rate limiting |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```php
 public static function default(): RateLimitConfig
 ```
+
+**Example:**
+
+```php
+$result = RateLimitConfig::default();
+```
+
+**Returns:** `RateLimitConfig`
 
 ---
 
@@ -1049,9 +1180,9 @@ HTTP Response with custom status code, headers, and content
 | `statusCode` | `int` | — | HTTP status code (defaults to 200) |
 | `headers` | `array<string, string>` | `{}` | Response headers |
 
-### Methods
+##### Methods
 
-#### setHeader()
+###### setHeader()
 
 Set a header
 
@@ -1061,7 +1192,22 @@ Set a header
 public function setHeader(string $key, string $value): void
 ```
 
-#### setCookie()
+**Example:**
+
+```php
+$instance->setHeader("value", "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `key` | `string` | Yes | The key |
+| `value` | `string` | Yes | The value |
+
+**Returns:** No return value.
+
+###### setCookie()
 
 Set a cookie in the response
 
@@ -1071,13 +1217,42 @@ Set a cookie in the response
 public function setCookie(string $key, string $value, bool $secure, bool $httpOnly, int $maxAge, string $domain, string $path, string $sameSite): void
 ```
 
-#### default()
+**Example:**
+
+```php
+$instance->setCookie("value", "value", true, true, 42, "value", "value", "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `key` | `string` | Yes | The key |
+| `value` | `string` | Yes | The value |
+| `secure` | `bool` | Yes | The secure |
+| `httpOnly` | `bool` | Yes | The http only |
+| `maxAge` | `?int` | No | The max age |
+| `domain` | `?string` | No | The domain |
+| `path` | `?string` | No | Path to the file |
+| `sameSite` | `?string` | No | The same site |
+
+**Returns:** No return value.
+
+###### default()
 
 **Signature:**
 
 ```php
 public static function default(): Response
 ```
+
+**Example:**
+
+```php
+$result = Response::default();
+```
+
+**Returns:** `Response`
 
 ---
 
@@ -1091,9 +1266,9 @@ Snapshot of an Axum response used by higher-level language bindings.
 | `headers` | `array<string, string>` | — | Response headers (lowercase keys for predictable lookups). |
 | `body` | `string` | — | Response body bytes (decoded for supported encodings). |
 
-### Methods
+##### Methods
 
-#### text()
+###### text()
 
 Return response body as UTF-8 string.
 
@@ -1103,7 +1278,17 @@ Return response body as UTF-8 string.
 public function text(): string
 ```
 
-#### header()
+**Example:**
+
+```php
+$result = $instance->text();
+```
+
+**Returns:** `string`
+
+**Errors:** Throws `FromUtf8Error`.
+
+###### header()
 
 Lookup header by case-insensitive name.
 
@@ -1113,15 +1298,29 @@ Lookup header by case-insensitive name.
 public function header(string $name): ?string
 ```
 
+**Example:**
+
+```php
+$result = $instance->header("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | `string` | Yes | The name |
+
+**Returns:** `?string`
+
 ---
 
 #### RouteBuilder
 
 Builder for defining a route.
 
-### Methods
+##### Methods
 
-#### new()
+###### new()
 
 Create a new builder for the provided HTTP method and path.
 
@@ -1131,7 +1330,22 @@ Create a new builder for the provided HTTP method and path.
 public static function new(Method $method, string $path): RouteBuilder
 ```
 
-#### handlerName()
+**Example:**
+
+```php
+$result = RouteBuilder::new(new Method(), "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `Method` | Yes | The method |
+| `path` | `string` | Yes | Path to the file |
+
+**Returns:** `RouteBuilder`
+
+###### handlerName()
 
 Assign an explicit handler name.
 
@@ -1141,7 +1355,21 @@ Assign an explicit handler name.
 public function handlerName(string $name): RouteBuilder
 ```
 
-#### requestSchemaJson()
+**Example:**
+
+```php
+$result = $instance->handlerName("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | `string` | Yes | The name |
+
+**Returns:** `RouteBuilder`
+
+###### requestSchemaJson()
 
 Provide a raw JSON schema for the request body.
 
@@ -1151,7 +1379,21 @@ Provide a raw JSON schema for the request body.
 public function requestSchemaJson(mixed $schema): RouteBuilder
 ```
 
-#### responseSchemaJson()
+**Example:**
+
+```php
+$result = $instance->requestSchemaJson([]);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `mixed` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### responseSchemaJson()
 
 Provide a raw JSON schema for the response body.
 
@@ -1161,7 +1403,21 @@ Provide a raw JSON schema for the response body.
 public function responseSchemaJson(mixed $schema): RouteBuilder
 ```
 
-#### paramsSchemaJson()
+**Example:**
+
+```php
+$result = $instance->responseSchemaJson([]);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `mixed` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### paramsSchemaJson()
 
 Provide a raw JSON schema for request parameters.
 
@@ -1171,7 +1427,21 @@ Provide a raw JSON schema for request parameters.
 public function paramsSchemaJson(mixed $schema): RouteBuilder
 ```
 
-#### fileParamsJson()
+**Example:**
+
+```php
+$result = $instance->paramsSchemaJson([]);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `mixed` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### fileParamsJson()
 
 Provide multipart file parameter configuration.
 
@@ -1181,7 +1451,21 @@ Provide multipart file parameter configuration.
 public function fileParamsJson(mixed $schema): RouteBuilder
 ```
 
-#### cors()
+**Example:**
+
+```php
+$result = $instance->fileParamsJson([]);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `mixed` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### cors()
 
 Attach a CORS configuration for this route.
 
@@ -1191,7 +1475,21 @@ Attach a CORS configuration for this route.
 public function cors(CorsConfig $cors): RouteBuilder
 ```
 
-#### compression()
+**Example:**
+
+```php
+$result = $instance->cors(new CorsConfig());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `cors` | `CorsConfig` | Yes | The cors config |
+
+**Returns:** `RouteBuilder`
+
+###### compression()
 
 Attach a compression configuration for this route.
 
@@ -1201,7 +1499,21 @@ Attach a compression configuration for this route.
 public function compression(CompressionConfig $compression): RouteBuilder
 ```
 
-#### sync()
+**Example:**
+
+```php
+$result = $instance->compression(new CompressionConfig());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `compression` | `CompressionConfig` | Yes | The compression config |
+
+**Returns:** `RouteBuilder`
+
+###### sync()
 
 Mark the route as synchronous.
 
@@ -1211,7 +1523,15 @@ Mark the route as synchronous.
 public function sync(): RouteBuilder
 ```
 
-#### handlerDependencies()
+**Example:**
+
+```php
+$result = $instance->sync();
+```
+
+**Returns:** `RouteBuilder`
+
+###### handlerDependencies()
 
 Declare the dependency keys that must be resolved before this handler runs.
 
@@ -1220,6 +1540,20 @@ Declare the dependency keys that must be resolved before this handler runs.
 ```php
 public function handlerDependencies(array<string> $dependencies): RouteBuilder
 ```
+
+**Example:**
+
+```php
+$result = $instance->handlerDependencies([]);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `dependencies` | `array<string>` | Yes | The dependencies |
+
+**Returns:** `RouteBuilder`
 
 ---
 
@@ -1236,15 +1570,23 @@ introspection control, complexity limits, and depth limits.
 | `complexityLimit` | `?int` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `?int` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```php
 public static function default(): SchemaConfig
 ```
+
+**Example:**
+
+```php
+$result = SchemaConfig::default();
+```
+
+**Returns:** `SchemaConfig`
 
 ---
 
@@ -1271,20 +1613,26 @@ Server configuration
 | `openapi` | `?OpenApiConfig` | `null` | OpenAPI documentation configuration |
 | `jsonrpc` | `?JsonRpcConfig` | `null` | JSON-RPC configuration |
 | `grpc` | `?GrpcConfig` | `null` | gRPC configuration |
-| `lifecycleHooks` | `?string` | `null` | Lifecycle hooks for request/response processing |
 | `backgroundTasks` | `BackgroundTaskConfig` | — | Background task executor configuration |
 | `enableHttpTrace` | `bool` | `false` | Enable per-request HTTP tracing (tower-http `TraceLayer`) |
-| `diContainer` | `?string` | `null` | Dependency injection container (requires 'di' feature) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```php
 public static function default(): ServerConfig
 ```
+
+**Example:**
+
+```php
+$result = ServerConfig::default();
+```
+
+**Returns:** `ServerConfig`
 
 ---
 
@@ -1324,9 +1672,9 @@ retry: 3000
 | `id` | `?string` | `null` | Event ID (optional, for client-side reconnection) |
 | `retry` | `?int` | `null` | Retry timeout in milliseconds (optional) |
 
-### Methods
+#### Methods
 
-#### withId()
+##### withId()
 
 Set the event ID for client-side reconnection support
 
@@ -1339,7 +1687,21 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 public function withId(string $id): SseEvent
 ```
 
-#### withRetry()
+**Example:**
+
+```php
+$result = $instance->withId("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `id` | `string` | Yes | Unique identifier for this event |
+
+**Returns:** `SseEvent`
+
+###### withRetry()
 
 Set the retry timeout for client reconnection
 
@@ -1351,6 +1713,20 @@ if the connection is lost. The client browser will automatically handle reconnec
 ```php
 public function withRetry(int $retryMs): SseEvent
 ```
+
+**Example:**
+
+```php
+$result = $instance->withRetry(42);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `retryMs` | `int` | Yes | Retry timeout in milliseconds |
+
+**Returns:** `SseEvent`
 
 ---
 
@@ -1391,11 +1767,10 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `size` | `?int` | `null` | Size of the file in bytes |
 | `content` | `string` | — | File content (may be base64 encoded) |
 | `contentEncoding` | `?string` | `null` | Content encoding type |
-| `cursor` | `string` | — | Internal cursor for Read/Seek operations |
 
-### Methods
+##### Methods
 
-#### asBytes()
+###### asBytes()
 
 Get the raw file content as bytes.
 
@@ -1407,7 +1782,15 @@ This provides zero-copy access to the underlying buffer.
 public function asBytes(): string
 ```
 
-#### readToString()
+**Example:**
+
+```php
+$result = $instance->asBytes();
+```
+
+**Returns:** `string`
+
+###### readToString()
 
 Read the file content as a UTF-8 string.
 
@@ -1421,7 +1804,17 @@ Returns an error if the content is not valid UTF-8.
 public function readToString(): string
 ```
 
-#### contentTypeOrDefault()
+**Example:**
+
+```php
+$result = $instance->readToString();
+```
+
+**Returns:** `string`
+
+**Errors:** Throws `Error`.
+
+###### contentTypeOrDefault()
 
 Get the content type, defaulting to "application/octet-stream".
 
@@ -1430,6 +1823,14 @@ Get the content type, defaulting to "application/octet-stream".
 ```php
 public function contentTypeOrDefault(): string
 ```
+
+**Example:**
+
+```php
+$result = $instance->contentTypeOrDefault();
+```
+
+**Returns:** `string`
 
 ---
 

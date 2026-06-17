@@ -22,6 +22,12 @@ A `QueryOnlyConfig` with default settings
 function schemaQueryOnly(): QueryOnlyConfig
 ```
 
+**Example:**
+
+```typescript
+const result = schemaQueryOnly();
+```
+
 **Returns:** `QueryOnlyConfig`
 
 ---
@@ -42,6 +48,12 @@ A `QueryMutationConfig` with default settings
 function schemaQueryMutation(): QueryMutationConfig
 ```
 
+**Example:**
+
+```typescript
+const result = schemaQueryMutation();
+```
+
 **Returns:** `QueryMutationConfig`
 
 ---
@@ -60,6 +72,12 @@ A `FullSchemaConfig` with default settings
 
 ```typescript
 function schemaFull(): FullSchemaConfig
+```
+
+**Example:**
+
+```typescript
+const result = schemaFull();
 ```
 
 **Returns:** `FullSchemaConfig`
@@ -101,15 +119,23 @@ Compression configuration shared across runtimes
 | `minSize` | `number` | — | Minimum response size to compress (bytes) |
 | `quality` | `number` | — | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```typescript
 static default(): CompressionConfig
 ```
+
+**Example:**
+
+```typescript
+const result = CompressionConfig.default();
+```
+
+**Returns:** `CompressionConfig`
 
 ---
 
@@ -137,12 +163,10 @@ CORS configuration for a route
 | `exposeHeaders` | `Array<string> \| null` | `null` | Expose headers |
 | `maxAge` | `number \| null` | `null` | Maximum age |
 | `allowCredentials` | `boolean \| null` | `null` | Allow credentials |
-| `methodsJoinedCache` | `string` | — | Methods joined cache |
-| `headersJoinedCache` | `string` | — | Headers joined cache |
 
-### Methods
+##### Methods
 
-#### allowedMethodsJoined()
+###### allowedMethodsJoined()
 
 Get the cached joined methods string for preflight responses
 
@@ -152,7 +176,15 @@ Get the cached joined methods string for preflight responses
 allowedMethodsJoined(): string
 ```
 
-#### allowedHeadersJoined()
+**Example:**
+
+```typescript
+const result = instance.allowedMethodsJoined();
+```
+
+**Returns:** `string`
+
+###### allowedHeadersJoined()
 
 Get the cached joined headers string for preflight responses
 
@@ -162,7 +194,15 @@ Get the cached joined headers string for preflight responses
 allowedHeadersJoined(): string
 ```
 
-#### isOriginAllowed()
+**Example:**
+
+```typescript
+const result = instance.allowedHeadersJoined();
+```
+
+**Returns:** `string`
+
+###### isOriginAllowed()
 
 Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -172,7 +212,21 @@ Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 isOriginAllowed(origin: string): boolean
 ```
 
-#### isMethodAllowed()
+**Example:**
+
+```typescript
+const result = instance.isOriginAllowed("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `origin` | `string` | Yes | The origin |
+
+**Returns:** `boolean`
+
+###### isMethodAllowed()
 
 Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -182,7 +236,21 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 isMethodAllowed(method: string): boolean
 ```
 
-#### default()
+**Example:**
+
+```typescript
+const result = instance.isMethodAllowed("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `string` | Yes | The method |
+
+**Returns:** `boolean`
+
+###### default()
 
 **Signature:**
 
@@ -190,110 +258,13 @@ isMethodAllowed(method: string): boolean
 static default(): CorsConfig
 ```
 
----
-
-#### Handler
-
-Handler trait that all language bindings must implement
-
-This trait is completely language-agnostic. Each binding (Python, Node, WASM)
-implements this trait to bridge their runtime to our HTTP server.
-
-### Methods
-
-#### call()
-
-Handle an HTTP request
-
-Takes the extracted request data and returns a future that resolves to either:
-
-- Ok(Response): A successful HTTP response
-- Err((StatusCode, String)): An error with status code and message
-
-**Signature:**
+**Example:**
 
 ```typescript
-call(request: Request, requestData: RequestData): HandlerResult
+const result = CorsConfig.default();
 ```
 
-#### prefersRawJsonBody()
-
-Whether this handler prefers consuming `RequestData.raw_body` over the parsed
-`RequestData.body` for JSON requests.
-
-When `true`, the server may skip eager JSON parsing when there is no request-body
-schema validator attached to the route.
-
-**Signature:**
-
-```typescript
-prefersRawJsonBody(): boolean
-```
-
-#### prefersParameterExtraction()
-
-Whether this handler wants to perform its own parameter validation/extraction (path/query/header/cookie).
-
-When `true`, the server will skip `ParameterValidator.validate_and_extract` in `ValidatingHandler`.
-This is useful for language bindings which need to transform validated parameters into
-language-specific values (e.g., Python kwargs) without duplicating work. When `false`,
-the server stores validated output in `RequestData.validated_params`.
-
-**Signature:**
-
-```typescript
-prefersParameterExtraction(): boolean
-```
-
-#### wantsHeaders()
-
-Whether this handler needs the parsed headers map in `RequestData`.
-
-When `false`, the server may skip building `RequestData.headers` for requests without a body.
-(Requests with bodies still typically need `Content-Type` decisions.)
-
-**Signature:**
-
-```typescript
-wantsHeaders(): boolean
-```
-
-#### wantsCookies()
-
-Whether this handler needs the parsed cookies map in `RequestData`.
-
-When `false`, the server may skip parsing cookies for requests without a body.
-
-**Signature:**
-
-```typescript
-wantsCookies(): boolean
-```
-
-#### wantsRequestExtensions()
-
-Whether this handler needs `RequestData` stored in request extensions.
-
-When `false`, the server avoids inserting `RequestData` into extensions to
-skip cloning in hot paths.
-
-**Signature:**
-
-```typescript
-wantsRequestExtensions(): boolean
-```
-
-#### staticResponse()
-
-Return a pre-built static response if this handler always produces the
-same output. When `Some`, the server bypasses the full middleware
-pipeline and serves the pre-built response directly.
-
-**Signature:**
-
-```typescript
-staticResponse(): StaticResponse | null
-```
+**Returns:** `CorsConfig`
 
 ---
 
@@ -301,9 +272,9 @@ staticResponse(): StaticResponse | null
 
 Convert user-facing handler functions into the low-level `Handler` trait.
 
-### Methods
+##### Methods
 
-#### intoHandler()
+###### intoHandler()
 
 Convert this value into a shared request handler.
 
@@ -312,6 +283,14 @@ Convert this value into a shared request handler.
 ```typescript
 intoHandler(): Handler
 ```
+
+**Example:**
+
+```typescript
+const result = instance.intoHandler();
+```
+
+**Returns:** `Handler`
 
 ---
 
@@ -326,15 +305,23 @@ JSON-RPC server configuration
 | `enableBatch` | `boolean` | — | Enable batch request processing (default: true) |
 | `maxBatchSize` | `number` | — | Maximum number of requests in a batch (default: 100) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```typescript
 static default(): JsonRpcConfig
 ```
+
+**Example:**
+
+```typescript
+const result = JsonRpcConfig.default();
+```
+
+**Returns:** `JsonRpcConfig`
 
 ---
 
@@ -399,15 +386,23 @@ OpenAPI configuration
 | `servers` | `Array<ServerInfo>` | `[]` | Server definitions |
 | `securitySchemes` | `Record<string, SecuritySchemeInfo>` | `{}` | Security schemes (auto-detected from middleware if not provided) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```typescript
 static default(): OpenApiConfig
 ```
+
+**Example:**
+
+```typescript
+const result = OpenApiConfig.default();
+```
+
+**Returns:** `OpenApiConfig`
 
 ---
 
@@ -507,9 +502,9 @@ Content-Type: application/problem+json
 | `instance` | `string \| null` | `null` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
 | `extensions` | `Record<string, unknown>` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
 
-### Methods
+#### Methods
 
-#### withDetail()
+##### withDetail()
 
 Set the detail field
 
@@ -519,7 +514,21 @@ Set the detail field
 withDetail(detail: string): ProblemDetails
 ```
 
-#### withInstance()
+**Example:**
+
+```typescript
+const result = instance.withDetail("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `string` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### withInstance()
 
 Set the instance field
 
@@ -529,7 +538,21 @@ Set the instance field
 withInstance(instance: string): ProblemDetails
 ```
 
-#### notFound()
+**Example:**
+
+```typescript
+const result = instance.withInstance("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `instance` | `string` | Yes | The instance |
+
+**Returns:** `ProblemDetails`
+
+###### notFound()
 
 Create a not found error
 
@@ -539,7 +562,21 @@ Create a not found error
 static notFound(detail: string): ProblemDetails
 ```
 
-#### methodNotAllowed()
+**Example:**
+
+```typescript
+const result = ProblemDetails.notFound("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `string` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### methodNotAllowed()
 
 Create a method not allowed error
 
@@ -549,7 +586,21 @@ Create a method not allowed error
 static methodNotAllowed(detail: string): ProblemDetails
 ```
 
-#### internalServerError()
+**Example:**
+
+```typescript
+const result = ProblemDetails.methodNotAllowed("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `string` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### internalServerError()
 
 Create an internal server error
 
@@ -559,7 +610,21 @@ Create an internal server error
 static internalServerError(detail: string): ProblemDetails
 ```
 
-#### badRequest()
+**Example:**
+
+```typescript
+const result = ProblemDetails.internalServerError("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `string` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### badRequest()
 
 Create a bad request error
 
@@ -569,7 +634,21 @@ Create a bad request error
 static badRequest(detail: string): ProblemDetails
 ```
 
-#### toJson()
+**Example:**
+
+```typescript
+const result = ProblemDetails.badRequest("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `string` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### toJson()
 
 Serialize to JSON string
 
@@ -582,7 +661,17 @@ Returns an error if the serialization fails.
 toJson(): string
 ```
 
-#### toJsonPretty()
+**Example:**
+
+```typescript
+const result = instance.toJson();
+```
+
+**Returns:** `string`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### toJsonPretty()
 
 Serialize to pretty JSON string
 
@@ -594,6 +683,16 @@ Returns an error if the serialization fails.
 ```typescript
 toJsonPretty(): string
 ```
+
+**Example:**
+
+```typescript
+const result = instance.toJsonPretty();
+```
+
+**Returns:** `string`
+
+**Errors:** Throws `Error` with a descriptive message.
 
 ---
 
@@ -607,15 +706,23 @@ Rate limiting configuration shared across runtimes
 | `burst` | `number` | `200` | Burst allowance |
 | `ipBased` | `boolean` | `true` | Use IP-based rate limiting |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```typescript
 static default(): RateLimitConfig
 ```
+
+**Example:**
+
+```typescript
+const result = RateLimitConfig.default();
+```
+
+**Returns:** `RateLimitConfig`
 
 ---
 
@@ -633,9 +740,9 @@ HTTP Response with custom status code, headers, and content
 | `statusCode` | `number` | — | HTTP status code (defaults to 200) |
 | `headers` | `Record<string, string>` | `{}` | Response headers |
 
-### Methods
+##### Methods
 
-#### setHeader()
+###### setHeader()
 
 Set a header
 
@@ -645,7 +752,22 @@ Set a header
 setHeader(key: string, value: string): void
 ```
 
-#### setCookie()
+**Example:**
+
+```typescript
+instance.setHeader("value", "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `key` | `string` | Yes | The key |
+| `value` | `string` | Yes | The value |
+
+**Returns:** No return value.
+
+###### setCookie()
 
 Set a cookie in the response
 
@@ -655,13 +777,42 @@ Set a cookie in the response
 setCookie(key: string, value: string, secure: boolean, httpOnly: boolean, maxAge: number, domain: string, path: string, sameSite: string): void
 ```
 
-#### default()
+**Example:**
+
+```typescript
+instance.setCookie("value", "value", true, true, 42, "value", "value", "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `key` | `string` | Yes | The key |
+| `value` | `string` | Yes | The value |
+| `secure` | `boolean` | Yes | The secure |
+| `httpOnly` | `boolean` | Yes | The http only |
+| `maxAge` | `number \| null` | No | The max age |
+| `domain` | `string \| null` | No | The domain |
+| `path` | `string \| null` | No | Path to the file |
+| `sameSite` | `string \| null` | No | The same site |
+
+**Returns:** No return value.
+
+###### default()
 
 **Signature:**
 
 ```typescript
 static default(): Response
 ```
+
+**Example:**
+
+```typescript
+const result = Response.default();
+```
+
+**Returns:** `Response`
 
 ---
 
@@ -688,20 +839,26 @@ Server configuration
 | `openapi` | `OpenApiConfig \| null` | `null` | OpenAPI documentation configuration |
 | `jsonrpc` | `JsonRpcConfig \| null` | `null` | JSON-RPC configuration |
 | `grpc` | `GrpcConfig \| null` | `null` | gRPC configuration |
-| `lifecycleHooks` | `string \| null` | `null` | Lifecycle hooks for request/response processing |
 | `backgroundTasks` | `BackgroundTaskConfig` | — | Background task executor configuration |
 | `enableHttpTrace` | `boolean` | `false` | Enable per-request HTTP tracing (tower-http `TraceLayer`) |
-| `diContainer` | `string \| null` | `null` | Dependency injection container (requires 'di' feature) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```typescript
 static default(): ServerConfig
 ```
+
+**Example:**
+
+```typescript
+const result = ServerConfig.default();
+```
+
+**Returns:** `ServerConfig`
 
 ---
 
@@ -725,29 +882,66 @@ interface for making HTTP requests, sending WebSocket connections, and
 handling Server-Sent Events. Language bindings wrap this to provide
 native API surfaces.
 
-### Methods
+##### Methods
 
-#### graphqlAt()
+###### graphqlAt()
 
 Send a GraphQL query/mutation to a custom endpoint
 
 **Signature:**
 
 ```typescript
-graphqlAt(endpoint: string, query: string, variables: unknown, operationName: string): ResponseSnapshot
+graphqlAt(endpoint: string, query: string, variables: unknown, operationName: string): Promise<ResponseSnapshot>
 ```
 
-#### graphql()
+**Example:**
+
+```typescript
+const result = await instance.graphqlAt("value", "value", {}, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `endpoint` | `string` | Yes | The endpoint |
+| `query` | `string` | Yes | The query |
+| `variables` | `unknown \| null` | No | The variables |
+| `operationName` | `string \| null` | No | The operation name |
+
+**Returns:** `ResponseSnapshot`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### graphql()
 
 Send a GraphQL query/mutation
 
 **Signature:**
 
 ```typescript
-graphql(query: string, variables: unknown, operationName: string): ResponseSnapshot
+graphql(query: string, variables: unknown, operationName: string): Promise<ResponseSnapshot>
 ```
 
-#### graphqlSubscriptionAt()
+**Example:**
+
+```typescript
+const result = await instance.graphql("value", {}, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `string` | Yes | The query |
+| `variables` | `unknown \| null` | No | The variables |
+| `operationName` | `string \| null` | No | The operation name |
+
+**Returns:** `ResponseSnapshot`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### graphqlSubscriptionAt()
 
 Send a GraphQL subscription (WebSocket) to a custom endpoint.
 
@@ -757,10 +951,29 @@ After the first payload is received, this client sends `complete` to unsubscribe
 **Signature:**
 
 ```typescript
-graphqlSubscriptionAt(endpoint: string, query: string, variables: unknown, operationName: string): GraphQlSubscriptionSnapshot
+graphqlSubscriptionAt(endpoint: string, query: string, variables: unknown, operationName: string): Promise<GraphQlSubscriptionSnapshot>
 ```
 
-#### graphqlSubscription()
+**Example:**
+
+```typescript
+const result = await instance.graphqlSubscriptionAt("value", "value", {}, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `endpoint` | `string` | Yes | The endpoint |
+| `query` | `string` | Yes | The query |
+| `variables` | `unknown \| null` | No | The variables |
+| `operationName` | `string \| null` | No | The operation name |
+
+**Returns:** `GraphQlSubscriptionSnapshot`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### graphqlSubscription()
 
 Send a GraphQL subscription (WebSocket).
 
@@ -769,8 +982,26 @@ Uses `/graphql` as the default subscription endpoint.
 **Signature:**
 
 ```typescript
-graphqlSubscription(query: string, variables: unknown, operationName: string): GraphQlSubscriptionSnapshot
+graphqlSubscription(query: string, variables: unknown, operationName: string): Promise<GraphQlSubscriptionSnapshot>
 ```
+
+**Example:**
+
+```typescript
+const result = await instance.graphqlSubscription("value", {}, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `string` | Yes | The query |
+| `variables` | `unknown \| null` | No | The variables |
+| `operationName` | `string \| null` | No | The operation name |
+
+**Returns:** `GraphQlSubscriptionSnapshot`
+
+**Errors:** Throws `Error` with a descriptive message.
 
 ---
 

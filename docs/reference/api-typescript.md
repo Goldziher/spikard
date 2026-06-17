@@ -22,6 +22,12 @@ A `QueryOnlyConfig` with default settings
 function schemaQueryOnly(): QueryOnlyConfig
 ```
 
+**Example:**
+
+```typescript
+const result = schemaQueryOnly();
+```
+
 **Returns:** `QueryOnlyConfig`
 
 ---
@@ -40,6 +46,12 @@ A `QueryMutationConfig` with default settings
 
 ```typescript
 function schemaQueryMutation(): QueryMutationConfig
+```
+
+**Example:**
+
+```typescript
+const result = schemaQueryMutation();
 ```
 
 **Returns:** `QueryMutationConfig`
@@ -62,6 +74,12 @@ A `FullSchemaConfig` with default settings
 function schemaFull(): FullSchemaConfig
 ```
 
+**Example:**
+
+```typescript
+const result = schemaFull();
+```
+
 **Returns:** `FullSchemaConfig`
 
 ---
@@ -76,134 +94,6 @@ API Key authentication configuration
 |-------|------|---------|-------------|
 | `keys` | `Array<string>` | — | Valid API keys |
 | `headerName` | `string` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
-
----
-
-#### App
-
-Spikard application builder.
-
-### Methods
-
-#### new()
-
-Create a new application with the default server configuration.
-
-**Signature:**
-
-```typescript
-static new(): App
-```
-
-#### onRequest()
-
-Register an `on_request` lifecycle hook (runs before validation and handler dispatch).
-
-**Signature:**
-
-```typescript
-onRequest(hook: string): App
-```
-
-#### preValidation()
-
-Register a `pre_validation` lifecycle hook (runs after `on_request`, before validation).
-
-**Signature:**
-
-```typescript
-preValidation(hook: string): App
-```
-
-#### preHandler()
-
-Register a `pre_handler` lifecycle hook (runs after validation, before the handler).
-
-**Signature:**
-
-```typescript
-preHandler(hook: string): App
-```
-
-#### onResponse()
-
-Register an `on_response` lifecycle hook (runs after a successful handler response).
-
-**Signature:**
-
-```typescript
-onResponse(hook: string): App
-```
-
-#### onError()
-
-Register an `on_error` lifecycle hook (runs when the handler returns an error).
-
-**Signature:**
-
-```typescript
-onError(hook: string): App
-```
-
-#### mergeAxumRouter()
-
-Attach an existing Axum router to this application, returning ownership.
-
-**Signature:**
-
-```typescript
-mergeAxumRouter(router: string): App
-```
-
-#### attachAxumRouter()
-
-Attach an Axum router using a mutable reference for incremental configuration.
-
-**Signature:**
-
-```typescript
-attachAxumRouter(router: string): App
-```
-
-#### intoRouter()
-
-Build the underlying Axum router.
-
-**Errors:**
-
-Returns an error if server or router construction fails.
-
-**Signature:**
-
-```typescript
-intoRouter(): string
-```
-
-#### intoRouterAndConfig()
-
-Decompose the application into its Axum router and server configuration.
-
-This is the low-level escape hatch used by the C FFI layer to start the
-server on a background thread while retaining the bind address from the
-caller-supplied `ServerConfig`. Prefer `App.run` for normal use.
-
-**Errors:**
-
-Returns an error if router construction fails.
-
-**Signature:**
-
-```typescript
-intoRouterAndConfig(): string
-```
-
-#### default()
-
-**Signature:**
-
-```typescript
-static default(): App
-```
 
 ---
 
@@ -225,15 +115,23 @@ AsyncAPI HTTP endpoint configuration
 | `name` | `string` | — | The name |
 | `requestId` | `string \| null` | `null` | Request id |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```typescript
 static default(): BackgroundJobMetadata
 ```
+
+**Example:**
+
+```typescript
+const result = BackgroundJobMetadata.default();
+```
+
+**Returns:** `BackgroundJobMetadata`
 
 ---
 
@@ -247,15 +145,23 @@ Configuration for in-process background task execution.
 | `maxConcurrentTasks` | `number` | `128` | Maximum concurrent tasks |
 | `drainTimeoutSecs` | `number` | `30` | Drain timeout secs |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```typescript
 static default(): BackgroundTaskConfig
 ```
+
+**Example:**
+
+```typescript
+const result = BackgroundTaskConfig.default();
+```
+
+**Returns:** `BackgroundTaskConfig`
 
 ---
 
@@ -270,15 +176,23 @@ Compression configuration shared across runtimes
 | `minSize` | `number` | — | Minimum response size to compress (bytes) |
 | `quality` | `number` | — | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```typescript
 static default(): CompressionConfig
 ```
+
+**Example:**
+
+```typescript
+const result = CompressionConfig.default();
+```
+
+**Returns:** `CompressionConfig`
 
 ---
 
@@ -306,12 +220,10 @@ CORS configuration for a route
 | `exposeHeaders` | `Array<string> \| null` | `null` | Expose headers |
 | `maxAge` | `number \| null` | `null` | Maximum age |
 | `allowCredentials` | `boolean \| null` | `null` | Allow credentials |
-| `methodsJoinedCache` | `string` | — | Methods joined cache |
-| `headersJoinedCache` | `string` | — | Headers joined cache |
 
-### Methods
+##### Methods
 
-#### allowedMethodsJoined()
+###### allowedMethodsJoined()
 
 Get the cached joined methods string for preflight responses
 
@@ -321,7 +233,15 @@ Get the cached joined methods string for preflight responses
 allowedMethodsJoined(): string
 ```
 
-#### allowedHeadersJoined()
+**Example:**
+
+```typescript
+const result = instance.allowedMethodsJoined();
+```
+
+**Returns:** `string`
+
+###### allowedHeadersJoined()
 
 Get the cached joined headers string for preflight responses
 
@@ -331,7 +251,15 @@ Get the cached joined headers string for preflight responses
 allowedHeadersJoined(): string
 ```
 
-#### isOriginAllowed()
+**Example:**
+
+```typescript
+const result = instance.allowedHeadersJoined();
+```
+
+**Returns:** `string`
+
+###### isOriginAllowed()
 
 Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -341,7 +269,21 @@ Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 isOriginAllowed(origin: string): boolean
 ```
 
-#### isMethodAllowed()
+**Example:**
+
+```typescript
+const result = instance.isOriginAllowed("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `origin` | `string` | Yes | The origin |
+
+**Returns:** `boolean`
+
+###### isMethodAllowed()
 
 Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -351,13 +293,35 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 isMethodAllowed(method: string): boolean
 ```
 
-#### default()
+**Example:**
+
+```typescript
+const result = instance.isMethodAllowed("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `string` | Yes | The method |
+
+**Returns:** `boolean`
+
+###### default()
 
 **Signature:**
 
 ```typescript
 static default(): CorsConfig
 ```
+
+**Example:**
+
+```typescript
+const result = CorsConfig.default();
+```
+
+**Returns:** `CorsConfig`
 
 ---
 
@@ -371,15 +335,23 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 | `complexityLimit` | `number \| null` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `number \| null` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```typescript
 static default(): FullSchemaConfig
 ```
+
+**Example:**
+
+```typescript
+const result = FullSchemaConfig.default();
+```
+
+**Returns:** `FullSchemaConfig`
 
 ---
 
@@ -390,9 +362,9 @@ Configuration for GraphQL routes
 Provides a builder pattern for configuring GraphQL route parameters
 for the Spikard HTTP server's routing system.
 
-### Methods
+##### Methods
 
-#### new()
+###### new()
 
 Create a new GraphQL route configuration with defaults
 
@@ -408,7 +380,15 @@ Default values:
 static new(): GraphQlRouteConfig
 ```
 
-#### path()
+**Example:**
+
+```typescript
+const result = GraphQlRouteConfig.new();
+```
+
+**Returns:** `GraphQlRouteConfig`
+
+###### path()
 
 Set the HTTP path for the GraphQL endpoint
 
@@ -418,7 +398,21 @@ Set the HTTP path for the GraphQL endpoint
 path(path: string): GraphQlRouteConfig
 ```
 
-#### method()
+**Example:**
+
+```typescript
+const result = instance.path("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `path` | `string` | Yes | The URL path (e.g., "/graphql", "/api/graphql") |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### method()
 
 Set the HTTP method for the GraphQL endpoint
 
@@ -428,7 +422,21 @@ Set the HTTP method for the GraphQL endpoint
 method(method: string): GraphQlRouteConfig
 ```
 
-#### enablePlayground()
+**Example:**
+
+```typescript
+const result = instance.method("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `string` | Yes | The HTTP method (typically "POST") |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### enablePlayground()
 
 Enable or disable the GraphQL Playground UI
 
@@ -438,7 +446,21 @@ Enable or disable the GraphQL Playground UI
 enablePlayground(enable: boolean): GraphQlRouteConfig
 ```
 
-#### description()
+**Example:**
+
+```typescript
+const result = instance.enablePlayground(true);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `enable` | `boolean` | Yes | Whether to enable playground |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### description()
 
 Set a custom description for documentation
 
@@ -448,7 +470,21 @@ Set a custom description for documentation
 description(description: string): GraphQlRouteConfig
 ```
 
-#### getPath()
+**Example:**
+
+```typescript
+const result = instance.description("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `description` | `string` | Yes | Documentation string |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### getPath()
 
 Get the configured path
 
@@ -458,7 +494,15 @@ Get the configured path
 getPath(): string
 ```
 
-#### getMethod()
+**Example:**
+
+```typescript
+const result = instance.getPath();
+```
+
+**Returns:** `string`
+
+###### getMethod()
 
 Get the configured method
 
@@ -468,7 +512,15 @@ Get the configured method
 getMethod(): string
 ```
 
-#### isPlaygroundEnabled()
+**Example:**
+
+```typescript
+const result = instance.getMethod();
+```
+
+**Returns:** `string`
+
+###### isPlaygroundEnabled()
 
 Check if playground is enabled
 
@@ -478,7 +530,15 @@ Check if playground is enabled
 isPlaygroundEnabled(): boolean
 ```
 
-#### getDescription()
+**Example:**
+
+```typescript
+const result = instance.isPlaygroundEnabled();
+```
+
+**Returns:** `boolean`
+
+###### getDescription()
 
 Get the description if set
 
@@ -488,13 +548,29 @@ Get the description if set
 getDescription(): string | null
 ```
 
-#### default()
+**Example:**
+
+```typescript
+const result = instance.getDescription();
+```
+
+**Returns:** `string | null`
+
+###### default()
 
 **Signature:**
 
 ```typescript
 static default(): GraphQlRouteConfig
 ```
+
+**Example:**
+
+```typescript
+const result = GraphQlRouteConfig.default();
+```
+
+**Returns:** `GraphQlRouteConfig`
 
 ---
 
@@ -552,9 +628,9 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `keepaliveTimeout` | `number` | — | HTTP/2 keepalive timeout in seconds |
 | `maxStreamResponseBytes` | `number \| null` | `null` | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `null` (unbounded total response size). |
 
-### Methods
+#### Methods
 
-#### default()
+##### default()
 
 **Signature:**
 
@@ -562,110 +638,13 @@ concurrent stream limiting to the HTTP/2 transport layer:
 static default(): GrpcConfig
 ```
 
----
-
-#### Handler
-
-Handler trait that all language bindings must implement
-
-This trait is completely language-agnostic. Each binding (Python, Node, WASM)
-implements this trait to bridge their runtime to our HTTP server.
-
-### Methods
-
-#### call()
-
-Handle an HTTP request
-
-Takes the extracted request data and returns a future that resolves to either:
-
-- Ok(Response): A successful HTTP response
-- Err((StatusCode, String)): An error with status code and message
-
-**Signature:**
+**Example:**
 
 ```typescript
-call(request: Request, requestData: RequestData): HandlerResult
+const result = GrpcConfig.default();
 ```
 
-#### prefersRawJsonBody()
-
-Whether this handler prefers consuming `RequestData.raw_body` over the parsed
-`RequestData.body` for JSON requests.
-
-When `true`, the server may skip eager JSON parsing when there is no request-body
-schema validator attached to the route.
-
-**Signature:**
-
-```typescript
-prefersRawJsonBody(): boolean
-```
-
-#### prefersParameterExtraction()
-
-Whether this handler wants to perform its own parameter validation/extraction (path/query/header/cookie).
-
-When `true`, the server will skip `ParameterValidator.validate_and_extract` in `ValidatingHandler`.
-This is useful for language bindings which need to transform validated parameters into
-language-specific values (e.g., Python kwargs) without duplicating work. When `false`,
-the server stores validated output in `RequestData.validated_params`.
-
-**Signature:**
-
-```typescript
-prefersParameterExtraction(): boolean
-```
-
-#### wantsHeaders()
-
-Whether this handler needs the parsed headers map in `RequestData`.
-
-When `false`, the server may skip building `RequestData.headers` for requests without a body.
-(Requests with bodies still typically need `Content-Type` decisions.)
-
-**Signature:**
-
-```typescript
-wantsHeaders(): boolean
-```
-
-#### wantsCookies()
-
-Whether this handler needs the parsed cookies map in `RequestData`.
-
-When `false`, the server may skip parsing cookies for requests without a body.
-
-**Signature:**
-
-```typescript
-wantsCookies(): boolean
-```
-
-#### wantsRequestExtensions()
-
-Whether this handler needs `RequestData` stored in request extensions.
-
-When `false`, the server avoids inserting `RequestData` into extensions to
-skip cloning in hot paths.
-
-**Signature:**
-
-```typescript
-wantsRequestExtensions(): boolean
-```
-
-#### staticResponse()
-
-Return a pre-built static response if this handler always produces the
-same output. When `Some`, the server bypasses the full middleware
-pipeline and serves the pre-built response directly.
-
-**Signature:**
-
-```typescript
-staticResponse(): StaticResponse | null
-```
+**Returns:** `GrpcConfig`
 
 ---
 
@@ -673,9 +652,9 @@ staticResponse(): StaticResponse | null
 
 Convert user-facing handler functions into the low-level `Handler` trait.
 
-### Methods
+##### Methods
 
-#### intoHandler()
+###### intoHandler()
 
 Convert this value into a shared request handler.
 
@@ -684,6 +663,14 @@ Convert this value into a shared request handler.
 ```typescript
 intoHandler(): Handler
 ```
+
+**Example:**
+
+```typescript
+const result = instance.intoHandler();
+```
+
+**Returns:** `Handler`
 
 ---
 
@@ -698,15 +685,23 @@ JSON-RPC server configuration
 | `enableBatch` | `boolean` | — | Enable batch request processing (default: true) |
 | `maxBatchSize` | `number` | — | Maximum number of requests in a batch (default: 100) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```typescript
 static default(): JsonRpcConfig
 ```
+
+**Example:**
+
+```typescript
+const result = JsonRpcConfig.default();
+```
+
+**Returns:** `JsonRpcConfig`
 
 ---
 
@@ -771,15 +766,23 @@ OpenAPI configuration
 | `servers` | `Array<ServerInfo>` | `[]` | Server definitions |
 | `securitySchemes` | `Record<string, SecuritySchemeInfo>` | `{}` | Security schemes (auto-detected from middleware if not provided) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```typescript
 static default(): OpenApiConfig
 ```
+
+**Example:**
+
+```typescript
+const result = OpenApiConfig.default();
+```
+
+**Returns:** `OpenApiConfig`
 
 ---
 
@@ -879,9 +882,9 @@ Content-Type: application/problem+json
 | `instance` | `string \| null` | `null` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
 | `extensions` | `Record<string, unknown>` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
 
-### Methods
+#### Methods
 
-#### withDetail()
+##### withDetail()
 
 Set the detail field
 
@@ -891,7 +894,21 @@ Set the detail field
 withDetail(detail: string): ProblemDetails
 ```
 
-#### withInstance()
+**Example:**
+
+```typescript
+const result = instance.withDetail("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `string` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### withInstance()
 
 Set the instance field
 
@@ -901,7 +918,21 @@ Set the instance field
 withInstance(instance: string): ProblemDetails
 ```
 
-#### notFound()
+**Example:**
+
+```typescript
+const result = instance.withInstance("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `instance` | `string` | Yes | The instance |
+
+**Returns:** `ProblemDetails`
+
+###### notFound()
 
 Create a not found error
 
@@ -911,7 +942,21 @@ Create a not found error
 static notFound(detail: string): ProblemDetails
 ```
 
-#### methodNotAllowed()
+**Example:**
+
+```typescript
+const result = ProblemDetails.notFound("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `string` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### methodNotAllowed()
 
 Create a method not allowed error
 
@@ -921,7 +966,21 @@ Create a method not allowed error
 static methodNotAllowed(detail: string): ProblemDetails
 ```
 
-#### internalServerError()
+**Example:**
+
+```typescript
+const result = ProblemDetails.methodNotAllowed("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `string` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### internalServerError()
 
 Create an internal server error
 
@@ -931,7 +990,21 @@ Create an internal server error
 static internalServerError(detail: string): ProblemDetails
 ```
 
-#### badRequest()
+**Example:**
+
+```typescript
+const result = ProblemDetails.internalServerError("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `string` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### badRequest()
 
 Create a bad request error
 
@@ -941,7 +1014,21 @@ Create a bad request error
 static badRequest(detail: string): ProblemDetails
 ```
 
-#### toJson()
+**Example:**
+
+```typescript
+const result = ProblemDetails.badRequest("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `string` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### toJson()
 
 Serialize to JSON string
 
@@ -954,7 +1041,17 @@ Returns an error if the serialization fails.
 toJson(): string
 ```
 
-#### toJsonPretty()
+**Example:**
+
+```typescript
+const result = instance.toJson();
+```
+
+**Returns:** `string`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### toJsonPretty()
 
 Serialize to pretty JSON string
 
@@ -966,6 +1063,16 @@ Returns an error if the serialization fails.
 ```typescript
 toJsonPretty(): string
 ```
+
+**Example:**
+
+```typescript
+const result = instance.toJsonPretty();
+```
+
+**Returns:** `string`
+
+**Errors:** Throws `Error` with a descriptive message.
 
 ---
 
@@ -979,15 +1086,23 @@ Configuration for schemas with Query and Mutation types
 | `complexityLimit` | `number \| null` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `number \| null` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```typescript
 static default(): QueryMutationConfig
 ```
+
+**Example:**
+
+```typescript
+const result = QueryMutationConfig.default();
+```
+
+**Returns:** `QueryMutationConfig`
 
 ---
 
@@ -1001,15 +1116,23 @@ Configuration for schemas with only Query type
 | `complexityLimit` | `number \| null` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `number \| null` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```typescript
 static default(): QueryOnlyConfig
 ```
+
+**Example:**
+
+```typescript
+const result = QueryOnlyConfig.default();
+```
+
+**Returns:** `QueryOnlyConfig`
 
 ---
 
@@ -1023,15 +1146,23 @@ Rate limiting configuration shared across runtimes
 | `burst` | `number` | `200` | Burst allowance |
 | `ipBased` | `boolean` | `true` | Use IP-based rate limiting |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```typescript
 static default(): RateLimitConfig
 ```
+
+**Example:**
+
+```typescript
+const result = RateLimitConfig.default();
+```
+
+**Returns:** `RateLimitConfig`
 
 ---
 
@@ -1049,9 +1180,9 @@ HTTP Response with custom status code, headers, and content
 | `statusCode` | `number` | — | HTTP status code (defaults to 200) |
 | `headers` | `Record<string, string>` | `{}` | Response headers |
 
-### Methods
+##### Methods
 
-#### setHeader()
+###### setHeader()
 
 Set a header
 
@@ -1061,7 +1192,22 @@ Set a header
 setHeader(key: string, value: string): void
 ```
 
-#### setCookie()
+**Example:**
+
+```typescript
+instance.setHeader("value", "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `key` | `string` | Yes | The key |
+| `value` | `string` | Yes | The value |
+
+**Returns:** No return value.
+
+###### setCookie()
 
 Set a cookie in the response
 
@@ -1071,13 +1217,42 @@ Set a cookie in the response
 setCookie(key: string, value: string, secure: boolean, httpOnly: boolean, maxAge: number, domain: string, path: string, sameSite: string): void
 ```
 
-#### default()
+**Example:**
+
+```typescript
+instance.setCookie("value", "value", true, true, 42, "value", "value", "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `key` | `string` | Yes | The key |
+| `value` | `string` | Yes | The value |
+| `secure` | `boolean` | Yes | The secure |
+| `httpOnly` | `boolean` | Yes | The http only |
+| `maxAge` | `number \| null` | No | The max age |
+| `domain` | `string \| null` | No | The domain |
+| `path` | `string \| null` | No | Path to the file |
+| `sameSite` | `string \| null` | No | The same site |
+
+**Returns:** No return value.
+
+###### default()
 
 **Signature:**
 
 ```typescript
 static default(): Response
 ```
+
+**Example:**
+
+```typescript
+const result = Response.default();
+```
+
+**Returns:** `Response`
 
 ---
 
@@ -1091,9 +1266,9 @@ Snapshot of an Axum response used by higher-level language bindings.
 | `headers` | `Record<string, string>` | — | Response headers (lowercase keys for predictable lookups). |
 | `body` | `Buffer` | — | Response body bytes (decoded for supported encodings). |
 
-### Methods
+##### Methods
 
-#### text()
+###### text()
 
 Return response body as UTF-8 string.
 
@@ -1103,7 +1278,17 @@ Return response body as UTF-8 string.
 text(): string
 ```
 
-#### header()
+**Example:**
+
+```typescript
+const result = instance.text();
+```
+
+**Returns:** `string`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### header()
 
 Lookup header by case-insensitive name.
 
@@ -1113,15 +1298,29 @@ Lookup header by case-insensitive name.
 header(name: string): string | null
 ```
 
+**Example:**
+
+```typescript
+const result = instance.header("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | `string` | Yes | The name |
+
+**Returns:** `string | null`
+
 ---
 
 #### RouteBuilder
 
 Builder for defining a route.
 
-### Methods
+##### Methods
 
-#### new()
+###### new()
 
 Create a new builder for the provided HTTP method and path.
 
@@ -1131,7 +1330,22 @@ Create a new builder for the provided HTTP method and path.
 static new(method: Method, path: string): RouteBuilder
 ```
 
-#### handlerName()
+**Example:**
+
+```typescript
+const result = RouteBuilder.new(new Method(), "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `Method` | Yes | The method |
+| `path` | `string` | Yes | Path to the file |
+
+**Returns:** `RouteBuilder`
+
+###### handlerName()
 
 Assign an explicit handler name.
 
@@ -1141,7 +1355,21 @@ Assign an explicit handler name.
 handlerName(name: string): RouteBuilder
 ```
 
-#### requestSchemaJson()
+**Example:**
+
+```typescript
+const result = instance.handlerName("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | `string` | Yes | The name |
+
+**Returns:** `RouteBuilder`
+
+###### requestSchemaJson()
 
 Provide a raw JSON schema for the request body.
 
@@ -1151,7 +1379,21 @@ Provide a raw JSON schema for the request body.
 requestSchemaJson(schema: unknown): RouteBuilder
 ```
 
-#### responseSchemaJson()
+**Example:**
+
+```typescript
+const result = instance.requestSchemaJson({});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `unknown` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### responseSchemaJson()
 
 Provide a raw JSON schema for the response body.
 
@@ -1161,7 +1403,21 @@ Provide a raw JSON schema for the response body.
 responseSchemaJson(schema: unknown): RouteBuilder
 ```
 
-#### paramsSchemaJson()
+**Example:**
+
+```typescript
+const result = instance.responseSchemaJson({});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `unknown` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### paramsSchemaJson()
 
 Provide a raw JSON schema for request parameters.
 
@@ -1171,7 +1427,21 @@ Provide a raw JSON schema for request parameters.
 paramsSchemaJson(schema: unknown): RouteBuilder
 ```
 
-#### fileParamsJson()
+**Example:**
+
+```typescript
+const result = instance.paramsSchemaJson({});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `unknown` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### fileParamsJson()
 
 Provide multipart file parameter configuration.
 
@@ -1181,7 +1451,21 @@ Provide multipart file parameter configuration.
 fileParamsJson(schema: unknown): RouteBuilder
 ```
 
-#### cors()
+**Example:**
+
+```typescript
+const result = instance.fileParamsJson({});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `unknown` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### cors()
 
 Attach a CORS configuration for this route.
 
@@ -1191,7 +1475,21 @@ Attach a CORS configuration for this route.
 cors(cors: CorsConfig): RouteBuilder
 ```
 
-#### compression()
+**Example:**
+
+```typescript
+const result = instance.cors(new CorsConfig());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `cors` | `CorsConfig` | Yes | The cors config |
+
+**Returns:** `RouteBuilder`
+
+###### compression()
 
 Attach a compression configuration for this route.
 
@@ -1201,7 +1499,21 @@ Attach a compression configuration for this route.
 compression(compression: CompressionConfig): RouteBuilder
 ```
 
-#### sync()
+**Example:**
+
+```typescript
+const result = instance.compression(new CompressionConfig());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `compression` | `CompressionConfig` | Yes | The compression config |
+
+**Returns:** `RouteBuilder`
+
+###### sync()
 
 Mark the route as synchronous.
 
@@ -1211,7 +1523,15 @@ Mark the route as synchronous.
 sync(): RouteBuilder
 ```
 
-#### handlerDependencies()
+**Example:**
+
+```typescript
+const result = instance.sync();
+```
+
+**Returns:** `RouteBuilder`
+
+###### handlerDependencies()
 
 Declare the dependency keys that must be resolved before this handler runs.
 
@@ -1220,6 +1540,20 @@ Declare the dependency keys that must be resolved before this handler runs.
 ```typescript
 handlerDependencies(dependencies: Array<string>): RouteBuilder
 ```
+
+**Example:**
+
+```typescript
+const result = instance.handlerDependencies([]);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `dependencies` | `Array<string>` | Yes | The dependencies |
+
+**Returns:** `RouteBuilder`
 
 ---
 
@@ -1236,15 +1570,23 @@ introspection control, complexity limits, and depth limits.
 | `complexityLimit` | `number \| null` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `number \| null` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```typescript
 static default(): SchemaConfig
 ```
+
+**Example:**
+
+```typescript
+const result = SchemaConfig.default();
+```
+
+**Returns:** `SchemaConfig`
 
 ---
 
@@ -1271,20 +1613,26 @@ Server configuration
 | `openapi` | `OpenApiConfig \| null` | `null` | OpenAPI documentation configuration |
 | `jsonrpc` | `JsonRpcConfig \| null` | `null` | JSON-RPC configuration |
 | `grpc` | `GrpcConfig \| null` | `null` | gRPC configuration |
-| `lifecycleHooks` | `string \| null` | `null` | Lifecycle hooks for request/response processing |
 | `backgroundTasks` | `BackgroundTaskConfig` | — | Background task executor configuration |
 | `enableHttpTrace` | `boolean` | `false` | Enable per-request HTTP tracing (tower-http `TraceLayer`) |
-| `diContainer` | `string \| null` | `null` | Dependency injection container (requires 'di' feature) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```typescript
 static default(): ServerConfig
 ```
+
+**Example:**
+
+```typescript
+const result = ServerConfig.default();
+```
+
+**Returns:** `ServerConfig`
 
 ---
 
@@ -1324,9 +1672,9 @@ retry: 3000
 | `id` | `string \| null` | `null` | Event ID (optional, for client-side reconnection) |
 | `retry` | `number \| null` | `null` | Retry timeout in milliseconds (optional) |
 
-### Methods
+#### Methods
 
-#### withId()
+##### withId()
 
 Set the event ID for client-side reconnection support
 
@@ -1339,7 +1687,21 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 withId(id: string): SseEvent
 ```
 
-#### withRetry()
+**Example:**
+
+```typescript
+const result = instance.withId("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `id` | `string` | Yes | Unique identifier for this event |
+
+**Returns:** `SseEvent`
+
+###### withRetry()
 
 Set the retry timeout for client reconnection
 
@@ -1351,6 +1713,20 @@ if the connection is lost. The client browser will automatically handle reconnec
 ```typescript
 withRetry(retryMs: number): SseEvent
 ```
+
+**Example:**
+
+```typescript
+const result = instance.withRetry(42);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `retryMs` | `number` | Yes | Retry timeout in milliseconds |
+
+**Returns:** `SseEvent`
 
 ---
 
@@ -1376,29 +1752,66 @@ interface for making HTTP requests, sending WebSocket connections, and
 handling Server-Sent Events. Language bindings wrap this to provide
 native API surfaces.
 
-### Methods
+##### Methods
 
-#### graphqlAt()
+###### graphqlAt()
 
 Send a GraphQL query/mutation to a custom endpoint
 
 **Signature:**
 
 ```typescript
-graphqlAt(endpoint: string, query: string, variables: unknown, operationName: string): ResponseSnapshot
+graphqlAt(endpoint: string, query: string, variables: unknown, operationName: string): Promise<ResponseSnapshot>
 ```
 
-#### graphql()
+**Example:**
+
+```typescript
+const result = await instance.graphqlAt("value", "value", {}, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `endpoint` | `string` | Yes | The endpoint |
+| `query` | `string` | Yes | The query |
+| `variables` | `unknown \| null` | No | The variables |
+| `operationName` | `string \| null` | No | The operation name |
+
+**Returns:** `ResponseSnapshot`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### graphql()
 
 Send a GraphQL query/mutation
 
 **Signature:**
 
 ```typescript
-graphql(query: string, variables: unknown, operationName: string): ResponseSnapshot
+graphql(query: string, variables: unknown, operationName: string): Promise<ResponseSnapshot>
 ```
 
-#### graphqlSubscriptionAt()
+**Example:**
+
+```typescript
+const result = await instance.graphql("value", {}, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `string` | Yes | The query |
+| `variables` | `unknown \| null` | No | The variables |
+| `operationName` | `string \| null` | No | The operation name |
+
+**Returns:** `ResponseSnapshot`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### graphqlSubscriptionAt()
 
 Send a GraphQL subscription (WebSocket) to a custom endpoint.
 
@@ -1408,10 +1821,29 @@ After the first payload is received, this client sends `complete` to unsubscribe
 **Signature:**
 
 ```typescript
-graphqlSubscriptionAt(endpoint: string, query: string, variables: unknown, operationName: string): GraphQlSubscriptionSnapshot
+graphqlSubscriptionAt(endpoint: string, query: string, variables: unknown, operationName: string): Promise<GraphQlSubscriptionSnapshot>
 ```
 
-#### graphqlSubscription()
+**Example:**
+
+```typescript
+const result = await instance.graphqlSubscriptionAt("value", "value", {}, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `endpoint` | `string` | Yes | The endpoint |
+| `query` | `string` | Yes | The query |
+| `variables` | `unknown \| null` | No | The variables |
+| `operationName` | `string \| null` | No | The operation name |
+
+**Returns:** `GraphQlSubscriptionSnapshot`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### graphqlSubscription()
 
 Send a GraphQL subscription (WebSocket).
 
@@ -1420,8 +1852,26 @@ Uses `/graphql` as the default subscription endpoint.
 **Signature:**
 
 ```typescript
-graphqlSubscription(query: string, variables: unknown, operationName: string): GraphQlSubscriptionSnapshot
+graphqlSubscription(query: string, variables: unknown, operationName: string): Promise<GraphQlSubscriptionSnapshot>
 ```
+
+**Example:**
+
+```typescript
+const result = await instance.graphqlSubscription("value", {}, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `string` | Yes | The query |
+| `variables` | `unknown \| null` | No | The variables |
+| `operationName` | `string \| null` | No | The operation name |
+
+**Returns:** `GraphQlSubscriptionSnapshot`
+
+**Errors:** Throws `Error` with a descriptive message.
 
 ---
 
@@ -1449,11 +1899,10 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `size` | `number \| null` | `null` | Size of the file in bytes |
 | `content` | `Buffer` | — | File content (may be base64 encoded) |
 | `contentEncoding` | `string \| null` | `null` | Content encoding type |
-| `cursor` | `string` | — | Internal cursor for Read/Seek operations |
 
-### Methods
+##### Methods
 
-#### asBytes()
+###### asBytes()
 
 Get the raw file content as bytes.
 
@@ -1465,7 +1914,15 @@ This provides zero-copy access to the underlying buffer.
 asBytes(): Buffer
 ```
 
-#### readToString()
+**Example:**
+
+```typescript
+const result = instance.asBytes();
+```
+
+**Returns:** `Buffer`
+
+###### readToString()
 
 Read the file content as a UTF-8 string.
 
@@ -1479,7 +1936,17 @@ Returns an error if the content is not valid UTF-8.
 readToString(): string
 ```
 
-#### contentTypeOrDefault()
+**Example:**
+
+```typescript
+const result = instance.readToString();
+```
+
+**Returns:** `string`
+
+**Errors:** Throws `Error` with a descriptive message.
+
+###### contentTypeOrDefault()
 
 Get the content type, defaulting to "application/octet-stream".
 
@@ -1488,6 +1955,14 @@ Get the content type, defaulting to "application/octet-stream".
 ```typescript
 contentTypeOrDefault(): string
 ```
+
+**Example:**
+
+```typescript
+const result = instance.contentTypeOrDefault();
+```
+
+**Returns:** `string`
 
 ---
 

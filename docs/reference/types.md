@@ -119,8 +119,6 @@ CORS configuration for a route
 | `expose_headers` | `Vec<String>` | `None` | Expose headers |
 | `max_age` | `Option<u32>` | `None` | Maximum age |
 | `allow_credentials` | `Option<bool>` | `None` | Allow credentials |
-| `methods_joined_cache` | `String` | — | Methods joined cache |
-| `headers_joined_cache` | `String` | — | Headers joined cache |
 
 ---
 
@@ -187,7 +185,7 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `enable_keepalive` | `bool` | `true` | Enable HTTP/2 keepalive |
 | `keepalive_interval` | `u64` | — | HTTP/2 keepalive interval in seconds |
 | `keepalive_timeout` | `u64` | — | HTTP/2 keepalive timeout in seconds |
-| `max_stream_response_bytes` | `Option<usize>` | `None` | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `None` (unbounded total response size). |
+| `max_stream_response_bytes` | `Option<usize>` | `None` | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic::Status::resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `None` (unbounded total response size). |
 
 ---
 
@@ -297,10 +295,8 @@ Server configuration
 | `openapi` | `Option<OpenApiConfig>` | `None` | OpenAPI documentation configuration |
 | `jsonrpc` | `Option<JsonRpcConfig>` | `None` | JSON-RPC configuration |
 | `grpc` | `Option<GrpcConfig>` | `None` | gRPC configuration |
-| `lifecycle_hooks` | `Option<String>` | `None` | Lifecycle hooks for request/response processing |
 | `background_tasks` | `BackgroundTaskConfig` | — | Background task executor configuration |
 | `enable_http_trace` | `bool` | `false` | Enable per-request HTTP tracing (tower-http `TraceLayer`) |
-| `di_container` | `Option<String>` | `None` | Dependency injection container (requires 'di' feature) |
 
 ---
 
@@ -350,7 +346,6 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `size` | `Option<usize>` | `None` | Size of the file in bytes |
 | `content` | `Vec<u8>` | — | File content (may be base64 encoded) |
 | `content_encoding` | `Option<String>` | `None` | Content encoding type |
-| `cursor` | `String` | — | Internal cursor for Read/Seek operations |
 
 ---
 

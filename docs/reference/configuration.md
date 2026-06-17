@@ -90,8 +90,6 @@ CORS configuration for a route
 | `expose_headers` | `list[str] \| None` | `None` | Expose headers |
 | `max_age` | `int \| None` | `None` | Maximum age |
 | `allow_credentials` | `bool \| None` | `None` | Allow credentials |
-| `methods_joined_cache` | `str` | — | Methods joined cache |
-| `headers_joined_cache` | `str` | — | Headers joined cache |
 
 ---
 
@@ -268,10 +266,8 @@ Server configuration
 | `openapi` | `OpenApiConfig \| None` | `None` | OpenAPI documentation configuration |
 | `jsonrpc` | `JsonRpcConfig \| None` | `None` | JSON-RPC configuration |
 | `grpc` | `GrpcConfig \| None` | `None` | gRPC configuration |
-| `lifecycle_hooks` | `str \| None` | `None` | Lifecycle hooks for request/response processing |
 | `background_tasks` | `BackgroundTaskConfig` | — | Background task executor configuration |
 | `enable_http_trace` | `bool` | `False` | Enable per-request HTTP tracing (tower-http `TraceLayer`) |
-| `di_container` | `str \| None` | `None` | Dependency injection container (requires 'di' feature) |
 
 ---
 

@@ -22,6 +22,12 @@ A `QueryOnlyConfig` with default settings
 func SchemaQueryOnly() QueryOnlyConfig
 ```
 
+**Example:**
+
+```go
+result := SchemaQueryOnly()
+```
+
 **Returns:** `QueryOnlyConfig`
 
 ---
@@ -40,6 +46,12 @@ A `QueryMutationConfig` with default settings
 
 ```go
 func SchemaQueryMutation() QueryMutationConfig
+```
+
+**Example:**
+
+```go
+result := SchemaQueryMutation()
 ```
 
 **Returns:** `QueryMutationConfig`
@@ -62,6 +74,12 @@ A `FullSchemaConfig` with default settings
 func SchemaFull() FullSchemaConfig
 ```
 
+**Example:**
+
+```go
+result := SchemaFull()
+```
+
 **Returns:** `FullSchemaConfig`
 
 ---
@@ -76,134 +94,6 @@ API Key authentication configuration
 |-------|------|---------|-------------|
 | `Keys` | `[]string` | — | Valid API keys |
 | `HeaderName` | `string` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
-
----
-
-#### App
-
-Spikard application builder.
-
-### Methods
-
-#### New()
-
-Create a new application with the default server configuration.
-
-**Signature:**
-
-```go
-func (o *App) New() App
-```
-
-#### OnRequest()
-
-Register an `on_request` lifecycle hook (runs before validation and handler dispatch).
-
-**Signature:**
-
-```go
-func (o *App) OnRequest(hook string) App
-```
-
-#### PreValidation()
-
-Register a `pre_validation` lifecycle hook (runs after `on_request`, before validation).
-
-**Signature:**
-
-```go
-func (o *App) PreValidation(hook string) App
-```
-
-#### PreHandler()
-
-Register a `pre_handler` lifecycle hook (runs after validation, before the handler).
-
-**Signature:**
-
-```go
-func (o *App) PreHandler(hook string) App
-```
-
-#### OnResponse()
-
-Register an `on_response` lifecycle hook (runs after a successful handler response).
-
-**Signature:**
-
-```go
-func (o *App) OnResponse(hook string) App
-```
-
-#### OnError()
-
-Register an `on_error` lifecycle hook (runs when the handler returns an error).
-
-**Signature:**
-
-```go
-func (o *App) OnError(hook string) App
-```
-
-#### MergeAxumRouter()
-
-Attach an existing Axum router to this application, returning ownership.
-
-**Signature:**
-
-```go
-func (o *App) MergeAxumRouter(router string) App
-```
-
-#### AttachAxumRouter()
-
-Attach an Axum router using a mutable reference for incremental configuration.
-
-**Signature:**
-
-```go
-func (o *App) AttachAxumRouter(router string) App
-```
-
-#### IntoRouter()
-
-Build the underlying Axum router.
-
-**Errors:**
-
-Returns an error if server or router construction fails.
-
-**Signature:**
-
-```go
-func (o *App) IntoRouter() (string, error)
-```
-
-#### IntoRouterAndConfig()
-
-Decompose the application into its Axum router and server configuration.
-
-This is the low-level escape hatch used by the C FFI layer to start the
-server on a background thread while retaining the bind address from the
-caller-supplied `ServerConfig`. Prefer `App.run` for normal use.
-
-**Errors:**
-
-Returns an error if router construction fails.
-
-**Signature:**
-
-```go
-func (o *App) IntoRouterAndConfig() (string, error)
-```
-
-#### Default()
-
-**Signature:**
-
-```go
-func (o *App) Default() App
-```
 
 ---
 
@@ -225,15 +115,23 @@ AsyncAPI HTTP endpoint configuration
 | `Name` | `string` | — | The name |
 | `RequestId` | `*string` | `nil` | Request id |
 
-### Methods
+##### Methods
 
-#### Default()
+###### Default()
 
 **Signature:**
 
 ```go
 func (o *BackgroundJobMetadata) Default() BackgroundJobMetadata
 ```
+
+**Example:**
+
+```go
+result := BackgroundJobMetadata.Default()
+```
+
+**Returns:** `BackgroundJobMetadata`
 
 ---
 
@@ -247,15 +145,23 @@ Configuration for in-process background task execution.
 | `MaxConcurrentTasks` | `int` | `128` | Maximum concurrent tasks |
 | `DrainTimeoutSecs` | `uint64` | `30` | Drain timeout secs |
 
-### Methods
+##### Methods
 
-#### Default()
+###### Default()
 
 **Signature:**
 
 ```go
 func (o *BackgroundTaskConfig) Default() BackgroundTaskConfig
 ```
+
+**Example:**
+
+```go
+result := BackgroundTaskConfig.Default()
+```
+
+**Returns:** `BackgroundTaskConfig`
 
 ---
 
@@ -270,15 +176,23 @@ Compression configuration shared across runtimes
 | `MinSize` | `int` | — | Minimum response size to compress (bytes) |
 | `Quality` | `uint32` | — | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
-### Methods
+##### Methods
 
-#### Default()
+###### Default()
 
 **Signature:**
 
 ```go
 func (o *CompressionConfig) Default() CompressionConfig
 ```
+
+**Example:**
+
+```go
+result := CompressionConfig.Default()
+```
+
+**Returns:** `CompressionConfig`
 
 ---
 
@@ -306,12 +220,10 @@ CORS configuration for a route
 | `ExposeHeaders` | `*[]string` | `nil` | Expose headers |
 | `MaxAge` | `*uint32` | `nil` | Maximum age |
 | `AllowCredentials` | `*bool` | `nil` | Allow credentials |
-| `MethodsJoinedCache` | `string` | — | Methods joined cache |
-| `HeadersJoinedCache` | `string` | — | Headers joined cache |
 
-### Methods
+##### Methods
 
-#### AllowedMethodsJoined()
+###### AllowedMethodsJoined()
 
 Get the cached joined methods string for preflight responses
 
@@ -321,7 +233,15 @@ Get the cached joined methods string for preflight responses
 func (o *CorsConfig) AllowedMethodsJoined() string
 ```
 
-#### AllowedHeadersJoined()
+**Example:**
+
+```go
+result := instance.AllowedMethodsJoined()
+```
+
+**Returns:** `string`
+
+###### AllowedHeadersJoined()
 
 Get the cached joined headers string for preflight responses
 
@@ -331,7 +251,15 @@ Get the cached joined headers string for preflight responses
 func (o *CorsConfig) AllowedHeadersJoined() string
 ```
 
-#### IsOriginAllowed()
+**Example:**
+
+```go
+result := instance.AllowedHeadersJoined()
+```
+
+**Returns:** `string`
+
+###### IsOriginAllowed()
 
 Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -341,7 +269,21 @@ Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 func (o *CorsConfig) IsOriginAllowed(origin string) bool
 ```
 
-#### IsMethodAllowed()
+**Example:**
+
+```go
+result := instance.IsOriginAllowed("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Origin` | `string` | Yes | The origin |
+
+**Returns:** `bool`
+
+###### IsMethodAllowed()
 
 Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -351,13 +293,35 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 func (o *CorsConfig) IsMethodAllowed(method string) bool
 ```
 
-#### Default()
+**Example:**
+
+```go
+result := instance.IsMethodAllowed("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Method` | `string` | Yes | The method |
+
+**Returns:** `bool`
+
+###### Default()
 
 **Signature:**
 
 ```go
 func (o *CorsConfig) Default() CorsConfig
 ```
+
+**Example:**
+
+```go
+result := CorsConfig.Default()
+```
+
+**Returns:** `CorsConfig`
 
 ---
 
@@ -371,15 +335,23 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 | `ComplexityLimit` | `*int` | `nil` | Maximum query complexity (None = unlimited) |
 | `DepthLimit` | `*int` | `nil` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### Default()
+###### Default()
 
 **Signature:**
 
 ```go
 func (o *FullSchemaConfig) Default() FullSchemaConfig
 ```
+
+**Example:**
+
+```go
+result := FullSchemaConfig.Default()
+```
+
+**Returns:** `FullSchemaConfig`
 
 ---
 
@@ -390,9 +362,9 @@ Configuration for GraphQL routes
 Provides a builder pattern for configuring GraphQL route parameters
 for the Spikard HTTP server's routing system.
 
-### Methods
+##### Methods
 
-#### New()
+###### New()
 
 Create a new GraphQL route configuration with defaults
 
@@ -408,7 +380,15 @@ Default values:
 func (o *GraphQlRouteConfig) New() GraphQlRouteConfig
 ```
 
-#### Path()
+**Example:**
+
+```go
+result := GraphQlRouteConfig.New()
+```
+
+**Returns:** `GraphQlRouteConfig`
+
+###### Path()
 
 Set the HTTP path for the GraphQL endpoint
 
@@ -418,7 +398,21 @@ Set the HTTP path for the GraphQL endpoint
 func (o *GraphQlRouteConfig) Path(path string) GraphQlRouteConfig
 ```
 
-#### Method()
+**Example:**
+
+```go
+result := instance.Path("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Path` | `string` | Yes | The URL path (e.g., "/graphql", "/api/graphql") |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### Method()
 
 Set the HTTP method for the GraphQL endpoint
 
@@ -428,7 +422,21 @@ Set the HTTP method for the GraphQL endpoint
 func (o *GraphQlRouteConfig) Method(method string) GraphQlRouteConfig
 ```
 
-#### EnablePlayground()
+**Example:**
+
+```go
+result := instance.Method("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Method` | `string` | Yes | The HTTP method (typically "POST") |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### EnablePlayground()
 
 Enable or disable the GraphQL Playground UI
 
@@ -438,7 +446,21 @@ Enable or disable the GraphQL Playground UI
 func (o *GraphQlRouteConfig) EnablePlayground(enable bool) GraphQlRouteConfig
 ```
 
-#### Description()
+**Example:**
+
+```go
+result := instance.EnablePlayground(true)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Enable` | `bool` | Yes | Whether to enable playground |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### Description()
 
 Set a custom description for documentation
 
@@ -448,7 +470,21 @@ Set a custom description for documentation
 func (o *GraphQlRouteConfig) Description(description string) GraphQlRouteConfig
 ```
 
-#### GetPath()
+**Example:**
+
+```go
+result := instance.Description("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Description` | `string` | Yes | Documentation string |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### GetPath()
 
 Get the configured path
 
@@ -458,7 +494,15 @@ Get the configured path
 func (o *GraphQlRouteConfig) GetPath() string
 ```
 
-#### GetMethod()
+**Example:**
+
+```go
+result := instance.GetPath()
+```
+
+**Returns:** `string`
+
+###### GetMethod()
 
 Get the configured method
 
@@ -468,7 +512,15 @@ Get the configured method
 func (o *GraphQlRouteConfig) GetMethod() string
 ```
 
-#### IsPlaygroundEnabled()
+**Example:**
+
+```go
+result := instance.GetMethod()
+```
+
+**Returns:** `string`
+
+###### IsPlaygroundEnabled()
 
 Check if playground is enabled
 
@@ -478,7 +530,15 @@ Check if playground is enabled
 func (o *GraphQlRouteConfig) IsPlaygroundEnabled() bool
 ```
 
-#### GetDescription()
+**Example:**
+
+```go
+result := instance.IsPlaygroundEnabled()
+```
+
+**Returns:** `bool`
+
+###### GetDescription()
 
 Get the description if set
 
@@ -488,13 +548,29 @@ Get the description if set
 func (o *GraphQlRouteConfig) GetDescription() *string
 ```
 
-#### Default()
+**Example:**
+
+```go
+result := instance.GetDescription()
+```
+
+**Returns:** `*string`
+
+###### Default()
 
 **Signature:**
 
 ```go
 func (o *GraphQlRouteConfig) Default() GraphQlRouteConfig
 ```
+
+**Example:**
+
+```go
+result := GraphQlRouteConfig.Default()
+```
+
+**Returns:** `GraphQlRouteConfig`
 
 ---
 
@@ -538,9 +614,9 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `KeepaliveTimeout` | `uint64` | — | HTTP/2 keepalive timeout in seconds |
 | `MaxStreamResponseBytes` | `*int` | `nil` | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `nil` (unbounded total response size). |
 
-### Methods
+#### Methods
 
-#### Default()
+##### Default()
 
 **Signature:**
 
@@ -548,110 +624,13 @@ concurrent stream limiting to the HTTP/2 transport layer:
 func (o *GrpcConfig) Default() GrpcConfig
 ```
 
----
-
-#### Handler
-
-Handler trait that all language bindings must implement
-
-This trait is completely language-agnostic. Each binding (Python, Node, WASM)
-implements this trait to bridge their runtime to our HTTP server.
-
-### Methods
-
-#### Call()
-
-Handle an HTTP request
-
-Takes the extracted request data and returns a future that resolves to either:
-
-- Ok(Response): A successful HTTP response
-- Err((StatusCode, String)): An error with status code and message
-
-**Signature:**
+**Example:**
 
 ```go
-func (o *Handler) Call(request Request, requestData RequestData) HandlerResult
+result := GrpcConfig.Default()
 ```
 
-#### PrefersRawJsonBody()
-
-Whether this handler prefers consuming `RequestData.raw_body` over the parsed
-`RequestData.body` for JSON requests.
-
-When `true`, the server may skip eager JSON parsing when there is no request-body
-schema validator attached to the route.
-
-**Signature:**
-
-```go
-func (o *Handler) PrefersRawJsonBody() bool
-```
-
-#### PrefersParameterExtraction()
-
-Whether this handler wants to perform its own parameter validation/extraction (path/query/header/cookie).
-
-When `true`, the server will skip `ParameterValidator.validate_and_extract` in `ValidatingHandler`.
-This is useful for language bindings which need to transform validated parameters into
-language-specific values (e.g., Python kwargs) without duplicating work. When `false`,
-the server stores validated output in `RequestData.validated_params`.
-
-**Signature:**
-
-```go
-func (o *Handler) PrefersParameterExtraction() bool
-```
-
-#### WantsHeaders()
-
-Whether this handler needs the parsed headers map in `RequestData`.
-
-When `false`, the server may skip building `RequestData.headers` for requests without a body.
-(Requests with bodies still typically need `Content-Type` decisions.)
-
-**Signature:**
-
-```go
-func (o *Handler) WantsHeaders() bool
-```
-
-#### WantsCookies()
-
-Whether this handler needs the parsed cookies map in `RequestData`.
-
-When `false`, the server may skip parsing cookies for requests without a body.
-
-**Signature:**
-
-```go
-func (o *Handler) WantsCookies() bool
-```
-
-#### WantsRequestExtensions()
-
-Whether this handler needs `RequestData` stored in request extensions.
-
-When `false`, the server avoids inserting `RequestData` into extensions to
-skip cloning in hot paths.
-
-**Signature:**
-
-```go
-func (o *Handler) WantsRequestExtensions() bool
-```
-
-#### StaticResponse()
-
-Return a pre-built static response if this handler always produces the
-same output. When `Some`, the server bypasses the full middleware
-pipeline and serves the pre-built response directly.
-
-**Signature:**
-
-```go
-func (o *Handler) StaticResponse() *StaticResponse
-```
+**Returns:** `GrpcConfig`
 
 ---
 
@@ -659,9 +638,9 @@ func (o *Handler) StaticResponse() *StaticResponse
 
 Convert user-facing handler functions into the low-level `Handler` trait.
 
-### Methods
+##### Methods
 
-#### IntoHandler()
+###### IntoHandler()
 
 Convert this value into a shared request handler.
 
@@ -670,6 +649,14 @@ Convert this value into a shared request handler.
 ```go
 func (o *IntoHandler) IntoHandler() Handler
 ```
+
+**Example:**
+
+```go
+result := instance.IntoHandler()
+```
+
+**Returns:** `Handler`
 
 ---
 
@@ -684,15 +671,23 @@ JSON-RPC server configuration
 | `EnableBatch` | `bool` | — | Enable batch request processing (default: true) |
 | `MaxBatchSize` | `int` | — | Maximum number of requests in a batch (default: 100) |
 
-### Methods
+##### Methods
 
-#### Default()
+###### Default()
 
 **Signature:**
 
 ```go
 func (o *JsonRpcConfig) Default() JsonRpcConfig
 ```
+
+**Example:**
+
+```go
+result := JsonRpcConfig.Default()
+```
+
+**Returns:** `JsonRpcConfig`
 
 ---
 
@@ -757,15 +752,23 @@ OpenAPI configuration
 | `Servers` | `[]ServerInfo` | `nil` | Server definitions |
 | `SecuritySchemes` | `map[string]SecuritySchemeInfo` | `nil` | Security schemes (auto-detected from middleware if not provided) |
 
-### Methods
+##### Methods
 
-#### Default()
+###### Default()
 
 **Signature:**
 
 ```go
 func (o *OpenApiConfig) Default() OpenApiConfig
 ```
+
+**Example:**
+
+```go
+result := OpenApiConfig.Default()
+```
+
+**Returns:** `OpenApiConfig`
 
 ---
 
@@ -865,9 +868,9 @@ Content-Type: application/problem+json
 | `Instance` | `*string` | `nil` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
 | `Extensions` | `map[string]interface{}` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
 
-### Methods
+#### Methods
 
-#### WithDetail()
+##### WithDetail()
 
 Set the detail field
 
@@ -877,7 +880,21 @@ Set the detail field
 func (o *ProblemDetails) WithDetail(detail string) ProblemDetails
 ```
 
-#### WithInstance()
+**Example:**
+
+```go
+result := instance.WithDetail("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Detail` | `string` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### WithInstance()
 
 Set the instance field
 
@@ -887,7 +904,21 @@ Set the instance field
 func (o *ProblemDetails) WithInstance(instance string) ProblemDetails
 ```
 
-#### NotFound()
+**Example:**
+
+```go
+result := instance.WithInstance("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Instance` | `string` | Yes | The instance |
+
+**Returns:** `ProblemDetails`
+
+###### NotFound()
 
 Create a not found error
 
@@ -897,7 +928,21 @@ Create a not found error
 func (o *ProblemDetails) NotFound(detail string) ProblemDetails
 ```
 
-#### MethodNotAllowed()
+**Example:**
+
+```go
+result := ProblemDetails.NotFound("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Detail` | `string` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### MethodNotAllowed()
 
 Create a method not allowed error
 
@@ -907,7 +952,21 @@ Create a method not allowed error
 func (o *ProblemDetails) MethodNotAllowed(detail string) ProblemDetails
 ```
 
-#### InternalServerError()
+**Example:**
+
+```go
+result := ProblemDetails.MethodNotAllowed("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Detail` | `string` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### InternalServerError()
 
 Create an internal server error
 
@@ -917,7 +976,21 @@ Create an internal server error
 func (o *ProblemDetails) InternalServerError(detail string) ProblemDetails
 ```
 
-#### BadRequest()
+**Example:**
+
+```go
+result := ProblemDetails.InternalServerError("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Detail` | `string` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### BadRequest()
 
 Create a bad request error
 
@@ -927,7 +1000,21 @@ Create a bad request error
 func (o *ProblemDetails) BadRequest(detail string) ProblemDetails
 ```
 
-#### ToJson()
+**Example:**
+
+```go
+result := ProblemDetails.BadRequest("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Detail` | `string` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### ToJson()
 
 Serialize to JSON string
 
@@ -940,7 +1027,20 @@ Returns an error if the serialization fails.
 func (o *ProblemDetails) ToJson() (string, error)
 ```
 
-#### ToJsonPretty()
+**Example:**
+
+```go
+result, err := instance.ToJson()
+if err != nil {
+    return err
+}
+```
+
+**Returns:** `string`
+
+**Errors:** Returns `error`.
+
+###### ToJsonPretty()
 
 Serialize to pretty JSON string
 
@@ -952,6 +1052,19 @@ Returns an error if the serialization fails.
 ```go
 func (o *ProblemDetails) ToJsonPretty() (string, error)
 ```
+
+**Example:**
+
+```go
+result, err := instance.ToJsonPretty()
+if err != nil {
+    return err
+}
+```
+
+**Returns:** `string`
+
+**Errors:** Returns `error`.
 
 ---
 
@@ -965,15 +1078,23 @@ Configuration for schemas with Query and Mutation types
 | `ComplexityLimit` | `*int` | `nil` | Maximum query complexity (None = unlimited) |
 | `DepthLimit` | `*int` | `nil` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### Default()
+###### Default()
 
 **Signature:**
 
 ```go
 func (o *QueryMutationConfig) Default() QueryMutationConfig
 ```
+
+**Example:**
+
+```go
+result := QueryMutationConfig.Default()
+```
+
+**Returns:** `QueryMutationConfig`
 
 ---
 
@@ -987,15 +1108,23 @@ Configuration for schemas with only Query type
 | `ComplexityLimit` | `*int` | `nil` | Maximum query complexity (None = unlimited) |
 | `DepthLimit` | `*int` | `nil` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### Default()
+###### Default()
 
 **Signature:**
 
 ```go
 func (o *QueryOnlyConfig) Default() QueryOnlyConfig
 ```
+
+**Example:**
+
+```go
+result := QueryOnlyConfig.Default()
+```
+
+**Returns:** `QueryOnlyConfig`
 
 ---
 
@@ -1009,15 +1138,23 @@ Rate limiting configuration shared across runtimes
 | `Burst` | `uint32` | `200` | Burst allowance |
 | `IpBased` | `bool` | `true` | Use IP-based rate limiting |
 
-### Methods
+##### Methods
 
-#### Default()
+###### Default()
 
 **Signature:**
 
 ```go
 func (o *RateLimitConfig) Default() RateLimitConfig
 ```
+
+**Example:**
+
+```go
+result := RateLimitConfig.Default()
+```
+
+**Returns:** `RateLimitConfig`
 
 ---
 
@@ -1035,9 +1172,9 @@ HTTP Response with custom status code, headers, and content
 | `StatusCode` | `uint16` | — | HTTP status code (defaults to 200) |
 | `Headers` | `map[string]string` | `nil` | Response headers |
 
-### Methods
+##### Methods
 
-#### SetHeader()
+###### SetHeader()
 
 Set a header
 
@@ -1047,7 +1184,22 @@ Set a header
 func (o *Response) SetHeader(key string, value string)
 ```
 
-#### SetCookie()
+**Example:**
+
+```go
+instance.SetHeader("value", "value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Key` | `string` | Yes | The key |
+| `Value` | `string` | Yes | The value |
+
+**Returns:** No return value.
+
+###### SetCookie()
 
 Set a cookie in the response
 
@@ -1057,7 +1209,28 @@ Set a cookie in the response
 func (o *Response) SetCookie(key string, value string, secure bool, httpOnly bool, maxAge int64, domain string, path string, sameSite string)
 ```
 
-#### Default()
+**Example:**
+
+```go
+instance.SetCookie("value", "value", true, true, 42, "value", "value", "value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Key` | `string` | Yes | The key |
+| `Value` | `string` | Yes | The value |
+| `Secure` | `bool` | Yes | The secure |
+| `HttpOnly` | `bool` | Yes | The http only |
+| `MaxAge` | `*int64` | No | The max age |
+| `Domain` | `*string` | No | The domain |
+| `Path` | `*string` | No | Path to the file |
+| `SameSite` | `*string` | No | The same site |
+
+**Returns:** No return value.
+
+###### Default()
 
 **Signature:**
 
@@ -1065,15 +1238,23 @@ func (o *Response) SetCookie(key string, value string, secure bool, httpOnly boo
 func (o *Response) Default() Response
 ```
 
+**Example:**
+
+```go
+result := Response.Default()
+```
+
+**Returns:** `Response`
+
 ---
 
 #### RouteBuilder
 
 Builder for defining a route.
 
-### Methods
+##### Methods
 
-#### New()
+###### New()
 
 Create a new builder for the provided HTTP method and path.
 
@@ -1083,7 +1264,22 @@ Create a new builder for the provided HTTP method and path.
 func (o *RouteBuilder) New(method Method, path string) RouteBuilder
 ```
 
-#### HandlerName()
+**Example:**
+
+```go
+result := RouteBuilder.New(Method{}, "value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Method` | `Method` | Yes | The method |
+| `Path` | `string` | Yes | Path to the file |
+
+**Returns:** `RouteBuilder`
+
+###### HandlerName()
 
 Assign an explicit handler name.
 
@@ -1093,7 +1289,21 @@ Assign an explicit handler name.
 func (o *RouteBuilder) HandlerName(name string) RouteBuilder
 ```
 
-#### RequestSchemaJson()
+**Example:**
+
+```go
+result := instance.HandlerName("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Name` | `string` | Yes | The name |
+
+**Returns:** `RouteBuilder`
+
+###### RequestSchemaJson()
 
 Provide a raw JSON schema for the request body.
 
@@ -1103,7 +1313,21 @@ Provide a raw JSON schema for the request body.
 func (o *RouteBuilder) RequestSchemaJson(schema interface{}) RouteBuilder
 ```
 
-#### ResponseSchemaJson()
+**Example:**
+
+```go
+result := instance.RequestSchemaJson(nil)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Schema` | `interface{}` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### ResponseSchemaJson()
 
 Provide a raw JSON schema for the response body.
 
@@ -1113,7 +1337,21 @@ Provide a raw JSON schema for the response body.
 func (o *RouteBuilder) ResponseSchemaJson(schema interface{}) RouteBuilder
 ```
 
-#### ParamsSchemaJson()
+**Example:**
+
+```go
+result := instance.ResponseSchemaJson(nil)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Schema` | `interface{}` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### ParamsSchemaJson()
 
 Provide a raw JSON schema for request parameters.
 
@@ -1123,7 +1361,21 @@ Provide a raw JSON schema for request parameters.
 func (o *RouteBuilder) ParamsSchemaJson(schema interface{}) RouteBuilder
 ```
 
-#### FileParamsJson()
+**Example:**
+
+```go
+result := instance.ParamsSchemaJson(nil)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Schema` | `interface{}` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### FileParamsJson()
 
 Provide multipart file parameter configuration.
 
@@ -1133,7 +1385,21 @@ Provide multipart file parameter configuration.
 func (o *RouteBuilder) FileParamsJson(schema interface{}) RouteBuilder
 ```
 
-#### Cors()
+**Example:**
+
+```go
+result := instance.FileParamsJson(nil)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Schema` | `interface{}` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### Cors()
 
 Attach a CORS configuration for this route.
 
@@ -1143,7 +1409,21 @@ Attach a CORS configuration for this route.
 func (o *RouteBuilder) Cors(cors CorsConfig) RouteBuilder
 ```
 
-#### Compression()
+**Example:**
+
+```go
+result := instance.Cors(CorsConfig{})
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Cors` | `CorsConfig` | Yes | The cors config |
+
+**Returns:** `RouteBuilder`
+
+###### Compression()
 
 Attach a compression configuration for this route.
 
@@ -1153,7 +1433,21 @@ Attach a compression configuration for this route.
 func (o *RouteBuilder) Compression(compression CompressionConfig) RouteBuilder
 ```
 
-#### Sync()
+**Example:**
+
+```go
+result := instance.Compression(CompressionConfig{})
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Compression` | `CompressionConfig` | Yes | The compression config |
+
+**Returns:** `RouteBuilder`
+
+###### Sync()
 
 Mark the route as synchronous.
 
@@ -1163,7 +1457,15 @@ Mark the route as synchronous.
 func (o *RouteBuilder) Sync() RouteBuilder
 ```
 
-#### HandlerDependencies()
+**Example:**
+
+```go
+result := instance.Sync()
+```
+
+**Returns:** `RouteBuilder`
+
+###### HandlerDependencies()
 
 Declare the dependency keys that must be resolved before this handler runs.
 
@@ -1172,6 +1474,20 @@ Declare the dependency keys that must be resolved before this handler runs.
 ```go
 func (o *RouteBuilder) HandlerDependencies(dependencies []string) RouteBuilder
 ```
+
+**Example:**
+
+```go
+result := instance.HandlerDependencies(nil)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Dependencies` | `[]string` | Yes | The dependencies |
+
+**Returns:** `RouteBuilder`
 
 ---
 
@@ -1188,15 +1504,23 @@ introspection control, complexity limits, and depth limits.
 | `ComplexityLimit` | `*int` | `nil` | Maximum query complexity (None = unlimited) |
 | `DepthLimit` | `*int` | `nil` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### Default()
+###### Default()
 
 **Signature:**
 
 ```go
 func (o *SchemaConfig) Default() SchemaConfig
 ```
+
+**Example:**
+
+```go
+result := SchemaConfig.Default()
+```
+
+**Returns:** `SchemaConfig`
 
 ---
 
@@ -1223,20 +1547,26 @@ Server configuration
 | `Openapi` | `*OpenApiConfig` | `nil` | OpenAPI documentation configuration |
 | `Jsonrpc` | `*JsonRpcConfig` | `nil` | JSON-RPC configuration |
 | `Grpc` | `*GrpcConfig` | `nil` | gRPC configuration |
-| `LifecycleHooks` | `*string` | `nil` | Lifecycle hooks for request/response processing |
 | `BackgroundTasks` | `BackgroundTaskConfig` | — | Background task executor configuration |
 | `EnableHttpTrace` | `bool` | `false` | Enable per-request HTTP tracing (tower-http `TraceLayer`) |
-| `DiContainer` | `*string` | `nil` | Dependency injection container (requires 'di' feature) |
 
-### Methods
+##### Methods
 
-#### Default()
+###### Default()
 
 **Signature:**
 
 ```go
 func (o *ServerConfig) Default() ServerConfig
 ```
+
+**Example:**
+
+```go
+result := ServerConfig.Default()
+```
+
+**Returns:** `ServerConfig`
 
 ---
 
@@ -1276,9 +1606,9 @@ retry: 3000
 | `Id` | `*string` | `nil` | Event ID (optional, for client-side reconnection) |
 | `Retry` | `*uint64` | `nil` | Retry timeout in milliseconds (optional) |
 
-### Methods
+#### Methods
 
-#### WithId()
+##### WithId()
 
 Set the event ID for client-side reconnection support
 
@@ -1291,7 +1621,21 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 func (o *SseEvent) WithId(id string) SseEvent
 ```
 
-#### WithRetry()
+**Example:**
+
+```go
+result := instance.WithId("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Id` | `string` | Yes | Unique identifier for this event |
+
+**Returns:** `SseEvent`
+
+###### WithRetry()
 
 Set the retry timeout for client reconnection
 
@@ -1303,6 +1647,20 @@ if the connection is lost. The client browser will automatically handle reconnec
 ```go
 func (o *SseEvent) WithRetry(retryMs uint64) SseEvent
 ```
+
+**Example:**
+
+```go
+result := instance.WithRetry(42)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `RetryMs` | `uint64` | Yes | Retry timeout in milliseconds |
+
+**Returns:** `SseEvent`
 
 ---
 
@@ -1343,11 +1701,10 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `Size` | `*int` | `nil` | Size of the file in bytes |
 | `Content` | `[]byte` | — | File content (may be base64 encoded) |
 | `ContentEncoding` | `*string` | `nil` | Content encoding type |
-| `Cursor` | `string` | — | Internal cursor for Read/Seek operations |
 
-### Methods
+##### Methods
 
-#### AsBytes()
+###### AsBytes()
 
 Get the raw file content as bytes.
 
@@ -1359,7 +1716,15 @@ This provides zero-copy access to the underlying buffer.
 func (o *UploadFile) AsBytes() []byte
 ```
 
-#### ReadToString()
+**Example:**
+
+```go
+result := instance.AsBytes()
+```
+
+**Returns:** `[]byte`
+
+###### ReadToString()
 
 Read the file content as a UTF-8 string.
 
@@ -1373,7 +1738,20 @@ Returns an error if the content is not valid UTF-8.
 func (o *UploadFile) ReadToString() (string, error)
 ```
 
-#### ContentTypeOrDefault()
+**Example:**
+
+```go
+result, err := instance.ReadToString()
+if err != nil {
+    return err
+}
+```
+
+**Returns:** `string`
+
+**Errors:** Returns `error`.
+
+###### ContentTypeOrDefault()
 
 Get the content type, defaulting to "application/octet-stream".
 
@@ -1382,6 +1760,14 @@ Get the content type, defaulting to "application/octet-stream".
 ```go
 func (o *UploadFile) ContentTypeOrDefault() string
 ```
+
+**Example:**
+
+```go
+result := instance.ContentTypeOrDefault()
+```
+
+**Returns:** `string`
 
 ---
 

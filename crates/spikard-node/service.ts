@@ -1,13 +1,13 @@
 // Auto-generated service API class
 
 import type { ServerConfig } from "./index";
-import { Method, RouteBuilder } from "./index";
+import { App as NativeApp, Method, RouteBuilder } from "./index";
 import { appIntoRouter, appRun } from "./index";
 /**
  * Spikard application builder.
  */
 export class App {
-  private readonly _app: JsApp;
+  private readonly _app: NativeApp;
   private _config: ServerConfig | undefined;
 
   /**
@@ -20,7 +20,7 @@ export class App {
    * Create a new application with the default server configuration.
    */
   constructor() {
-    this._app = new JsApp();
+    this._app = new NativeApp();
   }
   /**
    * Set the server configuration.

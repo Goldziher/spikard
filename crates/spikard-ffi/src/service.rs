@@ -144,8 +144,9 @@ pub extern "C" fn spikard_app_register_route(
         return 1; // Error: null pointer;
     }
 
-    // SAFETY: pointer was produced by the matching opaque `_new`/builder export and is consumed here.
-    let builder = unsafe { *Box::from_raw(builder) };
+    // SAFETY: pointer was produced by the matching opaque `_new`/builder export.
+    // Borrow it as a reference; caller retains ownership and is responsible for freeing.
+    let builder = unsafe { &*builder };
 
     let bridge = FfiHandlerBridge { callback, context };
     let handler: Arc<dyn spikard::Handler> = Arc::new(bridge);
@@ -153,7 +154,7 @@ pub extern "C" fn spikard_app_register_route(
     // SAFETY: owner was allocated by _new() and is valid until freed.
     match unsafe {
         match (*owner).inner.as_mut() {
-            Some(owner_ref) => owner_ref.route(builder, handler),
+            Some(owner_ref) => owner_ref.route(builder.clone(), handler),
             None => return 1, // Error: service already consumed
         }
     } {
@@ -591,8 +592,9 @@ pub extern "C" fn spikard_app_config(owner: *mut AppOpaque, config: *mut spikard
         return std::ptr::null_mut();
     }
 
-    // SAFETY: pointer was produced by the matching opaque `_new`/builder export and is consumed here.
-    let config = unsafe { *Box::from_raw(config) };
+    // SAFETY: pointer was produced by the matching opaque `_new`/builder export.
+    // Borrow it as a reference; caller retains ownership and is responsible for freeing.
+    let config = unsafe { &*config };
 
     // SAFETY: owner was allocated by _new() and is valid until freed.
     // Take the inner box out, transform it, and put the result back. The opaque
@@ -602,7 +604,7 @@ pub extern "C" fn spikard_app_config(owner: *mut AppOpaque, config: *mut spikard
             Some(boxed) => *boxed,
             None => return std::ptr::null_mut(),
         };
-        (*owner).inner = Some(Box::new(inner.config(config)));
+        (*owner).inner = Some(Box::new(inner.config(config.clone())));
     }
     owner
 }

@@ -67,7 +67,7 @@ tokio = { version = "1", features = ["full"] }
 # gRPC dependencies
 tonic = { version = "0.14", features = ["transport", "codegen", "gzip"] }
 tower = "0.5"
-tower-http = { version = "0.6.11", features = [
+tower-http = { version = "0.7.0", features = [
   "trace",
   "request-id",
   "compression-gzip",

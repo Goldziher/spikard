@@ -22,6 +22,12 @@ A `QueryOnlyConfig` with default settings
 pub fn schema_query_only() -> QueryOnlyConfig
 ```
 
+**Example:**
+
+```rust
+let result = schema_query_only();
+```
+
 **Returns:** `QueryOnlyConfig`
 
 ---
@@ -42,6 +48,12 @@ A `QueryMutationConfig` with default settings
 pub fn schema_query_mutation() -> QueryMutationConfig
 ```
 
+**Example:**
+
+```rust
+let result = schema_query_mutation();
+```
+
 **Returns:** `QueryMutationConfig`
 
 ---
@@ -60,6 +72,12 @@ A `FullSchemaConfig` with default settings
 
 ```rust
 pub fn schema_full() -> FullSchemaConfig
+```
+
+**Example:**
+
+```rust
+let result = schema_full();
 ```
 
 **Returns:** `FullSchemaConfig`
@@ -83,9 +101,9 @@ API Key authentication configuration
 
 Spikard application builder.
 
-### Methods
+##### Methods
 
-#### new()
+###### new()
 
 Create a new application with the default server configuration.
 
@@ -95,7 +113,15 @@ Create a new application with the default server configuration.
 pub fn new() -> App
 ```
 
-#### on_request()
+**Example:**
+
+```rust
+let result = App::new();
+```
+
+**Returns:** `App`
+
+###### on_request()
 
 Register an `on_request` lifecycle hook (runs before validation and handler dispatch).
 
@@ -105,7 +131,21 @@ Register an `on_request` lifecycle hook (runs before validation and handler disp
 pub fn on_request(&self, hook: &str) -> App
 ```
 
-#### pre_validation()
+**Example:**
+
+```rust
+let result = instance.on_request("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `hook` | `String` | Yes | The hook |
+
+**Returns:** `App`
+
+###### pre_validation()
 
 Register a `pre_validation` lifecycle hook (runs after `on_request`, before validation).
 
@@ -115,7 +155,21 @@ Register a `pre_validation` lifecycle hook (runs after `on_request`, before vali
 pub fn pre_validation(&self, hook: &str) -> App
 ```
 
-#### pre_handler()
+**Example:**
+
+```rust
+let result = instance.pre_validation("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `hook` | `String` | Yes | The hook |
+
+**Returns:** `App`
+
+###### pre_handler()
 
 Register a `pre_handler` lifecycle hook (runs after validation, before the handler).
 
@@ -125,7 +179,21 @@ Register a `pre_handler` lifecycle hook (runs after validation, before the handl
 pub fn pre_handler(&self, hook: &str) -> App
 ```
 
-#### on_response()
+**Example:**
+
+```rust
+let result = instance.pre_handler("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `hook` | `String` | Yes | The hook |
+
+**Returns:** `App`
+
+###### on_response()
 
 Register an `on_response` lifecycle hook (runs after a successful handler response).
 
@@ -135,7 +203,21 @@ Register an `on_response` lifecycle hook (runs after a successful handler respon
 pub fn on_response(&self, hook: &str) -> App
 ```
 
-#### on_error()
+**Example:**
+
+```rust
+let result = instance.on_response("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `hook` | `String` | Yes | The hook |
+
+**Returns:** `App`
+
+###### on_error()
 
 Register an `on_error` lifecycle hook (runs when the handler returns an error).
 
@@ -145,7 +227,21 @@ Register an `on_error` lifecycle hook (runs when the handler returns an error).
 pub fn on_error(&self, hook: &str) -> App
 ```
 
-#### merge_axum_router()
+**Example:**
+
+```rust
+let result = instance.on_error("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `hook` | `String` | Yes | The hook |
+
+**Returns:** `App`
+
+###### merge_axum_router()
 
 Attach an existing Axum router to this application, returning ownership.
 
@@ -155,7 +251,21 @@ Attach an existing Axum router to this application, returning ownership.
 pub fn merge_axum_router(&self, router: &str) -> App
 ```
 
-#### attach_axum_router()
+**Example:**
+
+```rust
+let result = instance.merge_axum_router("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `router` | `String` | Yes | The router |
+
+**Returns:** `App`
+
+###### attach_axum_router()
 
 Attach an Axum router using a mutable reference for incremental configuration.
 
@@ -165,7 +275,21 @@ Attach an Axum router using a mutable reference for incremental configuration.
 pub fn attach_axum_router(&self, router: &str) -> App
 ```
 
-#### into_router()
+**Example:**
+
+```rust
+let result = instance.attach_axum_router("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `router` | `String` | Yes | The router |
+
+**Returns:** `App`
+
+###### into_router()
 
 Build the underlying Axum router.
 
@@ -176,16 +300,26 @@ Returns an error if server or router construction fails.
 **Signature:**
 
 ```rust
-pub fn into_router(&self) -> String
+pub fn into_router(&self) -> Result<String, AppError>
 ```
 
-#### into_router_and_config()
+**Example:**
+
+```rust
+let result = instance.into_router()?;
+```
+
+**Returns:** `String`
+
+**Errors:** Returns `Err(AppError)`.
+
+###### into_router_and_config()
 
 Decompose the application into its Axum router and server configuration.
 
 This is the low-level escape hatch used by the C FFI layer to start the
 server on a background thread while retaining the bind address from the
-caller-supplied `ServerConfig`. Prefer `App.run` for normal use.
+caller-supplied `ServerConfig`. Prefer `App::run` for normal use.
 
 **Errors:**
 
@@ -194,16 +328,34 @@ Returns an error if router construction fails.
 **Signature:**
 
 ```rust
-pub fn into_router_and_config(&self) -> String
+pub fn into_router_and_config(&self) -> Result<String, AppError>
 ```
 
-#### default()
+**Example:**
+
+```rust
+let result = instance.into_router_and_config()?;
+```
+
+**Returns:** `String`
+
+**Errors:** Returns `Err(AppError)`.
+
+###### default()
 
 **Signature:**
 
 ```rust
 pub fn default() -> App
 ```
+
+**Example:**
+
+```rust
+let result = App::default();
+```
+
+**Returns:** `App`
 
 ---
 
@@ -225,15 +377,23 @@ AsyncAPI HTTP endpoint configuration
 | `name` | `String` | — | The name |
 | `request_id` | `Option<String>` | `None` | Request id |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```rust
 pub fn default() -> BackgroundJobMetadata
 ```
+
+**Example:**
+
+```rust
+let result = BackgroundJobMetadata::default();
+```
+
+**Returns:** `BackgroundJobMetadata`
 
 ---
 
@@ -247,15 +407,23 @@ Configuration for in-process background task execution.
 | `max_concurrent_tasks` | `usize` | `128` | Maximum concurrent tasks |
 | `drain_timeout_secs` | `u64` | `30` | Drain timeout secs |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```rust
 pub fn default() -> BackgroundTaskConfig
 ```
+
+**Example:**
+
+```rust
+let result = BackgroundTaskConfig::default();
+```
+
+**Returns:** `BackgroundTaskConfig`
 
 ---
 
@@ -270,15 +438,23 @@ Compression configuration shared across runtimes
 | `min_size` | `usize` | — | Minimum response size to compress (bytes) |
 | `quality` | `u32` | — | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```rust
 pub fn default() -> CompressionConfig
 ```
+
+**Example:**
+
+```rust
+let result = CompressionConfig::default();
+```
+
+**Returns:** `CompressionConfig`
 
 ---
 
@@ -309,9 +485,9 @@ CORS configuration for a route
 | `methods_joined_cache` | `String` | — | Methods joined cache |
 | `headers_joined_cache` | `String` | — | Headers joined cache |
 
-### Methods
+##### Methods
 
-#### allowed_methods_joined()
+###### allowed_methods_joined()
 
 Get the cached joined methods string for preflight responses
 
@@ -321,7 +497,15 @@ Get the cached joined methods string for preflight responses
 pub fn allowed_methods_joined(&self) -> String
 ```
 
-#### allowed_headers_joined()
+**Example:**
+
+```rust
+let result = instance.allowed_methods_joined();
+```
+
+**Returns:** `String`
+
+###### allowed_headers_joined()
 
 Get the cached joined headers string for preflight responses
 
@@ -331,7 +515,15 @@ Get the cached joined headers string for preflight responses
 pub fn allowed_headers_joined(&self) -> String
 ```
 
-#### is_origin_allowed()
+**Example:**
+
+```rust
+let result = instance.allowed_headers_joined();
+```
+
+**Returns:** `String`
+
+###### is_origin_allowed()
 
 Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -341,7 +533,21 @@ Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 pub fn is_origin_allowed(&self, origin: &str) -> bool
 ```
 
-#### is_method_allowed()
+**Example:**
+
+```rust
+let result = instance.is_origin_allowed("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `origin` | `String` | Yes | The origin |
+
+**Returns:** `bool`
+
+###### is_method_allowed()
 
 Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -351,13 +557,35 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 pub fn is_method_allowed(&self, method: &str) -> bool
 ```
 
-#### default()
+**Example:**
+
+```rust
+let result = instance.is_method_allowed("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `String` | Yes | The method |
+
+**Returns:** `bool`
+
+###### default()
 
 **Signature:**
 
 ```rust
 pub fn default() -> CorsConfig
 ```
+
+**Example:**
+
+```rust
+let result = CorsConfig::default();
+```
+
+**Returns:** `CorsConfig`
 
 ---
 
@@ -371,15 +599,23 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 | `complexity_limit` | `Option<usize>` | `None` | Maximum query complexity (None = unlimited) |
 | `depth_limit` | `Option<usize>` | `None` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```rust
 pub fn default() -> FullSchemaConfig
 ```
+
+**Example:**
+
+```rust
+let result = FullSchemaConfig::default();
+```
+
+**Returns:** `FullSchemaConfig`
 
 ---
 
@@ -390,9 +626,9 @@ Configuration for GraphQL routes
 Provides a builder pattern for configuring GraphQL route parameters
 for the Spikard HTTP server's routing system.
 
-### Methods
+##### Methods
 
-#### new()
+###### new()
 
 Create a new GraphQL route configuration with defaults
 
@@ -408,7 +644,15 @@ Default values:
 pub fn new() -> GraphQlRouteConfig
 ```
 
-#### path()
+**Example:**
+
+```rust
+let result = GraphQlRouteConfig::new();
+```
+
+**Returns:** `GraphQlRouteConfig`
+
+###### path()
 
 Set the HTTP path for the GraphQL endpoint
 
@@ -418,7 +662,21 @@ Set the HTTP path for the GraphQL endpoint
 pub fn path(&self, path: &str) -> GraphQlRouteConfig
 ```
 
-#### method()
+**Example:**
+
+```rust
+let result = instance.path("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `path` | `String` | Yes | The URL path (e.g., "/graphql", "/api/graphql") |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### method()
 
 Set the HTTP method for the GraphQL endpoint
 
@@ -428,7 +686,21 @@ Set the HTTP method for the GraphQL endpoint
 pub fn method(&self, method: &str) -> GraphQlRouteConfig
 ```
 
-#### enable_playground()
+**Example:**
+
+```rust
+let result = instance.method("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `String` | Yes | The HTTP method (typically "POST") |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### enable_playground()
 
 Enable or disable the GraphQL Playground UI
 
@@ -438,7 +710,21 @@ Enable or disable the GraphQL Playground UI
 pub fn enable_playground(&self, enable: bool) -> GraphQlRouteConfig
 ```
 
-#### description()
+**Example:**
+
+```rust
+let result = instance.enable_playground(true);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `enable` | `bool` | Yes | Whether to enable playground |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### description()
 
 Set a custom description for documentation
 
@@ -448,7 +734,21 @@ Set a custom description for documentation
 pub fn description(&self, description: &str) -> GraphQlRouteConfig
 ```
 
-#### get_path()
+**Example:**
+
+```rust
+let result = instance.description("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `description` | `String` | Yes | Documentation string |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### get_path()
 
 Get the configured path
 
@@ -458,7 +758,15 @@ Get the configured path
 pub fn get_path(&self) -> String
 ```
 
-#### get_method()
+**Example:**
+
+```rust
+let result = instance.get_path();
+```
+
+**Returns:** `String`
+
+###### get_method()
 
 Get the configured method
 
@@ -468,7 +776,15 @@ Get the configured method
 pub fn get_method(&self) -> String
 ```
 
-#### is_playground_enabled()
+**Example:**
+
+```rust
+let result = instance.get_method();
+```
+
+**Returns:** `String`
+
+###### is_playground_enabled()
 
 Check if playground is enabled
 
@@ -478,7 +794,15 @@ Check if playground is enabled
 pub fn is_playground_enabled(&self) -> bool
 ```
 
-#### get_description()
+**Example:**
+
+```rust
+let result = instance.is_playground_enabled();
+```
+
+**Returns:** `bool`
+
+###### get_description()
 
 Get the description if set
 
@@ -488,13 +812,29 @@ Get the description if set
 pub fn get_description(&self) -> Option<String>
 ```
 
-#### default()
+**Example:**
+
+```rust
+let result = instance.get_description();
+```
+
+**Returns:** `Option<String>`
+
+###### default()
 
 **Signature:**
 
 ```rust
 pub fn default() -> GraphQlRouteConfig
 ```
+
+**Example:**
+
+```rust
+let result = GraphQlRouteConfig::default();
+```
+
+**Returns:** `GraphQlRouteConfig`
 
 ---
 
@@ -538,7 +878,7 @@ concurrent stream limiting to the HTTP/2 transport layer:
 - **Stream Response Size Limits**: The `max_stream_response_bytes` field caps the
   total encoded bytes emitted across a server-streaming or bidi-streaming response.
   When the cumulative size exceeds the limit, the stream is terminated with
-  `tonic.Status.resource_exhausted`. Defaults to `None` (unbounded).
+  `tonic::Status::resource_exhausted`. Defaults to `None` (unbounded).
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -550,17 +890,25 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `enable_keepalive` | `bool` | `true` | Enable HTTP/2 keepalive |
 | `keepalive_interval` | `u64` | — | HTTP/2 keepalive interval in seconds |
 | `keepalive_timeout` | `u64` | — | HTTP/2 keepalive timeout in seconds |
-| `max_stream_response_bytes` | `Option<usize>` | `None` | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `None` (unbounded total response size). |
+| `max_stream_response_bytes` | `Option<usize>` | `None` | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic::Status::resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `None` (unbounded total response size). |
 
-### Methods
+#### Methods
 
-#### default()
+##### default()
 
 **Signature:**
 
 ```rust
 pub fn default() -> GrpcConfig
 ```
+
+**Example:**
+
+```rust
+let result = GrpcConfig::default();
+```
+
+**Returns:** `GrpcConfig`
 
 ---
 
@@ -571,9 +919,9 @@ Handler trait that all language bindings must implement
 This trait is completely language-agnostic. Each binding (Python, Node, WASM)
 implements this trait to bridge their runtime to our HTTP server.
 
-### Methods
+##### Methods
 
-#### call()
+###### call()
 
 Handle an HTTP request
 
@@ -585,13 +933,28 @@ Takes the extracted request data and returns a future that resolves to either:
 **Signature:**
 
 ```rust
-pub fn call(&self, request: Request, request_data: RequestData) -> HandlerResult
+pub async fn call(&self, request: Request, request_data: RequestData) -> HandlerResult
 ```
 
-#### prefers_raw_json_body()
+**Example:**
 
-Whether this handler prefers consuming `RequestData.raw_body` over the parsed
-`RequestData.body` for JSON requests.
+```rust
+let result = instance.call(Request::default(), RequestData::default()).await;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `request` | `Request` | Yes | The request |
+| `request_data` | `RequestData` | Yes | The request data |
+
+**Returns:** `HandlerResult`
+
+###### prefers_raw_json_body()
+
+Whether this handler prefers consuming `RequestData::raw_body` over the parsed
+`RequestData::body` for JSON requests.
 
 When `true`, the server may skip eager JSON parsing when there is no request-body
 schema validator attached to the route.
@@ -602,14 +965,22 @@ schema validator attached to the route.
 pub fn prefers_raw_json_body(&self) -> bool
 ```
 
-#### prefers_parameter_extraction()
+**Example:**
+
+```rust
+let result = instance.prefers_raw_json_body();
+```
+
+**Returns:** `bool`
+
+###### prefers_parameter_extraction()
 
 Whether this handler wants to perform its own parameter validation/extraction (path/query/header/cookie).
 
-When `true`, the server will skip `ParameterValidator.validate_and_extract` in `ValidatingHandler`.
+When `true`, the server will skip `ParameterValidator::validate_and_extract` in `ValidatingHandler`.
 This is useful for language bindings which need to transform validated parameters into
 language-specific values (e.g., Python kwargs) without duplicating work. When `false`,
-the server stores validated output in `RequestData.validated_params`.
+the server stores validated output in `RequestData::validated_params`.
 
 **Signature:**
 
@@ -617,11 +988,19 @@ the server stores validated output in `RequestData.validated_params`.
 pub fn prefers_parameter_extraction(&self) -> bool
 ```
 
-#### wants_headers()
+**Example:**
+
+```rust
+let result = instance.prefers_parameter_extraction();
+```
+
+**Returns:** `bool`
+
+###### wants_headers()
 
 Whether this handler needs the parsed headers map in `RequestData`.
 
-When `false`, the server may skip building `RequestData.headers` for requests without a body.
+When `false`, the server may skip building `RequestData::headers` for requests without a body.
 (Requests with bodies still typically need `Content-Type` decisions.)
 
 **Signature:**
@@ -630,7 +1009,15 @@ When `false`, the server may skip building `RequestData.headers` for requests wi
 pub fn wants_headers(&self) -> bool
 ```
 
-#### wants_cookies()
+**Example:**
+
+```rust
+let result = instance.wants_headers();
+```
+
+**Returns:** `bool`
+
+###### wants_cookies()
 
 Whether this handler needs the parsed cookies map in `RequestData`.
 
@@ -642,7 +1029,15 @@ When `false`, the server may skip parsing cookies for requests without a body.
 pub fn wants_cookies(&self) -> bool
 ```
 
-#### wants_request_extensions()
+**Example:**
+
+```rust
+let result = instance.wants_cookies();
+```
+
+**Returns:** `bool`
+
+###### wants_request_extensions()
 
 Whether this handler needs `RequestData` stored in request extensions.
 
@@ -655,7 +1050,15 @@ skip cloning in hot paths.
 pub fn wants_request_extensions(&self) -> bool
 ```
 
-#### static_response()
+**Example:**
+
+```rust
+let result = instance.wants_request_extensions();
+```
+
+**Returns:** `bool`
+
+###### static_response()
 
 Return a pre-built static response if this handler always produces the
 same output. When `Some`, the server bypasses the full middleware
@@ -667,15 +1070,23 @@ pipeline and serves the pre-built response directly.
 pub fn static_response(&self) -> Option<StaticResponse>
 ```
 
+**Example:**
+
+```rust
+let result = instance.static_response();
+```
+
+**Returns:** `Option<StaticResponse>`
+
 ---
 
 #### IntoHandler
 
 Convert user-facing handler functions into the low-level `Handler` trait.
 
-### Methods
+##### Methods
 
-#### into_handler()
+###### into_handler()
 
 Convert this value into a shared request handler.
 
@@ -684,6 +1095,14 @@ Convert this value into a shared request handler.
 ```rust
 pub fn into_handler(&self) -> Handler
 ```
+
+**Example:**
+
+```rust
+let result = instance.into_handler();
+```
+
+**Returns:** `Handler`
 
 ---
 
@@ -698,15 +1117,23 @@ JSON-RPC server configuration
 | `enable_batch` | `bool` | — | Enable batch request processing (default: true) |
 | `max_batch_size` | `usize` | — | Maximum number of requests in a batch (default: 100) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```rust
 pub fn default() -> JsonRpcConfig
 ```
+
+**Example:**
+
+```rust
+let result = JsonRpcConfig::default();
+```
+
+**Returns:** `JsonRpcConfig`
 
 ---
 
@@ -771,15 +1198,23 @@ OpenAPI configuration
 | `servers` | `Vec<ServerInfo>` | `vec![]` | Server definitions |
 | `security_schemes` | `HashMap<String, SecuritySchemeInfo>` | `HashMap::new()` | Security schemes (auto-detected from middleware if not provided) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```rust
 pub fn default() -> OpenApiConfig
 ```
+
+**Example:**
+
+```rust
+let result = OpenApiConfig::default();
+```
+
+**Returns:** `OpenApiConfig`
 
 ---
 
@@ -879,9 +1314,9 @@ Content-Type: application/problem+json
 | `instance` | `Option<String>` | `None` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
 | `extensions` | `HashMap<String, serde_json::Value>` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
 
-### Methods
+#### Methods
 
-#### with_detail()
+##### with_detail()
 
 Set the detail field
 
@@ -891,7 +1326,21 @@ Set the detail field
 pub fn with_detail(&self, detail: &str) -> ProblemDetails
 ```
 
-#### with_instance()
+**Example:**
+
+```rust
+let result = instance.with_detail("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### with_instance()
 
 Set the instance field
 
@@ -901,7 +1350,21 @@ Set the instance field
 pub fn with_instance(&self, instance: &str) -> ProblemDetails
 ```
 
-#### not_found()
+**Example:**
+
+```rust
+let result = instance.with_instance("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `instance` | `String` | Yes | The instance |
+
+**Returns:** `ProblemDetails`
+
+###### not_found()
 
 Create a not found error
 
@@ -911,7 +1374,21 @@ Create a not found error
 pub fn not_found(detail: &str) -> ProblemDetails
 ```
 
-#### method_not_allowed()
+**Example:**
+
+```rust
+let result = ProblemDetails::not_found("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### method_not_allowed()
 
 Create a method not allowed error
 
@@ -921,7 +1398,21 @@ Create a method not allowed error
 pub fn method_not_allowed(detail: &str) -> ProblemDetails
 ```
 
-#### internal_server_error()
+**Example:**
+
+```rust
+let result = ProblemDetails::method_not_allowed("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### internal_server_error()
 
 Create an internal server error
 
@@ -931,7 +1422,21 @@ Create an internal server error
 pub fn internal_server_error(detail: &str) -> ProblemDetails
 ```
 
-#### bad_request()
+**Example:**
+
+```rust
+let result = ProblemDetails::internal_server_error("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### bad_request()
 
 Create a bad request error
 
@@ -941,7 +1446,21 @@ Create a bad request error
 pub fn bad_request(detail: &str) -> ProblemDetails
 ```
 
-#### to_json()
+**Example:**
+
+```rust
+let result = ProblemDetails::bad_request("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### to_json()
 
 Serialize to JSON string
 
@@ -951,10 +1470,20 @@ Returns an error if the serialization fails.
 **Signature:**
 
 ```rust
-pub fn to_json(&self) -> String
+pub fn to_json(&self) -> Result<String, Error>
 ```
 
-#### to_json_pretty()
+**Example:**
+
+```rust
+let result = instance.to_json()?;
+```
+
+**Returns:** `String`
+
+**Errors:** Returns `Err(Error)`.
+
+###### to_json_pretty()
 
 Serialize to pretty JSON string
 
@@ -964,8 +1493,18 @@ Returns an error if the serialization fails.
 **Signature:**
 
 ```rust
-pub fn to_json_pretty(&self) -> String
+pub fn to_json_pretty(&self) -> Result<String, Error>
 ```
+
+**Example:**
+
+```rust
+let result = instance.to_json_pretty()?;
+```
+
+**Returns:** `String`
+
+**Errors:** Returns `Err(Error)`.
 
 ---
 
@@ -979,15 +1518,23 @@ Configuration for schemas with Query and Mutation types
 | `complexity_limit` | `Option<usize>` | `None` | Maximum query complexity (None = unlimited) |
 | `depth_limit` | `Option<usize>` | `None` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```rust
 pub fn default() -> QueryMutationConfig
 ```
+
+**Example:**
+
+```rust
+let result = QueryMutationConfig::default();
+```
+
+**Returns:** `QueryMutationConfig`
 
 ---
 
@@ -1001,15 +1548,23 @@ Configuration for schemas with only Query type
 | `complexity_limit` | `Option<usize>` | `None` | Maximum query complexity (None = unlimited) |
 | `depth_limit` | `Option<usize>` | `None` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```rust
 pub fn default() -> QueryOnlyConfig
 ```
+
+**Example:**
+
+```rust
+let result = QueryOnlyConfig::default();
+```
+
+**Returns:** `QueryOnlyConfig`
 
 ---
 
@@ -1023,15 +1578,23 @@ Rate limiting configuration shared across runtimes
 | `burst` | `u32` | `200` | Burst allowance |
 | `ip_based` | `bool` | `true` | Use IP-based rate limiting |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```rust
 pub fn default() -> RateLimitConfig
 ```
+
+**Example:**
+
+```rust
+let result = RateLimitConfig::default();
+```
+
+**Returns:** `RateLimitConfig`
 
 ---
 
@@ -1049,9 +1612,9 @@ HTTP Response with custom status code, headers, and content
 | `status_code` | `u16` | — | HTTP status code (defaults to 200) |
 | `headers` | `HashMap<String, String>` | `HashMap::new()` | Response headers |
 
-### Methods
+##### Methods
 
-#### set_header()
+###### set_header()
 
 Set a header
 
@@ -1061,7 +1624,22 @@ Set a header
 pub fn set_header(&self, key: &str, value: &str)
 ```
 
-#### set_cookie()
+**Example:**
+
+```rust
+instance.set_header("value", "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `key` | `String` | Yes | The key |
+| `value` | `String` | Yes | The value |
+
+**Returns:** No return value.
+
+###### set_cookie()
 
 Set a cookie in the response
 
@@ -1071,13 +1649,42 @@ Set a cookie in the response
 pub fn set_cookie(&self, key: &str, value: &str, secure: bool, http_only: bool, max_age: Option<i64>, domain: Option<String>, path: Option<String>, same_site: Option<String>)
 ```
 
-#### default()
+**Example:**
+
+```rust
+instance.set_cookie("value", "value", true, true, 42, "value", "value", "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `key` | `String` | Yes | The key |
+| `value` | `String` | Yes | The value |
+| `secure` | `bool` | Yes | The secure |
+| `http_only` | `bool` | Yes | The http only |
+| `max_age` | `Option<i64>` | No | The max age |
+| `domain` | `Option<String>` | No | The domain |
+| `path` | `Option<String>` | No | Path to the file |
+| `same_site` | `Option<String>` | No | The same site |
+
+**Returns:** No return value.
+
+###### default()
 
 **Signature:**
 
 ```rust
 pub fn default() -> Response
 ```
+
+**Example:**
+
+```rust
+let result = Response::default();
+```
+
+**Returns:** `Response`
 
 ---
 
@@ -1091,19 +1698,29 @@ Snapshot of an Axum response used by higher-level language bindings.
 | `headers` | `HashMap<String, String>` | — | Response headers (lowercase keys for predictable lookups). |
 | `body` | `Vec<u8>` | — | Response body bytes (decoded for supported encodings). |
 
-### Methods
+##### Methods
 
-#### text()
+###### text()
 
 Return response body as UTF-8 string.
 
 **Signature:**
 
 ```rust
-pub fn text(&self) -> String
+pub fn text(&self) -> Result<String, FromUtf8Error>
 ```
 
-#### header()
+**Example:**
+
+```rust
+let result = instance.text()?;
+```
+
+**Returns:** `String`
+
+**Errors:** Returns `Err(FromUtf8Error)`.
+
+###### header()
 
 Lookup header by case-insensitive name.
 
@@ -1113,15 +1730,29 @@ Lookup header by case-insensitive name.
 pub fn header(&self, name: &str) -> Option<String>
 ```
 
+**Example:**
+
+```rust
+let result = instance.header("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | `String` | Yes | The name |
+
+**Returns:** `Option<String>`
+
 ---
 
 #### RouteBuilder
 
 Builder for defining a route.
 
-### Methods
+##### Methods
 
-#### new()
+###### new()
 
 Create a new builder for the provided HTTP method and path.
 
@@ -1131,7 +1762,22 @@ Create a new builder for the provided HTTP method and path.
 pub fn new(method: Method, path: &str) -> RouteBuilder
 ```
 
-#### handler_name()
+**Example:**
+
+```rust
+let result = RouteBuilder::new(Method::default(), "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `Method` | Yes | The method |
+| `path` | `String` | Yes | Path to the file |
+
+**Returns:** `RouteBuilder`
+
+###### handler_name()
 
 Assign an explicit handler name.
 
@@ -1141,7 +1787,21 @@ Assign an explicit handler name.
 pub fn handler_name(&self, name: &str) -> RouteBuilder
 ```
 
-#### request_schema_json()
+**Example:**
+
+```rust
+let result = instance.handler_name("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | `String` | Yes | The name |
+
+**Returns:** `RouteBuilder`
+
+###### request_schema_json()
 
 Provide a raw JSON schema for the request body.
 
@@ -1151,7 +1811,21 @@ Provide a raw JSON schema for the request body.
 pub fn request_schema_json(&self, schema: serde_json::Value) -> RouteBuilder
 ```
 
-#### response_schema_json()
+**Example:**
+
+```rust
+let result = instance.request_schema_json(std::collections::HashMap::new());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `serde_json::Value` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### response_schema_json()
 
 Provide a raw JSON schema for the response body.
 
@@ -1161,7 +1835,21 @@ Provide a raw JSON schema for the response body.
 pub fn response_schema_json(&self, schema: serde_json::Value) -> RouteBuilder
 ```
 
-#### params_schema_json()
+**Example:**
+
+```rust
+let result = instance.response_schema_json(std::collections::HashMap::new());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `serde_json::Value` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### params_schema_json()
 
 Provide a raw JSON schema for request parameters.
 
@@ -1171,7 +1859,21 @@ Provide a raw JSON schema for request parameters.
 pub fn params_schema_json(&self, schema: serde_json::Value) -> RouteBuilder
 ```
 
-#### file_params_json()
+**Example:**
+
+```rust
+let result = instance.params_schema_json(std::collections::HashMap::new());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `serde_json::Value` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### file_params_json()
 
 Provide multipart file parameter configuration.
 
@@ -1181,7 +1883,21 @@ Provide multipart file parameter configuration.
 pub fn file_params_json(&self, schema: serde_json::Value) -> RouteBuilder
 ```
 
-#### cors()
+**Example:**
+
+```rust
+let result = instance.file_params_json(std::collections::HashMap::new());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `serde_json::Value` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### cors()
 
 Attach a CORS configuration for this route.
 
@@ -1191,7 +1907,21 @@ Attach a CORS configuration for this route.
 pub fn cors(&self, cors: CorsConfig) -> RouteBuilder
 ```
 
-#### compression()
+**Example:**
+
+```rust
+let result = instance.cors(CorsConfig::default());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `cors` | `CorsConfig` | Yes | The cors config |
+
+**Returns:** `RouteBuilder`
+
+###### compression()
 
 Attach a compression configuration for this route.
 
@@ -1201,7 +1931,21 @@ Attach a compression configuration for this route.
 pub fn compression(&self, compression: CompressionConfig) -> RouteBuilder
 ```
 
-#### sync()
+**Example:**
+
+```rust
+let result = instance.compression(CompressionConfig::default());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `compression` | `CompressionConfig` | Yes | The compression config |
+
+**Returns:** `RouteBuilder`
+
+###### sync()
 
 Mark the route as synchronous.
 
@@ -1211,7 +1955,15 @@ Mark the route as synchronous.
 pub fn sync(&self) -> RouteBuilder
 ```
 
-#### handler_dependencies()
+**Example:**
+
+```rust
+let result = instance.sync();
+```
+
+**Returns:** `RouteBuilder`
+
+###### handler_dependencies()
 
 Declare the dependency keys that must be resolved before this handler runs.
 
@@ -1220,6 +1972,20 @@ Declare the dependency keys that must be resolved before this handler runs.
 ```rust
 pub fn handler_dependencies(&self, dependencies: Vec<String>) -> RouteBuilder
 ```
+
+**Example:**
+
+```rust
+let result = instance.handler_dependencies(vec![]);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `dependencies` | `Vec<String>` | Yes | The dependencies |
+
+**Returns:** `RouteBuilder`
 
 ---
 
@@ -1236,15 +2002,23 @@ introspection control, complexity limits, and depth limits.
 | `complexity_limit` | `Option<usize>` | `None` | Maximum query complexity (None = unlimited) |
 | `depth_limit` | `Option<usize>` | `None` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```rust
 pub fn default() -> SchemaConfig
 ```
+
+**Example:**
+
+```rust
+let result = SchemaConfig::default();
+```
+
+**Returns:** `SchemaConfig`
 
 ---
 
@@ -1276,15 +2050,23 @@ Server configuration
 | `enable_http_trace` | `bool` | `false` | Enable per-request HTTP tracing (tower-http `TraceLayer`) |
 | `di_container` | `Option<String>` | `None` | Dependency injection container (requires 'di' feature) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```rust
 pub fn default() -> ServerConfig
 ```
+
+**Example:**
+
+```rust
+let result = ServerConfig::default();
+```
+
+**Returns:** `ServerConfig`
 
 ---
 
@@ -1324,9 +2106,9 @@ retry: 3000
 | `id` | `Option<String>` | `None` | Event ID (optional, for client-side reconnection) |
 | `retry` | `Option<u64>` | `None` | Retry timeout in milliseconds (optional) |
 
-### Methods
+#### Methods
 
-#### with_id()
+##### with_id()
 
 Set the event ID for client-side reconnection support
 
@@ -1339,7 +2121,25 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 pub fn with_id(&self, id: &str) -> SseEvent
 ```
 
-#### with_retry()
+**Example:**
+
+```rust
+use serde_json::json;
+use spikard_http::sse::SseEvent;
+
+let event = SseEvent::new(json!({"count": 1}))
+    .with_id("event-1");
+```rust
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `id` | `String` | Yes | Unique identifier for this event |
+
+**Returns:** `SseEvent`
+
+###### with_retry()
 
 Set the retry timeout for client reconnection
 
@@ -1351,6 +2151,24 @@ if the connection is lost. The client browser will automatically handle reconnec
 ```rust
 pub fn with_retry(&self, retry_ms: u64) -> SseEvent
 ```
+
+**Example:**
+
+```rust
+use serde_json::json;
+use spikard_http::sse::SseEvent;
+
+let event = SseEvent::new(json!({"data": "value"}))
+    .with_retry(5000); // Reconnect after 5 seconds
+```rust
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `retry_ms` | `u64` | Yes | Retry timeout in milliseconds |
+
+**Returns:** `SseEvent`
 
 ---
 
@@ -1376,29 +2194,66 @@ interface for making HTTP requests, sending WebSocket connections, and
 handling Server-Sent Events. Language bindings wrap this to provide
 native API surfaces.
 
-### Methods
+##### Methods
 
-#### graphql_at()
+###### graphql_at()
 
 Send a GraphQL query/mutation to a custom endpoint
 
 **Signature:**
 
 ```rust
-pub fn graphql_at(&self, endpoint: &str, query: &str, variables: Option<serde_json::Value>, operation_name: Option<String>) -> ResponseSnapshot
+pub async fn graphql_at(&self, endpoint: &str, query: &str, variables: Option<serde_json::Value>, operation_name: Option<String>) -> Result<ResponseSnapshot, SnapshotError>
 ```
 
-#### graphql()
+**Example:**
+
+```rust
+let result = instance.graphql_at("value", "value", std::collections::HashMap::new(), "value").await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `endpoint` | `String` | Yes | The endpoint |
+| `query` | `String` | Yes | The query |
+| `variables` | `Option<serde_json::Value>` | No | The variables |
+| `operation_name` | `Option<String>` | No | The operation name |
+
+**Returns:** `ResponseSnapshot`
+
+**Errors:** Returns `Err(SnapshotError)`.
+
+###### graphql()
 
 Send a GraphQL query/mutation
 
 **Signature:**
 
 ```rust
-pub fn graphql(&self, query: &str, variables: Option<serde_json::Value>, operation_name: Option<String>) -> ResponseSnapshot
+pub async fn graphql(&self, query: &str, variables: Option<serde_json::Value>, operation_name: Option<String>) -> Result<ResponseSnapshot, SnapshotError>
 ```
 
-#### graphql_subscription_at()
+**Example:**
+
+```rust
+let result = instance.graphql("value", std::collections::HashMap::new(), "value").await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `String` | Yes | The query |
+| `variables` | `Option<serde_json::Value>` | No | The variables |
+| `operation_name` | `Option<String>` | No | The operation name |
+
+**Returns:** `ResponseSnapshot`
+
+**Errors:** Returns `Err(SnapshotError)`.
+
+###### graphql_subscription_at()
 
 Send a GraphQL subscription (WebSocket) to a custom endpoint.
 
@@ -1408,10 +2263,29 @@ After the first payload is received, this client sends `complete` to unsubscribe
 **Signature:**
 
 ```rust
-pub fn graphql_subscription_at(&self, endpoint: &str, query: &str, variables: Option<serde_json::Value>, operation_name: Option<String>) -> GraphQlSubscriptionSnapshot
+pub async fn graphql_subscription_at(&self, endpoint: &str, query: &str, variables: Option<serde_json::Value>, operation_name: Option<String>) -> Result<GraphQlSubscriptionSnapshot, SnapshotError>
 ```
 
-#### graphql_subscription()
+**Example:**
+
+```rust
+let result = instance.graphql_subscription_at("value", "value", std::collections::HashMap::new(), "value").await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `endpoint` | `String` | Yes | The endpoint |
+| `query` | `String` | Yes | The query |
+| `variables` | `Option<serde_json::Value>` | No | The variables |
+| `operation_name` | `Option<String>` | No | The operation name |
+
+**Returns:** `GraphQlSubscriptionSnapshot`
+
+**Errors:** Returns `Err(SnapshotError)`.
+
+###### graphql_subscription()
 
 Send a GraphQL subscription (WebSocket).
 
@@ -1420,8 +2294,26 @@ Uses `/graphql` as the default subscription endpoint.
 **Signature:**
 
 ```rust
-pub fn graphql_subscription(&self, query: &str, variables: Option<serde_json::Value>, operation_name: Option<String>) -> GraphQlSubscriptionSnapshot
+pub async fn graphql_subscription(&self, query: &str, variables: Option<serde_json::Value>, operation_name: Option<String>) -> Result<GraphQlSubscriptionSnapshot, SnapshotError>
 ```
+
+**Example:**
+
+```rust
+let result = instance.graphql_subscription("value", std::collections::HashMap::new(), "value").await?;
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `String` | Yes | The query |
+| `variables` | `Option<serde_json::Value>` | No | The variables |
+| `operation_name` | `Option<String>` | No | The operation name |
+
+**Returns:** `GraphQlSubscriptionSnapshot`
+
+**Errors:** Returns `Err(SnapshotError)`.
 
 ---
 
@@ -1451,9 +2343,9 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `content_encoding` | `Option<String>` | `None` | Content encoding type |
 | `cursor` | `String` | — | Internal cursor for Read/Seek operations |
 
-### Methods
+##### Methods
 
-#### as_bytes()
+###### as_bytes()
 
 Get the raw file content as bytes.
 
@@ -1465,7 +2357,15 @@ This provides zero-copy access to the underlying buffer.
 pub fn as_bytes(&self) -> Vec<u8>
 ```
 
-#### read_to_string()
+**Example:**
+
+```rust
+let result = instance.as_bytes();
+```
+
+**Returns:** `Vec<u8>`
+
+###### read_to_string()
 
 Read the file content as a UTF-8 string.
 
@@ -1476,10 +2376,20 @@ Returns an error if the content is not valid UTF-8.
 **Signature:**
 
 ```rust
-pub fn read_to_string(&self) -> String
+pub fn read_to_string(&self) -> Result<String, Error>
 ```
 
-#### content_type_or_default()
+**Example:**
+
+```rust
+let result = instance.read_to_string()?;
+```
+
+**Returns:** `String`
+
+**Errors:** Returns `Err(Error)`.
+
+###### content_type_or_default()
 
 Get the content type, defaulting to "application/octet-stream".
 
@@ -1488,6 +2398,14 @@ Get the content type, defaulting to "application/octet-stream".
 ```rust
 pub fn content_type_or_default(&self) -> String
 ```
+
+**Example:**
+
+```rust
+let result = instance.content_type_or_default();
+```
+
+**Returns:** `String`
 
 ---
 

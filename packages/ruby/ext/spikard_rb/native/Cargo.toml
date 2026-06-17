@@ -16,6 +16,10 @@ name = "spikard_rb"
 path = "../src/lib.rs"
 crate-type = ["cdylib"]
 
+[features]
+default = ["di"]
+di = ["spikard/di"]
+
 [dependencies]
 magnus = "0.8"
 rb-sys = ">=0.9, <0.9.128"

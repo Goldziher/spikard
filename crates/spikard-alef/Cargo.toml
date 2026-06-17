@@ -13,7 +13,7 @@ name = "spikard-alef"
 path = "src/main.rs"
 
 [dependencies]
-alef = { git = "https://github.com/kreuzberg-dev/alef", rev = "3d5ec76b225bce220547dd3bc8f30d42083b0784" }
+alef = { git = "https://github.com/kreuzberg-dev/alef", rev = "17e0d038c6671862603ca561d821b792f70f7b71" }
 spikard-alef-ext = { path = "../spikard-alef-ext" }
 
 [lints]

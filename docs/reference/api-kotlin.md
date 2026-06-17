@@ -22,6 +22,12 @@ A `QueryOnlyConfig` with default settings
 fun schemaQueryOnly(): QueryOnlyConfig
 ```
 
+**Example:**
+
+```kotlin
+val result = schemaQueryOnly()
+```
+
 **Returns:** `QueryOnlyConfig`
 
 ---
@@ -40,6 +46,12 @@ A `QueryMutationConfig` with default settings
 
 ```kotlin
 fun schemaQueryMutation(): QueryMutationConfig
+```
+
+**Example:**
+
+```kotlin
+val result = schemaQueryMutation()
 ```
 
 **Returns:** `QueryMutationConfig`
@@ -62,6 +74,12 @@ A `FullSchemaConfig` with default settings
 fun schemaFull(): FullSchemaConfig
 ```
 
+**Example:**
+
+```kotlin
+val result = schemaFull()
+```
+
 **Returns:** `FullSchemaConfig`
 
 ---
@@ -76,138 +94,6 @@ API Key authentication configuration
 |-------|------|---------|-------------|
 | `keys` | `List<String>` | — | Valid API keys |
 | `headerName` | `String` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
-
----
-
-#### App
-
-Spikard application builder.
-
-### Methods
-
-#### new()
-
-Create a new application with the default server configuration.
-
-**Signature:**
-
-```kotlin
-@JvmStatic
-fun new(): App
-```
-
-#### onRequest()
-
-Register an `on_request` lifecycle hook (runs before validation and handler dispatch).
-
-**Signature:**
-
-```kotlin
-fun onRequest(hook: String): App
-```
-
-#### preValidation()
-
-Register a `pre_validation` lifecycle hook (runs after `on_request`, before validation).
-
-**Signature:**
-
-```kotlin
-fun preValidation(hook: String): App
-```
-
-#### preHandler()
-
-Register a `pre_handler` lifecycle hook (runs after validation, before the handler).
-
-**Signature:**
-
-```kotlin
-fun preHandler(hook: String): App
-```
-
-#### onResponse()
-
-Register an `on_response` lifecycle hook (runs after a successful handler response).
-
-**Signature:**
-
-```kotlin
-fun onResponse(hook: String): App
-```
-
-#### onError()
-
-Register an `on_error` lifecycle hook (runs when the handler returns an error).
-
-**Signature:**
-
-```kotlin
-fun onError(hook: String): App
-```
-
-#### mergeAxumRouter()
-
-Attach an existing Axum router to this application, returning ownership.
-
-**Signature:**
-
-```kotlin
-fun mergeAxumRouter(router: String): App
-```
-
-#### attachAxumRouter()
-
-Attach an Axum router using a mutable reference for incremental configuration.
-
-**Signature:**
-
-```kotlin
-fun attachAxumRouter(router: String): App
-```
-
-#### intoRouter()
-
-Build the underlying Axum router.
-
-**Errors:**
-
-Returns an error if server or router construction fails.
-
-**Signature:**
-
-```kotlin
-@Throws(AppError::class)
-fun intoRouter(): String
-```
-
-#### intoRouterAndConfig()
-
-Decompose the application into its Axum router and server configuration.
-
-This is the low-level escape hatch used by the C FFI layer to start the
-server on a background thread while retaining the bind address from the
-caller-supplied `ServerConfig`. Prefer `App.run` for normal use.
-
-**Errors:**
-
-Returns an error if router construction fails.
-
-**Signature:**
-
-```kotlin
-@Throws(AppError::class)
-fun intoRouterAndConfig(): String
-```
-
-#### default()
-
-**Signature:**
-
-```kotlin
-@JvmStatic
-fun default(): App
-```
 
 ---
 
@@ -229,9 +115,9 @@ AsyncAPI HTTP endpoint configuration
 | `name` | `String` | — | The name |
 | `requestId` | `String?` | `null` | Request id |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -239,6 +125,14 @@ AsyncAPI HTTP endpoint configuration
 @JvmStatic
 fun default(): BackgroundJobMetadata
 ```
+
+**Example:**
+
+```kotlin
+val result = BackgroundJobMetadata.default()
+```
+
+**Returns:** `BackgroundJobMetadata`
 
 ---
 
@@ -252,9 +146,9 @@ Configuration for in-process background task execution.
 | `maxConcurrentTasks` | `Long` | `128` | Maximum concurrent tasks |
 | `drainTimeoutSecs` | `Long` | `30` | Drain timeout secs |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -262,6 +156,14 @@ Configuration for in-process background task execution.
 @JvmStatic
 fun default(): BackgroundTaskConfig
 ```
+
+**Example:**
+
+```kotlin
+val result = BackgroundTaskConfig.default()
+```
+
+**Returns:** `BackgroundTaskConfig`
 
 ---
 
@@ -276,9 +178,9 @@ Compression configuration shared across runtimes
 | `minSize` | `Long` | — | Minimum response size to compress (bytes) |
 | `quality` | `Int` | — | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -286,6 +188,14 @@ Compression configuration shared across runtimes
 @JvmStatic
 fun default(): CompressionConfig
 ```
+
+**Example:**
+
+```kotlin
+val result = CompressionConfig.default()
+```
+
+**Returns:** `CompressionConfig`
 
 ---
 
@@ -313,12 +223,10 @@ CORS configuration for a route
 | `exposeHeaders` | `List<String>?` | `null` | Expose headers |
 | `maxAge` | `Int?` | `null` | Maximum age |
 | `allowCredentials` | `Boolean?` | `null` | Allow credentials |
-| `methodsJoinedCache` | `String` | — | Methods joined cache |
-| `headersJoinedCache` | `String` | — | Headers joined cache |
 
-### Methods
+##### Methods
 
-#### allowedMethodsJoined()
+###### allowedMethodsJoined()
 
 Get the cached joined methods string for preflight responses
 
@@ -328,7 +236,15 @@ Get the cached joined methods string for preflight responses
 fun allowedMethodsJoined(): String
 ```
 
-#### allowedHeadersJoined()
+**Example:**
+
+```kotlin
+val result = instance.allowedMethodsJoined()
+```
+
+**Returns:** `String`
+
+###### allowedHeadersJoined()
 
 Get the cached joined headers string for preflight responses
 
@@ -338,7 +254,15 @@ Get the cached joined headers string for preflight responses
 fun allowedHeadersJoined(): String
 ```
 
-#### isOriginAllowed()
+**Example:**
+
+```kotlin
+val result = instance.allowedHeadersJoined()
+```
+
+**Returns:** `String`
+
+###### isOriginAllowed()
 
 Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -348,7 +272,21 @@ Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 fun isOriginAllowed(origin: String): Boolean
 ```
 
-#### isMethodAllowed()
+**Example:**
+
+```kotlin
+val result = instance.isOriginAllowed("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `origin` | `String` | Yes | The origin |
+
+**Returns:** `Boolean`
+
+###### isMethodAllowed()
 
 Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -358,7 +296,21 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 fun isMethodAllowed(method: String): Boolean
 ```
 
-#### default()
+**Example:**
+
+```kotlin
+val result = instance.isMethodAllowed("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `String` | Yes | The method |
+
+**Returns:** `Boolean`
+
+###### default()
 
 **Signature:**
 
@@ -366,6 +318,14 @@ fun isMethodAllowed(method: String): Boolean
 @JvmStatic
 fun default(): CorsConfig
 ```
+
+**Example:**
+
+```kotlin
+val result = CorsConfig.default()
+```
+
+**Returns:** `CorsConfig`
 
 ---
 
@@ -379,9 +339,9 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 | `complexityLimit` | `Long?` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `Long?` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -389,6 +349,14 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 @JvmStatic
 fun default(): FullSchemaConfig
 ```
+
+**Example:**
+
+```kotlin
+val result = FullSchemaConfig.default()
+```
+
+**Returns:** `FullSchemaConfig`
 
 ---
 
@@ -399,9 +367,9 @@ Configuration for GraphQL routes
 Provides a builder pattern for configuring GraphQL route parameters
 for the Spikard HTTP server's routing system.
 
-### Methods
+##### Methods
 
-#### new()
+###### new()
 
 Create a new GraphQL route configuration with defaults
 
@@ -418,7 +386,15 @@ Default values:
 fun new(): GraphQlRouteConfig
 ```
 
-#### path()
+**Example:**
+
+```kotlin
+val result = GraphQlRouteConfig.new()
+```
+
+**Returns:** `GraphQlRouteConfig`
+
+###### path()
 
 Set the HTTP path for the GraphQL endpoint
 
@@ -428,7 +404,21 @@ Set the HTTP path for the GraphQL endpoint
 fun path(path: String): GraphQlRouteConfig
 ```
 
-#### method()
+**Example:**
+
+```kotlin
+val result = instance.path("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `path` | `String` | Yes | The URL path (e.g., "/graphql", "/api/graphql") |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### method()
 
 Set the HTTP method for the GraphQL endpoint
 
@@ -438,7 +428,21 @@ Set the HTTP method for the GraphQL endpoint
 fun method(method: String): GraphQlRouteConfig
 ```
 
-#### enablePlayground()
+**Example:**
+
+```kotlin
+val result = instance.method("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `String` | Yes | The HTTP method (typically "POST") |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### enablePlayground()
 
 Enable or disable the GraphQL Playground UI
 
@@ -448,7 +452,21 @@ Enable or disable the GraphQL Playground UI
 fun enablePlayground(enable: Boolean): GraphQlRouteConfig
 ```
 
-#### description()
+**Example:**
+
+```kotlin
+val result = instance.enablePlayground(true)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `enable` | `Boolean` | Yes | Whether to enable playground |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### description()
 
 Set a custom description for documentation
 
@@ -458,7 +476,21 @@ Set a custom description for documentation
 fun description(description: String): GraphQlRouteConfig
 ```
 
-#### getPath()
+**Example:**
+
+```kotlin
+val result = instance.description("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `description` | `String` | Yes | Documentation string |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### getPath()
 
 Get the configured path
 
@@ -468,7 +500,15 @@ Get the configured path
 fun getPath(): String
 ```
 
-#### getMethod()
+**Example:**
+
+```kotlin
+val result = instance.getPath()
+```
+
+**Returns:** `String`
+
+###### getMethod()
 
 Get the configured method
 
@@ -478,7 +518,15 @@ Get the configured method
 fun getMethod(): String
 ```
 
-#### isPlaygroundEnabled()
+**Example:**
+
+```kotlin
+val result = instance.getMethod()
+```
+
+**Returns:** `String`
+
+###### isPlaygroundEnabled()
 
 Check if playground is enabled
 
@@ -488,7 +536,15 @@ Check if playground is enabled
 fun isPlaygroundEnabled(): Boolean
 ```
 
-#### getDescription()
+**Example:**
+
+```kotlin
+val result = instance.isPlaygroundEnabled()
+```
+
+**Returns:** `Boolean`
+
+###### getDescription()
 
 Get the description if set
 
@@ -498,7 +554,15 @@ Get the description if set
 fun getDescription(): String?
 ```
 
-#### default()
+**Example:**
+
+```kotlin
+val result = instance.getDescription()
+```
+
+**Returns:** `String?`
+
+###### default()
 
 **Signature:**
 
@@ -506,6 +570,14 @@ fun getDescription(): String?
 @JvmStatic
 fun default(): GraphQlRouteConfig
 ```
+
+**Example:**
+
+```kotlin
+val result = GraphQlRouteConfig.default()
+```
+
+**Returns:** `GraphQlRouteConfig`
 
 ---
 
@@ -549,9 +621,9 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `keepaliveTimeout` | `Long` | — | HTTP/2 keepalive timeout in seconds |
 | `maxStreamResponseBytes` | `Long?` | `null` | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `null` (unbounded total response size). |
 
-### Methods
+#### Methods
 
-#### default()
+##### default()
 
 **Signature:**
 
@@ -560,110 +632,13 @@ concurrent stream limiting to the HTTP/2 transport layer:
 fun default(): GrpcConfig
 ```
 
----
-
-#### Handler
-
-Handler trait that all language bindings must implement
-
-This trait is completely language-agnostic. Each binding (Python, Node, WASM)
-implements this trait to bridge their runtime to our HTTP server.
-
-### Methods
-
-#### call()
-
-Handle an HTTP request
-
-Takes the extracted request data and returns a future that resolves to either:
-
-- Ok(Response): A successful HTTP response
-- Err((StatusCode, String)): An error with status code and message
-
-**Signature:**
+**Example:**
 
 ```kotlin
-fun call(request: Request, requestData: RequestData): HandlerResult
+val result = GrpcConfig.default()
 ```
 
-#### prefersRawJsonBody()
-
-Whether this handler prefers consuming `RequestData.raw_body` over the parsed
-`RequestData.body` for JSON requests.
-
-When `true`, the server may skip eager JSON parsing when there is no request-body
-schema validator attached to the route.
-
-**Signature:**
-
-```kotlin
-fun prefersRawJsonBody(): Boolean
-```
-
-#### prefersParameterExtraction()
-
-Whether this handler wants to perform its own parameter validation/extraction (path/query/header/cookie).
-
-When `true`, the server will skip `ParameterValidator.validate_and_extract` in `ValidatingHandler`.
-This is useful for language bindings which need to transform validated parameters into
-language-specific values (e.g., Python kwargs) without duplicating work. When `false`,
-the server stores validated output in `RequestData.validated_params`.
-
-**Signature:**
-
-```kotlin
-fun prefersParameterExtraction(): Boolean
-```
-
-#### wantsHeaders()
-
-Whether this handler needs the parsed headers map in `RequestData`.
-
-When `false`, the server may skip building `RequestData.headers` for requests without a body.
-(Requests with bodies still typically need `Content-Type` decisions.)
-
-**Signature:**
-
-```kotlin
-fun wantsHeaders(): Boolean
-```
-
-#### wantsCookies()
-
-Whether this handler needs the parsed cookies map in `RequestData`.
-
-When `false`, the server may skip parsing cookies for requests without a body.
-
-**Signature:**
-
-```kotlin
-fun wantsCookies(): Boolean
-```
-
-#### wantsRequestExtensions()
-
-Whether this handler needs `RequestData` stored in request extensions.
-
-When `false`, the server avoids inserting `RequestData` into extensions to
-skip cloning in hot paths.
-
-**Signature:**
-
-```kotlin
-fun wantsRequestExtensions(): Boolean
-```
-
-#### staticResponse()
-
-Return a pre-built static response if this handler always produces the
-same output. When `Some`, the server bypasses the full middleware
-pipeline and serves the pre-built response directly.
-
-**Signature:**
-
-```kotlin
-fun staticResponse(): StaticResponse?
-```
+**Returns:** `GrpcConfig`
 
 ---
 
@@ -671,9 +646,9 @@ fun staticResponse(): StaticResponse?
 
 Convert user-facing handler functions into the low-level `Handler` trait.
 
-### Methods
+##### Methods
 
-#### intoHandler()
+###### intoHandler()
 
 Convert this value into a shared request handler.
 
@@ -682,6 +657,14 @@ Convert this value into a shared request handler.
 ```kotlin
 fun intoHandler(): Handler
 ```
+
+**Example:**
+
+```kotlin
+val result = instance.intoHandler()
+```
+
+**Returns:** `Handler`
 
 ---
 
@@ -696,9 +679,9 @@ JSON-RPC server configuration
 | `enableBatch` | `Boolean` | — | Enable batch request processing (default: true) |
 | `maxBatchSize` | `Long` | — | Maximum number of requests in a batch (default: 100) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -706,6 +689,14 @@ JSON-RPC server configuration
 @JvmStatic
 fun default(): JsonRpcConfig
 ```
+
+**Example:**
+
+```kotlin
+val result = JsonRpcConfig.default()
+```
+
+**Returns:** `JsonRpcConfig`
 
 ---
 
@@ -770,9 +761,9 @@ OpenAPI configuration
 | `servers` | `List<ServerInfo>` | `[]` | Server definitions |
 | `securitySchemes` | `Map<String, SecuritySchemeInfo>` | `{}` | Security schemes (auto-detected from middleware if not provided) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -780,6 +771,14 @@ OpenAPI configuration
 @JvmStatic
 fun default(): OpenApiConfig
 ```
+
+**Example:**
+
+```kotlin
+val result = OpenApiConfig.default()
+```
+
+**Returns:** `OpenApiConfig`
 
 ---
 
@@ -879,9 +878,9 @@ Content-Type: application/problem+json
 | `instance` | `String?` | `null` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
 | `extensions` | `Map<String, Any>` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
 
-### Methods
+#### Methods
 
-#### withDetail()
+##### withDetail()
 
 Set the detail field
 
@@ -891,7 +890,21 @@ Set the detail field
 fun withDetail(detail: String): ProblemDetails
 ```
 
-#### withInstance()
+**Example:**
+
+```kotlin
+val result = instance.withDetail("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### withInstance()
 
 Set the instance field
 
@@ -901,7 +914,21 @@ Set the instance field
 fun withInstance(instance: String): ProblemDetails
 ```
 
-#### notFound()
+**Example:**
+
+```kotlin
+val result = instance.withInstance("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `instance` | `String` | Yes | The instance |
+
+**Returns:** `ProblemDetails`
+
+###### notFound()
 
 Create a not found error
 
@@ -912,7 +939,21 @@ Create a not found error
 fun notFound(detail: String): ProblemDetails
 ```
 
-#### methodNotAllowed()
+**Example:**
+
+```kotlin
+val result = ProblemDetails.notFound("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### methodNotAllowed()
 
 Create a method not allowed error
 
@@ -923,7 +964,21 @@ Create a method not allowed error
 fun methodNotAllowed(detail: String): ProblemDetails
 ```
 
-#### internalServerError()
+**Example:**
+
+```kotlin
+val result = ProblemDetails.methodNotAllowed("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### internalServerError()
 
 Create an internal server error
 
@@ -934,7 +989,21 @@ Create an internal server error
 fun internalServerError(detail: String): ProblemDetails
 ```
 
-#### badRequest()
+**Example:**
+
+```kotlin
+val result = ProblemDetails.internalServerError("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### badRequest()
 
 Create a bad request error
 
@@ -945,7 +1014,21 @@ Create a bad request error
 fun badRequest(detail: String): ProblemDetails
 ```
 
-#### toJson()
+**Example:**
+
+```kotlin
+val result = ProblemDetails.badRequest("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### toJson()
 
 Serialize to JSON string
 
@@ -959,7 +1042,17 @@ Returns an error if the serialization fails.
 fun toJson(): String
 ```
 
-#### toJsonPretty()
+**Example:**
+
+```kotlin
+val result = instance.toJson()
+```
+
+**Returns:** `String`
+
+**Errors:** Throws `Error`.
+
+###### toJsonPretty()
 
 Serialize to pretty JSON string
 
@@ -973,6 +1066,16 @@ Returns an error if the serialization fails.
 fun toJsonPretty(): String
 ```
 
+**Example:**
+
+```kotlin
+val result = instance.toJsonPretty()
+```
+
+**Returns:** `String`
+
+**Errors:** Throws `Error`.
+
 ---
 
 #### QueryMutationConfig
@@ -985,9 +1088,9 @@ Configuration for schemas with Query and Mutation types
 | `complexityLimit` | `Long?` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `Long?` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -995,6 +1098,14 @@ Configuration for schemas with Query and Mutation types
 @JvmStatic
 fun default(): QueryMutationConfig
 ```
+
+**Example:**
+
+```kotlin
+val result = QueryMutationConfig.default()
+```
+
+**Returns:** `QueryMutationConfig`
 
 ---
 
@@ -1008,9 +1119,9 @@ Configuration for schemas with only Query type
 | `complexityLimit` | `Long?` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `Long?` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -1018,6 +1129,14 @@ Configuration for schemas with only Query type
 @JvmStatic
 fun default(): QueryOnlyConfig
 ```
+
+**Example:**
+
+```kotlin
+val result = QueryOnlyConfig.default()
+```
+
+**Returns:** `QueryOnlyConfig`
 
 ---
 
@@ -1031,9 +1150,9 @@ Rate limiting configuration shared across runtimes
 | `burst` | `Int` | `200` | Burst allowance |
 | `ipBased` | `Boolean` | `true` | Use IP-based rate limiting |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -1041,6 +1160,14 @@ Rate limiting configuration shared across runtimes
 @JvmStatic
 fun default(): RateLimitConfig
 ```
+
+**Example:**
+
+```kotlin
+val result = RateLimitConfig.default()
+```
+
+**Returns:** `RateLimitConfig`
 
 ---
 
@@ -1058,9 +1185,9 @@ HTTP Response with custom status code, headers, and content
 | `statusCode` | `Short` | — | HTTP status code (defaults to 200) |
 | `headers` | `Map<String, String>` | `{}` | Response headers |
 
-### Methods
+##### Methods
 
-#### setHeader()
+###### setHeader()
 
 Set a header
 
@@ -1070,7 +1197,22 @@ Set a header
 fun setHeader(key: String, value: String)
 ```
 
-#### setCookie()
+**Example:**
+
+```kotlin
+instance.setHeader("value", "value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `key` | `String` | Yes | The key |
+| `value` | `String` | Yes | The value |
+
+**Returns:** No return value.
+
+###### setCookie()
 
 Set a cookie in the response
 
@@ -1080,7 +1222,28 @@ Set a cookie in the response
 fun setCookie(key: String, value: String, secure: Boolean, httpOnly: Boolean, maxAge: Long? = null, domain: String? = null, path: String? = null, sameSite: String? = null)
 ```
 
-#### default()
+**Example:**
+
+```kotlin
+instance.setCookie("value", "value", true, true, 42, "value", "value", "value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `key` | `String` | Yes | The key |
+| `value` | `String` | Yes | The value |
+| `secure` | `Boolean` | Yes | The secure |
+| `httpOnly` | `Boolean` | Yes | The http only |
+| `maxAge` | `Long?` | No | The max age |
+| `domain` | `String?` | No | The domain |
+| `path` | `String?` | No | Path to the file |
+| `sameSite` | `String?` | No | The same site |
+
+**Returns:** No return value.
+
+###### default()
 
 **Signature:**
 
@@ -1089,15 +1252,23 @@ fun setCookie(key: String, value: String, secure: Boolean, httpOnly: Boolean, ma
 fun default(): Response
 ```
 
+**Example:**
+
+```kotlin
+val result = Response.default()
+```
+
+**Returns:** `Response`
+
 ---
 
 #### RouteBuilder
 
 Builder for defining a route.
 
-### Methods
+##### Methods
 
-#### new()
+###### new()
 
 Create a new builder for the provided HTTP method and path.
 
@@ -1108,7 +1279,22 @@ Create a new builder for the provided HTTP method and path.
 fun new(method: Method, path: String): RouteBuilder
 ```
 
-#### handlerName()
+**Example:**
+
+```kotlin
+val result = RouteBuilder.new(Method(), "value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `Method` | Yes | The method |
+| `path` | `String` | Yes | Path to the file |
+
+**Returns:** `RouteBuilder`
+
+###### handlerName()
 
 Assign an explicit handler name.
 
@@ -1118,7 +1304,21 @@ Assign an explicit handler name.
 fun handlerName(name: String): RouteBuilder
 ```
 
-#### requestSchemaJson()
+**Example:**
+
+```kotlin
+val result = instance.handlerName("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | `String` | Yes | The name |
+
+**Returns:** `RouteBuilder`
+
+###### requestSchemaJson()
 
 Provide a raw JSON schema for the request body.
 
@@ -1128,7 +1328,21 @@ Provide a raw JSON schema for the request body.
 fun requestSchemaJson(schema: Any): RouteBuilder
 ```
 
-#### responseSchemaJson()
+**Example:**
+
+```kotlin
+val result = instance.requestSchemaJson(emptyMap())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `Any` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### responseSchemaJson()
 
 Provide a raw JSON schema for the response body.
 
@@ -1138,7 +1352,21 @@ Provide a raw JSON schema for the response body.
 fun responseSchemaJson(schema: Any): RouteBuilder
 ```
 
-#### paramsSchemaJson()
+**Example:**
+
+```kotlin
+val result = instance.responseSchemaJson(emptyMap())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `Any` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### paramsSchemaJson()
 
 Provide a raw JSON schema for request parameters.
 
@@ -1148,7 +1376,21 @@ Provide a raw JSON schema for request parameters.
 fun paramsSchemaJson(schema: Any): RouteBuilder
 ```
 
-#### fileParamsJson()
+**Example:**
+
+```kotlin
+val result = instance.paramsSchemaJson(emptyMap())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `Any` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### fileParamsJson()
 
 Provide multipart file parameter configuration.
 
@@ -1158,7 +1400,21 @@ Provide multipart file parameter configuration.
 fun fileParamsJson(schema: Any): RouteBuilder
 ```
 
-#### cors()
+**Example:**
+
+```kotlin
+val result = instance.fileParamsJson(emptyMap())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `Any` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### cors()
 
 Attach a CORS configuration for this route.
 
@@ -1168,7 +1424,21 @@ Attach a CORS configuration for this route.
 fun cors(cors: CorsConfig): RouteBuilder
 ```
 
-#### compression()
+**Example:**
+
+```kotlin
+val result = instance.cors(CorsConfig())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `cors` | `CorsConfig` | Yes | The cors config |
+
+**Returns:** `RouteBuilder`
+
+###### compression()
 
 Attach a compression configuration for this route.
 
@@ -1178,7 +1448,21 @@ Attach a compression configuration for this route.
 fun compression(compression: CompressionConfig): RouteBuilder
 ```
 
-#### sync()
+**Example:**
+
+```kotlin
+val result = instance.compression(CompressionConfig())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `compression` | `CompressionConfig` | Yes | The compression config |
+
+**Returns:** `RouteBuilder`
+
+###### sync()
 
 Mark the route as synchronous.
 
@@ -1188,7 +1472,15 @@ Mark the route as synchronous.
 fun sync(): RouteBuilder
 ```
 
-#### handlerDependencies()
+**Example:**
+
+```kotlin
+val result = instance.sync()
+```
+
+**Returns:** `RouteBuilder`
+
+###### handlerDependencies()
 
 Declare the dependency keys that must be resolved before this handler runs.
 
@@ -1197,6 +1489,20 @@ Declare the dependency keys that must be resolved before this handler runs.
 ```kotlin
 fun handlerDependencies(dependencies: List<String>): RouteBuilder
 ```
+
+**Example:**
+
+```kotlin
+val result = instance.handlerDependencies([])
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `dependencies` | `List<String>` | Yes | The dependencies |
+
+**Returns:** `RouteBuilder`
 
 ---
 
@@ -1213,9 +1519,9 @@ introspection control, complexity limits, and depth limits.
 | `complexityLimit` | `Long?` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `Long?` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -1223,6 +1529,14 @@ introspection control, complexity limits, and depth limits.
 @JvmStatic
 fun default(): SchemaConfig
 ```
+
+**Example:**
+
+```kotlin
+val result = SchemaConfig.default()
+```
+
+**Returns:** `SchemaConfig`
 
 ---
 
@@ -1249,14 +1563,12 @@ Server configuration
 | `openapi` | `OpenApiConfig?` | `null` | OpenAPI documentation configuration |
 | `jsonrpc` | `JsonRpcConfig?` | `null` | JSON-RPC configuration |
 | `grpc` | `GrpcConfig?` | `null` | gRPC configuration |
-| `lifecycleHooks` | `String?` | `null` | Lifecycle hooks for request/response processing |
 | `backgroundTasks` | `BackgroundTaskConfig` | — | Background task executor configuration |
 | `enableHttpTrace` | `Boolean` | `false` | Enable per-request HTTP tracing (tower-http `TraceLayer`) |
-| `diContainer` | `String?` | `null` | Dependency injection container (requires 'di' feature) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -1264,6 +1576,14 @@ Server configuration
 @JvmStatic
 fun default(): ServerConfig
 ```
+
+**Example:**
+
+```kotlin
+val result = ServerConfig.default()
+```
+
+**Returns:** `ServerConfig`
 
 ---
 
@@ -1303,9 +1623,9 @@ retry: 3000
 | `id` | `String?` | `null` | Event ID (optional, for client-side reconnection) |
 | `retry` | `Long?` | `null` | Retry timeout in milliseconds (optional) |
 
-### Methods
+#### Methods
 
-#### withId()
+##### withId()
 
 Set the event ID for client-side reconnection support
 
@@ -1318,7 +1638,21 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 fun withId(id: String): SseEvent
 ```
 
-#### withRetry()
+**Example:**
+
+```kotlin
+val result = instance.withId("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `id` | `String` | Yes | Unique identifier for this event |
+
+**Returns:** `SseEvent`
+
+###### withRetry()
 
 Set the retry timeout for client reconnection
 
@@ -1330,6 +1664,20 @@ if the connection is lost. The client browser will automatically handle reconnec
 ```kotlin
 fun withRetry(retryMs: Long): SseEvent
 ```
+
+**Example:**
+
+```kotlin
+val result = instance.withRetry(42)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `retryMs` | `Long` | Yes | Retry timeout in milliseconds |
+
+**Returns:** `SseEvent`
 
 ---
 
@@ -1370,11 +1718,10 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `size` | `Long?` | `null` | Size of the file in bytes |
 | `content` | `ByteArray` | — | File content (may be base64 encoded) |
 | `contentEncoding` | `String?` | `null` | Content encoding type |
-| `cursor` | `String` | — | Internal cursor for Read/Seek operations |
 
-### Methods
+##### Methods
 
-#### asBytes()
+###### asBytes()
 
 Get the raw file content as bytes.
 
@@ -1386,7 +1733,15 @@ This provides zero-copy access to the underlying buffer.
 fun asBytes(): ByteArray
 ```
 
-#### readToString()
+**Example:**
+
+```kotlin
+val result = instance.asBytes()
+```
+
+**Returns:** `ByteArray`
+
+###### readToString()
 
 Read the file content as a UTF-8 string.
 
@@ -1401,7 +1756,17 @@ Returns an error if the content is not valid UTF-8.
 fun readToString(): String
 ```
 
-#### contentTypeOrDefault()
+**Example:**
+
+```kotlin
+val result = instance.readToString()
+```
+
+**Returns:** `String`
+
+**Errors:** Throws `Error`.
+
+###### contentTypeOrDefault()
 
 Get the content type, defaulting to "application/octet-stream".
 
@@ -1410,6 +1775,14 @@ Get the content type, defaulting to "application/octet-stream".
 ```kotlin
 fun contentTypeOrDefault(): String
 ```
+
+**Example:**
+
+```kotlin
+val result = instance.contentTypeOrDefault()
+```
+
+**Returns:** `String`
 
 ---
 

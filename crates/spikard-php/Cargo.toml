@@ -17,6 +17,8 @@ crate-type = ["cdylib"]
 
 [features]
 extension-module = []
+default = ["di"]
+di = ["spikard/di"]
 
 [dependencies]
 ext-php-rs = "0.15.15"

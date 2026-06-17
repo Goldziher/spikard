@@ -911,12 +911,12 @@ void* __swift_bridge__$__alef_phantom_vec_validate_request(void);
 void* __swift_bridge__$__alef_phantom_vec_contact_info(void);
 void* __swift_bridge__$__alef_phantom_vec_license_info(void);
 void* __swift_bridge__$__alef_phantom_vec_server_info(void);
-void* __swift_bridge__$__alef_phantom_vec_testing_sse_event(void);
 void* __swift_bridge__$__alef_phantom_vec_handler_result(void);
 void* __swift_bridge__$__alef_phantom_vec_request(void);
 void* __swift_bridge__$__alef_phantom_vec_request_data(void);
 void* __swift_bridge__$__alef_phantom_vec_method(void);
 void* __swift_bridge__$__alef_phantom_vec_security_scheme_info(void);
+void* __swift_bridge__$__alef_phantom_vec_testing_sse_event(void);
 
 
 #endif /* RUST_BRIDGE_C_H */

@@ -7,6 +7,7 @@ environment:
 
 dependencies:
   spikard: ^0.15.6-rc.24
+  ffi: ^2.2.0
 
 dev_dependencies:
   test: ^1.25.0

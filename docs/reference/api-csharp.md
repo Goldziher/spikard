@@ -22,6 +22,12 @@ A `QueryOnlyConfig` with default settings
 public static QueryOnlyConfig SchemaQueryOnly()
 ```
 
+**Example:**
+
+```csharp
+var result = SchemaQueryOnly();
+```
+
 **Returns:** `QueryOnlyConfig`
 
 ---
@@ -40,6 +46,12 @@ A `QueryMutationConfig` with default settings
 
 ```csharp
 public static QueryMutationConfig SchemaQueryMutation()
+```
+
+**Example:**
+
+```csharp
+var result = SchemaQueryMutation();
 ```
 
 **Returns:** `QueryMutationConfig`
@@ -62,6 +74,12 @@ A `FullSchemaConfig` with default settings
 public static FullSchemaConfig SchemaFull()
 ```
 
+**Example:**
+
+```csharp
+var result = SchemaFull();
+```
+
 **Returns:** `FullSchemaConfig`
 
 ---
@@ -76,134 +94,6 @@ API Key authentication configuration
 |-------|------|---------|-------------|
 | `Keys` | `List<string>` | — | Valid API keys |
 | `HeaderName` | `string` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
-
----
-
-#### App
-
-Spikard application builder.
-
-### Methods
-
-#### New()
-
-Create a new application with the default server configuration.
-
-**Signature:**
-
-```csharp
-public App New()
-```
-
-#### OnRequest()
-
-Register an `on_request` lifecycle hook (runs before validation and handler dispatch).
-
-**Signature:**
-
-```csharp
-public App OnRequest(string hook)
-```
-
-#### PreValidation()
-
-Register a `pre_validation` lifecycle hook (runs after `on_request`, before validation).
-
-**Signature:**
-
-```csharp
-public App PreValidation(string hook)
-```
-
-#### PreHandler()
-
-Register a `pre_handler` lifecycle hook (runs after validation, before the handler).
-
-**Signature:**
-
-```csharp
-public App PreHandler(string hook)
-```
-
-#### OnResponse()
-
-Register an `on_response` lifecycle hook (runs after a successful handler response).
-
-**Signature:**
-
-```csharp
-public App OnResponse(string hook)
-```
-
-#### OnError()
-
-Register an `on_error` lifecycle hook (runs when the handler returns an error).
-
-**Signature:**
-
-```csharp
-public App OnError(string hook)
-```
-
-#### MergeAxumRouter()
-
-Attach an existing Axum router to this application, returning ownership.
-
-**Signature:**
-
-```csharp
-public App MergeAxumRouter(string router)
-```
-
-#### AttachAxumRouter()
-
-Attach an Axum router using a mutable reference for incremental configuration.
-
-**Signature:**
-
-```csharp
-public App AttachAxumRouter(string router)
-```
-
-#### IntoRouter()
-
-Build the underlying Axum router.
-
-**Errors:**
-
-Returns an error if server or router construction fails.
-
-**Signature:**
-
-```csharp
-public string IntoRouter()
-```
-
-#### IntoRouterAndConfig()
-
-Decompose the application into its Axum router and server configuration.
-
-This is the low-level escape hatch used by the C FFI layer to start the
-server on a background thread while retaining the bind address from the
-caller-supplied `ServerConfig`. Prefer `App.run` for normal use.
-
-**Errors:**
-
-Returns an error if router construction fails.
-
-**Signature:**
-
-```csharp
-public string IntoRouterAndConfig()
-```
-
-#### CreateDefault()
-
-**Signature:**
-
-```csharp
-public App CreateDefault()
-```
 
 ---
 
@@ -225,15 +115,23 @@ AsyncAPI HTTP endpoint configuration
 | `Name` | `string` | — | The name |
 | `RequestId` | `string?` | `null` | Request id |
 
-### Methods
+##### Methods
 
-#### CreateDefault()
+###### CreateDefault()
 
 **Signature:**
 
 ```csharp
 public BackgroundJobMetadata CreateDefault()
 ```
+
+**Example:**
+
+```csharp
+var result = BackgroundJobMetadata.CreateDefault();
+```
+
+**Returns:** `BackgroundJobMetadata`
 
 ---
 
@@ -247,15 +145,23 @@ Configuration for in-process background task execution.
 | `MaxConcurrentTasks` | `nuint` | `128` | Maximum concurrent tasks |
 | `DrainTimeoutSecs` | `ulong` | `30` | Drain timeout secs |
 
-### Methods
+##### Methods
 
-#### CreateDefault()
+###### CreateDefault()
 
 **Signature:**
 
 ```csharp
 public BackgroundTaskConfig CreateDefault()
 ```
+
+**Example:**
+
+```csharp
+var result = BackgroundTaskConfig.CreateDefault();
+```
+
+**Returns:** `BackgroundTaskConfig`
 
 ---
 
@@ -270,15 +176,23 @@ Compression configuration shared across runtimes
 | `MinSize` | `nuint` | — | Minimum response size to compress (bytes) |
 | `Quality` | `uint` | — | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
-### Methods
+##### Methods
 
-#### CreateDefault()
+###### CreateDefault()
 
 **Signature:**
 
 ```csharp
 public CompressionConfig CreateDefault()
 ```
+
+**Example:**
+
+```csharp
+var result = CompressionConfig.CreateDefault();
+```
+
+**Returns:** `CompressionConfig`
 
 ---
 
@@ -306,12 +220,10 @@ CORS configuration for a route
 | `ExposeHeaders` | `List<string>?` | `null` | Expose headers |
 | `MaxAge` | `uint?` | `null` | Maximum age |
 | `AllowCredentials` | `bool?` | `null` | Allow credentials |
-| `MethodsJoinedCache` | `string` | — | Methods joined cache |
-| `HeadersJoinedCache` | `string` | — | Headers joined cache |
 
-### Methods
+##### Methods
 
-#### AllowedMethodsJoined()
+###### AllowedMethodsJoined()
 
 Get the cached joined methods string for preflight responses
 
@@ -321,7 +233,15 @@ Get the cached joined methods string for preflight responses
 public string AllowedMethodsJoined()
 ```
 
-#### AllowedHeadersJoined()
+**Example:**
+
+```csharp
+var result = instance.AllowedMethodsJoined();
+```
+
+**Returns:** `string`
+
+###### AllowedHeadersJoined()
 
 Get the cached joined headers string for preflight responses
 
@@ -331,7 +251,15 @@ Get the cached joined headers string for preflight responses
 public string AllowedHeadersJoined()
 ```
 
-#### IsOriginAllowed()
+**Example:**
+
+```csharp
+var result = instance.AllowedHeadersJoined();
+```
+
+**Returns:** `string`
+
+###### IsOriginAllowed()
 
 Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -341,7 +269,21 @@ Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 public bool IsOriginAllowed(string origin)
 ```
 
-#### IsMethodAllowed()
+**Example:**
+
+```csharp
+var result = instance.IsOriginAllowed("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Origin` | `string` | Yes | The origin |
+
+**Returns:** `bool`
+
+###### IsMethodAllowed()
 
 Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -351,13 +293,35 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 public bool IsMethodAllowed(string method)
 ```
 
-#### CreateDefault()
+**Example:**
+
+```csharp
+var result = instance.IsMethodAllowed("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Method` | `string` | Yes | The method |
+
+**Returns:** `bool`
+
+###### CreateDefault()
 
 **Signature:**
 
 ```csharp
 public CorsConfig CreateDefault()
 ```
+
+**Example:**
+
+```csharp
+var result = CorsConfig.CreateDefault();
+```
+
+**Returns:** `CorsConfig`
 
 ---
 
@@ -371,15 +335,23 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 | `ComplexityLimit` | `nuint?` | `null` | Maximum query complexity (None = unlimited) |
 | `DepthLimit` | `nuint?` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### CreateDefault()
+###### CreateDefault()
 
 **Signature:**
 
 ```csharp
 public FullSchemaConfig CreateDefault()
 ```
+
+**Example:**
+
+```csharp
+var result = FullSchemaConfig.CreateDefault();
+```
+
+**Returns:** `FullSchemaConfig`
 
 ---
 
@@ -390,9 +362,9 @@ Configuration for GraphQL routes
 Provides a builder pattern for configuring GraphQL route parameters
 for the Spikard HTTP server's routing system.
 
-### Methods
+##### Methods
 
-#### New()
+###### New()
 
 Create a new GraphQL route configuration with defaults
 
@@ -408,7 +380,15 @@ Default values:
 public GraphQlRouteConfig New()
 ```
 
-#### Path()
+**Example:**
+
+```csharp
+var result = GraphQlRouteConfig.New();
+```
+
+**Returns:** `GraphQlRouteConfig`
+
+###### Path()
 
 Set the HTTP path for the GraphQL endpoint
 
@@ -418,7 +398,21 @@ Set the HTTP path for the GraphQL endpoint
 public GraphQlRouteConfig Path(string path)
 ```
 
-#### Method()
+**Example:**
+
+```csharp
+var result = instance.Path("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Path` | `string` | Yes | The URL path (e.g., "/graphql", "/api/graphql") |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### Method()
 
 Set the HTTP method for the GraphQL endpoint
 
@@ -428,7 +422,21 @@ Set the HTTP method for the GraphQL endpoint
 public GraphQlRouteConfig Method(string method)
 ```
 
-#### EnablePlayground()
+**Example:**
+
+```csharp
+var result = instance.Method("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Method` | `string` | Yes | The HTTP method (typically "POST") |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### EnablePlayground()
 
 Enable or disable the GraphQL Playground UI
 
@@ -438,7 +446,21 @@ Enable or disable the GraphQL Playground UI
 public GraphQlRouteConfig EnablePlayground(bool enable)
 ```
 
-#### Description()
+**Example:**
+
+```csharp
+var result = instance.EnablePlayground(true);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Enable` | `bool` | Yes | Whether to enable playground |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### Description()
 
 Set a custom description for documentation
 
@@ -448,7 +470,21 @@ Set a custom description for documentation
 public GraphQlRouteConfig Description(string description)
 ```
 
-#### GetPath()
+**Example:**
+
+```csharp
+var result = instance.Description("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Description` | `string` | Yes | Documentation string |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### GetPath()
 
 Get the configured path
 
@@ -458,7 +494,15 @@ Get the configured path
 public string GetPath()
 ```
 
-#### GetMethod()
+**Example:**
+
+```csharp
+var result = instance.GetPath();
+```
+
+**Returns:** `string`
+
+###### GetMethod()
 
 Get the configured method
 
@@ -468,7 +512,15 @@ Get the configured method
 public string GetMethod()
 ```
 
-#### IsPlaygroundEnabled()
+**Example:**
+
+```csharp
+var result = instance.GetMethod();
+```
+
+**Returns:** `string`
+
+###### IsPlaygroundEnabled()
 
 Check if playground is enabled
 
@@ -478,7 +530,15 @@ Check if playground is enabled
 public bool IsPlaygroundEnabled()
 ```
 
-#### GetDescription()
+**Example:**
+
+```csharp
+var result = instance.IsPlaygroundEnabled();
+```
+
+**Returns:** `bool`
+
+###### GetDescription()
 
 Get the description if set
 
@@ -488,13 +548,29 @@ Get the description if set
 public string? GetDescription()
 ```
 
-#### CreateDefault()
+**Example:**
+
+```csharp
+var result = instance.GetDescription();
+```
+
+**Returns:** `string?`
+
+###### CreateDefault()
 
 **Signature:**
 
 ```csharp
 public GraphQlRouteConfig CreateDefault()
 ```
+
+**Example:**
+
+```csharp
+var result = GraphQlRouteConfig.CreateDefault();
+```
+
+**Returns:** `GraphQlRouteConfig`
 
 ---
 
@@ -538,9 +614,9 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `KeepaliveTimeout` | `ulong` | — | HTTP/2 keepalive timeout in seconds |
 | `MaxStreamResponseBytes` | `nuint?` | `null` | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `null` (unbounded total response size). |
 
-### Methods
+#### Methods
 
-#### CreateDefault()
+##### CreateDefault()
 
 **Signature:**
 
@@ -548,110 +624,13 @@ concurrent stream limiting to the HTTP/2 transport layer:
 public GrpcConfig CreateDefault()
 ```
 
----
-
-#### Handler
-
-Handler trait that all language bindings must implement
-
-This trait is completely language-agnostic. Each binding (Python, Node, WASM)
-implements this trait to bridge their runtime to our HTTP server.
-
-### Methods
-
-#### Call()
-
-Handle an HTTP request
-
-Takes the extracted request data and returns a future that resolves to either:
-
-- Ok(Response): A successful HTTP response
-- Err((StatusCode, String)): An error with status code and message
-
-**Signature:**
+**Example:**
 
 ```csharp
-public async Task<HandlerResult> CallAsync(Request request, RequestData requestData)
+var result = GrpcConfig.CreateDefault();
 ```
 
-#### PrefersRawJsonBody()
-
-Whether this handler prefers consuming `RequestData.raw_body` over the parsed
-`RequestData.body` for JSON requests.
-
-When `true`, the server may skip eager JSON parsing when there is no request-body
-schema validator attached to the route.
-
-**Signature:**
-
-```csharp
-public bool PrefersRawJsonBody()
-```
-
-#### PrefersParameterExtraction()
-
-Whether this handler wants to perform its own parameter validation/extraction (path/query/header/cookie).
-
-When `true`, the server will skip `ParameterValidator.validate_and_extract` in `ValidatingHandler`.
-This is useful for language bindings which need to transform validated parameters into
-language-specific values (e.g., Python kwargs) without duplicating work. When `false`,
-the server stores validated output in `RequestData.validated_params`.
-
-**Signature:**
-
-```csharp
-public bool PrefersParameterExtraction()
-```
-
-#### WantsHeaders()
-
-Whether this handler needs the parsed headers map in `RequestData`.
-
-When `false`, the server may skip building `RequestData.headers` for requests without a body.
-(Requests with bodies still typically need `Content-Type` decisions.)
-
-**Signature:**
-
-```csharp
-public bool WantsHeaders()
-```
-
-#### WantsCookies()
-
-Whether this handler needs the parsed cookies map in `RequestData`.
-
-When `false`, the server may skip parsing cookies for requests without a body.
-
-**Signature:**
-
-```csharp
-public bool WantsCookies()
-```
-
-#### WantsRequestExtensions()
-
-Whether this handler needs `RequestData` stored in request extensions.
-
-When `false`, the server avoids inserting `RequestData` into extensions to
-skip cloning in hot paths.
-
-**Signature:**
-
-```csharp
-public bool WantsRequestExtensions()
-```
-
-#### StaticResponse()
-
-Return a pre-built static response if this handler always produces the
-same output. When `Some`, the server bypasses the full middleware
-pipeline and serves the pre-built response directly.
-
-**Signature:**
-
-```csharp
-public StaticResponse? StaticResponse()
-```
+**Returns:** `GrpcConfig`
 
 ---
 
@@ -659,9 +638,9 @@ public StaticResponse? StaticResponse()
 
 Convert user-facing handler functions into the low-level `Handler` trait.
 
-### Methods
+##### Methods
 
-#### IntoHandler()
+###### IntoHandler()
 
 Convert this value into a shared request handler.
 
@@ -670,6 +649,14 @@ Convert this value into a shared request handler.
 ```csharp
 public Handler IntoHandler()
 ```
+
+**Example:**
+
+```csharp
+var result = instance.IntoHandler();
+```
+
+**Returns:** `Handler`
 
 ---
 
@@ -684,15 +671,23 @@ JSON-RPC server configuration
 | `EnableBatch` | `bool` | — | Enable batch request processing (default: true) |
 | `MaxBatchSize` | `nuint` | — | Maximum number of requests in a batch (default: 100) |
 
-### Methods
+##### Methods
 
-#### CreateDefault()
+###### CreateDefault()
 
 **Signature:**
 
 ```csharp
 public JsonRpcConfig CreateDefault()
 ```
+
+**Example:**
+
+```csharp
+var result = JsonRpcConfig.CreateDefault();
+```
+
+**Returns:** `JsonRpcConfig`
 
 ---
 
@@ -757,15 +752,23 @@ OpenAPI configuration
 | `Servers` | `List<ServerInfo>` | `new List<ServerInfo>()` | Server definitions |
 | `SecuritySchemes` | `Dictionary<string, SecuritySchemeInfo>` | `new Dictionary<string, SecuritySchemeInfo>()` | Security schemes (auto-detected from middleware if not provided) |
 
-### Methods
+##### Methods
 
-#### CreateDefault()
+###### CreateDefault()
 
 **Signature:**
 
 ```csharp
 public OpenApiConfig CreateDefault()
 ```
+
+**Example:**
+
+```csharp
+var result = OpenApiConfig.CreateDefault();
+```
+
+**Returns:** `OpenApiConfig`
 
 ---
 
@@ -865,9 +868,9 @@ Content-Type: application/problem+json
 | `Instance` | `string?` | `null` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
 | `Extensions` | `Dictionary<string, object>` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
 
-### Methods
+#### Methods
 
-#### WithDetail()
+##### WithDetail()
 
 Set the detail field
 
@@ -877,7 +880,21 @@ Set the detail field
 public ProblemDetails WithDetail(string detail)
 ```
 
-#### WithInstance()
+**Example:**
+
+```csharp
+var result = instance.WithDetail("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Detail` | `string` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### WithInstance()
 
 Set the instance field
 
@@ -887,7 +904,21 @@ Set the instance field
 public ProblemDetails WithInstance(string instance)
 ```
 
-#### NotFound()
+**Example:**
+
+```csharp
+var result = instance.WithInstance("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Instance` | `string` | Yes | The instance |
+
+**Returns:** `ProblemDetails`
+
+###### NotFound()
 
 Create a not found error
 
@@ -897,7 +928,21 @@ Create a not found error
 public ProblemDetails NotFound(string detail)
 ```
 
-#### MethodNotAllowed()
+**Example:**
+
+```csharp
+var result = ProblemDetails.NotFound("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Detail` | `string` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### MethodNotAllowed()
 
 Create a method not allowed error
 
@@ -907,7 +952,21 @@ Create a method not allowed error
 public ProblemDetails MethodNotAllowed(string detail)
 ```
 
-#### InternalServerError()
+**Example:**
+
+```csharp
+var result = ProblemDetails.MethodNotAllowed("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Detail` | `string` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### InternalServerError()
 
 Create an internal server error
 
@@ -917,7 +976,21 @@ Create an internal server error
 public ProblemDetails InternalServerError(string detail)
 ```
 
-#### BadRequest()
+**Example:**
+
+```csharp
+var result = ProblemDetails.InternalServerError("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Detail` | `string` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### BadRequest()
 
 Create a bad request error
 
@@ -927,7 +1000,21 @@ Create a bad request error
 public ProblemDetails BadRequest(string detail)
 ```
 
-#### ToJson()
+**Example:**
+
+```csharp
+var result = ProblemDetails.BadRequest("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Detail` | `string` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### ToJson()
 
 Serialize to JSON string
 
@@ -940,7 +1027,17 @@ Returns an error if the serialization fails.
 public string ToJson()
 ```
 
-#### ToJsonPretty()
+**Example:**
+
+```csharp
+var result = instance.ToJson();
+```
+
+**Returns:** `string`
+
+**Errors:** Throws `Error`.
+
+###### ToJsonPretty()
 
 Serialize to pretty JSON string
 
@@ -952,6 +1049,16 @@ Returns an error if the serialization fails.
 ```csharp
 public string ToJsonPretty()
 ```
+
+**Example:**
+
+```csharp
+var result = instance.ToJsonPretty();
+```
+
+**Returns:** `string`
+
+**Errors:** Throws `Error`.
 
 ---
 
@@ -965,15 +1072,23 @@ Configuration for schemas with Query and Mutation types
 | `ComplexityLimit` | `nuint?` | `null` | Maximum query complexity (None = unlimited) |
 | `DepthLimit` | `nuint?` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### CreateDefault()
+###### CreateDefault()
 
 **Signature:**
 
 ```csharp
 public QueryMutationConfig CreateDefault()
 ```
+
+**Example:**
+
+```csharp
+var result = QueryMutationConfig.CreateDefault();
+```
+
+**Returns:** `QueryMutationConfig`
 
 ---
 
@@ -987,15 +1102,23 @@ Configuration for schemas with only Query type
 | `ComplexityLimit` | `nuint?` | `null` | Maximum query complexity (None = unlimited) |
 | `DepthLimit` | `nuint?` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### CreateDefault()
+###### CreateDefault()
 
 **Signature:**
 
 ```csharp
 public QueryOnlyConfig CreateDefault()
 ```
+
+**Example:**
+
+```csharp
+var result = QueryOnlyConfig.CreateDefault();
+```
+
+**Returns:** `QueryOnlyConfig`
 
 ---
 
@@ -1009,15 +1132,23 @@ Rate limiting configuration shared across runtimes
 | `Burst` | `uint` | `200` | Burst allowance |
 | `IpBased` | `bool` | `true` | Use IP-based rate limiting |
 
-### Methods
+##### Methods
 
-#### CreateDefault()
+###### CreateDefault()
 
 **Signature:**
 
 ```csharp
 public RateLimitConfig CreateDefault()
 ```
+
+**Example:**
+
+```csharp
+var result = RateLimitConfig.CreateDefault();
+```
+
+**Returns:** `RateLimitConfig`
 
 ---
 
@@ -1035,9 +1166,9 @@ HTTP Response with custom status code, headers, and content
 | `StatusCode` | `ushort` | — | HTTP status code (defaults to 200) |
 | `Headers` | `Dictionary<string, string>` | `new Dictionary<string, string>()` | Response headers |
 
-### Methods
+##### Methods
 
-#### SetHeader()
+###### SetHeader()
 
 Set a header
 
@@ -1047,7 +1178,22 @@ Set a header
 public void SetHeader(string key, string value)
 ```
 
-#### SetCookie()
+**Example:**
+
+```csharp
+instance.SetHeader("value", "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Key` | `string` | Yes | The key |
+| `Value` | `string` | Yes | The value |
+
+**Returns:** No return value.
+
+###### SetCookie()
 
 Set a cookie in the response
 
@@ -1057,7 +1203,28 @@ Set a cookie in the response
 public void SetCookie(string key, string value, bool secure, bool httpOnly, long maxAge, string domain, string path, string sameSite)
 ```
 
-#### CreateDefault()
+**Example:**
+
+```csharp
+instance.SetCookie("value", "value", true, true, 42, "value", "value", "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Key` | `string` | Yes | The key |
+| `Value` | `string` | Yes | The value |
+| `Secure` | `bool` | Yes | The secure |
+| `HttpOnly` | `bool` | Yes | The http only |
+| `MaxAge` | `long?` | No | The max age |
+| `Domain` | `string?` | No | The domain |
+| `Path` | `string?` | No | Path to the file |
+| `SameSite` | `string?` | No | The same site |
+
+**Returns:** No return value.
+
+###### CreateDefault()
 
 **Signature:**
 
@@ -1065,15 +1232,23 @@ public void SetCookie(string key, string value, bool secure, bool httpOnly, long
 public Response CreateDefault()
 ```
 
+**Example:**
+
+```csharp
+var result = Response.CreateDefault();
+```
+
+**Returns:** `Response`
+
 ---
 
 #### RouteBuilder
 
 Builder for defining a route.
 
-### Methods
+##### Methods
 
-#### New()
+###### New()
 
 Create a new builder for the provided HTTP method and path.
 
@@ -1083,7 +1258,22 @@ Create a new builder for the provided HTTP method and path.
 public RouteBuilder New(Method method, string path)
 ```
 
-#### HandlerName()
+**Example:**
+
+```csharp
+var result = RouteBuilder.New(new Method(), "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Method` | `Method` | Yes | The method |
+| `Path` | `string` | Yes | Path to the file |
+
+**Returns:** `RouteBuilder`
+
+###### HandlerName()
 
 Assign an explicit handler name.
 
@@ -1093,7 +1283,21 @@ Assign an explicit handler name.
 public RouteBuilder HandlerName(string name)
 ```
 
-#### RequestSchemaJson()
+**Example:**
+
+```csharp
+var result = instance.HandlerName("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Name` | `string` | Yes | The name |
+
+**Returns:** `RouteBuilder`
+
+###### RequestSchemaJson()
 
 Provide a raw JSON schema for the request body.
 
@@ -1103,7 +1307,21 @@ Provide a raw JSON schema for the request body.
 public RouteBuilder RequestSchemaJson(object schema)
 ```
 
-#### ResponseSchemaJson()
+**Example:**
+
+```csharp
+var result = instance.RequestSchemaJson(new Dictionary<string, object>());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Schema` | `object` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### ResponseSchemaJson()
 
 Provide a raw JSON schema for the response body.
 
@@ -1113,7 +1331,21 @@ Provide a raw JSON schema for the response body.
 public RouteBuilder ResponseSchemaJson(object schema)
 ```
 
-#### ParamsSchemaJson()
+**Example:**
+
+```csharp
+var result = instance.ResponseSchemaJson(new Dictionary<string, object>());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Schema` | `object` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### ParamsSchemaJson()
 
 Provide a raw JSON schema for request parameters.
 
@@ -1123,7 +1355,21 @@ Provide a raw JSON schema for request parameters.
 public RouteBuilder ParamsSchemaJson(object schema)
 ```
 
-#### FileParamsJson()
+**Example:**
+
+```csharp
+var result = instance.ParamsSchemaJson(new Dictionary<string, object>());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Schema` | `object` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### FileParamsJson()
 
 Provide multipart file parameter configuration.
 
@@ -1133,7 +1379,21 @@ Provide multipart file parameter configuration.
 public RouteBuilder FileParamsJson(object schema)
 ```
 
-#### Cors()
+**Example:**
+
+```csharp
+var result = instance.FileParamsJson(new Dictionary<string, object>());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Schema` | `object` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### Cors()
 
 Attach a CORS configuration for this route.
 
@@ -1143,7 +1403,21 @@ Attach a CORS configuration for this route.
 public RouteBuilder Cors(CorsConfig cors)
 ```
 
-#### Compression()
+**Example:**
+
+```csharp
+var result = instance.Cors(new CorsConfig());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Cors` | `CorsConfig` | Yes | The cors config |
+
+**Returns:** `RouteBuilder`
+
+###### Compression()
 
 Attach a compression configuration for this route.
 
@@ -1153,7 +1427,21 @@ Attach a compression configuration for this route.
 public RouteBuilder Compression(CompressionConfig compression)
 ```
 
-#### Sync()
+**Example:**
+
+```csharp
+var result = instance.Compression(new CompressionConfig());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Compression` | `CompressionConfig` | Yes | The compression config |
+
+**Returns:** `RouteBuilder`
+
+###### Sync()
 
 Mark the route as synchronous.
 
@@ -1163,7 +1451,15 @@ Mark the route as synchronous.
 public RouteBuilder Sync()
 ```
 
-#### HandlerDependencies()
+**Example:**
+
+```csharp
+var result = instance.Sync();
+```
+
+**Returns:** `RouteBuilder`
+
+###### HandlerDependencies()
 
 Declare the dependency keys that must be resolved before this handler runs.
 
@@ -1172,6 +1468,20 @@ Declare the dependency keys that must be resolved before this handler runs.
 ```csharp
 public RouteBuilder HandlerDependencies(List<string> dependencies)
 ```
+
+**Example:**
+
+```csharp
+var result = instance.HandlerDependencies(new List<object>());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Dependencies` | `List<string>` | Yes | The dependencies |
+
+**Returns:** `RouteBuilder`
 
 ---
 
@@ -1188,15 +1498,23 @@ introspection control, complexity limits, and depth limits.
 | `ComplexityLimit` | `nuint?` | `null` | Maximum query complexity (None = unlimited) |
 | `DepthLimit` | `nuint?` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### CreateDefault()
+###### CreateDefault()
 
 **Signature:**
 
 ```csharp
 public SchemaConfig CreateDefault()
 ```
+
+**Example:**
+
+```csharp
+var result = SchemaConfig.CreateDefault();
+```
+
+**Returns:** `SchemaConfig`
 
 ---
 
@@ -1223,20 +1541,26 @@ Server configuration
 | `Openapi` | `OpenApiConfig?` | `null` | OpenAPI documentation configuration |
 | `Jsonrpc` | `JsonRpcConfig?` | `null` | JSON-RPC configuration |
 | `Grpc` | `GrpcConfig?` | `null` | gRPC configuration |
-| `LifecycleHooks` | `string?` | `null` | Lifecycle hooks for request/response processing |
 | `BackgroundTasks` | `BackgroundTaskConfig` | — | Background task executor configuration |
 | `EnableHttpTrace` | `bool` | `false` | Enable per-request HTTP tracing (tower-http `TraceLayer`) |
-| `DiContainer` | `string?` | `null` | Dependency injection container (requires 'di' feature) |
 
-### Methods
+##### Methods
 
-#### CreateDefault()
+###### CreateDefault()
 
 **Signature:**
 
 ```csharp
 public ServerConfig CreateDefault()
 ```
+
+**Example:**
+
+```csharp
+var result = ServerConfig.CreateDefault();
+```
+
+**Returns:** `ServerConfig`
 
 ---
 
@@ -1276,9 +1600,9 @@ retry: 3000
 | `Id` | `string?` | `null` | Event ID (optional, for client-side reconnection) |
 | `Retry` | `ulong?` | `null` | Retry timeout in milliseconds (optional) |
 
-### Methods
+#### Methods
 
-#### WithId()
+##### WithId()
 
 Set the event ID for client-side reconnection support
 
@@ -1291,7 +1615,21 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 public SseEvent WithId(string id)
 ```
 
-#### WithRetry()
+**Example:**
+
+```csharp
+var result = instance.WithId("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `Id` | `string` | Yes | Unique identifier for this event |
+
+**Returns:** `SseEvent`
+
+###### WithRetry()
 
 Set the retry timeout for client reconnection
 
@@ -1303,6 +1641,20 @@ if the connection is lost. The client browser will automatically handle reconnec
 ```csharp
 public SseEvent WithRetry(ulong retryMs)
 ```
+
+**Example:**
+
+```csharp
+var result = instance.WithRetry(42);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `RetryMs` | `ulong` | Yes | Retry timeout in milliseconds |
+
+**Returns:** `SseEvent`
 
 ---
 
@@ -1343,11 +1695,10 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `Size` | `nuint?` | `null` | Size of the file in bytes |
 | `Content` | `byte[]` | — | File content (may be base64 encoded) |
 | `ContentEncoding` | `string?` | `null` | Content encoding type |
-| `Cursor` | `string` | — | Internal cursor for Read/Seek operations |
 
-### Methods
+##### Methods
 
-#### AsBytes()
+###### AsBytes()
 
 Get the raw file content as bytes.
 
@@ -1359,7 +1710,15 @@ This provides zero-copy access to the underlying buffer.
 public byte[] AsBytes()
 ```
 
-#### ReadToString()
+**Example:**
+
+```csharp
+var result = instance.AsBytes();
+```
+
+**Returns:** `byte[]`
+
+###### ReadToString()
 
 Read the file content as a UTF-8 string.
 
@@ -1373,7 +1732,17 @@ Returns an error if the content is not valid UTF-8.
 public string ReadToString()
 ```
 
-#### ContentTypeOrDefault()
+**Example:**
+
+```csharp
+var result = instance.ReadToString();
+```
+
+**Returns:** `string`
+
+**Errors:** Throws `Error`.
+
+###### ContentTypeOrDefault()
 
 Get the content type, defaulting to "application/octet-stream".
 
@@ -1382,6 +1751,14 @@ Get the content type, defaulting to "application/octet-stream".
 ```csharp
 public string ContentTypeOrDefault()
 ```
+
+**Example:**
+
+```csharp
+var result = instance.ContentTypeOrDefault();
+```
+
+**Returns:** `string`
 
 ---
 

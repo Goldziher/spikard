@@ -22,6 +22,12 @@ A `QueryOnlyConfig` with default settings
 SpikardQueryOnlyConfig* spikard_schema_query_only();
 ```
 
+**Example:**
+
+```c
+SpikardQueryOnlyConfig *result = spikard_schema_query_only();
+```
+
 **Returns:** `SpikardQueryOnlyConfig`
 
 ---
@@ -40,6 +46,12 @@ A `QueryMutationConfig` with default settings
 
 ```c
 SpikardQueryMutationConfig* spikard_schema_query_mutation();
+```
+
+**Example:**
+
+```c
+SpikardQueryMutationConfig *result = spikard_schema_query_mutation();
 ```
 
 **Returns:** `SpikardQueryMutationConfig`
@@ -62,6 +74,12 @@ A `FullSchemaConfig` with default settings
 SpikardFullSchemaConfig* spikard_schema_full();
 ```
 
+**Example:**
+
+```c
+SpikardFullSchemaConfig *result = spikard_schema_full();
+```
+
 **Returns:** `SpikardFullSchemaConfig`
 
 ---
@@ -76,134 +94,6 @@ API Key authentication configuration
 |-------|------|---------|-------------|
 | `keys` | `const char**` | — | Valid API keys |
 | `header_name` | `const char*` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
-
----
-
-#### SpikardApp
-
-Spikard application builder.
-
-### Methods
-
-#### spikard_new()
-
-Create a new application with the default server configuration.
-
-**Signature:**
-
-```c
-SpikardApp spikard_new();
-```
-
-#### spikard_on_request()
-
-Register an `on_request` lifecycle hook (runs before validation and handler dispatch).
-
-**Signature:**
-
-```c
-SpikardApp spikard_on_request(const char* hook);
-```
-
-#### spikard_pre_validation()
-
-Register a `pre_validation` lifecycle hook (runs after `on_request`, before validation).
-
-**Signature:**
-
-```c
-SpikardApp spikard_pre_validation(const char* hook);
-```
-
-#### spikard_pre_handler()
-
-Register a `pre_handler` lifecycle hook (runs after validation, before the handler).
-
-**Signature:**
-
-```c
-SpikardApp spikard_pre_handler(const char* hook);
-```
-
-#### spikard_on_response()
-
-Register an `on_response` lifecycle hook (runs after a successful handler response).
-
-**Signature:**
-
-```c
-SpikardApp spikard_on_response(const char* hook);
-```
-
-#### spikard_on_error()
-
-Register an `on_error` lifecycle hook (runs when the handler returns an error).
-
-**Signature:**
-
-```c
-SpikardApp spikard_on_error(const char* hook);
-```
-
-#### spikard_merge_axum_router()
-
-Attach an existing Axum router to this application, returning ownership.
-
-**Signature:**
-
-```c
-SpikardApp spikard_merge_axum_router(const char* router);
-```
-
-#### spikard_attach_axum_router()
-
-Attach an Axum router using a mutable reference for incremental configuration.
-
-**Signature:**
-
-```c
-SpikardApp spikard_attach_axum_router(const char* router);
-```
-
-#### spikard_into_router()
-
-Build the underlying Axum router.
-
-**Errors:**
-
-Returns an error if server or router construction fails.
-
-**Signature:**
-
-```c
-const char* spikard_into_router();
-```
-
-#### spikard_into_router_and_config()
-
-Decompose the application into its Axum router and server configuration.
-
-This is the low-level escape hatch used by the C FFI layer to start the
-server on a background thread while retaining the bind address from the
-caller-supplied `ServerConfig`. Prefer `App.run` for normal use.
-
-**Errors:**
-
-Returns an error if router construction fails.
-
-**Signature:**
-
-```c
-const char* spikard_into_router_and_config();
-```
-
-#### spikard_default()
-
-**Signature:**
-
-```c
-SpikardApp spikard_default();
-```
 
 ---
 
@@ -225,15 +115,23 @@ AsyncAPI HTTP endpoint configuration
 | `name` | `const char*` | — | The name |
 | `request_id` | `const char**` | `NULL` | Request id |
 
-### Methods
+##### Methods
 
-#### spikard_default()
+###### spikard_default()
 
 **Signature:**
 
 ```c
 SpikardBackgroundJobMetadata spikard_default();
 ```
+
+**Example:**
+
+```c
+SpikardBackgroundJobMetadata *result = spikard_default();
+```
+
+**Returns:** `SpikardBackgroundJobMetadata`
 
 ---
 
@@ -247,15 +145,23 @@ Configuration for in-process background task execution.
 | `max_concurrent_tasks` | `uintptr_t` | `128` | Maximum concurrent tasks |
 | `drain_timeout_secs` | `uint64_t` | `30` | Drain timeout secs |
 
-### Methods
+##### Methods
 
-#### spikard_default()
+###### spikard_default()
 
 **Signature:**
 
 ```c
 SpikardBackgroundTaskConfig spikard_default();
 ```
+
+**Example:**
+
+```c
+SpikardBackgroundTaskConfig *result = spikard_default();
+```
+
+**Returns:** `SpikardBackgroundTaskConfig`
 
 ---
 
@@ -270,15 +176,23 @@ Compression configuration shared across runtimes
 | `min_size` | `uintptr_t` | — | Minimum response size to compress (bytes) |
 | `quality` | `uint32_t` | — | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
-### Methods
+##### Methods
 
-#### spikard_default()
+###### spikard_default()
 
 **Signature:**
 
 ```c
 SpikardCompressionConfig spikard_default();
 ```
+
+**Example:**
+
+```c
+SpikardCompressionConfig *result = spikard_default();
+```
+
+**Returns:** `SpikardCompressionConfig`
 
 ---
 
@@ -306,12 +220,10 @@ CORS configuration for a route
 | `expose_headers` | `const char***` | `NULL` | Expose headers |
 | `max_age` | `uint32_t*` | `NULL` | Maximum age |
 | `allow_credentials` | `bool*` | `NULL` | Allow credentials |
-| `methods_joined_cache` | `const char*` | — | Methods joined cache |
-| `headers_joined_cache` | `const char*` | — | Headers joined cache |
 
-### Methods
+##### Methods
 
-#### spikard_allowed_methods_joined()
+###### spikard_allowed_methods_joined()
 
 Get the cached joined methods string for preflight responses
 
@@ -321,7 +233,15 @@ Get the cached joined methods string for preflight responses
 const char* spikard_allowed_methods_joined();
 ```
 
-#### spikard_allowed_headers_joined()
+**Example:**
+
+```c
+const char *result = spikard_allowed_methods_joined(instance);
+```
+
+**Returns:** `const char*`
+
+###### spikard_allowed_headers_joined()
 
 Get the cached joined headers string for preflight responses
 
@@ -331,7 +251,15 @@ Get the cached joined headers string for preflight responses
 const char* spikard_allowed_headers_joined();
 ```
 
-#### spikard_is_origin_allowed()
+**Example:**
+
+```c
+const char *result = spikard_allowed_headers_joined(instance);
+```
+
+**Returns:** `const char*`
+
+###### spikard_is_origin_allowed()
 
 Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -341,7 +269,21 @@ Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 bool spikard_is_origin_allowed(const char* origin);
 ```
 
-#### spikard_is_method_allowed()
+**Example:**
+
+```c
+bool result = spikard_is_origin_allowed(instance, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `origin` | `const char*` | Yes | The origin |
+
+**Returns:** `bool`
+
+###### spikard_is_method_allowed()
 
 Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -351,13 +293,35 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 bool spikard_is_method_allowed(const char* method);
 ```
 
-#### spikard_default()
+**Example:**
+
+```c
+bool result = spikard_is_method_allowed(instance, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `const char*` | Yes | The method |
+
+**Returns:** `bool`
+
+###### spikard_default()
 
 **Signature:**
 
 ```c
 SpikardCorsConfig spikard_default();
 ```
+
+**Example:**
+
+```c
+SpikardCorsConfig *result = spikard_default();
+```
+
+**Returns:** `SpikardCorsConfig`
 
 ---
 
@@ -371,15 +335,23 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 | `complexity_limit` | `uintptr_t*` | `NULL` | Maximum query complexity (None = unlimited) |
 | `depth_limit` | `uintptr_t*` | `NULL` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### spikard_default()
+###### spikard_default()
 
 **Signature:**
 
 ```c
 SpikardFullSchemaConfig spikard_default();
 ```
+
+**Example:**
+
+```c
+SpikardFullSchemaConfig *result = spikard_default();
+```
+
+**Returns:** `SpikardFullSchemaConfig`
 
 ---
 
@@ -390,9 +362,9 @@ Configuration for GraphQL routes
 Provides a builder pattern for configuring GraphQL route parameters
 for the Spikard HTTP server's routing system.
 
-### Methods
+##### Methods
 
-#### spikard_new()
+###### spikard_new()
 
 Create a new GraphQL route configuration with defaults
 
@@ -408,7 +380,15 @@ Default values:
 SpikardGraphQlRouteConfig spikard_new();
 ```
 
-#### spikard_path()
+**Example:**
+
+```c
+SpikardGraphQlRouteConfig *result = spikard_new();
+```
+
+**Returns:** `SpikardGraphQlRouteConfig`
+
+###### spikard_path()
 
 Set the HTTP path for the GraphQL endpoint
 
@@ -418,7 +398,21 @@ Set the HTTP path for the GraphQL endpoint
 SpikardGraphQlRouteConfig spikard_path(const char* path);
 ```
 
-#### spikard_method()
+**Example:**
+
+```c
+SpikardGraphQlRouteConfig *result = spikard_path(instance, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `path` | `const char*` | Yes | The URL path (e.g., "/graphql", "/api/graphql") |
+
+**Returns:** `SpikardGraphQlRouteConfig`
+
+###### spikard_method()
 
 Set the HTTP method for the GraphQL endpoint
 
@@ -428,7 +422,21 @@ Set the HTTP method for the GraphQL endpoint
 SpikardGraphQlRouteConfig spikard_method(const char* method);
 ```
 
-#### spikard_enable_playground()
+**Example:**
+
+```c
+SpikardGraphQlRouteConfig *result = spikard_method(instance, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `const char*` | Yes | The HTTP method (typically "POST") |
+
+**Returns:** `SpikardGraphQlRouteConfig`
+
+###### spikard_enable_playground()
 
 Enable or disable the GraphQL Playground UI
 
@@ -438,7 +446,21 @@ Enable or disable the GraphQL Playground UI
 SpikardGraphQlRouteConfig spikard_enable_playground(bool enable);
 ```
 
-#### spikard_description()
+**Example:**
+
+```c
+SpikardGraphQlRouteConfig *result = spikard_enable_playground(instance, true);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `enable` | `bool` | Yes | Whether to enable playground |
+
+**Returns:** `SpikardGraphQlRouteConfig`
+
+###### spikard_description()
 
 Set a custom description for documentation
 
@@ -448,7 +470,21 @@ Set a custom description for documentation
 SpikardGraphQlRouteConfig spikard_description(const char* description);
 ```
 
-#### spikard_get_path()
+**Example:**
+
+```c
+SpikardGraphQlRouteConfig *result = spikard_description(instance, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `description` | `const char*` | Yes | Documentation string |
+
+**Returns:** `SpikardGraphQlRouteConfig`
+
+###### spikard_get_path()
 
 Get the configured path
 
@@ -458,7 +494,15 @@ Get the configured path
 const char* spikard_get_path();
 ```
 
-#### spikard_get_method()
+**Example:**
+
+```c
+const char *result = spikard_get_path(instance);
+```
+
+**Returns:** `const char*`
+
+###### spikard_get_method()
 
 Get the configured method
 
@@ -468,7 +512,15 @@ Get the configured method
 const char* spikard_get_method();
 ```
 
-#### spikard_is_playground_enabled()
+**Example:**
+
+```c
+const char *result = spikard_get_method(instance);
+```
+
+**Returns:** `const char*`
+
+###### spikard_is_playground_enabled()
 
 Check if playground is enabled
 
@@ -478,7 +530,15 @@ Check if playground is enabled
 bool spikard_is_playground_enabled();
 ```
 
-#### spikard_get_description()
+**Example:**
+
+```c
+bool result = spikard_is_playground_enabled(instance);
+```
+
+**Returns:** `bool`
+
+###### spikard_get_description()
 
 Get the description if set
 
@@ -488,13 +548,29 @@ Get the description if set
 const char** spikard_get_description();
 ```
 
-#### spikard_default()
+**Example:**
+
+```c
+const char** result = spikard_get_description(instance);
+```
+
+**Returns:** `const char**`
+
+###### spikard_default()
 
 **Signature:**
 
 ```c
 SpikardGraphQlRouteConfig spikard_default();
 ```
+
+**Example:**
+
+```c
+SpikardGraphQlRouteConfig *result = spikard_default();
+```
+
+**Returns:** `SpikardGraphQlRouteConfig`
 
 ---
 
@@ -538,9 +614,9 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `keepalive_timeout` | `uint64_t` | — | HTTP/2 keepalive timeout in seconds |
 | `max_stream_response_bytes` | `uintptr_t*` | `NULL` | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `NULL` (unbounded total response size). |
 
-### Methods
+#### Methods
 
-#### spikard_default()
+##### spikard_default()
 
 **Signature:**
 
@@ -548,110 +624,13 @@ concurrent stream limiting to the HTTP/2 transport layer:
 SpikardGrpcConfig spikard_default();
 ```
 
----
-
-#### SpikardHandler
-
-Handler trait that all language bindings must implement
-
-This trait is completely language-agnostic. Each binding (Python, Node, WASM)
-implements this trait to bridge their runtime to our HTTP server.
-
-### Methods
-
-#### spikard_call()
-
-Handle an HTTP request
-
-Takes the extracted request data and returns a future that resolves to either:
-
-- Ok(Response): A successful HTTP response
-- Err((StatusCode, String)): An error with status code and message
-
-**Signature:**
+**Example:**
 
 ```c
-SpikardHandlerResult spikard_call(SpikardRequest request, SpikardRequestData request_data);
+SpikardGrpcConfig *result = spikard_default();
 ```
 
-#### spikard_prefers_raw_json_body()
-
-Whether this handler prefers consuming `RequestData.raw_body` over the parsed
-`RequestData.body` for JSON requests.
-
-When `true`, the server may skip eager JSON parsing when there is no request-body
-schema validator attached to the route.
-
-**Signature:**
-
-```c
-bool spikard_prefers_raw_json_body();
-```
-
-#### spikard_prefers_parameter_extraction()
-
-Whether this handler wants to perform its own parameter validation/extraction (path/query/header/cookie).
-
-When `true`, the server will skip `ParameterValidator.validate_and_extract` in `ValidatingHandler`.
-This is useful for language bindings which need to transform validated parameters into
-language-specific values (e.g., Python kwargs) without duplicating work. When `false`,
-the server stores validated output in `RequestData.validated_params`.
-
-**Signature:**
-
-```c
-bool spikard_prefers_parameter_extraction();
-```
-
-#### spikard_wants_headers()
-
-Whether this handler needs the parsed headers map in `RequestData`.
-
-When `false`, the server may skip building `RequestData.headers` for requests without a body.
-(Requests with bodies still typically need `Content-Type` decisions.)
-
-**Signature:**
-
-```c
-bool spikard_wants_headers();
-```
-
-#### spikard_wants_cookies()
-
-Whether this handler needs the parsed cookies map in `RequestData`.
-
-When `false`, the server may skip parsing cookies for requests without a body.
-
-**Signature:**
-
-```c
-bool spikard_wants_cookies();
-```
-
-#### spikard_wants_request_extensions()
-
-Whether this handler needs `RequestData` stored in request extensions.
-
-When `false`, the server avoids inserting `RequestData` into extensions to
-skip cloning in hot paths.
-
-**Signature:**
-
-```c
-bool spikard_wants_request_extensions();
-```
-
-#### spikard_static_response()
-
-Return a pre-built static response if this handler always produces the
-same output. When `Some`, the server bypasses the full middleware
-pipeline and serves the pre-built response directly.
-
-**Signature:**
-
-```c
-SpikardStaticResponse* spikard_static_response();
-```
+**Returns:** `SpikardGrpcConfig`
 
 ---
 
@@ -659,9 +638,9 @@ SpikardStaticResponse* spikard_static_response();
 
 Convert user-facing handler functions into the low-level `Handler` trait.
 
-### Methods
+##### Methods
 
-#### spikard_into_handler()
+###### spikard_into_handler()
 
 Convert this value into a shared request handler.
 
@@ -670,6 +649,14 @@ Convert this value into a shared request handler.
 ```c
 SpikardHandler spikard_into_handler();
 ```
+
+**Example:**
+
+```c
+SpikardHandler *result = spikard_into_handler(instance);
+```
+
+**Returns:** `SpikardHandler`
 
 ---
 
@@ -684,15 +671,23 @@ JSON-RPC server configuration
 | `enable_batch` | `bool` | — | Enable batch request processing (default: true) |
 | `max_batch_size` | `uintptr_t` | — | Maximum number of requests in a batch (default: 100) |
 
-### Methods
+##### Methods
 
-#### spikard_default()
+###### spikard_default()
 
 **Signature:**
 
 ```c
 SpikardJsonRpcConfig spikard_default();
 ```
+
+**Example:**
+
+```c
+SpikardJsonRpcConfig *result = spikard_default();
+```
+
+**Returns:** `SpikardJsonRpcConfig`
 
 ---
 
@@ -757,15 +752,23 @@ OpenAPI configuration
 | `servers` | `SpikardServerInfo*` | `NULL` | Server definitions |
 | `security_schemes` | `void*` | `NULL` | Security schemes (auto-detected from middleware if not provided) |
 
-### Methods
+##### Methods
 
-#### spikard_default()
+###### spikard_default()
 
 **Signature:**
 
 ```c
 SpikardOpenApiConfig spikard_default();
 ```
+
+**Example:**
+
+```c
+SpikardOpenApiConfig *result = spikard_default();
+```
+
+**Returns:** `SpikardOpenApiConfig`
 
 ---
 
@@ -865,9 +868,9 @@ Content-Type: application/problem+json
 | `instance` | `const char**` | `NULL` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
 | `extensions` | `void*` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
 
-### Methods
+#### Methods
 
-#### spikard_with_detail()
+##### spikard_with_detail()
 
 Set the detail field
 
@@ -877,7 +880,21 @@ Set the detail field
 SpikardProblemDetails spikard_with_detail(const char* detail);
 ```
 
-#### spikard_with_instance()
+**Example:**
+
+```c
+SpikardProblemDetails *result = spikard_with_detail(instance, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `const char*` | Yes | The detail |
+
+**Returns:** `SpikardProblemDetails`
+
+###### spikard_with_instance()
 
 Set the instance field
 
@@ -887,7 +904,21 @@ Set the instance field
 SpikardProblemDetails spikard_with_instance(const char* instance);
 ```
 
-#### spikard_not_found()
+**Example:**
+
+```c
+SpikardProblemDetails *result = spikard_with_instance(instance, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `instance` | `const char*` | Yes | The instance |
+
+**Returns:** `SpikardProblemDetails`
+
+###### spikard_not_found()
 
 Create a not found error
 
@@ -897,7 +928,21 @@ Create a not found error
 SpikardProblemDetails spikard_not_found(const char* detail);
 ```
 
-#### spikard_method_not_allowed()
+**Example:**
+
+```c
+SpikardProblemDetails *result = spikard_not_found("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `const char*` | Yes | The detail |
+
+**Returns:** `SpikardProblemDetails`
+
+###### spikard_method_not_allowed()
 
 Create a method not allowed error
 
@@ -907,7 +952,21 @@ Create a method not allowed error
 SpikardProblemDetails spikard_method_not_allowed(const char* detail);
 ```
 
-#### spikard_internal_server_error()
+**Example:**
+
+```c
+SpikardProblemDetails *result = spikard_method_not_allowed("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `const char*` | Yes | The detail |
+
+**Returns:** `SpikardProblemDetails`
+
+###### spikard_internal_server_error()
 
 Create an internal server error
 
@@ -917,7 +976,21 @@ Create an internal server error
 SpikardProblemDetails spikard_internal_server_error(const char* detail);
 ```
 
-#### spikard_bad_request()
+**Example:**
+
+```c
+SpikardProblemDetails *result = spikard_internal_server_error("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `const char*` | Yes | The detail |
+
+**Returns:** `SpikardProblemDetails`
+
+###### spikard_bad_request()
 
 Create a bad request error
 
@@ -927,7 +1000,21 @@ Create a bad request error
 SpikardProblemDetails spikard_bad_request(const char* detail);
 ```
 
-#### spikard_to_json()
+**Example:**
+
+```c
+SpikardProblemDetails *result = spikard_bad_request("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `const char*` | Yes | The detail |
+
+**Returns:** `SpikardProblemDetails`
+
+###### spikard_to_json()
 
 Serialize to JSON string
 
@@ -940,7 +1027,17 @@ Returns an error if the serialization fails.
 const char* spikard_to_json();
 ```
 
-#### spikard_to_json_pretty()
+**Example:**
+
+```c
+const char *result = spikard_to_json(instance);
+```
+
+**Returns:** `const char*`
+
+**Errors:** Returns `NULL` on error.
+
+###### spikard_to_json_pretty()
 
 Serialize to pretty JSON string
 
@@ -952,6 +1049,16 @@ Returns an error if the serialization fails.
 ```c
 const char* spikard_to_json_pretty();
 ```
+
+**Example:**
+
+```c
+const char *result = spikard_to_json_pretty(instance);
+```
+
+**Returns:** `const char*`
+
+**Errors:** Returns `NULL` on error.
 
 ---
 
@@ -965,15 +1072,23 @@ Configuration for schemas with Query and Mutation types
 | `complexity_limit` | `uintptr_t*` | `NULL` | Maximum query complexity (None = unlimited) |
 | `depth_limit` | `uintptr_t*` | `NULL` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### spikard_default()
+###### spikard_default()
 
 **Signature:**
 
 ```c
 SpikardQueryMutationConfig spikard_default();
 ```
+
+**Example:**
+
+```c
+SpikardQueryMutationConfig *result = spikard_default();
+```
+
+**Returns:** `SpikardQueryMutationConfig`
 
 ---
 
@@ -987,15 +1102,23 @@ Configuration for schemas with only Query type
 | `complexity_limit` | `uintptr_t*` | `NULL` | Maximum query complexity (None = unlimited) |
 | `depth_limit` | `uintptr_t*` | `NULL` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### spikard_default()
+###### spikard_default()
 
 **Signature:**
 
 ```c
 SpikardQueryOnlyConfig spikard_default();
 ```
+
+**Example:**
+
+```c
+SpikardQueryOnlyConfig *result = spikard_default();
+```
+
+**Returns:** `SpikardQueryOnlyConfig`
 
 ---
 
@@ -1009,15 +1132,23 @@ Rate limiting configuration shared across runtimes
 | `burst` | `uint32_t` | `200` | Burst allowance |
 | `ip_based` | `bool` | `true` | Use IP-based rate limiting |
 
-### Methods
+##### Methods
 
-#### spikard_default()
+###### spikard_default()
 
 **Signature:**
 
 ```c
 SpikardRateLimitConfig spikard_default();
 ```
+
+**Example:**
+
+```c
+SpikardRateLimitConfig *result = spikard_default();
+```
+
+**Returns:** `SpikardRateLimitConfig`
 
 ---
 
@@ -1035,9 +1166,9 @@ HTTP Response with custom status code, headers, and content
 | `status_code` | `uint16_t` | — | HTTP status code (defaults to 200) |
 | `headers` | `void*` | `NULL` | Response headers |
 
-### Methods
+##### Methods
 
-#### spikard_set_header()
+###### spikard_set_header()
 
 Set a header
 
@@ -1047,7 +1178,22 @@ Set a header
 void spikard_set_header(const char* key, const char* value);
 ```
 
-#### spikard_set_cookie()
+**Example:**
+
+```c
+spikard_set_header(instance, "value", "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `key` | `const char*` | Yes | The key |
+| `value` | `const char*` | Yes | The value |
+
+**Returns:** No return value.
+
+###### spikard_set_cookie()
 
 Set a cookie in the response
 
@@ -1057,7 +1203,28 @@ Set a cookie in the response
 void spikard_set_cookie(const char* key, const char* value, bool secure, bool http_only, int64_t max_age, const char* domain, const char* path, const char* same_site);
 ```
 
-#### spikard_default()
+**Example:**
+
+```c
+spikard_set_cookie(instance, "value", "value", true, true, 42, "value", "value", "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `key` | `const char*` | Yes | The key |
+| `value` | `const char*` | Yes | The value |
+| `secure` | `bool` | Yes | The secure |
+| `http_only` | `bool` | Yes | The http only |
+| `max_age` | `int64_t*` | No | The max age |
+| `domain` | `const char**` | No | The domain |
+| `path` | `const char**` | No | Path to the file |
+| `same_site` | `const char**` | No | The same site |
+
+**Returns:** No return value.
+
+###### spikard_default()
 
 **Signature:**
 
@@ -1065,15 +1232,23 @@ void spikard_set_cookie(const char* key, const char* value, bool secure, bool ht
 SpikardResponse spikard_default();
 ```
 
+**Example:**
+
+```c
+SpikardResponse *result = spikard_default();
+```
+
+**Returns:** `SpikardResponse`
+
 ---
 
 #### SpikardRouteBuilder
 
 Builder for defining a route.
 
-### Methods
+##### Methods
 
-#### spikard_new()
+###### spikard_new()
 
 Create a new builder for the provided HTTP method and path.
 
@@ -1083,7 +1258,22 @@ Create a new builder for the provided HTTP method and path.
 SpikardRouteBuilder spikard_new(SpikardMethod method, const char* path);
 ```
 
-#### spikard_handler_name()
+**Example:**
+
+```c
+SpikardRouteBuilder *result = spikard_new((SpikardMethod){0}, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `SpikardMethod` | Yes | The method |
+| `path` | `const char*` | Yes | Path to the file |
+
+**Returns:** `SpikardRouteBuilder`
+
+###### spikard_handler_name()
 
 Assign an explicit handler name.
 
@@ -1093,7 +1283,21 @@ Assign an explicit handler name.
 SpikardRouteBuilder spikard_handler_name(const char* name);
 ```
 
-#### spikard_request_schema_json()
+**Example:**
+
+```c
+SpikardRouteBuilder *result = spikard_handler_name(instance, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | `const char*` | Yes | The name |
+
+**Returns:** `SpikardRouteBuilder`
+
+###### spikard_request_schema_json()
 
 Provide a raw JSON schema for the request body.
 
@@ -1103,7 +1307,21 @@ Provide a raw JSON schema for the request body.
 SpikardRouteBuilder spikard_request_schema_json(void* schema);
 ```
 
-#### spikard_response_schema_json()
+**Example:**
+
+```c
+SpikardRouteBuilder *result = spikard_request_schema_json(instance, NULL);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `void*` | Yes | The schema |
+
+**Returns:** `SpikardRouteBuilder`
+
+###### spikard_response_schema_json()
 
 Provide a raw JSON schema for the response body.
 
@@ -1113,7 +1331,21 @@ Provide a raw JSON schema for the response body.
 SpikardRouteBuilder spikard_response_schema_json(void* schema);
 ```
 
-#### spikard_params_schema_json()
+**Example:**
+
+```c
+SpikardRouteBuilder *result = spikard_response_schema_json(instance, NULL);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `void*` | Yes | The schema |
+
+**Returns:** `SpikardRouteBuilder`
+
+###### spikard_params_schema_json()
 
 Provide a raw JSON schema for request parameters.
 
@@ -1123,7 +1355,21 @@ Provide a raw JSON schema for request parameters.
 SpikardRouteBuilder spikard_params_schema_json(void* schema);
 ```
 
-#### spikard_file_params_json()
+**Example:**
+
+```c
+SpikardRouteBuilder *result = spikard_params_schema_json(instance, NULL);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `void*` | Yes | The schema |
+
+**Returns:** `SpikardRouteBuilder`
+
+###### spikard_file_params_json()
 
 Provide multipart file parameter configuration.
 
@@ -1133,7 +1379,21 @@ Provide multipart file parameter configuration.
 SpikardRouteBuilder spikard_file_params_json(void* schema);
 ```
 
-#### spikard_cors()
+**Example:**
+
+```c
+SpikardRouteBuilder *result = spikard_file_params_json(instance, NULL);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `void*` | Yes | The schema |
+
+**Returns:** `SpikardRouteBuilder`
+
+###### spikard_cors()
 
 Attach a CORS configuration for this route.
 
@@ -1143,7 +1403,21 @@ Attach a CORS configuration for this route.
 SpikardRouteBuilder spikard_cors(SpikardCorsConfig cors);
 ```
 
-#### spikard_compression()
+**Example:**
+
+```c
+SpikardRouteBuilder *result = spikard_cors(instance, (SpikardCorsConfig){0});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `cors` | `SpikardCorsConfig` | Yes | The cors config |
+
+**Returns:** `SpikardRouteBuilder`
+
+###### spikard_compression()
 
 Attach a compression configuration for this route.
 
@@ -1153,7 +1427,21 @@ Attach a compression configuration for this route.
 SpikardRouteBuilder spikard_compression(SpikardCompressionConfig compression);
 ```
 
-#### spikard_sync()
+**Example:**
+
+```c
+SpikardRouteBuilder *result = spikard_compression(instance, (SpikardCompressionConfig){0});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `compression` | `SpikardCompressionConfig` | Yes | The compression config |
+
+**Returns:** `SpikardRouteBuilder`
+
+###### spikard_sync()
 
 Mark the route as synchronous.
 
@@ -1163,7 +1451,15 @@ Mark the route as synchronous.
 SpikardRouteBuilder spikard_sync();
 ```
 
-#### spikard_handler_dependencies()
+**Example:**
+
+```c
+SpikardRouteBuilder *result = spikard_sync(instance);
+```
+
+**Returns:** `SpikardRouteBuilder`
+
+###### spikard_handler_dependencies()
 
 Declare the dependency keys that must be resolved before this handler runs.
 
@@ -1172,6 +1468,20 @@ Declare the dependency keys that must be resolved before this handler runs.
 ```c
 SpikardRouteBuilder spikard_handler_dependencies(const char** dependencies);
 ```
+
+**Example:**
+
+```c
+SpikardRouteBuilder *result = spikard_handler_dependencies(instance, NULL);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `dependencies` | `const char**` | Yes | The dependencies |
+
+**Returns:** `SpikardRouteBuilder`
 
 ---
 
@@ -1188,15 +1498,23 @@ introspection control, complexity limits, and depth limits.
 | `complexity_limit` | `uintptr_t*` | `NULL` | Maximum query complexity (None = unlimited) |
 | `depth_limit` | `uintptr_t*` | `NULL` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### spikard_default()
+###### spikard_default()
 
 **Signature:**
 
 ```c
 SpikardSchemaConfig spikard_default();
 ```
+
+**Example:**
+
+```c
+SpikardSchemaConfig *result = spikard_default();
+```
+
+**Returns:** `SpikardSchemaConfig`
 
 ---
 
@@ -1223,20 +1541,26 @@ Server configuration
 | `openapi` | `SpikardOpenApiConfig*` | `NULL` | OpenAPI documentation configuration |
 | `jsonrpc` | `SpikardJsonRpcConfig*` | `NULL` | JSON-RPC configuration |
 | `grpc` | `SpikardGrpcConfig*` | `NULL` | gRPC configuration |
-| `lifecycle_hooks` | `const char**` | `NULL` | Lifecycle hooks for request/response processing |
 | `background_tasks` | `SpikardBackgroundTaskConfig` | — | Background task executor configuration |
 | `enable_http_trace` | `bool` | `false` | Enable per-request HTTP tracing (tower-http `TraceLayer`) |
-| `di_container` | `const char**` | `NULL` | Dependency injection container (requires 'di' feature) |
 
-### Methods
+##### Methods
 
-#### spikard_default()
+###### spikard_default()
 
 **Signature:**
 
 ```c
 SpikardServerConfig spikard_default();
 ```
+
+**Example:**
+
+```c
+SpikardServerConfig *result = spikard_default();
+```
+
+**Returns:** `SpikardServerConfig`
 
 ---
 
@@ -1276,9 +1600,9 @@ retry: 3000
 | `id` | `const char**` | `NULL` | Event ID (optional, for client-side reconnection) |
 | `retry` | `uint64_t*` | `NULL` | Retry timeout in milliseconds (optional) |
 
-### Methods
+#### Methods
 
-#### spikard_with_id()
+##### spikard_with_id()
 
 Set the event ID for client-side reconnection support
 
@@ -1291,7 +1615,21 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 SpikardSseEvent spikard_with_id(const char* id);
 ```
 
-#### spikard_with_retry()
+**Example:**
+
+```c
+SpikardSseEvent *result = spikard_with_id(instance, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `id` | `const char*` | Yes | Unique identifier for this event |
+
+**Returns:** `SpikardSseEvent`
+
+###### spikard_with_retry()
 
 Set the retry timeout for client reconnection
 
@@ -1303,6 +1641,20 @@ if the connection is lost. The client browser will automatically handle reconnec
 ```c
 SpikardSseEvent spikard_with_retry(uint64_t retry_ms);
 ```
+
+**Example:**
+
+```c
+SpikardSseEvent *result = spikard_with_retry(instance, 42);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `retry_ms` | `uint64_t` | Yes | Retry timeout in milliseconds |
+
+**Returns:** `SpikardSseEvent`
 
 ---
 
@@ -1343,11 +1695,10 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `size` | `uintptr_t*` | `NULL` | Size of the file in bytes |
 | `content` | `const uint8_t*` | — | File content (may be base64 encoded) |
 | `content_encoding` | `const char**` | `NULL` | Content encoding type |
-| `cursor` | `const char*` | — | Internal cursor for Read/Seek operations |
 
-### Methods
+##### Methods
 
-#### spikard_as_bytes()
+###### spikard_as_bytes()
 
 Get the raw file content as bytes.
 
@@ -1359,7 +1710,15 @@ This provides zero-copy access to the underlying buffer.
 const uint8_t* spikard_as_bytes();
 ```
 
-#### spikard_read_to_string()
+**Example:**
+
+```c
+const uint8_t *result = spikard_as_bytes(instance);
+```
+
+**Returns:** `const uint8_t*`
+
+###### spikard_read_to_string()
 
 Read the file content as a UTF-8 string.
 
@@ -1373,7 +1732,17 @@ Returns an error if the content is not valid UTF-8.
 const char* spikard_read_to_string();
 ```
 
-#### spikard_content_type_or_default()
+**Example:**
+
+```c
+const char *result = spikard_read_to_string(instance);
+```
+
+**Returns:** `const char*`
+
+**Errors:** Returns `NULL` on error.
+
+###### spikard_content_type_or_default()
 
 Get the content type, defaulting to "application/octet-stream".
 
@@ -1382,6 +1751,14 @@ Get the content type, defaulting to "application/octet-stream".
 ```c
 const char* spikard_content_type_or_default();
 ```
+
+**Example:**
+
+```c
+const char *result = spikard_content_type_or_default(instance);
+```
+
+**Returns:** `const char*`
 
 ---
 

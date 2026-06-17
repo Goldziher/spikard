@@ -34,7 +34,7 @@
   "extra": {
     "pie": {
       "binary": {
-        "url-template": "https://github.com/Goldziher/spikard/releases/download/{Version}/php_spikard_php-{Version}_php{PhpVersion}-{Arch}-{OS}-{Libc}-{TSMode}.tgz"
+        "url-template": "https://github.com/Goldziher/spikard/releases/download/{Version}/php_spikard_php-{Version}_php{PhpVersion}-{Arch}-{OSLower}-{Libc}-{TSMode}.tgz"
       }
     }
   }

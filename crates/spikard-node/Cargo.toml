@@ -19,6 +19,10 @@ ignored = ["serde_json"]
 [lib]
 crate-type = ["cdylib"]
 
+[features]
+default = ["di"]
+di = ["spikard/di"]
+
 [dependencies]
 axum = { default-features = false, version = "0.8" }
 napi = { version = "3", features = ["async", "serde-json"] }

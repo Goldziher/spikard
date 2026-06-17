@@ -24,7 +24,8 @@ ignored = ["ahash", "serde_json", "tokio"]
 crate-type = ["cdylib", "staticlib", "rlib"]
 
 [features]
-default = []
+default = ["di"]
+di = ["spikard/di"]
 
 [dependencies]
 ahash = "0.8"

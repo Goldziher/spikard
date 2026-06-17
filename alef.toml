@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.25.1"
+alef_version = "0.25.21"
 languages = [
   "python",
   "node",
@@ -887,9 +887,14 @@ format = "cd packages/kotlin && gradle ktlintFormat --no-daemon"
 check = "cd packages/kotlin && gradle ktlintCheck --no-daemon"
 
 [crates.lint.kotlin_android]
+# Android library scaffold (packages/kotlin-android/build.gradle.kts + AGP) is
+# not yet emitted by alef's kotlin_android backend (see crates.build_commands.kotlin_android
+# above for context). Binding code is compiled via the cargo-built JNI ffi
+# crate; e2e tests build their own gradle project. Lint commands are no-ops
+# until alef emits a full Android library scaffold.
 precondition = "command -v gradle >/dev/null 2>&1"
-format = "cd packages/kotlin-android && gradle ktlintFormat --no-daemon"
-check = "cd packages/kotlin-android && gradle ktlintCheck --no-daemon"
+format = ":"
+check = ":"
 
 [crates.lint.dart]
 precondition = "command -v dart >/dev/null 2>&1"

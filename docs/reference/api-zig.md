@@ -22,6 +22,12 @@ A `QueryOnlyConfig` with default settings
 pub fn schema_query_only() QueryOnlyConfig
 ```
 
+**Example:**
+
+```zig
+const result = schemaQueryOnly();
+```
+
 **Returns:** `QueryOnlyConfig`
 
 ---
@@ -40,6 +46,12 @@ A `QueryMutationConfig` with default settings
 
 ```zig
 pub fn schema_query_mutation() QueryMutationConfig
+```
+
+**Example:**
+
+```zig
+const result = schemaQueryMutation();
 ```
 
 **Returns:** `QueryMutationConfig`
@@ -62,6 +74,12 @@ A `FullSchemaConfig` with default settings
 pub fn schema_full() FullSchemaConfig
 ```
 
+**Example:**
+
+```zig
+const result = schemaFull();
+```
+
 **Returns:** `FullSchemaConfig`
 
 ---
@@ -76,134 +94,6 @@ API Key authentication configuration
 |-------|------|---------|-------------|
 | `keys` | `[]const [:0]const u8` | — | Valid API keys |
 | `headerName` | `[:0]const u8` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
-
----
-
-#### App
-
-Spikard application builder.
-
-### Methods
-
-#### new()
-
-Create a new application with the default server configuration.
-
-**Signature:**
-
-```zig
-pub fn new() App
-```
-
-#### onRequest()
-
-Register an `on_request` lifecycle hook (runs before validation and handler dispatch).
-
-**Signature:**
-
-```zig
-pub fn onRequest(self: *const App, hook: [:0]const u8) App
-```
-
-#### preValidation()
-
-Register a `pre_validation` lifecycle hook (runs after `on_request`, before validation).
-
-**Signature:**
-
-```zig
-pub fn preValidation(self: *const App, hook: [:0]const u8) App
-```
-
-#### preHandler()
-
-Register a `pre_handler` lifecycle hook (runs after validation, before the handler).
-
-**Signature:**
-
-```zig
-pub fn preHandler(self: *const App, hook: [:0]const u8) App
-```
-
-#### onResponse()
-
-Register an `on_response` lifecycle hook (runs after a successful handler response).
-
-**Signature:**
-
-```zig
-pub fn onResponse(self: *const App, hook: [:0]const u8) App
-```
-
-#### onError()
-
-Register an `on_error` lifecycle hook (runs when the handler returns an error).
-
-**Signature:**
-
-```zig
-pub fn onError(self: *const App, hook: [:0]const u8) App
-```
-
-#### mergeAxumRouter()
-
-Attach an existing Axum router to this application, returning ownership.
-
-**Signature:**
-
-```zig
-pub fn mergeAxumRouter(self: *const App, router: [:0]const u8) App
-```
-
-#### attachAxumRouter()
-
-Attach an Axum router using a mutable reference for incremental configuration.
-
-**Signature:**
-
-```zig
-pub fn attachAxumRouter(self: *const App, router: [:0]const u8) App
-```
-
-#### intoRouter()
-
-Build the underlying Axum router.
-
-**Errors:**
-
-Returns an error if server or router construction fails.
-
-**Signature:**
-
-```zig
-pub fn intoRouter(self: *const App) AppError![:0]const u8
-```
-
-#### intoRouterAndConfig()
-
-Decompose the application into its Axum router and server configuration.
-
-This is the low-level escape hatch used by the C FFI layer to start the
-server on a background thread while retaining the bind address from the
-caller-supplied `ServerConfig`. Prefer `App.run` for normal use.
-
-**Errors:**
-
-Returns an error if router construction fails.
-
-**Signature:**
-
-```zig
-pub fn intoRouterAndConfig(self: *const App) AppError![:0]const u8
-```
-
-#### default()
-
-**Signature:**
-
-```zig
-pub fn default() App
-```
 
 ---
 
@@ -225,15 +115,23 @@ AsyncAPI HTTP endpoint configuration
 | `name` | `[:0]const u8` | — | The name |
 | `requestId` | `[:0]const u8?` | `null` | Request id |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```zig
 pub fn default() BackgroundJobMetadata
 ```
+
+**Example:**
+
+```zig
+const result = BackgroundJobMetadata.default();
+```
+
+**Returns:** `BackgroundJobMetadata`
 
 ---
 
@@ -247,15 +145,23 @@ Configuration for in-process background task execution.
 | `maxConcurrentTasks` | `u64` | `128` | Maximum concurrent tasks |
 | `drainTimeoutSecs` | `u64` | `30` | Drain timeout secs |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```zig
 pub fn default() BackgroundTaskConfig
 ```
+
+**Example:**
+
+```zig
+const result = BackgroundTaskConfig.default();
+```
+
+**Returns:** `BackgroundTaskConfig`
 
 ---
 
@@ -270,15 +176,23 @@ Compression configuration shared across runtimes
 | `minSize` | `u64` | — | Minimum response size to compress (bytes) |
 | `quality` | `u32` | — | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```zig
 pub fn default() CompressionConfig
 ```
+
+**Example:**
+
+```zig
+const result = CompressionConfig.default();
+```
+
+**Returns:** `CompressionConfig`
 
 ---
 
@@ -306,12 +220,10 @@ CORS configuration for a route
 | `exposeHeaders` | `[]const [:0]const u8?` | `null` | Expose headers |
 | `maxAge` | `u32?` | `null` | Maximum age |
 | `allowCredentials` | `bool?` | `null` | Allow credentials |
-| `methodsJoinedCache` | `[:0]const u8` | — | Methods joined cache |
-| `headersJoinedCache` | `[:0]const u8` | — | Headers joined cache |
 
-### Methods
+##### Methods
 
-#### allowedMethodsJoined()
+###### allowedMethodsJoined()
 
 Get the cached joined methods string for preflight responses
 
@@ -321,7 +233,15 @@ Get the cached joined methods string for preflight responses
 pub fn allowedMethodsJoined(self: *const CorsConfig) [:0]const u8
 ```
 
-#### allowedHeadersJoined()
+**Example:**
+
+```zig
+const result = instance.allowedMethodsJoined();
+```
+
+**Returns:** `[:0]const u8`
+
+###### allowedHeadersJoined()
 
 Get the cached joined headers string for preflight responses
 
@@ -331,7 +251,15 @@ Get the cached joined headers string for preflight responses
 pub fn allowedHeadersJoined(self: *const CorsConfig) [:0]const u8
 ```
 
-#### isOriginAllowed()
+**Example:**
+
+```zig
+const result = instance.allowedHeadersJoined();
+```
+
+**Returns:** `[:0]const u8`
+
+###### isOriginAllowed()
 
 Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -341,7 +269,21 @@ Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 pub fn isOriginAllowed(self: *const CorsConfig, origin: [:0]const u8) bool
 ```
 
-#### isMethodAllowed()
+**Example:**
+
+```zig
+const result = instance.isOriginAllowed("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `origin` | `[:0]const u8` | Yes | The origin |
+
+**Returns:** `bool`
+
+###### isMethodAllowed()
 
 Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -351,13 +293,35 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 pub fn isMethodAllowed(self: *const CorsConfig, method: [:0]const u8) bool
 ```
 
-#### default()
+**Example:**
+
+```zig
+const result = instance.isMethodAllowed("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `[:0]const u8` | Yes | The method |
+
+**Returns:** `bool`
+
+###### default()
 
 **Signature:**
 
 ```zig
 pub fn default() CorsConfig
 ```
+
+**Example:**
+
+```zig
+const result = CorsConfig.default();
+```
+
+**Returns:** `CorsConfig`
 
 ---
 
@@ -371,15 +335,23 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 | `complexityLimit` | `u64?` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `u64?` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```zig
 pub fn default() FullSchemaConfig
 ```
+
+**Example:**
+
+```zig
+const result = FullSchemaConfig.default();
+```
+
+**Returns:** `FullSchemaConfig`
 
 ---
 
@@ -390,9 +362,9 @@ Configuration for GraphQL routes
 Provides a builder pattern for configuring GraphQL route parameters
 for the Spikard HTTP server's routing system.
 
-### Methods
+##### Methods
 
-#### new()
+###### new()
 
 Create a new GraphQL route configuration with defaults
 
@@ -408,7 +380,15 @@ Default values:
 pub fn new() GraphQlRouteConfig
 ```
 
-#### path()
+**Example:**
+
+```zig
+const result = GraphQlRouteConfig.new();
+```
+
+**Returns:** `GraphQlRouteConfig`
+
+###### path()
 
 Set the HTTP path for the GraphQL endpoint
 
@@ -418,7 +398,21 @@ Set the HTTP path for the GraphQL endpoint
 pub fn path(self: *const GraphQlRouteConfig, path: [:0]const u8) GraphQlRouteConfig
 ```
 
-#### method()
+**Example:**
+
+```zig
+const result = instance.path("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `path` | `[:0]const u8` | Yes | The URL path (e.g., "/graphql", "/api/graphql") |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### method()
 
 Set the HTTP method for the GraphQL endpoint
 
@@ -428,7 +422,21 @@ Set the HTTP method for the GraphQL endpoint
 pub fn method(self: *const GraphQlRouteConfig, method: [:0]const u8) GraphQlRouteConfig
 ```
 
-#### enablePlayground()
+**Example:**
+
+```zig
+const result = instance.method("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `[:0]const u8` | Yes | The HTTP method (typically "POST") |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### enablePlayground()
 
 Enable or disable the GraphQL Playground UI
 
@@ -438,7 +446,21 @@ Enable or disable the GraphQL Playground UI
 pub fn enablePlayground(self: *const GraphQlRouteConfig, enable: bool) GraphQlRouteConfig
 ```
 
-#### description()
+**Example:**
+
+```zig
+const result = instance.enablePlayground(true);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `enable` | `bool` | Yes | Whether to enable playground |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### description()
 
 Set a custom description for documentation
 
@@ -448,7 +470,21 @@ Set a custom description for documentation
 pub fn description(self: *const GraphQlRouteConfig, description: [:0]const u8) GraphQlRouteConfig
 ```
 
-#### getPath()
+**Example:**
+
+```zig
+const result = instance.description("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `description` | `[:0]const u8` | Yes | Documentation string |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### getPath()
 
 Get the configured path
 
@@ -458,7 +494,15 @@ Get the configured path
 pub fn getPath(self: *const GraphQlRouteConfig) [:0]const u8
 ```
 
-#### getMethod()
+**Example:**
+
+```zig
+const result = instance.getPath();
+```
+
+**Returns:** `[:0]const u8`
+
+###### getMethod()
 
 Get the configured method
 
@@ -468,7 +512,15 @@ Get the configured method
 pub fn getMethod(self: *const GraphQlRouteConfig) [:0]const u8
 ```
 
-#### isPlaygroundEnabled()
+**Example:**
+
+```zig
+const result = instance.getMethod();
+```
+
+**Returns:** `[:0]const u8`
+
+###### isPlaygroundEnabled()
 
 Check if playground is enabled
 
@@ -478,7 +530,15 @@ Check if playground is enabled
 pub fn isPlaygroundEnabled(self: *const GraphQlRouteConfig) bool
 ```
 
-#### getDescription()
+**Example:**
+
+```zig
+const result = instance.isPlaygroundEnabled();
+```
+
+**Returns:** `bool`
+
+###### getDescription()
 
 Get the description if set
 
@@ -488,13 +548,29 @@ Get the description if set
 pub fn getDescription(self: *const GraphQlRouteConfig) ?[:0]const u8
 ```
 
-#### default()
+**Example:**
+
+```zig
+const result = instance.getDescription();
+```
+
+**Returns:** `?[:0]const u8`
+
+###### default()
 
 **Signature:**
 
 ```zig
 pub fn default() GraphQlRouteConfig
 ```
+
+**Example:**
+
+```zig
+const result = GraphQlRouteConfig.default();
+```
+
+**Returns:** `GraphQlRouteConfig`
 
 ---
 
@@ -552,9 +628,9 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `keepaliveTimeout` | `u64` | — | HTTP/2 keepalive timeout in seconds |
 | `maxStreamResponseBytes` | `u64?` | `null` | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `null` (unbounded total response size). |
 
-### Methods
+#### Methods
 
-#### default()
+##### default()
 
 **Signature:**
 
@@ -562,110 +638,13 @@ concurrent stream limiting to the HTTP/2 transport layer:
 pub fn default() GrpcConfig
 ```
 
----
-
-#### Handler
-
-Handler trait that all language bindings must implement
-
-This trait is completely language-agnostic. Each binding (Python, Node, WASM)
-implements this trait to bridge their runtime to our HTTP server.
-
-### Methods
-
-#### call()
-
-Handle an HTTP request
-
-Takes the extracted request data and returns a future that resolves to either:
-
-- Ok(Response): A successful HTTP response
-- Err((StatusCode, String)): An error with status code and message
-
-**Signature:**
+**Example:**
 
 ```zig
-pub fn call(self: *const Handler, request: Request, request_data: RequestData) HandlerResult
+const result = GrpcConfig.default();
 ```
 
-#### prefersRawJsonBody()
-
-Whether this handler prefers consuming `RequestData.raw_body` over the parsed
-`RequestData.body` for JSON requests.
-
-When `true`, the server may skip eager JSON parsing when there is no request-body
-schema validator attached to the route.
-
-**Signature:**
-
-```zig
-pub fn prefersRawJsonBody(self: *const Handler) bool
-```
-
-#### prefersParameterExtraction()
-
-Whether this handler wants to perform its own parameter validation/extraction (path/query/header/cookie).
-
-When `true`, the server will skip `ParameterValidator.validate_and_extract` in `ValidatingHandler`.
-This is useful for language bindings which need to transform validated parameters into
-language-specific values (e.g., Python kwargs) without duplicating work. When `false`,
-the server stores validated output in `RequestData.validated_params`.
-
-**Signature:**
-
-```zig
-pub fn prefersParameterExtraction(self: *const Handler) bool
-```
-
-#### wantsHeaders()
-
-Whether this handler needs the parsed headers map in `RequestData`.
-
-When `false`, the server may skip building `RequestData.headers` for requests without a body.
-(Requests with bodies still typically need `Content-Type` decisions.)
-
-**Signature:**
-
-```zig
-pub fn wantsHeaders(self: *const Handler) bool
-```
-
-#### wantsCookies()
-
-Whether this handler needs the parsed cookies map in `RequestData`.
-
-When `false`, the server may skip parsing cookies for requests without a body.
-
-**Signature:**
-
-```zig
-pub fn wantsCookies(self: *const Handler) bool
-```
-
-#### wantsRequestExtensions()
-
-Whether this handler needs `RequestData` stored in request extensions.
-
-When `false`, the server avoids inserting `RequestData` into extensions to
-skip cloning in hot paths.
-
-**Signature:**
-
-```zig
-pub fn wantsRequestExtensions(self: *const Handler) bool
-```
-
-#### staticResponse()
-
-Return a pre-built static response if this handler always produces the
-same output. When `Some`, the server bypasses the full middleware
-pipeline and serves the pre-built response directly.
-
-**Signature:**
-
-```zig
-pub fn staticResponse(self: *const Handler) ?StaticResponse
-```
+**Returns:** `GrpcConfig`
 
 ---
 
@@ -673,9 +652,9 @@ pub fn staticResponse(self: *const Handler) ?StaticResponse
 
 Convert user-facing handler functions into the low-level `Handler` trait.
 
-### Methods
+##### Methods
 
-#### intoHandler()
+###### intoHandler()
 
 Convert this value into a shared request handler.
 
@@ -684,6 +663,14 @@ Convert this value into a shared request handler.
 ```zig
 pub fn intoHandler(self: *const IntoHandler) Handler
 ```
+
+**Example:**
+
+```zig
+const result = instance.intoHandler();
+```
+
+**Returns:** `Handler`
 
 ---
 
@@ -698,15 +685,23 @@ JSON-RPC server configuration
 | `enableBatch` | `bool` | — | Enable batch request processing (default: true) |
 | `maxBatchSize` | `u64` | — | Maximum number of requests in a batch (default: 100) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```zig
 pub fn default() JsonRpcConfig
 ```
+
+**Example:**
+
+```zig
+const result = JsonRpcConfig.default();
+```
+
+**Returns:** `JsonRpcConfig`
 
 ---
 
@@ -771,15 +766,23 @@ OpenAPI configuration
 | `servers` | `[]const ServerInfo` | `[]` | Server definitions |
 | `securitySchemes` | `std.StringHashMap(SecuritySchemeInfo)` | `{}` | Security schemes (auto-detected from middleware if not provided) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```zig
 pub fn default() OpenApiConfig
 ```
+
+**Example:**
+
+```zig
+const result = OpenApiConfig.default();
+```
+
+**Returns:** `OpenApiConfig`
 
 ---
 
@@ -879,9 +882,9 @@ Content-Type: application/problem+json
 | `instance` | `[:0]const u8?` | `null` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
 | `extensions` | `std.StringHashMap([:0]const u8)` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
 
-### Methods
+#### Methods
 
-#### withDetail()
+##### withDetail()
 
 Set the detail field
 
@@ -891,7 +894,21 @@ Set the detail field
 pub fn withDetail(self: *const ProblemDetails, detail: [:0]const u8) ProblemDetails
 ```
 
-#### withInstance()
+**Example:**
+
+```zig
+const result = instance.withDetail("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `[:0]const u8` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### withInstance()
 
 Set the instance field
 
@@ -901,7 +918,21 @@ Set the instance field
 pub fn withInstance(self: *const ProblemDetails, instance: [:0]const u8) ProblemDetails
 ```
 
-#### notFound()
+**Example:**
+
+```zig
+const result = instance.withInstance("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `instance` | `[:0]const u8` | Yes | The instance |
+
+**Returns:** `ProblemDetails`
+
+###### notFound()
 
 Create a not found error
 
@@ -911,7 +942,21 @@ Create a not found error
 pub fn notFound(detail: [:0]const u8) ProblemDetails
 ```
 
-#### methodNotAllowed()
+**Example:**
+
+```zig
+const result = ProblemDetails.notFound("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `[:0]const u8` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### methodNotAllowed()
 
 Create a method not allowed error
 
@@ -921,7 +966,21 @@ Create a method not allowed error
 pub fn methodNotAllowed(detail: [:0]const u8) ProblemDetails
 ```
 
-#### internalServerError()
+**Example:**
+
+```zig
+const result = ProblemDetails.methodNotAllowed("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `[:0]const u8` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### internalServerError()
 
 Create an internal server error
 
@@ -931,7 +990,21 @@ Create an internal server error
 pub fn internalServerError(detail: [:0]const u8) ProblemDetails
 ```
 
-#### badRequest()
+**Example:**
+
+```zig
+const result = ProblemDetails.internalServerError("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `[:0]const u8` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### badRequest()
 
 Create a bad request error
 
@@ -941,7 +1014,21 @@ Create a bad request error
 pub fn badRequest(detail: [:0]const u8) ProblemDetails
 ```
 
-#### toJson()
+**Example:**
+
+```zig
+const result = ProblemDetails.badRequest("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `[:0]const u8` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### toJson()
 
 Serialize to JSON string
 
@@ -954,7 +1041,17 @@ Returns an error if the serialization fails.
 pub fn toJson(self: *const ProblemDetails) Error![:0]const u8
 ```
 
-#### toJsonPretty()
+**Example:**
+
+```zig
+const result = try instance.toJson();
+```
+
+**Returns:** `[:0]const u8`
+
+**Errors:** Throws `Error`.
+
+###### toJsonPretty()
 
 Serialize to pretty JSON string
 
@@ -966,6 +1063,16 @@ Returns an error if the serialization fails.
 ```zig
 pub fn toJsonPretty(self: *const ProblemDetails) Error![:0]const u8
 ```
+
+**Example:**
+
+```zig
+const result = try instance.toJsonPretty();
+```
+
+**Returns:** `[:0]const u8`
+
+**Errors:** Throws `Error`.
 
 ---
 
@@ -979,15 +1086,23 @@ Configuration for schemas with Query and Mutation types
 | `complexityLimit` | `u64?` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `u64?` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```zig
 pub fn default() QueryMutationConfig
 ```
+
+**Example:**
+
+```zig
+const result = QueryMutationConfig.default();
+```
+
+**Returns:** `QueryMutationConfig`
 
 ---
 
@@ -1001,15 +1116,23 @@ Configuration for schemas with only Query type
 | `complexityLimit` | `u64?` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `u64?` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```zig
 pub fn default() QueryOnlyConfig
 ```
+
+**Example:**
+
+```zig
+const result = QueryOnlyConfig.default();
+```
+
+**Returns:** `QueryOnlyConfig`
 
 ---
 
@@ -1023,15 +1146,23 @@ Rate limiting configuration shared across runtimes
 | `burst` | `u32` | `200` | Burst allowance |
 | `ipBased` | `bool` | `true` | Use IP-based rate limiting |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```zig
 pub fn default() RateLimitConfig
 ```
+
+**Example:**
+
+```zig
+const result = RateLimitConfig.default();
+```
+
+**Returns:** `RateLimitConfig`
 
 ---
 
@@ -1049,9 +1180,9 @@ HTTP Response with custom status code, headers, and content
 | `statusCode` | `u16` | — | HTTP status code (defaults to 200) |
 | `headers` | `std.StringHashMap([:0]const u8)` | `{}` | Response headers |
 
-### Methods
+##### Methods
 
-#### setHeader()
+###### setHeader()
 
 Set a header
 
@@ -1061,7 +1192,22 @@ Set a header
 pub fn setHeader(self: *const Response, key: [:0]const u8, value: [:0]const u8) void
 ```
 
-#### setCookie()
+**Example:**
+
+```zig
+instance.setHeader("value", "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `key` | `[:0]const u8` | Yes | The key |
+| `value` | `[:0]const u8` | Yes | The value |
+
+**Returns:** No return value.
+
+###### setCookie()
 
 Set a cookie in the response
 
@@ -1071,13 +1217,42 @@ Set a cookie in the response
 pub fn setCookie(self: *const Response, key: [:0]const u8, value: [:0]const u8, secure: bool, http_only: bool, max_age: ?i64, domain: ?[:0]const u8, path: ?[:0]const u8, same_site: ?[:0]const u8) void
 ```
 
-#### default()
+**Example:**
+
+```zig
+instance.setCookie("value", "value", true, true, 42, "value", "value", "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `key` | `[:0]const u8` | Yes | The key |
+| `value` | `[:0]const u8` | Yes | The value |
+| `secure` | `bool` | Yes | The secure |
+| `httpOnly` | `bool` | Yes | The http only |
+| `maxAge` | `i64?` | No | The max age |
+| `domain` | `[:0]const u8?` | No | The domain |
+| `path` | `[:0]const u8?` | No | Path to the file |
+| `sameSite` | `[:0]const u8?` | No | The same site |
+
+**Returns:** No return value.
+
+###### default()
 
 **Signature:**
 
 ```zig
 pub fn default() Response
 ```
+
+**Example:**
+
+```zig
+const result = Response.default();
+```
+
+**Returns:** `Response`
 
 ---
 
@@ -1091,9 +1266,9 @@ Snapshot of an Axum response used by higher-level language bindings.
 | `headers` | `std.StringHashMap([:0]const u8)` | — | Response headers (lowercase keys for predictable lookups). |
 | `body` | `[]const u8` | — | Response body bytes (decoded for supported encodings). |
 
-### Methods
+##### Methods
 
-#### text()
+###### text()
 
 Return response body as UTF-8 string.
 
@@ -1103,7 +1278,17 @@ Return response body as UTF-8 string.
 pub fn text(self: *const ResponseSnapshot) FromUtf8Error![:0]const u8
 ```
 
-#### header()
+**Example:**
+
+```zig
+const result = try instance.text();
+```
+
+**Returns:** `[:0]const u8`
+
+**Errors:** Throws `FromUtf8Error`.
+
+###### header()
 
 Lookup header by case-insensitive name.
 
@@ -1113,15 +1298,29 @@ Lookup header by case-insensitive name.
 pub fn header(self: *const ResponseSnapshot, name: [:0]const u8) ?[:0]const u8
 ```
 
+**Example:**
+
+```zig
+const result = instance.header("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | `[:0]const u8` | Yes | The name |
+
+**Returns:** `?[:0]const u8`
+
 ---
 
 #### RouteBuilder
 
 Builder for defining a route.
 
-### Methods
+##### Methods
 
-#### new()
+###### new()
 
 Create a new builder for the provided HTTP method and path.
 
@@ -1131,7 +1330,22 @@ Create a new builder for the provided HTTP method and path.
 pub fn new(method: Method, path: [:0]const u8) RouteBuilder
 ```
 
-#### handlerName()
+**Example:**
+
+```zig
+const result = RouteBuilder.new(.{}, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `Method` | Yes | The method |
+| `path` | `[:0]const u8` | Yes | Path to the file |
+
+**Returns:** `RouteBuilder`
+
+###### handlerName()
 
 Assign an explicit handler name.
 
@@ -1141,7 +1355,21 @@ Assign an explicit handler name.
 pub fn handlerName(self: *const RouteBuilder, name: [:0]const u8) RouteBuilder
 ```
 
-#### requestSchemaJson()
+**Example:**
+
+```zig
+const result = instance.handlerName("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | `[:0]const u8` | Yes | The name |
+
+**Returns:** `RouteBuilder`
+
+###### requestSchemaJson()
 
 Provide a raw JSON schema for the request body.
 
@@ -1151,7 +1379,21 @@ Provide a raw JSON schema for the request body.
 pub fn requestSchemaJson(self: *const RouteBuilder, schema: [:0]const u8) RouteBuilder
 ```
 
-#### responseSchemaJson()
+**Example:**
+
+```zig
+const result = instance.requestSchemaJson(.{});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `[:0]const u8` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### responseSchemaJson()
 
 Provide a raw JSON schema for the response body.
 
@@ -1161,7 +1403,21 @@ Provide a raw JSON schema for the response body.
 pub fn responseSchemaJson(self: *const RouteBuilder, schema: [:0]const u8) RouteBuilder
 ```
 
-#### paramsSchemaJson()
+**Example:**
+
+```zig
+const result = instance.responseSchemaJson(.{});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `[:0]const u8` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### paramsSchemaJson()
 
 Provide a raw JSON schema for request parameters.
 
@@ -1171,7 +1427,21 @@ Provide a raw JSON schema for request parameters.
 pub fn paramsSchemaJson(self: *const RouteBuilder, schema: [:0]const u8) RouteBuilder
 ```
 
-#### fileParamsJson()
+**Example:**
+
+```zig
+const result = instance.paramsSchemaJson(.{});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `[:0]const u8` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### fileParamsJson()
 
 Provide multipart file parameter configuration.
 
@@ -1181,7 +1451,21 @@ Provide multipart file parameter configuration.
 pub fn fileParamsJson(self: *const RouteBuilder, schema: [:0]const u8) RouteBuilder
 ```
 
-#### cors()
+**Example:**
+
+```zig
+const result = instance.fileParamsJson(.{});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `[:0]const u8` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### cors()
 
 Attach a CORS configuration for this route.
 
@@ -1191,7 +1475,21 @@ Attach a CORS configuration for this route.
 pub fn cors(self: *const RouteBuilder, cors: CorsConfig) RouteBuilder
 ```
 
-#### compression()
+**Example:**
+
+```zig
+const result = instance.cors(.{});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `cors` | `CorsConfig` | Yes | The cors config |
+
+**Returns:** `RouteBuilder`
+
+###### compression()
 
 Attach a compression configuration for this route.
 
@@ -1201,7 +1499,21 @@ Attach a compression configuration for this route.
 pub fn compression(self: *const RouteBuilder, compression: CompressionConfig) RouteBuilder
 ```
 
-#### sync()
+**Example:**
+
+```zig
+const result = instance.compression(.{});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `compression` | `CompressionConfig` | Yes | The compression config |
+
+**Returns:** `RouteBuilder`
+
+###### sync()
 
 Mark the route as synchronous.
 
@@ -1211,7 +1523,15 @@ Mark the route as synchronous.
 pub fn sync(self: *const RouteBuilder) RouteBuilder
 ```
 
-#### handlerDependencies()
+**Example:**
+
+```zig
+const result = instance.sync();
+```
+
+**Returns:** `RouteBuilder`
+
+###### handlerDependencies()
 
 Declare the dependency keys that must be resolved before this handler runs.
 
@@ -1220,6 +1540,20 @@ Declare the dependency keys that must be resolved before this handler runs.
 ```zig
 pub fn handlerDependencies(self: *const RouteBuilder, dependencies: []const [:0]const u8) RouteBuilder
 ```
+
+**Example:**
+
+```zig
+const result = instance.handlerDependencies(&[_]u8{});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `dependencies` | `[]const [:0]const u8` | Yes | The dependencies |
+
+**Returns:** `RouteBuilder`
 
 ---
 
@@ -1236,15 +1570,23 @@ introspection control, complexity limits, and depth limits.
 | `complexityLimit` | `u64?` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `u64?` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```zig
 pub fn default() SchemaConfig
 ```
+
+**Example:**
+
+```zig
+const result = SchemaConfig.default();
+```
+
+**Returns:** `SchemaConfig`
 
 ---
 
@@ -1271,20 +1613,26 @@ Server configuration
 | `openapi` | `OpenApiConfig?` | `null` | OpenAPI documentation configuration |
 | `jsonrpc` | `JsonRpcConfig?` | `null` | JSON-RPC configuration |
 | `grpc` | `GrpcConfig?` | `null` | gRPC configuration |
-| `lifecycleHooks` | `[:0]const u8?` | `null` | Lifecycle hooks for request/response processing |
 | `backgroundTasks` | `BackgroundTaskConfig` | — | Background task executor configuration |
 | `enableHttpTrace` | `bool` | `false` | Enable per-request HTTP tracing (tower-http `TraceLayer`) |
-| `diContainer` | `[:0]const u8?` | `null` | Dependency injection container (requires 'di' feature) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```zig
 pub fn default() ServerConfig
 ```
+
+**Example:**
+
+```zig
+const result = ServerConfig.default();
+```
+
+**Returns:** `ServerConfig`
 
 ---
 
@@ -1324,9 +1672,9 @@ retry: 3000
 | `id` | `[:0]const u8?` | `null` | Event ID (optional, for client-side reconnection) |
 | `retry` | `u64?` | `null` | Retry timeout in milliseconds (optional) |
 
-### Methods
+#### Methods
 
-#### withId()
+##### withId()
 
 Set the event ID for client-side reconnection support
 
@@ -1339,7 +1687,21 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 pub fn withId(self: *const SseEvent, id: [:0]const u8) SseEvent
 ```
 
-#### withRetry()
+**Example:**
+
+```zig
+const result = instance.withId("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `id` | `[:0]const u8` | Yes | Unique identifier for this event |
+
+**Returns:** `SseEvent`
+
+###### withRetry()
 
 Set the retry timeout for client reconnection
 
@@ -1351,6 +1713,20 @@ if the connection is lost. The client browser will automatically handle reconnec
 ```zig
 pub fn withRetry(self: *const SseEvent, retry_ms: u64) SseEvent
 ```
+
+**Example:**
+
+```zig
+const result = instance.withRetry(42);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `retryMs` | `u64` | Yes | Retry timeout in milliseconds |
+
+**Returns:** `SseEvent`
 
 ---
 
@@ -1376,9 +1752,9 @@ interface for making HTTP requests, sending WebSocket connections, and
 handling Server-Sent Events. Language bindings wrap this to provide
 native API surfaces.
 
-### Methods
+##### Methods
 
-#### graphqlAt()
+###### graphqlAt()
 
 Send a GraphQL query/mutation to a custom endpoint
 
@@ -1388,7 +1764,26 @@ Send a GraphQL query/mutation to a custom endpoint
 pub fn graphqlAt(self: *const TestClient, endpoint: [:0]const u8, query: [:0]const u8, variables: ?[:0]const u8, operation_name: ?[:0]const u8) SnapshotError!ResponseSnapshot
 ```
 
-#### graphql()
+**Example:**
+
+```zig
+const result = try instance.graphqlAt("value", "value", .{}, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `endpoint` | `[:0]const u8` | Yes | The endpoint |
+| `query` | `[:0]const u8` | Yes | The query |
+| `variables` | `[:0]const u8?` | No | The variables |
+| `operationName` | `[:0]const u8?` | No | The operation name |
+
+**Returns:** `ResponseSnapshot`
+
+**Errors:** Throws `SnapshotError`.
+
+###### graphql()
 
 Send a GraphQL query/mutation
 
@@ -1398,7 +1793,25 @@ Send a GraphQL query/mutation
 pub fn graphql(self: *const TestClient, query: [:0]const u8, variables: ?[:0]const u8, operation_name: ?[:0]const u8) SnapshotError!ResponseSnapshot
 ```
 
-#### graphqlSubscriptionAt()
+**Example:**
+
+```zig
+const result = try instance.graphql("value", .{}, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `[:0]const u8` | Yes | The query |
+| `variables` | `[:0]const u8?` | No | The variables |
+| `operationName` | `[:0]const u8?` | No | The operation name |
+
+**Returns:** `ResponseSnapshot`
+
+**Errors:** Throws `SnapshotError`.
+
+###### graphqlSubscriptionAt()
 
 Send a GraphQL subscription (WebSocket) to a custom endpoint.
 
@@ -1411,7 +1824,26 @@ After the first payload is received, this client sends `complete` to unsubscribe
 pub fn graphqlSubscriptionAt(self: *const TestClient, endpoint: [:0]const u8, query: [:0]const u8, variables: ?[:0]const u8, operation_name: ?[:0]const u8) SnapshotError!GraphQlSubscriptionSnapshot
 ```
 
-#### graphqlSubscription()
+**Example:**
+
+```zig
+const result = try instance.graphqlSubscriptionAt("value", "value", .{}, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `endpoint` | `[:0]const u8` | Yes | The endpoint |
+| `query` | `[:0]const u8` | Yes | The query |
+| `variables` | `[:0]const u8?` | No | The variables |
+| `operationName` | `[:0]const u8?` | No | The operation name |
+
+**Returns:** `GraphQlSubscriptionSnapshot`
+
+**Errors:** Throws `SnapshotError`.
+
+###### graphqlSubscription()
 
 Send a GraphQL subscription (WebSocket).
 
@@ -1422,6 +1854,24 @@ Uses `/graphql` as the default subscription endpoint.
 ```zig
 pub fn graphqlSubscription(self: *const TestClient, query: [:0]const u8, variables: ?[:0]const u8, operation_name: ?[:0]const u8) SnapshotError!GraphQlSubscriptionSnapshot
 ```
+
+**Example:**
+
+```zig
+const result = try instance.graphqlSubscription("value", .{}, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `[:0]const u8` | Yes | The query |
+| `variables` | `[:0]const u8?` | No | The variables |
+| `operationName` | `[:0]const u8?` | No | The operation name |
+
+**Returns:** `GraphQlSubscriptionSnapshot`
+
+**Errors:** Throws `SnapshotError`.
 
 ---
 
@@ -1449,11 +1899,10 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `size` | `u64?` | `null` | Size of the file in bytes |
 | `content` | `[]const u8` | — | File content (may be base64 encoded) |
 | `contentEncoding` | `[:0]const u8?` | `null` | Content encoding type |
-| `cursor` | `[:0]const u8` | — | Internal cursor for Read/Seek operations |
 
-### Methods
+##### Methods
 
-#### asBytes()
+###### asBytes()
 
 Get the raw file content as bytes.
 
@@ -1465,7 +1914,15 @@ This provides zero-copy access to the underlying buffer.
 pub fn asBytes(self: *const UploadFile) []const u8
 ```
 
-#### readToString()
+**Example:**
+
+```zig
+const result = instance.asBytes();
+```
+
+**Returns:** `[]const u8`
+
+###### readToString()
 
 Read the file content as a UTF-8 string.
 
@@ -1479,7 +1936,17 @@ Returns an error if the content is not valid UTF-8.
 pub fn readToString(self: *const UploadFile) Error![:0]const u8
 ```
 
-#### contentTypeOrDefault()
+**Example:**
+
+```zig
+const result = try instance.readToString();
+```
+
+**Returns:** `[:0]const u8`
+
+**Errors:** Throws `Error`.
+
+###### contentTypeOrDefault()
 
 Get the content type, defaulting to "application/octet-stream".
 
@@ -1488,6 +1955,14 @@ Get the content type, defaulting to "application/octet-stream".
 ```zig
 pub fn contentTypeOrDefault(self: *const UploadFile) [:0]const u8
 ```
+
+**Example:**
+
+```zig
+const result = instance.contentTypeOrDefault();
+```
+
+**Returns:** `[:0]const u8`
 
 ---
 

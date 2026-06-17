@@ -22,6 +22,12 @@ A `QueryOnlyConfig` with default settings
 QueryOnlyConfig schemaQueryOnly()
 ```
 
+**Example:**
+
+```dart
+final result = schemaQueryOnly();
+```
+
 **Returns:** `QueryOnlyConfig`
 
 ---
@@ -40,6 +46,12 @@ A `QueryMutationConfig` with default settings
 
 ```dart
 QueryMutationConfig schemaQueryMutation()
+```
+
+**Example:**
+
+```dart
+final result = schemaQueryMutation();
 ```
 
 **Returns:** `QueryMutationConfig`
@@ -62,6 +74,12 @@ A `FullSchemaConfig` with default settings
 FullSchemaConfig schemaFull()
 ```
 
+**Example:**
+
+```dart
+final result = schemaFull();
+```
+
 **Returns:** `FullSchemaConfig`
 
 ---
@@ -76,134 +94,6 @@ API Key authentication configuration
 |-------|------|---------|-------------|
 | `keys` | `List<String>` | — | Valid API keys |
 | `headerName` | `String` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
-
----
-
-#### App
-
-Spikard application builder.
-
-### Methods
-
-#### new()
-
-Create a new application with the default server configuration.
-
-**Signature:**
-
-```dart
-static App new()
-```
-
-#### onRequest()
-
-Register an `on_request` lifecycle hook (runs before validation and handler dispatch).
-
-**Signature:**
-
-```dart
-App onRequest(String hook)
-```
-
-#### preValidation()
-
-Register a `pre_validation` lifecycle hook (runs after `on_request`, before validation).
-
-**Signature:**
-
-```dart
-App preValidation(String hook)
-```
-
-#### preHandler()
-
-Register a `pre_handler` lifecycle hook (runs after validation, before the handler).
-
-**Signature:**
-
-```dart
-App preHandler(String hook)
-```
-
-#### onResponse()
-
-Register an `on_response` lifecycle hook (runs after a successful handler response).
-
-**Signature:**
-
-```dart
-App onResponse(String hook)
-```
-
-#### onError()
-
-Register an `on_error` lifecycle hook (runs when the handler returns an error).
-
-**Signature:**
-
-```dart
-App onError(String hook)
-```
-
-#### mergeAxumRouter()
-
-Attach an existing Axum router to this application, returning ownership.
-
-**Signature:**
-
-```dart
-App mergeAxumRouter(String router)
-```
-
-#### attachAxumRouter()
-
-Attach an Axum router using a mutable reference for incremental configuration.
-
-**Signature:**
-
-```dart
-App attachAxumRouter(String router)
-```
-
-#### intoRouter()
-
-Build the underlying Axum router.
-
-**Errors:**
-
-Returns an error if server or router construction fails.
-
-**Signature:**
-
-```dart
-String intoRouter()
-```
-
-#### intoRouterAndConfig()
-
-Decompose the application into its Axum router and server configuration.
-
-This is the low-level escape hatch used by the C FFI layer to start the
-server on a background thread while retaining the bind address from the
-caller-supplied `ServerConfig`. Prefer `App.run` for normal use.
-
-**Errors:**
-
-Returns an error if router construction fails.
-
-**Signature:**
-
-```dart
-String intoRouterAndConfig()
-```
-
-#### default()
-
-**Signature:**
-
-```dart
-static App default()
-```
 
 ---
 
@@ -225,15 +115,23 @@ AsyncAPI HTTP endpoint configuration
 | `name` | `String` | — | The name |
 | `requestId` | `String?` | `null` | Request id |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```dart
 static BackgroundJobMetadata default()
 ```
+
+**Example:**
+
+```dart
+final result = BackgroundJobMetadata.default();
+```
+
+**Returns:** `BackgroundJobMetadata`
 
 ---
 
@@ -247,15 +145,23 @@ Configuration for in-process background task execution.
 | `maxConcurrentTasks` | `int` | `128` | Maximum concurrent tasks |
 | `drainTimeoutSecs` | `int` | `30` | Drain timeout secs |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```dart
 static BackgroundTaskConfig default()
 ```
+
+**Example:**
+
+```dart
+final result = BackgroundTaskConfig.default();
+```
+
+**Returns:** `BackgroundTaskConfig`
 
 ---
 
@@ -270,15 +176,23 @@ Compression configuration shared across runtimes
 | `minSize` | `int` | — | Minimum response size to compress (bytes) |
 | `quality` | `int` | — | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```dart
 static CompressionConfig default()
 ```
+
+**Example:**
+
+```dart
+final result = CompressionConfig.default();
+```
+
+**Returns:** `CompressionConfig`
 
 ---
 
@@ -306,12 +220,10 @@ CORS configuration for a route
 | `exposeHeaders` | `List<String>?` | `null` | Expose headers |
 | `maxAge` | `int?` | `null` | Maximum age |
 | `allowCredentials` | `bool?` | `null` | Allow credentials |
-| `methodsJoinedCache` | `String` | — | Methods joined cache |
-| `headersJoinedCache` | `String` | — | Headers joined cache |
 
-### Methods
+##### Methods
 
-#### allowedMethodsJoined()
+###### allowedMethodsJoined()
 
 Get the cached joined methods string for preflight responses
 
@@ -321,7 +233,15 @@ Get the cached joined methods string for preflight responses
 String allowedMethodsJoined()
 ```
 
-#### allowedHeadersJoined()
+**Example:**
+
+```dart
+final result = instance.allowedMethodsJoined();
+```
+
+**Returns:** `String`
+
+###### allowedHeadersJoined()
 
 Get the cached joined headers string for preflight responses
 
@@ -331,7 +251,15 @@ Get the cached joined headers string for preflight responses
 String allowedHeadersJoined()
 ```
 
-#### isOriginAllowed()
+**Example:**
+
+```dart
+final result = instance.allowedHeadersJoined();
+```
+
+**Returns:** `String`
+
+###### isOriginAllowed()
 
 Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -341,7 +269,21 @@ Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 bool isOriginAllowed(String origin)
 ```
 
-#### isMethodAllowed()
+**Example:**
+
+```dart
+final result = instance.isOriginAllowed("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `origin` | `String` | Yes | The origin |
+
+**Returns:** `bool`
+
+###### isMethodAllowed()
 
 Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -351,13 +293,35 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 bool isMethodAllowed(String method)
 ```
 
-#### default()
+**Example:**
+
+```dart
+final result = instance.isMethodAllowed("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `String` | Yes | The method |
+
+**Returns:** `bool`
+
+###### default()
 
 **Signature:**
 
 ```dart
 static CorsConfig default()
 ```
+
+**Example:**
+
+```dart
+final result = CorsConfig.default();
+```
+
+**Returns:** `CorsConfig`
 
 ---
 
@@ -371,15 +335,23 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 | `complexityLimit` | `int?` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `int?` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```dart
 static FullSchemaConfig default()
 ```
+
+**Example:**
+
+```dart
+final result = FullSchemaConfig.default();
+```
+
+**Returns:** `FullSchemaConfig`
 
 ---
 
@@ -390,9 +362,9 @@ Configuration for GraphQL routes
 Provides a builder pattern for configuring GraphQL route parameters
 for the Spikard HTTP server's routing system.
 
-### Methods
+##### Methods
 
-#### new()
+###### new()
 
 Create a new GraphQL route configuration with defaults
 
@@ -408,7 +380,15 @@ Default values:
 static GraphQlRouteConfig new()
 ```
 
-#### path()
+**Example:**
+
+```dart
+final result = GraphQlRouteConfig.new();
+```
+
+**Returns:** `GraphQlRouteConfig`
+
+###### path()
 
 Set the HTTP path for the GraphQL endpoint
 
@@ -418,7 +398,21 @@ Set the HTTP path for the GraphQL endpoint
 GraphQlRouteConfig path(String path)
 ```
 
-#### method()
+**Example:**
+
+```dart
+final result = instance.path("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `path` | `String` | Yes | The URL path (e.g., "/graphql", "/api/graphql") |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### method()
 
 Set the HTTP method for the GraphQL endpoint
 
@@ -428,7 +422,21 @@ Set the HTTP method for the GraphQL endpoint
 GraphQlRouteConfig method(String method)
 ```
 
-#### enablePlayground()
+**Example:**
+
+```dart
+final result = instance.method("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `String` | Yes | The HTTP method (typically "POST") |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### enablePlayground()
 
 Enable or disable the GraphQL Playground UI
 
@@ -438,7 +446,21 @@ Enable or disable the GraphQL Playground UI
 GraphQlRouteConfig enablePlayground(bool enable)
 ```
 
-#### description()
+**Example:**
+
+```dart
+final result = instance.enablePlayground(true);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `enable` | `bool` | Yes | Whether to enable playground |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### description()
 
 Set a custom description for documentation
 
@@ -448,7 +470,21 @@ Set a custom description for documentation
 GraphQlRouteConfig description(String description)
 ```
 
-#### getPath()
+**Example:**
+
+```dart
+final result = instance.description("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `description` | `String` | Yes | Documentation string |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### getPath()
 
 Get the configured path
 
@@ -458,7 +494,15 @@ Get the configured path
 String getPath()
 ```
 
-#### getMethod()
+**Example:**
+
+```dart
+final result = instance.getPath();
+```
+
+**Returns:** `String`
+
+###### getMethod()
 
 Get the configured method
 
@@ -468,7 +512,15 @@ Get the configured method
 String getMethod()
 ```
 
-#### isPlaygroundEnabled()
+**Example:**
+
+```dart
+final result = instance.getMethod();
+```
+
+**Returns:** `String`
+
+###### isPlaygroundEnabled()
 
 Check if playground is enabled
 
@@ -478,7 +530,15 @@ Check if playground is enabled
 bool isPlaygroundEnabled()
 ```
 
-#### getDescription()
+**Example:**
+
+```dart
+final result = instance.isPlaygroundEnabled();
+```
+
+**Returns:** `bool`
+
+###### getDescription()
 
 Get the description if set
 
@@ -488,13 +548,29 @@ Get the description if set
 String? getDescription()
 ```
 
-#### default()
+**Example:**
+
+```dart
+final result = instance.getDescription();
+```
+
+**Returns:** `String?`
+
+###### default()
 
 **Signature:**
 
 ```dart
 static GraphQlRouteConfig default()
 ```
+
+**Example:**
+
+```dart
+final result = GraphQlRouteConfig.default();
+```
+
+**Returns:** `GraphQlRouteConfig`
 
 ---
 
@@ -552,9 +628,9 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `keepaliveTimeout` | `int` | — | HTTP/2 keepalive timeout in seconds |
 | `maxStreamResponseBytes` | `int?` | `null` | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `null` (unbounded total response size). |
 
-### Methods
+#### Methods
 
-#### default()
+##### default()
 
 **Signature:**
 
@@ -562,110 +638,13 @@ concurrent stream limiting to the HTTP/2 transport layer:
 static GrpcConfig default()
 ```
 
----
-
-#### Handler
-
-Handler trait that all language bindings must implement
-
-This trait is completely language-agnostic. Each binding (Python, Node, WASM)
-implements this trait to bridge their runtime to our HTTP server.
-
-### Methods
-
-#### call()
-
-Handle an HTTP request
-
-Takes the extracted request data and returns a future that resolves to either:
-
-- Ok(Response): A successful HTTP response
-- Err((StatusCode, String)): An error with status code and message
-
-**Signature:**
+**Example:**
 
 ```dart
-HandlerResult call(Request request, RequestData requestData)
+final result = GrpcConfig.default();
 ```
 
-#### prefersRawJsonBody()
-
-Whether this handler prefers consuming `RequestData.raw_body` over the parsed
-`RequestData.body` for JSON requests.
-
-When `true`, the server may skip eager JSON parsing when there is no request-body
-schema validator attached to the route.
-
-**Signature:**
-
-```dart
-bool prefersRawJsonBody()
-```
-
-#### prefersParameterExtraction()
-
-Whether this handler wants to perform its own parameter validation/extraction (path/query/header/cookie).
-
-When `true`, the server will skip `ParameterValidator.validate_and_extract` in `ValidatingHandler`.
-This is useful for language bindings which need to transform validated parameters into
-language-specific values (e.g., Python kwargs) without duplicating work. When `false`,
-the server stores validated output in `RequestData.validated_params`.
-
-**Signature:**
-
-```dart
-bool prefersParameterExtraction()
-```
-
-#### wantsHeaders()
-
-Whether this handler needs the parsed headers map in `RequestData`.
-
-When `false`, the server may skip building `RequestData.headers` for requests without a body.
-(Requests with bodies still typically need `Content-Type` decisions.)
-
-**Signature:**
-
-```dart
-bool wantsHeaders()
-```
-
-#### wantsCookies()
-
-Whether this handler needs the parsed cookies map in `RequestData`.
-
-When `false`, the server may skip parsing cookies for requests without a body.
-
-**Signature:**
-
-```dart
-bool wantsCookies()
-```
-
-#### wantsRequestExtensions()
-
-Whether this handler needs `RequestData` stored in request extensions.
-
-When `false`, the server avoids inserting `RequestData` into extensions to
-skip cloning in hot paths.
-
-**Signature:**
-
-```dart
-bool wantsRequestExtensions()
-```
-
-#### staticResponse()
-
-Return a pre-built static response if this handler always produces the
-same output. When `Some`, the server bypasses the full middleware
-pipeline and serves the pre-built response directly.
-
-**Signature:**
-
-```dart
-StaticResponse? staticResponse()
-```
+**Returns:** `GrpcConfig`
 
 ---
 
@@ -673,9 +652,9 @@ StaticResponse? staticResponse()
 
 Convert user-facing handler functions into the low-level `Handler` trait.
 
-### Methods
+##### Methods
 
-#### intoHandler()
+###### intoHandler()
 
 Convert this value into a shared request handler.
 
@@ -684,6 +663,14 @@ Convert this value into a shared request handler.
 ```dart
 Handler intoHandler()
 ```
+
+**Example:**
+
+```dart
+final result = instance.intoHandler();
+```
+
+**Returns:** `Handler`
 
 ---
 
@@ -698,15 +685,23 @@ JSON-RPC server configuration
 | `enableBatch` | `bool` | — | Enable batch request processing (default: true) |
 | `maxBatchSize` | `int` | — | Maximum number of requests in a batch (default: 100) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```dart
 static JsonRpcConfig default()
 ```
+
+**Example:**
+
+```dart
+final result = JsonRpcConfig.default();
+```
+
+**Returns:** `JsonRpcConfig`
 
 ---
 
@@ -771,15 +766,23 @@ OpenAPI configuration
 | `servers` | `List<ServerInfo>` | `[]` | Server definitions |
 | `securitySchemes` | `Map<String, SecuritySchemeInfo>` | `{}` | Security schemes (auto-detected from middleware if not provided) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```dart
 static OpenApiConfig default()
 ```
+
+**Example:**
+
+```dart
+final result = OpenApiConfig.default();
+```
+
+**Returns:** `OpenApiConfig`
 
 ---
 
@@ -879,9 +882,9 @@ Content-Type: application/problem+json
 | `instance` | `String?` | `null` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
 | `extensions` | `Map<String, String>` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
 
-### Methods
+#### Methods
 
-#### withDetail()
+##### withDetail()
 
 Set the detail field
 
@@ -891,7 +894,21 @@ Set the detail field
 ProblemDetails withDetail(String detail)
 ```
 
-#### withInstance()
+**Example:**
+
+```dart
+final result = instance.withDetail("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### withInstance()
 
 Set the instance field
 
@@ -901,7 +918,21 @@ Set the instance field
 ProblemDetails withInstance(String instance)
 ```
 
-#### notFound()
+**Example:**
+
+```dart
+final result = instance.withInstance("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `instance` | `String` | Yes | The instance |
+
+**Returns:** `ProblemDetails`
+
+###### notFound()
 
 Create a not found error
 
@@ -911,7 +942,21 @@ Create a not found error
 static ProblemDetails notFound(String detail)
 ```
 
-#### methodNotAllowed()
+**Example:**
+
+```dart
+final result = ProblemDetails.notFound("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### methodNotAllowed()
 
 Create a method not allowed error
 
@@ -921,7 +966,21 @@ Create a method not allowed error
 static ProblemDetails methodNotAllowed(String detail)
 ```
 
-#### internalServerError()
+**Example:**
+
+```dart
+final result = ProblemDetails.methodNotAllowed("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### internalServerError()
 
 Create an internal server error
 
@@ -931,7 +990,21 @@ Create an internal server error
 static ProblemDetails internalServerError(String detail)
 ```
 
-#### badRequest()
+**Example:**
+
+```dart
+final result = ProblemDetails.internalServerError("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### badRequest()
 
 Create a bad request error
 
@@ -941,7 +1014,21 @@ Create a bad request error
 static ProblemDetails badRequest(String detail)
 ```
 
-#### toJson()
+**Example:**
+
+```dart
+final result = ProblemDetails.badRequest("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### toJson()
 
 Serialize to JSON string
 
@@ -954,7 +1041,17 @@ Returns an error if the serialization fails.
 String toJson()
 ```
 
-#### toJsonPretty()
+**Example:**
+
+```dart
+final result = instance.toJson();
+```
+
+**Returns:** `String`
+
+**Errors:** Throws `Error`.
+
+###### toJsonPretty()
 
 Serialize to pretty JSON string
 
@@ -966,6 +1063,16 @@ Returns an error if the serialization fails.
 ```dart
 String toJsonPretty()
 ```
+
+**Example:**
+
+```dart
+final result = instance.toJsonPretty();
+```
+
+**Returns:** `String`
+
+**Errors:** Throws `Error`.
 
 ---
 
@@ -979,15 +1086,23 @@ Configuration for schemas with Query and Mutation types
 | `complexityLimit` | `int?` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `int?` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```dart
 static QueryMutationConfig default()
 ```
+
+**Example:**
+
+```dart
+final result = QueryMutationConfig.default();
+```
+
+**Returns:** `QueryMutationConfig`
 
 ---
 
@@ -1001,15 +1116,23 @@ Configuration for schemas with only Query type
 | `complexityLimit` | `int?` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `int?` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```dart
 static QueryOnlyConfig default()
 ```
+
+**Example:**
+
+```dart
+final result = QueryOnlyConfig.default();
+```
+
+**Returns:** `QueryOnlyConfig`
 
 ---
 
@@ -1023,15 +1146,23 @@ Rate limiting configuration shared across runtimes
 | `burst` | `int` | `200` | Burst allowance |
 | `ipBased` | `bool` | `true` | Use IP-based rate limiting |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```dart
 static RateLimitConfig default()
 ```
+
+**Example:**
+
+```dart
+final result = RateLimitConfig.default();
+```
+
+**Returns:** `RateLimitConfig`
 
 ---
 
@@ -1049,9 +1180,9 @@ HTTP Response with custom status code, headers, and content
 | `statusCode` | `int` | — | HTTP status code (defaults to 200) |
 | `headers` | `Map<String, String>` | `{}` | Response headers |
 
-### Methods
+##### Methods
 
-#### setHeader()
+###### setHeader()
 
 Set a header
 
@@ -1061,7 +1192,22 @@ Set a header
 void setHeader(String key, String value)
 ```
 
-#### setCookie()
+**Example:**
+
+```dart
+instance.setHeader("value", "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `key` | `String` | Yes | The key |
+| `value` | `String` | Yes | The value |
+
+**Returns:** No return value.
+
+###### setCookie()
 
 Set a cookie in the response
 
@@ -1071,13 +1217,42 @@ Set a cookie in the response
 void setCookie(String key, String value, bool secure, bool httpOnly, [int? maxAge, String? domain, String? path, String? sameSite])
 ```
 
-#### default()
+**Example:**
+
+```dart
+instance.setCookie("value", "value", true, true, 42, "value", "value", "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `key` | `String` | Yes | The key |
+| `value` | `String` | Yes | The value |
+| `secure` | `bool` | Yes | The secure |
+| `httpOnly` | `bool` | Yes | The http only |
+| `maxAge` | `int?` | No | The max age |
+| `domain` | `String?` | No | The domain |
+| `path` | `String?` | No | Path to the file |
+| `sameSite` | `String?` | No | The same site |
+
+**Returns:** No return value.
+
+###### default()
 
 **Signature:**
 
 ```dart
 static Response default()
 ```
+
+**Example:**
+
+```dart
+final result = Response.default();
+```
+
+**Returns:** `Response`
 
 ---
 
@@ -1091,9 +1266,9 @@ Snapshot of an Axum response used by higher-level language bindings.
 | `headers` | `Map<String, String>` | — | Response headers (lowercase keys for predictable lookups). |
 | `body` | `Uint8List` | — | Response body bytes (decoded for supported encodings). |
 
-### Methods
+##### Methods
 
-#### text()
+###### text()
 
 Return response body as UTF-8 string.
 
@@ -1103,7 +1278,17 @@ Return response body as UTF-8 string.
 String text()
 ```
 
-#### header()
+**Example:**
+
+```dart
+final result = instance.text();
+```
+
+**Returns:** `String`
+
+**Errors:** Throws `FromUtf8Error`.
+
+###### header()
 
 Lookup header by case-insensitive name.
 
@@ -1113,15 +1298,29 @@ Lookup header by case-insensitive name.
 String? header(String name)
 ```
 
+**Example:**
+
+```dart
+final result = instance.header("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | `String` | Yes | The name |
+
+**Returns:** `String?`
+
 ---
 
 #### RouteBuilder
 
 Builder for defining a route.
 
-### Methods
+##### Methods
 
-#### new()
+###### new()
 
 Create a new builder for the provided HTTP method and path.
 
@@ -1131,7 +1330,22 @@ Create a new builder for the provided HTTP method and path.
 static RouteBuilder new(Method method, String path)
 ```
 
-#### handlerName()
+**Example:**
+
+```dart
+final result = RouteBuilder.new(Method(), "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `Method` | Yes | The method |
+| `path` | `String` | Yes | Path to the file |
+
+**Returns:** `RouteBuilder`
+
+###### handlerName()
 
 Assign an explicit handler name.
 
@@ -1141,7 +1355,21 @@ Assign an explicit handler name.
 RouteBuilder handlerName(String name)
 ```
 
-#### requestSchemaJson()
+**Example:**
+
+```dart
+final result = instance.handlerName("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | `String` | Yes | The name |
+
+**Returns:** `RouteBuilder`
+
+###### requestSchemaJson()
 
 Provide a raw JSON schema for the request body.
 
@@ -1151,7 +1379,21 @@ Provide a raw JSON schema for the request body.
 RouteBuilder requestSchemaJson(String schema)
 ```
 
-#### responseSchemaJson()
+**Example:**
+
+```dart
+final result = instance.requestSchemaJson({});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `String` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### responseSchemaJson()
 
 Provide a raw JSON schema for the response body.
 
@@ -1161,7 +1403,21 @@ Provide a raw JSON schema for the response body.
 RouteBuilder responseSchemaJson(String schema)
 ```
 
-#### paramsSchemaJson()
+**Example:**
+
+```dart
+final result = instance.responseSchemaJson({});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `String` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### paramsSchemaJson()
 
 Provide a raw JSON schema for request parameters.
 
@@ -1171,7 +1427,21 @@ Provide a raw JSON schema for request parameters.
 RouteBuilder paramsSchemaJson(String schema)
 ```
 
-#### fileParamsJson()
+**Example:**
+
+```dart
+final result = instance.paramsSchemaJson({});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `String` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### fileParamsJson()
 
 Provide multipart file parameter configuration.
 
@@ -1181,7 +1451,21 @@ Provide multipart file parameter configuration.
 RouteBuilder fileParamsJson(String schema)
 ```
 
-#### cors()
+**Example:**
+
+```dart
+final result = instance.fileParamsJson({});
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `String` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### cors()
 
 Attach a CORS configuration for this route.
 
@@ -1191,7 +1475,21 @@ Attach a CORS configuration for this route.
 RouteBuilder cors(CorsConfig cors)
 ```
 
-#### compression()
+**Example:**
+
+```dart
+final result = instance.cors(CorsConfig());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `cors` | `CorsConfig` | Yes | The cors config |
+
+**Returns:** `RouteBuilder`
+
+###### compression()
 
 Attach a compression configuration for this route.
 
@@ -1201,7 +1499,21 @@ Attach a compression configuration for this route.
 RouteBuilder compression(CompressionConfig compression)
 ```
 
-#### sync()
+**Example:**
+
+```dart
+final result = instance.compression(CompressionConfig());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `compression` | `CompressionConfig` | Yes | The compression config |
+
+**Returns:** `RouteBuilder`
+
+###### sync()
 
 Mark the route as synchronous.
 
@@ -1211,7 +1523,15 @@ Mark the route as synchronous.
 RouteBuilder sync()
 ```
 
-#### handlerDependencies()
+**Example:**
+
+```dart
+final result = instance.sync();
+```
+
+**Returns:** `RouteBuilder`
+
+###### handlerDependencies()
 
 Declare the dependency keys that must be resolved before this handler runs.
 
@@ -1220,6 +1540,20 @@ Declare the dependency keys that must be resolved before this handler runs.
 ```dart
 RouteBuilder handlerDependencies(List<String> dependencies)
 ```
+
+**Example:**
+
+```dart
+final result = instance.handlerDependencies([]);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `dependencies` | `List<String>` | Yes | The dependencies |
+
+**Returns:** `RouteBuilder`
 
 ---
 
@@ -1236,15 +1570,23 @@ introspection control, complexity limits, and depth limits.
 | `complexityLimit` | `int?` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `int?` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```dart
 static SchemaConfig default()
 ```
+
+**Example:**
+
+```dart
+final result = SchemaConfig.default();
+```
+
+**Returns:** `SchemaConfig`
 
 ---
 
@@ -1271,20 +1613,26 @@ Server configuration
 | `openapi` | `OpenApiConfig?` | `null` | OpenAPI documentation configuration |
 | `jsonrpc` | `JsonRpcConfig?` | `null` | JSON-RPC configuration |
 | `grpc` | `GrpcConfig?` | `null` | gRPC configuration |
-| `lifecycleHooks` | `String?` | `null` | Lifecycle hooks for request/response processing |
 | `backgroundTasks` | `BackgroundTaskConfig` | — | Background task executor configuration |
 | `enableHttpTrace` | `bool` | `false` | Enable per-request HTTP tracing (tower-http `TraceLayer`) |
-| `diContainer` | `String?` | `null` | Dependency injection container (requires 'di' feature) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```dart
 static ServerConfig default()
 ```
+
+**Example:**
+
+```dart
+final result = ServerConfig.default();
+```
+
+**Returns:** `ServerConfig`
 
 ---
 
@@ -1324,9 +1672,9 @@ retry: 3000
 | `id` | `String?` | `null` | Event ID (optional, for client-side reconnection) |
 | `retry` | `int?` | `null` | Retry timeout in milliseconds (optional) |
 
-### Methods
+#### Methods
 
-#### withId()
+##### withId()
 
 Set the event ID for client-side reconnection support
 
@@ -1339,7 +1687,21 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 SseEvent withId(String id)
 ```
 
-#### withRetry()
+**Example:**
+
+```dart
+final result = instance.withId("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `id` | `String` | Yes | Unique identifier for this event |
+
+**Returns:** `SseEvent`
+
+###### withRetry()
 
 Set the retry timeout for client reconnection
 
@@ -1351,6 +1713,20 @@ if the connection is lost. The client browser will automatically handle reconnec
 ```dart
 SseEvent withRetry(int retryMs)
 ```
+
+**Example:**
+
+```dart
+final result = instance.withRetry(42);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `retryMs` | `int` | Yes | Retry timeout in milliseconds |
+
+**Returns:** `SseEvent`
 
 ---
 
@@ -1376,9 +1752,9 @@ interface for making HTTP requests, sending WebSocket connections, and
 handling Server-Sent Events. Language bindings wrap this to provide
 native API surfaces.
 
-### Methods
+##### Methods
 
-#### graphqlAt()
+###### graphqlAt()
 
 Send a GraphQL query/mutation to a custom endpoint
 
@@ -1388,7 +1764,26 @@ Send a GraphQL query/mutation to a custom endpoint
 ResponseSnapshot graphqlAt(String endpoint, String query, [String? variables, String? operationName])
 ```
 
-#### graphql()
+**Example:**
+
+```dart
+final result = await instance.graphqlAt("value", "value", {}, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `endpoint` | `String` | Yes | The endpoint |
+| `query` | `String` | Yes | The query |
+| `variables` | `String?` | No | The variables |
+| `operationName` | `String?` | No | The operation name |
+
+**Returns:** `ResponseSnapshot`
+
+**Errors:** Throws `SnapshotError`.
+
+###### graphql()
 
 Send a GraphQL query/mutation
 
@@ -1398,7 +1793,25 @@ Send a GraphQL query/mutation
 ResponseSnapshot graphql(String query, [String? variables, String? operationName])
 ```
 
-#### graphqlSubscriptionAt()
+**Example:**
+
+```dart
+final result = await instance.graphql("value", {}, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `String` | Yes | The query |
+| `variables` | `String?` | No | The variables |
+| `operationName` | `String?` | No | The operation name |
+
+**Returns:** `ResponseSnapshot`
+
+**Errors:** Throws `SnapshotError`.
+
+###### graphqlSubscriptionAt()
 
 Send a GraphQL subscription (WebSocket) to a custom endpoint.
 
@@ -1411,7 +1824,26 @@ After the first payload is received, this client sends `complete` to unsubscribe
 GraphQlSubscriptionSnapshot graphqlSubscriptionAt(String endpoint, String query, [String? variables, String? operationName])
 ```
 
-#### graphqlSubscription()
+**Example:**
+
+```dart
+final result = await instance.graphqlSubscriptionAt("value", "value", {}, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `endpoint` | `String` | Yes | The endpoint |
+| `query` | `String` | Yes | The query |
+| `variables` | `String?` | No | The variables |
+| `operationName` | `String?` | No | The operation name |
+
+**Returns:** `GraphQlSubscriptionSnapshot`
+
+**Errors:** Throws `SnapshotError`.
+
+###### graphqlSubscription()
 
 Send a GraphQL subscription (WebSocket).
 
@@ -1422,6 +1854,24 @@ Uses `/graphql` as the default subscription endpoint.
 ```dart
 GraphQlSubscriptionSnapshot graphqlSubscription(String query, [String? variables, String? operationName])
 ```
+
+**Example:**
+
+```dart
+final result = await instance.graphqlSubscription("value", {}, "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `String` | Yes | The query |
+| `variables` | `String?` | No | The variables |
+| `operationName` | `String?` | No | The operation name |
+
+**Returns:** `GraphQlSubscriptionSnapshot`
+
+**Errors:** Throws `SnapshotError`.
 
 ---
 
@@ -1449,11 +1899,10 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `size` | `int?` | `null` | Size of the file in bytes |
 | `content` | `Uint8List` | — | File content (may be base64 encoded) |
 | `contentEncoding` | `String?` | `null` | Content encoding type |
-| `cursor` | `String` | — | Internal cursor for Read/Seek operations |
 
-### Methods
+##### Methods
 
-#### asBytes()
+###### asBytes()
 
 Get the raw file content as bytes.
 
@@ -1465,7 +1914,15 @@ This provides zero-copy access to the underlying buffer.
 Uint8List asBytes()
 ```
 
-#### readToString()
+**Example:**
+
+```dart
+final result = instance.asBytes();
+```
+
+**Returns:** `Uint8List`
+
+###### readToString()
 
 Read the file content as a UTF-8 string.
 
@@ -1479,7 +1936,17 @@ Returns an error if the content is not valid UTF-8.
 String readToString()
 ```
 
-#### contentTypeOrDefault()
+**Example:**
+
+```dart
+final result = instance.readToString();
+```
+
+**Returns:** `String`
+
+**Errors:** Throws `Error`.
+
+###### contentTypeOrDefault()
 
 Get the content type, defaulting to "application/octet-stream".
 
@@ -1488,6 +1955,14 @@ Get the content type, defaulting to "application/octet-stream".
 ```dart
 String contentTypeOrDefault()
 ```
+
+**Example:**
+
+```dart
+final result = instance.contentTypeOrDefault();
+```
+
+**Returns:** `String`
 
 ---
 

@@ -1,7 +1,7 @@
 // Auto-generated service API class
 
 const { ServerConfig } = require("./index");
-const { Method, RouteBuilder } = require("./index");
+const { App: NativeApp, Method, RouteBuilder } = require("./index");
 const { appIntoRouter, appRun } = require("./index");
 /**
  * Spikard application builder.
@@ -20,7 +20,7 @@ class App {
    * Create a new application with the default server configuration.
    */
   constructor() {
-    this._app = new JsApp();
+    this._app = new NativeApp();
   }
   /**
    * Set the server configuration.

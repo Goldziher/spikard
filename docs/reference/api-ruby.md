@@ -22,6 +22,12 @@ A `QueryOnlyConfig` with default settings
 def self.schema_query_only()
 ```
 
+**Example:**
+
+```ruby
+result = schema_query_only()
+```
+
 **Returns:** `QueryOnlyConfig`
 
 ---
@@ -40,6 +46,12 @@ A `QueryMutationConfig` with default settings
 
 ```ruby
 def self.schema_query_mutation()
+```
+
+**Example:**
+
+```ruby
+result = schema_query_mutation()
 ```
 
 **Returns:** `QueryMutationConfig`
@@ -62,6 +74,12 @@ A `FullSchemaConfig` with default settings
 def self.schema_full()
 ```
 
+**Example:**
+
+```ruby
+result = schema_full()
+```
+
 **Returns:** `FullSchemaConfig`
 
 ---
@@ -76,134 +94,6 @@ API Key authentication configuration
 |-------|------|---------|-------------|
 | `keys` | `Array<String>` | — | Valid API keys |
 | `header_name` | `String` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
-
----
-
-#### App
-
-Spikard application builder.
-
-### Methods
-
-#### new()
-
-Create a new application with the default server configuration.
-
-**Signature:**
-
-```ruby
-def self.new()
-```
-
-#### on_request()
-
-Register an `on_request` lifecycle hook (runs before validation and handler dispatch).
-
-**Signature:**
-
-```ruby
-def on_request(hook)
-```
-
-#### pre_validation()
-
-Register a `pre_validation` lifecycle hook (runs after `on_request`, before validation).
-
-**Signature:**
-
-```ruby
-def pre_validation(hook)
-```
-
-#### pre_handler()
-
-Register a `pre_handler` lifecycle hook (runs after validation, before the handler).
-
-**Signature:**
-
-```ruby
-def pre_handler(hook)
-```
-
-#### on_response()
-
-Register an `on_response` lifecycle hook (runs after a successful handler response).
-
-**Signature:**
-
-```ruby
-def on_response(hook)
-```
-
-#### on_error()
-
-Register an `on_error` lifecycle hook (runs when the handler returns an error).
-
-**Signature:**
-
-```ruby
-def on_error(hook)
-```
-
-#### merge_axum_router()
-
-Attach an existing Axum router to this application, returning ownership.
-
-**Signature:**
-
-```ruby
-def merge_axum_router(router)
-```
-
-#### attach_axum_router()
-
-Attach an Axum router using a mutable reference for incremental configuration.
-
-**Signature:**
-
-```ruby
-def attach_axum_router(router)
-```
-
-#### into_router()
-
-Build the underlying Axum router.
-
-**Errors:**
-
-Returns an error if server or router construction fails.
-
-**Signature:**
-
-```ruby
-def into_router()
-```
-
-#### into_router_and_config()
-
-Decompose the application into its Axum router and server configuration.
-
-This is the low-level escape hatch used by the C FFI layer to start the
-server on a background thread while retaining the bind address from the
-caller-supplied `ServerConfig`. Prefer `App.run` for normal use.
-
-**Errors:**
-
-Returns an error if router construction fails.
-
-**Signature:**
-
-```ruby
-def into_router_and_config()
-```
-
-#### default()
-
-**Signature:**
-
-```ruby
-def self.default()
-```
 
 ---
 
@@ -225,15 +115,23 @@ AsyncAPI HTTP endpoint configuration
 | `name` | `String` | — | The name |
 | `request_id` | `String?` | `nil` | Request id |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```ruby
 def self.default()
 ```
+
+**Example:**
+
+```ruby
+result = BackgroundJobMetadata.default()
+```
+
+**Returns:** `BackgroundJobMetadata`
 
 ---
 
@@ -247,15 +145,23 @@ Configuration for in-process background task execution.
 | `max_concurrent_tasks` | `Integer` | `128` | Maximum concurrent tasks |
 | `drain_timeout_secs` | `Integer` | `30` | Drain timeout secs |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```ruby
 def self.default()
 ```
+
+**Example:**
+
+```ruby
+result = BackgroundTaskConfig.default()
+```
+
+**Returns:** `BackgroundTaskConfig`
 
 ---
 
@@ -270,15 +176,23 @@ Compression configuration shared across runtimes
 | `min_size` | `Integer` | — | Minimum response size to compress (bytes) |
 | `quality` | `Integer` | — | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```ruby
 def self.default()
 ```
+
+**Example:**
+
+```ruby
+result = CompressionConfig.default()
+```
+
+**Returns:** `CompressionConfig`
 
 ---
 
@@ -306,12 +220,10 @@ CORS configuration for a route
 | `expose_headers` | `Array<String>?` | `nil` | Expose headers |
 | `max_age` | `Integer?` | `nil` | Maximum age |
 | `allow_credentials` | `Boolean?` | `nil` | Allow credentials |
-| `methods_joined_cache` | `String` | — | Methods joined cache |
-| `headers_joined_cache` | `String` | — | Headers joined cache |
 
-### Methods
+##### Methods
 
-#### allowed_methods_joined()
+###### allowed_methods_joined()
 
 Get the cached joined methods string for preflight responses
 
@@ -321,7 +233,15 @@ Get the cached joined methods string for preflight responses
 def allowed_methods_joined()
 ```
 
-#### allowed_headers_joined()
+**Example:**
+
+```ruby
+result = instance.allowed_methods_joined()
+```
+
+**Returns:** `String`
+
+###### allowed_headers_joined()
 
 Get the cached joined headers string for preflight responses
 
@@ -331,7 +251,15 @@ Get the cached joined headers string for preflight responses
 def allowed_headers_joined()
 ```
 
-#### is_origin_allowed()
+**Example:**
+
+```ruby
+result = instance.allowed_headers_joined()
+```
+
+**Returns:** `String`
+
+###### is_origin_allowed()
 
 Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -341,7 +269,21 @@ Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 def is_origin_allowed(origin)
 ```
 
-#### is_method_allowed()
+**Example:**
+
+```ruby
+result = instance.is_origin_allowed("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `origin` | `String` | Yes | The origin |
+
+**Returns:** `Boolean`
+
+###### is_method_allowed()
 
 Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -351,13 +293,35 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 def is_method_allowed(method)
 ```
 
-#### default()
+**Example:**
+
+```ruby
+result = instance.is_method_allowed("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `String` | Yes | The method |
+
+**Returns:** `Boolean`
+
+###### default()
 
 **Signature:**
 
 ```ruby
 def self.default()
 ```
+
+**Example:**
+
+```ruby
+result = CorsConfig.default()
+```
+
+**Returns:** `CorsConfig`
 
 ---
 
@@ -371,15 +335,23 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 | `complexity_limit` | `Integer?` | `nil` | Maximum query complexity (None = unlimited) |
 | `depth_limit` | `Integer?` | `nil` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```ruby
 def self.default()
 ```
+
+**Example:**
+
+```ruby
+result = FullSchemaConfig.default()
+```
+
+**Returns:** `FullSchemaConfig`
 
 ---
 
@@ -390,9 +362,9 @@ Configuration for GraphQL routes
 Provides a builder pattern for configuring GraphQL route parameters
 for the Spikard HTTP server's routing system.
 
-### Methods
+##### Methods
 
-#### new()
+###### new()
 
 Create a new GraphQL route configuration with defaults
 
@@ -408,7 +380,15 @@ Default values:
 def self.new()
 ```
 
-#### path()
+**Example:**
+
+```ruby
+result = GraphQlRouteConfig.new()
+```
+
+**Returns:** `GraphQlRouteConfig`
+
+###### path()
 
 Set the HTTP path for the GraphQL endpoint
 
@@ -418,7 +398,21 @@ Set the HTTP path for the GraphQL endpoint
 def path(path)
 ```
 
-#### method()
+**Example:**
+
+```ruby
+result = instance.path("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `path` | `String` | Yes | The URL path (e.g., "/graphql", "/api/graphql") |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### method()
 
 Set the HTTP method for the GraphQL endpoint
 
@@ -428,7 +422,21 @@ Set the HTTP method for the GraphQL endpoint
 def method(method)
 ```
 
-#### enable_playground()
+**Example:**
+
+```ruby
+result = instance.method("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `String` | Yes | The HTTP method (typically "POST") |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### enable_playground()
 
 Enable or disable the GraphQL Playground UI
 
@@ -438,7 +446,21 @@ Enable or disable the GraphQL Playground UI
 def enable_playground(enable)
 ```
 
-#### description()
+**Example:**
+
+```ruby
+result = instance.enable_playground(true)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `enable` | `Boolean` | Yes | Whether to enable playground |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### description()
 
 Set a custom description for documentation
 
@@ -448,7 +470,21 @@ Set a custom description for documentation
 def description(description)
 ```
 
-#### get_path()
+**Example:**
+
+```ruby
+result = instance.description("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `description` | `String` | Yes | Documentation string |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### get_path()
 
 Get the configured path
 
@@ -458,7 +494,15 @@ Get the configured path
 def get_path()
 ```
 
-#### get_method()
+**Example:**
+
+```ruby
+result = instance.get_path()
+```
+
+**Returns:** `String`
+
+###### get_method()
 
 Get the configured method
 
@@ -468,7 +512,15 @@ Get the configured method
 def get_method()
 ```
 
-#### is_playground_enabled()
+**Example:**
+
+```ruby
+result = instance.get_method()
+```
+
+**Returns:** `String`
+
+###### is_playground_enabled()
 
 Check if playground is enabled
 
@@ -478,7 +530,15 @@ Check if playground is enabled
 def is_playground_enabled()
 ```
 
-#### get_description()
+**Example:**
+
+```ruby
+result = instance.is_playground_enabled()
+```
+
+**Returns:** `Boolean`
+
+###### get_description()
 
 Get the description if set
 
@@ -488,13 +548,29 @@ Get the description if set
 def get_description()
 ```
 
-#### default()
+**Example:**
+
+```ruby
+result = instance.get_description()
+```
+
+**Returns:** `String?`
+
+###### default()
 
 **Signature:**
 
 ```ruby
 def self.default()
 ```
+
+**Example:**
+
+```ruby
+result = GraphQlRouteConfig.default()
+```
+
+**Returns:** `GraphQlRouteConfig`
 
 ---
 
@@ -552,9 +628,9 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `keepalive_timeout` | `Integer` | — | HTTP/2 keepalive timeout in seconds |
 | `max_stream_response_bytes` | `Integer?` | `nil` | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `nil` (unbounded total response size). |
 
-### Methods
+#### Methods
 
-#### default()
+##### default()
 
 **Signature:**
 
@@ -562,110 +638,13 @@ concurrent stream limiting to the HTTP/2 transport layer:
 def self.default()
 ```
 
----
-
-#### Handler
-
-Handler trait that all language bindings must implement
-
-This trait is completely language-agnostic. Each binding (Python, Node, WASM)
-implements this trait to bridge their runtime to our HTTP server.
-
-### Methods
-
-#### call()
-
-Handle an HTTP request
-
-Takes the extracted request data and returns a future that resolves to either:
-
-- Ok(Response): A successful HTTP response
-- Err((StatusCode, String)): An error with status code and message
-
-**Signature:**
+**Example:**
 
 ```ruby
-def call(request, request_data)
+result = GrpcConfig.default()
 ```
 
-#### prefers_raw_json_body()
-
-Whether this handler prefers consuming `RequestData.raw_body` over the parsed
-`RequestData.body` for JSON requests.
-
-When `true`, the server may skip eager JSON parsing when there is no request-body
-schema validator attached to the route.
-
-**Signature:**
-
-```ruby
-def prefers_raw_json_body()
-```
-
-#### prefers_parameter_extraction()
-
-Whether this handler wants to perform its own parameter validation/extraction (path/query/header/cookie).
-
-When `true`, the server will skip `ParameterValidator.validate_and_extract` in `ValidatingHandler`.
-This is useful for language bindings which need to transform validated parameters into
-language-specific values (e.g., Python kwargs) without duplicating work. When `false`,
-the server stores validated output in `RequestData.validated_params`.
-
-**Signature:**
-
-```ruby
-def prefers_parameter_extraction()
-```
-
-#### wants_headers()
-
-Whether this handler needs the parsed headers map in `RequestData`.
-
-When `false`, the server may skip building `RequestData.headers` for requests without a body.
-(Requests with bodies still typically need `Content-Type` decisions.)
-
-**Signature:**
-
-```ruby
-def wants_headers()
-```
-
-#### wants_cookies()
-
-Whether this handler needs the parsed cookies map in `RequestData`.
-
-When `false`, the server may skip parsing cookies for requests without a body.
-
-**Signature:**
-
-```ruby
-def wants_cookies()
-```
-
-#### wants_request_extensions()
-
-Whether this handler needs `RequestData` stored in request extensions.
-
-When `false`, the server avoids inserting `RequestData` into extensions to
-skip cloning in hot paths.
-
-**Signature:**
-
-```ruby
-def wants_request_extensions()
-```
-
-#### static_response()
-
-Return a pre-built static response if this handler always produces the
-same output. When `Some`, the server bypasses the full middleware
-pipeline and serves the pre-built response directly.
-
-**Signature:**
-
-```ruby
-def static_response()
-```
+**Returns:** `GrpcConfig`
 
 ---
 
@@ -673,9 +652,9 @@ def static_response()
 
 Convert user-facing handler functions into the low-level `Handler` trait.
 
-### Methods
+##### Methods
 
-#### into_handler()
+###### into_handler()
 
 Convert this value into a shared request handler.
 
@@ -684,6 +663,14 @@ Convert this value into a shared request handler.
 ```ruby
 def into_handler()
 ```
+
+**Example:**
+
+```ruby
+result = instance.into_handler()
+```
+
+**Returns:** `Handler`
 
 ---
 
@@ -698,15 +685,23 @@ JSON-RPC server configuration
 | `enable_batch` | `Boolean` | — | Enable batch request processing (default: true) |
 | `max_batch_size` | `Integer` | — | Maximum number of requests in a batch (default: 100) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```ruby
 def self.default()
 ```
+
+**Example:**
+
+```ruby
+result = JsonRpcConfig.default()
+```
+
+**Returns:** `JsonRpcConfig`
 
 ---
 
@@ -771,15 +766,23 @@ OpenAPI configuration
 | `servers` | `Array<ServerInfo>` | `[]` | Server definitions |
 | `security_schemes` | `Hash{String=>SecuritySchemeInfo}` | `{}` | Security schemes (auto-detected from middleware if not provided) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```ruby
 def self.default()
 ```
+
+**Example:**
+
+```ruby
+result = OpenApiConfig.default()
+```
+
+**Returns:** `OpenApiConfig`
 
 ---
 
@@ -879,9 +882,9 @@ Content-Type: application/problem+json
 | `instance` | `String?` | `nil` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
 | `extensions` | `Hash{String=>Object}` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
 
-### Methods
+#### Methods
 
-#### with_detail()
+##### with_detail()
 
 Set the detail field
 
@@ -891,7 +894,21 @@ Set the detail field
 def with_detail(detail)
 ```
 
-#### with_instance()
+**Example:**
+
+```ruby
+result = instance.with_detail("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### with_instance()
 
 Set the instance field
 
@@ -901,7 +918,21 @@ Set the instance field
 def with_instance(instance)
 ```
 
-#### not_found()
+**Example:**
+
+```ruby
+result = instance.with_instance("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `instance` | `String` | Yes | The instance |
+
+**Returns:** `ProblemDetails`
+
+###### not_found()
 
 Create a not found error
 
@@ -911,7 +942,21 @@ Create a not found error
 def self.not_found(detail)
 ```
 
-#### method_not_allowed()
+**Example:**
+
+```ruby
+result = ProblemDetails.not_found("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### method_not_allowed()
 
 Create a method not allowed error
 
@@ -921,7 +966,21 @@ Create a method not allowed error
 def self.method_not_allowed(detail)
 ```
 
-#### internal_server_error()
+**Example:**
+
+```ruby
+result = ProblemDetails.method_not_allowed("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### internal_server_error()
 
 Create an internal server error
 
@@ -931,7 +990,21 @@ Create an internal server error
 def self.internal_server_error(detail)
 ```
 
-#### bad_request()
+**Example:**
+
+```ruby
+result = ProblemDetails.internal_server_error("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### bad_request()
 
 Create a bad request error
 
@@ -941,7 +1014,21 @@ Create a bad request error
 def self.bad_request(detail)
 ```
 
-#### to_json()
+**Example:**
+
+```ruby
+result = ProblemDetails.bad_request("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### to_json()
 
 Serialize to JSON string
 
@@ -954,7 +1041,17 @@ Returns an error if the serialization fails.
 def to_json()
 ```
 
-#### to_json_pretty()
+**Example:**
+
+```ruby
+result = instance.to_json()
+```
+
+**Returns:** `String`
+
+**Errors:** Raises `Error`.
+
+###### to_json_pretty()
 
 Serialize to pretty JSON string
 
@@ -966,6 +1063,16 @@ Returns an error if the serialization fails.
 ```ruby
 def to_json_pretty()
 ```
+
+**Example:**
+
+```ruby
+result = instance.to_json_pretty()
+```
+
+**Returns:** `String`
+
+**Errors:** Raises `Error`.
 
 ---
 
@@ -979,15 +1086,23 @@ Configuration for schemas with Query and Mutation types
 | `complexity_limit` | `Integer?` | `nil` | Maximum query complexity (None = unlimited) |
 | `depth_limit` | `Integer?` | `nil` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```ruby
 def self.default()
 ```
+
+**Example:**
+
+```ruby
+result = QueryMutationConfig.default()
+```
+
+**Returns:** `QueryMutationConfig`
 
 ---
 
@@ -1001,15 +1116,23 @@ Configuration for schemas with only Query type
 | `complexity_limit` | `Integer?` | `nil` | Maximum query complexity (None = unlimited) |
 | `depth_limit` | `Integer?` | `nil` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```ruby
 def self.default()
 ```
+
+**Example:**
+
+```ruby
+result = QueryOnlyConfig.default()
+```
+
+**Returns:** `QueryOnlyConfig`
 
 ---
 
@@ -1023,15 +1146,23 @@ Rate limiting configuration shared across runtimes
 | `burst` | `Integer` | `200` | Burst allowance |
 | `ip_based` | `Boolean` | `true` | Use IP-based rate limiting |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```ruby
 def self.default()
 ```
+
+**Example:**
+
+```ruby
+result = RateLimitConfig.default()
+```
+
+**Returns:** `RateLimitConfig`
 
 ---
 
@@ -1045,9 +1176,9 @@ HTTP Response with custom status code, headers, and content
 | `status_code` | `Integer` | — | HTTP status code (defaults to 200) |
 | `headers` | `Hash{String=>String}` | `{}` | Response headers |
 
-### Methods
+##### Methods
 
-#### set_header()
+###### set_header()
 
 Set a header
 
@@ -1057,7 +1188,22 @@ Set a header
 def set_header(key, value)
 ```
 
-#### set_cookie()
+**Example:**
+
+```ruby
+instance.set_header("value", "value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `key` | `String` | Yes | The key |
+| `value` | `String` | Yes | The value |
+
+**Returns:** No return value.
+
+###### set_cookie()
 
 Set a cookie in the response
 
@@ -1067,13 +1213,42 @@ Set a cookie in the response
 def set_cookie(key, value, secure, http_only, max_age, domain, path, same_site)
 ```
 
-#### default()
+**Example:**
+
+```ruby
+instance.set_cookie("value", "value", true, true, max_age: 42, domain: "value", path: "value", same_site: "value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `key` | `String` | Yes | The key |
+| `value` | `String` | Yes | The value |
+| `secure` | `Boolean` | Yes | The secure |
+| `http_only` | `Boolean` | Yes | The http only |
+| `max_age` | `Integer?` | No | The max age |
+| `domain` | `String?` | No | The domain |
+| `path` | `String?` | No | Path to the file |
+| `same_site` | `String?` | No | The same site |
+
+**Returns:** No return value.
+
+###### default()
 
 **Signature:**
 
 ```ruby
 def self.default()
 ```
+
+**Example:**
+
+```ruby
+result = Response.default()
+```
+
+**Returns:** `Response`
 
 ---
 
@@ -1087,9 +1262,9 @@ Snapshot of an Axum response used by higher-level language bindings.
 | `headers` | `Hash{String=>String}` | — | Response headers (lowercase keys for predictable lookups). |
 | `body` | `String` | — | Response body bytes (decoded for supported encodings). |
 
-### Methods
+##### Methods
 
-#### text()
+###### text()
 
 Return response body as UTF-8 string.
 
@@ -1099,7 +1274,17 @@ Return response body as UTF-8 string.
 def text()
 ```
 
-#### header()
+**Example:**
+
+```ruby
+result = instance.text()
+```
+
+**Returns:** `String`
+
+**Errors:** Raises `FromUtf8Error`.
+
+###### header()
 
 Lookup header by case-insensitive name.
 
@@ -1109,15 +1294,29 @@ Lookup header by case-insensitive name.
 def header(name)
 ```
 
+**Example:**
+
+```ruby
+result = instance.header("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | `String` | Yes | The name |
+
+**Returns:** `String?`
+
 ---
 
 #### RouteBuilder
 
 Builder for defining a route.
 
-### Methods
+##### Methods
 
-#### new()
+###### new()
 
 Create a new builder for the provided HTTP method and path.
 
@@ -1127,7 +1326,22 @@ Create a new builder for the provided HTTP method and path.
 def self.new(method, path)
 ```
 
-#### handler_name()
+**Example:**
+
+```ruby
+result = RouteBuilder.new(Method.new, "value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `Method` | Yes | The method |
+| `path` | `String` | Yes | Path to the file |
+
+**Returns:** `RouteBuilder`
+
+###### handler_name()
 
 Assign an explicit handler name.
 
@@ -1137,7 +1351,21 @@ Assign an explicit handler name.
 def handler_name(name)
 ```
 
-#### request_schema_json()
+**Example:**
+
+```ruby
+result = instance.handler_name("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | `String` | Yes | The name |
+
+**Returns:** `RouteBuilder`
+
+###### request_schema_json()
 
 Provide a raw JSON schema for the request body.
 
@@ -1147,7 +1375,21 @@ Provide a raw JSON schema for the request body.
 def request_schema_json(schema)
 ```
 
-#### response_schema_json()
+**Example:**
+
+```ruby
+result = instance.request_schema_json([])
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `Object` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### response_schema_json()
 
 Provide a raw JSON schema for the response body.
 
@@ -1157,7 +1399,21 @@ Provide a raw JSON schema for the response body.
 def response_schema_json(schema)
 ```
 
-#### params_schema_json()
+**Example:**
+
+```ruby
+result = instance.response_schema_json([])
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `Object` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### params_schema_json()
 
 Provide a raw JSON schema for request parameters.
 
@@ -1167,7 +1423,21 @@ Provide a raw JSON schema for request parameters.
 def params_schema_json(schema)
 ```
 
-#### file_params_json()
+**Example:**
+
+```ruby
+result = instance.params_schema_json([])
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `Object` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### file_params_json()
 
 Provide multipart file parameter configuration.
 
@@ -1177,7 +1447,21 @@ Provide multipart file parameter configuration.
 def file_params_json(schema)
 ```
 
-#### cors()
+**Example:**
+
+```ruby
+result = instance.file_params_json([])
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `Object` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### cors()
 
 Attach a CORS configuration for this route.
 
@@ -1187,7 +1471,21 @@ Attach a CORS configuration for this route.
 def cors(cors)
 ```
 
-#### compression()
+**Example:**
+
+```ruby
+result = instance.cors(CorsConfig.new)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `cors` | `CorsConfig` | Yes | The cors config |
+
+**Returns:** `RouteBuilder`
+
+###### compression()
 
 Attach a compression configuration for this route.
 
@@ -1197,7 +1495,21 @@ Attach a compression configuration for this route.
 def compression(compression)
 ```
 
-#### sync()
+**Example:**
+
+```ruby
+result = instance.compression(CompressionConfig.new)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `compression` | `CompressionConfig` | Yes | The compression config |
+
+**Returns:** `RouteBuilder`
+
+###### sync()
 
 Mark the route as synchronous.
 
@@ -1207,7 +1519,15 @@ Mark the route as synchronous.
 def sync()
 ```
 
-#### handler_dependencies()
+**Example:**
+
+```ruby
+result = instance.sync()
+```
+
+**Returns:** `RouteBuilder`
+
+###### handler_dependencies()
 
 Declare the dependency keys that must be resolved before this handler runs.
 
@@ -1216,6 +1536,20 @@ Declare the dependency keys that must be resolved before this handler runs.
 ```ruby
 def handler_dependencies(dependencies)
 ```
+
+**Example:**
+
+```ruby
+result = instance.handler_dependencies([])
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `dependencies` | `Array<String>` | Yes | The dependencies |
+
+**Returns:** `RouteBuilder`
 
 ---
 
@@ -1232,15 +1566,23 @@ introspection control, complexity limits, and depth limits.
 | `complexity_limit` | `Integer?` | `nil` | Maximum query complexity (None = unlimited) |
 | `depth_limit` | `Integer?` | `nil` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```ruby
 def self.default()
 ```
+
+**Example:**
+
+```ruby
+result = SchemaConfig.default()
+```
+
+**Returns:** `SchemaConfig`
 
 ---
 
@@ -1267,20 +1609,26 @@ Server configuration
 | `openapi` | `OpenApiConfig?` | `nil` | OpenAPI documentation configuration |
 | `jsonrpc` | `JsonRpcConfig?` | `nil` | JSON-RPC configuration |
 | `grpc` | `GrpcConfig?` | `nil` | gRPC configuration |
-| `lifecycle_hooks` | `String?` | `nil` | Lifecycle hooks for request/response processing |
 | `background_tasks` | `BackgroundTaskConfig` | — | Background task executor configuration |
 | `enable_http_trace` | `Boolean` | `false` | Enable per-request HTTP tracing (tower-http `TraceLayer`) |
-| `di_container` | `String?` | `nil` | Dependency injection container (requires 'di' feature) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```ruby
 def self.default()
 ```
+
+**Example:**
+
+```ruby
+result = ServerConfig.default()
+```
+
+**Returns:** `ServerConfig`
 
 ---
 
@@ -1320,9 +1668,9 @@ retry: 3000
 | `id` | `String?` | `nil` | Event ID (optional, for client-side reconnection) |
 | `retry` | `Integer?` | `nil` | Retry timeout in milliseconds (optional) |
 
-### Methods
+#### Methods
 
-#### with_id()
+##### with_id()
 
 Set the event ID for client-side reconnection support
 
@@ -1335,7 +1683,21 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 def with_id(id)
 ```
 
-#### with_retry()
+**Example:**
+
+```ruby
+result = instance.with_id("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `id` | `String` | Yes | Unique identifier for this event |
+
+**Returns:** `SseEvent`
+
+###### with_retry()
 
 Set the retry timeout for client reconnection
 
@@ -1347,6 +1709,20 @@ if the connection is lost. The client browser will automatically handle reconnec
 ```ruby
 def with_retry(retry_ms)
 ```
+
+**Example:**
+
+```ruby
+result = instance.with_retry(42)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `retry_ms` | `Integer` | Yes | Retry timeout in milliseconds |
+
+**Returns:** `SseEvent`
 
 ---
 
@@ -1372,9 +1748,9 @@ interface for making HTTP requests, sending WebSocket connections, and
 handling Server-Sent Events. Language bindings wrap this to provide
 native API surfaces.
 
-### Methods
+##### Methods
 
-#### graphql_at()
+###### graphql_at()
 
 Send a GraphQL query/mutation to a custom endpoint
 
@@ -1384,7 +1760,26 @@ Send a GraphQL query/mutation to a custom endpoint
 def graphql_at(endpoint, query, variables, operation_name)
 ```
 
-#### graphql()
+**Example:**
+
+```ruby
+result = instance.graphql_at("value", "value", variables: [], operation_name: "value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `endpoint` | `String` | Yes | The endpoint |
+| `query` | `String` | Yes | The query |
+| `variables` | `Object?` | No | The variables |
+| `operation_name` | `String?` | No | The operation name |
+
+**Returns:** `ResponseSnapshot`
+
+**Errors:** Raises `SnapshotError`.
+
+###### graphql()
 
 Send a GraphQL query/mutation
 
@@ -1394,7 +1789,25 @@ Send a GraphQL query/mutation
 def graphql(query, variables, operation_name)
 ```
 
-#### graphql_subscription_at()
+**Example:**
+
+```ruby
+result = instance.graphql("value", variables: [], operation_name: "value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `String` | Yes | The query |
+| `variables` | `Object?` | No | The variables |
+| `operation_name` | `String?` | No | The operation name |
+
+**Returns:** `ResponseSnapshot`
+
+**Errors:** Raises `SnapshotError`.
+
+###### graphql_subscription_at()
 
 Send a GraphQL subscription (WebSocket) to a custom endpoint.
 
@@ -1407,7 +1820,26 @@ After the first payload is received, this client sends `complete` to unsubscribe
 def graphql_subscription_at(endpoint, query, variables, operation_name)
 ```
 
-#### graphql_subscription()
+**Example:**
+
+```ruby
+result = instance.graphql_subscription_at("value", "value", variables: [], operation_name: "value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `endpoint` | `String` | Yes | The endpoint |
+| `query` | `String` | Yes | The query |
+| `variables` | `Object?` | No | The variables |
+| `operation_name` | `String?` | No | The operation name |
+
+**Returns:** `GraphQlSubscriptionSnapshot`
+
+**Errors:** Raises `SnapshotError`.
+
+###### graphql_subscription()
 
 Send a GraphQL subscription (WebSocket).
 
@@ -1418,6 +1850,24 @@ Uses `/graphql` as the default subscription endpoint.
 ```ruby
 def graphql_subscription(query, variables, operation_name)
 ```
+
+**Example:**
+
+```ruby
+result = instance.graphql_subscription("value", variables: [], operation_name: "value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `String` | Yes | The query |
+| `variables` | `Object?` | No | The variables |
+| `operation_name` | `String?` | No | The operation name |
+
+**Returns:** `GraphQlSubscriptionSnapshot`
+
+**Errors:** Raises `SnapshotError`.
 
 ---
 
@@ -1445,11 +1895,10 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `size` | `Integer?` | `nil` | Size of the file in bytes |
 | `content` | `String` | — | File content (may be base64 encoded) |
 | `content_encoding` | `String?` | `nil` | Content encoding type |
-| `cursor` | `String` | — | Internal cursor for Read/Seek operations |
 
-### Methods
+##### Methods
 
-#### as_bytes()
+###### as_bytes()
 
 Get the raw file content as bytes.
 
@@ -1461,7 +1910,15 @@ This provides zero-copy access to the underlying buffer.
 def as_bytes()
 ```
 
-#### read_to_string()
+**Example:**
+
+```ruby
+result = instance.as_bytes()
+```
+
+**Returns:** `String`
+
+###### read_to_string()
 
 Read the file content as a UTF-8 string.
 
@@ -1475,7 +1932,17 @@ Returns an error if the content is not valid UTF-8.
 def read_to_string()
 ```
 
-#### content_type_or_default()
+**Example:**
+
+```ruby
+result = instance.read_to_string()
+```
+
+**Returns:** `String`
+
+**Errors:** Raises `Error`.
+
+###### content_type_or_default()
 
 Get the content type, defaulting to "application/octet-stream".
 
@@ -1484,6 +1951,14 @@ Get the content type, defaulting to "application/octet-stream".
 ```ruby
 def content_type_or_default()
 ```
+
+**Example:**
+
+```ruby
+result = instance.content_type_or_default()
+```
+
+**Returns:** `String`
 
 ---
 

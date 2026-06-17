@@ -22,6 +22,12 @@ A `QueryOnlyConfig` with default settings
 public static QueryOnlyConfig schemaQueryOnly()
 ```
 
+**Example:**
+
+```java
+var result = schemaQueryOnly();
+```
+
 **Returns:** `QueryOnlyConfig`
 
 ---
@@ -40,6 +46,12 @@ A `QueryMutationConfig` with default settings
 
 ```java
 public static QueryMutationConfig schemaQueryMutation()
+```
+
+**Example:**
+
+```java
+var result = schemaQueryMutation();
 ```
 
 **Returns:** `QueryMutationConfig`
@@ -62,6 +74,12 @@ A `FullSchemaConfig` with default settings
 public static FullSchemaConfig schemaFull()
 ```
 
+**Example:**
+
+```java
+var result = schemaFull();
+```
+
 **Returns:** `FullSchemaConfig`
 
 ---
@@ -76,134 +94,6 @@ API Key authentication configuration
 |-------|------|---------|-------------|
 | `keys` | `List<String>` | — | Valid API keys |
 | `headerName` | `String` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
-
----
-
-#### App
-
-Spikard application builder.
-
-### Methods
-
-#### new()
-
-Create a new application with the default server configuration.
-
-**Signature:**
-
-```java
-public static App new()
-```
-
-#### onRequest()
-
-Register an `on_request` lifecycle hook (runs before validation and handler dispatch).
-
-**Signature:**
-
-```java
-public App onRequest(String hook)
-```
-
-#### preValidation()
-
-Register a `pre_validation` lifecycle hook (runs after `on_request`, before validation).
-
-**Signature:**
-
-```java
-public App preValidation(String hook)
-```
-
-#### preHandler()
-
-Register a `pre_handler` lifecycle hook (runs after validation, before the handler).
-
-**Signature:**
-
-```java
-public App preHandler(String hook)
-```
-
-#### onResponse()
-
-Register an `on_response` lifecycle hook (runs after a successful handler response).
-
-**Signature:**
-
-```java
-public App onResponse(String hook)
-```
-
-#### onError()
-
-Register an `on_error` lifecycle hook (runs when the handler returns an error).
-
-**Signature:**
-
-```java
-public App onError(String hook)
-```
-
-#### mergeAxumRouter()
-
-Attach an existing Axum router to this application, returning ownership.
-
-**Signature:**
-
-```java
-public App mergeAxumRouter(String router)
-```
-
-#### attachAxumRouter()
-
-Attach an Axum router using a mutable reference for incremental configuration.
-
-**Signature:**
-
-```java
-public App attachAxumRouter(String router)
-```
-
-#### intoRouter()
-
-Build the underlying Axum router.
-
-**Errors:**
-
-Returns an error if server or router construction fails.
-
-**Signature:**
-
-```java
-public String intoRouter() throws AppError
-```
-
-#### intoRouterAndConfig()
-
-Decompose the application into its Axum router and server configuration.
-
-This is the low-level escape hatch used by the C FFI layer to start the
-server on a background thread while retaining the bind address from the
-caller-supplied `ServerConfig`. Prefer `App.run` for normal use.
-
-**Errors:**
-
-Returns an error if router construction fails.
-
-**Signature:**
-
-```java
-public String intoRouterAndConfig() throws AppError
-```
-
-#### defaultOptions()
-
-**Signature:**
-
-```java
-public static App defaultOptions()
-```
 
 ---
 
@@ -225,15 +115,23 @@ AsyncAPI HTTP endpoint configuration
 | `name` | `String` | — | The name |
 | `requestId` | `Optional<String>` | `null` | Request id |
 
-### Methods
+##### Methods
 
-#### defaultOptions()
+###### defaultOptions()
 
 **Signature:**
 
 ```java
 public static BackgroundJobMetadata defaultOptions()
 ```
+
+**Example:**
+
+```java
+var result = BackgroundJobMetadata.defaultOptions();
+```
+
+**Returns:** `BackgroundJobMetadata`
 
 ---
 
@@ -247,15 +145,23 @@ Configuration for in-process background task execution.
 | `maxConcurrentTasks` | `long` | `128` | Maximum concurrent tasks |
 | `drainTimeoutSecs` | `long` | `30` | Drain timeout secs |
 
-### Methods
+##### Methods
 
-#### defaultOptions()
+###### defaultOptions()
 
 **Signature:**
 
 ```java
 public static BackgroundTaskConfig defaultOptions()
 ```
+
+**Example:**
+
+```java
+var result = BackgroundTaskConfig.defaultOptions();
+```
+
+**Returns:** `BackgroundTaskConfig`
 
 ---
 
@@ -270,15 +176,23 @@ Compression configuration shared across runtimes
 | `minSize` | `long` | — | Minimum response size to compress (bytes) |
 | `quality` | `int` | — | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
-### Methods
+##### Methods
 
-#### defaultOptions()
+###### defaultOptions()
 
 **Signature:**
 
 ```java
 public static CompressionConfig defaultOptions()
 ```
+
+**Example:**
+
+```java
+var result = CompressionConfig.defaultOptions();
+```
+
+**Returns:** `CompressionConfig`
 
 ---
 
@@ -306,12 +220,10 @@ CORS configuration for a route
 | `exposeHeaders` | `Optional<List<String>>` | `null` | Expose headers |
 | `maxAge` | `Optional<Integer>` | `null` | Maximum age |
 | `allowCredentials` | `Optional<Boolean>` | `null` | Allow credentials |
-| `methodsJoinedCache` | `String` | — | Methods joined cache |
-| `headersJoinedCache` | `String` | — | Headers joined cache |
 
-### Methods
+##### Methods
 
-#### allowedMethodsJoined()
+###### allowedMethodsJoined()
 
 Get the cached joined methods string for preflight responses
 
@@ -321,7 +233,15 @@ Get the cached joined methods string for preflight responses
 public String allowedMethodsJoined()
 ```
 
-#### allowedHeadersJoined()
+**Example:**
+
+```java
+var result = instance.allowedMethodsJoined();
+```
+
+**Returns:** `String`
+
+###### allowedHeadersJoined()
 
 Get the cached joined headers string for preflight responses
 
@@ -331,7 +251,15 @@ Get the cached joined headers string for preflight responses
 public String allowedHeadersJoined()
 ```
 
-#### isOriginAllowed()
+**Example:**
+
+```java
+var result = instance.allowedHeadersJoined();
+```
+
+**Returns:** `String`
+
+###### isOriginAllowed()
 
 Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -341,7 +269,21 @@ Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 public boolean isOriginAllowed(String origin)
 ```
 
-#### isMethodAllowed()
+**Example:**
+
+```java
+var result = instance.isOriginAllowed("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `origin` | `String` | Yes | The origin |
+
+**Returns:** `boolean`
+
+###### isMethodAllowed()
 
 Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -351,13 +293,35 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 public boolean isMethodAllowed(String method)
 ```
 
-#### defaultOptions()
+**Example:**
+
+```java
+var result = instance.isMethodAllowed("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `String` | Yes | The method |
+
+**Returns:** `boolean`
+
+###### defaultOptions()
 
 **Signature:**
 
 ```java
 public static CorsConfig defaultOptions()
 ```
+
+**Example:**
+
+```java
+var result = CorsConfig.defaultOptions();
+```
+
+**Returns:** `CorsConfig`
 
 ---
 
@@ -371,15 +335,23 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 | `complexityLimit` | `Optional<Long>` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `Optional<Long>` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### defaultOptions()
+###### defaultOptions()
 
 **Signature:**
 
 ```java
 public static FullSchemaConfig defaultOptions()
 ```
+
+**Example:**
+
+```java
+var result = FullSchemaConfig.defaultOptions();
+```
+
+**Returns:** `FullSchemaConfig`
 
 ---
 
@@ -390,9 +362,9 @@ Configuration for GraphQL routes
 Provides a builder pattern for configuring GraphQL route parameters
 for the Spikard HTTP server's routing system.
 
-### Methods
+##### Methods
 
-#### new()
+###### new()
 
 Create a new GraphQL route configuration with defaults
 
@@ -408,7 +380,15 @@ Default values:
 public static GraphQlRouteConfig new()
 ```
 
-#### path()
+**Example:**
+
+```java
+var result = GraphQlRouteConfig.new();
+```
+
+**Returns:** `GraphQlRouteConfig`
+
+###### path()
 
 Set the HTTP path for the GraphQL endpoint
 
@@ -418,7 +398,21 @@ Set the HTTP path for the GraphQL endpoint
 public GraphQlRouteConfig path(String path)
 ```
 
-#### method()
+**Example:**
+
+```java
+var result = instance.path("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `path` | `String` | Yes | The URL path (e.g., "/graphql", "/api/graphql") |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### method()
 
 Set the HTTP method for the GraphQL endpoint
 
@@ -428,7 +422,21 @@ Set the HTTP method for the GraphQL endpoint
 public GraphQlRouteConfig method(String method)
 ```
 
-#### enablePlayground()
+**Example:**
+
+```java
+var result = instance.method("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `String` | Yes | The HTTP method (typically "POST") |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### enablePlayground()
 
 Enable or disable the GraphQL Playground UI
 
@@ -438,7 +446,21 @@ Enable or disable the GraphQL Playground UI
 public GraphQlRouteConfig enablePlayground(boolean enable)
 ```
 
-#### description()
+**Example:**
+
+```java
+var result = instance.enablePlayground(true);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `enable` | `boolean` | Yes | Whether to enable playground |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### description()
 
 Set a custom description for documentation
 
@@ -448,7 +470,21 @@ Set a custom description for documentation
 public GraphQlRouteConfig description(String description)
 ```
 
-#### getPath()
+**Example:**
+
+```java
+var result = instance.description("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `description` | `String` | Yes | Documentation string |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### getPath()
 
 Get the configured path
 
@@ -458,7 +494,15 @@ Get the configured path
 public String getPath()
 ```
 
-#### getMethod()
+**Example:**
+
+```java
+var result = instance.getPath();
+```
+
+**Returns:** `String`
+
+###### getMethod()
 
 Get the configured method
 
@@ -468,7 +512,15 @@ Get the configured method
 public String getMethod()
 ```
 
-#### isPlaygroundEnabled()
+**Example:**
+
+```java
+var result = instance.getMethod();
+```
+
+**Returns:** `String`
+
+###### isPlaygroundEnabled()
 
 Check if playground is enabled
 
@@ -478,7 +530,15 @@ Check if playground is enabled
 public boolean isPlaygroundEnabled()
 ```
 
-#### getDescription()
+**Example:**
+
+```java
+var result = instance.isPlaygroundEnabled();
+```
+
+**Returns:** `boolean`
+
+###### getDescription()
 
 Get the description if set
 
@@ -488,13 +548,29 @@ Get the description if set
 public Optional<String> getDescription()
 ```
 
-#### defaultOptions()
+**Example:**
+
+```java
+var result = instance.getDescription();
+```
+
+**Returns:** `Optional<String>`
+
+###### defaultOptions()
 
 **Signature:**
 
 ```java
 public static GraphQlRouteConfig defaultOptions()
 ```
+
+**Example:**
+
+```java
+var result = GraphQlRouteConfig.defaultOptions();
+```
+
+**Returns:** `GraphQlRouteConfig`
 
 ---
 
@@ -538,9 +614,9 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `keepaliveTimeout` | `long` | — | HTTP/2 keepalive timeout in seconds |
 | `maxStreamResponseBytes` | `Optional<Long>` | `null` | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `null` (unbounded total response size). |
 
-### Methods
+#### Methods
 
-#### defaultOptions()
+##### defaultOptions()
 
 **Signature:**
 
@@ -548,110 +624,13 @@ concurrent stream limiting to the HTTP/2 transport layer:
 public static GrpcConfig defaultOptions()
 ```
 
----
-
-#### Handler
-
-Handler trait that all language bindings must implement
-
-This trait is completely language-agnostic. Each binding (Python, Node, WASM)
-implements this trait to bridge their runtime to our HTTP server.
-
-### Methods
-
-#### call()
-
-Handle an HTTP request
-
-Takes the extracted request data and returns a future that resolves to either:
-
-- Ok(Response): A successful HTTP response
-- Err((StatusCode, String)): An error with status code and message
-
-**Signature:**
+**Example:**
 
 ```java
-public HandlerResult call(Request request, RequestData requestData)
+var result = GrpcConfig.defaultOptions();
 ```
 
-#### prefersRawJsonBody()
-
-Whether this handler prefers consuming `RequestData.raw_body` over the parsed
-`RequestData.body` for JSON requests.
-
-When `true`, the server may skip eager JSON parsing when there is no request-body
-schema validator attached to the route.
-
-**Signature:**
-
-```java
-public boolean prefersRawJsonBody()
-```
-
-#### prefersParameterExtraction()
-
-Whether this handler wants to perform its own parameter validation/extraction (path/query/header/cookie).
-
-When `true`, the server will skip `ParameterValidator.validate_and_extract` in `ValidatingHandler`.
-This is useful for language bindings which need to transform validated parameters into
-language-specific values (e.g., Python kwargs) without duplicating work. When `false`,
-the server stores validated output in `RequestData.validated_params`.
-
-**Signature:**
-
-```java
-public boolean prefersParameterExtraction()
-```
-
-#### wantsHeaders()
-
-Whether this handler needs the parsed headers map in `RequestData`.
-
-When `false`, the server may skip building `RequestData.headers` for requests without a body.
-(Requests with bodies still typically need `Content-Type` decisions.)
-
-**Signature:**
-
-```java
-public boolean wantsHeaders()
-```
-
-#### wantsCookies()
-
-Whether this handler needs the parsed cookies map in `RequestData`.
-
-When `false`, the server may skip parsing cookies for requests without a body.
-
-**Signature:**
-
-```java
-public boolean wantsCookies()
-```
-
-#### wantsRequestExtensions()
-
-Whether this handler needs `RequestData` stored in request extensions.
-
-When `false`, the server avoids inserting `RequestData` into extensions to
-skip cloning in hot paths.
-
-**Signature:**
-
-```java
-public boolean wantsRequestExtensions()
-```
-
-#### staticResponse()
-
-Return a pre-built static response if this handler always produces the
-same output. When `Some`, the server bypasses the full middleware
-pipeline and serves the pre-built response directly.
-
-**Signature:**
-
-```java
-public Optional<StaticResponse> staticResponse()
-```
+**Returns:** `GrpcConfig`
 
 ---
 
@@ -659,9 +638,9 @@ public Optional<StaticResponse> staticResponse()
 
 Convert user-facing handler functions into the low-level `Handler` trait.
 
-### Methods
+##### Methods
 
-#### intoHandler()
+###### intoHandler()
 
 Convert this value into a shared request handler.
 
@@ -670,6 +649,14 @@ Convert this value into a shared request handler.
 ```java
 public Handler intoHandler()
 ```
+
+**Example:**
+
+```java
+var result = instance.intoHandler();
+```
+
+**Returns:** `Handler`
 
 ---
 
@@ -684,15 +671,23 @@ JSON-RPC server configuration
 | `enableBatch` | `boolean` | — | Enable batch request processing (default: true) |
 | `maxBatchSize` | `long` | — | Maximum number of requests in a batch (default: 100) |
 
-### Methods
+##### Methods
 
-#### defaultOptions()
+###### defaultOptions()
 
 **Signature:**
 
 ```java
 public static JsonRpcConfig defaultOptions()
 ```
+
+**Example:**
+
+```java
+var result = JsonRpcConfig.defaultOptions();
+```
+
+**Returns:** `JsonRpcConfig`
 
 ---
 
@@ -757,15 +752,23 @@ OpenAPI configuration
 | `servers` | `List<ServerInfo>` | `Collections.emptyList()` | Server definitions |
 | `securitySchemes` | `Map<String, SecuritySchemeInfo>` | `Collections.emptyMap()` | Security schemes (auto-detected from middleware if not provided) |
 
-### Methods
+##### Methods
 
-#### defaultOptions()
+###### defaultOptions()
 
 **Signature:**
 
 ```java
 public static OpenApiConfig defaultOptions()
 ```
+
+**Example:**
+
+```java
+var result = OpenApiConfig.defaultOptions();
+```
+
+**Returns:** `OpenApiConfig`
 
 ---
 
@@ -865,9 +868,9 @@ Content-Type: application/problem+json
 | `instance` | `Optional<String>` | `null` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
 | `extensions` | `Map<String, Object>` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
 
-### Methods
+#### Methods
 
-#### withDetail()
+##### withDetail()
 
 Set the detail field
 
@@ -877,7 +880,21 @@ Set the detail field
 public ProblemDetails withDetail(String detail)
 ```
 
-#### withInstance()
+**Example:**
+
+```java
+var result = instance.withDetail("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### withInstance()
 
 Set the instance field
 
@@ -887,7 +904,21 @@ Set the instance field
 public ProblemDetails withInstance(String instance)
 ```
 
-#### notFound()
+**Example:**
+
+```java
+var result = instance.withInstance("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `instance` | `String` | Yes | The instance |
+
+**Returns:** `ProblemDetails`
+
+###### notFound()
 
 Create a not found error
 
@@ -897,7 +928,21 @@ Create a not found error
 public static ProblemDetails notFound(String detail)
 ```
 
-#### methodNotAllowed()
+**Example:**
+
+```java
+var result = ProblemDetails.notFound("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### methodNotAllowed()
 
 Create a method not allowed error
 
@@ -907,7 +952,21 @@ Create a method not allowed error
 public static ProblemDetails methodNotAllowed(String detail)
 ```
 
-#### internalServerError()
+**Example:**
+
+```java
+var result = ProblemDetails.methodNotAllowed("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### internalServerError()
 
 Create an internal server error
 
@@ -917,7 +976,21 @@ Create an internal server error
 public static ProblemDetails internalServerError(String detail)
 ```
 
-#### badRequest()
+**Example:**
+
+```java
+var result = ProblemDetails.internalServerError("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### badRequest()
 
 Create a bad request error
 
@@ -927,7 +1000,21 @@ Create a bad request error
 public static ProblemDetails badRequest(String detail)
 ```
 
-#### toJson()
+**Example:**
+
+```java
+var result = ProblemDetails.badRequest("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### toJson()
 
 Serialize to JSON string
 
@@ -940,7 +1027,17 @@ Returns an error if the serialization fails.
 public String toJson() throws Error
 ```
 
-#### toJsonPretty()
+**Example:**
+
+```java
+var result = instance.toJson();
+```
+
+**Returns:** `String`
+
+**Errors:** Throws `ErrorException`.
+
+###### toJsonPretty()
 
 Serialize to pretty JSON string
 
@@ -952,6 +1049,16 @@ Returns an error if the serialization fails.
 ```java
 public String toJsonPretty() throws Error
 ```
+
+**Example:**
+
+```java
+var result = instance.toJsonPretty();
+```
+
+**Returns:** `String`
+
+**Errors:** Throws `ErrorException`.
 
 ---
 
@@ -965,15 +1072,23 @@ Configuration for schemas with Query and Mutation types
 | `complexityLimit` | `Optional<Long>` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `Optional<Long>` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### defaultOptions()
+###### defaultOptions()
 
 **Signature:**
 
 ```java
 public static QueryMutationConfig defaultOptions()
 ```
+
+**Example:**
+
+```java
+var result = QueryMutationConfig.defaultOptions();
+```
+
+**Returns:** `QueryMutationConfig`
 
 ---
 
@@ -987,15 +1102,23 @@ Configuration for schemas with only Query type
 | `complexityLimit` | `Optional<Long>` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `Optional<Long>` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### defaultOptions()
+###### defaultOptions()
 
 **Signature:**
 
 ```java
 public static QueryOnlyConfig defaultOptions()
 ```
+
+**Example:**
+
+```java
+var result = QueryOnlyConfig.defaultOptions();
+```
+
+**Returns:** `QueryOnlyConfig`
 
 ---
 
@@ -1009,15 +1132,23 @@ Rate limiting configuration shared across runtimes
 | `burst` | `int` | `200` | Burst allowance |
 | `ipBased` | `boolean` | `true` | Use IP-based rate limiting |
 
-### Methods
+##### Methods
 
-#### defaultOptions()
+###### defaultOptions()
 
 **Signature:**
 
 ```java
 public static RateLimitConfig defaultOptions()
 ```
+
+**Example:**
+
+```java
+var result = RateLimitConfig.defaultOptions();
+```
+
+**Returns:** `RateLimitConfig`
 
 ---
 
@@ -1035,9 +1166,9 @@ HTTP Response with custom status code, headers, and content
 | `statusCode` | `short` | — | HTTP status code (defaults to 200) |
 | `headers` | `Map<String, String>` | `Collections.emptyMap()` | Response headers |
 
-### Methods
+##### Methods
 
-#### setHeader()
+###### setHeader()
 
 Set a header
 
@@ -1047,7 +1178,22 @@ Set a header
 public void setHeader(String key, String value)
 ```
 
-#### setCookie()
+**Example:**
+
+```java
+instance.setHeader("value", "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `key` | `String` | Yes | The key |
+| `value` | `String` | Yes | The value |
+
+**Returns:** No return value.
+
+###### setCookie()
 
 Set a cookie in the response
 
@@ -1057,7 +1203,28 @@ Set a cookie in the response
 public void setCookie(String key, String value, boolean secure, boolean httpOnly, long maxAge, String domain, String path, String sameSite)
 ```
 
-#### defaultOptions()
+**Example:**
+
+```java
+instance.setCookie("value", "value", true, true, 42, "value", "value", "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `key` | `String` | Yes | The key |
+| `value` | `String` | Yes | The value |
+| `secure` | `boolean` | Yes | The secure |
+| `httpOnly` | `boolean` | Yes | The http only |
+| `maxAge` | `Optional<Long>` | No | The max age |
+| `domain` | `Optional<String>` | No | The domain |
+| `path` | `Optional<String>` | No | Path to the file |
+| `sameSite` | `Optional<String>` | No | The same site |
+
+**Returns:** No return value.
+
+###### defaultOptions()
 
 **Signature:**
 
@@ -1065,15 +1232,23 @@ public void setCookie(String key, String value, boolean secure, boolean httpOnly
 public static Response defaultOptions()
 ```
 
+**Example:**
+
+```java
+var result = Response.defaultOptions();
+```
+
+**Returns:** `Response`
+
 ---
 
 #### RouteBuilder
 
 Builder for defining a route.
 
-### Methods
+##### Methods
 
-#### new()
+###### new()
 
 Create a new builder for the provided HTTP method and path.
 
@@ -1083,7 +1258,22 @@ Create a new builder for the provided HTTP method and path.
 public static RouteBuilder new(Method method, String path)
 ```
 
-#### handlerName()
+**Example:**
+
+```java
+var result = RouteBuilder.new(new Method(), "value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `Method` | Yes | The method |
+| `path` | `String` | Yes | Path to the file |
+
+**Returns:** `RouteBuilder`
+
+###### handlerName()
 
 Assign an explicit handler name.
 
@@ -1093,7 +1283,21 @@ Assign an explicit handler name.
 public RouteBuilder handlerName(String name)
 ```
 
-#### requestSchemaJson()
+**Example:**
+
+```java
+var result = instance.handlerName("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | `String` | Yes | The name |
+
+**Returns:** `RouteBuilder`
+
+###### requestSchemaJson()
 
 Provide a raw JSON schema for the request body.
 
@@ -1103,7 +1307,21 @@ Provide a raw JSON schema for the request body.
 public RouteBuilder requestSchemaJson(Object schema)
 ```
 
-#### responseSchemaJson()
+**Example:**
+
+```java
+var result = instance.requestSchemaJson(Map.of());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `Object` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### responseSchemaJson()
 
 Provide a raw JSON schema for the response body.
 
@@ -1113,7 +1331,21 @@ Provide a raw JSON schema for the response body.
 public RouteBuilder responseSchemaJson(Object schema)
 ```
 
-#### paramsSchemaJson()
+**Example:**
+
+```java
+var result = instance.responseSchemaJson(Map.of());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `Object` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### paramsSchemaJson()
 
 Provide a raw JSON schema for request parameters.
 
@@ -1123,7 +1355,21 @@ Provide a raw JSON schema for request parameters.
 public RouteBuilder paramsSchemaJson(Object schema)
 ```
 
-#### fileParamsJson()
+**Example:**
+
+```java
+var result = instance.paramsSchemaJson(Map.of());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `Object` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### fileParamsJson()
 
 Provide multipart file parameter configuration.
 
@@ -1133,7 +1379,21 @@ Provide multipart file parameter configuration.
 public RouteBuilder fileParamsJson(Object schema)
 ```
 
-#### cors()
+**Example:**
+
+```java
+var result = instance.fileParamsJson(Map.of());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `Object` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### cors()
 
 Attach a CORS configuration for this route.
 
@@ -1143,7 +1403,21 @@ Attach a CORS configuration for this route.
 public RouteBuilder cors(CorsConfig cors)
 ```
 
-#### compression()
+**Example:**
+
+```java
+var result = instance.cors(new CorsConfig());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `cors` | `CorsConfig` | Yes | The cors config |
+
+**Returns:** `RouteBuilder`
+
+###### compression()
 
 Attach a compression configuration for this route.
 
@@ -1153,7 +1427,21 @@ Attach a compression configuration for this route.
 public RouteBuilder compression(CompressionConfig compression)
 ```
 
-#### sync()
+**Example:**
+
+```java
+var result = instance.compression(new CompressionConfig());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `compression` | `CompressionConfig` | Yes | The compression config |
+
+**Returns:** `RouteBuilder`
+
+###### sync()
 
 Mark the route as synchronous.
 
@@ -1163,7 +1451,15 @@ Mark the route as synchronous.
 public RouteBuilder sync()
 ```
 
-#### handlerDependencies()
+**Example:**
+
+```java
+var result = instance.sync();
+```
+
+**Returns:** `RouteBuilder`
+
+###### handlerDependencies()
 
 Declare the dependency keys that must be resolved before this handler runs.
 
@@ -1172,6 +1468,20 @@ Declare the dependency keys that must be resolved before this handler runs.
 ```java
 public RouteBuilder handlerDependencies(List<String> dependencies)
 ```
+
+**Example:**
+
+```java
+var result = instance.handlerDependencies(List.of());
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `dependencies` | `List<String>` | Yes | The dependencies |
+
+**Returns:** `RouteBuilder`
 
 ---
 
@@ -1188,15 +1498,23 @@ introspection control, complexity limits, and depth limits.
 | `complexityLimit` | `Optional<Long>` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `Optional<Long>` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### defaultOptions()
+###### defaultOptions()
 
 **Signature:**
 
 ```java
 public static SchemaConfig defaultOptions()
 ```
+
+**Example:**
+
+```java
+var result = SchemaConfig.defaultOptions();
+```
+
+**Returns:** `SchemaConfig`
 
 ---
 
@@ -1223,20 +1541,26 @@ Server configuration
 | `openapi` | `Optional<OpenApiConfig>` | `null` | OpenAPI documentation configuration |
 | `jsonrpc` | `Optional<JsonRpcConfig>` | `null` | JSON-RPC configuration |
 | `grpc` | `Optional<GrpcConfig>` | `null` | gRPC configuration |
-| `lifecycleHooks` | `Optional<String>` | `null` | Lifecycle hooks for request/response processing |
 | `backgroundTasks` | `BackgroundTaskConfig` | — | Background task executor configuration |
 | `enableHttpTrace` | `boolean` | `false` | Enable per-request HTTP tracing (tower-http `TraceLayer`) |
-| `diContainer` | `Optional<String>` | `null` | Dependency injection container (requires 'di' feature) |
 
-### Methods
+##### Methods
 
-#### defaultOptions()
+###### defaultOptions()
 
 **Signature:**
 
 ```java
 public static ServerConfig defaultOptions()
 ```
+
+**Example:**
+
+```java
+var result = ServerConfig.defaultOptions();
+```
+
+**Returns:** `ServerConfig`
 
 ---
 
@@ -1276,9 +1600,9 @@ retry: 3000
 | `id` | `Optional<String>` | `null` | Event ID (optional, for client-side reconnection) |
 | `retry` | `Optional<Long>` | `null` | Retry timeout in milliseconds (optional) |
 
-### Methods
+#### Methods
 
-#### withId()
+##### withId()
 
 Set the event ID for client-side reconnection support
 
@@ -1291,7 +1615,21 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 public SseEvent withId(String id)
 ```
 
-#### withRetry()
+**Example:**
+
+```java
+var result = instance.withId("value");
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `id` | `String` | Yes | Unique identifier for this event |
+
+**Returns:** `SseEvent`
+
+###### withRetry()
 
 Set the retry timeout for client reconnection
 
@@ -1303,6 +1641,20 @@ if the connection is lost. The client browser will automatically handle reconnec
 ```java
 public SseEvent withRetry(long retryMs)
 ```
+
+**Example:**
+
+```java
+var result = instance.withRetry(42);
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `retryMs` | `long` | Yes | Retry timeout in milliseconds |
+
+**Returns:** `SseEvent`
 
 ---
 
@@ -1343,11 +1695,10 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `size` | `Optional<Long>` | `null` | Size of the file in bytes |
 | `content` | `byte[]` | — | File content (may be base64 encoded) |
 | `contentEncoding` | `Optional<String>` | `null` | Content encoding type |
-| `cursor` | `String` | — | Internal cursor for Read/Seek operations |
 
-### Methods
+##### Methods
 
-#### asBytes()
+###### asBytes()
 
 Get the raw file content as bytes.
 
@@ -1359,7 +1710,15 @@ This provides zero-copy access to the underlying buffer.
 public byte[] asBytes()
 ```
 
-#### readToString()
+**Example:**
+
+```java
+var result = instance.asBytes();
+```
+
+**Returns:** `byte[]`
+
+###### readToString()
 
 Read the file content as a UTF-8 string.
 
@@ -1373,7 +1732,17 @@ Returns an error if the content is not valid UTF-8.
 public String readToString() throws Error
 ```
 
-#### contentTypeOrDefault()
+**Example:**
+
+```java
+var result = instance.readToString();
+```
+
+**Returns:** `String`
+
+**Errors:** Throws `ErrorException`.
+
+###### contentTypeOrDefault()
 
 Get the content type, defaulting to "application/octet-stream".
 
@@ -1382,6 +1751,14 @@ Get the content type, defaulting to "application/octet-stream".
 ```java
 public String contentTypeOrDefault()
 ```
+
+**Example:**
+
+```java
+var result = instance.contentTypeOrDefault();
+```
+
+**Returns:** `String`
 
 ---
 

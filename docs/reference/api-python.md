@@ -22,6 +22,12 @@ A `QueryOnlyConfig` with default settings
 def schema_query_only() -> QueryOnlyConfig
 ```
 
+**Example:**
+
+```python
+result = schema_query_only()
+```
+
 **Returns:** `QueryOnlyConfig`
 
 ---
@@ -40,6 +46,12 @@ A `QueryMutationConfig` with default settings
 
 ```python
 def schema_query_mutation() -> QueryMutationConfig
+```
+
+**Example:**
+
+```python
+result = schema_query_mutation()
 ```
 
 **Returns:** `QueryMutationConfig`
@@ -62,6 +74,12 @@ A `FullSchemaConfig` with default settings
 def schema_full() -> FullSchemaConfig
 ```
 
+**Example:**
+
+```python
+result = schema_full()
+```
+
 **Returns:** `FullSchemaConfig`
 
 ---
@@ -76,136 +94,6 @@ API Key authentication configuration
 |-------|------|---------|-------------|
 | `keys` | `list[str]` | — | Valid API keys |
 | `header_name` | `str` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
-
----
-
-#### App
-
-Spikard application builder.
-
-### Methods
-
-#### new()
-
-Create a new application with the default server configuration.
-
-**Signature:**
-
-```python
-@staticmethod
-def new() -> App
-```
-
-#### on_request()
-
-Register an `on_request` lifecycle hook (runs before validation and handler dispatch).
-
-**Signature:**
-
-```python
-def on_request(self, hook: str) -> App
-```
-
-#### pre_validation()
-
-Register a `pre_validation` lifecycle hook (runs after `on_request`, before validation).
-
-**Signature:**
-
-```python
-def pre_validation(self, hook: str) -> App
-```
-
-#### pre_handler()
-
-Register a `pre_handler` lifecycle hook (runs after validation, before the handler).
-
-**Signature:**
-
-```python
-def pre_handler(self, hook: str) -> App
-```
-
-#### on_response()
-
-Register an `on_response` lifecycle hook (runs after a successful handler response).
-
-**Signature:**
-
-```python
-def on_response(self, hook: str) -> App
-```
-
-#### on_error()
-
-Register an `on_error` lifecycle hook (runs when the handler returns an error).
-
-**Signature:**
-
-```python
-def on_error(self, hook: str) -> App
-```
-
-#### merge_axum_router()
-
-Attach an existing Axum router to this application, returning ownership.
-
-**Signature:**
-
-```python
-def merge_axum_router(self, router: str) -> App
-```
-
-#### attach_axum_router()
-
-Attach an Axum router using a mutable reference for incremental configuration.
-
-**Signature:**
-
-```python
-def attach_axum_router(self, router: str) -> App
-```
-
-#### into_router()
-
-Build the underlying Axum router.
-
-**Errors:**
-
-Returns an error if server or router construction fails.
-
-**Signature:**
-
-```python
-def into_router(self) -> str
-```
-
-#### into_router_and_config()
-
-Decompose the application into its Axum router and server configuration.
-
-This is the low-level escape hatch used by the C FFI layer to start the
-server on a background thread while retaining the bind address from the
-caller-supplied `ServerConfig`. Prefer `App.run` for normal use.
-
-**Errors:**
-
-Returns an error if router construction fails.
-
-**Signature:**
-
-```python
-def into_router_and_config(self) -> str
-```
-
-#### default()
-
-**Signature:**
-
-```python
-@staticmethod
-def default() -> App
-```
 
 ---
 
@@ -227,9 +115,9 @@ AsyncAPI HTTP endpoint configuration
 | `name` | `str` | — | The name |
 | `request_id` | `str \| None` | `None` | Request id |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -237,6 +125,14 @@ AsyncAPI HTTP endpoint configuration
 @staticmethod
 def default() -> BackgroundJobMetadata
 ```
+
+**Example:**
+
+```python
+result = BackgroundJobMetadata.default()
+```
+
+**Returns:** `BackgroundJobMetadata`
 
 ---
 
@@ -250,9 +146,9 @@ Configuration for in-process background task execution.
 | `max_concurrent_tasks` | `int` | `128` | Maximum concurrent tasks |
 | `drain_timeout_secs` | `int` | `30` | Drain timeout secs |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -260,6 +156,14 @@ Configuration for in-process background task execution.
 @staticmethod
 def default() -> BackgroundTaskConfig
 ```
+
+**Example:**
+
+```python
+result = BackgroundTaskConfig.default()
+```
+
+**Returns:** `BackgroundTaskConfig`
 
 ---
 
@@ -274,9 +178,9 @@ Compression configuration shared across runtimes
 | `min_size` | `int` | — | Minimum response size to compress (bytes) |
 | `quality` | `int` | — | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -284,6 +188,14 @@ Compression configuration shared across runtimes
 @staticmethod
 def default() -> CompressionConfig
 ```
+
+**Example:**
+
+```python
+result = CompressionConfig.default()
+```
+
+**Returns:** `CompressionConfig`
 
 ---
 
@@ -311,12 +223,10 @@ CORS configuration for a route
 | `expose_headers` | `list[str] \| None` | `None` | Expose headers |
 | `max_age` | `int \| None` | `None` | Maximum age |
 | `allow_credentials` | `bool \| None` | `None` | Allow credentials |
-| `methods_joined_cache` | `str` | — | Methods joined cache |
-| `headers_joined_cache` | `str` | — | Headers joined cache |
 
-### Methods
+##### Methods
 
-#### allowed_methods_joined()
+###### allowed_methods_joined()
 
 Get the cached joined methods string for preflight responses
 
@@ -326,7 +236,15 @@ Get the cached joined methods string for preflight responses
 def allowed_methods_joined(self) -> str
 ```
 
-#### allowed_headers_joined()
+**Example:**
+
+```python
+result = instance.allowed_methods_joined()
+```
+
+**Returns:** `str`
+
+###### allowed_headers_joined()
 
 Get the cached joined headers string for preflight responses
 
@@ -336,7 +254,15 @@ Get the cached joined headers string for preflight responses
 def allowed_headers_joined(self) -> str
 ```
 
-#### is_origin_allowed()
+**Example:**
+
+```python
+result = instance.allowed_headers_joined()
+```
+
+**Returns:** `str`
+
+###### is_origin_allowed()
 
 Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -346,7 +272,21 @@ Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 def is_origin_allowed(self, origin: str) -> bool
 ```
 
-#### is_method_allowed()
+**Example:**
+
+```python
+result = instance.is_origin_allowed("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `origin` | `str` | Yes | The origin |
+
+**Returns:** `bool`
+
+###### is_method_allowed()
 
 Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -356,7 +296,21 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 def is_method_allowed(self, method: str) -> bool
 ```
 
-#### default()
+**Example:**
+
+```python
+result = instance.is_method_allowed("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `str` | Yes | The method |
+
+**Returns:** `bool`
+
+###### default()
 
 **Signature:**
 
@@ -364,6 +318,14 @@ def is_method_allowed(self, method: str) -> bool
 @staticmethod
 def default() -> CorsConfig
 ```
+
+**Example:**
+
+```python
+result = CorsConfig.default()
+```
+
+**Returns:** `CorsConfig`
 
 ---
 
@@ -377,9 +339,9 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 | `complexity_limit` | `int \| None` | `None` | Maximum query complexity (None = unlimited) |
 | `depth_limit` | `int \| None` | `None` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -387,6 +349,14 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 @staticmethod
 def default() -> FullSchemaConfig
 ```
+
+**Example:**
+
+```python
+result = FullSchemaConfig.default()
+```
+
+**Returns:** `FullSchemaConfig`
 
 ---
 
@@ -397,9 +367,9 @@ Configuration for GraphQL routes
 Provides a builder pattern for configuring GraphQL route parameters
 for the Spikard HTTP server's routing system.
 
-### Methods
+##### Methods
 
-#### new()
+###### new()
 
 Create a new GraphQL route configuration with defaults
 
@@ -416,7 +386,15 @@ Default values:
 def new() -> GraphQlRouteConfig
 ```
 
-#### path()
+**Example:**
+
+```python
+result = GraphQlRouteConfig.new()
+```
+
+**Returns:** `GraphQlRouteConfig`
+
+###### path()
 
 Set the HTTP path for the GraphQL endpoint
 
@@ -426,7 +404,21 @@ Set the HTTP path for the GraphQL endpoint
 def path(self, path: str) -> GraphQlRouteConfig
 ```
 
-#### method()
+**Example:**
+
+```python
+result = instance.path("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `path` | `str` | Yes | The URL path (e.g., "/graphql", "/api/graphql") |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### method()
 
 Set the HTTP method for the GraphQL endpoint
 
@@ -436,7 +428,21 @@ Set the HTTP method for the GraphQL endpoint
 def method(self, method: str) -> GraphQlRouteConfig
 ```
 
-#### enable_playground()
+**Example:**
+
+```python
+result = instance.method("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `str` | Yes | The HTTP method (typically "POST") |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### enable_playground()
 
 Enable or disable the GraphQL Playground UI
 
@@ -446,7 +452,21 @@ Enable or disable the GraphQL Playground UI
 def enable_playground(self, enable: bool) -> GraphQlRouteConfig
 ```
 
-#### description()
+**Example:**
+
+```python
+result = instance.enable_playground(True)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `enable` | `bool` | Yes | Whether to enable playground |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### description()
 
 Set a custom description for documentation
 
@@ -456,7 +476,21 @@ Set a custom description for documentation
 def description(self, description: str) -> GraphQlRouteConfig
 ```
 
-#### get_path()
+**Example:**
+
+```python
+result = instance.description("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `description` | `str` | Yes | Documentation string |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### get_path()
 
 Get the configured path
 
@@ -466,7 +500,15 @@ Get the configured path
 def get_path(self) -> str
 ```
 
-#### get_method()
+**Example:**
+
+```python
+result = instance.get_path()
+```
+
+**Returns:** `str`
+
+###### get_method()
 
 Get the configured method
 
@@ -476,7 +518,15 @@ Get the configured method
 def get_method(self) -> str
 ```
 
-#### is_playground_enabled()
+**Example:**
+
+```python
+result = instance.get_method()
+```
+
+**Returns:** `str`
+
+###### is_playground_enabled()
 
 Check if playground is enabled
 
@@ -486,7 +536,15 @@ Check if playground is enabled
 def is_playground_enabled(self) -> bool
 ```
 
-#### get_description()
+**Example:**
+
+```python
+result = instance.is_playground_enabled()
+```
+
+**Returns:** `bool`
+
+###### get_description()
 
 Get the description if set
 
@@ -496,7 +554,15 @@ Get the description if set
 def get_description(self) -> str | None
 ```
 
-#### default()
+**Example:**
+
+```python
+result = instance.get_description()
+```
+
+**Returns:** `str | None`
+
+###### default()
 
 **Signature:**
 
@@ -504,6 +570,14 @@ def get_description(self) -> str | None
 @staticmethod
 def default() -> GraphQlRouteConfig
 ```
+
+**Example:**
+
+```python
+result = GraphQlRouteConfig.default()
+```
+
+**Returns:** `GraphQlRouteConfig`
 
 ---
 
@@ -561,9 +635,9 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `keepalive_timeout` | `int` | — | HTTP/2 keepalive timeout in seconds |
 | `max_stream_response_bytes` | `int \| None` | `None` | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `None` (unbounded total response size). |
 
-### Methods
+#### Methods
 
-#### default()
+##### default()
 
 **Signature:**
 
@@ -572,110 +646,13 @@ concurrent stream limiting to the HTTP/2 transport layer:
 def default() -> GrpcConfig
 ```
 
----
-
-#### Handler
-
-Handler trait that all language bindings must implement
-
-This trait is completely language-agnostic. Each binding (Python, Node, WASM)
-implements this trait to bridge their runtime to our HTTP server.
-
-### Methods
-
-#### call()
-
-Handle an HTTP request
-
-Takes the extracted request data and returns a future that resolves to either:
-
-- Ok(Response): A successful HTTP response
-- Err((StatusCode, String)): An error with status code and message
-
-**Signature:**
+**Example:**
 
 ```python
-def call(self, request: Request, request_data: RequestData) -> HandlerResult
+result = GrpcConfig.default()
 ```
 
-#### prefers_raw_json_body()
-
-Whether this handler prefers consuming `RequestData.raw_body` over the parsed
-`RequestData.body` for JSON requests.
-
-When `True`, the server may skip eager JSON parsing when there is no request-body
-schema validator attached to the route.
-
-**Signature:**
-
-```python
-def prefers_raw_json_body(self) -> bool
-```
-
-#### prefers_parameter_extraction()
-
-Whether this handler wants to perform its own parameter validation/extraction (path/query/header/cookie).
-
-When `True`, the server will skip `ParameterValidator.validate_and_extract` in `ValidatingHandler`.
-This is useful for language bindings which need to transform validated parameters into
-language-specific values (e.g., Python kwargs) without duplicating work. When `False`,
-the server stores validated output in `RequestData.validated_params`.
-
-**Signature:**
-
-```python
-def prefers_parameter_extraction(self) -> bool
-```
-
-#### wants_headers()
-
-Whether this handler needs the parsed headers map in `RequestData`.
-
-When `False`, the server may skip building `RequestData.headers` for requests without a body.
-(Requests with bodies still typically need `Content-Type` decisions.)
-
-**Signature:**
-
-```python
-def wants_headers(self) -> bool
-```
-
-#### wants_cookies()
-
-Whether this handler needs the parsed cookies map in `RequestData`.
-
-When `False`, the server may skip parsing cookies for requests without a body.
-
-**Signature:**
-
-```python
-def wants_cookies(self) -> bool
-```
-
-#### wants_request_extensions()
-
-Whether this handler needs `RequestData` stored in request extensions.
-
-When `False`, the server avoids inserting `RequestData` into extensions to
-skip cloning in hot paths.
-
-**Signature:**
-
-```python
-def wants_request_extensions(self) -> bool
-```
-
-#### static_response()
-
-Return a pre-built static response if this handler always produces the
-same output. When `Some`, the server bypasses the full middleware
-pipeline and serves the pre-built response directly.
-
-**Signature:**
-
-```python
-def static_response(self) -> StaticResponse | None
-```
+**Returns:** `GrpcConfig`
 
 ---
 
@@ -683,9 +660,9 @@ def static_response(self) -> StaticResponse | None
 
 Convert user-facing handler functions into the low-level `Handler` trait.
 
-### Methods
+##### Methods
 
-#### into_handler()
+###### into_handler()
 
 Convert this value into a shared request handler.
 
@@ -694,6 +671,14 @@ Convert this value into a shared request handler.
 ```python
 def into_handler(self) -> Handler
 ```
+
+**Example:**
+
+```python
+result = instance.into_handler()
+```
+
+**Returns:** `Handler`
 
 ---
 
@@ -708,9 +693,9 @@ JSON-RPC server configuration
 | `enable_batch` | `bool` | — | Enable batch request processing (default: true) |
 | `max_batch_size` | `int` | — | Maximum number of requests in a batch (default: 100) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -718,6 +703,14 @@ JSON-RPC server configuration
 @staticmethod
 def default() -> JsonRpcConfig
 ```
+
+**Example:**
+
+```python
+result = JsonRpcConfig.default()
+```
+
+**Returns:** `JsonRpcConfig`
 
 ---
 
@@ -782,9 +775,9 @@ OpenAPI configuration
 | `servers` | `list[ServerInfo]` | `[]` | Server definitions |
 | `security_schemes` | `dict[str, SecuritySchemeInfo]` | `{}` | Security schemes (auto-detected from middleware if not provided) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -792,6 +785,14 @@ OpenAPI configuration
 @staticmethod
 def default() -> OpenApiConfig
 ```
+
+**Example:**
+
+```python
+result = OpenApiConfig.default()
+```
+
+**Returns:** `OpenApiConfig`
 
 ---
 
@@ -891,9 +892,9 @@ Content-Type: application/problem+json
 | `instance` | `str \| None` | `None` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
 | `extensions` | `dict[str, dict[str, Any]]` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
 
-### Methods
+#### Methods
 
-#### with_detail()
+##### with_detail()
 
 Set the detail field
 
@@ -903,7 +904,21 @@ Set the detail field
 def with_detail(self, detail: str) -> ProblemDetails
 ```
 
-#### with_instance()
+**Example:**
+
+```python
+result = instance.with_detail("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `str` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### with_instance()
 
 Set the instance field
 
@@ -913,7 +928,21 @@ Set the instance field
 def with_instance(self, instance: str) -> ProblemDetails
 ```
 
-#### not_found()
+**Example:**
+
+```python
+result = instance.with_instance("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `instance` | `str` | Yes | The instance |
+
+**Returns:** `ProblemDetails`
+
+###### not_found()
 
 Create a not found error
 
@@ -924,7 +953,21 @@ Create a not found error
 def not_found(detail: str) -> ProblemDetails
 ```
 
-#### method_not_allowed()
+**Example:**
+
+```python
+result = ProblemDetails.not_found("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `str` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### method_not_allowed()
 
 Create a method not allowed error
 
@@ -935,7 +978,21 @@ Create a method not allowed error
 def method_not_allowed(detail: str) -> ProblemDetails
 ```
 
-#### internal_server_error()
+**Example:**
+
+```python
+result = ProblemDetails.method_not_allowed("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `str` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### internal_server_error()
 
 Create an internal server error
 
@@ -946,7 +1003,21 @@ Create an internal server error
 def internal_server_error(detail: str) -> ProblemDetails
 ```
 
-#### bad_request()
+**Example:**
+
+```python
+result = ProblemDetails.internal_server_error("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `str` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### bad_request()
 
 Create a bad request error
 
@@ -957,7 +1028,21 @@ Create a bad request error
 def bad_request(detail: str) -> ProblemDetails
 ```
 
-#### to_json()
+**Example:**
+
+```python
+result = ProblemDetails.bad_request("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `str` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### to_json()
 
 Serialize to JSON string
 
@@ -970,7 +1055,17 @@ Returns an error if the serialization fails.
 def to_json(self) -> str
 ```
 
-#### to_json_pretty()
+**Example:**
+
+```python
+result = instance.to_json()
+```
+
+**Returns:** `str`
+
+**Errors:** Raises `Error`.
+
+###### to_json_pretty()
 
 Serialize to pretty JSON string
 
@@ -982,6 +1077,16 @@ Returns an error if the serialization fails.
 ```python
 def to_json_pretty(self) -> str
 ```
+
+**Example:**
+
+```python
+result = instance.to_json_pretty()
+```
+
+**Returns:** `str`
+
+**Errors:** Raises `Error`.
 
 ---
 
@@ -995,9 +1100,9 @@ Configuration for schemas with Query and Mutation types
 | `complexity_limit` | `int \| None` | `None` | Maximum query complexity (None = unlimited) |
 | `depth_limit` | `int \| None` | `None` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -1005,6 +1110,14 @@ Configuration for schemas with Query and Mutation types
 @staticmethod
 def default() -> QueryMutationConfig
 ```
+
+**Example:**
+
+```python
+result = QueryMutationConfig.default()
+```
+
+**Returns:** `QueryMutationConfig`
 
 ---
 
@@ -1018,9 +1131,9 @@ Configuration for schemas with only Query type
 | `complexity_limit` | `int \| None` | `None` | Maximum query complexity (None = unlimited) |
 | `depth_limit` | `int \| None` | `None` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -1028,6 +1141,14 @@ Configuration for schemas with only Query type
 @staticmethod
 def default() -> QueryOnlyConfig
 ```
+
+**Example:**
+
+```python
+result = QueryOnlyConfig.default()
+```
+
+**Returns:** `QueryOnlyConfig`
 
 ---
 
@@ -1041,9 +1162,9 @@ Rate limiting configuration shared across runtimes
 | `burst` | `int` | `200` | Burst allowance |
 | `ip_based` | `bool` | `True` | Use IP-based rate limiting |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -1051,6 +1172,14 @@ Rate limiting configuration shared across runtimes
 @staticmethod
 def default() -> RateLimitConfig
 ```
+
+**Example:**
+
+```python
+result = RateLimitConfig.default()
+```
+
+**Returns:** `RateLimitConfig`
 
 ---
 
@@ -1068,9 +1197,9 @@ HTTP Response with custom status code, headers, and content
 | `status_code` | `int` | — | HTTP status code (defaults to 200) |
 | `headers` | `dict[str, str]` | `{}` | Response headers |
 
-### Methods
+##### Methods
 
-#### set_header()
+###### set_header()
 
 Set a header
 
@@ -1080,7 +1209,22 @@ Set a header
 def set_header(self, key: str, value: str) -> None
 ```
 
-#### set_cookie()
+**Example:**
+
+```python
+instance.set_header("value", "value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `key` | `str` | Yes | The key |
+| `value` | `str` | Yes | The value |
+
+**Returns:** No return value.
+
+###### set_cookie()
 
 Set a cookie in the response
 
@@ -1090,7 +1234,28 @@ Set a cookie in the response
 def set_cookie(self, key: str, value: str, secure: bool, http_only: bool, max_age: int, domain: str, path: str, same_site: str) -> None
 ```
 
-#### default()
+**Example:**
+
+```python
+instance.set_cookie("value", "value", True, True, max_age=42, domain="value", path="value", same_site="value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `key` | `str` | Yes | The key |
+| `value` | `str` | Yes | The value |
+| `secure` | `bool` | Yes | The secure |
+| `http_only` | `bool` | Yes | The http only |
+| `max_age` | `int \| None` | No | The max age |
+| `domain` | `str \| None` | No | The domain |
+| `path` | `str \| None` | No | Path to the file |
+| `same_site` | `str \| None` | No | The same site |
+
+**Returns:** No return value.
+
+###### default()
 
 **Signature:**
 
@@ -1098,6 +1263,14 @@ def set_cookie(self, key: str, value: str, secure: bool, http_only: bool, max_ag
 @staticmethod
 def default() -> Response
 ```
+
+**Example:**
+
+```python
+result = Response.default()
+```
+
+**Returns:** `Response`
 
 ---
 
@@ -1111,9 +1284,9 @@ Snapshot of an Axum response used by higher-level language bindings.
 | `headers` | `dict[str, str]` | — | Response headers (lowercase keys for predictable lookups). |
 | `body` | `bytes` | — | Response body bytes (decoded for supported encodings). |
 
-### Methods
+##### Methods
 
-#### text()
+###### text()
 
 Return response body as UTF-8 string.
 
@@ -1123,7 +1296,17 @@ Return response body as UTF-8 string.
 def text(self) -> str
 ```
 
-#### header()
+**Example:**
+
+```python
+result = instance.text()
+```
+
+**Returns:** `str`
+
+**Errors:** Raises `FromUtf8Error`.
+
+###### header()
 
 Lookup header by case-insensitive name.
 
@@ -1133,15 +1316,29 @@ Lookup header by case-insensitive name.
 def header(self, name: str) -> str | None
 ```
 
+**Example:**
+
+```python
+result = instance.header("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | `str` | Yes | The name |
+
+**Returns:** `str | None`
+
 ---
 
 #### RouteBuilder
 
 Builder for defining a route.
 
-### Methods
+##### Methods
 
-#### new()
+###### new()
 
 Create a new builder for the provided HTTP method and path.
 
@@ -1152,7 +1349,22 @@ Create a new builder for the provided HTTP method and path.
 def new(method: Method, path: str) -> RouteBuilder
 ```
 
-#### handler_name()
+**Example:**
+
+```python
+result = RouteBuilder.new(Method(), "value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `Method` | Yes | The method |
+| `path` | `str` | Yes | Path to the file |
+
+**Returns:** `RouteBuilder`
+
+###### handler_name()
 
 Assign an explicit handler name.
 
@@ -1162,7 +1374,21 @@ Assign an explicit handler name.
 def handler_name(self, name: str) -> RouteBuilder
 ```
 
-#### request_schema_json()
+**Example:**
+
+```python
+result = instance.handler_name("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | `str` | Yes | The name |
+
+**Returns:** `RouteBuilder`
+
+###### request_schema_json()
 
 Provide a raw JSON schema for the request body.
 
@@ -1172,7 +1398,21 @@ Provide a raw JSON schema for the request body.
 def request_schema_json(self, schema: dict[str, Any]) -> RouteBuilder
 ```
 
-#### response_schema_json()
+**Example:**
+
+```python
+result = instance.request_schema_json({})
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `dict[str, Any]` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### response_schema_json()
 
 Provide a raw JSON schema for the response body.
 
@@ -1182,7 +1422,21 @@ Provide a raw JSON schema for the response body.
 def response_schema_json(self, schema: dict[str, Any]) -> RouteBuilder
 ```
 
-#### params_schema_json()
+**Example:**
+
+```python
+result = instance.response_schema_json({})
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `dict[str, Any]` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### params_schema_json()
 
 Provide a raw JSON schema for request parameters.
 
@@ -1192,7 +1446,21 @@ Provide a raw JSON schema for request parameters.
 def params_schema_json(self, schema: dict[str, Any]) -> RouteBuilder
 ```
 
-#### file_params_json()
+**Example:**
+
+```python
+result = instance.params_schema_json({})
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `dict[str, Any]` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### file_params_json()
 
 Provide multipart file parameter configuration.
 
@@ -1202,7 +1470,21 @@ Provide multipart file parameter configuration.
 def file_params_json(self, schema: dict[str, Any]) -> RouteBuilder
 ```
 
-#### cors()
+**Example:**
+
+```python
+result = instance.file_params_json({})
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `dict[str, Any]` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### cors()
 
 Attach a CORS configuration for this route.
 
@@ -1212,7 +1494,21 @@ Attach a CORS configuration for this route.
 def cors(self, cors: CorsConfig) -> RouteBuilder
 ```
 
-#### compression()
+**Example:**
+
+```python
+result = instance.cors(CorsConfig())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `cors` | `CorsConfig` | Yes | The cors config |
+
+**Returns:** `RouteBuilder`
+
+###### compression()
 
 Attach a compression configuration for this route.
 
@@ -1222,7 +1518,21 @@ Attach a compression configuration for this route.
 def compression(self, compression: CompressionConfig) -> RouteBuilder
 ```
 
-#### sync()
+**Example:**
+
+```python
+result = instance.compression(CompressionConfig())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `compression` | `CompressionConfig` | Yes | The compression config |
+
+**Returns:** `RouteBuilder`
+
+###### sync()
 
 Mark the route as synchronous.
 
@@ -1232,7 +1542,15 @@ Mark the route as synchronous.
 def sync(self) -> RouteBuilder
 ```
 
-#### handler_dependencies()
+**Example:**
+
+```python
+result = instance.sync()
+```
+
+**Returns:** `RouteBuilder`
+
+###### handler_dependencies()
 
 Declare the dependency keys that must be resolved before this handler runs.
 
@@ -1241,6 +1559,20 @@ Declare the dependency keys that must be resolved before this handler runs.
 ```python
 def handler_dependencies(self, dependencies: list[str]) -> RouteBuilder
 ```
+
+**Example:**
+
+```python
+result = instance.handler_dependencies([])
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `dependencies` | `list[str]` | Yes | The dependencies |
+
+**Returns:** `RouteBuilder`
 
 ---
 
@@ -1257,9 +1589,9 @@ introspection control, complexity limits, and depth limits.
 | `complexity_limit` | `int \| None` | `None` | Maximum query complexity (None = unlimited) |
 | `depth_limit` | `int \| None` | `None` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -1267,6 +1599,14 @@ introspection control, complexity limits, and depth limits.
 @staticmethod
 def default() -> SchemaConfig
 ```
+
+**Example:**
+
+```python
+result = SchemaConfig.default()
+```
+
+**Returns:** `SchemaConfig`
 
 ---
 
@@ -1293,14 +1633,12 @@ Server configuration
 | `openapi` | `OpenApiConfig \| None` | `None` | OpenAPI documentation configuration |
 | `jsonrpc` | `JsonRpcConfig \| None` | `None` | JSON-RPC configuration |
 | `grpc` | `GrpcConfig \| None` | `None` | gRPC configuration |
-| `lifecycle_hooks` | `str \| None` | `None` | Lifecycle hooks for request/response processing |
 | `background_tasks` | `BackgroundTaskConfig` | — | Background task executor configuration |
 | `enable_http_trace` | `bool` | `False` | Enable per-request HTTP tracing (tower-http `TraceLayer`) |
-| `di_container` | `str \| None` | `None` | Dependency injection container (requires 'di' feature) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
@@ -1308,6 +1646,14 @@ Server configuration
 @staticmethod
 def default() -> ServerConfig
 ```
+
+**Example:**
+
+```python
+result = ServerConfig.default()
+```
+
+**Returns:** `ServerConfig`
 
 ---
 
@@ -1347,9 +1693,9 @@ retry: 3000
 | `id` | `str \| None` | `None` | Event ID (optional, for client-side reconnection) |
 | `retry` | `int \| None` | `None` | Retry timeout in milliseconds (optional) |
 
-### Methods
+#### Methods
 
-#### with_id()
+##### with_id()
 
 Set the event ID for client-side reconnection support
 
@@ -1362,7 +1708,21 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 def with_id(self, id: str) -> SseEvent
 ```
 
-#### with_retry()
+**Example:**
+
+```python
+result = instance.with_id("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `id` | `str` | Yes | Unique identifier for this event |
+
+**Returns:** `SseEvent`
+
+###### with_retry()
 
 Set the retry timeout for client reconnection
 
@@ -1374,6 +1734,20 @@ if the connection is lost. The client browser will automatically handle reconnec
 ```python
 def with_retry(self, retry_ms: int) -> SseEvent
 ```
+
+**Example:**
+
+```python
+result = instance.with_retry(42)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `retry_ms` | `int` | Yes | Retry timeout in milliseconds |
+
+**Returns:** `SseEvent`
 
 ---
 
@@ -1399,9 +1773,9 @@ interface for making HTTP requests, sending WebSocket connections, and
 handling Server-Sent Events. Language bindings wrap this to provide
 native API surfaces.
 
-### Methods
+##### Methods
 
-#### graphql_at()
+###### graphql_at()
 
 Send a GraphQL query/mutation to a custom endpoint
 
@@ -1411,7 +1785,26 @@ Send a GraphQL query/mutation to a custom endpoint
 def graphql_at(self, endpoint: str, query: str, variables: dict[str, Any], operation_name: str) -> ResponseSnapshot
 ```
 
-#### graphql()
+**Example:**
+
+```python
+result = instance.graphql_at("value", "value", variables={}, operation_name="value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `endpoint` | `str` | Yes | The endpoint |
+| `query` | `str` | Yes | The query |
+| `variables` | `dict[str, Any] \| None` | No | The variables |
+| `operation_name` | `str \| None` | No | The operation name |
+
+**Returns:** `ResponseSnapshot`
+
+**Errors:** Raises `SnapshotError`.
+
+###### graphql()
 
 Send a GraphQL query/mutation
 
@@ -1421,7 +1814,25 @@ Send a GraphQL query/mutation
 def graphql(self, query: str, variables: dict[str, Any], operation_name: str) -> ResponseSnapshot
 ```
 
-#### graphql_subscription_at()
+**Example:**
+
+```python
+result = instance.graphql("value", variables={}, operation_name="value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `str` | Yes | The query |
+| `variables` | `dict[str, Any] \| None` | No | The variables |
+| `operation_name` | `str \| None` | No | The operation name |
+
+**Returns:** `ResponseSnapshot`
+
+**Errors:** Raises `SnapshotError`.
+
+###### graphql_subscription_at()
 
 Send a GraphQL subscription (WebSocket) to a custom endpoint.
 
@@ -1434,7 +1845,26 @@ After the first payload is received, this client sends `complete` to unsubscribe
 def graphql_subscription_at(self, endpoint: str, query: str, variables: dict[str, Any], operation_name: str) -> GraphQlSubscriptionSnapshot
 ```
 
-#### graphql_subscription()
+**Example:**
+
+```python
+result = instance.graphql_subscription_at("value", "value", variables={}, operation_name="value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `endpoint` | `str` | Yes | The endpoint |
+| `query` | `str` | Yes | The query |
+| `variables` | `dict[str, Any] \| None` | No | The variables |
+| `operation_name` | `str \| None` | No | The operation name |
+
+**Returns:** `GraphQlSubscriptionSnapshot`
+
+**Errors:** Raises `SnapshotError`.
+
+###### graphql_subscription()
 
 Send a GraphQL subscription (WebSocket).
 
@@ -1445,6 +1875,24 @@ Uses `/graphql` as the default subscription endpoint.
 ```python
 def graphql_subscription(self, query: str, variables: dict[str, Any], operation_name: str) -> GraphQlSubscriptionSnapshot
 ```
+
+**Example:**
+
+```python
+result = instance.graphql_subscription("value", variables={}, operation_name="value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `str` | Yes | The query |
+| `variables` | `dict[str, Any] \| None` | No | The variables |
+| `operation_name` | `str \| None` | No | The operation name |
+
+**Returns:** `GraphQlSubscriptionSnapshot`
+
+**Errors:** Raises `SnapshotError`.
 
 ---
 
@@ -1472,11 +1920,10 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `size` | `int \| None` | `None` | Size of the file in bytes |
 | `content` | `bytes` | — | File content (may be base64 encoded) |
 | `content_encoding` | `str \| None` | `None` | Content encoding type |
-| `cursor` | `str` | — | Internal cursor for Read/Seek operations |
 
-### Methods
+##### Methods
 
-#### as_bytes()
+###### as_bytes()
 
 Get the raw file content as bytes.
 
@@ -1488,7 +1935,15 @@ This provides zero-copy access to the underlying buffer.
 def as_bytes(self) -> bytes
 ```
 
-#### read_to_string()
+**Example:**
+
+```python
+result = instance.as_bytes()
+```
+
+**Returns:** `bytes`
+
+###### read_to_string()
 
 Read the file content as a UTF-8 string.
 
@@ -1502,7 +1957,17 @@ Returns an error if the content is not valid UTF-8.
 def read_to_string(self) -> str
 ```
 
-#### content_type_or_default()
+**Example:**
+
+```python
+result = instance.read_to_string()
+```
+
+**Returns:** `str`
+
+**Errors:** Raises `Error`.
+
+###### content_type_or_default()
 
 Get the content type, defaulting to "application/octet-stream".
 
@@ -1511,6 +1976,14 @@ Get the content type, defaulting to "application/octet-stream".
 ```python
 def content_type_or_default(self) -> str
 ```
+
+**Example:**
+
+```python
+result = instance.content_type_or_default()
+```
+
+**Returns:** `str`
 
 ---
 

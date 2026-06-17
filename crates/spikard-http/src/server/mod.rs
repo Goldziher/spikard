@@ -941,7 +941,7 @@ pub(crate) fn build_router_with_handlers_and_config_and_grpc(
             compression_layer = compression_layer.br(false);
         }
 
-        let min_threshold = compression.min_size.min(u16::MAX as usize) as u16;
+        let min_threshold = compression.min_size.min(u64::MAX as usize) as u64;
         let predicate = SizeAbove::new(min_threshold)
             .and(NotForContentType::GRPC)
             .and(NotForContentType::IMAGES)

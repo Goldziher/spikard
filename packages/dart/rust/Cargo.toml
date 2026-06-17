@@ -11,6 +11,9 @@ ignored = ["axum", "spikard", "spikard-core", "spikard-graphql", "spikard-http"]
 
 [lib]
 crate-type = ["cdylib", "staticlib"]
+[features]
+default = ["di"]
+di = ["spikard/di"]
 
 [dependencies]
 axum = { default-features = false, version = "0.8" }
@@ -24,5 +27,4 @@ tokio = { version = "1", features = ["rt-multi-thread", "sync"] }
 
 [lints.rust]
 # flutter_rust_bridge uses #[cfg(frb_expand)] internally during macro expansion.
-# Declare it as a known cfg so rustc does not emit unexpected_cfgs warnings.
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }

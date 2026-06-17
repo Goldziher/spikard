@@ -22,6 +22,12 @@ A `QueryOnlyConfig` with default settings
 public static func schemaQueryOnly() -> QueryOnlyConfig
 ```
 
+**Example:**
+
+```swift
+let result = schemaQueryOnly()
+```
+
 **Returns:** `QueryOnlyConfig`
 
 ---
@@ -40,6 +46,12 @@ A `QueryMutationConfig` with default settings
 
 ```swift
 public static func schemaQueryMutation() -> QueryMutationConfig
+```
+
+**Example:**
+
+```swift
+let result = schemaQueryMutation()
 ```
 
 **Returns:** `QueryMutationConfig`
@@ -62,6 +74,12 @@ A `FullSchemaConfig` with default settings
 public static func schemaFull() -> FullSchemaConfig
 ```
 
+**Example:**
+
+```swift
+let result = schemaFull()
+```
+
 **Returns:** `FullSchemaConfig`
 
 ---
@@ -76,134 +94,6 @@ API Key authentication configuration
 |-------|------|---------|-------------|
 | `keys` | `[String]` | — | Valid API keys |
 | `headerName` | `String` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
-
----
-
-#### App
-
-Spikard application builder.
-
-### Methods
-
-#### new()
-
-Create a new application with the default server configuration.
-
-**Signature:**
-
-```swift
-public static func new() -> App
-```
-
-#### onRequest()
-
-Register an `on_request` lifecycle hook (runs before validation and handler dispatch).
-
-**Signature:**
-
-```swift
-public func onRequest(hook: String) -> App
-```
-
-#### preValidation()
-
-Register a `pre_validation` lifecycle hook (runs after `on_request`, before validation).
-
-**Signature:**
-
-```swift
-public func preValidation(hook: String) -> App
-```
-
-#### preHandler()
-
-Register a `pre_handler` lifecycle hook (runs after validation, before the handler).
-
-**Signature:**
-
-```swift
-public func preHandler(hook: String) -> App
-```
-
-#### onResponse()
-
-Register an `on_response` lifecycle hook (runs after a successful handler response).
-
-**Signature:**
-
-```swift
-public func onResponse(hook: String) -> App
-```
-
-#### onError()
-
-Register an `on_error` lifecycle hook (runs when the handler returns an error).
-
-**Signature:**
-
-```swift
-public func onError(hook: String) -> App
-```
-
-#### mergeAxumRouter()
-
-Attach an existing Axum router to this application, returning ownership.
-
-**Signature:**
-
-```swift
-public func mergeAxumRouter(router: String) -> App
-```
-
-#### attachAxumRouter()
-
-Attach an Axum router using a mutable reference for incremental configuration.
-
-**Signature:**
-
-```swift
-public func attachAxumRouter(router: String) -> App
-```
-
-#### intoRouter()
-
-Build the underlying Axum router.
-
-**Errors:**
-
-Returns an error if server or router construction fails.
-
-**Signature:**
-
-```swift
-public func intoRouter() throws -> String
-```
-
-#### intoRouterAndConfig()
-
-Decompose the application into its Axum router and server configuration.
-
-This is the low-level escape hatch used by the C FFI layer to start the
-server on a background thread while retaining the bind address from the
-caller-supplied `ServerConfig`. Prefer `App.run` for normal use.
-
-**Errors:**
-
-Returns an error if router construction fails.
-
-**Signature:**
-
-```swift
-public func intoRouterAndConfig() throws -> String
-```
-
-#### default()
-
-**Signature:**
-
-```swift
-public static func default() -> App
-```
 
 ---
 
@@ -225,15 +115,23 @@ AsyncAPI HTTP endpoint configuration
 | `name` | `String` | — | The name |
 | `requestId` | `String?` | `null` | Request id |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```swift
 public static func default() -> BackgroundJobMetadata
 ```
+
+**Example:**
+
+```swift
+let result = BackgroundJobMetadata.default()
+```
+
+**Returns:** `BackgroundJobMetadata`
 
 ---
 
@@ -247,15 +145,23 @@ Configuration for in-process background task execution.
 | `maxConcurrentTasks` | `UInt64` | `128` | Maximum concurrent tasks |
 | `drainTimeoutSecs` | `UInt64` | `30` | Drain timeout secs |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```swift
 public static func default() -> BackgroundTaskConfig
 ```
+
+**Example:**
+
+```swift
+let result = BackgroundTaskConfig.default()
+```
+
+**Returns:** `BackgroundTaskConfig`
 
 ---
 
@@ -270,15 +176,23 @@ Compression configuration shared across runtimes
 | `minSize` | `UInt64` | — | Minimum response size to compress (bytes) |
 | `quality` | `UInt32` | — | Compression quality (0-11 for brotli, 0-9 for gzip) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```swift
 public static func default() -> CompressionConfig
 ```
+
+**Example:**
+
+```swift
+let result = CompressionConfig.default()
+```
+
+**Returns:** `CompressionConfig`
 
 ---
 
@@ -306,12 +220,10 @@ CORS configuration for a route
 | `exposeHeaders` | `[String]?` | `null` | Expose headers |
 | `maxAge` | `UInt32?` | `null` | Maximum age |
 | `allowCredentials` | `Bool?` | `null` | Allow credentials |
-| `methodsJoinedCache` | `String` | — | Methods joined cache |
-| `headersJoinedCache` | `String` | — | Headers joined cache |
 
-### Methods
+##### Methods
 
-#### allowedMethodsJoined()
+###### allowedMethodsJoined()
 
 Get the cached joined methods string for preflight responses
 
@@ -321,7 +233,15 @@ Get the cached joined methods string for preflight responses
 public func allowedMethodsJoined() -> String
 ```
 
-#### allowedHeadersJoined()
+**Example:**
+
+```swift
+let result = instance.allowedMethodsJoined()
+```
+
+**Returns:** `String`
+
+###### allowedHeadersJoined()
 
 Get the cached joined headers string for preflight responses
 
@@ -331,7 +251,15 @@ Get the cached joined headers string for preflight responses
 public func allowedHeadersJoined() -> String
 ```
 
-#### isOriginAllowed()
+**Example:**
+
+```swift
+let result = instance.allowedHeadersJoined()
+```
+
+**Returns:** `String`
+
+###### isOriginAllowed()
 
 Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -341,7 +269,21 @@ Check if an origin is allowed (O(1) with wildcard, O(n) for exact match)
 public func isOriginAllowed(origin: String) -> Bool
 ```
 
-#### isMethodAllowed()
+**Example:**
+
+```swift
+let result = instance.isOriginAllowed("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `origin` | `String` | Yes | The origin |
+
+**Returns:** `Bool`
+
+###### isMethodAllowed()
 
 Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 
@@ -351,13 +293,35 @@ Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
 public func isMethodAllowed(method: String) -> Bool
 ```
 
-#### default()
+**Example:**
+
+```swift
+let result = instance.isMethodAllowed("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `String` | Yes | The method |
+
+**Returns:** `Bool`
+
+###### default()
 
 **Signature:**
 
 ```swift
 public static func default() -> CorsConfig
 ```
+
+**Example:**
+
+```swift
+let result = CorsConfig.default()
+```
+
+**Returns:** `CorsConfig`
 
 ---
 
@@ -371,15 +335,23 @@ Configuration for fully-featured schemas with Query, Mutation, and Subscription 
 | `complexityLimit` | `UInt64?` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `UInt64?` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```swift
 public static func default() -> FullSchemaConfig
 ```
+
+**Example:**
+
+```swift
+let result = FullSchemaConfig.default()
+```
+
+**Returns:** `FullSchemaConfig`
 
 ---
 
@@ -390,9 +362,9 @@ Configuration for GraphQL routes
 Provides a builder pattern for configuring GraphQL route parameters
 for the Spikard HTTP server's routing system.
 
-### Methods
+##### Methods
 
-#### new()
+###### new()
 
 Create a new GraphQL route configuration with defaults
 
@@ -408,7 +380,15 @@ Default values:
 public static func new() -> GraphQlRouteConfig
 ```
 
-#### path()
+**Example:**
+
+```swift
+let result = GraphQlRouteConfig.new()
+```
+
+**Returns:** `GraphQlRouteConfig`
+
+###### path()
 
 Set the HTTP path for the GraphQL endpoint
 
@@ -418,7 +398,21 @@ Set the HTTP path for the GraphQL endpoint
 public func path(path: String) -> GraphQlRouteConfig
 ```
 
-#### method()
+**Example:**
+
+```swift
+let result = instance.path("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `path` | `String` | Yes | The URL path (e.g., "/graphql", "/api/graphql") |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### method()
 
 Set the HTTP method for the GraphQL endpoint
 
@@ -428,7 +422,21 @@ Set the HTTP method for the GraphQL endpoint
 public func method(method: String) -> GraphQlRouteConfig
 ```
 
-#### enablePlayground()
+**Example:**
+
+```swift
+let result = instance.method("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `String` | Yes | The HTTP method (typically "POST") |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### enablePlayground()
 
 Enable or disable the GraphQL Playground UI
 
@@ -438,7 +446,21 @@ Enable or disable the GraphQL Playground UI
 public func enablePlayground(enable: Bool) -> GraphQlRouteConfig
 ```
 
-#### description()
+**Example:**
+
+```swift
+let result = instance.enablePlayground(true)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `enable` | `Bool` | Yes | Whether to enable playground |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### description()
 
 Set a custom description for documentation
 
@@ -448,7 +470,21 @@ Set a custom description for documentation
 public func description(description: String) -> GraphQlRouteConfig
 ```
 
-#### getPath()
+**Example:**
+
+```swift
+let result = instance.description("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `description` | `String` | Yes | Documentation string |
+
+**Returns:** `GraphQlRouteConfig`
+
+###### getPath()
 
 Get the configured path
 
@@ -458,7 +494,15 @@ Get the configured path
 public func getPath() -> String
 ```
 
-#### getMethod()
+**Example:**
+
+```swift
+let result = instance.getPath()
+```
+
+**Returns:** `String`
+
+###### getMethod()
 
 Get the configured method
 
@@ -468,7 +512,15 @@ Get the configured method
 public func getMethod() -> String
 ```
 
-#### isPlaygroundEnabled()
+**Example:**
+
+```swift
+let result = instance.getMethod()
+```
+
+**Returns:** `String`
+
+###### isPlaygroundEnabled()
 
 Check if playground is enabled
 
@@ -478,7 +530,15 @@ Check if playground is enabled
 public func isPlaygroundEnabled() -> Bool
 ```
 
-#### getDescription()
+**Example:**
+
+```swift
+let result = instance.isPlaygroundEnabled()
+```
+
+**Returns:** `Bool`
+
+###### getDescription()
 
 Get the description if set
 
@@ -488,13 +548,29 @@ Get the description if set
 public func getDescription() -> String?
 ```
 
-#### default()
+**Example:**
+
+```swift
+let result = instance.getDescription()
+```
+
+**Returns:** `String?`
+
+###### default()
 
 **Signature:**
 
 ```swift
 public static func default() -> GraphQlRouteConfig
 ```
+
+**Example:**
+
+```swift
+let result = GraphQlRouteConfig.default()
+```
+
+**Returns:** `GraphQlRouteConfig`
 
 ---
 
@@ -552,9 +628,9 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `keepaliveTimeout` | `UInt64` | — | HTTP/2 keepalive timeout in seconds |
 | `maxStreamResponseBytes` | `UInt64?` | `null` | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `null` (unbounded total response size). |
 
-### Methods
+#### Methods
 
-#### default()
+##### default()
 
 **Signature:**
 
@@ -562,110 +638,13 @@ concurrent stream limiting to the HTTP/2 transport layer:
 public static func default() -> GrpcConfig
 ```
 
----
-
-#### Handler
-
-Handler trait that all language bindings must implement
-
-This trait is completely language-agnostic. Each binding (Python, Node, WASM)
-implements this trait to bridge their runtime to our HTTP server.
-
-### Methods
-
-#### call()
-
-Handle an HTTP request
-
-Takes the extracted request data and returns a future that resolves to either:
-
-- Ok(Response): A successful HTTP response
-- Err((StatusCode, String)): An error with status code and message
-
-**Signature:**
+**Example:**
 
 ```swift
-public func call(request: Request, requestData: RequestData) -> HandlerResult
+let result = GrpcConfig.default()
 ```
 
-#### prefersRawJsonBody()
-
-Whether this handler prefers consuming `RequestData.raw_body` over the parsed
-`RequestData.body` for JSON requests.
-
-When `true`, the server may skip eager JSON parsing when there is no request-body
-schema validator attached to the route.
-
-**Signature:**
-
-```swift
-public func prefersRawJsonBody() -> Bool
-```
-
-#### prefersParameterExtraction()
-
-Whether this handler wants to perform its own parameter validation/extraction (path/query/header/cookie).
-
-When `true`, the server will skip `ParameterValidator.validate_and_extract` in `ValidatingHandler`.
-This is useful for language bindings which need to transform validated parameters into
-language-specific values (e.g., Python kwargs) without duplicating work. When `false`,
-the server stores validated output in `RequestData.validated_params`.
-
-**Signature:**
-
-```swift
-public func prefersParameterExtraction() -> Bool
-```
-
-#### wantsHeaders()
-
-Whether this handler needs the parsed headers map in `RequestData`.
-
-When `false`, the server may skip building `RequestData.headers` for requests without a body.
-(Requests with bodies still typically need `Content-Type` decisions.)
-
-**Signature:**
-
-```swift
-public func wantsHeaders() -> Bool
-```
-
-#### wantsCookies()
-
-Whether this handler needs the parsed cookies map in `RequestData`.
-
-When `false`, the server may skip parsing cookies for requests without a body.
-
-**Signature:**
-
-```swift
-public func wantsCookies() -> Bool
-```
-
-#### wantsRequestExtensions()
-
-Whether this handler needs `RequestData` stored in request extensions.
-
-When `false`, the server avoids inserting `RequestData` into extensions to
-skip cloning in hot paths.
-
-**Signature:**
-
-```swift
-public func wantsRequestExtensions() -> Bool
-```
-
-#### staticResponse()
-
-Return a pre-built static response if this handler always produces the
-same output. When `Some`, the server bypasses the full middleware
-pipeline and serves the pre-built response directly.
-
-**Signature:**
-
-```swift
-public func staticResponse() -> StaticResponse?
-```
+**Returns:** `GrpcConfig`
 
 ---
 
@@ -673,9 +652,9 @@ public func staticResponse() -> StaticResponse?
 
 Convert user-facing handler functions into the low-level `Handler` trait.
 
-### Methods
+##### Methods
 
-#### intoHandler()
+###### intoHandler()
 
 Convert this value into a shared request handler.
 
@@ -684,6 +663,14 @@ Convert this value into a shared request handler.
 ```swift
 public func intoHandler() -> Handler
 ```
+
+**Example:**
+
+```swift
+let result = instance.intoHandler()
+```
+
+**Returns:** `Handler`
 
 ---
 
@@ -698,15 +685,23 @@ JSON-RPC server configuration
 | `enableBatch` | `Bool` | — | Enable batch request processing (default: true) |
 | `maxBatchSize` | `UInt64` | — | Maximum number of requests in a batch (default: 100) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```swift
 public static func default() -> JsonRpcConfig
 ```
+
+**Example:**
+
+```swift
+let result = JsonRpcConfig.default()
+```
+
+**Returns:** `JsonRpcConfig`
 
 ---
 
@@ -771,15 +766,23 @@ OpenAPI configuration
 | `servers` | `[ServerInfo]` | `[]` | Server definitions |
 | `securitySchemes` | `[String: SecuritySchemeInfo]` | `{}` | Security schemes (auto-detected from middleware if not provided) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```swift
 public static func default() -> OpenApiConfig
 ```
+
+**Example:**
+
+```swift
+let result = OpenApiConfig.default()
+```
+
+**Returns:** `OpenApiConfig`
 
 ---
 
@@ -879,9 +882,9 @@ Content-Type: application/problem+json
 | `instance` | `String?` | `null` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
 | `extensions` | `[String: String]` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
 
-### Methods
+#### Methods
 
-#### withDetail()
+##### withDetail()
 
 Set the detail field
 
@@ -891,7 +894,21 @@ Set the detail field
 public func withDetail(detail: String) -> ProblemDetails
 ```
 
-#### withInstance()
+**Example:**
+
+```swift
+let result = instance.withDetail("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### withInstance()
 
 Set the instance field
 
@@ -901,7 +918,21 @@ Set the instance field
 public func withInstance(instance: String) -> ProblemDetails
 ```
 
-#### notFound()
+**Example:**
+
+```swift
+let result = instance.withInstance("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `instance` | `String` | Yes | The instance |
+
+**Returns:** `ProblemDetails`
+
+###### notFound()
 
 Create a not found error
 
@@ -911,7 +942,21 @@ Create a not found error
 public static func notFound(detail: String) -> ProblemDetails
 ```
 
-#### methodNotAllowed()
+**Example:**
+
+```swift
+let result = ProblemDetails.notFound("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### methodNotAllowed()
 
 Create a method not allowed error
 
@@ -921,7 +966,21 @@ Create a method not allowed error
 public static func methodNotAllowed(detail: String) -> ProblemDetails
 ```
 
-#### internalServerError()
+**Example:**
+
+```swift
+let result = ProblemDetails.methodNotAllowed("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### internalServerError()
 
 Create an internal server error
 
@@ -931,7 +990,21 @@ Create an internal server error
 public static func internalServerError(detail: String) -> ProblemDetails
 ```
 
-#### badRequest()
+**Example:**
+
+```swift
+let result = ProblemDetails.internalServerError("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### badRequest()
 
 Create a bad request error
 
@@ -941,7 +1014,21 @@ Create a bad request error
 public static func badRequest(detail: String) -> ProblemDetails
 ```
 
-#### toJson()
+**Example:**
+
+```swift
+let result = ProblemDetails.badRequest("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `detail` | `String` | Yes | The detail |
+
+**Returns:** `ProblemDetails`
+
+###### toJson()
 
 Serialize to JSON string
 
@@ -954,7 +1041,17 @@ Returns an error if the serialization fails.
 public func toJson() throws -> String
 ```
 
-#### toJsonPretty()
+**Example:**
+
+```swift
+let result = try instance.toJson()
+```
+
+**Returns:** `String`
+
+**Errors:** Throws `Error`.
+
+###### toJsonPretty()
 
 Serialize to pretty JSON string
 
@@ -966,6 +1063,16 @@ Returns an error if the serialization fails.
 ```swift
 public func toJsonPretty() throws -> String
 ```
+
+**Example:**
+
+```swift
+let result = try instance.toJsonPretty()
+```
+
+**Returns:** `String`
+
+**Errors:** Throws `Error`.
 
 ---
 
@@ -979,15 +1086,23 @@ Configuration for schemas with Query and Mutation types
 | `complexityLimit` | `UInt64?` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `UInt64?` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```swift
 public static func default() -> QueryMutationConfig
 ```
+
+**Example:**
+
+```swift
+let result = QueryMutationConfig.default()
+```
+
+**Returns:** `QueryMutationConfig`
 
 ---
 
@@ -1001,15 +1116,23 @@ Configuration for schemas with only Query type
 | `complexityLimit` | `UInt64?` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `UInt64?` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```swift
 public static func default() -> QueryOnlyConfig
 ```
+
+**Example:**
+
+```swift
+let result = QueryOnlyConfig.default()
+```
+
+**Returns:** `QueryOnlyConfig`
 
 ---
 
@@ -1023,15 +1146,23 @@ Rate limiting configuration shared across runtimes
 | `burst` | `UInt32` | `200` | Burst allowance |
 | `ipBased` | `Bool` | `true` | Use IP-based rate limiting |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```swift
 public static func default() -> RateLimitConfig
 ```
+
+**Example:**
+
+```swift
+let result = RateLimitConfig.default()
+```
+
+**Returns:** `RateLimitConfig`
 
 ---
 
@@ -1049,9 +1180,9 @@ HTTP Response with custom status code, headers, and content
 | `statusCode` | `UInt16` | — | HTTP status code (defaults to 200) |
 | `headers` | `[String: String]` | `{}` | Response headers |
 
-### Methods
+##### Methods
 
-#### setHeader()
+###### setHeader()
 
 Set a header
 
@@ -1061,7 +1192,22 @@ Set a header
 public func setHeader(key: String, value: String)
 ```
 
-#### setCookie()
+**Example:**
+
+```swift
+instance.setHeader("value", "value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `key` | `String` | Yes | The key |
+| `value` | `String` | Yes | The value |
+
+**Returns:** No return value.
+
+###### setCookie()
 
 Set a cookie in the response
 
@@ -1071,13 +1217,42 @@ Set a cookie in the response
 public func setCookie(key: String, value: String, secure: Bool, httpOnly: Bool, maxAge: Int64? = nil, domain: String? = nil, path: String? = nil, sameSite: String? = nil)
 ```
 
-#### default()
+**Example:**
+
+```swift
+instance.setCookie("value", "value", true, true, 42, "value", "value", "value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `key` | `String` | Yes | The key |
+| `value` | `String` | Yes | The value |
+| `secure` | `Bool` | Yes | The secure |
+| `httpOnly` | `Bool` | Yes | The http only |
+| `maxAge` | `Int64?` | No | The max age |
+| `domain` | `String?` | No | The domain |
+| `path` | `String?` | No | Path to the file |
+| `sameSite` | `String?` | No | The same site |
+
+**Returns:** No return value.
+
+###### default()
 
 **Signature:**
 
 ```swift
 public static func default() -> Response
 ```
+
+**Example:**
+
+```swift
+let result = Response.default()
+```
+
+**Returns:** `Response`
 
 ---
 
@@ -1091,9 +1266,9 @@ Snapshot of an Axum response used by higher-level language bindings.
 | `headers` | `[String: String]` | — | Response headers (lowercase keys for predictable lookups). |
 | `body` | `Data` | — | Response body bytes (decoded for supported encodings). |
 
-### Methods
+##### Methods
 
-#### text()
+###### text()
 
 Return response body as UTF-8 string.
 
@@ -1103,7 +1278,17 @@ Return response body as UTF-8 string.
 public func text() throws -> String
 ```
 
-#### header()
+**Example:**
+
+```swift
+let result = try instance.text()
+```
+
+**Returns:** `String`
+
+**Errors:** Throws `FromUtf8Error`.
+
+###### header()
 
 Lookup header by case-insensitive name.
 
@@ -1113,15 +1298,29 @@ Lookup header by case-insensitive name.
 public func header(name: String) -> String?
 ```
 
+**Example:**
+
+```swift
+let result = instance.header("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | `String` | Yes | The name |
+
+**Returns:** `String?`
+
 ---
 
 #### RouteBuilder
 
 Builder for defining a route.
 
-### Methods
+##### Methods
 
-#### new()
+###### new()
 
 Create a new builder for the provided HTTP method and path.
 
@@ -1131,7 +1330,22 @@ Create a new builder for the provided HTTP method and path.
 public static func new(method: Method, path: String) -> RouteBuilder
 ```
 
-#### handlerName()
+**Example:**
+
+```swift
+let result = RouteBuilder.new(Method(), "value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `method` | `Method` | Yes | The method |
+| `path` | `String` | Yes | Path to the file |
+
+**Returns:** `RouteBuilder`
+
+###### handlerName()
 
 Assign an explicit handler name.
 
@@ -1141,7 +1355,21 @@ Assign an explicit handler name.
 public func handlerName(name: String) -> RouteBuilder
 ```
 
-#### requestSchemaJson()
+**Example:**
+
+```swift
+let result = instance.handlerName("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `name` | `String` | Yes | The name |
+
+**Returns:** `RouteBuilder`
+
+###### requestSchemaJson()
 
 Provide a raw JSON schema for the request body.
 
@@ -1151,7 +1379,21 @@ Provide a raw JSON schema for the request body.
 public func requestSchemaJson(schema: String) -> RouteBuilder
 ```
 
-#### responseSchemaJson()
+**Example:**
+
+```swift
+let result = instance.requestSchemaJson([:])
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `String` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### responseSchemaJson()
 
 Provide a raw JSON schema for the response body.
 
@@ -1161,7 +1403,21 @@ Provide a raw JSON schema for the response body.
 public func responseSchemaJson(schema: String) -> RouteBuilder
 ```
 
-#### paramsSchemaJson()
+**Example:**
+
+```swift
+let result = instance.responseSchemaJson([:])
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `String` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### paramsSchemaJson()
 
 Provide a raw JSON schema for request parameters.
 
@@ -1171,7 +1427,21 @@ Provide a raw JSON schema for request parameters.
 public func paramsSchemaJson(schema: String) -> RouteBuilder
 ```
 
-#### fileParamsJson()
+**Example:**
+
+```swift
+let result = instance.paramsSchemaJson([:])
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `String` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### fileParamsJson()
 
 Provide multipart file parameter configuration.
 
@@ -1181,7 +1451,21 @@ Provide multipart file parameter configuration.
 public func fileParamsJson(schema: String) -> RouteBuilder
 ```
 
-#### cors()
+**Example:**
+
+```swift
+let result = instance.fileParamsJson([:])
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `schema` | `String` | Yes | The schema |
+
+**Returns:** `RouteBuilder`
+
+###### cors()
 
 Attach a CORS configuration for this route.
 
@@ -1191,7 +1475,21 @@ Attach a CORS configuration for this route.
 public func cors(cors: CorsConfig) -> RouteBuilder
 ```
 
-#### compression()
+**Example:**
+
+```swift
+let result = instance.cors(CorsConfig())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `cors` | `CorsConfig` | Yes | The cors config |
+
+**Returns:** `RouteBuilder`
+
+###### compression()
 
 Attach a compression configuration for this route.
 
@@ -1201,7 +1499,21 @@ Attach a compression configuration for this route.
 public func compression(compression: CompressionConfig) -> RouteBuilder
 ```
 
-#### sync()
+**Example:**
+
+```swift
+let result = instance.compression(CompressionConfig())
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `compression` | `CompressionConfig` | Yes | The compression config |
+
+**Returns:** `RouteBuilder`
+
+###### sync()
 
 Mark the route as synchronous.
 
@@ -1211,7 +1523,15 @@ Mark the route as synchronous.
 public func sync() -> RouteBuilder
 ```
 
-#### handlerDependencies()
+**Example:**
+
+```swift
+let result = instance.sync()
+```
+
+**Returns:** `RouteBuilder`
+
+###### handlerDependencies()
 
 Declare the dependency keys that must be resolved before this handler runs.
 
@@ -1220,6 +1540,20 @@ Declare the dependency keys that must be resolved before this handler runs.
 ```swift
 public func handlerDependencies(dependencies: [String]) -> RouteBuilder
 ```
+
+**Example:**
+
+```swift
+let result = instance.handlerDependencies([])
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `dependencies` | `[String]` | Yes | The dependencies |
+
+**Returns:** `RouteBuilder`
 
 ---
 
@@ -1236,15 +1570,23 @@ introspection control, complexity limits, and depth limits.
 | `complexityLimit` | `UInt64?` | `null` | Maximum query complexity (None = unlimited) |
 | `depthLimit` | `UInt64?` | `null` | Maximum query depth (None = unlimited) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```swift
 public static func default() -> SchemaConfig
 ```
+
+**Example:**
+
+```swift
+let result = SchemaConfig.default()
+```
+
+**Returns:** `SchemaConfig`
 
 ---
 
@@ -1271,20 +1613,26 @@ Server configuration
 | `openapi` | `OpenApiConfig?` | `null` | OpenAPI documentation configuration |
 | `jsonrpc` | `JsonRpcConfig?` | `null` | JSON-RPC configuration |
 | `grpc` | `GrpcConfig?` | `null` | gRPC configuration |
-| `lifecycleHooks` | `String?` | `null` | Lifecycle hooks for request/response processing |
 | `backgroundTasks` | `BackgroundTaskConfig` | — | Background task executor configuration |
 | `enableHttpTrace` | `Bool` | `false` | Enable per-request HTTP tracing (tower-http `TraceLayer`) |
-| `diContainer` | `String?` | `null` | Dependency injection container (requires 'di' feature) |
 
-### Methods
+##### Methods
 
-#### default()
+###### default()
 
 **Signature:**
 
 ```swift
 public static func default() -> ServerConfig
 ```
+
+**Example:**
+
+```swift
+let result = ServerConfig.default()
+```
+
+**Returns:** `ServerConfig`
 
 ---
 
@@ -1324,9 +1672,9 @@ retry: 3000
 | `id` | `String?` | `null` | Event ID (optional, for client-side reconnection) |
 | `retry` | `UInt64?` | `null` | Retry timeout in milliseconds (optional) |
 
-### Methods
+#### Methods
 
-#### withId()
+##### withId()
 
 Set the event ID for client-side reconnection support
 
@@ -1339,7 +1687,21 @@ The client sends this ID back in the `Last-Event-ID` header when reconnecting.
 public func withId(id: String) -> SseEvent
 ```
 
-#### withRetry()
+**Example:**
+
+```swift
+let result = instance.withId("value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `id` | `String` | Yes | Unique identifier for this event |
+
+**Returns:** `SseEvent`
+
+###### withRetry()
 
 Set the retry timeout for client reconnection
 
@@ -1351,6 +1713,20 @@ if the connection is lost. The client browser will automatically handle reconnec
 ```swift
 public func withRetry(retryMs: UInt64) -> SseEvent
 ```
+
+**Example:**
+
+```swift
+let result = instance.withRetry(42)
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `retryMs` | `UInt64` | Yes | Retry timeout in milliseconds |
+
+**Returns:** `SseEvent`
 
 ---
 
@@ -1376,9 +1752,9 @@ interface for making HTTP requests, sending WebSocket connections, and
 handling Server-Sent Events. Language bindings wrap this to provide
 native API surfaces.
 
-### Methods
+##### Methods
 
-#### graphqlAt()
+###### graphqlAt()
 
 Send a GraphQL query/mutation to a custom endpoint
 
@@ -1388,7 +1764,26 @@ Send a GraphQL query/mutation to a custom endpoint
 public func graphqlAt(endpoint: String, query: String, variables: String? = nil, operationName: String? = nil) throws -> ResponseSnapshot
 ```
 
-#### graphql()
+**Example:**
+
+```swift
+let result = try instance.graphqlAt("value", "value", [:], "value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `endpoint` | `String` | Yes | The endpoint |
+| `query` | `String` | Yes | The query |
+| `variables` | `String?` | No | The variables |
+| `operationName` | `String?` | No | The operation name |
+
+**Returns:** `ResponseSnapshot`
+
+**Errors:** Throws `SnapshotError`.
+
+###### graphql()
 
 Send a GraphQL query/mutation
 
@@ -1398,7 +1793,25 @@ Send a GraphQL query/mutation
 public func graphql(query: String, variables: String? = nil, operationName: String? = nil) throws -> ResponseSnapshot
 ```
 
-#### graphqlSubscriptionAt()
+**Example:**
+
+```swift
+let result = try instance.graphql("value", [:], "value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `String` | Yes | The query |
+| `variables` | `String?` | No | The variables |
+| `operationName` | `String?` | No | The operation name |
+
+**Returns:** `ResponseSnapshot`
+
+**Errors:** Throws `SnapshotError`.
+
+###### graphqlSubscriptionAt()
 
 Send a GraphQL subscription (WebSocket) to a custom endpoint.
 
@@ -1411,7 +1824,26 @@ After the first payload is received, this client sends `complete` to unsubscribe
 public func graphqlSubscriptionAt(endpoint: String, query: String, variables: String? = nil, operationName: String? = nil) throws -> GraphQlSubscriptionSnapshot
 ```
 
-#### graphqlSubscription()
+**Example:**
+
+```swift
+let result = try instance.graphqlSubscriptionAt("value", "value", [:], "value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `endpoint` | `String` | Yes | The endpoint |
+| `query` | `String` | Yes | The query |
+| `variables` | `String?` | No | The variables |
+| `operationName` | `String?` | No | The operation name |
+
+**Returns:** `GraphQlSubscriptionSnapshot`
+
+**Errors:** Throws `SnapshotError`.
+
+###### graphqlSubscription()
 
 Send a GraphQL subscription (WebSocket).
 
@@ -1422,6 +1854,24 @@ Uses `/graphql` as the default subscription endpoint.
 ```swift
 public func graphqlSubscription(query: String, variables: String? = nil, operationName: String? = nil) throws -> GraphQlSubscriptionSnapshot
 ```
+
+**Example:**
+
+```swift
+let result = try instance.graphqlSubscription("value", [:], "value")
+```
+
+**Parameters:**
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `query` | `String` | Yes | The query |
+| `variables` | `String?` | No | The variables |
+| `operationName` | `String?` | No | The operation name |
+
+**Returns:** `GraphQlSubscriptionSnapshot`
+
+**Errors:** Throws `SnapshotError`.
 
 ---
 
@@ -1449,11 +1899,10 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `size` | `UInt64?` | `null` | Size of the file in bytes |
 | `content` | `Data` | — | File content (may be base64 encoded) |
 | `contentEncoding` | `String?` | `null` | Content encoding type |
-| `cursor` | `String` | — | Internal cursor for Read/Seek operations |
 
-### Methods
+##### Methods
 
-#### asBytes()
+###### asBytes()
 
 Get the raw file content as bytes.
 
@@ -1465,7 +1914,15 @@ This provides zero-copy access to the underlying buffer.
 public func asBytes() -> Data
 ```
 
-#### readToString()
+**Example:**
+
+```swift
+let result = instance.asBytes()
+```
+
+**Returns:** `Data`
+
+###### readToString()
 
 Read the file content as a UTF-8 string.
 
@@ -1479,7 +1936,17 @@ Returns an error if the content is not valid UTF-8.
 public func readToString() throws -> String
 ```
 
-#### contentTypeOrDefault()
+**Example:**
+
+```swift
+let result = try instance.readToString()
+```
+
+**Returns:** `String`
+
+**Errors:** Throws `Error`.
+
+###### contentTypeOrDefault()
 
 Get the content type, defaulting to "application/octet-stream".
 
@@ -1488,6 +1955,14 @@ Get the content type, defaulting to "application/octet-stream".
 ```swift
 public func contentTypeOrDefault() -> String
 ```
+
+**Example:**
+
+```swift
+let result = instance.contentTypeOrDefault()
+```
+
+**Returns:** `String`
 
 ---
 

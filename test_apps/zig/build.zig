@@ -130,6 +130,7 @@ pub fn build(b: *std.Build) void {
             background_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    background_run.step.dependOn(&auth_run.step);
     test_step.dependOn(&background_run.step);
 
     const background_tasks_module = b.createModule(.{
@@ -157,6 +158,7 @@ pub fn build(b: *std.Build) void {
             background_tasks_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    background_tasks_run.step.dependOn(&background_run.step);
     test_step.dependOn(&background_tasks_run.step);
 
     const body_limits_module = b.createModule(.{
@@ -184,6 +186,7 @@ pub fn build(b: *std.Build) void {
             body_limits_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    body_limits_run.step.dependOn(&background_tasks_run.step);
     test_step.dependOn(&body_limits_run.step);
 
     const compression_module = b.createModule(.{
@@ -211,6 +214,7 @@ pub fn build(b: *std.Build) void {
             compression_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    compression_run.step.dependOn(&body_limits_run.step);
     test_step.dependOn(&compression_run.step);
 
     const content_types_module = b.createModule(.{
@@ -238,6 +242,7 @@ pub fn build(b: *std.Build) void {
             content_types_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    content_types_run.step.dependOn(&compression_run.step);
     test_step.dependOn(&content_types_run.step);
 
     const cookies_module = b.createModule(.{
@@ -265,6 +270,7 @@ pub fn build(b: *std.Build) void {
             cookies_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    cookies_run.step.dependOn(&content_types_run.step);
     test_step.dependOn(&cookies_run.step);
 
     const cors_module = b.createModule(.{
@@ -292,6 +298,7 @@ pub fn build(b: *std.Build) void {
             cors_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    cors_run.step.dependOn(&cookies_run.step);
     test_step.dependOn(&cors_run.step);
 
     const di_module = b.createModule(.{
@@ -319,6 +326,7 @@ pub fn build(b: *std.Build) void {
             di_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    di_run.step.dependOn(&cors_run.step);
     test_step.dependOn(&di_run.step);
 
     const edge_cases_module = b.createModule(.{
@@ -346,6 +354,7 @@ pub fn build(b: *std.Build) void {
             edge_cases_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    edge_cases_run.step.dependOn(&di_run.step);
     test_step.dependOn(&edge_cases_run.step);
 
     const graphql_operations_module = b.createModule(.{
@@ -373,6 +382,7 @@ pub fn build(b: *std.Build) void {
             graphql_operations_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    graphql_operations_run.step.dependOn(&edge_cases_run.step);
     test_step.dependOn(&graphql_operations_run.step);
 
     const graphql_schema_module = b.createModule(.{
@@ -400,6 +410,7 @@ pub fn build(b: *std.Build) void {
             graphql_schema_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    graphql_schema_run.step.dependOn(&graphql_operations_run.step);
     test_step.dependOn(&graphql_schema_run.step);
 
     const grpc_module = b.createModule(.{
@@ -427,6 +438,7 @@ pub fn build(b: *std.Build) void {
             grpc_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    grpc_run.step.dependOn(&graphql_schema_run.step);
     test_step.dependOn(&grpc_run.step);
 
     const headers_module = b.createModule(.{
@@ -454,6 +466,7 @@ pub fn build(b: *std.Build) void {
             headers_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    headers_run.step.dependOn(&grpc_run.step);
     test_step.dependOn(&headers_run.step);
 
     const http_methods_module = b.createModule(.{
@@ -481,6 +494,7 @@ pub fn build(b: *std.Build) void {
             http_methods_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    http_methods_run.step.dependOn(&headers_run.step);
     test_step.dependOn(&http_methods_run.step);
 
     const json_bodies_module = b.createModule(.{
@@ -508,6 +522,7 @@ pub fn build(b: *std.Build) void {
             json_bodies_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    json_bodies_run.step.dependOn(&http_methods_run.step);
     test_step.dependOn(&json_bodies_run.step);
 
     const jsonrpc_module = b.createModule(.{
@@ -535,6 +550,7 @@ pub fn build(b: *std.Build) void {
             jsonrpc_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    jsonrpc_run.step.dependOn(&json_bodies_run.step);
     test_step.dependOn(&jsonrpc_run.step);
 
     const lifecycle_hooks_module = b.createModule(.{
@@ -562,6 +578,7 @@ pub fn build(b: *std.Build) void {
             lifecycle_hooks_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    lifecycle_hooks_run.step.dependOn(&jsonrpc_run.step);
     test_step.dependOn(&lifecycle_hooks_run.step);
 
     const multipart_module = b.createModule(.{
@@ -589,6 +606,7 @@ pub fn build(b: *std.Build) void {
             multipart_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    multipart_run.step.dependOn(&lifecycle_hooks_run.step);
     test_step.dependOn(&multipart_run.step);
 
     const openapi_module = b.createModule(.{
@@ -616,6 +634,7 @@ pub fn build(b: *std.Build) void {
             openapi_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    openapi_run.step.dependOn(&multipart_run.step);
     test_step.dependOn(&openapi_run.step);
 
     const openrpc_module = b.createModule(.{
@@ -643,6 +662,7 @@ pub fn build(b: *std.Build) void {
             openrpc_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    openrpc_run.step.dependOn(&openapi_run.step);
     test_step.dependOn(&openrpc_run.step);
 
     const path_params_module = b.createModule(.{
@@ -670,6 +690,7 @@ pub fn build(b: *std.Build) void {
             path_params_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    path_params_run.step.dependOn(&openrpc_run.step);
     test_step.dependOn(&path_params_run.step);
 
     const problem_details_module = b.createModule(.{
@@ -697,6 +718,7 @@ pub fn build(b: *std.Build) void {
             problem_details_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    problem_details_run.step.dependOn(&path_params_run.step);
     test_step.dependOn(&problem_details_run.step);
 
     const query_params_module = b.createModule(.{
@@ -724,6 +746,7 @@ pub fn build(b: *std.Build) void {
             query_params_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    query_params_run.step.dependOn(&problem_details_run.step);
     test_step.dependOn(&query_params_run.step);
 
     const rate_limit_module = b.createModule(.{
@@ -751,6 +774,7 @@ pub fn build(b: *std.Build) void {
             rate_limit_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    rate_limit_run.step.dependOn(&query_params_run.step);
     test_step.dependOn(&rate_limit_run.step);
 
     const request_id_module = b.createModule(.{
@@ -778,6 +802,7 @@ pub fn build(b: *std.Build) void {
             request_id_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    request_id_run.step.dependOn(&rate_limit_run.step);
     test_step.dependOn(&request_id_run.step);
 
     const request_timeout_module = b.createModule(.{
@@ -805,6 +830,7 @@ pub fn build(b: *std.Build) void {
             request_timeout_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    request_timeout_run.step.dependOn(&request_id_run.step);
     test_step.dependOn(&request_timeout_run.step);
 
     const response_module = b.createModule(.{
@@ -832,6 +858,7 @@ pub fn build(b: *std.Build) void {
             response_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    response_run.step.dependOn(&request_timeout_run.step);
     test_step.dependOn(&response_run.step);
 
     const server_config_module = b.createModule(.{
@@ -859,6 +886,7 @@ pub fn build(b: *std.Build) void {
             server_config_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    server_config_run.step.dependOn(&response_run.step);
     test_step.dependOn(&server_config_run.step);
 
     const sse_module = b.createModule(.{
@@ -886,6 +914,7 @@ pub fn build(b: *std.Build) void {
             sse_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    sse_run.step.dependOn(&server_config_run.step);
     test_step.dependOn(&sse_run.step);
 
     const static_files_module = b.createModule(.{
@@ -913,6 +942,7 @@ pub fn build(b: *std.Build) void {
             static_files_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    static_files_run.step.dependOn(&sse_run.step);
     test_step.dependOn(&static_files_run.step);
 
     const status_codes_module = b.createModule(.{
@@ -940,6 +970,7 @@ pub fn build(b: *std.Build) void {
             status_codes_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    status_codes_run.step.dependOn(&static_files_run.step);
     test_step.dependOn(&status_codes_run.step);
 
     const streaming_module = b.createModule(.{
@@ -967,6 +998,7 @@ pub fn build(b: *std.Build) void {
             streaming_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    streaming_run.step.dependOn(&status_codes_run.step);
     test_step.dependOn(&streaming_run.step);
 
     const upload_module = b.createModule(.{
@@ -994,6 +1026,7 @@ pub fn build(b: *std.Build) void {
             upload_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    upload_run.step.dependOn(&streaming_run.step);
     test_step.dependOn(&upload_run.step);
 
     const url_encoded_module = b.createModule(.{
@@ -1021,6 +1054,7 @@ pub fn build(b: *std.Build) void {
             url_encoded_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    url_encoded_run.step.dependOn(&upload_run.step);
     test_step.dependOn(&url_encoded_run.step);
 
     const validation_errors_module = b.createModule(.{
@@ -1048,6 +1082,7 @@ pub fn build(b: *std.Build) void {
             validation_errors_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    validation_errors_run.step.dependOn(&url_encoded_run.step);
     test_step.dependOn(&validation_errors_run.step);
 
     const websocket_module = b.createModule(.{
@@ -1075,6 +1110,7 @@ pub fn build(b: *std.Build) void {
             websocket_run.setEnvironmentVariable(_entry.key_ptr.*, _entry.value_ptr.*);
         }
     }
+    websocket_run.step.dependOn(&validation_errors_run.step);
     test_step.dependOn(&websocket_run.step);
 
 }
