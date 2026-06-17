@@ -51,3 +51,14 @@ merge_strategy = 'local-override'
 [[installed_skills]]
 name = 'alef'
 source = 'https://github.com/kreuzberg-dev/alef.git'
+
+[[marketplaces]]
+name = "basemind"
+source = "Goldziher/basemind"
+type = "github"
+
+[[plugins]]
+marketplace = "basemind"
+name = "basemind"
+scope = "project"
+enabled = true
