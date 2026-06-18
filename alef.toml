@@ -989,7 +989,7 @@ e2e = "cd e2e/php && composer install --no-interaction --quiet && php run_tests.
 [crates.test.elixir]
 precondition = "command -v mix >/dev/null 2>&1"
 before = "cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
-e2e = "cd e2e/elixir && mix deps.get && RUSTLER_PRECOMPILED_FORCE_BUILD_ALL=1 mix deps.compile spikard --force && RUSTLER_PRECOMPILED_FORCE_BUILD_ALL=1 mix test"
+e2e = "cd e2e/elixir && mix deps.get && RUSTLER_PRECOMPILED_FORCE_BUILD_ALL=1 mix deps.compile && RUSTLER_PRECOMPILED_FORCE_BUILD_ALL=1 mix test"
 
 [crates.test.go]
 precondition = "command -v go >/dev/null 2>&1"
