@@ -11,6 +11,7 @@ use tokio_util::sync::CancellationToken;
 
 /// Configuration for in-process background task execution.
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(default)]
 pub struct BackgroundTaskConfig {
     pub max_queue_size: usize,
     pub max_concurrent_tasks: usize,

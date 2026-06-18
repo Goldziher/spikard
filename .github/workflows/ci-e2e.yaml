@@ -188,8 +188,8 @@ jobs:
         if: matrix.language == 'go'
         run: |
           cargo build --locked -p spikard-ffi --release
-          mkdir -p packages/go/.lib/linux-amd64
-          cp target/release/libspikard_ffi.so packages/go/.lib/linux-amd64/libspikard_ffi.so
+          mkdir -p packages/go/.lib/linux-x86_64
+          cp target/release/libspikard_ffi.so packages/go/.lib/linux-x86_64/libspikard_ffi.so
 
       - name: Build Go harness
         if: matrix.language == 'go'

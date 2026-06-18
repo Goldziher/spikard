@@ -140,6 +140,7 @@ pub struct StaticFilesConfig {
 
 /// Server configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
 pub struct ServerConfig {
     /// Host to bind to
     pub host: String,
