@@ -2,7 +2,7 @@
 title: "Go API Reference"
 ---
 
-## Go API Reference <span class="version-badge">v0.15.6-rc.24</span>
+## Go API Reference <span class="version-badge">v0.16.0-rc.1</span>
 
 ### Functions
 
@@ -92,7 +92,7 @@ API Key authentication configuration
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `Keys` | `[]string` | — | Valid API keys |
+| `Keys` | `\[\]string` | — | Valid API keys |
 | `HeaderName` | `string` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
 
 ---
@@ -214,10 +214,10 @@ CORS configuration for a route
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `AllowedOrigins` | `[]string` | `nil` | Allowed origins |
-| `AllowedMethods` | `[]string` | `nil` | Allowed methods |
-| `AllowedHeaders` | `[]string` | `nil` | Allowed headers |
-| `ExposeHeaders` | `*[]string` | `nil` | Expose headers |
+| `AllowedOrigins` | `\[\]string` | `nil` | Allowed origins |
+| `AllowedMethods` | `\[\]string` | `nil` | Allowed methods |
+| `AllowedHeaders` | `\[\]string` | `nil` | Allowed headers |
+| `ExposeHeaders` | `*\[\]string` | `nil` | Expose headers |
 | `MaxAge` | `*uint32` | `nil` | Maximum age |
 | `AllowCredentials` | `*bool` | `nil` | Allow credentials |
 
@@ -581,7 +581,7 @@ Configuration for gRPC support
 Controls how the server handles gRPC requests, including compression,
 timeouts, and protocol settings.
 
-### Stream Limits
+##### Stream Limits
 
 This configuration enforces message-level size limits but delegates
 concurrent stream limiting to the HTTP/2 transport layer:
@@ -614,9 +614,9 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `KeepaliveTimeout` | `uint64` | — | HTTP/2 keepalive timeout in seconds |
 | `MaxStreamResponseBytes` | `*int` | `nil` | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `nil` (unbounded total response size). |
 
-#### Methods
+##### Methods
 
-##### Default()
+###### Default()
 
 **Signature:**
 
@@ -705,7 +705,7 @@ enabling discovery and documentation of RPC-compatible endpoints.
 | `ParamsSchema` | `*interface{}` | `nil` | Optional JSON Schema for method parameters |
 | `ResultSchema` | `*interface{}` | `nil` | Optional JSON Schema for the result |
 | `Deprecated` | `bool` | `/* serde(default) */` | Whether this method is deprecated |
-| `Tags` | `[]string` | `/* serde(default) */` | Tags for categorizing and grouping methods |
+| `Tags` | `\[\]string` | `/* serde(default) */` | Tags for categorizing and grouping methods |
 
 ---
 
@@ -717,7 +717,7 @@ JWT authentication configuration
 |-------|------|---------|-------------|
 | `Secret` | `string` | — | Secret key for JWT verification |
 | `Algorithm` | `string` | `/* serde(default) */` | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
-| `Audience` | `*[]string` | `nil` | Required audience claim |
+| `Audience` | `*\[\]string` | `nil` | Required audience claim |
 | `Issuer` | `*string` | `nil` | Required issuer claim |
 | `Leeway` | `uint64` | `/* serde(default) */` | Leeway for expiration checks (seconds) |
 
@@ -749,8 +749,8 @@ OpenAPI configuration
 | `OpenapiJsonPath` | `string` | — | Path to serve OpenAPI JSON spec (default: "/openapi.json") |
 | `Contact` | `*ContactInfo` | `nil` | Contact information |
 | `License` | `*LicenseInfo` | `nil` | License information |
-| `Servers` | `[]ServerInfo` | `nil` | Server definitions |
-| `SecuritySchemes` | `map[string]SecuritySchemeInfo` | `nil` | Security schemes (auto-detected from middleware if not provided) |
+| `Servers` | `\[\]ServerInfo` | `nil` | Server definitions |
+| `SecuritySchemes` | `map\[string\]SecuritySchemeInfo` | `nil` | Security schemes (auto-detected from middleware if not provided) |
 
 ##### Methods
 
@@ -791,9 +791,9 @@ Full parse result returned by `POST /asyncapi/parse`
 | `SpecVersion` | `string` | — | Spec version |
 | `Title` | `string` | — | Title |
 | `ApiVersion` | `string` | — | Api version |
-| `Channels` | `[]ParsedChannel` | — | Channels |
-| `Operations` | `[]ParsedOperation` | — | Operations |
-| `Messages` | `[]ParsedMessage` | — | Messages |
+| `Channels` | `\[\]ParsedChannel` | — | Channels |
+| `Operations` | `\[\]ParsedOperation` | — | Operations |
+| `Messages` | `\[\]ParsedMessage` | — | Messages |
 
 ---
 
@@ -805,7 +805,7 @@ A single channel extracted from an AsyncAPI spec
 |-------|------|---------|-------------|
 | `Name` | `string` | — | Channel key from the spec (e.g. "chat/messages") |
 | `Address` | `string` | — | Channel address / path |
-| `Messages` | `[]string` | — | Message names declared on this channel |
+| `Messages` | `\[\]string` | — | Message names declared on this channel |
 | `Bindings` | `*interface{}` | `nil` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
@@ -841,7 +841,7 @@ A machine-readable format for specifying errors in HTTP API responses.
 Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
 if not specified.
 
-### Content-Type
+##### Content-Type
 
 Responses using this struct should set:
 
@@ -866,11 +866,11 @@ Content-Type: application/problem+json
 | `Status` | `uint16` | — | The HTTP status code generated by the origin server. This is advisory; the actual HTTP status code takes precedence. |
 | `Detail` | `*string` | `nil` | A human-readable explanation specific to this occurrence of the problem. |
 | `Instance` | `*string` | `nil` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
-| `Extensions` | `map[string]interface{}` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
+| `Extensions` | `map\[string\]interface{}` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
 
-#### Methods
+##### Methods
 
-##### WithDetail()
+###### WithDetail()
 
 Set the detail field
 
@@ -1170,7 +1170,7 @@ HTTP Response with custom status code, headers, and content
 |-------|------|---------|-------------|
 | `Content` | `*interface{}` | `nil` | Response body content |
 | `StatusCode` | `uint16` | — | HTTP status code (defaults to 200) |
-| `Headers` | `map[string]string` | `nil` | Response headers |
+| `Headers` | `map\[string\]string` | `nil` | Response headers |
 
 ##### Methods
 
@@ -1485,7 +1485,7 @@ result := instance.HandlerDependencies(nil)
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `Dependencies` | `[]string` | Yes | The dependencies |
+| `Dependencies` | `\[\]string` | Yes | The dependencies |
 
 **Returns:** `RouteBuilder`
 
@@ -1540,7 +1540,7 @@ Server configuration
 | `RateLimit` | `*RateLimitConfig` | `nil` | Enable rate limiting |
 | `JwtAuth` | `*JwtConfig` | `nil` | JWT authentication configuration |
 | `ApiKeyAuth` | `*ApiKeyConfig` | `nil` | API Key authentication configuration |
-| `StaticFiles` | `[]StaticFilesConfig` | `nil` | Static file serving configuration |
+| `StaticFiles` | `\[\]StaticFilesConfig` | `nil` | Static file serving configuration |
 | `GracefulShutdown` | `bool` | `true` | Enable graceful shutdown on SIGTERM/SIGINT |
 | `ShutdownTimeout` | `uint64` | `30` | Graceful shutdown timeout (seconds) |
 | `Asyncapi` | `*AsyncApiConfig` | `nil` | AsyncAPI HTTP endpoint configuration |
@@ -1588,7 +1588,7 @@ An individual SSE event
 Represents a single Server-Sent Event to be sent to a connected client.
 Events can have an optional type, ID, and retry timeout for advanced scenarios.
 
-### SSE Format
+##### SSE Format
 
 Events are serialized to the following text format:
 
@@ -1606,9 +1606,9 @@ retry: 3000
 | `Id` | `*string` | `nil` | Event ID (optional, for client-side reconnection) |
 | `Retry` | `*uint64` | `nil` | Retry timeout in milliseconds (optional) |
 
-#### Methods
+##### Methods
 
-##### WithId()
+###### WithId()
 
 Set the event ID for client-side reconnection support
 
@@ -1699,7 +1699,7 @@ base64 decoding and implements standard I/O traits for compatibility.
 | `Filename` | `string` | — | Original filename from the client |
 | `ContentType` | `*string` | `nil` | MIME type of the uploaded file |
 | `Size` | `*int` | `nil` | Size of the file in bytes |
-| `Content` | `[]byte` | — | File content (may be base64 encoded) |
+| `Content` | `\[\]byte` | — | File content (may be base64 encoded) |
 | `ContentEncoding` | `*string` | `nil` | Content encoding type |
 
 ##### Methods
@@ -1791,7 +1791,7 @@ Response body for `POST /asyncapi/validate`
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `Valid` | `bool` | — | Valid |
-| `Errors` | `[]string` | — | Errors |
+| `Errors` | `\[\]string` | — | Errors |
 
 ---
 

@@ -2,7 +2,7 @@
 title: "C API Reference"
 ---
 
-## C API Reference <span class="version-badge">v0.15.6-rc.24</span>
+## C API Reference <span class="version-badge">v0.16.0-rc.1</span>
 
 ### Functions
 
@@ -581,7 +581,7 @@ Configuration for gRPC support
 Controls how the server handles gRPC requests, including compression,
 timeouts, and protocol settings.
 
-### Stream Limits
+##### Stream Limits
 
 This configuration enforces message-level size limits but delegates
 concurrent stream limiting to the HTTP/2 transport layer:
@@ -614,9 +614,9 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `keepalive_timeout` | `uint64_t` | — | HTTP/2 keepalive timeout in seconds |
 | `max_stream_response_bytes` | `uintptr_t*` | `NULL` | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `NULL` (unbounded total response size). |
 
-#### Methods
+##### Methods
 
-##### spikard_default()
+###### spikard_default()
 
 **Signature:**
 
@@ -841,7 +841,7 @@ A machine-readable format for specifying errors in HTTP API responses.
 Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
 if not specified.
 
-### Content-Type
+##### Content-Type
 
 Responses using this struct should set:
 
@@ -868,9 +868,9 @@ Content-Type: application/problem+json
 | `instance` | `const char**` | `NULL` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
 | `extensions` | `void*` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
 
-#### Methods
+##### Methods
 
-##### spikard_with_detail()
+###### spikard_with_detail()
 
 Set the detail field
 
@@ -1582,7 +1582,7 @@ An individual SSE event
 Represents a single Server-Sent Event to be sent to a connected client.
 Events can have an optional type, ID, and retry timeout for advanced scenarios.
 
-### SSE Format
+##### SSE Format
 
 Events are serialized to the following text format:
 
@@ -1600,9 +1600,9 @@ retry: 3000
 | `id` | `const char**` | `NULL` | Event ID (optional, for client-side reconnection) |
 | `retry` | `uint64_t*` | `NULL` | Retry timeout in milliseconds (optional) |
 
-#### Methods
+##### Methods
 
-##### spikard_with_id()
+###### spikard_with_id()
 
 Set the event ID for client-side reconnection support
 

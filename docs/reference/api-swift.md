@@ -2,7 +2,7 @@
 title: "Swift API Reference"
 ---
 
-## Swift API Reference <span class="version-badge">v0.15.6-rc.24</span>
+## Swift API Reference <span class="version-badge">v0.16.0-rc.1</span>
 
 ### Functions
 
@@ -92,7 +92,7 @@ API Key authentication configuration
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `keys` | `[String]` | — | Valid API keys |
+| `keys` | `\[String\]` | — | Valid API keys |
 | `headerName` | `String` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
 
 ---
@@ -214,10 +214,10 @@ CORS configuration for a route
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `allowedOrigins` | `[String]` | `[]` | Allowed origins |
-| `allowedMethods` | `[String]` | `[]` | Allowed methods |
-| `allowedHeaders` | `[String]` | `[]` | Allowed headers |
-| `exposeHeaders` | `[String]?` | `null` | Expose headers |
+| `allowedOrigins` | `\[String\]` | `\[\]` | Allowed origins |
+| `allowedMethods` | `\[String\]` | `\[\]` | Allowed methods |
+| `allowedHeaders` | `\[String\]` | `\[\]` | Allowed headers |
+| `exposeHeaders` | `\[String\]?` | `null` | Expose headers |
 | `maxAge` | `UInt32?` | `null` | Maximum age |
 | `allowCredentials` | `Bool?` | `null` | Allow credentials |
 
@@ -583,7 +583,7 @@ Snapshot of a GraphQL subscription exchange over WebSocket.
 | `operationId` | `String` | — | Operation id used for the subscription request. |
 | `acknowledged` | `Bool` | — | Whether the server acknowledged the GraphQL WebSocket connection. |
 | `event` | `String?` | `null` | First `next.payload` received for this subscription, if any. |
-| `errors` | `[String]` | — | GraphQL protocol errors emitted by the server. |
+| `errors` | `\[String\]` | — | GraphQL protocol errors emitted by the server. |
 | `completeReceived` | `Bool` | — | Whether a `complete` frame was observed for this operation. |
 
 ---
@@ -595,7 +595,7 @@ Configuration for gRPC support
 Controls how the server handles gRPC requests, including compression,
 timeouts, and protocol settings.
 
-### Stream Limits
+##### Stream Limits
 
 This configuration enforces message-level size limits but delegates
 concurrent stream limiting to the HTTP/2 transport layer:
@@ -628,9 +628,9 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `keepaliveTimeout` | `UInt64` | — | HTTP/2 keepalive timeout in seconds |
 | `maxStreamResponseBytes` | `UInt64?` | `null` | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `null` (unbounded total response size). |
 
-#### Methods
+##### Methods
 
-##### default()
+###### default()
 
 **Signature:**
 
@@ -719,7 +719,7 @@ enabling discovery and documentation of RPC-compatible endpoints.
 | `paramsSchema` | `String?` | `null` | Optional JSON Schema for method parameters |
 | `resultSchema` | `String?` | `null` | Optional JSON Schema for the result |
 | `deprecated` | `Bool` | `/* serde(default) */` | Whether this method is deprecated |
-| `tags` | `[String]` | `/* serde(default) */` | Tags for categorizing and grouping methods |
+| `tags` | `\[String\]` | `/* serde(default) */` | Tags for categorizing and grouping methods |
 
 ---
 
@@ -731,7 +731,7 @@ JWT authentication configuration
 |-------|------|---------|-------------|
 | `secret` | `String` | — | Secret key for JWT verification |
 | `algorithm` | `String` | `/* serde(default) */` | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
-| `audience` | `[String]?` | `null` | Required audience claim |
+| `audience` | `\[String\]?` | `null` | Required audience claim |
 | `issuer` | `String?` | `null` | Required issuer claim |
 | `leeway` | `UInt64` | `/* serde(default) */` | Leeway for expiration checks (seconds) |
 
@@ -763,8 +763,8 @@ OpenAPI configuration
 | `openapiJsonPath` | `String` | — | Path to serve OpenAPI JSON spec (default: "/openapi.json") |
 | `contact` | `ContactInfo?` | `null` | Contact information |
 | `license` | `LicenseInfo?` | `null` | License information |
-| `servers` | `[ServerInfo]` | `[]` | Server definitions |
-| `securitySchemes` | `[String: SecuritySchemeInfo]` | `{}` | Security schemes (auto-detected from middleware if not provided) |
+| `servers` | `\[ServerInfo\]` | `\[\]` | Server definitions |
+| `securitySchemes` | `\[String: SecuritySchemeInfo\]` | `{}` | Security schemes (auto-detected from middleware if not provided) |
 
 ##### Methods
 
@@ -805,9 +805,9 @@ Full parse result returned by `POST /asyncapi/parse`
 | `specVersion` | `String` | — | Spec version |
 | `title` | `String` | — | Title |
 | `apiVersion` | `String` | — | Api version |
-| `channels` | `[ParsedChannel]` | — | Channels |
-| `operations` | `[ParsedOperation]` | — | Operations |
-| `messages` | `[ParsedMessage]` | — | Messages |
+| `channels` | `\[ParsedChannel\]` | — | Channels |
+| `operations` | `\[ParsedOperation\]` | — | Operations |
+| `messages` | `\[ParsedMessage\]` | — | Messages |
 
 ---
 
@@ -819,7 +819,7 @@ A single channel extracted from an AsyncAPI spec
 |-------|------|---------|-------------|
 | `name` | `String` | — | Channel key from the spec (e.g. "chat/messages") |
 | `address` | `String` | — | Channel address / path |
-| `messages` | `[String]` | — | Message names declared on this channel |
+| `messages` | `\[String\]` | — | Message names declared on this channel |
 | `bindings` | `String?` | `null` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
@@ -855,7 +855,7 @@ A machine-readable format for specifying errors in HTTP API responses.
 Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
 if not specified.
 
-### Content-Type
+##### Content-Type
 
 Responses using this struct should set:
 
@@ -880,11 +880,11 @@ Content-Type: application/problem+json
 | `status` | `UInt16` | — | The HTTP status code generated by the origin server. This is advisory; the actual HTTP status code takes precedence. |
 | `detail` | `String?` | `null` | A human-readable explanation specific to this occurrence of the problem. |
 | `instance` | `String?` | `null` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
-| `extensions` | `[String: String]` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
+| `extensions` | `\[String: String\]` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
 
-#### Methods
+##### Methods
 
-##### withDetail()
+###### withDetail()
 
 Set the detail field
 
@@ -1178,7 +1178,7 @@ HTTP Response with custom status code, headers, and content
 |-------|------|---------|-------------|
 | `content` | `String?` | `null` | Response body content |
 | `statusCode` | `UInt16` | — | HTTP status code (defaults to 200) |
-| `headers` | `[String: String]` | `{}` | Response headers |
+| `headers` | `\[String: String\]` | `{}` | Response headers |
 
 ##### Methods
 
@@ -1263,7 +1263,7 @@ Snapshot of an Axum response used by higher-level language bindings.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `status` | `UInt16` | — | HTTP status code. |
-| `headers` | `[String: String]` | — | Response headers (lowercase keys for predictable lookups). |
+| `headers` | `\[String: String\]` | — | Response headers (lowercase keys for predictable lookups). |
 | `body` | `Data` | — | Response body bytes (decoded for supported encodings). |
 
 ##### Methods
@@ -1551,7 +1551,7 @@ let result = instance.handlerDependencies([])
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `dependencies` | `[String]` | Yes | The dependencies |
+| `dependencies` | `\[String\]` | Yes | The dependencies |
 
 **Returns:** `RouteBuilder`
 
@@ -1606,7 +1606,7 @@ Server configuration
 | `rateLimit` | `RateLimitConfig?` | `null` | Enable rate limiting |
 | `jwtAuth` | `JwtConfig?` | `null` | JWT authentication configuration |
 | `apiKeyAuth` | `ApiKeyConfig?` | `null` | API Key authentication configuration |
-| `staticFiles` | `[StaticFilesConfig]` | `[]` | Static file serving configuration |
+| `staticFiles` | `\[StaticFilesConfig\]` | `\[\]` | Static file serving configuration |
 | `gracefulShutdown` | `Bool` | `true` | Enable graceful shutdown on SIGTERM/SIGINT |
 | `shutdownTimeout` | `UInt64` | `30` | Graceful shutdown timeout (seconds) |
 | `asyncapi` | `AsyncApiConfig?` | `null` | AsyncAPI HTTP endpoint configuration |
@@ -1654,7 +1654,7 @@ An individual SSE event
 Represents a single Server-Sent Event to be sent to a connected client.
 Events can have an optional type, ID, and retry timeout for advanced scenarios.
 
-### SSE Format
+##### SSE Format
 
 Events are serialized to the following text format:
 
@@ -1672,9 +1672,9 @@ retry: 3000
 | `id` | `String?` | `null` | Event ID (optional, for client-side reconnection) |
 | `retry` | `UInt64?` | `null` | Retry timeout in milliseconds (optional) |
 
-#### Methods
+##### Methods
 
-##### withId()
+###### withId()
 
 Set the event ID for client-side reconnection support
 
@@ -1986,7 +1986,7 @@ Response body for `POST /asyncapi/validate`
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `valid` | `Bool` | — | Valid |
-| `errors` | `[String]` | — | Errors |
+| `errors` | `\[String\]` | — | Errors |
 
 ---
 

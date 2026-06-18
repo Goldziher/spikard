@@ -593,18 +593,6 @@ void* __swift_bridge__$Vec_TestingSseEvent$get_mut(void* vec_ptr, uintptr_t inde
 uintptr_t __swift_bridge__$Vec_TestingSseEvent$len(void* vec_ptr);
 void* __swift_bridge__$Vec_TestingSseEvent$as_ptr(void* vec_ptr);
 
-typedef struct HandlerResult HandlerResult;
-void __swift_bridge__$HandlerResult$_free(void* self);
-
-void* __swift_bridge__$Vec_HandlerResult$new(void);
-void __swift_bridge__$Vec_HandlerResult$drop(void* vec_ptr);
-void __swift_bridge__$Vec_HandlerResult$push(void* vec_ptr, void* item_ptr);
-void* __swift_bridge__$Vec_HandlerResult$pop(void* vec_ptr);
-void* __swift_bridge__$Vec_HandlerResult$get(void* vec_ptr, uintptr_t index);
-void* __swift_bridge__$Vec_HandlerResult$get_mut(void* vec_ptr, uintptr_t index);
-uintptr_t __swift_bridge__$Vec_HandlerResult$len(void* vec_ptr);
-void* __swift_bridge__$Vec_HandlerResult$as_ptr(void* vec_ptr);
-
 typedef struct Request Request;
 void __swift_bridge__$Request$_free(void* self);
 
@@ -652,6 +640,18 @@ void* __swift_bridge__$Vec_SecuritySchemeInfo$get(void* vec_ptr, uintptr_t index
 void* __swift_bridge__$Vec_SecuritySchemeInfo$get_mut(void* vec_ptr, uintptr_t index);
 uintptr_t __swift_bridge__$Vec_SecuritySchemeInfo$len(void* vec_ptr);
 void* __swift_bridge__$Vec_SecuritySchemeInfo$as_ptr(void* vec_ptr);
+
+typedef struct HandlerResult HandlerResult;
+void __swift_bridge__$HandlerResult$_free(void* self);
+
+void* __swift_bridge__$Vec_HandlerResult$new(void);
+void __swift_bridge__$Vec_HandlerResult$drop(void* vec_ptr);
+void __swift_bridge__$Vec_HandlerResult$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_HandlerResult$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_HandlerResult$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_HandlerResult$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_HandlerResult$len(void* vec_ptr);
+void* __swift_bridge__$Vec_HandlerResult$as_ptr(void* vec_ptr);
 
 typedef struct App App;
 void __swift_bridge__$App$_free(void* self);
@@ -836,8 +836,11 @@ void* __swift_bridge__$LicenseInfo$url(void* self);
 void* __swift_bridge__$ServerInfo$url(void* self);
 void* __swift_bridge__$ServerInfo$description(void* self);
 void* __swift_bridge__$TestingSseEvent$data(void* self);
+void __swift_bridge__$request_noop(void* client);
+void __swift_bridge__$request_data_noop(void* client);
 void* __swift_bridge__$Method$to_string(void* self);
 void* __swift_bridge__$SecuritySchemeInfo$to_string(void* self);
+void __swift_bridge__$handler_result_noop(void* client);
 void* __swift_bridge__$schema_query_only(void);
 void* __swift_bridge__$schema_query_mutation(void);
 void* __swift_bridge__$schema_full(void);

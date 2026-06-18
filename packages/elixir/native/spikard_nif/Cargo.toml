@@ -1,6 +1,6 @@
 [package]
 name = "spikard_nif"
-version = "0.15.6-rc.24"
+version = "0.16.0-rc.1"
 edition = "2024"
 license = "MIT"
 description = "Rust-centric multi-language HTTP framework with polyglot bindings"
@@ -19,6 +19,10 @@ path = "../../../../packages/elixir/lib/lib.rs"
 
 crate-type = ["cdylib"]
 
+[features]
+default = ["di"]
+di = ["spikard/di"]
+
 [dependencies]
 alloc-no-stdlib = "=2.0.4"
 alloc-stdlib = "=0.2.2"
@@ -26,10 +30,10 @@ brotli-decompressor = "=5.0.1"
 rustler = "0.38"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-spikard = { version = "0.15.6-rc.24", path = "../../../../crates/spikard", features = ["di"] }
-spikard-core = { path = "../../../../crates/spikard-core", version = "0.15.6-rc.24" }
-spikard-graphql = { path = "../../../../crates/spikard-graphql", version = "0.15.6-rc.24" }
-spikard-http = { path = "../../../../crates/spikard-http", version = "0.15.6-rc.24" }
+spikard = { version = "0.16.0-rc.1", path = "../../../../crates/spikard", features = ["di"] }
+spikard-core = { path = "../../../../crates/spikard-core", version = "0.16.0-rc.1" }
+spikard-graphql = { path = "../../../../crates/spikard-graphql", version = "0.16.0-rc.1" }
+spikard-http = { path = "../../../../crates/spikard-http", version = "0.16.0-rc.1" }
 tokio = { version = "1", features = ["rt-multi-thread", "sync"] }
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(feature, values("di"))'] }

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0-rc.1] - 2026-06-18
+
+### Changed
+
+- Bumped to `0.16.0-rc.1` and regenerated all language bindings against [alef v0.25.41](https://github.com/kreuzberg-dev/alef/releases/tag/v0.25.41) (from v0.25.21). The regeneration carries several upstream codegen fixes into the bindings: PyO3 None-guards the coercion comprehension for optional `Vec<enum>` fields (no more `TypeError` when the value is `None`) and drops a redundant visitor `# type: ignore`; PHP DTO instance methods returning `Vec`/`Map` now emit an `@return array<T>` PHPDoc (PHPStan max); Swift generated noop shims drop the explicit `-> ()` and no longer emit duplicate definitions for own-block opaque types; and the curated Java PMD ruleset suppresses rules inherent to generated DTOs (`AvoidUsingHardCodedIP`, `ArrayIsStoredDirectly`, `MethodReturnsInternalArray`, `TooManyFields`, `CommentRequired`, and the rest).
+
+### Fixed
+
+- Pointed the `pmd` pre-commit hook at the curated `packages/java/pmd-ruleset.xml` (via `-R`) instead of PMD's built-in `quickstart.xml`, so the generated Java bindings pass PMD with the generated-DTO-inherent rules excluded.
+
 ## [0.15.6-rc.22] - 2026-06-11
 
 ### Fixed

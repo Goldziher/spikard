@@ -2,7 +2,7 @@
 title: "Zig API Reference"
 ---
 
-## Zig API Reference <span class="version-badge">v0.15.6-rc.24</span>
+## Zig API Reference <span class="version-badge">v0.16.0-rc.1</span>
 
 ### Functions
 
@@ -92,8 +92,8 @@ API Key authentication configuration
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `keys` | `[]const [:0]const u8` | — | Valid API keys |
-| `headerName` | `[:0]const u8` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
+| `keys` | `\[\]const \[:0\]const u8` | — | Valid API keys |
+| `headerName` | `\[:0\]const u8` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
 
 ---
 
@@ -104,7 +104,7 @@ AsyncAPI HTTP endpoint configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `bool` | — | Enable AsyncAPI endpoints (default: false) |
-| `spec` | `[:0]const u8?` | `null` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+| `spec` | `\[:0\]const u8?` | `null` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 
@@ -112,8 +112,8 @@ AsyncAPI HTTP endpoint configuration
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `name` | `[:0]const u8` | — | The name |
-| `requestId` | `[:0]const u8?` | `null` | Request id |
+| `name` | `\[:0\]const u8` | — | The name |
+| `requestId` | `\[:0\]const u8?` | `null` | Request id |
 
 ##### Methods
 
@@ -202,9 +202,9 @@ Contact information
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `name` | `[:0]const u8?` | `null` | Name of the contact person or organisation. |
-| `email` | `[:0]const u8?` | `null` | Contact email address. |
-| `url` | `[:0]const u8?` | `null` | URL pointing to the contact information page. |
+| `name` | `\[:0\]const u8?` | `null` | Name of the contact person or organisation. |
+| `email` | `\[:0\]const u8?` | `null` | Contact email address. |
+| `url` | `\[:0\]const u8?` | `null` | URL pointing to the contact information page. |
 
 ---
 
@@ -214,10 +214,10 @@ CORS configuration for a route
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `allowedOrigins` | `[]const [:0]const u8` | `[]` | Allowed origins |
-| `allowedMethods` | `[]const [:0]const u8` | `[]` | Allowed methods |
-| `allowedHeaders` | `[]const [:0]const u8` | `[]` | Allowed headers |
-| `exposeHeaders` | `[]const [:0]const u8?` | `null` | Expose headers |
+| `allowedOrigins` | `\[\]const \[:0\]const u8` | `\[\]` | Allowed origins |
+| `allowedMethods` | `\[\]const \[:0\]const u8` | `\[\]` | Allowed methods |
+| `allowedHeaders` | `\[\]const \[:0\]const u8` | `\[\]` | Allowed headers |
+| `exposeHeaders` | `\[\]const \[:0\]const u8?` | `null` | Expose headers |
 | `maxAge` | `u32?` | `null` | Maximum age |
 | `allowCredentials` | `bool?` | `null` | Allow credentials |
 
@@ -279,7 +279,7 @@ const result = instance.isOriginAllowed("value");
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `origin` | `[:0]const u8` | Yes | The origin |
+| `origin` | `\[:0\]const u8` | Yes | The origin |
 
 **Returns:** `bool`
 
@@ -303,7 +303,7 @@ const result = instance.isMethodAllowed("value");
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `method` | `[:0]const u8` | Yes | The method |
+| `method` | `\[:0\]const u8` | Yes | The method |
 
 **Returns:** `bool`
 
@@ -408,7 +408,7 @@ const result = instance.path("value");
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `path` | `[:0]const u8` | Yes | The URL path (e.g., "/graphql", "/api/graphql") |
+| `path` | `\[:0\]const u8` | Yes | The URL path (e.g., "/graphql", "/api/graphql") |
 
 **Returns:** `GraphQlRouteConfig`
 
@@ -432,7 +432,7 @@ const result = instance.method("value");
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `method` | `[:0]const u8` | Yes | The HTTP method (typically "POST") |
+| `method` | `\[:0\]const u8` | Yes | The HTTP method (typically "POST") |
 
 **Returns:** `GraphQlRouteConfig`
 
@@ -480,7 +480,7 @@ const result = instance.description("value");
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `description` | `[:0]const u8` | Yes | Documentation string |
+| `description` | `\[:0\]const u8` | Yes | Documentation string |
 
 **Returns:** `GraphQlRouteConfig`
 
@@ -580,10 +580,10 @@ Snapshot of a GraphQL subscription exchange over WebSocket.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `operationId` | `[:0]const u8` | — | Operation id used for the subscription request. |
+| `operationId` | `\[:0\]const u8` | — | Operation id used for the subscription request. |
 | `acknowledged` | `bool` | — | Whether the server acknowledged the GraphQL WebSocket connection. |
-| `event` | `[:0]const u8?` | `null` | First `next.payload` received for this subscription, if any. |
-| `errors` | `[]const [:0]const u8` | — | GraphQL protocol errors emitted by the server. |
+| `event` | `\[:0\]const u8?` | `null` | First `next.payload` received for this subscription, if any. |
+| `errors` | `\[\]const \[:0\]const u8` | — | GraphQL protocol errors emitted by the server. |
 | `completeReceived` | `bool` | — | Whether a `complete` frame was observed for this operation. |
 
 ---
@@ -595,7 +595,7 @@ Configuration for gRPC support
 Controls how the server handles gRPC requests, including compression,
 timeouts, and protocol settings.
 
-### Stream Limits
+##### Stream Limits
 
 This configuration enforces message-level size limits but delegates
 concurrent stream limiting to the HTTP/2 transport layer:
@@ -628,9 +628,9 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `keepaliveTimeout` | `u64` | — | HTTP/2 keepalive timeout in seconds |
 | `maxStreamResponseBytes` | `u64?` | `null` | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `null` (unbounded total response size). |
 
-#### Methods
+##### Methods
 
-##### default()
+###### default()
 
 **Signature:**
 
@@ -681,7 +681,7 @@ JSON-RPC server configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `bool` | `true` | Enable JSON-RPC endpoint |
-| `endpointPath` | `[:0]const u8` | — | HTTP endpoint path for JSON-RPC requests (default: "/rpc") |
+| `endpointPath` | `\[:0\]const u8` | — | HTTP endpoint path for JSON-RPC requests (default: "/rpc") |
 | `enableBatch` | `bool` | — | Enable batch request processing (default: true) |
 | `maxBatchSize` | `u64` | — | Maximum number of requests in a batch (default: 100) |
 
@@ -714,12 +714,12 @@ enabling discovery and documentation of RPC-compatible endpoints.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `methodName` | `[:0]const u8` | — | The JSON-RPC method name (e.g., "user.create") |
-| `description` | `[:0]const u8?` | `null` | Optional description of what the method does |
-| `paramsSchema` | `[:0]const u8?` | `null` | Optional JSON Schema for method parameters |
-| `resultSchema` | `[:0]const u8?` | `null` | Optional JSON Schema for the result |
+| `methodName` | `\[:0\]const u8` | — | The JSON-RPC method name (e.g., "user.create") |
+| `description` | `\[:0\]const u8?` | `null` | Optional description of what the method does |
+| `paramsSchema` | `\[:0\]const u8?` | `null` | Optional JSON Schema for method parameters |
+| `resultSchema` | `\[:0\]const u8?` | `null` | Optional JSON Schema for the result |
 | `deprecated` | `bool` | `/* serde(default) */` | Whether this method is deprecated |
-| `tags` | `[]const [:0]const u8` | `/* serde(default) */` | Tags for categorizing and grouping methods |
+| `tags` | `\[\]const \[:0\]const u8` | `/* serde(default) */` | Tags for categorizing and grouping methods |
 
 ---
 
@@ -729,10 +729,10 @@ JWT authentication configuration
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `secret` | `[:0]const u8` | — | Secret key for JWT verification |
-| `algorithm` | `[:0]const u8` | `/* serde(default) */` | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
-| `audience` | `[]const [:0]const u8?` | `null` | Required audience claim |
-| `issuer` | `[:0]const u8?` | `null` | Required issuer claim |
+| `secret` | `\[:0\]const u8` | — | Secret key for JWT verification |
+| `algorithm` | `\[:0\]const u8` | `/* serde(default) */` | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
+| `audience` | `\[\]const \[:0\]const u8?` | `null` | Required audience claim |
+| `issuer` | `\[:0\]const u8?` | `null` | Required issuer claim |
 | `leeway` | `u64` | `/* serde(default) */` | Leeway for expiration checks (seconds) |
 
 ---
@@ -743,8 +743,8 @@ License information
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `name` | `[:0]const u8` | — | SPDX license identifier or display name (e.g. `"MIT"`). |
-| `url` | `[:0]const u8?` | `null` | URL to the full license text. |
+| `name` | `\[:0\]const u8` | — | SPDX license identifier or display name (e.g. `"MIT"`). |
+| `url` | `\[:0\]const u8?` | `null` | URL to the full license text. |
 
 ---
 
@@ -755,15 +755,15 @@ OpenAPI configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `bool` | `false` | Enable OpenAPI generation (default: false for zero overhead) |
-| `title` | `[:0]const u8` | `"API"` | API title |
-| `version` | `[:0]const u8` | `"1.0.0"` | API version |
-| `description` | `[:0]const u8?` | `null` | API description (supports markdown) |
-| `swaggerUiPath` | `[:0]const u8` | — | Path to serve Swagger UI (default: "/docs") |
-| `redocPath` | `[:0]const u8` | — | Path to serve Redoc (default: "/redoc") |
-| `openapiJsonPath` | `[:0]const u8` | — | Path to serve OpenAPI JSON spec (default: "/openapi.json") |
+| `title` | `\[:0\]const u8` | `"API"` | API title |
+| `version` | `\[:0\]const u8` | `"1.0.0"` | API version |
+| `description` | `\[:0\]const u8?` | `null` | API description (supports markdown) |
+| `swaggerUiPath` | `\[:0\]const u8` | — | Path to serve Swagger UI (default: "/docs") |
+| `redocPath` | `\[:0\]const u8` | — | Path to serve Redoc (default: "/redoc") |
+| `openapiJsonPath` | `\[:0\]const u8` | — | Path to serve OpenAPI JSON spec (default: "/openapi.json") |
 | `contact` | `ContactInfo?` | `null` | Contact information |
 | `license` | `LicenseInfo?` | `null` | License information |
-| `servers` | `[]const ServerInfo` | `[]` | Server definitions |
+| `servers` | `\[\]const ServerInfo` | `\[\]` | Server definitions |
 | `securitySchemes` | `std.StringHashMap(SecuritySchemeInfo)` | `{}` | Security schemes (auto-detected from middleware if not provided) |
 
 ##### Methods
@@ -792,7 +792,7 @@ Request body for `POST /asyncapi/parse`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `[:0]const u8` | — | Spec |
+| `spec` | `\[:0\]const u8` | — | Spec |
 
 ---
 
@@ -802,12 +802,12 @@ Full parse result returned by `POST /asyncapi/parse`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `specVersion` | `[:0]const u8` | — | Spec version |
-| `title` | `[:0]const u8` | — | Title |
-| `apiVersion` | `[:0]const u8` | — | Api version |
-| `channels` | `[]const ParsedChannel` | — | Channels |
-| `operations` | `[]const ParsedOperation` | — | Operations |
-| `messages` | `[]const ParsedMessage` | — | Messages |
+| `specVersion` | `\[:0\]const u8` | — | Spec version |
+| `title` | `\[:0\]const u8` | — | Title |
+| `apiVersion` | `\[:0\]const u8` | — | Api version |
+| `channels` | `\[\]const ParsedChannel` | — | Channels |
+| `operations` | `\[\]const ParsedOperation` | — | Operations |
+| `messages` | `\[\]const ParsedMessage` | — | Messages |
 
 ---
 
@@ -817,10 +817,10 @@ A single channel extracted from an AsyncAPI spec
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `name` | `[:0]const u8` | — | Channel key from the spec (e.g. "chat/messages") |
-| `address` | `[:0]const u8` | — | Channel address / path |
-| `messages` | `[]const [:0]const u8` | — | Message names declared on this channel |
-| `bindings` | `[:0]const u8?` | `null` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
+| `name` | `\[:0\]const u8` | — | Channel key from the spec (e.g. "chat/messages") |
+| `address` | `\[:0\]const u8` | — | Channel address / path |
+| `messages` | `\[\]const \[:0\]const u8` | — | Message names declared on this channel |
+| `bindings` | `\[:0\]const u8?` | `null` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
 
@@ -830,8 +830,8 @@ A resolved message (name + JSON Schema)
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `name` | `[:0]const u8` | — | Message name |
-| `schema` | `[:0]const u8?` | `null` | Resolved JSON Schema for the message payload, if available |
+| `name` | `\[:0\]const u8` | — | Message name |
+| `schema` | `\[:0\]const u8?` | `null` | Resolved JSON Schema for the message payload, if available |
 
 ---
 
@@ -841,9 +841,9 @@ A single operation extracted from an AsyncAPI spec
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `name` | `[:0]const u8` | — | Operation name |
-| `action` | `[:0]const u8` | — | Operation action: "send" or "receive" |
-| `channel` | `[:0]const u8` | — | Channel reference (resolved to the channel name) |
+| `name` | `\[:0\]const u8` | — | Operation name |
+| `action` | `\[:0\]const u8` | — | Operation action: "send" or "receive" |
+| `channel` | `\[:0\]const u8` | — | Channel reference (resolved to the channel name) |
 
 ---
 
@@ -855,7 +855,7 @@ A machine-readable format for specifying errors in HTTP API responses.
 Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
 if not specified.
 
-### Content-Type
+##### Content-Type
 
 Responses using this struct should set:
 
@@ -875,16 +875,16 @@ Content-Type: application/problem+json
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `typeUri` | `[:0]const u8` | — | A URI reference that identifies the problem type. Defaults to "about:blank" when absent. Should be a stable, human-readable identifier for the problem type. |
-| `title` | `[:0]const u8` | — | A short, human-readable summary of the problem type. Should not change from occurrence to occurrence of the problem. |
+| `typeUri` | `\[:0\]const u8` | — | A URI reference that identifies the problem type. Defaults to "about:blank" when absent. Should be a stable, human-readable identifier for the problem type. |
+| `title` | `\[:0\]const u8` | — | A short, human-readable summary of the problem type. Should not change from occurrence to occurrence of the problem. |
 | `status` | `u16` | — | The HTTP status code generated by the origin server. This is advisory; the actual HTTP status code takes precedence. |
-| `detail` | `[:0]const u8?` | `null` | A human-readable explanation specific to this occurrence of the problem. |
-| `instance` | `[:0]const u8?` | `null` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
-| `extensions` | `std.StringHashMap([:0]const u8)` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
+| `detail` | `\[:0\]const u8?` | `null` | A human-readable explanation specific to this occurrence of the problem. |
+| `instance` | `\[:0\]const u8?` | `null` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
+| `extensions` | `std.StringHashMap(\[:0\]const u8)` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
 
-#### Methods
+##### Methods
 
-##### withDetail()
+###### withDetail()
 
 Set the detail field
 
@@ -904,7 +904,7 @@ const result = instance.withDetail("value");
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `detail` | `[:0]const u8` | Yes | The detail |
+| `detail` | `\[:0\]const u8` | Yes | The detail |
 
 **Returns:** `ProblemDetails`
 
@@ -928,7 +928,7 @@ const result = instance.withInstance("value");
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `instance` | `[:0]const u8` | Yes | The instance |
+| `instance` | `\[:0\]const u8` | Yes | The instance |
 
 **Returns:** `ProblemDetails`
 
@@ -952,7 +952,7 @@ const result = ProblemDetails.notFound("value");
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `detail` | `[:0]const u8` | Yes | The detail |
+| `detail` | `\[:0\]const u8` | Yes | The detail |
 
 **Returns:** `ProblemDetails`
 
@@ -976,7 +976,7 @@ const result = ProblemDetails.methodNotAllowed("value");
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `detail` | `[:0]const u8` | Yes | The detail |
+| `detail` | `\[:0\]const u8` | Yes | The detail |
 
 **Returns:** `ProblemDetails`
 
@@ -1000,7 +1000,7 @@ const result = ProblemDetails.internalServerError("value");
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `detail` | `[:0]const u8` | Yes | The detail |
+| `detail` | `\[:0\]const u8` | Yes | The detail |
 
 **Returns:** `ProblemDetails`
 
@@ -1024,7 +1024,7 @@ const result = ProblemDetails.badRequest("value");
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `detail` | `[:0]const u8` | Yes | The detail |
+| `detail` | `\[:0\]const u8` | Yes | The detail |
 
 **Returns:** `ProblemDetails`
 
@@ -1176,9 +1176,9 @@ HTTP Response with custom status code, headers, and content
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `[:0]const u8?` | `null` | Response body content |
+| `content` | `\[:0\]const u8?` | `null` | Response body content |
 | `statusCode` | `u16` | — | HTTP status code (defaults to 200) |
-| `headers` | `std.StringHashMap([:0]const u8)` | `{}` | Response headers |
+| `headers` | `std.StringHashMap(\[:0\]const u8)` | `{}` | Response headers |
 
 ##### Methods
 
@@ -1202,8 +1202,8 @@ instance.setHeader("value", "value");
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `key` | `[:0]const u8` | Yes | The key |
-| `value` | `[:0]const u8` | Yes | The value |
+| `key` | `\[:0\]const u8` | Yes | The key |
+| `value` | `\[:0\]const u8` | Yes | The value |
 
 **Returns:** No return value.
 
@@ -1227,14 +1227,14 @@ instance.setCookie("value", "value", true, true, 42, "value", "value", "value");
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `key` | `[:0]const u8` | Yes | The key |
-| `value` | `[:0]const u8` | Yes | The value |
+| `key` | `\[:0\]const u8` | Yes | The key |
+| `value` | `\[:0\]const u8` | Yes | The value |
 | `secure` | `bool` | Yes | The secure |
 | `httpOnly` | `bool` | Yes | The http only |
 | `maxAge` | `i64?` | No | The max age |
-| `domain` | `[:0]const u8?` | No | The domain |
-| `path` | `[:0]const u8?` | No | Path to the file |
-| `sameSite` | `[:0]const u8?` | No | The same site |
+| `domain` | `\[:0\]const u8?` | No | The domain |
+| `path` | `\[:0\]const u8?` | No | Path to the file |
+| `sameSite` | `\[:0\]const u8?` | No | The same site |
 
 **Returns:** No return value.
 
@@ -1263,8 +1263,8 @@ Snapshot of an Axum response used by higher-level language bindings.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `status` | `u16` | — | HTTP status code. |
-| `headers` | `std.StringHashMap([:0]const u8)` | — | Response headers (lowercase keys for predictable lookups). |
-| `body` | `[]const u8` | — | Response body bytes (decoded for supported encodings). |
+| `headers` | `std.StringHashMap(\[:0\]const u8)` | — | Response headers (lowercase keys for predictable lookups). |
+| `body` | `\[\]const u8` | — | Response body bytes (decoded for supported encodings). |
 
 ##### Methods
 
@@ -1308,7 +1308,7 @@ const result = instance.header("value");
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `name` | `[:0]const u8` | Yes | The name |
+| `name` | `\[:0\]const u8` | Yes | The name |
 
 **Returns:** `?[:0]const u8`
 
@@ -1341,7 +1341,7 @@ const result = RouteBuilder.new(.{}, "value");
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `method` | `Method` | Yes | The method |
-| `path` | `[:0]const u8` | Yes | Path to the file |
+| `path` | `\[:0\]const u8` | Yes | Path to the file |
 
 **Returns:** `RouteBuilder`
 
@@ -1365,7 +1365,7 @@ const result = instance.handlerName("value");
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `name` | `[:0]const u8` | Yes | The name |
+| `name` | `\[:0\]const u8` | Yes | The name |
 
 **Returns:** `RouteBuilder`
 
@@ -1389,7 +1389,7 @@ const result = instance.requestSchemaJson(.{});
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `schema` | `[:0]const u8` | Yes | The schema |
+| `schema` | `\[:0\]const u8` | Yes | The schema |
 
 **Returns:** `RouteBuilder`
 
@@ -1413,7 +1413,7 @@ const result = instance.responseSchemaJson(.{});
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `schema` | `[:0]const u8` | Yes | The schema |
+| `schema` | `\[:0\]const u8` | Yes | The schema |
 
 **Returns:** `RouteBuilder`
 
@@ -1437,7 +1437,7 @@ const result = instance.paramsSchemaJson(.{});
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `schema` | `[:0]const u8` | Yes | The schema |
+| `schema` | `\[:0\]const u8` | Yes | The schema |
 
 **Returns:** `RouteBuilder`
 
@@ -1461,7 +1461,7 @@ const result = instance.fileParamsJson(.{});
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `schema` | `[:0]const u8` | Yes | The schema |
+| `schema` | `\[:0\]const u8` | Yes | The schema |
 
 **Returns:** `RouteBuilder`
 
@@ -1551,7 +1551,7 @@ const result = instance.handlerDependencies(&[_]u8{});
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `dependencies` | `[]const [:0]const u8` | Yes | The dependencies |
+| `dependencies` | `\[\]const \[:0\]const u8` | Yes | The dependencies |
 
 **Returns:** `RouteBuilder`
 
@@ -1596,7 +1596,7 @@ Server configuration
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `host` | `[:0]const u8` | `"127.0.0.1"` | Host to bind to |
+| `host` | `\[:0\]const u8` | `"127.0.0.1"` | Host to bind to |
 | `port` | `u16` | `8000` | Port to bind to |
 | `workers` | `u64` | `1` | Number of Tokio runtime worker threads used by binding-managed server runtimes |
 | `enableRequestId` | `bool` | `false` | Enable request ID generation and propagation |
@@ -1606,7 +1606,7 @@ Server configuration
 | `rateLimit` | `RateLimitConfig?` | `null` | Enable rate limiting |
 | `jwtAuth` | `JwtConfig?` | `null` | JWT authentication configuration |
 | `apiKeyAuth` | `ApiKeyConfig?` | `null` | API Key authentication configuration |
-| `staticFiles` | `[]const StaticFilesConfig` | `[]` | Static file serving configuration |
+| `staticFiles` | `\[\]const StaticFilesConfig` | `\[\]` | Static file serving configuration |
 | `gracefulShutdown` | `bool` | `true` | Enable graceful shutdown on SIGTERM/SIGINT |
 | `shutdownTimeout` | `u64` | `30` | Graceful shutdown timeout (seconds) |
 | `asyncapi` | `AsyncApiConfig?` | `null` | AsyncAPI HTTP endpoint configuration |
@@ -1642,8 +1642,8 @@ Server information
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `url` | `[:0]const u8` | — | Base URL of the server (e.g. `"<https://api.example.com/v1"`>). |
-| `description` | `[:0]const u8?` | `null` | Optional human-readable description of the server environment. |
+| `url` | `\[:0\]const u8` | — | Base URL of the server (e.g. `"<https://api.example.com/v1"`>). |
+| `description` | `\[:0\]const u8?` | `null` | Optional human-readable description of the server environment. |
 
 ---
 
@@ -1654,7 +1654,7 @@ An individual SSE event
 Represents a single Server-Sent Event to be sent to a connected client.
 Events can have an optional type, ID, and retry timeout for advanced scenarios.
 
-### SSE Format
+##### SSE Format
 
 Events are serialized to the following text format:
 
@@ -1667,14 +1667,14 @@ retry: 3000
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `eventType` | `[:0]const u8?` | `null` | Event type (optional) |
-| `data` | `[:0]const u8` | — | Event data (JSON value) |
-| `id` | `[:0]const u8?` | `null` | Event ID (optional, for client-side reconnection) |
+| `eventType` | `\[:0\]const u8?` | `null` | Event type (optional) |
+| `data` | `\[:0\]const u8` | — | Event data (JSON value) |
+| `id` | `\[:0\]const u8?` | `null` | Event ID (optional, for client-side reconnection) |
 | `retry` | `u64?` | `null` | Retry timeout in milliseconds (optional) |
 
-#### Methods
+##### Methods
 
-##### withId()
+###### withId()
 
 Set the event ID for client-side reconnection support
 
@@ -1697,7 +1697,7 @@ const result = instance.withId("value");
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `id` | `[:0]const u8` | Yes | Unique identifier for this event |
+| `id` | `\[:0\]const u8` | Yes | Unique identifier for this event |
 
 **Returns:** `SseEvent`
 
@@ -1736,10 +1736,10 @@ Static file serving configuration
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `directory` | `[:0]const u8` | — | Directory path to serve |
-| `routePrefix` | `[:0]const u8` | — | URL path prefix (e.g., "/static") |
+| `directory` | `\[:0\]const u8` | — | Directory path to serve |
+| `routePrefix` | `\[:0\]const u8` | — | URL path prefix (e.g., "/static") |
 | `indexFile` | `bool` | `/* serde(default) */` | Fallback to index.html for directories |
-| `cacheControl` | `[:0]const u8?` | `null` | Cache-Control header value |
+| `cacheControl` | `\[:0\]const u8?` | `null` | Cache-Control header value |
 
 ---
 
@@ -1774,10 +1774,10 @@ const result = try instance.graphqlAt("value", "value", .{}, "value");
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `endpoint` | `[:0]const u8` | Yes | The endpoint |
-| `query` | `[:0]const u8` | Yes | The query |
-| `variables` | `[:0]const u8?` | No | The variables |
-| `operationName` | `[:0]const u8?` | No | The operation name |
+| `endpoint` | `\[:0\]const u8` | Yes | The endpoint |
+| `query` | `\[:0\]const u8` | Yes | The query |
+| `variables` | `\[:0\]const u8?` | No | The variables |
+| `operationName` | `\[:0\]const u8?` | No | The operation name |
 
 **Returns:** `ResponseSnapshot`
 
@@ -1803,9 +1803,9 @@ const result = try instance.graphql("value", .{}, "value");
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `query` | `[:0]const u8` | Yes | The query |
-| `variables` | `[:0]const u8?` | No | The variables |
-| `operationName` | `[:0]const u8?` | No | The operation name |
+| `query` | `\[:0\]const u8` | Yes | The query |
+| `variables` | `\[:0\]const u8?` | No | The variables |
+| `operationName` | `\[:0\]const u8?` | No | The operation name |
 
 **Returns:** `ResponseSnapshot`
 
@@ -1834,10 +1834,10 @@ const result = try instance.graphqlSubscriptionAt("value", "value", .{}, "value"
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `endpoint` | `[:0]const u8` | Yes | The endpoint |
-| `query` | `[:0]const u8` | Yes | The query |
-| `variables` | `[:0]const u8?` | No | The variables |
-| `operationName` | `[:0]const u8?` | No | The operation name |
+| `endpoint` | `\[:0\]const u8` | Yes | The endpoint |
+| `query` | `\[:0\]const u8` | Yes | The query |
+| `variables` | `\[:0\]const u8?` | No | The variables |
+| `operationName` | `\[:0\]const u8?` | No | The operation name |
 
 **Returns:** `GraphQlSubscriptionSnapshot`
 
@@ -1865,9 +1865,9 @@ const result = try instance.graphqlSubscription("value", .{}, "value");
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `query` | `[:0]const u8` | Yes | The query |
-| `variables` | `[:0]const u8?` | No | The variables |
-| `operationName` | `[:0]const u8?` | No | The operation name |
+| `query` | `\[:0\]const u8` | Yes | The query |
+| `variables` | `\[:0\]const u8?` | No | The variables |
+| `operationName` | `\[:0\]const u8?` | No | The operation name |
 
 **Returns:** `GraphQlSubscriptionSnapshot`
 
@@ -1881,7 +1881,7 @@ A single Server-Sent Event.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `data` | `[:0]const u8` | — | The data field of the event. |
+| `data` | `\[:0\]const u8` | — | The data field of the event. |
 
 ---
 
@@ -1894,11 +1894,11 @@ base64 decoding and implements standard I/O traits for compatibility.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `filename` | `[:0]const u8` | — | Original filename from the client |
-| `contentType` | `[:0]const u8?` | `null` | MIME type of the uploaded file |
+| `filename` | `\[:0\]const u8` | — | Original filename from the client |
+| `contentType` | `\[:0\]const u8?` | `null` | MIME type of the uploaded file |
 | `size` | `u64?` | `null` | Size of the file in bytes |
-| `content` | `[]const u8` | — | File content (may be base64 encoded) |
-| `contentEncoding` | `[:0]const u8?` | `null` | Content encoding type |
+| `content` | `\[\]const u8` | — | File content (may be base64 encoded) |
+| `contentEncoding` | `\[:0\]const u8?` | `null` | Content encoding type |
 
 ##### Methods
 
@@ -1972,10 +1972,10 @@ Request body for `POST /asyncapi/validate`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `[:0]const u8` | — | Spec |
-| `channel` | `[:0]const u8` | — | Channel |
-| `message` | `[:0]const u8` | — | Message |
-| `payload` | `[:0]const u8` | — | Payload |
+| `spec` | `\[:0\]const u8` | — | Spec |
+| `channel` | `\[:0\]const u8` | — | Channel |
+| `message` | `\[:0\]const u8` | — | Message |
+| `payload` | `\[:0\]const u8` | — | Payload |
 
 ---
 
@@ -1986,7 +1986,7 @@ Response body for `POST /asyncapi/validate`
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `valid` | `bool` | — | Valid |
-| `errors` | `[]const [:0]const u8` | — | Errors |
+| `errors` | `\[\]const \[:0\]const u8` | — | Errors |
 
 ---
 
@@ -2016,8 +2016,8 @@ Security scheme types
 
 | Value | Description |
 |-------|-------------|
-| `Http` | Http — Fields: `scheme`: `[:0]const u8`, `bearerFormat`: `[:0]const u8` |
-| `ApiKey` | Api key — Fields: `location`: `[:0]const u8`, `name`: `[:0]const u8` |
+| `Http` | Http — Fields: `scheme`: `\[:0\]const u8`, `bearerFormat`: `\[:0\]const u8` |
+| `ApiKey` | Api key — Fields: `location`: `\[:0\]const u8`, `name`: `\[:0\]const u8` |
 
 ---
 
@@ -2027,8 +2027,8 @@ Possible errors while converting an Axum response into a snapshot.
 
 | Value | Description |
 |-------|-------------|
-| `InvalidHeader` | Response header could not be decoded to UTF-8. — Fields: `0`: `[:0]const u8` |
-| `Decompression` | Body decompression failed. — Fields: `0`: `[:0]const u8` |
+| `InvalidHeader` | Response header could not be decoded to UTF-8. — Fields: `0`: `\[:0\]const u8` |
+| `Decompression` | Body decompression failed. — Fields: `0`: `\[:0\]const u8` |
 
 ---
 
@@ -2038,11 +2038,11 @@ A WebSocket message that can be text or binary.
 
 | Value | Description |
 |-------|-------------|
-| `Text` | A text message. — Fields: `0`: `[:0]const u8` |
-| `Binary` | A binary message. — Fields: `0`: `[]const u8` |
-| `Close` | A close message with a numeric close code (RFC 6455) and optional reason text. Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received, 1006 Abnormal Closure. — Fields: `code`: `u16`, `reason`: `[:0]const u8` |
-| `Ping` | A ping message. — Fields: `0`: `[]const u8` |
-| `Pong` | A pong message. — Fields: `0`: `[]const u8` |
+| `Text` | A text message. — Fields: `0`: `\[:0\]const u8` |
+| `Binary` | A binary message. — Fields: `0`: `\[\]const u8` |
+| `Close` | A close message with a numeric close code (RFC 6455) and optional reason text. Common codes: 1000 Normal Closure, 1001 Going Away, 1005 No Status Received, 1006 Abnormal Closure. — Fields: `code`: `u16`, `reason`: `\[:0\]const u8` |
+| `Ping` | A ping message. — Fields: `0`: `\[\]const u8` |
+| `Pong` | A pong message. — Fields: `0`: `\[\]const u8` |
 
 ---
 

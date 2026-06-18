@@ -113,9 +113,9 @@ CORS configuration for a route
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `allowed_origins` | `Vec<String>` | `vec![]` | Allowed origins |
-| `allowed_methods` | `Vec<String>` | `vec![]` | Allowed methods |
-| `allowed_headers` | `Vec<String>` | `vec![]` | Allowed headers |
+| `allowed_origins` | `Vec<String>` | `vec!\[\]` | Allowed origins |
+| `allowed_methods` | `Vec<String>` | `vec!\[\]` | Allowed methods |
+| `allowed_headers` | `Vec<String>` | `vec!\[\]` | Allowed headers |
 | `expose_headers` | `Vec<String>` | `None` | Expose headers |
 | `max_age` | `Option<u32>` | `None` | Maximum age |
 | `allow_credentials` | `Option<bool>` | `None` | Allow credentials |
@@ -217,7 +217,7 @@ OpenAPI configuration
 | `openapi_json_path` | `String` | — | Path to serve OpenAPI JSON spec (default: "/openapi.json") |
 | `contact` | `Option<ContactInfo>` | `None` | Contact information |
 | `license` | `Option<LicenseInfo>` | `None` | License information |
-| `servers` | `Vec<ServerInfo>` | `vec![]` | Server definitions |
+| `servers` | `Vec<ServerInfo>` | `vec!\[\]` | Server definitions |
 | `security_schemes` | `HashMap<String, SecuritySchemeInfo>` | `HashMap::new()` | Security schemes (auto-detected from middleware if not provided) |
 
 ---
@@ -288,7 +288,7 @@ Server configuration
 | `rate_limit` | `Option<RateLimitConfig>` | `None` | Enable rate limiting |
 | `jwt_auth` | `Option<JwtConfig>` | `None` | JWT authentication configuration |
 | `api_key_auth` | `Option<ApiKeyConfig>` | `None` | API Key authentication configuration |
-| `static_files` | `Vec<StaticFilesConfig>` | `vec![]` | Static file serving configuration |
+| `static_files` | `Vec<StaticFilesConfig>` | `vec!\[\]` | Static file serving configuration |
 | `graceful_shutdown` | `bool` | `true` | Enable graceful shutdown on SIGTERM/SIGINT |
 | `shutdown_timeout` | `u64` | `30` | Graceful shutdown timeout (seconds) |
 | `asyncapi` | `Option<AsyncApiConfig>` | `None` | AsyncAPI HTTP endpoint configuration |

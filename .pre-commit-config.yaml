@@ -124,6 +124,7 @@ repos:
 
       - id: checkstyle
       - id: pmd
+        args: ["check", "-R", "packages/java/pmd-ruleset.xml", "-f", "text"]
         exclude: ^test_native_load\.java$
       - id: cpd
         args: ["--minimum-tokens=120"]

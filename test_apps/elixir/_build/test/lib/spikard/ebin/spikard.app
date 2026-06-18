@@ -1,1 +1,0 @@
-{application,spikard,[{modules,[]},{optional_applications,[]},{applications,[kernel,stdlib,elixir,rustler_precompiled]},{description,"Rust-centric multi-language HTTP framework with polyglot bindings"},{registered,[]},{vsn,"0.15.6-rc.4"}]}.

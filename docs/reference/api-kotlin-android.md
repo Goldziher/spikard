@@ -2,7 +2,7 @@
 title: "Kotlin (Android) API Reference"
 ---
 
-## Kotlin (Android) API Reference <span class="version-badge">v0.15.6-rc.24</span>
+## Kotlin (Android) API Reference <span class="version-badge">v0.16.0-rc.1</span>
 
 ### Functions
 
@@ -217,9 +217,9 @@ CORS configuration for a route
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `allowedOrigins` | `List<String>` | `[]` | Allowed origins |
-| `allowedMethods` | `List<String>` | `[]` | Allowed methods |
-| `allowedHeaders` | `List<String>` | `[]` | Allowed headers |
+| `allowedOrigins` | `List<String>` | `\[\]` | Allowed origins |
+| `allowedMethods` | `List<String>` | `\[\]` | Allowed methods |
+| `allowedHeaders` | `List<String>` | `\[\]` | Allowed headers |
 | `exposeHeaders` | `List<String>?` | `null` | Expose headers |
 | `maxAge` | `Int?` | `null` | Maximum age |
 | `allowCredentials` | `Boolean?` | `null` | Allow credentials |
@@ -588,7 +588,7 @@ Configuration for gRPC support
 Controls how the server handles gRPC requests, including compression,
 timeouts, and protocol settings.
 
-### Stream Limits
+##### Stream Limits
 
 This configuration enforces message-level size limits but delegates
 concurrent stream limiting to the HTTP/2 transport layer:
@@ -621,9 +621,9 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `keepaliveTimeout` | `Long` | — | HTTP/2 keepalive timeout in seconds |
 | `maxStreamResponseBytes` | `Long?` | `null` | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `null` (unbounded total response size). |
 
-#### Methods
+##### Methods
 
-##### default()
+###### default()
 
 **Signature:**
 
@@ -758,7 +758,7 @@ OpenAPI configuration
 | `openapiJsonPath` | `String` | — | Path to serve OpenAPI JSON spec (default: "/openapi.json") |
 | `contact` | `ContactInfo?` | `null` | Contact information |
 | `license` | `LicenseInfo?` | `null` | License information |
-| `servers` | `List<ServerInfo>` | `[]` | Server definitions |
+| `servers` | `List<ServerInfo>` | `\[\]` | Server definitions |
 | `securitySchemes` | `Map<String, SecuritySchemeInfo>` | `{}` | Security schemes (auto-detected from middleware if not provided) |
 
 ##### Methods
@@ -851,7 +851,7 @@ A machine-readable format for specifying errors in HTTP API responses.
 Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
 if not specified.
 
-### Content-Type
+##### Content-Type
 
 Responses using this struct should set:
 
@@ -878,9 +878,9 @@ Content-Type: application/problem+json
 | `instance` | `String?` | `null` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
 | `extensions` | `Map<String, Any>` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
 
-#### Methods
+##### Methods
 
-##### withDetail()
+###### withDetail()
 
 Set the detail field
 
@@ -1556,7 +1556,7 @@ Server configuration
 | `rateLimit` | `RateLimitConfig?` | `null` | Enable rate limiting |
 | `jwtAuth` | `JwtConfig?` | `null` | JWT authentication configuration |
 | `apiKeyAuth` | `ApiKeyConfig?` | `null` | API Key authentication configuration |
-| `staticFiles` | `List<StaticFilesConfig>` | `[]` | Static file serving configuration |
+| `staticFiles` | `List<StaticFilesConfig>` | `\[\]` | Static file serving configuration |
 | `gracefulShutdown` | `Boolean` | `true` | Enable graceful shutdown on SIGTERM/SIGINT |
 | `shutdownTimeout` | `Long` | `30` | Graceful shutdown timeout (seconds) |
 | `asyncapi` | `AsyncApiConfig?` | `null` | AsyncAPI HTTP endpoint configuration |
@@ -1605,7 +1605,7 @@ An individual SSE event
 Represents a single Server-Sent Event to be sent to a connected client.
 Events can have an optional type, ID, and retry timeout for advanced scenarios.
 
-### SSE Format
+##### SSE Format
 
 Events are serialized to the following text format:
 
@@ -1623,9 +1623,9 @@ retry: 3000
 | `id` | `String?` | `null` | Event ID (optional, for client-side reconnection) |
 | `retry` | `Long?` | `null` | Retry timeout in milliseconds (optional) |
 
-#### Methods
+##### Methods
 
-##### withId()
+###### withId()
 
 Set the event ID for client-side reconnection support
 

@@ -2,7 +2,7 @@
 title: "Elixir API Reference"
 ---
 
-## Elixir API Reference <span class="version-badge">v0.15.6-rc.24</span>
+## Elixir API Reference <span class="version-badge">v0.16.0-rc.1</span>
 
 ### Functions
 
@@ -217,9 +217,9 @@ CORS configuration for a route
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `allowed_origins` | `list(String.t())` | `[]` | Allowed origins |
-| `allowed_methods` | `list(String.t())` | `[]` | Allowed methods |
-| `allowed_headers` | `list(String.t())` | `[]` | Allowed headers |
+| `allowed_origins` | `list(String.t())` | `\[\]` | Allowed origins |
+| `allowed_methods` | `list(String.t())` | `\[\]` | Allowed methods |
+| `allowed_headers` | `list(String.t())` | `\[\]` | Allowed headers |
 | `expose_headers` | `list(String.t()) \| nil` | `nil` | Expose headers |
 | `max_age` | `integer() \| nil` | `nil` | Maximum age |
 | `allow_credentials` | `boolean() \| nil` | `nil` | Allow credentials |
@@ -598,7 +598,7 @@ Configuration for gRPC support
 Controls how the server handles gRPC requests, including compression,
 timeouts, and protocol settings.
 
-### Stream Limits
+##### Stream Limits
 
 This configuration enforces message-level size limits but delegates
 concurrent stream limiting to the HTTP/2 transport layer:
@@ -631,9 +631,9 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `keepalive_timeout` | `integer()` | — | HTTP/2 keepalive timeout in seconds |
 | `max_stream_response_bytes` | `integer() \| nil` | `nil` | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `nil` (unbounded total response size). |
 
-#### Functions
+##### Functions
 
-##### default()
+###### default()
 
 **Signature:**
 
@@ -766,7 +766,7 @@ OpenAPI configuration
 | `openapi_json_path` | `String.t()` | — | Path to serve OpenAPI JSON spec (default: "/openapi.json") |
 | `contact` | `ContactInfo \| nil` | `nil` | Contact information |
 | `license` | `LicenseInfo \| nil` | `nil` | License information |
-| `servers` | `list(ServerInfo)` | `[]` | Server definitions |
+| `servers` | `list(ServerInfo)` | `\[\]` | Server definitions |
 | `security_schemes` | `map()` | `%{}` | Security schemes (auto-detected from middleware if not provided) |
 
 ##### Functions
@@ -858,7 +858,7 @@ A machine-readable format for specifying errors in HTTP API responses.
 Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
 if not specified.
 
-### Content-Type
+##### Content-Type
 
 Responses using this struct should set:
 
@@ -885,9 +885,9 @@ Content-Type: application/problem+json
 | `instance` | `String.t() \| nil` | `nil` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
 | `extensions` | `map()` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
 
-#### Functions
+##### Functions
 
-##### with_detail()
+###### with_detail()
 
 Set the detail field
 
@@ -1605,7 +1605,7 @@ Server configuration
 | `rate_limit` | `RateLimitConfig \| nil` | `nil` | Enable rate limiting |
 | `jwt_auth` | `JwtConfig \| nil` | `nil` | JWT authentication configuration |
 | `api_key_auth` | `ApiKeyConfig \| nil` | `nil` | API Key authentication configuration |
-| `static_files` | `list(StaticFilesConfig)` | `[]` | Static file serving configuration |
+| `static_files` | `list(StaticFilesConfig)` | `\[\]` | Static file serving configuration |
 | `graceful_shutdown` | `boolean()` | `true` | Enable graceful shutdown on SIGTERM/SIGINT |
 | `shutdown_timeout` | `integer()` | `30` | Graceful shutdown timeout (seconds) |
 | `asyncapi` | `AsyncApiConfig \| nil` | `nil` | AsyncAPI HTTP endpoint configuration |
@@ -1653,7 +1653,7 @@ An individual SSE event
 Represents a single Server-Sent Event to be sent to a connected client.
 Events can have an optional type, ID, and retry timeout for advanced scenarios.
 
-### SSE Format
+##### SSE Format
 
 Events are serialized to the following text format:
 
@@ -1671,9 +1671,9 @@ retry: 3000
 | `id` | `String.t() \| nil` | `nil` | Event ID (optional, for client-side reconnection) |
 | `retry` | `integer() \| nil` | `nil` | Retry timeout in milliseconds (optional) |
 
-#### Functions
+##### Functions
 
-##### with_id()
+###### with_id()
 
 Set the event ID for client-side reconnection support
 

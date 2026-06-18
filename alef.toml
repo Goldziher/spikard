@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.25.21"
+alef_version = "0.25.41"
 languages = [
   "python",
   "node",
@@ -1233,7 +1233,7 @@ name = "spikard"
 # so alef's stale-hash detection emits a fallback comment instead of using this
 # string verbatim. Refresh after the first real spikard zig package release via
 # `alef sync-versions` (which auto-populates from the published tarball).
-hash = "spikard-0.15.6-rc.24-PLACEHOLDER1234567890abcdefABCDEF0987654321"
+hash = "spikard-0.16.0-rc.1-PLACEHOLDER1234567890abcdefABCDEF0987654321"
 
 [crates.e2e.registry.packages.wasm]
 name = "@spikard/node-wasm"

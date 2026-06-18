@@ -2,7 +2,7 @@
 title: "WebAssembly API Reference"
 ---
 
-## WebAssembly API Reference <span class="version-badge">v0.15.6-rc.24</span>
+## WebAssembly API Reference <span class="version-badge">v0.16.0-rc.1</span>
 
 ### Functions
 
@@ -157,9 +157,9 @@ CORS configuration for a route
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `allowedOrigins` | `Array<string>` | `[]` | Allowed origins |
-| `allowedMethods` | `Array<string>` | `[]` | Allowed methods |
-| `allowedHeaders` | `Array<string>` | `[]` | Allowed headers |
+| `allowedOrigins` | `Array<string>` | `\[\]` | Allowed origins |
+| `allowedMethods` | `Array<string>` | `\[\]` | Allowed methods |
+| `allowedHeaders` | `Array<string>` | `\[\]` | Allowed headers |
 | `exposeHeaders` | `Array<string> \| null` | `null` | Expose headers |
 | `maxAge` | `number \| null` | `null` | Maximum age |
 | `allowCredentials` | `boolean \| null` | `null` | Allow credentials |
@@ -383,7 +383,7 @@ OpenAPI configuration
 | `openapiJsonPath` | `string` | — | Path to serve OpenAPI JSON spec (default: "/openapi.json") |
 | `contact` | `ContactInfo \| null` | `null` | Contact information |
 | `license` | `LicenseInfo \| null` | `null` | License information |
-| `servers` | `Array<ServerInfo>` | `[]` | Server definitions |
+| `servers` | `Array<ServerInfo>` | `\[\]` | Server definitions |
 | `securitySchemes` | `Record<string, SecuritySchemeInfo>` | `{}` | Security schemes (auto-detected from middleware if not provided) |
 
 ##### Methods
@@ -475,7 +475,7 @@ A machine-readable format for specifying errors in HTTP API responses.
 Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
 if not specified.
 
-### Content-Type
+##### Content-Type
 
 Responses using this struct should set:
 
@@ -502,9 +502,9 @@ Content-Type: application/problem+json
 | `instance` | `string \| null` | `null` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
 | `extensions` | `Record<string, unknown>` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
 
-#### Methods
+##### Methods
 
-##### withDetail()
+###### withDetail()
 
 Set the detail field
 
@@ -832,7 +832,7 @@ Server configuration
 | `rateLimit` | `RateLimitConfig \| null` | `null` | Enable rate limiting |
 | `jwtAuth` | `JwtConfig \| null` | `null` | JWT authentication configuration |
 | `apiKeyAuth` | `ApiKeyConfig \| null` | `null` | API Key authentication configuration |
-| `staticFiles` | `Array<StaticFilesConfig>` | `[]` | Static file serving configuration |
+| `staticFiles` | `Array<StaticFilesConfig>` | `\[\]` | Static file serving configuration |
 | `gracefulShutdown` | `boolean` | `true` | Enable graceful shutdown on SIGTERM/SIGINT |
 | `shutdownTimeout` | `number` | `30` | Graceful shutdown timeout (seconds) |
 | `asyncapi` | `AsyncApiConfig \| null` | `null` | AsyncAPI HTTP endpoint configuration |

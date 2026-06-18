@@ -84,10 +84,10 @@ CORS configuration for a route
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `allowed_origins` | `list[str]` | `[]` | Allowed origins |
-| `allowed_methods` | `list[str]` | `[]` | Allowed methods |
-| `allowed_headers` | `list[str]` | `[]` | Allowed headers |
-| `expose_headers` | `list[str] \| None` | `None` | Expose headers |
+| `allowed_origins` | `list\[str\]` | `\[\]` | Allowed origins |
+| `allowed_methods` | `list\[str\]` | `\[\]` | Allowed methods |
+| `allowed_headers` | `list\[str\]` | `\[\]` | Allowed headers |
+| `expose_headers` | `list\[str\] \| None` | `None` | Expose headers |
 | `max_age` | `int \| None` | `None` | Maximum age |
 | `allow_credentials` | `bool \| None` | `None` | Allow credentials |
 
@@ -188,8 +188,8 @@ OpenAPI configuration
 | `openapi_json_path` | `str` | — | Path to serve OpenAPI JSON spec (default: "/openapi.json") |
 | `contact` | `ContactInfo \| None` | `None` | Contact information |
 | `license` | `LicenseInfo \| None` | `None` | License information |
-| `servers` | `list[ServerInfo]` | `[]` | Server definitions |
-| `security_schemes` | `dict[str, SecuritySchemeInfo]` | `{}` | Security schemes (auto-detected from middleware if not provided) |
+| `servers` | `list\[ServerInfo\]` | `\[\]` | Server definitions |
+| `security_schemes` | `dict\[str, SecuritySchemeInfo\]` | `{}` | Security schemes (auto-detected from middleware if not provided) |
 
 ---
 
@@ -199,9 +199,9 @@ HTTP Response with custom status code, headers, and content
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `dict[str, Any] \| None` | `None` | Response body content |
+| `content` | `dict\[str, Any\] \| None` | `None` | Response body content |
 | `status_code` | `int` | — | HTTP status code (defaults to 200) |
-| `headers` | `dict[str, str]` | `{}` | Response headers |
+| `headers` | `dict\[str, str\]` | `{}` | Response headers |
 
 ---
 
@@ -213,7 +213,7 @@ JWT authentication configuration
 |-------|------|---------|-------------|
 | `secret` | `str` | — | Secret key for JWT verification |
 | `algorithm` | `str` | `/* serde(default) */` | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
-| `audience` | `list[str] \| None` | `None` | Required audience claim |
+| `audience` | `list\[str\] \| None` | `None` | Required audience claim |
 | `issuer` | `str \| None` | `None` | Required issuer claim |
 | `leeway` | `int` | `/* serde(default) */` | Leeway for expiration checks (seconds) |
 
@@ -225,7 +225,7 @@ API Key authentication configuration
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `keys` | `list[str]` | — | Valid API keys |
+| `keys` | `list\[str\]` | — | Valid API keys |
 | `header_name` | `str` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
 
 ---
@@ -259,7 +259,7 @@ Server configuration
 | `rate_limit` | `RateLimitConfig \| None` | `None` | Enable rate limiting |
 | `jwt_auth` | `JwtConfig \| None` | `None` | JWT authentication configuration |
 | `api_key_auth` | `ApiKeyConfig \| None` | `None` | API Key authentication configuration |
-| `static_files` | `list[StaticFilesConfig]` | `[]` | Static file serving configuration |
+| `static_files` | `list\[StaticFilesConfig\]` | `\[\]` | Static file serving configuration |
 | `graceful_shutdown` | `bool` | `True` | Enable graceful shutdown on SIGTERM/SIGINT |
 | `shutdown_timeout` | `int` | `30` | Graceful shutdown timeout (seconds) |
 | `asyncapi` | `AsyncApiConfig \| None` | `None` | AsyncAPI HTTP endpoint configuration |
@@ -278,7 +278,7 @@ AsyncAPI HTTP endpoint configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `bool` | — | Enable AsyncAPI endpoints (default: false) |
-| `spec` | `dict[str, Any] \| None` | `None` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+| `spec` | `dict\[str, Any\] \| None` | `None` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 

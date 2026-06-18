@@ -2,7 +2,7 @@
 title: "Rust API Reference"
 ---
 
-## Rust API Reference <span class="version-badge">v0.15.6-rc.24</span>
+## Rust API Reference <span class="version-badge">v0.16.0-rc.1</span>
 
 ### Functions
 
@@ -476,9 +476,9 @@ CORS configuration for a route
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `allowed_origins` | `Vec<String>` | `vec![]` | Allowed origins |
-| `allowed_methods` | `Vec<String>` | `vec![]` | Allowed methods |
-| `allowed_headers` | `Vec<String>` | `vec![]` | Allowed headers |
+| `allowed_origins` | `Vec<String>` | `vec!\[\]` | Allowed origins |
+| `allowed_methods` | `Vec<String>` | `vec!\[\]` | Allowed methods |
+| `allowed_headers` | `Vec<String>` | `vec!\[\]` | Allowed headers |
 | `expose_headers` | `Option<Vec<String>>` | `None` | Expose headers |
 | `max_age` | `Option<u32>` | `None` | Maximum age |
 | `allow_credentials` | `Option<bool>` | `None` | Allow credentials |
@@ -859,7 +859,7 @@ Configuration for gRPC support
 Controls how the server handles gRPC requests, including compression,
 timeouts, and protocol settings.
 
-### Stream Limits
+##### Stream Limits
 
 This configuration enforces message-level size limits but delegates
 concurrent stream limiting to the HTTP/2 transport layer:
@@ -892,9 +892,9 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `keepalive_timeout` | `u64` | — | HTTP/2 keepalive timeout in seconds |
 | `max_stream_response_bytes` | `Option<usize>` | `None` | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic::Status::resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `None` (unbounded total response size). |
 
-#### Methods
+##### Methods
 
-##### default()
+###### default()
 
 **Signature:**
 
@@ -1195,7 +1195,7 @@ OpenAPI configuration
 | `openapi_json_path` | `String` | — | Path to serve OpenAPI JSON spec (default: "/openapi.json") |
 | `contact` | `Option<ContactInfo>` | `None` | Contact information |
 | `license` | `Option<LicenseInfo>` | `None` | License information |
-| `servers` | `Vec<ServerInfo>` | `vec![]` | Server definitions |
+| `servers` | `Vec<ServerInfo>` | `vec!\[\]` | Server definitions |
 | `security_schemes` | `HashMap<String, SecuritySchemeInfo>` | `HashMap::new()` | Security schemes (auto-detected from middleware if not provided) |
 
 ##### Methods
@@ -1287,7 +1287,7 @@ A machine-readable format for specifying errors in HTTP API responses.
 Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
 if not specified.
 
-### Content-Type
+##### Content-Type
 
 Responses using this struct should set:
 
@@ -1314,9 +1314,9 @@ Content-Type: application/problem+json
 | `instance` | `Option<String>` | `None` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
 | `extensions` | `HashMap<String, serde_json::Value>` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
 
-#### Methods
+##### Methods
 
-##### with_detail()
+###### with_detail()
 
 Set the detail field
 
@@ -2038,7 +2038,7 @@ Server configuration
 | `rate_limit` | `Option<RateLimitConfig>` | `None` | Enable rate limiting |
 | `jwt_auth` | `Option<JwtConfig>` | `None` | JWT authentication configuration |
 | `api_key_auth` | `Option<ApiKeyConfig>` | `None` | API Key authentication configuration |
-| `static_files` | `Vec<StaticFilesConfig>` | `vec![]` | Static file serving configuration |
+| `static_files` | `Vec<StaticFilesConfig>` | `vec!\[\]` | Static file serving configuration |
 | `graceful_shutdown` | `bool` | `true` | Enable graceful shutdown on SIGTERM/SIGINT |
 | `shutdown_timeout` | `u64` | `30` | Graceful shutdown timeout (seconds) |
 | `asyncapi` | `Option<AsyncApiConfig>` | `None` | AsyncAPI HTTP endpoint configuration |
@@ -2088,7 +2088,7 @@ An individual SSE event
 Represents a single Server-Sent Event to be sent to a connected client.
 Events can have an optional type, ID, and retry timeout for advanced scenarios.
 
-### SSE Format
+##### SSE Format
 
 Events are serialized to the following text format:
 
@@ -2106,9 +2106,9 @@ retry: 3000
 | `id` | `Option<String>` | `None` | Event ID (optional, for client-side reconnection) |
 | `retry` | `Option<u64>` | `None` | Retry timeout in milliseconds (optional) |
 
-#### Methods
+##### Methods
 
-##### with_id()
+###### with_id()
 
 Set the event ID for client-side reconnection support
 

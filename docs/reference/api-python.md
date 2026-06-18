@@ -2,7 +2,7 @@
 title: "Python API Reference"
 ---
 
-## Python API Reference <span class="version-badge">v0.15.6-rc.24</span>
+## Python API Reference <span class="version-badge">v0.16.0-rc.1</span>
 
 ### Functions
 
@@ -92,7 +92,7 @@ API Key authentication configuration
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `keys` | `list[str]` | — | Valid API keys |
+| `keys` | `list\[str\]` | — | Valid API keys |
 | `header_name` | `str` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
 
 ---
@@ -104,7 +104,7 @@ AsyncAPI HTTP endpoint configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `bool` | — | Enable AsyncAPI endpoints (default: false) |
-| `spec` | `dict[str, Any] \| None` | `None` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
+| `spec` | `dict\[str, Any\] \| None` | `None` | Pre-registered AsyncAPI spec to serve from GET /asyncapi.json |
 
 ---
 
@@ -217,10 +217,10 @@ CORS configuration for a route
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `allowed_origins` | `list[str]` | `[]` | Allowed origins |
-| `allowed_methods` | `list[str]` | `[]` | Allowed methods |
-| `allowed_headers` | `list[str]` | `[]` | Allowed headers |
-| `expose_headers` | `list[str] \| None` | `None` | Expose headers |
+| `allowed_origins` | `list\[str\]` | `\[\]` | Allowed origins |
+| `allowed_methods` | `list\[str\]` | `\[\]` | Allowed methods |
+| `allowed_headers` | `list\[str\]` | `\[\]` | Allowed headers |
+| `expose_headers` | `list\[str\] \| None` | `None` | Expose headers |
 | `max_age` | `int \| None` | `None` | Maximum age |
 | `allow_credentials` | `bool \| None` | `None` | Allow credentials |
 
@@ -589,8 +589,8 @@ Snapshot of a GraphQL subscription exchange over WebSocket.
 |-------|------|---------|-------------|
 | `operation_id` | `str` | — | Operation id used for the subscription request. |
 | `acknowledged` | `bool` | — | Whether the server acknowledged the GraphQL WebSocket connection. |
-| `event` | `dict[str, Any] \| None` | `None` | First `next.payload` received for this subscription, if any. |
-| `errors` | `list[dict[str, Any]]` | — | GraphQL protocol errors emitted by the server. |
+| `event` | `dict\[str, Any\] \| None` | `None` | First `next.payload` received for this subscription, if any. |
+| `errors` | `list\[dict\[str, Any\]\]` | — | GraphQL protocol errors emitted by the server. |
 | `complete_received` | `bool` | — | Whether a `complete` frame was observed for this operation. |
 
 ---
@@ -602,7 +602,7 @@ Configuration for gRPC support
 Controls how the server handles gRPC requests, including compression,
 timeouts, and protocol settings.
 
-### Stream Limits
+##### Stream Limits
 
 This configuration enforces message-level size limits but delegates
 concurrent stream limiting to the HTTP/2 transport layer:
@@ -635,9 +635,9 @@ concurrent stream limiting to the HTTP/2 transport layer:
 | `keepalive_timeout` | `int` | — | HTTP/2 keepalive timeout in seconds |
 | `max_stream_response_bytes` | `int \| None` | `None` | Total byte cap across an entire streaming response. When `Some(n)`, the streaming adapter aborts the stream with `tonic.Status.resource_exhausted` once the cumulative encoded message bytes exceed `n`. The stream yields the error item and then terminates. Per-message cap remains `max_message_size`. This limit applies to server-streaming and bidirectional-streaming RPCs only; unary RPCs are governed solely by `max_message_size`. Default: `None` (unbounded total response size). |
 
-#### Methods
+##### Methods
 
-##### default()
+###### default()
 
 **Signature:**
 
@@ -725,10 +725,10 @@ enabling discovery and documentation of RPC-compatible endpoints.
 |-------|------|---------|-------------|
 | `method_name` | `str` | — | The JSON-RPC method name (e.g., "user.create") |
 | `description` | `str \| None` | `None` | Optional description of what the method does |
-| `params_schema` | `dict[str, Any] \| None` | `None` | Optional JSON Schema for method parameters |
-| `result_schema` | `dict[str, Any] \| None` | `None` | Optional JSON Schema for the result |
+| `params_schema` | `dict\[str, Any\] \| None` | `None` | Optional JSON Schema for method parameters |
+| `result_schema` | `dict\[str, Any\] \| None` | `None` | Optional JSON Schema for the result |
 | `deprecated` | `bool` | `/* serde(default) */` | Whether this method is deprecated |
-| `tags` | `list[str]` | `/* serde(default) */` | Tags for categorizing and grouping methods |
+| `tags` | `list\[str\]` | `/* serde(default) */` | Tags for categorizing and grouping methods |
 
 ---
 
@@ -740,7 +740,7 @@ JWT authentication configuration
 |-------|------|---------|-------------|
 | `secret` | `str` | — | Secret key for JWT verification |
 | `algorithm` | `str` | `/* serde(default) */` | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
-| `audience` | `list[str] \| None` | `None` | Required audience claim |
+| `audience` | `list\[str\] \| None` | `None` | Required audience claim |
 | `issuer` | `str \| None` | `None` | Required issuer claim |
 | `leeway` | `int` | `/* serde(default) */` | Leeway for expiration checks (seconds) |
 
@@ -772,8 +772,8 @@ OpenAPI configuration
 | `openapi_json_path` | `str` | — | Path to serve OpenAPI JSON spec (default: "/openapi.json") |
 | `contact` | `ContactInfo \| None` | `None` | Contact information |
 | `license` | `LicenseInfo \| None` | `None` | License information |
-| `servers` | `list[ServerInfo]` | `[]` | Server definitions |
-| `security_schemes` | `dict[str, SecuritySchemeInfo]` | `{}` | Security schemes (auto-detected from middleware if not provided) |
+| `servers` | `list\[ServerInfo\]` | `\[\]` | Server definitions |
+| `security_schemes` | `dict\[str, SecuritySchemeInfo\]` | `{}` | Security schemes (auto-detected from middleware if not provided) |
 
 ##### Methods
 
@@ -802,7 +802,7 @@ Request body for `POST /asyncapi/parse`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `dict[str, Any]` | — | Spec |
+| `spec` | `dict\[str, Any\]` | — | Spec |
 
 ---
 
@@ -815,9 +815,9 @@ Full parse result returned by `POST /asyncapi/parse`
 | `spec_version` | `str` | — | Spec version |
 | `title` | `str` | — | Title |
 | `api_version` | `str` | — | Api version |
-| `channels` | `list[ParsedChannel]` | — | Channels |
-| `operations` | `list[ParsedOperation]` | — | Operations |
-| `messages` | `list[ParsedMessage]` | — | Messages |
+| `channels` | `list\[ParsedChannel\]` | — | Channels |
+| `operations` | `list\[ParsedOperation\]` | — | Operations |
+| `messages` | `list\[ParsedMessage\]` | — | Messages |
 
 ---
 
@@ -829,8 +829,8 @@ A single channel extracted from an AsyncAPI spec
 |-------|------|---------|-------------|
 | `name` | `str` | — | Channel key from the spec (e.g. "chat/messages") |
 | `address` | `str` | — | Channel address / path |
-| `messages` | `list[str]` | — | Message names declared on this channel |
-| `bindings` | `dict[str, Any] \| None` | `None` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
+| `messages` | `list\[str\]` | — | Message names declared on this channel |
+| `bindings` | `dict\[str, Any\] \| None` | `None` | Bindings (ws / http / amqp / …) as raw JSON for forward-compatibility |
 
 ---
 
@@ -841,7 +841,7 @@ A resolved message (name + JSON Schema)
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `name` | `str` | — | Message name |
-| `schema` | `dict[str, Any] \| None` | `None` | Resolved JSON Schema for the message payload, if available |
+| `schema` | `dict\[str, Any\] \| None` | `None` | Resolved JSON Schema for the message payload, if available |
 
 ---
 
@@ -865,7 +865,7 @@ A machine-readable format for specifying errors in HTTP API responses.
 Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank"
 if not specified.
 
-### Content-Type
+##### Content-Type
 
 Responses using this struct should set:
 
@@ -890,11 +890,11 @@ Content-Type: application/problem+json
 | `status` | `int` | — | The HTTP status code generated by the origin server. This is advisory; the actual HTTP status code takes precedence. |
 | `detail` | `str \| None` | `None` | A human-readable explanation specific to this occurrence of the problem. |
 | `instance` | `str \| None` | `None` | A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced. |
-| `extensions` | `dict[str, dict[str, Any]]` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
+| `extensions` | `dict\[str, dict\[str, Any\]\]` | — | Extension members - problem-type-specific data. For validation errors, this typically contains an "errors" array. |
 
-#### Methods
+##### Methods
 
-##### with_detail()
+###### with_detail()
 
 Set the detail field
 
@@ -1193,9 +1193,9 @@ HTTP Response with custom status code, headers, and content
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `content` | `dict[str, Any] \| None` | `None` | Response body content |
+| `content` | `dict\[str, Any\] \| None` | `None` | Response body content |
 | `status_code` | `int` | — | HTTP status code (defaults to 200) |
-| `headers` | `dict[str, str]` | `{}` | Response headers |
+| `headers` | `dict\[str, str\]` | `{}` | Response headers |
 
 ##### Methods
 
@@ -1281,7 +1281,7 @@ Snapshot of an Axum response used by higher-level language bindings.
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `status` | `int` | — | HTTP status code. |
-| `headers` | `dict[str, str]` | — | Response headers (lowercase keys for predictable lookups). |
+| `headers` | `dict\[str, str\]` | — | Response headers (lowercase keys for predictable lookups). |
 | `body` | `bytes` | — | Response body bytes (decoded for supported encodings). |
 
 ##### Methods
@@ -1408,7 +1408,7 @@ result = instance.request_schema_json({})
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `schema` | `dict[str, Any]` | Yes | The schema |
+| `schema` | `dict\[str, Any\]` | Yes | The schema |
 
 **Returns:** `RouteBuilder`
 
@@ -1432,7 +1432,7 @@ result = instance.response_schema_json({})
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `schema` | `dict[str, Any]` | Yes | The schema |
+| `schema` | `dict\[str, Any\]` | Yes | The schema |
 
 **Returns:** `RouteBuilder`
 
@@ -1456,7 +1456,7 @@ result = instance.params_schema_json({})
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `schema` | `dict[str, Any]` | Yes | The schema |
+| `schema` | `dict\[str, Any\]` | Yes | The schema |
 
 **Returns:** `RouteBuilder`
 
@@ -1480,7 +1480,7 @@ result = instance.file_params_json({})
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `schema` | `dict[str, Any]` | Yes | The schema |
+| `schema` | `dict\[str, Any\]` | Yes | The schema |
 
 **Returns:** `RouteBuilder`
 
@@ -1570,7 +1570,7 @@ result = instance.handler_dependencies([])
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `dependencies` | `list[str]` | Yes | The dependencies |
+| `dependencies` | `list\[str\]` | Yes | The dependencies |
 
 **Returns:** `RouteBuilder`
 
@@ -1626,7 +1626,7 @@ Server configuration
 | `rate_limit` | `RateLimitConfig \| None` | `None` | Enable rate limiting |
 | `jwt_auth` | `JwtConfig \| None` | `None` | JWT authentication configuration |
 | `api_key_auth` | `ApiKeyConfig \| None` | `None` | API Key authentication configuration |
-| `static_files` | `list[StaticFilesConfig]` | `[]` | Static file serving configuration |
+| `static_files` | `list\[StaticFilesConfig\]` | `\[\]` | Static file serving configuration |
 | `graceful_shutdown` | `bool` | `True` | Enable graceful shutdown on SIGTERM/SIGINT |
 | `shutdown_timeout` | `int` | `30` | Graceful shutdown timeout (seconds) |
 | `asyncapi` | `AsyncApiConfig \| None` | `None` | AsyncAPI HTTP endpoint configuration |
@@ -1675,7 +1675,7 @@ An individual SSE event
 Represents a single Server-Sent Event to be sent to a connected client.
 Events can have an optional type, ID, and retry timeout for advanced scenarios.
 
-### SSE Format
+##### SSE Format
 
 Events are serialized to the following text format:
 
@@ -1689,13 +1689,13 @@ retry: 3000
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `event_type` | `str \| None` | `None` | Event type (optional) |
-| `data` | `dict[str, Any]` | — | Event data (JSON value) |
+| `data` | `dict\[str, Any\]` | — | Event data (JSON value) |
 | `id` | `str \| None` | `None` | Event ID (optional, for client-side reconnection) |
 | `retry` | `int \| None` | `None` | Retry timeout in milliseconds (optional) |
 
-#### Methods
+##### Methods
 
-##### with_id()
+###### with_id()
 
 Set the event ID for client-side reconnection support
 
@@ -1797,7 +1797,7 @@ result = instance.graphql_at("value", "value", variables={}, operation_name="val
 |------|------|----------|-------------|
 | `endpoint` | `str` | Yes | The endpoint |
 | `query` | `str` | Yes | The query |
-| `variables` | `dict[str, Any] \| None` | No | The variables |
+| `variables` | `dict\[str, Any\] \| None` | No | The variables |
 | `operation_name` | `str \| None` | No | The operation name |
 
 **Returns:** `ResponseSnapshot`
@@ -1825,7 +1825,7 @@ result = instance.graphql("value", variables={}, operation_name="value")
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `query` | `str` | Yes | The query |
-| `variables` | `dict[str, Any] \| None` | No | The variables |
+| `variables` | `dict\[str, Any\] \| None` | No | The variables |
 | `operation_name` | `str \| None` | No | The operation name |
 
 **Returns:** `ResponseSnapshot`
@@ -1857,7 +1857,7 @@ result = instance.graphql_subscription_at("value", "value", variables={}, operat
 |------|------|----------|-------------|
 | `endpoint` | `str` | Yes | The endpoint |
 | `query` | `str` | Yes | The query |
-| `variables` | `dict[str, Any] \| None` | No | The variables |
+| `variables` | `dict\[str, Any\] \| None` | No | The variables |
 | `operation_name` | `str \| None` | No | The operation name |
 
 **Returns:** `GraphQlSubscriptionSnapshot`
@@ -1887,7 +1887,7 @@ result = instance.graphql_subscription("value", variables={}, operation_name="va
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `query` | `str` | Yes | The query |
-| `variables` | `dict[str, Any] \| None` | No | The variables |
+| `variables` | `dict\[str, Any\] \| None` | No | The variables |
 | `operation_name` | `str \| None` | No | The operation name |
 
 **Returns:** `GraphQlSubscriptionSnapshot`
@@ -1993,10 +1993,10 @@ Request body for `POST /asyncapi/validate`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `spec` | `dict[str, Any]` | — | Spec |
+| `spec` | `dict\[str, Any\]` | — | Spec |
 | `channel` | `str` | — | Channel |
 | `message` | `str` | — | Message |
-| `payload` | `dict[str, Any]` | — | Payload |
+| `payload` | `dict\[str, Any\]` | — | Payload |
 
 ---
 
@@ -2007,7 +2007,7 @@ Response body for `POST /asyncapi/validate`
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `valid` | `bool` | — | Valid |
-| `errors` | `list[str]` | — | Errors |
+| `errors` | `list\[str\]` | — | Errors |
 
 ---
 
