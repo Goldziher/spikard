@@ -93,7 +93,7 @@ API Key authentication configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `keys` | `Array<string>` | — | Valid API keys |
-| `headerName` | `string` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
+| `headerName` | `string` | `serde(default = "default_api_key_header")` | Header name to check (e.g., "X-API-Key") |
 
 ---
 
@@ -730,7 +730,7 @@ JWT authentication configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `secret` | `string` | — | Secret key for JWT verification |
-| `algorithm` | `string` | `/* serde(default) */` | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
+| `algorithm` | `string` | `serde(default = "default_jwt_algorithm")` | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
 | `audience` | `Array<string> \| null` | `null` | Required audience claim |
 | `issuer` | `string \| null` | `null` | Required issuer claim |
 | `leeway` | `number` | `/* serde(default) */` | Leeway for expiration checks (seconds) |
@@ -856,9 +856,7 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ##### Content-Type
-
 Responses using this struct should set:
-
 ```text
 Content-Type: application/problem+json
 ```
@@ -1657,7 +1655,6 @@ Events can have an optional type, ID, and retry timeout for advanced scenarios.
 ##### SSE Format
 
 Events are serialized to the following text format:
-
 ```text
 event: event_type
 data: {"json":"value"}
@@ -1738,7 +1735,7 @@ Static file serving configuration
 |-------|------|---------|-------------|
 | `directory` | `string` | — | Directory path to serve |
 | `routePrefix` | `string` | — | URL path prefix (e.g., "/static") |
-| `indexFile` | `boolean` | `/* serde(default) */` | Fallback to index.html for directories |
+| `indexFile` | `boolean` | `serde(default = "default_true")` | Fallback to index.html for directories |
 | `cacheControl` | `string \| null` | `null` | Cache-Control header value |
 
 ---

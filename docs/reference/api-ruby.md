@@ -93,7 +93,7 @@ API Key authentication configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `keys` | `Array<String>` | — | Valid API keys |
-| `header_name` | `String` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
+| `header_name` | `String` | `serde(default = "default_api_key_header")` | Header name to check (e.g., "X-API-Key") |
 
 ---
 
@@ -730,7 +730,7 @@ JWT authentication configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `secret` | `String` | — | Secret key for JWT verification |
-| `algorithm` | `String` | `/* serde(default) */` | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
+| `algorithm` | `String` | `serde(default = "default_jwt_algorithm")` | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
 | `audience` | `Array<String>?` | `nil` | Required audience claim |
 | `issuer` | `String?` | `nil` | Required issuer claim |
 | `leeway` | `Integer` | `/* serde(default) */` | Leeway for expiration checks (seconds) |
@@ -856,9 +856,7 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ##### Content-Type
-
 Responses using this struct should set:
-
 ```text
 Content-Type: application/problem+json
 ```
@@ -1653,7 +1651,6 @@ Events can have an optional type, ID, and retry timeout for advanced scenarios.
 ##### SSE Format
 
 Events are serialized to the following text format:
-
 ```text
 event: event_type
 data: {"json":"value"}
@@ -1734,7 +1731,7 @@ Static file serving configuration
 |-------|------|---------|-------------|
 | `directory` | `String` | — | Directory path to serve |
 | `route_prefix` | `String` | — | URL path prefix (e.g., "/static") |
-| `index_file` | `Boolean` | `/* serde(default) */` | Fallback to index.html for directories |
+| `index_file` | `Boolean` | `serde(default = "default_true")` | Fallback to index.html for directories |
 | `cache_control` | `String?` | `nil` | Cache-Control header value |
 
 ---

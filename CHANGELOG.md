@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Regenerated all language bindings against [alef v0.25.49](https://github.com/kreuzberg-dev/alef/releases/tag/v0.25.49). The regeneration carries an upstream codegen fix for serde-default markers in generated struct `Default` impls: fields annotated with `#[serde(default = "path")]` were emitted verbatim as `field: serde(default = "path")`, which is invalid Rust and broke the Ruby/magnus binding build (`packages/ruby/ext/spikard_rb/src/lib.rs`, 6 occurrences for the JWT algorithm default). The generator now falls through to the field's type-zero value (e.g. `String::new()`) when the default is an unresolved serde marker.
+
 ## [0.16.0-rc.1] - 2026-06-18
 
 ### Changed

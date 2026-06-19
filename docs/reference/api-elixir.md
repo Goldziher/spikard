@@ -96,7 +96,7 @@ API Key authentication configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `keys` | `list(String.t())` | — | Valid API keys |
-| `header_name` | `String.t()` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
+| `header_name` | `String.t()` | `serde(default = "default_api_key_header")` | Header name to check (e.g., "X-API-Key") |
 
 ---
 
@@ -733,7 +733,7 @@ JWT authentication configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `secret` | `String.t()` | — | Secret key for JWT verification |
-| `algorithm` | `String.t()` | `/* serde(default) */` | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
+| `algorithm` | `String.t()` | `serde(default = "default_jwt_algorithm")` | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
 | `audience` | `list(String.t()) \| nil` | `nil` | Required audience claim |
 | `issuer` | `String.t() \| nil` | `nil` | Required issuer claim |
 | `leeway` | `integer()` | `/* serde(default) */` | Leeway for expiration checks (seconds) |
@@ -859,9 +859,7 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ##### Content-Type
-
 Responses using this struct should set:
-
 ```text
 Content-Type: application/problem+json
 ```
@@ -1656,7 +1654,6 @@ Events can have an optional type, ID, and retry timeout for advanced scenarios.
 ##### SSE Format
 
 Events are serialized to the following text format:
-
 ```text
 event: event_type
 data: {"json":"value"}
@@ -1737,7 +1734,7 @@ Static file serving configuration
 |-------|------|---------|-------------|
 | `directory` | `String.t()` | — | Directory path to serve |
 | `route_prefix` | `String.t()` | — | URL path prefix (e.g., "/static") |
-| `index_file` | `boolean()` | `/* serde(default) */` | Fallback to index.html for directories |
+| `index_file` | `boolean()` | `serde(default = "default_true")` | Fallback to index.html for directories |
 | `cache_control` | `String.t() \| nil` | `nil` | Cache-Control header value |
 
 ---

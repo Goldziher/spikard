@@ -89,6 +89,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.7"
+  ffi:
+    dependency: "direct main"
+    description:
+      name: ffi
+      sha256: "6d7fd89431262d8f3125e81b50d3847a091d846eafcd4fdb88dd06f36d705a45"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.0"
   file:
     dependency: transitive
     description:
@@ -301,10 +309,10 @@ packages:
     dependency: "direct main"
     description:
       name: spikard
-      sha256: "3e06f5fd788e601d616c83681c424b5e21a3cf8ecabc7c82552a659d56be2c6a"
+      sha256: "74779cc7b8277056a0ac88851aee629cbddaf0c4351141cf2cdb4f18cb2f52bb"
       url: "https://pub.dev"
     source: hosted
-    version: "0.15.6-rc.22"
+    version: "0.16.0-rc.1"
   stack_trace:
     dependency: transitive
     description:

@@ -93,7 +93,7 @@ API Key authentication configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `Keys` | `List<string>` | — | Valid API keys |
-| `HeaderName` | `string` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
+| `HeaderName` | `string` | `serde(default = "default_api_key_header")` | Header name to check (e.g., "X-API-Key") |
 
 ---
 
@@ -716,7 +716,7 @@ JWT authentication configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `Secret` | `string` | — | Secret key for JWT verification |
-| `Algorithm` | `string` | `/* serde(default) */` | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
+| `Algorithm` | `string` | `serde(default = "default_jwt_algorithm")` | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
 | `Audience` | `List<string>?` | `null` | Required audience claim |
 | `Issuer` | `string?` | `null` | Required issuer claim |
 | `Leeway` | `ulong` | `/* serde(default) */` | Leeway for expiration checks (seconds) |
@@ -842,9 +842,7 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ##### Content-Type
-
 Responses using this struct should set:
-
 ```text
 Content-Type: application/problem+json
 ```
@@ -1585,7 +1583,6 @@ Events can have an optional type, ID, and retry timeout for advanced scenarios.
 ##### SSE Format
 
 Events are serialized to the following text format:
-
 ```text
 event: event_type
 data: {"json":"value"}
@@ -1666,7 +1663,7 @@ Static file serving configuration
 |-------|------|---------|-------------|
 | `Directory` | `string` | — | Directory path to serve |
 | `RoutePrefix` | `string` | — | URL path prefix (e.g., "/static") |
-| `IndexFile` | `bool` | `/* serde(default) */` | Fallback to index.html for directories |
+| `IndexFile` | `bool` | `serde(default = "default_true")` | Fallback to index.html for directories |
 | `CacheControl` | `string?` | `null` | Cache-Control header value |
 
 ---

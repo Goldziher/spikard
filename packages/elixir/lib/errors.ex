@@ -93,4 +93,5 @@ defmodule Spikard.Errors do
       }
     end
   end
+
 end

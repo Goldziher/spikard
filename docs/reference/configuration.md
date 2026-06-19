@@ -212,7 +212,7 @@ JWT authentication configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `secret` | `str` | — | Secret key for JWT verification |
-| `algorithm` | `str` | `/* serde(default) */` | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
+| `algorithm` | `str` | `serde(default = "default_jwt_algorithm")` | Required algorithm (HS256, HS384, HS512, RS256, etc.) |
 | `audience` | `list\[str\] \| None` | `None` | Required audience claim |
 | `issuer` | `str \| None` | `None` | Required issuer claim |
 | `leeway` | `int` | `/* serde(default) */` | Leeway for expiration checks (seconds) |
@@ -226,7 +226,7 @@ API Key authentication configuration
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `keys` | `list\[str\]` | — | Valid API keys |
-| `header_name` | `str` | `/* serde(default) */` | Header name to check (e.g., "X-API-Key") |
+| `header_name` | `str` | `serde(default = "default_api_key_header")` | Header name to check (e.g., "X-API-Key") |
 
 ---
 
@@ -238,7 +238,7 @@ Static file serving configuration
 |-------|------|---------|-------------|
 | `directory` | `str` | — | Directory path to serve |
 | `route_prefix` | `str` | — | URL path prefix (e.g., "/static") |
-| `index_file` | `bool` | `/* serde(default) */` | Fallback to index.html for directories |
+| `index_file` | `bool` | `serde(default = "default_true")` | Fallback to index.html for directories |
 | `cache_control` | `str \| None` | `None` | Cache-Control header value |
 
 ---
