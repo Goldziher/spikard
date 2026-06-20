@@ -30,7 +30,13 @@
     "support-nts": true,
     "download-url-method": "pre-packaged-binary"
   },
-  "keywords": ["framework", "http", "polyglot", "rust", "web"],
+  "keywords": [
+    "framework",
+    "http",
+    "polyglot",
+    "rust",
+    "web"
+  ],
   "extra": {
     "pie": {
       "binary": {

@@ -24,7 +24,7 @@ repositories {
 }
 
 dependencies {
-    testImplementation("dev.spikard:spikard-kotlin:0.16.0-rc.1")
+    testImplementation("dev.spikard:spikard-kotlin:0.16.0-rc.2")
     testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.0")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:6.1.0")
     testImplementation("com.fasterxml.jackson.core:jackson-databind:2.18.2")

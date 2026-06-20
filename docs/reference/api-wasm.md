@@ -2,7 +2,7 @@
 title: "WebAssembly API Reference"
 ---
 
-## WebAssembly API Reference <span class="version-badge">v0.16.0-rc.1</span>
+## WebAssembly API Reference <span class="version-badge">v0.16.0-rc.2</span>
 
 ### Functions
 
@@ -476,7 +476,9 @@ Per RFC 9457, all fields are optional. The `type` field defaults to "about:blank
 if not specified.
 
 ##### Content-Type
+
 Responses using this struct should set:
+
 ```text
 Content-Type: application/problem+json
 ```

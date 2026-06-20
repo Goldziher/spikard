@@ -39,8 +39,8 @@ dependencies = [
 
 [[package]]
 name = "alef"
-version = "0.25.47"
-source = "git+https://github.com/kreuzberg-dev/alef?rev=32a3b9a521feb7658ac4dc694360a27c143b41b2#32a3b9a521feb7658ac4dc694360a27c143b41b2"
+version = "0.25.50"
+source = "git+https://github.com/kreuzberg-dev/alef?rev=473c73b1d39e0ef6134e0b249253c7431c31122e#473c73b1d39e0ef6134e0b249253c7431c31122e"
 dependencies = [
  "ahash",
  "anyhow",
@@ -3931,7 +3931,7 @@ dependencies = [
 
 [[package]]
 name = "spikard"
-version = "0.16.0-rc.1"
+version = "0.16.0-rc.2"
 dependencies = [
  "anyhow",
  "axum",
@@ -3951,7 +3951,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-alef"
-version = "0.16.0-rc.1"
+version = "0.16.0-rc.2"
 dependencies = [
  "alef",
  "spikard-alef-ext",
@@ -3959,7 +3959,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-alef-ext"
-version = "0.16.0-rc.1"
+version = "0.16.0-rc.2"
 dependencies = [
  "alef",
  "anyhow",
@@ -3972,7 +3972,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-cli"
-version = "0.16.0-rc.1"
+version = "0.16.0-rc.2"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -4005,7 +4005,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-codegen"
-version = "0.16.0-rc.1"
+version = "0.16.0-rc.2"
 dependencies = [
  "indexmap",
  "scythe-core",
@@ -4016,7 +4016,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-core"
-version = "0.16.0-rc.1"
+version = "0.16.0-rc.2"
 dependencies = [
  "anyhow",
  "base64",
@@ -4041,7 +4041,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-ffi"
-version = "0.16.0-rc.1"
+version = "0.16.0-rc.2"
 dependencies = [
  "ahash",
  "cbindgen",
@@ -4056,7 +4056,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-graphql"
-version = "0.16.0-rc.1"
+version = "0.16.0-rc.2"
 dependencies = [
  "async-graphql",
  "axum",
@@ -4077,7 +4077,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-http"
-version = "0.16.0-rc.1"
+version = "0.16.0-rc.2"
 dependencies = [
  "ahash",
  "anyhow",
@@ -4133,7 +4133,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-node"
-version = "0.16.0-rc.1"
+version = "0.16.0-rc.2"
 dependencies = [
  "axum",
  "napi",
@@ -4151,7 +4151,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-py"
-version = "0.16.0-rc.1"
+version = "0.16.0-rc.2"
 dependencies = [
  "axum",
  "pyo3",
@@ -4167,7 +4167,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-swift"
-version = "0.16.0-rc.1"
+version = "0.16.0-rc.2"
 dependencies = [
  "ahash",
  "async-trait",
@@ -4186,7 +4186,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-wasm"
-version = "0.16.0-rc.1"
+version = "0.16.0-rc.2"
 dependencies = [
  "axum",
  "futures",

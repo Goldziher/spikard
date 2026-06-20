@@ -1,12 +1,19 @@
 {
   "name": "@spikard/node",
-  "version": "0.16.0-rc.1",
+  "version": "0.16.0-rc.2",
   "description": "Rust-centric multi-language HTTP framework with polyglot bindings",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Goldziher/spikard.git"
   },
+  "files": [
+    "index.js",
+    "index-wrapper.cjs",
+    "index.d.ts",
+    "service.cjs",
+    "*.node"
+  ],
   "main": "index-wrapper.cjs",
   "types": "index.d.ts",
   "exports": {
@@ -16,20 +23,30 @@
       "default": "./index-wrapper.cjs"
     }
   },
-  "files": ["index.js", "index-wrapper.cjs", "index.d.ts", "service.cjs", "*.node"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "npx --yes -p @napi-rs/cli@^3.6.2 napi build --platform --release",
+    "artifacts": "npx --yes -p @napi-rs/cli@^3.6.2 napi artifacts",
+    "prepublishOnly": "npx --yes -p @napi-rs/cli@^3.6.2 napi prepublish -t npm --skip-optional-publish"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^3.6.2"
+  },
   "optionalDependencies": {
-    "@spikard/node-linux-x64-gnu": "0.16.0-rc.1",
-    "@spikard/node-linux-arm64-gnu": "0.16.0-rc.1",
-    "@spikard/node-linux-x64-musl": "0.16.0-rc.1",
-    "@spikard/node-linux-arm64-musl": "0.16.0-rc.1",
-    "@spikard/node-darwin-x64": "0.16.0-rc.1",
-    "@spikard/node-darwin-arm64": "0.16.0-rc.1",
-    "@spikard/node-win32-x64-msvc": "0.16.0-rc.1",
-    "@spikard/node-win32-arm64-msvc": "0.16.0-rc.1"
+    "@spikard/node-darwin-arm64": "0.16.0-rc.2",
+    "@spikard/node-darwin-x64": "0.16.0-rc.2",
+    "@spikard/node-linux-arm64-gnu": "0.16.0-rc.2",
+    "@spikard/node-linux-arm64-musl": "0.16.0-rc.2",
+    "@spikard/node-linux-x64-gnu": "0.16.0-rc.2",
+    "@spikard/node-linux-x64-musl": "0.16.0-rc.2",
+    "@spikard/node-win32-arm64-msvc": "0.16.0-rc.2",
+    "@spikard/node-win32-x64-msvc": "0.16.0-rc.2"
   },
   "napi": {
-    "packageName": "@spikard/node",
     "binaryName": "spikard-node",
+    "packageName": "@spikard/node",
     "targets": [
       "x86_64-unknown-linux-gnu",
       "aarch64-unknown-linux-gnu",
@@ -41,12 +58,7 @@
       "aarch64-pc-windows-msvc"
     ]
   },
-  "scripts": {
-    "build": "npx --yes -p @napi-rs/cli@^3.6.2 napi build --platform --release",
-    "artifacts": "npx --yes -p @napi-rs/cli@^3.6.2 napi artifacts",
-    "prepublishOnly": "npx --yes -p @napi-rs/cli@^3.6.2 napi prepublish -t npm --skip-optional-publish"
-  },
-  "engines": { "node": ">= 18" },
-  "publishConfig": { "access": "public" },
-  "devDependencies": { "@napi-rs/cli": "^3.6.2" }
+  "engines": {
+    "node": ">= 18"
+  }
 }

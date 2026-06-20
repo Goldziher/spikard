@@ -12,7 +12,7 @@ repos:
         stages: [commit-msg]
 
   - repo: https://github.com/kreuzberg-dev/pre-commit-hooks
-    rev: v2.1.12
+    rev: v2.3.0
     hooks:
       # Alef verification
       - id: alef-verify
@@ -84,6 +84,7 @@ repos:
 
       - id: shellcheck
         args: ["-x"]
+        exclude: (^|/)gradlew$
 
       - id: markdownlint-rumdl-strict
         exclude: ^(docs/|CONTRIBUTING\.md$|CHANGELOG\.md$|(crates|packages)/[^/]+/README\.md$|templates/readme/|testing_data/|skills/|README\.md$|\.ai-rulez/)
@@ -193,6 +194,10 @@ repos:
         files: ^packages/zig/src/.*\.zig$
 
       - id: alef-docs-fresh
+        # spikard verifies with spikard-alef (registers the HTTP-domain IR
+        # extension); the generic alef on PATH computes a different inputs-hash
+        # and would report every binding stale.
+        args: ["cargo", "run", "--quiet", "--release", "-p", "spikard-alef", "--"]
       - id: alef-snippets-validate
 
       # Formatters
