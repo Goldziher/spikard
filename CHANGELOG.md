@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Publish: Hex release assets.** The `upload-release-assets` glob in `publish.yaml` used `spikard_nif-*.tar.gz`, but the Elixir NIF build emits `libspikard_nif-*.tar.gz` (with the `lib` prefix), so zero NIF tarballs were attached to the release and the `Publish Hex` job failed downloading them. Corrected the glob.
+
+### Changed
+
+- **Dropped Intel macOS (`x86_64-apple-darwin`).** Removed the Intel-mac Node binding target (`@spikard/node-darwin-x64`) via `alef.toml` `exclude_platforms = ["darwin-x64"]`, and removed the Intel-mac `build-node` matrix entry and the `macos-15-intel` Homebrew bottle from `publish.yaml`. The publish pipeline now ships Apple Silicon (arm64) macOS only.
+
 ## [0.16.0-rc.2] - 2026-06-20
 
 ### Fixed

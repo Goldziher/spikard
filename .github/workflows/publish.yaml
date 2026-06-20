@@ -340,12 +340,6 @@ jobs:
               use_napi_cross: false,
             }
           - {
-              os: macos-15-intel,
-              target: x86_64-apple-darwin,
-              rust_target: "",
-              use_napi_cross: false,
-            }
-          - {
               os: ubuntu-latest,
               target: x86_64-unknown-linux-gnu,
               rust_target: "",
@@ -708,7 +702,7 @@ jobs:
           assets: |
             spikard-cli-*.tar.gz
             spikard-*-ffi-*.tar.gz
-            spikard_nif-*.tar.gz
+            libspikard_nif-*.tar.gz
           fail-if-empty: "false"
           clobber: ${{ needs.prepare.outputs.force_republish }}
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -1149,9 +1143,6 @@ jobs:
         include:
           - os: macos-latest
             bottle_tag: arm64_sequoia
-            install_brew: false
-          - os: macos-15-intel
-            bottle_tag: sequoia
             install_brew: false
           - os: ubuntu-latest
             bottle_tag: x86_64_linux

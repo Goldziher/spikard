@@ -151,6 +151,10 @@ build_release = "cd packages/python && maturin develop --release"
 [crates.node]
 package_name = "@spikard/node"
 features = ["di"]
+# Intel macOS (x86_64-apple-darwin / napi `darwin-x64`) is not a shipped target —
+# the publish pipeline builds Apple Silicon (arm64) macOS only. Drop it so the
+# generated package.json does not emit a dangling optionalDependency/stub.
+exclude_platforms = ["darwin-x64"]
 
 [crates.node.extra_dependencies]
 serde_bytes = "0.11"
