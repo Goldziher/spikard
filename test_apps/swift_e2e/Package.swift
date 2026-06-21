@@ -8,7 +8,7 @@ let package = Package(
         .iOS(.v16),
     ],
     dependencies: [
-        .package(url: "https://github.com/Goldziher/spikard", from: "0.16.0-rc.2"),
+        .package(url: "https://github.com/Goldziher/spikard", from: "0.16.0-rc.3"),
     ],
     targets: [
         .executableTarget(

@@ -47,7 +47,7 @@ kotlin {
 
 dependencies {
     // Published Android AAR from Maven Central (verifies artifact resolution)
-    implementation("dev.spikard:spikard-android:0.16.0-rc.2")
+    implementation("dev.spikard:spikard-android:0.16.0-rc.3")
     // Jackson for JSON assertion helpers
     testImplementation("com.fasterxml.jackson.core:jackson-annotations:2.18.2")
     testImplementation("com.fasterxml.jackson.core:jackson-databind:2.18.2")
@@ -80,7 +80,7 @@ dependencies {
 tasks.register("verifyAarPublished") {
     description = "Verify the published Android AAR contains jni and classes.jar"
     doLast {
-        val aarCoord = "dev.spikard:spikard-android:0.16.0-rc.2"
+        val aarCoord = "dev.spikard:spikard-android:0.16.0-rc.3"
         val (groupId, artifactId, version) = run {
             val parts = aarCoord.split(':')
             Triple(parts[0], parts[1], parts[2])

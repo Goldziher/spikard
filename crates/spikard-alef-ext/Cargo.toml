@@ -1,6 +1,6 @@
 [package]
 name = "spikard-alef-ext"
-version = "0.16.0-rc.2"
+version = "0.16.0-rc.3"
 edition = "2024"
 authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
 license = "MIT"
@@ -9,7 +9,7 @@ description = "Alef HTTP extension for the spikard polyglot framework"
 publish = false
 
 [dependencies]
-alef = { git = "https://github.com/kreuzberg-dev/alef", rev = "473c73b1d39e0ef6134e0b249253c7431c31122e" }
+alef = { git = "https://github.com/kreuzberg-dev/alef", tag = "v0.25.58" }
 anyhow = "1"
 heck = "0.5"
 minijinja = "2"

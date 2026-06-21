@@ -23,7 +23,7 @@ di = ["dep:tokio", "dep:bytes"]
 anyhow = "1.0"
 base64 = "0.22"
 brotli = "8.0"
-bytes = { version = "1.11", optional = true }
+bytes = { version = "1.12", optional = true }
 flate2.workspace = true
 http.workspace = true
 indexmap = "2.14"

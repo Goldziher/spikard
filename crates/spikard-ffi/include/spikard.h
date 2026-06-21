@@ -550,6 +550,12 @@ int32_t spikard_graph_ql_route_config_is_playground_enabled(const SPIKARDGraphQL
 char *spikard_graph_ql_route_config_get_description(const SPIKARDGraphQLRouteConfig *this_);
 
 /**
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+SPIKARDGraphQLRouteConfig *spikard_graph_ql_route_config_default(void);
+
+/**
  * Create a `SchemaConfig` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
@@ -2498,7 +2504,7 @@ void spikard_request_data_free(SPIKARDRequestData *ptr);
 int32_t spikard_method_from_i32(int32_t value);
 
 /**
- * Convert a `Method` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `Method` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -2513,7 +2519,7 @@ int32_t spikard_method_from_str(const char *name);
 int32_t spikard_security_scheme_info_from_i32(int32_t value);
 
 /**
- * Convert a `SecuritySchemeInfo` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `SecuritySchemeInfo` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -2528,7 +2534,7 @@ int32_t spikard_security_scheme_info_from_str(const char *name);
 int32_t spikard_snapshot_error_from_i32(int32_t value);
 
 /**
- * Convert a `SnapshotError` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `SnapshotError` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
@@ -2543,7 +2549,7 @@ int32_t spikard_snapshot_error_from_str(const char *name);
 int32_t spikard_web_socket_message_from_i32(int32_t value);
 
 /**
- * Convert a `WebSocketMessage` variant name (C string) to its integer value. Returns -1 on invalid input.
+ * Convert a `WebSocketMessage` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */

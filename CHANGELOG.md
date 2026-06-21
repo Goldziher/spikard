@@ -7,12 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0-rc.3] - 2026-06-21
+
 ### Fixed
 
 - **Publish: Hex release assets.** The `upload-release-assets` glob in `publish.yaml` used `spikard_nif-*.tar.gz`, but the Elixir NIF build emits `libspikard_nif-*.tar.gz` (with the `lib` prefix), so zero NIF tarballs were attached to the release and the `Publish Hex` job failed downloading them. Corrected the glob.
 
 ### Changed
 
+- **Regenerated all language bindings against [alef v0.25.58](https://github.com/kreuzberg-dev/alef/releases/tag/v0.25.58)** (from 0.25.50) and pinned the binding generator to that release tag. This carries the latest upstream codegen fixes — backend binding-generation hardening, Go capsule host-import aliasing, and preserving backend-aware parameter types in long function signatures — across every binding.
+- **Upgraded all dependencies to their latest versions** (`task upgrade`): Rust crates (`cargo upgrade --incompatible`), per-language ecosystem dependencies (`alef update --latest`), and Zig module dependencies, with all lock files refreshed.
+- Excluded the `service_http_additions.ts` HTTP-extension fragment — a class-body splice fragment, not a valid standalone TS module — from the node `oxfmt` format command in `alef.toml`, so `task alef:format` no longer fails parsing it.
 - **Dropped Intel macOS (`x86_64-apple-darwin`).** Removed the Intel-mac Node binding target (`@spikard/node-darwin-x64`) via `alef.toml` `exclude_platforms = ["darwin-x64"]`, and removed the Intel-mac `build-node` matrix entry and the `macos-15-intel` Homebrew bottle from `publish.yaml`. The publish pipeline now ships Apple Silicon (arm64) macOS only.
 
 ## [0.16.0-rc.2] - 2026-06-20

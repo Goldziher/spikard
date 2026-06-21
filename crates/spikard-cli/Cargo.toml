@@ -54,7 +54,7 @@ protox = "0.9" # Protocol Buffers compilation
 rmcp = { version = "1.7.0", features = ["client", "transport-io"], optional = true }
 scythe-core = { version = "0.10", features = ["serde"] }
 serde.workspace = true
-serde-saphyr = "0.0.27"
+serde-saphyr = "0.0.28"
 serde_json.workspace = true
 spikard.workspace = true
 spikard-codegen = { workspace = true }

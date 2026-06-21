@@ -28,7 +28,7 @@ anyhow = "1.0"
 axum.workspace = true
 axum-test = "20"
 base64 = "0.22"
-bytes = "1.11"
+bytes = "1.12"
 schemars = { version = "1.2", features = ["derive"] }
 serde.workspace = true
 serde_json.workspace = true

@@ -30,7 +30,7 @@ subscription = []
 [dependencies]
 async-graphql = "7"
 axum = { version = "0.8" }
-bytes = "1.11"
+bytes = "1.12"
 futures = "0.3"
 http.workspace = true
 serde.workspace = true

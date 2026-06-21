@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.25.50"
+alef_version = "0.25.58"
 languages = [
   "python",
   "node",
@@ -852,7 +852,9 @@ typecheck = "mypy packages/python/"
 
 [crates.lint.node]
 precondition = "command -v pnpm >/dev/null 2>&1"
-format = "pnpm dlx oxfmt crates/spikard-node"
+# service_http_additions.ts is a class-body fragment emitted by spikard-alef-ext
+# for splicing, not a valid standalone TS module, so oxfmt cannot parse it.
+format = "pnpm dlx oxfmt crates/spikard-node '!**/service_http_additions.ts'"
 check = "pnpm dlx oxlint --fix crates/spikard-node"
 typecheck = "pnpm tsc --noEmit -p crates/spikard-node/tsconfig.json"
 
@@ -1237,7 +1239,7 @@ name = "spikard"
 # so alef's stale-hash detection emits a fallback comment instead of using this
 # string verbatim. Refresh after the first real spikard zig package release via
 # `alef sync-versions` (which auto-populates from the published tarball).
-hash = "spikard-0.16.0-rc.2-PLACEHOLDER1234567890abcdefABCDEF0987654321"
+hash = "spikard-0.16.0-rc.3-PLACEHOLDER1234567890abcdefABCDEF0987654321"
 
 [crates.e2e.registry.packages.wasm]
 name = "@spikard/node-wasm"
