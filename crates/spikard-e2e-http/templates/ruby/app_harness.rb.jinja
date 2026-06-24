@@ -1,0 +1,116 @@
+#!/usr/bin/env ruby
+{# Ruby app harness for server-pattern e2e tests
+
+   This harness script is spawned as a subprocess by spec_helper.rb and runs the
+   SUT app, registering handlers per fixture. It loads all fixtures, creates
+   handlers that return expected responses, and serves on a configured port.
+
+   Context variables (passed from Ruby codegen):
+   - imports: list of module names to import (e.g., ["sample_app"])
+   - app_class: full constant path to app class (e.g., "SampleApp::App")
+   - method_enum_module: module path for Method enum (e.g., "SampleApp::Method")
+   - register_route_method: app method to register routes (e.g., "route")
+   - run_method: serve entrypoint (e.g., "run")
+   - host: binding host (e.g., "127.0.0.1")
+   - port: binding port (e.g., 8002)
+   - fixtures_json: raw JSON string with all fixtures (auto-serialized)
+#}
+# frozen_string_literal: true
+
+require "json"
+require "socket"
+require "{{ imports[0] }}"
+
+module AppHarness
+  # Load fixtures from the JSON payload.
+  FIXTURES_JSON = {{ fixtures_json }}
+  FIXTURES = JSON.parse(FIXTURES_JSON, symbolize_names: true)
+
+  # Create and configure the app. The app_class config must include the full
+  # constant path (e.g., "SampleApp::App") so it resolves correctly within the
+  # AppHarness module block.
+  APP = {{ app_class }}.new
+
+  # Register a handler for each fixture.
+  FIXTURES.each do |fixture_id, fixture|
+    http = fixture[:http]
+    next unless http
+
+    handler_config = http[:handler] || {}
+    route = handler_config[:route] || "/"
+    method_str = (handler_config[:method] || "GET").upcase
+    body_schema = handler_config[:body_schema]
+    expected = http[:expected_response] || {}
+
+    expected_status = expected[:status_code] || 200
+    expected_body = expected[:body]
+    expected_headers = expected[:headers] || {}
+
+    # Build the handler closure that returns the expected response.
+    handler_fn = lambda do |*_args, **_kwargs|
+      # Return the expected response wrapped in the framework's response shape.
+      # The body field name ({{ response_body_field }}) is configurable via
+      # `[crates.e2e.harness].response_body_field` so the wrapper matches the
+      # SUT's Response deserialization layout.
+      {
+        status_code: expected_status,
+        "{{ response_body_field }}": expected_body,
+        headers: expected_headers
+      }
+    end
+
+    # Register the handler at /fixtures/<fixture_id>{route}
+    full_route = "/fixtures/#{fixture_id}#{route}"
+
+    # Normalize the HTTP method to PascalCase for RouteBuilder (accepts strings via TryConvert).
+    method_str_upper = method_str.upcase
+    method_val = method_str_upper.capitalize
+    next if method_val.empty?
+
+    # Build the RouteBuilder with the method and path.
+    builder = ::{{ route_builder_class }}.new(method_val, full_route)
+
+    # If there's a body schema, attach it to the builder.
+    if body_schema
+      builder = builder.{{ route_builder_schema_setter }}(JSON.dump(body_schema))
+    end
+
+    # Thread handler middleware through to the RouteBuilder.
+    middleware_config = handler_config[:middleware] || {}
+    middleware_dispatch = {
+      "cors" => ->(cfg) { builder.cors(cfg) }
+    }
+    middleware_config.each do |mw_name, mw_cfg|
+      next unless mw_cfg
+      applicator = middleware_dispatch[mw_name.to_s]
+      next unless applicator
+      builder = applicator.call(mw_cfg)
+    end
+
+    # Register the route with the handler.
+    # Ruby uses block form for route registration
+    APP.{{ register_route_method }}(builder, &handler_fn)
+  end
+
+  # Start the server.
+  # The harness reports its listening port via HARNESS_PORT so the parent
+  # test orchestrator can verify connectivity. Port binding is handled by
+  # the application's ServerConfig (which may be environment-configured or
+  # set via bindings that expose a config method).
+  port = Integer(ENV.fetch("HARNESS_PORT", "{{ port }}"))
+  attempts = 0
+
+  begin
+    ENV["PORT"] = port.to_s
+    ENV["HARNESS_PORT"] = port.to_s
+    puts "HARNESS_PORT=#{port}"
+    STDOUT.flush
+    APP.{{ run_method }}
+  rescue Errno::EADDRINUSE
+    attempts += 1
+    raise if attempts >= 10
+
+    port = rand(40000..60000)
+    retry
+  end
+end

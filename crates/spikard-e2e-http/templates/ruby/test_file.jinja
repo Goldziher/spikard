@@ -1,0 +1,35 @@
+{#- Ruby test_file template (spec file)
+
+   Context variables:
+   - category: fixture category (used in describe block)
+   - requires: list of require statements (without quotes or require keyword)
+   - has_array_contains: bool - whether to emit alef_e2e_item_texts helper
+   - has_http: bool - whether to emit mock_server_url helper
+   - examples: list of pre-rendered example blocks
+   - header: pre-rendered header from hash::header()
+#}
+{{ header }}# frozen_string_literal: true
+
+{% for req in requires -%}
+require '{{ req }}'
+{% endfor %}
+
+RSpec.describe '{{ category }}' do
+{%- if has_array_contains %}
+
+  def alef_e2e_item_texts(item)
+    return [item.to_s] if item.is_a?(String) || item.is_a?(Symbol) || item.is_a?(Numeric)
+    [:kind, :name, :signature, :path, :alias, :text, :source].filter_map do |attr|
+      item.respond_to?(attr) ? item.send(attr).to_s : nil
+    end + [item.to_s]
+  end
+{%- endif %}
+{%- if has_http %}
+
+  let(:mock_server_url) { ENV.fetch('MOCK_SERVER_URL', 'http://localhost:8080') }
+{%- endif %}
+{%- for example in examples %}
+
+{{ example }}
+{%- endfor %}
+end

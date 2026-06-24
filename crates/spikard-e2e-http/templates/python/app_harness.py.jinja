@@ -1,0 +1,187 @@
+{#- Python app harness for server-pattern e2e tests
+
+   This harness script is spawned as a subprocess by conftest.py and runs the
+   SUT app, registering handlers per fixture. It loads all fixtures, creates
+   handlers that return expected responses, and serves on a configured port.
+
+   Context variables (passed from Python codegen):
+   - imports: list of module names to import (e.g., ["my_app"])
+   - app_class: class name for SUT app (e.g., "App")
+   - route_builder_import: import path for RouteBuilder (e.g., "my_app._my_app")
+   - route_builder_class: class name for route builder (e.g., "RouteBuilder")
+   - route_builder_constructor: constructor method (e.g., "__init__" or "new")
+   - route_builder_schema_setter: method to set request schema (e.g., "request_schema_json")
+   - method_enum_import: import path for Method enum (e.g., "my_app._my_app")
+   - method_enum_class: class name for method enum (e.g., "Method")
+   - register_route_method: app method to register routes (e.g., "register_route")
+   - run_method: serve entrypoint (e.g., "run")
+   - host: binding host (e.g., "127.0.0.1")
+   - port: binding port (e.g., 8000)
+   - fixtures_json: raw JSON string with all fixtures (auto-serialized)
+#}
+#!/usr/bin/env python3
+"""App harness for server-pattern e2e tests.
+
+This script spawns the SUT app and registers handlers per fixture,
+returning expected responses. It's driven by conftest.py.
+"""
+
+import json
+import sys
+
+{% for import_name in imports %}
+from {{ import_name }} import {{ app_class }}
+from {{ import_name }} import ServerConfig
+{% endfor %}
+from {{ route_builder_import }} import {{ route_builder_class }}
+from {{ method_enum_import }} import {{ method_enum_class }}
+
+# Load fixtures from the JSON payload.
+# The fixtures dict contains per-fixture data with handler route, method, body_schema, etc.
+_FIXTURES_JSON = r"""{{ fixtures_json }}"""
+_FIXTURES = json.loads(_FIXTURES_JSON)
+
+# Create and configure the app.
+app = {{ app_class }}()
+
+# Register a handler for each fixture.
+for fixture_id, fixture in _FIXTURES.items():
+    http = fixture.get("http")
+    if not http:
+        continue
+
+    handler = http.get("handler", {})
+    route = handler.get("route", "/")
+    method_str = handler.get("method", "GET").upper()
+    body_schema = handler.get("body_schema")
+    expected = http.get("expected_response", {})
+
+    # Build handler function that returns the expected response.
+    expected_status = expected.get("status_code", 200)
+    expected_body = expected.get("body")
+    expected_headers = expected.get("headers") or {}
+
+    def make_handler(status, body, headers):
+        def handler_fn(*args, **kwargs):
+            # Return the expected response wrapped in the framework's response shape.
+            # The body field name ({{ response_body_field }}) is configurable via
+            # `[crates.e2e.harness].response_body_field` so the wrapper matches the
+            # SUT's Response deserialization layout. Args are path parameters
+            # (e.g., id={id}), which we ignore.
+            return {"status_code": status, "{{ response_body_field }}": body, "headers": dict(headers)}
+        return handler_fn
+
+    # Register the handler at /fixtures/<fixture_id>{route}
+    full_route = f"/fixtures/{fixture_id}{route}"
+
+    # Build the RouteBuilder with the method and path.
+    method_enum_val = getattr({{ method_enum_class }}, method_str, None)
+    if method_enum_val is None:
+        continue
+
+    builder = {{ route_builder_class }}(method_enum_val, full_route)
+
+    # If there's a body schema, attach it to the builder.
+    if body_schema is not None:
+        builder = builder.{{ route_builder_schema_setter }}(json.dumps(body_schema))
+
+    # Thread handler middleware through to the RouteBuilder.
+    # Each entry in `middleware` is a {name: config} pair. The dispatch table
+    # maps middleware names to their (ConfigClass, builder_method) pairs so
+    # new middlewares can be added without changing this loop.
+    middleware = handler.get("middleware") or {}
+    if middleware:
+        from {{ route_builder_import }} import CorsConfig  # noqa: PLC0415
+        _MIDDLEWARE_DISPATCH = {
+            "cors": (CorsConfig, "cors"),
+        }
+        for mw_name, mw_config in middleware.items():
+            if mw_config is None:
+                continue
+            dispatch = _MIDDLEWARE_DISPATCH.get(mw_name)
+            if dispatch is None:
+                continue
+            config_cls, builder_method = dispatch
+            mw_obj = config_cls.from_json(json.dumps(mw_config))
+            builder = getattr(builder, builder_method)(mw_obj)
+
+    # Register the route with the handler. Python uses verb-decorator form:
+    # `app.{{ register_route_method }}(builder)` returns a decorator that wraps the handler.
+    app.{{ register_route_method }}(builder)(make_handler(expected_status, expected_body, expected_headers))
+
+    # If the fixture has CORS middleware configured, register an OPTIONS preflight handler
+    if middleware and "cors" in middleware:
+        cors_config = middleware["cors"]
+
+        # Build a CORS preflight handler
+        def make_cors_preflight_handler(cors_cfg):
+            def cors_handler_fn(*args, **kwargs):
+                # Case-insensitive header lookup helper (HTTP headers are case-insensitive)
+                def get_header_value(headers_dict, name):
+                    if not headers_dict:
+                        return ""
+                    # Try direct lookup first
+                    if name in headers_dict:
+                        return headers_dict.get(name) or ""
+                    # Fallback: search keys case-insensitively
+                    lower_name = name.lower()
+                    for key, value in headers_dict.items():
+                        if key.lower() == lower_name:
+                            return value or ""
+                    return ""
+
+                request_data = args[0] or {}
+                headers_dict = request_data.get("headers", {})
+                origin = get_header_value(headers_dict, "origin")
+                request_method = get_header_value(headers_dict, "access-control-request-method")
+                request_headers = get_header_value(headers_dict, "access-control-request-headers")
+
+                # Simple CORS validation: check origin and method
+                allowed_origins = cors_cfg.get("allowed_origins") or []
+                allowed_methods = cors_cfg.get("allowed_methods") or []
+                allowed_headers = cors_cfg.get("allowed_headers") or []
+
+                is_origin_allowed = origin in allowed_origins
+                is_method_allowed = not request_method or request_method.upper() in [m.upper() for m in allowed_methods]
+                headers_array = [h.strip().upper() for h in request_headers.split(",")] if request_headers else []
+                are_headers_allowed = all(
+                    h in [ah.upper() for ah in allowed_headers] for h in headers_array
+                )
+
+                if not is_origin_allowed or not is_method_allowed or not are_headers_allowed:
+                    return {
+                        "status_code": 403,
+                        "{{ response_body_field }}": None,
+                        "headers": {}
+                    }
+
+                cors_headers = {
+                    "Access-Control-Allow-Origin": origin,
+                    "Access-Control-Allow-Methods": request_method or ", ".join(allowed_methods),
+                    "Access-Control-Allow-Headers": request_headers or ", ".join(allowed_headers)
+                }
+
+                if cors_cfg.get("max_age"):
+                    cors_headers["Access-Control-Max-Age"] = str(cors_cfg["max_age"])
+
+                return {
+                    "status_code": 204,
+                    "{{ response_body_field }}": None,
+                    "headers": cors_headers
+                }
+            return cors_handler_fn
+
+        # Register the OPTIONS handler
+        options_method = getattr({{ method_enum_class }}, "OPTIONS", None)
+        if options_method is not None:
+            options_builder = {{ route_builder_class }}(options_method, full_route)
+            app.{{ register_route_method }}(options_builder)(make_cors_preflight_handler(cors_config))
+
+# Configure and start the server.
+{%- if not skip_app_config %}
+_config = ServerConfig(host="{{ host }}", port={{ port }})
+app.config(_config)
+{%- endif %}
+print(f"Harness listening on {{ host }}:{{ port }}")
+sys.stdout.flush()
+app.{{ run_method }}()

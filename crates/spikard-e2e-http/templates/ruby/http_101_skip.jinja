@@ -1,0 +1,12 @@
+{#- Ruby HTTP 101 (WebSocket) skip test template
+
+   Context variables:
+   - method: HTTP method (uppercase)
+   - path: request path
+   - description: fixture description as a Ruby string literal (already quoted)
+#}
+  describe '{{ method }} {{ path }}' do
+    it {{ description }} do
+      skip 'HTTP 101 WebSocket upgrade cannot be tested via Net::HTTP'
+    end
+  end

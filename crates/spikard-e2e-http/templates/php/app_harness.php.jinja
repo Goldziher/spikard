@@ -1,0 +1,106 @@
+#!/usr/bin/env php
+<?php
+{{ header }}
+declare(strict_types=1);
+
+/**
+ * App harness for server-pattern e2e tests.
+ *
+ * This script spawns the SUT app and registers handlers per fixture,
+ * returning expected responses. It's driven by bootstrap.php via proc_open.
+ */
+
+// Load the PHP binding package via its Composer autoloader.
+// The package's autoloader is separate since php-ext prevents direct path dependency.
+$pkgAutoloader = __DIR__ . '/{{ pkg_path }}/vendor/autoload.php';
+if (!file_exists($pkgAutoloader)) {
+    fprintf(STDERR, "Error: PHP binding package autoloader not found at %s\n", $pkgAutoloader);
+    exit(1);
+}
+require_once $pkgAutoloader;
+
+// Import the app class and supporting types from the binding.
+use {{ route_builder_import }}\{{ app_class }};
+use {{ route_builder_import }}\ServerConfig;
+use {{ route_builder_import }}\{{ route_builder_class }};
+use {{ method_enum_import }}\{{ method_enum_class }};
+
+// Load fixtures from the JSON payload.
+// The fixtures dict contains per-fixture data with handler route, method, body_schema, etc.
+$_FIXTURES_JSON = <<<'FIXTURES_END'
+{{ fixtures_json }}
+FIXTURES_END;
+$_FIXTURES = json_decode($_FIXTURES_JSON, true);
+if (!is_array($_FIXTURES)) {
+    $_FIXTURES = [];
+}
+
+// Create and configure the app.
+$app = new {{ app_class }}();
+
+// Register a handler for each fixture.
+foreach ($_FIXTURES as $fixture_id => $fixture) {
+    $http = $fixture['http'] ?? null;
+    if (!is_array($http)) {
+        continue;
+    }
+
+    $handler = $http['handler'] ?? [];
+    $route = $handler['route'] ?? '/';
+    $method_str = strtoupper($handler['method'] ?? 'GET');
+    $body_schema = $handler['body_schema'] ?? null;
+    $expected = $http['expected_response'] ?? [];
+
+    // Build handler function that returns the expected response.
+    $expected_status = (int)($expected['status_code'] ?? 200);
+    $expected_body = $expected['body'] ?? null;
+    $expected_headers = $expected['headers'] ?? [];
+
+    // Create closure that captures the expected response data.
+    $handler_fn = static function (...$args) use (
+        $expected_status,
+        $expected_body,
+        $expected_headers
+    ): array {
+        // Return the expected response wrapped in the framework's response shape.
+        // The body field name ({{ response_body_field }}) is configurable via
+        // `[crates.e2e.harness].response_body_field` so the wrapper matches the
+        // SUT's Response deserialization layout. Args are path parameters
+        // (e.g., id={id}), which we ignore.
+        return [
+            'status_code' => $expected_status,
+            '{{ response_body_field }}' => $expected_body,
+            'headers' => is_array($expected_headers) ? $expected_headers : [],
+        ];
+    };
+
+    // Register the handler at /fixtures/<fixture_id>{route}
+    $full_route = "/fixtures/{$fixture_id}{$route}";
+
+    // Build the RouteBuilder with the method and path.
+    $method_enum_val = constant("{{ method_enum_import }}\\{{ method_enum_class }}::{$method_str}");
+    if ($method_enum_val === null) {
+        continue;
+    }
+
+    $builder = new {{ route_builder_class }}($method_enum_val, $full_route);
+
+    // If there's a body schema, attach it to the builder.
+    if ($body_schema !== null) {
+        $builder = $builder->{{ route_builder_schema_setter }}(json_encode($body_schema));
+    }
+
+    // Register the route with the handler.
+    $app = $app->{{ register_route_method }}($builder, $handler_fn);
+}
+
+// Configure and start the server.
+$_config = new ServerConfig();
+$_config->host = '{{ host }}';
+$_config->port = {{ port }};
+$app = $app->config($_config);
+
+echo "Harness listening on {{ host }}:{{ port }}\n";
+fflush(STDOUT);
+
+$app->{{ run_method }}();

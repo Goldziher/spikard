@@ -1,0 +1,114 @@
+#!/usr/bin/env elixir
+{#- Elixir app harness for server-pattern e2e tests
+
+   This harness script is spawned as a subprocess by test_helper.exs and runs the
+   SUT app, registering handlers per fixture. It loads all fixtures, creates
+   handlers that return expected responses, and serves on a configured port.
+
+   Context variables (passed from Elixir codegen):
+   - app_class: class name for SUT app (e.g., "App")
+   - register_route_method: app method to register routes (e.g., "route")
+   - route_builder_class: class name for route builder (e.g., "MyPkg.RouteBuilder")
+   - route_builder_schema_setter: method to set request schema (e.g., "request_schema_json")
+   - method_enum_class: class name for method enum (e.g., "MyPkg.Method")
+   - run_method: serve entrypoint (e.g., "run")
+   - host: binding host (e.g., "127.0.0.1")
+   - port: binding port (e.g., 8000)
+   - binding_path: path to binding package
+   - fixtures_json: raw JSON string with all fixtures (auto-serialized)
+#}
+
+# When run as a standalone script via elixir (not via mix), load dependencies
+# from the calling process's ebin directories (passed via -pa flags).
+# The dependencies are already compiled and accessible; this script just needs
+# to ensure they're in the code path. The Application environment is not needed.
+
+# Ensure the binding modules are loaded from code path
+Code.ensure_loaded!({{ app_class }})
+Code.ensure_loaded!({{ route_builder_class }})
+Code.ensure_loaded!({{ method_enum_class }})
+{% if not skip_app_config -%}
+Code.ensure_loaded!({{ server_config_class }})
+{% endif %}
+
+# Load fixtures from the JSON payload
+fixtures_json = {{ fixtures_json }}
+{:ok, fixtures} = Jason.decode(fixtures_json)
+
+# Alias binding module names for readability
+# The binding module name is derived from imports
+alias {{ app_class }}
+alias {{ route_builder_class }}
+alias {{ method_enum_class }}
+{% if not skip_app_config -%}
+alias {{ server_config_class }}
+{% endif %}
+
+# Create and configure the app
+app = {{ app_class }}.new()
+
+# Register a handler for each fixture
+app = Enum.reduce(fixtures, app, fn {fixture_id, fixture}, app_acc ->
+  http = Map.get(fixture, "http")
+  if is_nil(http) do
+    app_acc
+  else
+    handler = Map.get(http, "handler", %{})
+    method_str = Map.get(handler, "method", "GET") |> String.upcase()
+    body_schema = Map.get(handler, "body_schema")
+    expected = Map.get(http, "expected_response", %{})
+
+    # Build handler function that returns the expected response
+    expected_status = Map.get(expected, "status_code", 200)
+    expected_body = Map.get(expected, "body")
+    expected_headers = Map.get(expected, "headers") || %{}
+
+    # Create handler closure that captures the expected values
+    handler_fn = fn _request ->
+      {
+        expected_status,
+        expected_body,
+        expected_headers
+      }
+    end
+
+    # Register the handler at /fixtures/<fixture_id>
+    # Note: the test sends requests to /fixtures/{fixture_id};
+    # the handler's route field is the intended target route the fixture simulates,
+    # not the path to register on the SUT.
+    full_route = "/fixtures/#{fixture_id}"
+
+    # Build the RouteBuilder with the method and path
+    method_atom = method_str |> String.downcase() |> String.to_atom()
+    method_enum_val = apply({{ method_enum_class }}, method_atom, [])
+
+    builder = {{ route_builder_class }}.new(method_enum_val, full_route)
+
+    # If there's a body schema, attach it to the builder
+    builder =
+      if is_nil(body_schema) do
+        builder
+      else
+        body_schema_json = Jason.encode!(body_schema)
+        {{ route_builder_class }}.{{ route_builder_schema_setter }}(builder, body_schema_json)
+      end
+
+    # Register the route with the handler
+    {{ app_class }}.{{ register_route_method }}(app_acc, builder, handler_fn)
+  end
+end)
+
+{% if not skip_app_config %}
+# Configure and start the server
+config = struct({{ server_config_class }}, %{
+  host: "{{ host }}",
+  port: {{ port }}
+})
+
+app = {{ app_class }}.config(app, config)
+{%- endif %}
+
+IO.puts("Harness listening on {{ host }}:{{ port }}")
+
+# Run the app
+{{ app_class }}.{{ run_method }}(app)

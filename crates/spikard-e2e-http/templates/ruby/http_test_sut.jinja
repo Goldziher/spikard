@@ -1,0 +1,84 @@
+{#- Ruby HTTP server-pattern test rendering
+
+   Tests hit the SUT via an HTTP request to /fixtures/<id>{path} and assert
+   on the response. This is used when [crates.e2e.harness].imports is set.
+
+   Context variables:
+   - fn_name: sanitized test function name
+   - description: fixture description as a Ruby string literal (already quoted)
+   - method: HTTP method (uppercase)
+   - path: request path (includes /fixtures/<id> prefix)
+   - headers_ruby: Ruby hash literal for request headers
+   - has_body: boolean
+   - body_ruby: Ruby literal for request body JSON
+   - is_raw_body: boolean — true when body is a raw string (e.g. form-encoded), skip JSON.dump()
+   - expected_status: HTTP status code
+   - has_text_body: boolean
+   - text_ruby: Ruby literal for expected text response body
+   - has_json_body: boolean
+   - json_ruby: Ruby literal for expected JSON response body
+   - has_partial_body: boolean
+   - partial_body_checks: array of {key, value} dicts
+   - header_assertions: array of {name, assertion_type, value} dicts
+   - has_validation_errors: boolean
+   - validation_errors: array of {loc_ruby, escaped_msg} dicts
+#}
+  describe '{{ fn_name }}' do
+    it {{ description }} do
+      require 'net/http'
+      require 'uri'
+      require 'json'
+      base_url = ENV.fetch('SUT_URL', 'http://127.0.0.1:8000')
+      uri = URI.parse("#{base_url}{{ path }}")
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = uri.scheme == 'https'
+{% if has_body %}
+      _headers = {{ headers_ruby }}.dup
+{% if is_raw_body %}
+      _headers['Content-Type'] ||= 'multipart/form-data; boundary=alef-boundary'
+{% else %}
+      _headers['Content-Type'] ||= 'application/json'
+{% endif %}
+      _req = Net::HTTP::{{ method_class }}.new(uri.request_uri, _headers)
+{% if is_raw_body %}
+      _req.body = {{ body_ruby }}
+{% else %}
+      _req.body = JSON.dump({{ body_ruby }})
+{% endif %}
+{% else %}
+      _headers = {{ headers_ruby }}.dup
+      _req = Net::HTTP::{{ method_class }}.new(uri.request_uri, _headers)
+{% endif %}
+      response = http.request(_req)
+      expect(response.code.to_i).to eq({{ expected_status }})
+{% for assertion in header_assertions %}
+{% if assertion.assertion_type == 'present' %}
+      expect(response['{{ assertion.name }}']).not_to be_nil
+{% elif assertion.assertion_type == 'absent' %}
+      expect(response['{{ assertion.name }}']).to be_nil
+{% elif assertion.assertion_type == 'uuid' %}
+      expect(response['{{ assertion.name }}']).to match(/\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/i)
+{% else %}
+      expect(response['{{ assertion.name }}']).to eq('{{ assertion.value }}')
+{% endif %}
+{% endfor %}
+{% if has_text_body %}
+      expect(response.body.to_s).to eq({{ text_ruby }})
+{% elif has_json_body %}
+      _body = response.body && !response.body.empty? ? JSON.parse(response.body) : nil
+      expect(_body).to eq({{ json_ruby }})
+{% elif has_partial_body %}
+      _body = JSON.parse(response.body)
+{% for check in partial_body_checks %}
+      expect(_body['{{ check.key }}']).to eq({{ check.value }})
+{% endfor %}
+{% endif %}
+{% if has_validation_errors %}
+      _body = JSON.parse(response.body)
+      _errors = _body['errors'] || []
+{% for ve in validation_errors %}
+      expect(_errors.any? { |e| e['loc'] == [{{ ve.loc_ruby }}] && e['msg'].include?('{{ ve.escaped_msg }}') }).to be true
+{% endfor %}
+{% endif %}
+    end
+  end
