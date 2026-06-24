@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@spikard/node':
-        specifier: ^0.15.6-rc.22
-        version: 0.15.6-rc.22
+        specifier: ^0.16.0-rc.3
+        version: 0.16.0-rc.3
       '@types/node':
         specifier: ^22.10.2
         version: 22.19.20
@@ -139,8 +139,40 @@ packages:
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
 
-  '@spikard/node@0.15.6-rc.22':
-    resolution: {integrity: sha512-+9b7P1U7XbrZTsXCNr3SzkyKkVwDt4oObmZlXffu35m/LG35J9LbbVMO2Wby7ovI4pkQhvL8SLRwwWhzryC5iw==}
+  '@spikard/node-darwin-arm64@0.16.0-rc.3':
+    resolution: {integrity: sha512-DHjImsQnhlbeoToFJBddBX2zT16MRbhfQVIoJa1U7x+MlJOS+NgrrOZ25RTrCAbEa39zl1owyapHIWEY8Onz+A==}
+    engines: {node: '>= 18'}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@spikard/node-linux-arm64-gnu@0.16.0-rc.3':
+    resolution: {integrity: sha512-Y9F9E+W6T0gTBs3k5+bYcRo00ynE4RO/kMYits/iLP6YL1Yp1rUJZJ9Jzl30Agu5v+0n4CvJg0+UVB4Hiiw1qw==}
+    engines: {node: '>= 18'}
+    cpu: [arm64]
+    os: [linux]
+    libc: [glibc]
+
+  '@spikard/node-linux-x64-gnu@0.16.0-rc.3':
+    resolution: {integrity: sha512-y2XJzHiOmgEP6Ox7r31Zi+ie4Tj8oSSSFpw40EnAlnWQhvUsEVV/YuJIUeCqkV9C7q6bKCMbP1tA14sVFpImaQ==}
+    engines: {node: '>= 18'}
+    cpu: [x64]
+    os: [linux]
+    libc: [glibc]
+
+  '@spikard/node-win32-arm64-msvc@0.16.0-rc.3':
+    resolution: {integrity: sha512-lQyr6wkxjaqm3tdd883AOfVGkCXCSC2xBUwSJ+u9ACmCBEC9aORhR2vMFDAwzso254wssPXXLboSJOvDkL8mpA==}
+    engines: {node: '>= 18'}
+    cpu: [arm64]
+    os: [win32]
+
+  '@spikard/node-win32-x64-msvc@0.16.0-rc.3':
+    resolution: {integrity: sha512-Fdvl4VVp4IB/8+2GFwHVZdpHz61L3clBZWxPOJ3TNMgGOx/tBl2nn2AWaHsGk0ogmaIP3qPTn1AuJXxbDqtRhg==}
+    engines: {node: '>= 18'}
+    cpu: [x64]
+    os: [win32]
+
+  '@spikard/node@0.16.0-rc.3':
+    resolution: {integrity: sha512-Ci2pkc5SECu/bcxhLjjXK4PCEicGJuVOiUsiGSQ/yfuCHun5V8cTsmzDJ+eAInWri0LbHLbCikLOLiIK2uDSmg==}
     engines: {node: '>= 18'}
 
   '@standard-schema/spec@1.1.0':
@@ -536,7 +568,28 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.1': {}
 
-  '@spikard/node@0.15.6-rc.22': {}
+  '@spikard/node-darwin-arm64@0.16.0-rc.3':
+    optional: true
+
+  '@spikard/node-linux-arm64-gnu@0.16.0-rc.3':
+    optional: true
+
+  '@spikard/node-linux-x64-gnu@0.16.0-rc.3':
+    optional: true
+
+  '@spikard/node-win32-arm64-msvc@0.16.0-rc.3':
+    optional: true
+
+  '@spikard/node-win32-x64-msvc@0.16.0-rc.3':
+    optional: true
+
+  '@spikard/node@0.16.0-rc.3':
+    optionalDependencies:
+      '@spikard/node-darwin-arm64': 0.16.0-rc.3
+      '@spikard/node-linux-arm64-gnu': 0.16.0-rc.3
+      '@spikard/node-linux-x64-gnu': 0.16.0-rc.3
+      '@spikard/node-win32-arm64-msvc': 0.16.0-rc.3
+      '@spikard/node-win32-x64-msvc': 0.16.0-rc.3
 
   '@standard-schema/spec@1.1.0': {}
 

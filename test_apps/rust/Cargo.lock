@@ -2839,9 +2839,9 @@ dependencies = [
 
 [[package]]
 name = "spikard"
-version = "0.16.0-rc.1"
+version = "0.16.0-rc.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fe2add8e4238b28e6ba040c1e33cd65cc7ddc7f02939a49bbdadad45732ea380"
+checksum = "bb487eab26c3b52911ccee24022a07370ea82913b36b61b77ced03a67590aab6"
 dependencies = [
  "anyhow",
  "axum",
@@ -2859,9 +2859,9 @@ dependencies = [
 
 [[package]]
 name = "spikard-core"
-version = "0.16.0-rc.1"
+version = "0.16.0-rc.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ff23e8bc754a81e606aed0fcb8eac3696c95c2b909996745a5bc080c3d28dc3"
+checksum = "a7732590fce30f9c4db14bb99c21b642329de9075402ba8e4c119814aed86d04"
 dependencies = [
  "anyhow",
  "base64",
@@ -2885,7 +2885,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-e2e-rust"
-version = "0.16.0-rc.1"
+version = "0.16.0-rc.3"
 dependencies = [
  "axum",
  "axum-test",
@@ -2902,9 +2902,9 @@ dependencies = [
 
 [[package]]
 name = "spikard-graphql"
-version = "0.16.0-rc.1"
+version = "0.16.0-rc.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "03fd3346fb1ae41953b764bc17fba7224c5b3c5ecec4151fb4f4ca3598c04ccd"
+checksum = "3f317f88da7336e1aabb88b1f070ccec7a9670bd1c776b4c56a92b984b394bb8"
 dependencies = [
  "async-graphql",
  "axum",
@@ -2923,9 +2923,9 @@ dependencies = [
 
 [[package]]
 name = "spikard-http"
-version = "0.16.0-rc.1"
+version = "0.16.0-rc.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "699167bfdceaae80a2938639b4662732f2de1af5717694ac28a08098a0d1a624"
+checksum = "e5170da38930651806f2b572d385f1e2b104eb00e7339f1b65dac2e9e99b7e95"
 dependencies = [
  "ahash",
  "anyhow",

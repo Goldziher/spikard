@@ -1,0 +1,4 @@
+packages/ruby/lib/spikard/errors.rb 58e3815c8af6931cbd1af7894323424f6e2fe51c
+packages/ruby/lib/spikard.rb e11ef4e98080c12a1dff8d20f1ce2a7cbff1f5e7
+packages/ruby/lib/spikard/version.rb 2cddfcf42b4314d8c8c794eb5a34c7d71ccaa133
+packages/ruby/lib/spikard/service.rb f60e1770e3aea750cae82c9ed1ff3b7a25d70040

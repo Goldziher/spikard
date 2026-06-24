@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Publish: multi-platform native builds across the board.** The publish pipeline shipped
+  linux-x86_64-only (or source-only) artifacts while the committed manifests advertised
+  multi-platform support, so consumers on other platforms hit 404s / source-compile fallbacks.
+  The consolidated single-runner `build-ffi-assets` is split into per-platform matrix jobs
+  (`build-go-ffi`, `build-c-ffi`, `build-java-natives`, `build-csharp-natives`) over
+  linux-x64/arm64, macos-arm64, windows-x64 with a glibc-2.28 floor on the gnu legs; the Maven
+  jar and NuGet package now download and stage **all** platform natives before packing.
+  (`.github/workflows/publish.yaml`)
+- **Publish: C# nupkg shipped zero native libs.** `build-ffi-assets` wrote C# natives to
+  `packages/csharp/runtimes`, but the csproj packs `runtimes/**` relative to
+  `packages/csharp/Spikard/`, so the runtimes were never bundled. `publish-nuget` now stages into
+  `packages/csharp/Spikard/runtimes/<rid>/native/`.
+- **Publish: Swift was unimplemented.** Added `swift-artifactbundle`, `swift-package`,
+  `update-swift-package-manifest` (substitutes `__ALEF_SWIFT_CHECKSUM__` and pushes the
+  `release/swift/<version>` branch the Swift e2e/test-app pins), and `upload-swift-bundle`.
+- **Publish: Zig tarball shipped no FFI libs.** `publish-zig` now depends on `build-c-ffi`, lays
+  the per-platform libs out by RID, and passes `multi-platform-ffi-dir`/`module-name`/`ffi-lib-name`
+  so `zig fetch` consumers can link.
+- **Publish: PHP PIE binaries were never built.** `composer.json` advertises pre-packaged binaries
+  (`php_spikard_php-*.tgz`), but no `package-php-pie` step produced them. `build-php` is now a
+  `php 8.2–8.5 × {linux-x64/arm64, macos-arm64, windows-x64}` matrix and `upload-php-pie-release`
+  attaches the archives to the release.
+- **Publish: Ruby shipped a source-only gem.** `build-ruby` now runs `rake compile && rake build`
+  across a platform matrix to emit platform-tagged gems, and `publish-rubygems` uses OIDC trusted
+  publishing (`id-token: write` + `gem update --system`) instead of a legacy API key.
+- **Publish: CLI shipped linux-x64 only.** `build-cli` is now a 4-target matrix (+ Windows `.zip`).
+- **Publish: Dart published source with no natives.** Added `dart-server-natives`, `dart-package`,
+  `assemble-dart-bundle` (stages natives into `lib/src/native/<rid>/`), and `trigger-pubdev`;
+  `publish-pubdev.yaml` now consumes the assembled artifact and is idempotency-gated on `pub_exists`.
+- **Publish: hardening.** `publish-node` now `wait-for-package`s its platform sub-packages before
+  the main publish (no install-race); `publish-pypi`/`publish-node`/`publish-wasm` gained `is_tag`
+  guards; `finalize` skips on partial failure (`!contains(needs.*.result, 'failure')`).
+
 ## [0.16.0-rc.3] - 2026-06-21
 
 ### Fixed

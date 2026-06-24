@@ -708,6 +708,11 @@ tasks:
       - cargo run --package spikard-http
 
   # === Published-package smoke tests ===
+  test-apps:mock-server:
+    desc: "Build the e2e mock-server that published-package test app harnesses spawn"
+    cmds:
+      - cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release
+
   test-apps:python:
     desc: "Run Python published package test app"
     dir: test_apps/python
@@ -767,12 +772,14 @@ tasks:
 
   test-apps:java:
     desc: "Run Java published package test app"
+    deps: [test-apps:mock-server]
     dir: test_apps/java
     cmds:
       - ./mvnw test
 
   test-apps:csharp:
     desc: "Run C# published package test app"
+    deps: [test-apps:mock-server]
     dir: test_apps/csharp
     cmds:
       - dotnet test

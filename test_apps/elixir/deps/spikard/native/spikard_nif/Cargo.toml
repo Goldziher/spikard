@@ -1,0 +1,39 @@
+[package]
+name = "spikard_nif"
+version = "0.16.0-rc.3"
+edition = "2024"
+license = "MIT"
+description = "Rust-centric multi-language HTTP framework with polyglot bindings"
+readme = false
+keywords = ["framework", "http", "polyglot", "rust", "web"]
+categories = []
+
+[package.metadata.cargo-machete]
+ignored = ["tokio", "alloc-no-stdlib", "alloc-stdlib", "brotli-decompressor"]
+
+[workspace]
+
+[lib]
+name = "spikard_nif"
+path = "../../../../packages/elixir/lib/lib.rs"
+
+crate-type = ["cdylib"]
+
+[features]
+default = ["di"]
+di = ["spikard/di"]
+
+[dependencies]
+alloc-no-stdlib = "=2.0.4"
+alloc-stdlib = "=0.2.2"
+brotli-decompressor = "=5.0.1"
+rustler = "0.38"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+spikard = { version = "0.16.0-rc.3", features = ["di"] }
+spikard-core = { version = "0.16.0-rc.3" }
+spikard-graphql = { version = "0.16.0-rc.3" }
+spikard-http = { version = "0.16.0-rc.3" }
+tokio = { version = "1", features = ["rt-multi-thread", "sync"] }
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(feature, values("di"))'] }

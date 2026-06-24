@@ -26,6 +26,22 @@ importers:
       '@napi-rs/cli':
         specifier: ^3.6.2
         version: 3.6.2(@emnapi/core@1.9.0)(@emnapi/runtime@1.9.0)(@types/node@22.19.19)
+    optionalDependencies:
+      '@spikard/node-darwin-arm64':
+        specifier: 0.16.0-rc.3
+        version: 0.16.0-rc.3
+      '@spikard/node-linux-arm64-gnu':
+        specifier: 0.16.0-rc.3
+        version: 0.16.0-rc.3
+      '@spikard/node-linux-x64-gnu':
+        specifier: 0.16.0-rc.3
+        version: 0.16.0-rc.3
+      '@spikard/node-win32-arm64-msvc':
+        specifier: 0.16.0-rc.3
+        version: 0.16.0-rc.3
+      '@spikard/node-win32-x64-msvc':
+        specifier: 0.16.0-rc.3
+        version: 0.16.0-rc.3
 
   e2e/node:
     devDependencies:
@@ -1062,6 +1078,38 @@ packages:
 
   '@rollup/rollup-win32-x64-msvc@4.62.2':
     resolution: {integrity: sha512-BfzEnDJOt9T8M989/lA37EcJgat01wLRnoi5dQf3QzOH7jzpqTAzdDbVfRljVr5r+jzKqpbHeyOfAaXxAd0PAA==}
+    cpu: [x64]
+    os: [win32]
+
+  '@spikard/node-darwin-arm64@0.16.0-rc.3':
+    resolution: {integrity: sha512-DHjImsQnhlbeoToFJBddBX2zT16MRbhfQVIoJa1U7x+MlJOS+NgrrOZ25RTrCAbEa39zl1owyapHIWEY8Onz+A==}
+    engines: {node: '>= 18'}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@spikard/node-linux-arm64-gnu@0.16.0-rc.3':
+    resolution: {integrity: sha512-Y9F9E+W6T0gTBs3k5+bYcRo00ynE4RO/kMYits/iLP6YL1Yp1rUJZJ9Jzl30Agu5v+0n4CvJg0+UVB4Hiiw1qw==}
+    engines: {node: '>= 18'}
+    cpu: [arm64]
+    os: [linux]
+    libc: [glibc]
+
+  '@spikard/node-linux-x64-gnu@0.16.0-rc.3':
+    resolution: {integrity: sha512-y2XJzHiOmgEP6Ox7r31Zi+ie4Tj8oSSSFpw40EnAlnWQhvUsEVV/YuJIUeCqkV9C7q6bKCMbP1tA14sVFpImaQ==}
+    engines: {node: '>= 18'}
+    cpu: [x64]
+    os: [linux]
+    libc: [glibc]
+
+  '@spikard/node-win32-arm64-msvc@0.16.0-rc.3':
+    resolution: {integrity: sha512-lQyr6wkxjaqm3tdd883AOfVGkCXCSC2xBUwSJ+u9ACmCBEC9aORhR2vMFDAwzso254wssPXXLboSJOvDkL8mpA==}
+    engines: {node: '>= 18'}
+    cpu: [arm64]
+    os: [win32]
+
+  '@spikard/node-win32-x64-msvc@0.16.0-rc.3':
+    resolution: {integrity: sha512-Fdvl4VVp4IB/8+2GFwHVZdpHz61L3clBZWxPOJ3TNMgGOx/tBl2nn2AWaHsGk0ogmaIP3qPTn1AuJXxbDqtRhg==}
+    engines: {node: '>= 18'}
     cpu: [x64]
     os: [win32]
 
@@ -2132,6 +2180,21 @@ snapshots:
     optional: true
 
   '@rollup/rollup-win32-x64-msvc@4.62.2':
+    optional: true
+
+  '@spikard/node-darwin-arm64@0.16.0-rc.3':
+    optional: true
+
+  '@spikard/node-linux-arm64-gnu@0.16.0-rc.3':
+    optional: true
+
+  '@spikard/node-linux-x64-gnu@0.16.0-rc.3':
+    optional: true
+
+  '@spikard/node-win32-arm64-msvc@0.16.0-rc.3':
+    optional: true
+
+  '@spikard/node-win32-x64-msvc@0.16.0-rc.3':
     optional: true
 
   '@standard-schema/spec@1.1.0': {}

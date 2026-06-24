@@ -109,3 +109,8 @@ strip = true
 [profile.dev]
 opt-level = 0
 debug = true
+
+# TEMPORARY: local alef checkout for iterating on generator fixes.
+# Revert (re-pin spikard-alef{,-ext} to the released tag) before the final rc commit.
+[patch."https://github.com/kreuzberg-dev/alef"]
+alef = { path = "/Users/naamanhirschfeld/workspace/kreuzberg-dev/alef" }

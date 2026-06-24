@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@spikard/node-wasm':
-        specifier: 0.15.6-rc.4
-        version: 0.15.6-rc.4
+        specifier: ^0.16.0-rc.3
+        version: 0.16.0-rc.3
       rollup:
         specifier: ^4.53.3
         version: 4.60.4
@@ -277,8 +277,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@spikard/node-wasm@0.15.6-rc.4':
-    resolution: {integrity: sha512-GS4WJsJg7tGm32VysuDcjJIuouICUuPPvxuIE/XDb2+iD6tg0PBvXKhCh6WYNW4/dsVtFKlHkjkpg8Ohfi9ZwQ==}
+  '@spikard/node-wasm@0.16.0-rc.3':
+    resolution: {integrity: sha512-9VYWbzLsdlVOleHEZGfrjE9FfXV2LfcolqxO2s99jmFQNIqTLFmNWZjiHSYMevnShbGmHjviovPJvzGJXj6PqA==}
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
@@ -750,7 +750,7 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.60.4':
     optional: true
 
-  '@spikard/node-wasm@0.15.6-rc.4': {}
+  '@spikard/node-wasm@0.16.0-rc.3': {}
 
   '@standard-schema/spec@1.1.0': {}
 

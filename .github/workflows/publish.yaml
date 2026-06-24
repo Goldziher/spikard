@@ -412,7 +412,11 @@ jobs:
         id: build-wasm
         with:
           crate-dir: crates/spikard-wasm
-          build-command: wasm-pack build . --release --target bundler
+          # Build every wasm-pack target (web/bundler/nodejs/deno) into pkg/<target>/
+          # so the published package.json main/module/types resolve, and strip the
+          # wasm-pack-emitted pkg/.gitignore ("*") that otherwise makes npm drop all
+          # of pkg/ from the tarball. See the package.json "build:all" script.
+          build-command: npm run build:all
           pack-tarball: "true"
       - uses: actions/upload-artifact@v7
         with:
@@ -420,7 +424,7 @@ jobs:
           path: ${{ steps.build-wasm.outputs.tarball }}
 
   build-ruby:
-    name: Build Ruby gem
+    name: Build Ruby gem (${{ matrix.label }})
     # build-ruby-gem@v1 rewrites workspace path-deps to registry version-deps
     # (--require-registry) before compiling, so the core crates must be on
     # crates.io first: order after publish-crates. The status guard lets the build
@@ -428,7 +432,20 @@ jobs:
     # only on its actual failure.
     needs: [prepare, publish-crates]
     if: ${{ !cancelled() && needs.publish-crates.result != 'failure' && needs.prepare.outputs.release_ruby == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    env:
+      RB_SYS_CARGO_PROFILE: release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, label: linux-x86_64 }
+          - { os: ubuntu-24.04-arm, label: linux-aarch64 }
+          - { os: macos-latest, label: macos-arm64 }
+          # Opt-in legs for the remaining CROSS_PLATFORMS entries (x86_64-darwin,
+          # x64-mingw-ucrt); without them those consumers fall back to the source gem.
+          # - { os: macos-15-intel, label: macos-x86_64 }
+          # - { os: windows-latest, label: windows-x86_64 }
     steps:
       - uses: actions/checkout@v6
         with:
@@ -447,48 +464,107 @@ jobs:
           # Skip the registry rewrite on dry-runs (unpublished version cannot
           # resolve); build via workspace path-deps instead.
           rewrite-native-deps: ${{ needs.prepare.outputs.dry_run != 'true' }}
-      - name: Pack gem
+      - name: Package platform gem
+        # `rake compile` builds the native extension for this runner's platform;
+        # rake-compiler then tags the `rake build` gem with the current platform
+        # (e.g. -x86_64-linux), alongside the fallback source gem. Without the
+        # compile, `rake build` emits a source-only gem that forces every consumer
+        # to compile from source on `gem install`.
+        working-directory: packages/ruby
+        shell: bash
         run: |
-          mkdir -p dist/ruby
-          cd packages/ruby
-          gem build spikard.gemspec
-          mv ./*.gem ../../dist/ruby/
+          bundle exec rake compile
+          bundle exec rake build
+      - name: Drop source gem on non-canonical builders
+        if: ${{ matrix.label != 'linux-x86_64' }}
+        # Only the canonical linux-x86_64 builder ships the fallback source gem;
+        # other runners emit byte-different source gems that collide under the
+        # publish merge. Keep only platform-tagged gems (Rakefile CROSS_PLATFORMS).
+        shell: bash
+        run: |
+          shopt -s nullglob
+          for f in packages/ruby/pkg/*.gem; do
+            base="$(basename "$f")"
+            case "$base" in
+              *-x86_64-linux.gem|*-aarch64-linux.gem|*-arm64-darwin.gem|*-x86_64-darwin.gem|*-x64-mingw-ucrt.gem) ;;
+              *) echo "Removing non-canonical source gem $base"; rm -f "$f" ;;
+            esac
+          done
       - uses: actions/upload-artifact@v7
         with:
-          name: ruby-gem
-          path: dist/ruby/*.gem
+          name: rubygems-${{ matrix.label }}
+          path: packages/ruby/pkg/*.gem
+          retention-days: 14
 
   build-php:
-    name: Build PHP extension
+    name: Build PHP extension (php${{ matrix.php }} ${{ matrix.platform.label }})
     # build-php-extension@v1 rewrites path-deps to registry versions before
     # building; the core crates must be published first. The status guard lets the
     # build run when publish-crates is skipped, blocking only on its actual failure.
     needs: [prepare, publish-crates]
     if: ${{ !cancelled() && needs.publish-crates.result != 'failure' && needs.prepare.outputs.release_php == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.platform.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ["8.2", "8.3", "8.4", "8.5"]
+        platform:
+          - { os: ubuntu-latest, label: linux-x86_64, target: x86_64-unknown-linux-gnu }
+          - { os: ubuntu-24.04-arm, label: linux-arm64, target: aarch64-unknown-linux-gnu }
+          - { os: macos-latest, label: macos-arm64, target: aarch64-apple-darwin }
+          - { os: windows-latest, label: windows-x86_64, target: x86_64-pc-windows-msvc }
     steps:
       - uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: kreuzberg-dev/actions/setup-php@v1
         with:
-          php-version: "8.4"
+          php-version: ${{ matrix.php }}
       - uses: kreuzberg-dev/actions/setup-rust@v1
         with:
           toolchain: "1.95"
+          target: ${{ matrix.platform.target }}
       - uses: kreuzberg-dev/actions/build-php-extension@v1
         with:
           crate-name: spikard-php
           lib-name: spikard_php
+          php-version: ${{ matrix.php }}
+          php-ts: nts
           # Skip the registry rewrite on dry-runs (unpublished version cannot
           # resolve); build via workspace path-deps instead.
           rewrite-native-deps: ${{ needs.prepare.outputs.dry_run != 'true' }}
+      - uses: kreuzberg-dev/actions/package-php-pie@v1
+        with:
+          php-version: ${{ matrix.php }}
+          php-ts: nts
+          target: ${{ matrix.platform.target }}
+          windows-compiler: ${{ contains(matrix.platform.target, 'windows') && 'vs17' || '' }}
+          version: ${{ needs.prepare.outputs.version }}
+          output-dir: dist/php-package
+      - uses: actions/upload-artifact@v7
+        with:
+          name: php-package-${{ matrix.platform.label }}-php${{ matrix.php }}
+          path: |
+            dist/php-package/php_*.tgz
+            dist/php-package/php_*.tgz.sha256
+            dist/php-package/php_*.zip
+            dist/php-package/php_*.zip.sha256
+          retention-days: 14
 
   build-cli:
-    name: Build CLI
+    name: Build CLI (${{ matrix.target }})
     needs: prepare
     if: ${{ needs.prepare.outputs.release_cli == 'true' || needs.prepare.outputs.release_homebrew == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, target: x86_64-unknown-linux-gnu, label: linux-x86_64 }
+          - { os: ubuntu-24.04-arm, target: aarch64-unknown-linux-gnu, label: linux-aarch64 }
+          - { os: macos-latest, target: aarch64-apple-darwin, label: macos-aarch64 }
+          - { os: windows-latest, target: x86_64-pc-windows-msvc, label: windows-x86_64 }
     steps:
       - uses: actions/checkout@v6
         with:
@@ -496,70 +572,41 @@ jobs:
       - uses: kreuzberg-dev/actions/setup-rust@v1
         with:
           toolchain: "1.95"
+          target: ${{ matrix.target }}
+      - name: Setup Zig for glibc 2.28 floor
+        if: contains(matrix.target, '-linux-gnu')
+        uses: kreuzberg-dev/actions/setup-zig@v1
+      - name: Install cargo-zigbuild for glibc 2.28 floor
+        if: contains(matrix.target, '-linux-gnu')
+        shell: bash
+        run: command -v cargo-zigbuild || cargo install --locked cargo-zigbuild
       - id: cli
         uses: kreuzberg-dev/actions/build-rust-cli@v1
         with:
           package-name: spikard-cli
           binary-name: spikard
+          target: ${{ matrix.target }}
+          glibc-version: "2.28"
       - name: Package CLI
+        env:
+          BINARY_PATH: ${{ steps.cli.outputs.binary-path }}
+          TARGET: ${{ matrix.target }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        shell: bash
         run: |
           mkdir -p dist/cli
-          tar -czf "dist/cli/spikard-cli-${{ needs.prepare.outputs.version }}-linux-x86_64.tar.gz" -C "$(dirname "${{ steps.cli.outputs.binary-path }}")" spikard
+          STAGE_DIR="$(dirname "$BINARY_PATH")"
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            ( cd "$STAGE_DIR" && 7z a "$GITHUB_WORKSPACE/dist/cli/spikard-cli-${VERSION}-${TARGET}.zip" spikard.exe >/dev/null )
+          else
+            tar -czf "dist/cli/spikard-cli-${VERSION}-${TARGET}.tar.gz" -C "$STAGE_DIR" spikard
+          fi
       - uses: actions/upload-artifact@v7
         with:
-          name: cli-assets
+          name: cli-assets-${{ matrix.target }}
           path: dist/cli/*
-
-  build-ffi-assets:
-    name: Build FFI assets
-    needs: prepare
-    if: ${{ needs.prepare.outputs.release_go == 'true' || needs.prepare.outputs.release_c_ffi == 'true' || needs.prepare.outputs.release_java == 'true' || needs.prepare.outputs.release_csharp == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: kreuzberg-dev/actions/setup-rust@v1
-        with:
-          toolchain: "1.95"
-      - uses: kreuzberg-dev/actions/build-rust-ffi@v1
-        with:
-          crate-name: spikard-ffi
-      - uses: kreuzberg-dev/actions/build-go-ffi@v1
-        with:
-          crate-name: spikard-ffi
-          target: x86_64-unknown-linux-gnu
-          lib-name: spikard_ffi
-          header-path: crates/spikard-ffi/include/spikard.h
-          output-dir: dist/go
-          archive-name: spikard-go-ffi-${{ needs.prepare.outputs.version }}-linux-x86_64.tar.gz
-      - uses: kreuzberg-dev/actions/build-java-natives@v1
-        with:
-          crate-name: spikard-ffi
-          target: x86_64-unknown-linux-gnu
-          lib-name: spikard_ffi
-          classifier: linux-x86_64
-          output-dir: packages/java/src/main/resources/natives
-      - uses: kreuzberg-dev/actions/build-csharp-natives@v1
-        with:
-          crate-name: spikard-ffi
-          target: x86_64-unknown-linux-gnu
-          lib-name: spikard_ffi
-          rid: linux-x64
-          output-dir: packages/csharp/runtimes
-      - name: Package C FFI
-        run: |
-          mkdir -p dist/c-ffi
-          tar -czf "dist/c-ffi/spikard-c-ffi-${{ needs.prepare.outputs.version }}-linux-x86_64.tar.gz" \
-            crates/spikard-ffi/include/spikard.h target/release/libspikard_ffi.so
-      - uses: actions/upload-artifact@v7
-        with:
-          name: ffi-assets
-          path: |
-            dist/go/*
-            dist/c-ffi/*
-            packages/java/src/main/resources/natives/**
-            packages/csharp/runtimes/**
+          if-no-files-found: error
+          retention-days: 14
 
   build-elixir:
     name: Build Elixir NIF (${{ matrix.label }})
@@ -644,9 +691,11 @@ jobs:
           path: dist/elixir-natives/*.tar.gz
 
   build-jvm-dotnet-dart-swift-zig:
-    name: Build package-only targets
+    name: Build Kotlin package
+    # Kotlin-only: Java jar is built in publish-maven (with per-platform natives),
+    # C# nupkg in publish-nuget, Dart in the dart-* jobs, Zig in publish-zig.
     needs: prepare
-    if: ${{ needs.prepare.outputs.release_java == 'true' || needs.prepare.outputs.release_kotlin == 'true' || needs.prepare.outputs.release_csharp == 'true' || needs.prepare.outputs.release_dart == 'true' || needs.prepare.outputs.release_zig == 'true' }}
+    if: ${{ needs.prepare.outputs.release_kotlin == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -655,39 +704,24 @@ jobs:
       - uses: kreuzberg-dev/actions/setup-rust@v1
         with:
           toolchain: "1.95"
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "25"
-      - uses: kreuzberg-dev/actions/setup-maven@v1
       - uses: kreuzberg-dev/actions/setup-gradle@v1
         with:
           java-version: "25"
           gradle-version: "9.1.0"
-      - uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: "10.0.x"
-      - uses: dart-lang/setup-dart@v1
-      - uses: kreuzberg-dev/actions/setup-zig@v1
-      - name: Build package projects
+      - name: Build Kotlin package
         run: |
+          # Host FFI build so any Gradle test that dlopens spikard_ffi resolves it.
           cargo build --release -p spikard-ffi
-          cd packages/java && mvn -B -DskipTests package && cd ../..
           cd packages/kotlin && gradle build --no-daemon && cd ../..
-          dotnet pack packages/csharp/Spikard --configuration Release --output dist/nuget
-          cd packages/dart && dart pub get && dart test && cd ../..
-          cd packages/zig && zig build test -Dffi_path=../../target/release && cd ../..
       - uses: actions/upload-artifact@v7
         with:
           name: package-targets
           path: |
-            packages/java/target/*.jar
             packages/kotlin/build/libs/*.jar
-            dist/nuget/*.nupkg
 
   upload-release-assets:
     name: Upload release assets
-    needs: [prepare, build-cli, build-ffi-assets, build-elixir]
+    needs: [prepare, build-cli, build-go-ffi, build-c-ffi, build-elixir]
     if: ${{ always() && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' }}
     runs-on: ubuntu-latest
     steps:
@@ -701,6 +735,7 @@ jobs:
           working-directory: dist/release-assets
           assets: |
             spikard-cli-*.tar.gz
+            spikard-cli-*.zip
             spikard-*-ffi-*.tar.gz
             libspikard_nif-*.tar.gz
           fail-if-empty: "false"
@@ -763,7 +798,7 @@ jobs:
   publish-pypi:
     name: Publish PyPI
     needs: [prepare, check-registries, build-python, build-python-sdist]
-    if: ${{ !cancelled() && needs.prepare.outputs.release_python == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.pypi_exists != 'true') }}
+    if: ${{ !cancelled() && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_python == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.pypi_exists != 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v8
@@ -779,7 +814,7 @@ jobs:
   publish-node:
     name: Publish Node
     needs: [prepare, check-registries, build-node, build-node-typescript-defs]
-    if: ${{ !cancelled() && needs.prepare.outputs.release_node == 'true' && needs.build-node.result == 'success' && needs.build-node-typescript-defs.result == 'success' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.npm_node_exists != 'true') }}
+    if: ${{ !cancelled() && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_node == 'true' && needs.build-node.result == 'success' && needs.build-node-typescript-defs.result == 'success' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.npm_node_exists != 'true') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -848,10 +883,7 @@ jobs:
           jq --argjson deps "$optional_deps_json" '.optionalDependencies = $deps' \
             crates/spikard-node/package.json > "$tmp_pkg_json"
           mv "$tmp_pkg_json" crates/spikard-node/package.json
-
-          # Pack the main package last so its optionalDependencies are baked in.
-          (cd crates/spikard-node && npm pack && mv ./*.tgz npm/)
-      - name: Publish platform sub-packages and main package
+      - name: Publish platform sub-packages
         uses: kreuzberg-dev/actions/publish-npm@v1
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -859,11 +891,38 @@ jobs:
           packages-dir: crates/spikard-node/npm
           npm-tag: ${{ needs.prepare.outputs.npm_tag }}
           dry-run: ${{ needs.prepare.outputs.dry_run }}
+      # Wait for the platform sub-packages to index before publishing the main
+      # package, whose optionalDependencies reference them — otherwise there is a
+      # window where `npm install @spikard/node` fails on unresolved deps.
+      - name: Wait for npm indexing (node-linux-x64-gnu)
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        uses: kreuzberg-dev/actions/wait-for-package@v1
+        with:
+          registry: npm
+          package: "@spikard/node-linux-x64-gnu"
+          version: ${{ needs.prepare.outputs.version }}
+          max-attempts: "60"
+      - name: Wait for npm indexing (node-linux-arm64-gnu)
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        uses: kreuzberg-dev/actions/wait-for-package@v1
+        with:
+          registry: npm
+          package: "@spikard/node-linux-arm64-gnu"
+          version: ${{ needs.prepare.outputs.version }}
+          max-attempts: "60"
+      - name: Publish main @spikard/node package
+        uses: kreuzberg-dev/actions/publish-npm@v1
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        with:
+          package-dir: crates/spikard-node
+          npm-tag: ${{ needs.prepare.outputs.npm_tag }}
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
 
   publish-wasm:
     name: Publish WASM
     needs: [prepare, check-registries, build-wasm]
-    if: ${{ !cancelled() && needs.prepare.outputs.release_wasm == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.npm_wasm_exists != 'true') }}
+    if: ${{ !cancelled() && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_wasm == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.npm_wasm_exists != 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v8
@@ -885,23 +944,36 @@ jobs:
   publish-rubygems:
     name: Publish RubyGems
     needs: [prepare, check-registries, build-ruby]
-    if: ${{ !cancelled() && needs.prepare.outputs.release_ruby == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.ruby_exists != 'true') }}
+    if: ${{ !cancelled() && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_ruby == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.ruby_exists != 'true') }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/download-artifact@v8
         with:
-          name: ruby-gem
-          path: dist/ruby
-      - uses: kreuzberg-dev/actions/publish-rubygems@v1
-        env:
-          GEM_HOST_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
+          pattern: rubygems-*
+          path: dist
+          # No merge-multiple: the canonical linux-x86_64 builder also ships the
+          # fallback source gem spikard-<version>.gem, whose basename collides
+          # across runners. publish-rubygems globs recursively and dedupes.
+      - uses: ruby/setup-ruby@v1
         with:
-          gems-dir: dist/ruby
+          ruby-version: "3.4"
+          bundler-cache: false
+      # Trusted publishing (OIDC) needs a recent RubyGems; the runner's bundled
+      # version can be too old for configure-rubygems-credentials.
+      - name: Update RubyGems for OIDC trusted publishing
+        run: gem update --system
+      - uses: rubygems/configure-rubygems-credentials@v2.0.0
+      - uses: kreuzberg-dev/actions/publish-rubygems@v1
+        with:
+          gems-dir: dist
           dry-run: ${{ needs.prepare.outputs.dry_run }}
 
   publish-packagist:
     name: Publish Packagist
-    needs: [prepare, check-registries]
+    needs: [prepare, check-registries, upload-php-pie-release]
     if: ${{ !cancelled() && needs.prepare.outputs.release_php == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.php_exists != 'true') }}
     runs-on: ubuntu-latest
     steps:
@@ -972,7 +1044,7 @@ jobs:
 
   publish-maven:
     name: Publish Maven
-    needs: [prepare, check-registries, build-jvm-dotnet-dart-swift-zig]
+    needs: [prepare, check-registries, build-java-natives]
     if: ${{ !cancelled() && needs.prepare.outputs.release_java == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.maven_java_exists != 'true') }}
     runs-on: ubuntu-latest
     steps:
@@ -984,6 +1056,24 @@ jobs:
           distribution: temurin
           java-version: "25"
       - uses: kreuzberg-dev/actions/setup-maven@v1
+      - name: Download Java natives (all classifiers)
+        uses: actions/download-artifact@v8
+        with:
+          pattern: java-natives-*
+          path: dist/java-natives
+          merge-multiple: true
+      - name: Stage natives into Java resources
+        shell: bash
+        run: |
+          set -euo pipefail
+          dest=packages/java/src/main/resources/natives
+          rm -rf "$dest"
+          mkdir -p "$dest"
+          # build-java-natives@v1 artifacts already carry <classifier>/lib… layout.
+          cp -R dist/java-natives/. "$dest/"
+          find "$dest" -type f
+      - name: Package Java JAR with bundled natives
+        run: cd packages/java && mvn -B -DskipTests package
       - uses: kreuzberg-dev/actions/publish-maven@v1
         env:
           MAVEN_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
@@ -1019,44 +1109,107 @@ jobs:
 
   publish-nuget:
     name: Publish NuGet
-    needs: [prepare, check-registries, build-jvm-dotnet-dart-swift-zig]
+    needs: [prepare, check-registries, build-csharp-natives]
     if: ${{ !cancelled() && needs.prepare.outputs.release_csharp == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.nuget_exists != 'true') }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v8
-        with:
-          name: package-targets
-          path: dist/packages
-      - uses: kreuzberg-dev/actions/publish-nuget@v1
-        env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-        with:
-          packages-dir: dist/packages/dist/nuget
-          nuget-user: nhirschfeld
-          dry-run: ${{ needs.prepare.outputs.dry_run }}
-
-  publish-zig:
-    name: Publish Zig metadata
-    needs: [prepare, build-jvm-dotnet-dart-swift-zig]
-    # No zig_exists gate: Zig has no central registry, so the check-registries
-    # "exists" probe is a GitHub-release-tag lookup that is always true here — the
-    # prepare job creates the draft Release for this tag before check-registries
-    # runs, so the probe would always skip this job. The publish-zig action is
-    # idempotent (validate build.zig.zon, verify the tag, append the resolved
-    # tarball URL + SHA-256 to the release notes), so it must run on every fresh
-    # tag release.
-    if: ${{ !cancelled() && needs.prepare.outputs.release_zig == 'true' && needs.build-jvm-dotnet-dart-swift-zig.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+      - name: Download C# natives (all RIDs)
+        uses: actions/download-artifact@v8
+        with:
+          pattern: csharp-natives-*
+          path: dist/csharp-natives
+          merge-multiple: true
+      - name: Stage runtimes into csproj dir
+        shell: bash
+        run: |
+          set -euo pipefail
+          # csproj packs runtimes/** relative to packages/csharp/Spikard/
+          dest=packages/csharp/Spikard/runtimes
+          rm -rf "$dest"
+          mkdir -p "$dest"
+          # build-csharp-natives@v1 artifacts already carry runtimes/<rid>/native/ layout.
+          cp -R dist/csharp-natives/runtimes/. "$dest/"
+          find "$dest" -type f
+      - name: Pack NuGet
+        run: dotnet pack packages/csharp/Spikard --configuration Release --output dist/nuget
+      - uses: kreuzberg-dev/actions/publish-nuget@v1
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        with:
+          packages-dir: dist/nuget
+          nuget-user: nhirschfeld
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
+
+  publish-zig:
+    name: Publish Zig metadata
+    # Depends on build-c-ffi so the per-target FFI artifacts are available for
+    # multi-platform-ffi-dir bundling into the published Zig tarball.
+    needs: [prepare, build-c-ffi]
+    # No zig_exists gate: Zig has no central registry, so the check-registries
+    # "exists" probe is a GitHub-release-tag lookup that is always true here.
+    # publish-zig is idempotent (update-existing), so it runs on every fresh tag.
+    if: ${{ !cancelled() && needs.prepare.outputs.release_zig == 'true' && needs.build-c-ffi.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - name: Download per-target C FFI artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: c-ffi-*
+          path: dist/c-ffi-downloaded
+          merge-multiple: false
+      - name: Lay out FFI artifacts for multi-platform Zig bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          # spikard c-ffi tarballs are spikard-c-ffi-<version>-<platform>.tar.gz,
+          # each containing <stage>/lib/* and <stage>/include/*.h where <stage> is
+          # spikard-ffi-<platform>. Derive the platform from the stage dir (the
+          # platform label itself contains a dash) and map it to the zig RID layout.
+          declare -A RID_FOR=(
+            ["linux-x86_64"]="linux-x64"
+            ["linux-aarch64"]="linux-arm64"
+            ["macos-arm64"]="osx-arm64"
+            ["windows-x86_64"]="win-x64"
+          )
+          out="ffi-artifacts"
+          mkdir -p "$out/include"
+          for art in dist/c-ffi-downloaded/*/spikard-c-ffi-*.tar.gz; do
+            [ -f "$art" ] || continue
+            tmp="$(mktemp -d)"
+            tar -xzf "$art" -C "$tmp"
+            stage_root="$(find "$tmp" -maxdepth 1 -mindepth 1 -type d | head -1)"
+            platform="$(basename "$stage_root")"
+            platform="${platform#spikard-ffi-}"
+            rid="${RID_FOR[$platform]:-}"
+            if [ -z "$rid" ]; then
+              echo "::warning::Unknown C FFI platform '$platform' — skipping"
+              rm -rf "$tmp"; continue
+            fi
+            mkdir -p "$out/$rid"
+            cp "$stage_root"/lib/* "$out/$rid/"
+            cp "$stage_root"/include/*.h "$out/include/" 2>/dev/null || true
+            rm -rf "$tmp"
+          done
+          ls -la "$out"
+          for d in "$out"/*/; do echo "--- $d ---"; ls -la "$d"; done
       - uses: kreuzberg-dev/actions/publish-zig@v1
         with:
           working-directory: packages/zig
           tag: ${{ needs.prepare.outputs.tag }}
           zig-version: "0.16.0"
           package-name: spikard-zig
+          multi-platform-ffi-dir: ffi-artifacts
+          module-name: spikard
+          ffi-lib-name: spikard_ffi
           update-release-notes: "true"
           update-existing: "true"
           dry-run: ${{ needs.prepare.outputs.dry_run }}
@@ -1236,6 +1389,469 @@ jobs:
           git commit -m "spikard ${{ needs.prepare.outputs.version }}: add bottle DSL"
           git push origin HEAD
 
+  swift-artifactbundle:
+    name: Build Swift artifact bundle
+    needs: prepare
+    if: ${{ needs.prepare.outputs.release_swift == 'true' }}
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+          fetch-depth: 0
+      - uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
+      - uses: kreuzberg-dev/actions/build-swift-artifactbundle@v1
+        id: bundle
+        with:
+          crate-name: spikard-swift
+          artifact-name: Spikard-rs
+          include-macos-x86_64: "false"
+          include-ios-x86_64: "false"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: swift-artifactbundle
+          path: ${{ steps.bundle.outputs.bundle-zip }}
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@v7
+        with:
+          name: swift-checksum
+          path: ${{ steps.bundle.outputs.checksum-file }}
+          if-no-files-found: error
+          retention-days: 14
+
+  swift-package:
+    name: Build Swift package
+    needs: prepare
+    if: ${{ needs.prepare.outputs.release_swift == 'true' }}
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+          fetch-depth: 0
+      - uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
+      - uses: kreuzberg-dev/actions/build-swift-package@v1
+        with:
+          package-dir: packages/swift
+          crate-name: spikard-swift
+      - uses: actions/upload-artifact@v7
+        with:
+          name: swift-package
+          path: packages/swift
+          retention-days: 14
+
+  update-swift-package-manifest:
+    name: Update Swift Package.swift manifest with version and checksum
+    needs: [prepare, swift-artifactbundle]
+    if: ${{ needs.prepare.outputs.release_swift == 'true' && needs.prepare.outputs.is_tag == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
+      - uses: actions/download-artifact@v8
+        with:
+          name: swift-checksum
+          path: swift-checksums
+      - name: Update Package.swift with version and checksum
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          CHECKSUM=$(cat swift-checksums/*.checksum | tr -d '[:space:]')
+          sed -i "s/__ALEF_SWIFT_VERSION__/${VERSION}/g" Package.swift
+          sed -i "s/__ALEF_SWIFT_CHECKSUM__/${CHECKSUM}/g" Package.swift
+          echo "Updated Package.swift:"
+          head -40 Package.swift
+      - name: Commit and push Package.swift
+        run: |
+          git config user.name "spikard-bot"
+          git config user.email "bot@spikard.dev"
+          git add Package.swift
+          git commit -m "chore(swift): update Package.swift with checksum for v${{ needs.prepare.outputs.version }}"
+          git tag -f "${{ needs.prepare.outputs.tag }}"
+          git push origin -f "refs/tags/${{ needs.prepare.outputs.tag }}"
+          # Also publish the checksummed commit to a release/swift/<version> branch. The
+          # alef-generated Swift e2e/test-app pins `branch: "release/swift/<version>"`, so this
+          # ref must exist for SwiftPM to resolve the package with the substituted checksum.
+          git push origin -f "HEAD:refs/heads/release/swift/${{ needs.prepare.outputs.version }}"
+
+  upload-swift-bundle:
+    name: Upload Swift artifact bundle to GitHub Release
+    needs: [prepare, swift-artifactbundle]
+    if: ${{ needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && needs.swift-artifactbundle.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: swift-artifactbundle
+          path: dist/swift-bundle
+      - uses: kreuzberg-dev/actions/upload-release-assets@v1
+        with:
+          tag: ${{ needs.prepare.outputs.tag }}
+          working-directory: dist/swift-bundle
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          assets: "*.zip"
+          clobber: ${{ needs.prepare.outputs.force_republish }}
+
+  upload-php-pie-release:
+    name: Upload PHP PIE archives to GitHub Release
+    needs: [prepare, build-php]
+    if: ${{ needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && needs.build-php.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: php-package-*
+          path: dist/php-package
+          merge-multiple: true
+      - uses: kreuzberg-dev/actions/upload-release-assets@v1
+        with:
+          tag: ${{ needs.prepare.outputs.tag }}
+          working-directory: dist/php-package
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
+          clobber: ${{ needs.prepare.outputs.force_republish }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          assets: |
+            php_*.tgz
+            php_*.tgz.sha256
+            php_*.zip
+            php_*.zip.sha256
+
+  build-go-ffi:
+    name: Build Go FFI library (${{ matrix.platform }})
+    needs: prepare
+    if: ${{ needs.prepare.outputs.release_go == 'true' }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, platform: linux-x86_64, target: x86_64-unknown-linux-gnu }
+          - { os: ubuntu-24.04-arm, platform: linux-aarch64, target: aarch64-unknown-linux-gnu }
+          - { os: macos-latest, platform: macos-arm64, target: aarch64-apple-darwin }
+          - { os: windows-latest, platform: windows-x86_64, target: x86_64-pc-windows-msvc }
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
+          target: ${{ matrix.target }}
+      - name: Setup Zig for glibc 2.28 floor
+        if: contains(matrix.target, '-linux-gnu')
+        uses: kreuzberg-dev/actions/setup-zig@v1
+      - name: Install cargo-zigbuild for glibc 2.28 floor
+        if: contains(matrix.target, '-linux-gnu')
+        shell: bash
+        run: command -v cargo-zigbuild || cargo install --locked cargo-zigbuild
+      - uses: kreuzberg-dev/actions/build-go-ffi@v1
+        with:
+          target: ${{ matrix.target }}
+          crate-name: spikard-ffi
+          lib-name: spikard_ffi
+          header-path: crates/spikard-ffi/include/spikard.h
+          archive-name: spikard-go-ffi-${{ needs.prepare.outputs.version }}-${{ matrix.platform }}.tar.gz
+          output-dir: dist/go
+          glibc-version: ${{ contains(matrix.target, '-linux-gnu') && '2.28' || '' }}
+      - uses: actions/upload-artifact@v7
+        with:
+          name: go-ffi-${{ matrix.platform }}
+          path: dist/go/*.tar.gz
+          if-no-files-found: error
+          retention-days: 14
+
+  build-c-ffi:
+    name: Build C FFI distribution (${{ matrix.platform }})
+    needs: prepare
+    if: ${{ needs.prepare.outputs.release_c_ffi == 'true' || needs.prepare.outputs.release_zig == 'true' }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, platform: linux-x86_64, target: x86_64-unknown-linux-gnu }
+          - { os: ubuntu-24.04-arm, platform: linux-aarch64, target: aarch64-unknown-linux-gnu }
+          - { os: macos-latest, platform: macos-arm64, target: aarch64-apple-darwin }
+          - { os: windows-latest, platform: windows-x86_64, target: x86_64-pc-windows-msvc }
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
+          target: ${{ matrix.target }}
+      - name: Setup Zig for glibc 2.28 floor
+        if: contains(matrix.target, '-linux-gnu')
+        uses: kreuzberg-dev/actions/setup-zig@v1
+      - name: Install cargo-zigbuild for glibc 2.28 floor
+        if: contains(matrix.target, '-linux-gnu')
+        shell: bash
+        run: command -v cargo-zigbuild || cargo install --locked cargo-zigbuild
+      - uses: kreuzberg-dev/actions/build-rust-ffi@v1
+        with:
+          crate-name: spikard-ffi
+          target: ${{ matrix.target }}
+          glibc-version: ${{ contains(matrix.target, '-linux-gnu') && '2.28' || '' }}
+      - name: Stage C FFI distribution
+        env:
+          TARGET: ${{ matrix.target }}
+          PLATFORM: ${{ matrix.platform }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          STAGE="spikard-ffi-${PLATFORM}"
+          mkdir -p "$STAGE/lib" "$STAGE/include"
+          find "target/${TARGET}/release" -maxdepth 1 -type f \
+            \( -name 'libspikard_ffi.*' -o -name 'spikard_ffi.dll' \) \
+            -exec cp {} "$STAGE/lib/" \;
+          cp crates/spikard-ffi/include/spikard.h "$STAGE/include/"
+          cp LICENSE "$STAGE/" 2>/dev/null || true
+          mkdir -p dist/c-ffi
+          tar -czf "dist/c-ffi/spikard-c-ffi-${{ needs.prepare.outputs.version }}-${PLATFORM}.tar.gz" "$STAGE"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: c-ffi-${{ matrix.platform }}
+          path: dist/c-ffi/*.tar.gz
+          if-no-files-found: error
+          retention-days: 14
+
+  build-java-natives:
+    name: Build Java natives (${{ matrix.classifier }})
+    needs: prepare
+    if: ${{ needs.prepare.outputs.release_java == 'true' }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, classifier: linux-x86_64, target: x86_64-unknown-linux-gnu }
+          - { os: ubuntu-24.04-arm, classifier: linux-aarch64, target: aarch64-unknown-linux-gnu }
+          - { os: macos-latest, classifier: macos-arm64, target: aarch64-apple-darwin }
+          - { os: windows-latest, classifier: windows-x86_64, target: x86_64-pc-windows-msvc }
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
+          target: ${{ matrix.target }}
+      - name: Setup Zig for glibc 2.28 floor
+        if: contains(matrix.target, '-linux-gnu')
+        uses: kreuzberg-dev/actions/setup-zig@v1
+      - name: Install cargo-zigbuild for glibc 2.28 floor
+        if: contains(matrix.target, '-linux-gnu')
+        shell: bash
+        run: command -v cargo-zigbuild || cargo install --locked cargo-zigbuild
+      - uses: kreuzberg-dev/actions/build-java-natives@v1
+        with:
+          target: ${{ matrix.target }}
+          crate-name: spikard-ffi
+          lib-name: spikard_ffi
+          classifier: ${{ matrix.classifier }}
+          glibc-version: ${{ contains(matrix.target, '-linux-gnu') && '2.28' || '' }}
+      - uses: actions/upload-artifact@v7
+        with:
+          name: java-natives-${{ matrix.classifier }}
+          path: dist/java-natives
+          if-no-files-found: error
+          retention-days: 14
+
+  build-csharp-natives:
+    name: Build C# natives (${{ matrix.rid }})
+    needs: prepare
+    if: ${{ needs.prepare.outputs.release_csharp == 'true' }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, rid: linux-x64, target: x86_64-unknown-linux-gnu }
+          - { os: ubuntu-24.04-arm, rid: linux-arm64, target: aarch64-unknown-linux-gnu }
+          - { os: macos-latest, rid: osx-arm64, target: aarch64-apple-darwin }
+          - { os: windows-latest, rid: win-x64, target: x86_64-pc-windows-msvc }
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
+          target: ${{ matrix.target }}
+      - name: Setup Zig for glibc 2.28 floor
+        if: contains(matrix.target, '-linux-gnu')
+        uses: kreuzberg-dev/actions/setup-zig@v1
+      - name: Install cargo-zigbuild for glibc 2.28 floor
+        if: contains(matrix.target, '-linux-gnu')
+        shell: bash
+        run: command -v cargo-zigbuild || cargo install --locked cargo-zigbuild
+      - uses: kreuzberg-dev/actions/build-csharp-natives@v1
+        with:
+          target: ${{ matrix.target }}
+          crate-name: spikard-ffi
+          lib-name: spikard_ffi
+          rid: ${{ matrix.rid }}
+          glibc-version: ${{ contains(matrix.target, '-linux-gnu') && '2.28' || '' }}
+      - uses: actions/upload-artifact@v7
+        with:
+          name: csharp-natives-${{ matrix.rid }}
+          path: dist/csharp-natives
+          if-no-files-found: error
+          retention-days: 14
+
+  dart-server-natives:
+    name: Build Dart server native (${{ matrix.rid }})
+    needs: [prepare, check-registries]
+    if: ${{ needs.prepare.outputs.release_dart == 'true' && (needs.check-registries.outputs.pub_exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, target: x86_64-unknown-linux-gnu, rid: linux-x64, lib: libspikard_dart.so }
+          - { os: ubuntu-24.04-arm, target: aarch64-unknown-linux-gnu, rid: linux-arm64, lib: libspikard_dart.so }
+          - { os: macos-latest, target: aarch64-apple-darwin, rid: macos-arm64, lib: libspikard_dart.dylib }
+          - { os: windows-latest, target: x86_64-pc-windows-msvc, rid: windows-x64, lib: spikard_dart.dll }
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+          fetch-depth: 0
+      - uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
+          target: ${{ matrix.target }}
+      - name: Build Dart server native
+        shell: bash
+        run: cargo build --locked -p spikard-dart --release --target "${{ matrix.target }}"
+      - name: Stage native library
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+          LIB: ${{ matrix.lib }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist/server-natives
+          cp "target/${TARGET}/release/${LIB}" "dist/server-natives/${LIB}"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dart-server-${{ matrix.rid }}
+          path: dist/server-natives
+          if-no-files-found: error
+          retention-days: 14
+
+  dart-package:
+    name: Build Dart package
+    needs: [prepare, check-registries]
+    if: ${{ needs.prepare.outputs.release_dart == 'true' && (needs.check-registries.outputs.pub_exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+          fetch-depth: 0
+      - uses: kreuzberg-dev/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
+      - uses: dart-lang/setup-dart@v1
+      - uses: kreuzberg-dev/actions/build-dart-package@v1
+        with:
+          package-dir: packages/dart/rust
+          crate-name: spikard-dart
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dart-package
+          path: packages/dart
+          retention-days: 14
+
+  assemble-dart-bundle:
+    name: Assemble Dart package with native artifacts
+    needs: [prepare, dart-package, dart-server-natives, check-registries]
+    if: ${{ needs.prepare.outputs.release_dart == 'true' && needs.prepare.outputs.is_tag == 'true' && (needs.check-registries.outputs.pub_exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dart-package
+          path: packages/dart
+      - uses: actions/download-artifact@v8
+        with:
+          name: dart-server-linux-x64
+          path: dart-server-artifacts/linux-x64
+      - uses: actions/download-artifact@v8
+        with:
+          name: dart-server-linux-arm64
+          path: dart-server-artifacts/linux-arm64
+      - uses: actions/download-artifact@v8
+        with:
+          name: dart-server-macos-arm64
+          path: dart-server-artifacts/macos-arm64
+      - uses: actions/download-artifact@v8
+        with:
+          name: dart-server-windows-x64
+          path: dart-server-artifacts/windows-x64
+      - name: Stage native libraries into Dart package
+        shell: bash
+        run: |
+          set -euo pipefail
+          # spikard's FRB loader (frb_generated.dart::_alefResolveExternalLibrary)
+          # resolves natives from lib/src/native/<rid>/ with Dart x64/arm64 naming.
+          for entry in \
+            "linux-x64:libspikard_dart.so" \
+            "linux-arm64:libspikard_dart.so" \
+            "macos-arm64:libspikard_dart.dylib" \
+            "windows-x64:spikard_dart.dll"; do
+            rid="${entry%%:*}"
+            lib="${entry##*:}"
+            dest="packages/dart/lib/src/native/${rid}"
+            mkdir -p "$dest"
+            src="dart-server-artifacts/${rid}/${lib}"
+            if [ -f "$src" ]; then
+              cp -v "$src" "$dest/"
+            else
+              echo "::error::missing native $src" && exit 1
+            fi
+          done
+          echo "Staged natives:"
+          find packages/dart/lib/src/native -type f
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dart-package-assembled
+          path: packages/dart
+          retention-days: 7
+
+  trigger-pubdev:
+    name: Trigger pub.dev publish workflow
+    needs: [prepare, check-registries, assemble-dart-bundle]
+    if: ${{ needs.prepare.outputs.release_dart == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && (needs.check-registries.outputs.pub_exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Dispatch publish-pubdev workflow
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh workflow run publish-pubdev.yaml \
+            --ref ${{ github.ref_name }} \
+            -f run_id=${{ github.run_id }}
+
   finalize:
     name: Finalize release
     needs:
@@ -1253,7 +1869,10 @@ jobs:
       - publish-nuget
       - publish-zig
       - publish-homebrew-bottles
-    if: ${{ always() && needs.prepare.outputs.is_tag == 'true' }}
+      - update-swift-package-manifest
+      - upload-swift-bundle
+      - upload-php-pie-release
+    if: ${{ always() && needs.prepare.outputs.is_tag == 'true' && !contains(needs.*.result, 'failure') }}
     runs-on: ubuntu-latest
     steps:
       - uses: kreuzberg-dev/actions/finalize-release@v1

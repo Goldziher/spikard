@@ -37,6 +37,7 @@ repos:
             "warnings",
           ]
       - id: cargo-sort
+        args: ["-w"]
         exclude: ^(crates/spikard-(wasm|node|py|php|ffi)|packages/(dart|swift)/rust|packages/ruby/ext/spikard_rb/native)/Cargo\.toml$
       - id: cargo-machete
         args:
@@ -64,10 +65,11 @@ repos:
 
       # Linters and checks
       - id: ai-rulez-generate
+      - id: ai-rulez-validate
 
       - id: check-merge-conflict
       - id: check-added-large-files
-        exclude: uv.lock
+        exclude: (Cargo\.lock|uv\.lock)
       - id: detect-private-key
       - id: check-case-conflict
       - id: check-executables-have-shebangs
@@ -100,23 +102,22 @@ repos:
       - id: pydocstyle
         files: ^packages/python/spikard/.*\.py$
 
-      # JS/TS — preserve any commented-out exclusions verbatim (e.g. tsdoc-lint)
+      # JS/TS
       - id: oxlint
       - id: tsc-typecheck
-      # tsdoc-lint disabled: the generated TypeScript/WASM wrappers use oxlint
-      # and oxfmt, and the shared hook expects an eslint toolchain that this
-      # package intentionally does not carry.
-      # - id: tsdoc-lint
-      #   files: ^packages/(typescript|wasm)/src/.*\.ts$
-      #   exclude: \.d\.ts$
+      - id: tsdoc-lint
+        files: ^packages/(typescript|wasm)/src/.*\.ts$
+        exclude: \.d\.ts$
 
-      # Go — preserve any commented-out exclusions verbatim (e.g. godoc-lint)
+      # Go — packages/go is excluded from golangci-lint/godoc-lint because alef's
+      # HTTP-service go generator emits non-idiomatic, lint-failing code in
+      # packages/go/service.go (revive var-naming `c_config`/`new_owner`,
+      # errcheck, goconst). Re-enable with KREUZBERG_GO_MOD_DIRS once alef emits
+      # golangci-clean go (alef batch).
       - id: golangci-lint
         exclude: ^(e2e/|test_apps/|tools/|packages/go/)
       - id: govulncheck
         exclude: ^(e2e/|test_apps/|tools/|packages/go/)
-      # godoc-lint disabled: shared hook v1.1.2 invokes the removed
-      # golangci-lint v1 --disable-all flag against golangci-lint v2.
       # - id: godoc-lint
       #   files: ^packages/go/.*\.go$
       #   exclude: ^(e2e/|test_apps/)
@@ -135,11 +136,10 @@ repos:
       - id: javadoc-lint
         files: ^packages/java/src/main/java/dev/spikard/.*\.java$
 
-      # ktfmt disabled: ktfmt 0.62 formats Gradle Kotlin scripts with
-      # indentation that ktlint 1.8 rejects. Use ktlint as the single Kotlin
-      # formatter/linter for this package.
-      # - id: ktfmt
-      #   files: ^packages/kotlin/.*\.kts?$
+      # NOTE: spikard uses ktlint (not the canonical ktfmt) as its single Kotlin
+      # formatter/linter, because `task alef:format` formats kotlin via the
+      # gradle ktlintFormat task. ktfmt 0.62 formats Gradle Kotlin scripts with
+      # indentation that ktlint 1.8 rejects, so mixing them fights alef:format.
       - id: detekt
         args: ["--build-upon-default-config"]
         files: ^packages/kotlin/.*\.kts?$
@@ -147,13 +147,16 @@ repos:
         files: ^packages/kotlin/.*\.kts?$
       - id: kotlin-dokka
 
-      # Ruby — preserve any commented-out exclusions verbatim (e.g. yard-coverage)
+      # Ruby
       - id: rubocop-lint
         files: ^packages/ruby/.*\.(rb|rbs)$
+        exclude: ^packages/ruby/ext/
       - id: steep
         files: ^packages/ruby/.*\.(rb|rbs)$
-      # yard-coverage disabled: the root Ruby test path does not provide a
-      # YARD toolchain for the generated native wrapper.
+      # yard-coverage disabled: alef's HTTP-service ruby generator emits
+      # packages/ruby/lib/spikard/service.rb (Spikard::App#get/post/route/...)
+      # without YARD doc comments, so the coverage gate fails on generated
+      # public methods. Re-enable once alef emits ruby doc comments (alef batch).
       # - id: yard-coverage
       #   files: ^packages/ruby/lib/.*\.rb$
       #   exclude: ^packages/ruby/lib/spikard/native\.rb$
@@ -171,12 +174,18 @@ repos:
 
       - id: mix-credo
         files: ^packages/elixir/
-      - id: ex-doc-coverage
-        files: ^(packages/elixir/.*\.exs?|crates/spikard-elixir/src/.*\.ex)$
-        args: ["packages/elixir/mix.exs"]
-        env:
-          MIX_ENV: "dev"
-          SPIKARD_BUILD: "1"
+      # ex-doc-coverage disabled: ExDoc 0.40.3 crashes (FunctionClauseError in
+      # ExDoc.Formatter.HTML.Assets.extract_filename!/1 on an empty asset list)
+      # because packages/elixir/mix.exs carries no `docs:`/assets config, so the
+      # hook can never run to completion. Not a CI gate (ci-validate runs only
+      # actionlint/check-yaml/check-toml/check-json). Re-enable once mix.exs gains
+      # a docs config and/or ExDoc is pinned to a working version.
+      # - id: ex-doc-coverage
+      #   files: ^(packages/elixir/.*\.exs?|crates/spikard-elixir/src/.*\.ex)$
+      #   args: ["packages/elixir/mix.exs"]
+      #   env:
+      #     MIX_ENV: "dev"
+      #     SPIKARD_BUILD: "1"
 
       - id: swiftlint
         files: ^packages/swift/.*\.swift$
@@ -192,6 +201,8 @@ repos:
         files: ^packages/zig/.*\.zig$
       - id: zig-doc-lint
         files: ^packages/zig/src/.*\.zig$
+
+      - id: hadolint
 
       - id: alef-docs-fresh
         # spikard verifies with spikard-alef (registers the HTTP-domain IR
@@ -211,13 +222,28 @@ repos:
       - id: cargo-fmt
         args: ["--all"]
       - id: pyproject-fmt
+        # alef emits packages/python/pyproject.toml with a specific classifier
+        # list, per-file-ignores ordering, and tool.mypy overrides block;
+        # pyproject-fmt re-orders/collapses these, breaking the CI
+        # `git diff --exit-code` freshness check after alef re-emits.
+        exclude: ^packages/python/pyproject\.toml$
       - id: ruff-format
       - id: oxfmt
+        # The napi-rs bootstrap shim (index.js) is re-emitted by napi build in a
+        # form oxfmt would reformat, and the ai-rulez manifest is owned by the
+        # ai-rulez-generate hook; oxfmt would fight both generators and break the
+        # CI `git diff --exit-code` check.
+        exclude: |
+          (?x)^(
+            crates/spikard-node/index\.js$|
+            \.ai-rulez/\.generated-manifest\.json$
+          )
       - id: go-fmt
         exclude: ^(e2e/|test_apps/|tools/|packages/go/)
       - id: palantir-java-format
       - id: rubocop
         files: ^packages/ruby/.*\.rb$
+        exclude: ^packages/ruby/ext/
       - id: dotnet-format
         files: ^packages/csharp/.*\.cs$
       - id: php-cs-fixer
@@ -226,8 +252,15 @@ repos:
       - id: mix-format
         files: ^packages/elixir/
       - id: swift-format
+        # alef emits Package.swift with a single-line URL; swift-format wraps it
+        # to the next line, breaking the CI `git diff --exit-code` check.
         files: ^packages/swift/.*\.swift$
+        exclude: (^|/)Package\.swift$
       - id: dart-format
         files: ^packages/dart/.*\.dart$
       - id: zig-fmt
+        # alef emits build.zig `b.option(...)` args multi-line for column
+        # alignment; zig-fmt collapses them, breaking the CI
+        # `git diff --exit-code` check after alef re-runs sync-versions.
         files: ^packages/zig/.*\.zig$
+        exclude: ^packages/zig/build\.zig$

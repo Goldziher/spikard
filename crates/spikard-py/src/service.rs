@@ -168,8 +168,8 @@ pub fn app_into_router(_py: Python<'_>, registrations: &Bound<'_, PyList>) -> Py
         }
     }
 
-    let _ = owner
-        .into_router()
+    let _ = _py
+        .detach(|| owner.into_router())
         .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e.to_string()))?;
     Ok(())
 }

@@ -9,11 +9,11 @@ package dev.spikard;
  */
 @FunctionalInterface
 public interface Callable {
-    /**
-     * Handle a request.
-     *
-     * @param request JSON request string
-     * @return JSON response string
-     */
-    String handle(String request);
+  /**
+   * Handle a request.
+   *
+   * @param request JSON request string
+   * @return JSON response string
+   */
+  String handle(String request);
 }

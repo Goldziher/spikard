@@ -29,7 +29,7 @@ final class App
     public function route(RouteBuilder $builder, ?callable $handler = null): mixed
     {
         if ($handler !== null) {
-        $this->registrations[] = ['route', [$builder], $handler];
+            $this->registrations[] = ['route', [$builder], $handler];
             return $this;
         }
 
