@@ -62,12 +62,21 @@ for (const [fixtureId, fixture] of Object.entries(_FIXTURES)) {
     continue;
   }
 
-  // Build handler function that returns the expected response
+  // Build handler function that returns the expected response.
+  // Transport/middleware-managed headers (content-encoding, content-length,
+  // transfer-encoding, vary) are stripped from the handler response: the server
+  // middleware produces them, and emitting e.g. content-encoding on an
+  // uncompressed handler body makes the compression layer skip compression,
+  // leaving a declared-but-not-applied encoding the client cannot decode.
+  const _middlewareManagedHeaders = new Set(['content-encoding', 'content-length', 'transfer-encoding', 'vary']);
+  const handlerHeaders = Object.fromEntries(
+    Object.entries(expectedHeaders).filter(([name]) => !_middlewareManagedHeaders.has(name.toLowerCase()))
+  );
   const handlerFn = (request) => {
     return {
       status_code: expectedStatus,
       {{ response_body_field }}: expectedBody,
-      headers: { ...expectedHeaders }
+      headers: { ...handlerHeaders }
     };
   };
 

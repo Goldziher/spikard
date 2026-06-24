@@ -48,7 +48,26 @@ fn make_env() -> Environment<'static> {
         include_str!("../../templates/typescript/http_test_skip_101.jinja").to_owned(),
     )
     .expect("built-in template parse failed");
+    env.add_template_owned(
+        "typescript/globalSetup_server.ts.jinja".to_owned(),
+        include_str!("../../templates/typescript/globalSetup_server.ts.jinja").to_owned(),
+    )
+    .expect("built-in template parse failed");
     env
+}
+
+/// Render the server-pattern `globalSetup.ts` that spawns the `app_harness.mjs`
+/// subprocess and exposes it to the vitest suite. Ported verbatim from alef's
+/// `typescript/config.rs::render_global_setup(true)`.
+#[must_use]
+pub fn render_global_setup_server() -> String {
+    let header = hash::header(CommentStyle::DoubleSlash);
+    let env = make_env();
+    render(
+        &env,
+        "typescript/globalSetup_server.ts.jinja",
+        context! { header => header },
+    )
 }
 
 /// Render a named template from the local environment.

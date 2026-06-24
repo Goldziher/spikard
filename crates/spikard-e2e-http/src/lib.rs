@@ -37,16 +37,48 @@ impl Extension for E2eHttpExtension {
 
     fn emit_e2e(
         &self,
-        _groups: &[FixtureGroup],
-        _e2e_config: &E2eConfig,
+        groups: &[FixtureGroup],
+        e2e_config: &E2eConfig,
         _config: &ResolvedCrateConfig,
-        _language: &str,
+        language: &str,
         _type_defs: &[TypeDef],
         _enums: &[EnumDef],
     ) -> Result<Vec<GeneratedFile>> {
-        // Skeleton: the per-language HTTP e2e generation is migrated here from
-        // alef core in subsequent steps. Until then this returns empty, so the
-        // built-in alef e2e generators still produce the HTTP suites unchanged.
-        Ok(vec![])
+        // The extension owns spikard's *server-pattern* e2e generation (the
+        // `app_harness` that spins up the SUT as an HTTP server, plus the
+        // harness-spawn test setup). The shared client-pattern driver, per-test
+        // bodies, mock-server, and project scaffolding stay generic in alef.
+        match language {
+            "node" => emit_node(groups, e2e_config),
+            // Remaining languages are migrated incrementally; until then alef's
+            // built-in server-pattern emission still produces them.
+            _ => Ok(vec![]),
+        }
     }
+}
+
+/// Emit node's server-pattern files: the `app_harness.mjs` (SUT-as-server) and
+/// the server-pattern `globalSetup.ts` that spawns it. Gated identically to
+/// alef's prior emission: HTTP fixtures present and a harness import configured.
+fn emit_node(groups: &[FixtureGroup], e2e_config: &E2eConfig) -> Result<Vec<GeneratedFile>> {
+    use std::path::PathBuf;
+
+    let has_http = groups.iter().flat_map(|g| g.fixtures.iter()).any(|f| f.http.is_some());
+    if !has_http || e2e_config.harness.imports.is_empty() {
+        return Ok(vec![]);
+    }
+
+    let base = PathBuf::from(e2e_config.effective_output()).join("node");
+    Ok(vec![
+        GeneratedFile {
+            path: base.join("app_harness.mjs"),
+            content: lang::node::render_app_harness(e2e_config, groups),
+            generated_header: true,
+        },
+        GeneratedFile {
+            path: base.join("globalSetup.ts"),
+            content: lang::node::render_global_setup_server(),
+            generated_header: true,
+        },
+    ])
 }
