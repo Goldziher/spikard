@@ -5,5 +5,8 @@
 //! in every generation run without requiring any changes to alef core.
 
 fn main() -> std::process::ExitCode {
-    alef::run_with_extensions(vec![Box::new(spikard_alef_ext::HttpExtension::new())])
+    alef::run_with_extensions(vec![
+        Box::new(spikard_alef_ext::HttpExtension::new()),
+        Box::new(spikard_e2e_http::E2eHttpExtension::new()),
+    ])
 }

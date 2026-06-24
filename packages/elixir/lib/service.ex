@@ -33,15 +33,15 @@ defmodule Spikard.Conn do
   - path: Request path
   """
   @type t :: %__MODULE__{
-    path_params: map(),
-    query_params: map(),
-    headers: map(),
-    cookies: map(),
-    body: any(),
-    raw_body: binary() | nil,
-    method: String.t(),
-    path: String.t()
-  }
+          path_params: map(),
+          query_params: map(),
+          headers: map(),
+          cookies: map(),
+          body: any(),
+          raw_body: binary() | nil,
+          method: String.t(),
+          path: String.t()
+        }
 
   @doc """
   Get a path parameter value.
@@ -71,6 +71,7 @@ defmodule Spikard.Conn do
     Map.get(cookies, name)
   end
 end
+
 defmodule Spikard.App do
   @moduledoc """
   Spikard application builder.
@@ -122,6 +123,7 @@ defmodule Spikard.App do
     entry = {"route", {builder}, handler_pid}
     %__MODULE__{self | registrations: [entry | self.registrations]}
   end
+
   # HandlerWrapper GenServer: wraps a closure for use as a handler
   defmodule HandlerWrapper do
     use GenServer
@@ -321,6 +323,7 @@ defmodule Spikard.App do
       trace(app, path, handler)
     end
   end
+
   # GenServer for dispatching trait_call messages from Rust.
   defmodule App.Handler do
     use GenServer
@@ -333,9 +336,9 @@ defmodule Spikard.App do
       {:ok, state}
     end
 
-    def handle_cast({:trait_call, method, args_json, reply_id}, registrations) do
-      # Decode JSON args and dispatch to registered handler
-      case decode_args_and_dispatch(method, args_json, registrations) do
+    def handle_cast({:trait_call, method, args, reply_id}, registrations) do
+      # args arrives as a native Erlang map (no JSON decode); dispatch to the registered handler.
+      case decode_args_and_dispatch(method, args, registrations) do
         {:ok, response} ->
           Native.complete_trait_call(reply_id, response)
 
@@ -347,35 +350,27 @@ defmodule Spikard.App do
       {:noreply, registrations}
     end
 
-
-    defp decode_args_and_dispatch(method, args_json, registrations) do
+    defp decode_args_and_dispatch(method, args, registrations) do
       # Find handler entry for the method
       case find_handler(method, registrations) do
         nil ->
           {:error, "Handler not registered for method: #{method}"}
 
         {^method, _metadata, handler} ->
-          # Decode JSON args (assumes handler accepts a single arg)
-          case Jason.decode(args_json) do
-            {:ok, args} ->
-              # Call the registered handler with decoded args
-              try do
-                response = handler.(args)
-                # Encode response to JSON
-                case Jason.encode(response) do
-                  {:ok, response_json} ->
-                    {:ok, response_json}
+          # Call the registered handler with the native args map (assumes handler accepts a single arg)
+          try do
+            response = handler.(args)
+            # Encode response to JSON (the reply path stays JSON)
+            case Jason.encode(response) do
+              {:ok, response_json} ->
+                {:ok, response_json}
 
-                  {:error, reason} ->
-                    {:error, "Failed to encode response: #{reason}"}
-                end
-              rescue
-                e ->
-                  {:error, "Handler raised exception: #{inspect(e)}"}
-              end
-
-            {:error, reason} ->
-              {:error, "Failed to decode args: #{reason}"}
+              {:error, reason} ->
+                {:error, "Failed to encode response: #{reason}"}
+            end
+          rescue
+            e ->
+              {:error, "Handler raised exception: #{inspect(e)}"}
           end
       end
     end

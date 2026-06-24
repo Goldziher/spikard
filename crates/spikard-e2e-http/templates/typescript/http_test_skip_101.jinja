@@ -1,0 +1,9 @@
+{#- TypeScript HTTP 101 skip test template
+
+   Context variables:
+   - test_name: sanitized fixture id
+   - description: fixture description
+#}
+  it.skip('{{ test_name }}: {{ description }}', async () => {
+    // HTTP 101 WebSocket upgrade cannot be tested via fetch
+  });

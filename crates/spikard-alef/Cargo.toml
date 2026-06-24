@@ -15,6 +15,7 @@ path = "src/main.rs"
 [dependencies]
 alef = { git = "https://github.com/kreuzberg-dev/alef", tag = "v0.26.8" }
 spikard-alef-ext = { path = "../spikard-alef-ext" }
+spikard-e2e-http = { path = "../spikard-e2e-http" }
 
 [lints]
 workspace = true

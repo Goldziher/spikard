@@ -275,27 +275,6 @@ impl JsApp {
             .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
         Ok(())
     }
-    /// Apply a server configuration to the application.
-    ///
-    /// The generated TypeScript wrapper serialises the `ServerConfig` object to a
-    /// JSON string before crossing the FFI boundary; this method deserialises it
-    /// into the napi `JsServerConfig`, converts it to the core `ServerConfig`, and
-    /// applies it to the inner app.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the JSON payload cannot be deserialised into a
-    /// `ServerConfig`.
-    #[napi]
-    pub fn config(&self, config: String) -> napi::Result<()> {
-        let js_config: crate::JsServerConfig =
-            serde_json::from_str(&config).map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
-        let core_config: spikard::ServerConfig = js_config.into();
-        let mut inner = self.inner.lock().expect("app mutex poisoned");
-        let owner = std::mem::take(&mut *inner);
-        *inner = owner.config(core_config);
-        Ok(())
-    }
     /// Call the `run` entrypoint on the inner service.
     ///
     /// Run the HTTP server using the configured routes.
@@ -303,7 +282,7 @@ impl JsApp {
     /// # Errors
     ///
     /// Returns an error if server construction or execution fails.
-    #[napi]
+    #[napi(js_name = "nativeRun")]
     pub async fn run(&self) -> napi::Result<()> {
         let owner = {
             let mut guard = self.inner.lock().expect("app mutex poisoned");
@@ -322,7 +301,7 @@ impl JsApp {
     /// # Errors
     ///
     /// Returns an error if server or router construction fails.
-    #[napi]
+    #[napi(js_name = "nativeIntoRouter")]
     pub fn into_router(&self) -> napi::Result<()> {
         let owner = {
             let mut guard = self.inner.lock().expect("app mutex poisoned");

@@ -4,6 +4,7 @@ members = [
   "crates/spikard",
   "crates/spikard-alef",
   "crates/spikard-alef-ext",
+  "crates/spikard-e2e-http",
   "crates/spikard-cli",
   "crates/spikard-codegen",
   "crates/spikard-core",

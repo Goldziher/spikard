@@ -39,7 +39,7 @@ dependencies = [
 
 [[package]]
 name = "alef"
-version = "0.26.8"
+version = "0.28.0"
 dependencies = [
  "ahash",
  "anyhow",
@@ -3973,6 +3973,7 @@ version = "0.16.0-rc.3"
 dependencies = [
  "alef",
  "spikard-alef-ext",
+ "spikard-e2e-http",
 ]
 
 [[package]]
@@ -4055,6 +4056,21 @@ dependencies = [
  "tracing",
  "url",
  "uuid",
+]
+
+[[package]]
+name = "spikard-e2e-http"
+version = "0.16.0-rc.3"
+dependencies = [
+ "alef",
+ "anyhow",
+ "heck",
+ "minijinja",
+ "percent-encoding",
+ "serde",
+ "serde_json",
+ "toml 1.1.2+spec-1.1.0",
+ "tracing",
 ]
 
 [[package]]

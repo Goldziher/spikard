@@ -1,0 +1,23 @@
+[package]
+name = "spikard-e2e-http"
+version = "0.16.0-rc.3"
+edition = "2024"
+authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
+license = "MIT"
+repository = "https://github.com/Goldziher/spikard"
+description = "Alef e2e HTTP test-generation extension for the spikard polyglot framework"
+publish = false
+
+[dependencies]
+alef = { git = "https://github.com/kreuzberg-dev/alef", tag = "v0.26.8" }
+anyhow = "1"
+heck = "0.5"
+minijinja = "2"
+percent-encoding = "2"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1"
+toml = "1.1"
+tracing = "0.1"
+
+[lints]
+workspace = true

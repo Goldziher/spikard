@@ -1,0 +1,191 @@
+{{ header }}
+/**
+ * App harness for server-pattern e2e tests
+ *
+ * This harness is spawned as a subprocess and runs the SUT app,
+ * registering handlers per fixture. It loads all fixtures, creates
+ * handlers that return expected responses, and serves on a configured port.
+ */
+
+{% if import_style == "named" %}
+{% for import_name in imports -%}
+import { {{ app_class }}, {{ server_config_factory_import }}, {{ method_enum }}, {{ route_builder_class }}, CorsConfig, CompressionConfig, ApiKeyAuthConfig, JwtAuthConfig, BearerAuthConfig } from '{{ import_name }}';
+{% endfor -%}
+{% else %}
+{% for import_name in imports -%}
+import _pkg from '{{ import_name }}';
+{% endfor -%}
+const { {{ app_class }}, {{ server_config_factory_import }}, {{ method_enum }}, {{ route_builder_class }}, CorsConfig, CompressionConfig, ApiKeyAuthConfig, JwtAuthConfig, BearerAuthConfig } = _pkg;
+{% endif %}
+
+// Load fixtures from the inline JSON payload.
+const _FIXTURES = {{fixtures_json}};
+
+// Create and configure the app
+{% if constructor_method == ".new()" -%}
+const app = {{ app_class }}.new();
+{% else -%}
+const app = new {{ app_class }}();
+{% endif -%}
+
+// Map HTTP method name to the corresponding Method enum value
+const methodMap = {
+  'GET': {{ method_enum }}.Get,
+  'POST': {{ method_enum }}.Post,
+  'PUT': {{ method_enum }}.Put,
+  'PATCH': {{ method_enum }}.Patch,
+  'DELETE': {{ method_enum }}.Delete,
+  'HEAD': {{ method_enum }}.Head,
+  'OPTIONS': {{ method_enum }}.Options,
+  'CONNECT': {{ method_enum }}.Connect,
+  'TRACE': {{ method_enum }}.Trace,
+};
+
+// Register a handler for each fixture
+for (const [fixtureId, fixture] of Object.entries(_FIXTURES)) {
+  const http = fixture.http;
+  if (!http) continue;
+
+  const handler = http.handler || {};
+  const route = handler.route || '/';
+  const methodStr = (handler.method || 'GET').toUpperCase();
+  const expected = http.expected_response || {};
+
+  const expectedStatus = expected.status_code || 200;
+  const expectedBody = expected.body;
+  const expectedHeaders = expected.headers || {};
+
+  // Map method string to the Method enum value
+  const methodEnum = methodMap[methodStr];
+  if (!methodEnum) {
+    console.warn(`Skipping fixture ${fixtureId}: unknown HTTP method ${methodStr}`);
+    continue;
+  }
+
+  // Build handler function that returns the expected response
+  const handlerFn = (request) => {
+    return {
+      status_code: expectedStatus,
+      {{ response_body_field }}: expectedBody,
+      headers: { ...expectedHeaders }
+    };
+  };
+
+  // Register the handler at /fixtures/<fixture_id>{route}
+  const fullRoute = `/fixtures/${fixtureId}${route}`;
+
+  // Build RouteBuilder and register the route
+  {% if route_builder_constructor_method == ".new" -%}
+  let builder = {{ route_builder_class }}.new(methodEnum, fullRoute);
+  {%- else -%}
+  let builder = new {{ route_builder_class }}(methodEnum, fullRoute);
+  {%- endif %}
+
+  // Wire handler middleware through to the RouteBuilder.
+  // Each entry in `middleware` is a {name: config} pair. The dispatch table
+  // maps middleware names to their builder methods so new middlewares can be
+  // added without changing this loop.
+  if (handler.middleware) {
+    const middlewareDispatch = {
+      'cors': 'cors',
+      'compression': 'compression',
+      'api_key_auth': 'api_key_auth',
+      'jwt_auth': 'jwt_auth',
+      'bearer_auth': 'bearer_auth',
+    };
+    for (const [mwName, mwConfig] of Object.entries(handler.middleware)) {
+      if (mwConfig === null || mwConfig === undefined) {
+        continue;
+      }
+      const builderMethod = middlewareDispatch[mwName];
+      if (builderMethod === undefined) {
+        continue;
+      }
+      if (typeof builder[builderMethod] === 'function') {
+        builder = builder[builderMethod](mwConfig);
+      }
+    }
+  }
+
+  app.{{ register_route_method }}(builder, handlerFn);
+
+  // If the fixture has CORS middleware configured, register an OPTIONS preflight handler
+  if (handler.middleware && handler.middleware.cors) {
+    const corsConfig = handler.middleware.cors;
+    {% if route_builder_constructor_method == ".new" -%}
+    const optionsBuilder = {{ route_builder_class }}.new({{ method_enum }}.Options, fullRoute);
+    {%- else -%}
+    const optionsBuilder = new {{ route_builder_class }}({{ method_enum }}.Options, fullRoute);
+    {%- endif %}
+
+    // Build a CORS preflight handler
+    const corsHandlerFn = (request) => {
+      // Case-insensitive header lookup helper
+      const getHeaderValue = (headers, name) => {
+        if (!headers) return '';
+        if (typeof headers.get === 'function') {
+          return headers.get(name.toLowerCase()) || '';
+        }
+        // Fallback: search keys case-insensitively
+        const lowerName = name.toLowerCase();
+        for (const [key, value] of Object.entries(headers)) {
+          if (key.toLowerCase() === lowerName) {
+            return value || '';
+          }
+        }
+        return '';
+      };
+
+      const origin = getHeaderValue(request.headers, 'origin');
+      const requestMethod = getHeaderValue(request.headers, 'access-control-request-method');
+      const requestHeaders = getHeaderValue(request.headers, 'access-control-request-headers');
+
+      // Simple CORS validation: check origin and method
+      const allowedOrigins = Array.isArray(corsConfig.allow_origins) ? corsConfig.allow_origins : [];
+      const allowedMethods = Array.isArray(corsConfig.allow_methods) ? corsConfig.allow_methods : [];
+      const allowedHeaders = Array.isArray(corsConfig.allow_headers) ? corsConfig.allow_headers : [];
+
+      const isOriginAllowed = allowedOrigins.includes(origin);
+      const isMethodAllowed = !requestMethod || allowedMethods.includes(requestMethod.toUpperCase());
+      const headersArray = requestHeaders ? requestHeaders.split(',').map(h => h.trim().toUpperCase()) : [];
+      const areHeadersAllowed = headersArray.every(h =>
+        allowedHeaders.map(ah => ah.toUpperCase()).includes(h)
+      );
+
+      if (!isOriginAllowed || !isMethodAllowed || !areHeadersAllowed) {
+        return {
+          status_code: 403,
+          body: null,
+          headers: {}
+        };
+      }
+
+      const corsHeaders = {
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Methods': requestMethod || (allowedMethods.join(', ')),
+        'Access-Control-Allow-Headers': requestHeaders || (allowedHeaders.join(', '))
+      };
+
+      if (corsConfig.max_age) {
+        corsHeaders['Access-Control-Max-Age'] = String(corsConfig.max_age);
+      }
+
+      return {
+        status_code: 204,
+        body: null,
+        headers: corsHeaders
+      };
+    };
+
+    app.{{ register_route_method }}(optionsBuilder, corsHandlerFn);
+  }
+}
+
+// Configure and start the server
+const config = {{ server_config_factory }};
+config.host = '{{ host }}';
+config.port = {{ port }};
+app.config(config);
+
+console.log(`Harness listening on {{ host }}:{{ port }}`);
+await app.{{ run_method }}();
