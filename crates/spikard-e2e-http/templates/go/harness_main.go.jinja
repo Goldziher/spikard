@@ -1,0 +1,336 @@
+{#- Go app harness for server-pattern e2e tests
+   <!-- go-ffi-nonblock -->
+
+   This harness program is spawned as a subprocess by main_test.go and runs the
+   SUT app, registering handlers per fixture. It loads all fixtures, creates
+   handlers that return expected responses, and serves on a configured port.
+
+   Context variables (passed from Go codegen):
+   - imports: list of import paths to include (typically the package being tested)
+   - app_class: class name for SUT app (e.g., "App")
+   - route_builder_class: class name for route builder (e.g., "RouteBuilder")
+   - method_enum_import: import path for Method (e.g., "my_app")
+   - method_enum_class: class name for method enum (e.g., "GET", "POST")
+   - register_route_method: app method to register routes (e.g., "RegisterRoute")
+   - start_background_method: non-blocking serve entrypoint (e.g., "StartBackground")
+   - port: binding port (e.g., 8012)
+   - fixtures_json: raw JSON string with all fixtures (auto-serialized)
+#}
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+	"os"
+	"os/signal"
+	"strings"
+	"syscall"
+
+{%- for import_name in imports %}
+	{{ import_alias }} "{{ import_name }}"
+{%- endfor %}
+)
+
+// Fixture describes an HTTP test fixture with its handler route and expected response.
+type Fixture struct {
+	HTTP *HTTPFixture `json:"http"`
+}
+
+// HTTPFixture contains handler and expected response details.
+type HTTPFixture struct {
+	Handler          HandlerDetails `json:"handler"`
+	ExpectedResponse ResponseDetails `json:"expected_response"`
+}
+
+// HandlerDetails specifies the route and HTTP method for the handler.
+type HandlerDetails struct {
+	Route      string                 `json:"route"`
+	Method     string                 `json:"method"`
+	BodySchema interface{}             `json:"body_schema"`
+	Middleware map[string]interface{}  `json:"middleware"`
+}
+
+// ResponseDetails defines the expected status, body, and headers.
+type ResponseDetails struct {
+	StatusCode uint16            `json:"status_code"`
+	Body       interface{}       `json:"body"`
+	Headers    map[string]string `json:"headers"`
+}
+
+const port = {{ port }}
+const host = "127.0.0.1"
+
+// Load fixtures from the JSON payload embedded at codegen time.
+// Use a quoted string with escaped newlines to avoid backtick conflicts.
+var fixturesJSON = "{{ fixtures_json }}"
+
+func main() {
+	var fixtures map[string]Fixture
+	if err := json.Unmarshal([]byte(fixturesJSON), &fixtures); err != nil {
+		log.Fatalf("unmarshal fixtures: %v", err)
+	}
+
+	app, err := {{ import_alias }}.NewApp()
+	if err != nil {
+		log.Fatalf("new app: %v", err)
+	}
+
+	// Map fixture method names (UPPERCASE) to framework method enum constants (PascalCase).
+	methodMap := map[string]{{ import_alias }}.Method{
+		"GET":     {{ import_alias }}.MethodGet,
+		"POST":    {{ import_alias }}.MethodPost,
+		"PUT":     {{ import_alias }}.MethodPut,
+		"PATCH":   {{ import_alias }}.MethodPatch,
+		"DELETE":  {{ import_alias }}.MethodDelete,
+		"HEAD":    {{ import_alias }}.MethodHead,
+		"OPTIONS": {{ import_alias }}.MethodOptions,
+		"CONNECT": {{ import_alias }}.MethodConnect,
+		"TRACE":   {{ import_alias }}.MethodTrace,
+	}
+
+	// Register a handler for each fixture.
+	for fixtureID, fixture := range fixtures {
+		if fixture.HTTP == nil {
+			continue
+		}
+
+		http := fixture.HTTP
+		route := http.Handler.Route
+		method := http.Handler.Method
+		bodySchema := http.Handler.BodySchema
+		middleware := http.Handler.Middleware
+		expectedStatus := http.ExpectedResponse.StatusCode
+		expectedBody := http.ExpectedResponse.Body
+		expectedHeaders := http.ExpectedResponse.Headers
+
+		// Build a closure that captures the expected response for this fixture.
+		// The handler ignores request parameters and returns the recorded response.
+		handler := makeHandler(expectedStatus, expectedBody, expectedHeaders)
+
+		// Register the route with the full fixture-namespaced path: /fixtures/<fixture_id>{route}
+		fullRoute := fmt.Sprintf("/fixtures/%s%s", fixtureID, route)
+
+		// Convert method string (GET, POST, etc.) to the framework's method enum.
+		m, ok := methodMap[strings.ToUpper(method)]
+		if !ok {
+			log.Printf("skipping fixture %s: unknown method %s", fixtureID, method)
+			continue
+		}
+		builder, err := {{ import_alias }}.RouteBuilderNew(m, fullRoute)
+		if err != nil {
+			log.Fatalf("create route builder: %v", err)
+		}
+
+		// If there's a body schema, attach it to the builder.
+		if bodySchema != nil {
+			bodySchemaJSON, _ := json.Marshal(bodySchema)
+			builder = builder.RequestSchemaJSON(json.RawMessage(bodySchemaJSON))
+		}
+
+		// Register the route with the handler.
+		// Note: The builder is consumed by RegisterRoute (ownership transferred to Rust).
+		// Do NOT call builder.Free() — the Rust FFI layer already owns and frees it.
+		if err := app.{{ register_route_method }}(handler, builder); err != nil {
+			log.Fatalf("register route %s: %v", fullRoute, err)
+		}
+
+		// If the fixture has CORS middleware configured, register an OPTIONS preflight handler.
+		if middleware != nil {
+			if corsConfig, ok := middleware["cors"].(map[string]interface{}); ok {
+				corsHandler := makeCorsPreflightHandler(corsConfig)
+				optionsMethod := methodMap["OPTIONS"]
+				optionsBuilder, err := {{ import_alias }}.RouteBuilderNew(optionsMethod, fullRoute)
+				if err != nil {
+					log.Fatalf("create OPTIONS route builder: %v", err)
+				}
+				if err := app.{{ register_route_method }}(corsHandler, optionsBuilder); err != nil {
+					log.Fatalf("register OPTIONS route %s: %v", fullRoute, err)
+				}
+			}
+		}
+	}
+
+	// Start the server on a background OS thread.  StartBackground blocks until
+	// the TCP socket is bound, so the server is guaranteed to be accepting
+	// connections when this call returns.  This avoids the goroutine + polling
+	// pattern that previously exhausted cgo OS threads.
+	serverHandle, err := app.{{ start_background_method }}(host, port)
+	if err != nil {
+		log.Fatalf("start background server on %s:%d: %v", host, port, err)
+	}
+
+	// Signal readiness to the parent test process.
+	fmt.Printf("Harness listening on %s:%d\n", host, port)
+	os.Stdout.Sync()
+
+	// Graceful shutdown on interrupt.
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	<-sigChan
+	serverHandle.Stop()
+}
+
+// makeCorsPreflightHandler builds a CORS preflight handler that validates the request
+// and returns either a 403 (Forbidden) if validation fails or 204 (No Content) if allowed.
+func makeCorsPreflightHandler(corsConfig map[string]interface{}) func([]byte) ([]byte, error) {
+	return func(reqBody []byte) ([]byte, error) {
+		// Parse the request to extract CORS-related headers.
+		// The request body contains the full RequestData with headers as a map.
+		var requestData map[string]interface{}
+		if err := json.Unmarshal(reqBody, &requestData); err != nil {
+			// If we can't parse, return 403.
+			return jsonResponse(403, nil, map[string]string{}), nil
+		}
+
+		// Extract headers from request data (case-insensitive lookup helper).
+		headersRaw, ok := requestData["headers"].(map[string]interface{})
+		if !ok {
+			headersRaw = make(map[string]interface{})
+		}
+		origin := getHeaderValue(headersRaw, "origin")
+		requestMethod := getHeaderValue(headersRaw, "access-control-request-method")
+		requestHeaders := getHeaderValue(headersRaw, "access-control-request-headers")
+
+		// Extract CORS config.
+		allowedOrigins := getStringSlice(corsConfig, "allow_origins")
+		allowedMethods := getStringSlice(corsConfig, "allow_methods")
+		allowedHeaders := getStringSlice(corsConfig, "allow_headers")
+		maxAge := getInt64(corsConfig, "max_age")
+
+		// Validate CORS preflight request.
+		isOriginAllowed := contains(allowedOrigins, origin)
+		// Compare methods case-insensitively (both sides uppercased).
+		isMethodAllowed := requestMethod == "" || containsCaseInsensitive(allowedMethods, requestMethod)
+		areHeadersAllowed := true
+		if requestHeaders != "" {
+			requestHeadersList := splitAndTrim(requestHeaders, ",")
+			for _, rh := range requestHeadersList {
+				if !containsCaseInsensitive(allowedHeaders, rh) {
+					areHeadersAllowed = false
+					break
+				}
+			}
+		}
+
+		// If any check fails, return 403.
+		if !isOriginAllowed || !isMethodAllowed || !areHeadersAllowed {
+			return jsonResponse(403, nil, map[string]string{}), nil
+		}
+
+		// Build CORS response headers.
+		corsHeaders := map[string]string{
+			"Access-Control-Allow-Origin":  origin,
+			"Access-Control-Allow-Methods": requestMethod,
+			"Access-Control-Allow-Headers": requestHeaders,
+		}
+		if maxAge > 0 {
+			corsHeaders["Access-Control-Max-Age"] = fmt.Sprintf("%d", maxAge)
+		}
+
+		return jsonResponse(204, nil, corsHeaders), nil
+	}
+}
+
+// Helper functions for CORS validation.
+
+// getHeaderValue extracts a header value case-insensitively.
+func getHeaderValue(headers map[string]interface{}, name string) string {
+	if val, ok := headers[name].(string); ok {
+		return val
+	}
+	// Try case-insensitive lookup.
+	lowerName := strings.ToLower(name)
+	for k, v := range headers {
+		if strings.ToLower(k) == lowerName {
+			if str, ok := v.(string); ok {
+				return str
+			}
+		}
+	}
+	return ""
+}
+
+// getStringSlice extracts a slice of strings from a map.
+func getStringSlice(m map[string]interface{}, key string) []string {
+	val, ok := m[key]
+	if !ok {
+		return []string{}
+	}
+	slice, ok := val.([]interface{})
+	if !ok {
+		return []string{}
+	}
+	result := make([]string, 0, len(slice))
+	for _, item := range slice {
+		if str, ok := item.(string); ok {
+			result = append(result, str)
+		}
+	}
+	return result
+}
+
+// getInt64 extracts an int64 from a map.
+func getInt64(m map[string]interface{}, key string) int64 {
+	val, ok := m[key]
+	if !ok {
+		return 0
+	}
+	switch v := val.(type) {
+	case float64:
+		return int64(v)
+	case int64:
+		return v
+	default:
+		return 0
+	}
+}
+
+// contains checks if a string is in a slice (case-sensitive).
+func contains(slice []string, s string) bool {
+	for _, item := range slice {
+		if item == s {
+			return true
+		}
+	}
+	return false
+}
+
+// containsCaseInsensitive checks if a string is in a slice (case-insensitive).
+func containsCaseInsensitive(slice []string, s string) bool {
+	lower := strings.ToLower(s)
+	for _, item := range slice {
+		if strings.ToLower(item) == lower {
+			return true
+		}
+	}
+	return false
+}
+
+// splitAndTrim splits a string by a delimiter and trims whitespace.
+func splitAndTrim(s, delimiter string) []string {
+	parts := strings.Split(s, delimiter)
+	result := make([]string, len(parts))
+	for i, part := range parts {
+		result[i] = strings.TrimSpace(part)
+	}
+	return result
+}
+
+// jsonResponse builds a JSON response wrapper.
+func jsonResponse(statusCode uint16, body interface{}, headers map[string]string) []byte {
+	resp := map[string]interface{}{
+		"status_code": statusCode,
+		"content":     body,
+		"headers":     headers,
+	}
+	respBody, _ := json.Marshal(resp)
+	return respBody
+}
+
+// makeHandler returns a handler function that always returns the expected response.
+func makeHandler(statusCode uint16, body interface{}, headers map[string]string) func([]byte) ([]byte, error) {
+	return func(reqBody []byte) ([]byte, error) {
+		return jsonResponse(statusCode, body, headers), nil
+	}
+}

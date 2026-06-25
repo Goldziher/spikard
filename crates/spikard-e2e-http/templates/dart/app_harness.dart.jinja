@@ -1,0 +1,111 @@
+#!/usr/bin/env dart
+/// App harness for server-pattern e2e tests.
+///
+/// This script spawns the SUT app and registers handlers per fixture,
+/// returning expected responses. It's driven by the test setUpAll.
+
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'package:{{ pkg_name }}/{{ pkg_name }}.dart';
+import 'package:{{ pkg_name }}/src/{{ bridge_module }}/frb_generated.dart' show RustLib;
+
+// Load fixtures from the JSON payload.
+// The fixtures dict contains per-fixture data with handler route, method, body_schema, etc.
+const String _FIXTURES_JSON = r'''{{ fixtures_json }}''';
+
+Future<void> main() async {
+  await RustLib.init();
+
+  final fixtures = jsonDecode(_FIXTURES_JSON) as Map<String, dynamic>? ?? {};
+
+  // Create and configure the app.
+  final app = App();
+
+  // Register a handler for each fixture.
+  for (final MapEntry<String, dynamic> entry in fixtures.entries) {
+    final fixtureId = entry.key;
+    final fixture = entry.value as Map<String, dynamic>? ?? {};
+
+    final http = fixture['http'] as Map<String, dynamic>?;
+    if (http == null) continue;
+
+    final handler = http['handler'] as Map<String, dynamic>? ?? {};
+    final route = handler['route'] as String? ?? '/';
+    final methodStr = (handler['method'] as String? ?? 'GET').toUpperCase();
+    final bodySchema = handler['body_schema'] as String?;
+    final expected = http['expected_response'] as Map<String, dynamic>? ?? {};
+
+    final expectedStatus = expected['status_code'] as int? ?? 200;
+    final expectedBody = expected['body'];
+    final expectedHeaders = (expected['headers'] as Map<String, dynamic>? ?? {}).cast<String, String>();
+
+    // Build handler function that returns the expected response.
+    String Function(String) makeHandler(int status, dynamic body, Map<String, String> headers) {
+      return (String _requestJson) {
+        // Return the expected response as JSON with status_code, body, and headers.
+        return jsonEncode({
+          'status_code': status,
+          'body': body,
+          'headers': headers,
+        });
+      };
+    }
+
+    // Register the handler at /fixtures/<fixture_id>{route}
+    final fullRoute = '/fixtures/$fixtureId$route';
+
+    // Convert method string to Method enum.
+    final methodEnum = _methodFromString(methodStr);
+    if (methodEnum == null) continue;
+
+    // Build the RouteBuilder with the path, method, and optional body schema.
+    var builder = await RouteBuilder.newInstance(method: methodEnum, path: fullRoute);
+
+    if (bodySchema != null && bodySchema.isNotEmpty) {
+      builder = await builder.requestSchemaJson(bodySchema);
+    }
+
+    // Register the route with the handler.
+    app.route(
+      builder,
+      makeHandler(expectedStatus, expectedBody, expectedHeaders),
+    );
+  }
+
+  // Bind and start the server on port 8008.
+  const host = '127.0.0.1';
+  const port = 8008;
+
+  // Print the SUT_URL so the test harness knows we're listening.
+  print('SUT_URL=http://$host:$port');
+
+  // Run the app (blocks until shutdown).
+  await app.run();
+}
+
+/// Convert HTTP method string (e.g., "GET", "POST") to Method enum.
+Method? _methodFromString(String methodStr) {
+  switch (methodStr) {
+    case 'GET':
+      return Method.get_;
+    case 'POST':
+      return Method.post;
+    case 'PUT':
+      return Method.put;
+    case 'DELETE':
+      return Method.delete;
+    case 'PATCH':
+      return Method.patch;
+    case 'HEAD':
+      return Method.head;
+    case 'OPTIONS':
+      return Method.options;
+    case 'CONNECT':
+      return Method.connect;
+    case 'TRACE':
+      return Method.trace;
+    default:
+      return null;
+  }
+}

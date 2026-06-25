@@ -1,0 +1,96 @@
+{#- Swift app harness for server-pattern e2e tests
+
+   This harness executable is spawned as a subprocess by the test suite's
+   setUp() and runs the SUT app, registering handlers per fixture. It loads
+   all fixtures, creates handlers that return expected responses, and serves
+   on a configured port.
+
+   Context variables (passed from Swift codegen):
+   - fixtures_json: raw JSON string with all fixtures (auto-serialized)
+   - host: binding host (e.g., "127.0.0.1")
+   - port: binding port (e.g., 8009)
+#}
+// swift-format-ignore-file
+import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
+
+{{ imports }}
+
+// Load fixtures from the JSON payload.
+// The fixtures dict contains per-fixture data with handler route, method, body_schema, etc.
+// Split JSON across multiple raw string literals (safe delimiters computed in Rust).
+let _FIXTURES_JSON: String = [
+{%- for chunk in fixtures_json_chunks %}
+    {{ chunk }},
+{%- endfor %}
+].joined()
+
+guard let _fixturesData = _FIXTURES_JSON.data(using: .utf8),
+      let _fixtures = try? JSONSerialization.jsonObject(with: _fixturesData) as? [String: [String: Any]] else {
+    print("Failed to parse fixtures JSON")
+    exit(1)
+}
+
+// Create the app.
+let app = {{ app_class }}()
+
+// Register a handler for each fixture using convenience methods.
+for (fixtureId, fixtureDict) in _fixtures {
+    guard let http = fixtureDict["http"] as? [String: Any] else {
+        continue
+    }
+
+    guard let handler = http["handler"] as? [String: Any] else {
+        continue
+    }
+
+    let route = handler["route"] as? String ?? "/"
+    let methodStr = (handler["method"] as? String ?? "GET").lowercased()
+    let expected = http["expected_response"] as? [String: Any] ?? [:]
+
+    // Extract expected response values.
+    let expectedStatus = expected["status_code"] as? Int ?? 200
+    let expectedBody = expected["body"]
+    let expectedHeaders = expected["headers"] as? [String: String] ?? [:]
+
+    let fullRoute = "/fixtures/\(fixtureId)\(route)"
+
+    // Create handler that returns the expected response.
+    let handler_fn: (String) -> String = { _ in
+        let responseDict: [String: Any] = [
+            "status_code": expectedStatus,
+            "{{ response_body_field }}": expectedBody as Any,
+            "headers": expectedHeaders
+        ]
+        if let responseData = try? JSONSerialization.data(withJSONObject: responseDict, options: []),
+           let responseStr = String(data: responseData, encoding: .utf8) {
+            return responseStr
+        }
+        return "{}"
+    }
+
+    // Register the route with the handler using the convenience method for the HTTP verb.
+    do {
+        switch methodStr {
+        case "get":     try app.get(handler_fn, path: fullRoute)
+        case "post":    try app.post(handler_fn, path: fullRoute)
+        case "put":     try app.put(handler_fn, path: fullRoute)
+        case "patch":   try app.patch(handler_fn, path: fullRoute)
+        case "delete":  try app.delete(handler_fn, path: fullRoute)
+        case "head":    try app.head(handler_fn, path: fullRoute)
+        case "options": try app.options(handler_fn, path: fullRoute)
+        default: continue
+        }
+    } catch {
+        print("Failed to register route \(fullRoute): \(error)")
+        continue
+    }
+}
+
+// Configure and start the server.
+try app.config(host: "{{ host }}", port: {{ port }})
+print("Harness listening on {{ host }}:{{ port }}")
+fflush(stdout)
+try app.run()

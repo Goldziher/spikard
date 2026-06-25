@@ -276,7 +276,7 @@ tasks:
   e2e:generate:
     desc: "Generate E2E tests for all languages from fixtures"
     cmds:
-      - alef e2e generate
+      - cargo run -p spikard-alef --release -- e2e generate
 
   e2e:build:
     desc: "Build all language bindings used by e2e suites (release)"
@@ -303,12 +303,12 @@ tasks:
   e2e:lint:
     desc: "Validate e2e fixtures"
     cmds:
-      - alef e2e validate
+      - cargo run -p spikard-alef --release -- e2e validate
 
   e2e:verify:
     desc: "Verify generated e2e tests are up to date"
     cmds:
-      - alef e2e generate
+      - cargo run -p spikard-alef --release -- e2e generate
       - git diff --exit-code e2e/
 
   rust:e2e:
@@ -389,7 +389,7 @@ tasks:
   verify:tests:
     desc: "Verify generated e2e tests are up to date"
     cmds:
-      - alef e2e generate
+      - cargo run -p spikard-alef --release -- e2e generate
       - git diff --exit-code e2e/
 
   # === Publish ===

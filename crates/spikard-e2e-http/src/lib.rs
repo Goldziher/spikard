@@ -58,11 +58,16 @@ impl Extension for E2eHttpExtension {
         // harness-spawn test setup). The shared client-pattern driver, per-test
         // bodies, mock-server, and project scaffolding stay generic in alef.
         match language {
+            "dart" => lang::dart::emit(groups, e2e_config, config),
+            "go" => lang::go::emit(groups, e2e_config, config),
+            "java" => lang::java::emit(groups, e2e_config, config),
             "node" => emit_node(groups, e2e_config),
             "python" => emit_python(groups, e2e_config, config),
             "php" => lang::php::emit(groups, e2e_config, config),
             "ruby" => lang::ruby::emit(groups, e2e_config, config),
             "elixir" => lang::elixir::emit(groups, e2e_config, config),
+            "swift" => lang::swift::emit(groups, e2e_config, config),
+            "wasm" => lang::wasm::emit(groups, e2e_config, config),
             // Remaining languages are migrated incrementally; until then alef's
             // built-in server-pattern emission still produces them.
             _ => Ok(vec![]),

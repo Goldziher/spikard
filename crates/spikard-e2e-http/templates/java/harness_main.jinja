@@ -1,0 +1,145 @@
+{#- Java HarnessMain for server-pattern e2e tests
+
+   This harness loads fixtures from classpath resources, registers HTTP handlers
+   that return expected responses, and serves on a port from SUT_URL env var
+   (or falls back to the alef e2e default harness port). It mirrors the Python app_harness.py pattern.
+
+   Context variables:
+   - java_group_id: Java package (e.g., "dev.my_pkg")
+   - binding_pkg: binding package (e.g., "dev.my_pkg")
+   - app_class: SUT app class name (e.g., "App")
+   - run_method: serve entrypoint method name (e.g., "run")
+   - register_method: app method to register routes (e.g., "registerAppRoute")
+   - response_body_field: field name in Response for body (e.g., "body")
+   - host: binding host (e.g., "127.0.0.1")
+   - default_port: alef e2e default harness port (e.g., 8000) — used when SUT_URL is unset
+   - fixture_ids: list of fixture IDs to register handlers for
+#}
+package {{ java_group_id }}.e2e;
+
+import {{ binding_pkg }}.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.net.URI;
+import java.util.*;
+
+public class HarnessMain {
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    public static void main(String[] args) {
+        try {
+            // Resolve the port: read SUT_URL env var (e.g., http://127.0.0.1:8000)
+            // or discover an available port dynamically
+            String sutUrl = System.getenv("SUT_URL");
+            int effectivePort;
+            String effectiveHost = "{{ host }}";
+
+            if (sutUrl != null && !sutUrl.isEmpty()) {
+                try {
+                    URI uri = new URI(sutUrl);
+                    effectiveHost = uri.getHost() != null ? uri.getHost() : effectiveHost;
+                    effectivePort = uri.getPort() > 0 ? uri.getPort() : {{ default_port }};
+                } catch (Exception e) {
+                    System.err.println("Warning: failed to parse SUT_URL: " + e.getMessage());
+                    effectivePort = {{ default_port }};
+                }
+            } else {
+                // Fall back to the alef e2e default harness port
+                effectivePort = {{ default_port }};
+            }
+
+            // Create and configure the app
+            {{ app_class }} app = new {{ app_class }}();
+
+            // Register handlers for each fixture, loading from classpath resources.
+            // Fixtures are stored as individual JSON files in src/test/resources/fixtures/
+            // to avoid exceeding Java's 65KB string literal limit.
+            List<String> fixtureIds = Arrays.asList(
+{%- for fixture_id in fixture_ids %}
+                "{{ fixture_id }}"{{ "," if not loop.last else "" }}
+{%- endfor %}
+            );
+
+            for (String fixtureId : fixtureIds) {
+                // Load fixture from classpath
+                JsonNode fixtureData = FixtureLoader.loadFixture(fixtureId);
+                if (fixtureData == null) {
+                    System.err.println("Warning: could not load fixture " + fixtureId);
+                    continue;
+                }
+
+                // Extract HTTP fixture data
+                JsonNode httpNode = fixtureData.get("http");
+                if (httpNode == null) {
+                    continue;
+                }
+
+                // Extract handler and expected response details
+                JsonNode handlerNode = httpNode.get("handler");
+                JsonNode responseNode = httpNode.get("expected_response");
+
+                if (handlerNode == null || responseNode == null) {
+                    continue;
+                }
+
+                String route = handlerNode.get("route").asText();
+                String method = handlerNode.get("method").asText();
+                int statusCode = responseNode.get("status_code").asInt();
+                JsonNode responseBody = responseNode.get("{{ response_body_field }}");
+                JsonNode responseHeaders = responseNode.get("headers");
+
+                // Build the full fixture-namespaced route: /fixtures/<fixture_id>{route}
+                String fullRoute = "/fixtures/" + fixtureId + route;
+
+                // Create a handler closure that captures the expected response for this fixture
+                final int finalStatusCode = statusCode;
+                final JsonNode finalResponseBody = responseBody;
+                final JsonNode finalResponseHeaders = responseHeaders;
+                Callable handler = request -> {
+                    // Handler ignores request and returns the recorded expected response
+                    Map<String, Object> resp = new LinkedHashMap<>();
+                    resp.put("status_code", finalStatusCode);
+                    resp.put("{{ response_body_field }}", finalResponseBody);
+                    if (finalResponseHeaders != null && finalResponseHeaders.isObject()) {
+                        Map<String, String> headers = new LinkedHashMap<>();
+                        finalResponseHeaders.fieldNames().forEachRemaining(name ->
+                            headers.put(name, finalResponseHeaders.get(name).asText())
+                        );
+                        resp.put("headers", headers);
+                    }
+                    try {
+                        return MAPPER.writeValueAsString(resp);
+                    } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+                        throw new RuntimeException("Failed to serialize response: " + e.getMessage(), e);
+                    }
+                };
+
+                // Create RouteBuilder with the method enum and full route
+                RouteBuilder builder = RouteBuilder.create(Method.fromValue(method), fullRoute);
+
+                // Register the handler with the app
+                int regResult = app.{{ register_method }}(handler, builder);
+
+                if (regResult != 0) {
+                    System.err.println("Warning: failed to register fixture handler for " + fixtureId);
+                }
+            }
+
+            // Configure the app to bind to the effective host and port
+            app.config(effectiveHost, effectivePort);
+
+            // Optionally emit the harness port for debugging, but the test runner
+            // does not rely on this message due to Java process-pipe buffering.
+            // Instead, tests use TCP polling against the configured default port.
+            System.out.println("HARNESS_PORT=" + effectivePort);
+            System.out.flush();
+
+            // Run the app (blocks indefinitely)
+            // The app is expected to listen on the configured default port.
+            app.{{ run_method }}();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+}
