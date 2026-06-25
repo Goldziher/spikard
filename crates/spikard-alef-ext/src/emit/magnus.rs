@@ -71,6 +71,30 @@ fn format_ruby_comment(text: &str, indent: usize) -> String {
     out
 }
 
+/// Indent every non-blank line of `s` by `n` spaces, leaving blank lines empty
+/// (so no trailing whitespace is emitted). Used to nest col-0 class templates
+/// inside the `module {Crate}` / `module Errors` wrapper.
+fn indent_block(s: &str, n: usize) -> String {
+    let pad = " ".repeat(n);
+    let mut out = String::new();
+    for line in s.split_inclusive('\n') {
+        match line.strip_suffix('\n') {
+            Some("") => out.push('\n'),
+            Some(content) => {
+                out.push_str(&pad);
+                out.push_str(content);
+                out.push('\n');
+            }
+            None if line.is_empty() => {}
+            None => {
+                out.push_str(&pad);
+                out.push_str(line);
+            }
+        }
+    }
+    out
+}
+
 fn gen_lifecycle_hooks(env: &Environment<'static>, out: &mut String, hooks: &[LifecycleHookDef]) {
     for hook in hooks {
         let doc_comment = format_ruby_comment(&hook.doc, 6);
@@ -120,7 +144,10 @@ fn gen_error_classes(env: &Environment<'static>, api: &ApiSurface, cfg: &HttpExt
     let mut out = String::from("# frozen_string_literal: true\n\n");
     let _ = writeln!(out, "module {crate_module}");
     out.push_str("  module Errors\n");
-    out.push_str(&render(env, "service_rb_error_base_class.rb.jinja", context! {}));
+    out.push_str(&indent_block(
+        &render(env, "service_rb_error_base_class.rb.jinja", context! {}),
+        4,
+    ));
 
     for error in &cfg.error_types {
         let http_status = error.http_status.as_u16();
@@ -128,16 +155,20 @@ fn gen_error_classes(env: &Environment<'static>, api: &ApiSurface, cfg: &HttpExt
             .problem_details_type
             .as_deref()
             .map_or_else(|| "nil".to_string(), |s| format!("\"{s}\""));
-        let doc_comment = format_ruby_comment(&error.doc, 4);
-        out.push_str(&render(
-            env,
-            "service_rb_error_subclass.rb.jinja",
-            context! {
-                class_name => &error.name,
-                http_status => http_status,
-                problem_details_type => problem_details_type,
-                doc_comment => doc_comment,
-            },
+        let doc_comment = format_ruby_comment(&error.doc, 2);
+        out.push('\n');
+        out.push_str(&indent_block(
+            &render(
+                env,
+                "service_rb_error_subclass.rb.jinja",
+                context! {
+                    class_name => &error.name,
+                    http_status => http_status,
+                    problem_details_type => problem_details_type,
+                    doc_comment => doc_comment,
+                },
+            ),
+            4,
         ));
     }
 

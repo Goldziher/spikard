@@ -7,7 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0-rc.4] - 2026-06-25
+
+### Changed
+
+- **e2e: server-pattern harness generation now lives in the `spikard-e2e-http` alef extension.**
+  The HTTP-server-under-test harness programs (`app_harness.*` / `harness_main.*`) and their spawn
+  setup for all ten server-pattern languages (node, python, php, ruby, elixir, go, java, dart, swift,
+  wasm) are emitted via `Extension::emit_e2e` rather than alef's built-in generators. The shared
+  client-pattern e2e (mock-server, per-test request bodies, scaffolding) stays generic in alef.
+- **Re-pinned alef to v0.28.1.** Brings per-variant constructors for data enums across the PyO3 /
+  magnus / php / extendr / rustler backends (e.g. `Shape.circle(radius)`) and the modularized binding
+  generators. Bindings regenerated accordingly.
+
 ### Fixed
+
+- **Ruby `errors.rb` indentation.** The magnus HTTP-extension emit now nests the generated error
+  classes (and their doc comments) correctly inside the `module {Crate}` / `module Errors` wrapper, so
+  regeneration no longer produces col-0 classes / mismatched comment indentation.
+- **`version:set` / `version:sync` use the extension-aware binary.** `.task/tools/version-sync.yml`
+  invoked the stock `alef` binary, which lacks `Extension::emit_e2e` and deleted the server-pattern
+  e2e harness files on regeneration; it now uses `cargo run -p spikard-alef`.
 
 - **Publish: multi-platform native builds across the board.** The publish pipeline shipped
   linux-x86_64-only (or source-only) artifacts while the committed manifests advertised

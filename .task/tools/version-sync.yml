@@ -4,8 +4,11 @@ internal: true
 includes:
   platforms: ../config/platforms.yml
 
+# Use the project's extension-aware binary (spikard-alef registers the HTTP +
+# e2e-http extensions). The stock `alef` binary lacks Extension::emit_e2e and
+# would delete the server-pattern e2e harness files on `generate`/`e2e generate`.
 vars:
-  ALEF: "alef"
+  ALEF: "cargo run -p spikard-alef --release --"
 
 tasks:
   sync:

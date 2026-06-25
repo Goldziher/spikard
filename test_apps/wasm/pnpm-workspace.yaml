@@ -4,4 +4,4 @@ allowBuilds:
   esbuild: true
   tree-sitter: true
 minimumReleaseAgeExclude:
-  - '@spikard/node-wasm@0.16.0-rc.3'
+  - '@spikard/node-wasm@0.16.0-rc.4'

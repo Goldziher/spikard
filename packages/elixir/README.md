@@ -88,7 +88,7 @@ Add to `mix.exs`:
 ```elixir
 def deps do
   [
-    {:spikard, "~> 0.16.0-rc.3"}
+    {:spikard, "~> 0.16.0-rc.4"}
   ]
 end
 ```
