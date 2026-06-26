@@ -11,8 +11,8 @@ repos:
         args: ["--write"]
         stages: [commit-msg]
 
-  - repo: https://github.com/kreuzberg-dev/pre-commit-hooks
-    rev: v2.3.0
+  - repo: https://github.com/xberg-io/pre-commit-hooks
+    rev: v3.0.0
     hooks:
       # Alef verification
       - id: alef-verify
@@ -112,7 +112,7 @@ repos:
       # Go — packages/go is excluded from golangci-lint/godoc-lint because alef's
       # HTTP-service go generator emits non-idiomatic, lint-failing code in
       # packages/go/service.go (revive var-naming `c_config`/`new_owner`,
-      # errcheck, goconst). Re-enable with KREUZBERG_GO_MOD_DIRS once alef emits
+      # errcheck, goconst). Re-enable with XBERG_GO_MOD_DIRS once alef emits
       # golangci-clean go (alef batch).
       - id: golangci-lint
         exclude: ^(e2e/|test_apps/|tools/|packages/go/)
@@ -122,7 +122,7 @@ repos:
       #   files: ^packages/go/.*\.go$
       #   exclude: ^(e2e/|test_apps/)
       #   env:
-      #     KREUZBERG_GO_MOD_DIRS: "packages/go"
+      #     XBERG_GO_MOD_DIRS: "packages/go"
 
       - id: checkstyle
       - id: pmd
