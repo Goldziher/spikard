@@ -1299,7 +1299,7 @@ wheels = [
 
 [[package]]
 name = "spikard"
-version = "0.15.6rc21"
+version = "0.16.0rc4"
 source = { editable = "packages/python" }
 
 [package.dev-dependencies]

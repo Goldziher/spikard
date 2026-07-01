@@ -2,23 +2,23 @@
 import PackageDescription
 
 let package = Package(
-    name: "E2eSwift",
-    platforms: [
-        .macOS(.v13),
-        .iOS(.v16),
-    ],
-    dependencies: [
-        .package(url: "https://github.com/Goldziher/spikard", branch: "release/swift/0.16.0-rc.4"),
-    ],
-    targets: [
-        .executableTarget(
-            name: "Harness",
-            dependencies: [.product(name: "Spikard", package: "spikard")],
-            path: "Sources/Harness"
-        ),
-        .testTarget(
-            name: "SpikardE2ETests",
-            dependencies: [.product(name: "Spikard", package: "spikard")]
-        ),
-    ]
+  name: "E2eSwift",
+  platforms: [
+    .macOS(.v13),
+    .iOS(.v16),
+  ],
+  dependencies: [
+    .package(url: "https://github.com/Goldziher/spikard", branch: "release/swift/0.16.0-rc.4"),
+  ],
+  targets: [
+    .executableTarget(
+      name: "Harness",
+      dependencies: [.product(name: "Spikard", package: "spikard")],
+      path: "Sources/Harness"
+    ),
+    .testTarget(
+      name: "SpikardE2ETests",
+      dependencies: [.product(name: "Spikard", package: "spikard")]
+    ),
+  ]
 )

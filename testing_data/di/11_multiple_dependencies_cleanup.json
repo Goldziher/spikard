@@ -41,14 +41,7 @@
     "state_path": "/api/multi-cleanup-state",
     "state_key": "cleanup_order",
     "value_field": "event",
-    "expected_state": [
-      "db_opened",
-      "cache_opened",
-      "session_opened",
-      "session_closed",
-      "cache_closed",
-      "db_closed"
-    ]
+    "expected_state": ["db_opened", "cache_opened", "session_opened", "session_closed", "cache_closed", "db_closed"]
   },
   "request": {
     "method": "GET",

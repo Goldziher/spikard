@@ -3,16 +3,7 @@
   "title": "gRPC Streaming Fixture Schema",
   "description": "JSON Schema for gRPC streaming test fixtures",
   "type": "object",
-  "required": [
-    "name",
-    "description",
-    "category",
-    "protobuf",
-    "handler",
-    "request",
-    "expected_response",
-    "tags"
-  ],
+  "required": ["name", "description", "category", "protobuf", "handler", "request", "expected_response", "tags"],
   "properties": {
     "name": {
       "type": "string",
@@ -78,13 +69,7 @@
                 "type": "array",
                 "items": {
                   "type": "object",
-                  "required": [
-                    "name",
-                    "input_type",
-                    "output_type",
-                    "client_streaming",
-                    "server_streaming"
-                  ],
+                  "required": ["name", "input_type", "output_type", "client_streaming", "server_streaming"],
                   "properties": {
                     "name": { "type": "string" },
                     "input_type": { "type": "string" },

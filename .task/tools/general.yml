@@ -9,36 +9,25 @@ vars:
 
 tasks:
   pre-commit:install:
-    desc: "Install prek pre-commit hooks for commit and commit-msg"
+    desc: "Install poly git hooks for commit and commit-msg"
     silent: false
     cmds:
-      - cmd: prek install
-        ignore_error: false
-      - cmd: prek install --hook-type commit-msg
+      - cmd: poly hooks install
         ignore_error: false
 
   pre-commit:run:
-    desc: "Run prek pre-commit hooks on all files"
+    desc: "Run poly hooks on all files"
     silent: false
     cmds:
-      - cmd: prek run --all-files
+      - cmd: poly hooks run --all-files
         ignore_error: false
 
   pre-commit:uninstall:
-    desc: "Uninstall prek hooks"
+    desc: "Uninstall poly git hooks"
     silent: false
     cmds:
-      - cmd: prek uninstall
+      - cmd: poly hooks uninstall
         ignore_error: true
-      - cmd: prek uninstall --hook-type commit-msg
-        ignore_error: true
-
-  pre-commit:autoupdate:
-    desc: "Update prek hooks to latest revisions"
-    silent: false
-    cmds:
-      - cmd: prek autoupdate
-        ignore_error: false
 
   validate:config:
     desc: "Validate YAML task configuration files"

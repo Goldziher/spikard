@@ -17,9 +17,7 @@
     "services": [
       {
         "name": "ResourceService",
-        "methods": [
-          { "name": "AllocateMemory", "input_type": "HeavyRequest", "output_type": "HeavyResponse" }
-        ]
+        "methods": [{ "name": "AllocateMemory", "input_type": "HeavyRequest", "output_type": "HeavyResponse" }]
       }
     ]
   },

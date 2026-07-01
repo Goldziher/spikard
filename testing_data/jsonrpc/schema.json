@@ -159,14 +159,7 @@
       "items": {
         "type": "string"
       },
-      "examples": [
-        ["users"],
-        ["auth", "security"],
-        ["admin"],
-        ["batch"],
-        ["edge-cases"],
-        ["validation"]
-      ]
+      "examples": [["users"], ["auth", "security"], ["admin"], ["batch"], ["edge-cases"], ["validation"]]
     }
   },
   "fixture_directories": {
@@ -199,11 +192,7 @@
           "description": "Tests JSON-RPC method for updating an existing user",
           "purpose": "User modification with partial updates",
           "test_cases": 3,
-          "scenarios": [
-            "Successful user update",
-            "User not found (404 error)",
-            "Invalid update data"
-          ]
+          "scenarios": ["Successful user update", "User not found (404 error)", "Invalid update data"]
         },
         "user_delete.json": {
           "description": "Tests JSON-RPC method for deleting a user",

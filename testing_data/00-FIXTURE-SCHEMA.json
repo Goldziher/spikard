@@ -1068,11 +1068,7 @@
         "content_type": {
           "type": "string",
           "description": "Content-Type header (convenience field, also in headers)",
-          "examples": [
-            "application/json",
-            "multipart/form-data",
-            "application/x-www-form-urlencoded"
-          ]
+          "examples": ["application/json", "multipart/form-data", "application/x-www-form-urlencoded"]
         },
         "graphql": {
           "type": "object",

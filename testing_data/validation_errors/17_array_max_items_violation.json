@@ -39,19 +39,7 @@
     "body": {
       "name": "Item",
       "price": 10.0,
-      "tags": [
-        "tag1",
-        "tag2",
-        "tag3",
-        "tag4",
-        "tag5",
-        "tag6",
-        "tag7",
-        "tag8",
-        "tag9",
-        "tag10",
-        "tag11"
-      ]
+      "tags": ["tag1", "tag2", "tag3", "tag4", "tag5", "tag6", "tag7", "tag8", "tag9", "tag10", "tag11"]
     }
   },
   "expected_response": {
@@ -66,19 +54,7 @@
           "type": "too_long",
           "loc": ["body", "tags"],
           "msg": "List should have at most 10 items after validation",
-          "input": [
-            "tag1",
-            "tag2",
-            "tag3",
-            "tag4",
-            "tag5",
-            "tag6",
-            "tag7",
-            "tag8",
-            "tag9",
-            "tag10",
-            "tag11"
-          ],
+          "input": ["tag1", "tag2", "tag3", "tag4", "tag5", "tag6", "tag7", "tag8", "tag9", "tag10", "tag11"],
           "ctx": {
             "max_length": 10
           }

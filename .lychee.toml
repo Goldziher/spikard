@@ -6,47 +6,47 @@ root_dir = "site"
 
 # Exclude common patterns that produce false positives
 exclude = [
-  # Localhost / loopback addresses
-  "localhost",
-  "127\\.0\\.0\\.1",
-  "0\\.0\\.0\\.0",
+    # Localhost / loopback addresses
+    "localhost",
+    "127\\.0\\.0\\.1",
+    "0\\.0\\.0\\.0",
 
-  # Placeholder / example domains
-  "example\\.com",
-  "example\\.org",
-  "api\\.example\\.com",
+    # Placeholder / example domains
+    "example\\.com",
+    "example\\.org",
+    "api\\.example\\.com",
 
-  # Template variables (e.g. ${var}, {{ var }})
-  "\\$\\{",
-  "\\{\\{",
+    # Template variables (e.g. ${var}, {{ var }})
+    "\\$\\{",
+    "\\{\\{",
 
-  # GitHub edit links (require auth)
-  "github\\.com/.*/edit/",
+    # GitHub edit links (require auth)
+    "github\\.com/.*/edit/",
 
-  # GitHub raw links for new/renamed files (404 until pushed)
-  "github\\.com/.*/raw/",
+    # GitHub raw links for new/renamed files (404 until pushed)
+    "github\\.com/.*/raw/",
 
-  # Docs site self-references (404 until deployed)
-  "spikard\\.dev",
-  "docs\\.spikard\\.kreuzberg\\.dev",
+    # Docs site self-references (404 until deployed)
+    "spikard\\.dev",
+    "docs\\.spikard\\.kreuzberg\\.dev",
 
-  # Registry pages that are rate-limited or 404 until first publish
-  "pypi\\.org/project/",
-  "crates\\.io/crates/",
-  "npmjs\\.com/package/",
-  "rubygems\\.org/gems/",
-  "packagist\\.org/packages/",
-  "hex\\.pm/packages/",
-  "nuget\\.org/packages/",
-  "central\\.sonatype\\.com/artifact/",
-  "search\\.maven\\.org/artifact/",
-  "pub\\.dev/packages/",
+    # Registry pages that are rate-limited or 404 until first publish
+    "pypi\\.org/project/",
+    "crates\\.io/crates/",
+    "npmjs\\.com/package/",
+    "rubygems\\.org/gems/",
+    "packagist\\.org/packages/",
+    "hex\\.pm/packages/",
+    "nuget\\.org/packages/",
+    "central\\.sonatype\\.com/artifact/",
+    "search\\.maven\\.org/artifact/",
+    "pub\\.dev/packages/",
 
-  # Discord invite links (require auth)
-  "discord\\.gg/",
+    # Discord invite links (require auth)
+    "discord\\.gg/",
 
-  # Taskfile.dev installation page — Cloudflare frequently resets connections from GHA runners
-  "taskfile\\.dev/installation",
+    # Taskfile.dev installation page — Cloudflare frequently resets connections from GHA runners
+    "taskfile\\.dev/installation",
 ]
 
 # Accept these HTTP status codes as valid

@@ -19,7 +19,7 @@ part 'lib.freezed.dart';
 ///
 /// A `QueryOnlyConfig` with default settings
 Future<QueryOnlyConfig> schemaQueryOnly() =>
-    RustLib.instance.api.crateSchemaQueryOnly();
+RustLib.instance.api.crateSchemaQueryOnly();
 
 /// Create a schema configuration with Query and Mutation types.
 ///
@@ -29,7 +29,7 @@ Future<QueryOnlyConfig> schemaQueryOnly() =>
 ///
 /// A `QueryMutationConfig` with default settings
 Future<QueryMutationConfig> schemaQueryMutation() =>
-    RustLib.instance.api.crateSchemaQueryMutation();
+RustLib.instance.api.crateSchemaQueryMutation();
 
 /// Create a schema configuration with all three root types.
 ///
@@ -41,13 +41,13 @@ Future<QueryMutationConfig> schemaQueryMutation() =>
 Future<FullSchemaConfig> schemaFull() => RustLib.instance.api.crateSchemaFull();
 
 Future<UploadFile> createUploadFileFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateUploadFileFromJson(json: json);
+RustLib.instance.api.crateCreateUploadFileFromJson(json: json);
 
 Future<SchemaConfig> createSchemaConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateSchemaConfigFromJson(json: json);
+RustLib.instance.api.crateCreateSchemaConfigFromJson(json: json);
 
 Future<QueryOnlyConfig> createQueryOnlyConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateQueryOnlyConfigFromJson(json: json);
+RustLib.instance.api.crateCreateQueryOnlyConfigFromJson(json: json);
 
 Future<QueryMutationConfig> createQueryMutationConfigFromJson({
   required String json,
@@ -66,73 +66,73 @@ Future<BackgroundJobMetadata> createBackgroundJobMetadataFromJson({
 }) => RustLib.instance.api.crateCreateBackgroundJobMetadataFromJson(json: json);
 
 Future<CorsConfig> createCorsConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateCorsConfigFromJson(json: json);
+RustLib.instance.api.crateCreateCorsConfigFromJson(json: json);
 
 Future<CompressionConfig> createCompressionConfigFromJson({
   required String json,
 }) => RustLib.instance.api.crateCreateCompressionConfigFromJson(json: json);
 
 Future<RateLimitConfig> createRateLimitConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateRateLimitConfigFromJson(json: json);
+RustLib.instance.api.crateCreateRateLimitConfigFromJson(json: json);
 
 Future<GrpcConfig> createGrpcConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateGrpcConfigFromJson(json: json);
+RustLib.instance.api.crateCreateGrpcConfigFromJson(json: json);
 
 Future<JsonRpcConfig> createJsonRpcConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateJsonRpcConfigFromJson(json: json);
+RustLib.instance.api.crateCreateJsonRpcConfigFromJson(json: json);
 
 Future<OpenApiConfig> createOpenApiConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateOpenApiConfigFromJson(json: json);
+RustLib.instance.api.crateCreateOpenApiConfigFromJson(json: json);
 
 Future<Response> createResponseFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateResponseFromJson(json: json);
+RustLib.instance.api.crateCreateResponseFromJson(json: json);
 
 Future<SseEvent> createSseEventFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateSseEventFromJson(json: json);
+RustLib.instance.api.crateCreateSseEventFromJson(json: json);
 
 Future<JwtConfig> createJwtConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateJwtConfigFromJson(json: json);
+RustLib.instance.api.crateCreateJwtConfigFromJson(json: json);
 
 Future<ApiKeyConfig> createApiKeyConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateApiKeyConfigFromJson(json: json);
+RustLib.instance.api.crateCreateApiKeyConfigFromJson(json: json);
 
 Future<StaticFilesConfig> createStaticFilesConfigFromJson({
   required String json,
 }) => RustLib.instance.api.crateCreateStaticFilesConfigFromJson(json: json);
 
 Future<ServerConfig> createServerConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateServerConfigFromJson(json: json);
+RustLib.instance.api.crateCreateServerConfigFromJson(json: json);
 
 Future<JsonRpcMethodInfo> createJsonRpcMethodInfoFromJson({
   required String json,
 }) => RustLib.instance.api.crateCreateJsonRpcMethodInfoFromJson(json: json);
 
 Future<ProblemDetails> createProblemDetailsFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateProblemDetailsFromJson(json: json);
+RustLib.instance.api.crateCreateProblemDetailsFromJson(json: json);
 
 Future<AsyncApiConfig> createAsyncApiConfigFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateAsyncApiConfigFromJson(json: json);
+RustLib.instance.api.crateCreateAsyncApiConfigFromJson(json: json);
 
 Future<ParsedChannel> createParsedChannelFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateParsedChannelFromJson(json: json);
+RustLib.instance.api.crateCreateParsedChannelFromJson(json: json);
 
 Future<ParsedOperation> createParsedOperationFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateParsedOperationFromJson(json: json);
+RustLib.instance.api.crateCreateParsedOperationFromJson(json: json);
 
 Future<ParsedMessage> createParsedMessageFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateParsedMessageFromJson(json: json);
+RustLib.instance.api.crateCreateParsedMessageFromJson(json: json);
 
 Future<ParseResult> createParseResultFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateParseResultFromJson(json: json);
+RustLib.instance.api.crateCreateParseResultFromJson(json: json);
 
 Future<ContactInfo> createContactInfoFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateContactInfoFromJson(json: json);
+RustLib.instance.api.crateCreateContactInfoFromJson(json: json);
 
 Future<LicenseInfo> createLicenseInfoFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateLicenseInfoFromJson(json: json);
+RustLib.instance.api.crateCreateLicenseInfoFromJson(json: json);
 
 Future<ServerInfo> createServerInfoFromJson({required String json}) =>
-    RustLib.instance.api.crateCreateServerInfoFromJson(json: json);
+RustLib.instance.api.crateCreateServerInfoFromJson(json: json);
 
 Future<ResponseSnapshot> createResponseSnapshotFromJson({
   required String json,
@@ -141,7 +141,7 @@ Future<ResponseSnapshot> createResponseSnapshotFromJson({
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<GraphQLRouteConfig>>
 abstract class GraphQlRouteConfig implements RustOpaqueInterface {
   static Future<GraphQlRouteConfig> default_() =>
-      RustLib.instance.api.crateGraphQlRouteConfigDefault();
+  RustLib.instance.api.crateGraphQlRouteConfigDefault();
 
   Future<GraphQlRouteConfig> description({required String description});
 
@@ -159,7 +159,7 @@ abstract class GraphQlRouteConfig implements RustOpaqueInterface {
 
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
   static Future<GraphQlRouteConfig> newInstance() =>
-      RustLib.instance.api.crateGraphQlRouteConfigNew();
+  RustLib.instance.api.crateGraphQlRouteConfigNew();
 
   Future<GraphQlRouteConfig> path({required String path});
 }
@@ -237,11 +237,11 @@ class ApiKeyConfig {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ApiKeyConfig &&
-          runtimeType == other.runtimeType &&
-          keys == other.keys &&
-          headerName == other.headerName;
+  identical(this, other) ||
+  other is ApiKeyConfig &&
+  runtimeType == other.runtimeType &&
+  keys == other.keys &&
+  headerName == other.headerName;
 }
 
 @freezed
@@ -273,11 +273,11 @@ class AsyncApiConfig {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is AsyncApiConfig &&
-          runtimeType == other.runtimeType &&
-          enabled == other.enabled &&
-          spec == other.spec;
+  identical(this, other) ||
+  other is AsyncApiConfig &&
+  runtimeType == other.runtimeType &&
+  enabled == other.enabled &&
+  spec == other.spec;
 }
 
 class BackgroundJobMetadata {
@@ -291,11 +291,11 @@ class BackgroundJobMetadata {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is BackgroundJobMetadata &&
-          runtimeType == other.runtimeType &&
-          name == other.name &&
-          requestId == other.requestId;
+  identical(this, other) ||
+  other is BackgroundJobMetadata &&
+  runtimeType == other.runtimeType &&
+  name == other.name &&
+  requestId == other.requestId;
 }
 
 /// Configuration for in-process background task execution.
@@ -312,18 +312,18 @@ class BackgroundTaskConfig {
 
   @override
   int get hashCode =>
-      maxQueueSize.hashCode ^
-      maxConcurrentTasks.hashCode ^
-      drainTimeoutSecs.hashCode;
+  maxQueueSize.hashCode ^
+  maxConcurrentTasks.hashCode ^
+  drainTimeoutSecs.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is BackgroundTaskConfig &&
-          runtimeType == other.runtimeType &&
-          maxQueueSize == other.maxQueueSize &&
-          maxConcurrentTasks == other.maxConcurrentTasks &&
-          drainTimeoutSecs == other.drainTimeoutSecs;
+  identical(this, other) ||
+  other is BackgroundTaskConfig &&
+  runtimeType == other.runtimeType &&
+  maxQueueSize == other.maxQueueSize &&
+  maxConcurrentTasks == other.maxConcurrentTasks &&
+  drainTimeoutSecs == other.drainTimeoutSecs;
 }
 
 /// Compression configuration shared across runtimes
@@ -349,17 +349,17 @@ class CompressionConfig {
 
   @override
   int get hashCode =>
-      gzip.hashCode ^ brotli.hashCode ^ minSize.hashCode ^ quality.hashCode;
+  gzip.hashCode ^ brotli.hashCode ^ minSize.hashCode ^ quality.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is CompressionConfig &&
-          runtimeType == other.runtimeType &&
-          gzip == other.gzip &&
-          brotli == other.brotli &&
-          minSize == other.minSize &&
-          quality == other.quality;
+  identical(this, other) ||
+  other is CompressionConfig &&
+  runtimeType == other.runtimeType &&
+  gzip == other.gzip &&
+  brotli == other.brotli &&
+  minSize == other.minSize &&
+  quality == other.quality;
 }
 
 /// Contact information
@@ -380,12 +380,12 @@ class ContactInfo {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ContactInfo &&
-          runtimeType == other.runtimeType &&
-          name == other.name &&
-          email == other.email &&
-          url == other.url;
+  identical(this, other) ||
+  other is ContactInfo &&
+  runtimeType == other.runtimeType &&
+  name == other.name &&
+  email == other.email &&
+  url == other.url;
 }
 
 /// CORS configuration for a route
@@ -408,24 +408,24 @@ class CorsConfig {
 
   @override
   int get hashCode =>
-      allowedOrigins.hashCode ^
-      allowedMethods.hashCode ^
-      allowedHeaders.hashCode ^
-      exposeHeaders.hashCode ^
-      maxAge.hashCode ^
-      allowCredentials.hashCode;
+  allowedOrigins.hashCode ^
+  allowedMethods.hashCode ^
+  allowedHeaders.hashCode ^
+  exposeHeaders.hashCode ^
+  maxAge.hashCode ^
+  allowCredentials.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is CorsConfig &&
-          runtimeType == other.runtimeType &&
-          allowedOrigins == other.allowedOrigins &&
-          allowedMethods == other.allowedMethods &&
-          allowedHeaders == other.allowedHeaders &&
-          exposeHeaders == other.exposeHeaders &&
-          maxAge == other.maxAge &&
-          allowCredentials == other.allowCredentials;
+  identical(this, other) ||
+  other is CorsConfig &&
+  runtimeType == other.runtimeType &&
+  allowedOrigins == other.allowedOrigins &&
+  allowedMethods == other.allowedMethods &&
+  allowedHeaders == other.allowedHeaders &&
+  exposeHeaders == other.exposeHeaders &&
+  maxAge == other.maxAge &&
+  allowCredentials == other.allowCredentials;
 }
 
 /// Configuration for fully-featured schemas with Query, Mutation, and Subscription types
@@ -447,18 +447,18 @@ class FullSchemaConfig {
 
   @override
   int get hashCode =>
-      introspectionEnabled.hashCode ^
-      complexityLimit.hashCode ^
-      depthLimit.hashCode;
+  introspectionEnabled.hashCode ^
+  complexityLimit.hashCode ^
+  depthLimit.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is FullSchemaConfig &&
-          runtimeType == other.runtimeType &&
-          introspectionEnabled == other.introspectionEnabled &&
-          complexityLimit == other.complexityLimit &&
-          depthLimit == other.depthLimit;
+  identical(this, other) ||
+  other is FullSchemaConfig &&
+  runtimeType == other.runtimeType &&
+  introspectionEnabled == other.introspectionEnabled &&
+  complexityLimit == other.complexityLimit &&
+  depthLimit == other.depthLimit;
 }
 
 @freezed
@@ -469,91 +469,91 @@ sealed class GraphQLError with _$GraphQLError {
   ///
   /// Occurs when the GraphQL executor encounters a runtime error during query execution.
   const factory GraphQLError.executionError({required String field0}) =
-      GraphQLError_ExecutionError;
+  GraphQLError_ExecutionError;
 
   /// Error during schema building
   ///
   /// Occurs when schema construction fails due to invalid definitions or conflicts.
   const factory GraphQLError.schemaBuildError({required String field0}) =
-      GraphQLError_SchemaBuildError;
+  GraphQLError_SchemaBuildError;
 
   /// Error during request handling
   ///
   /// Occurs when the HTTP request cannot be properly handled or parsed.
   const factory GraphQLError.requestHandlingError({required String field0}) =
-      GraphQLError_RequestHandlingError;
+  GraphQLError_RequestHandlingError;
 
   /// Serialization error
   ///
   /// Occurs during JSON serialization/deserialization of GraphQL values.
   const factory GraphQLError.serializationError({required String field0}) =
-      GraphQLError_SerializationError;
+  GraphQLError_SerializationError;
 
   /// JSON parsing error
   ///
   /// Occurs when JSON input cannot be parsed.
   const factory GraphQLError.jsonError({required String field0}) =
-      GraphQLError_JsonError;
+  GraphQLError_JsonError;
 
   /// GraphQL validation error
   ///
   /// Occurs when a GraphQL query fails schema validation.
   const factory GraphQLError.validationError({required String field0}) =
-      GraphQLError_ValidationError;
+  GraphQLError_ValidationError;
 
   /// GraphQL parse error
   ///
   /// Occurs when the GraphQL query string cannot be parsed.
   const factory GraphQLError.parseError({required String field0}) =
-      GraphQLError_ParseError;
+  GraphQLError_ParseError;
 
   /// Authentication error
   ///
   /// Occurs when request authentication fails.
   const factory GraphQLError.authenticationError({required String field0}) =
-      GraphQLError_AuthenticationError;
+  GraphQLError_AuthenticationError;
 
   /// Authorization error
   ///
   /// Occurs when user lacks required permissions.
   const factory GraphQLError.authorizationError({required String field0}) =
-      GraphQLError_AuthorizationError;
+  GraphQLError_AuthorizationError;
 
   /// Not found error
   ///
   /// Occurs when a requested resource is not found.
   const factory GraphQLError.notFound({required String field0}) =
-      GraphQLError_NotFound;
+  GraphQLError_NotFound;
 
   /// Rate limit error
   ///
   /// Occurs when rate limit is exceeded.
   const factory GraphQLError.rateLimitExceeded({required String field0}) =
-      GraphQLError_RateLimitExceeded;
+  GraphQLError_RateLimitExceeded;
 
   /// Invalid input error with validation details
   ///
   /// Occurs during input validation with detailed error information.
   const factory GraphQLError.invalidInput({required String message}) =
-      GraphQLError_InvalidInput;
+  GraphQLError_InvalidInput;
 
   /// Query complexity limit exceeded
   ///
   /// Occurs when a GraphQL query exceeds the configured complexity limit.
   const factory GraphQLError.complexityLimitExceeded() =
-      GraphQLError_ComplexityLimitExceeded;
+  GraphQLError_ComplexityLimitExceeded;
 
   /// Query depth limit exceeded
   ///
   /// Occurs when a GraphQL query exceeds the configured depth limit.
   const factory GraphQLError.depthLimitExceeded() =
-      GraphQLError_DepthLimitExceeded;
+  GraphQLError_DepthLimitExceeded;
 
   /// Internal server error
   ///
   /// Occurs when an unexpected internal error happens.
   const factory GraphQLError.internalError({required String field0}) =
-      GraphQLError_InternalError;
+  GraphQLError_InternalError;
 
   /// Stable machine-readable error type identifier (`SCREAMING_SNAKE_CASE`).
   ///
@@ -561,7 +561,7 @@ sealed class GraphQLError with _$GraphQLError {
   /// available to bindings that surface the identifier alongside the
   /// human-readable message.
   Future<String> errorType() =>
-      RustLib.instance.api.crateGraphQlErrorErrorType(that: this);
+  RustLib.instance.api.crateGraphQlErrorErrorType(that: this);
 
   /// Whether the error condition is transient and may succeed on retry.
   ///
@@ -569,7 +569,7 @@ sealed class GraphQLError with _$GraphQLError {
   /// error) and false for client-input errors (validation, parse, auth).
   /// Bindings forward this signal to retry/back-off logic.
   Future<bool> isTransient() =>
-      RustLib.instance.api.crateGraphQlErrorIsTransient(that: this);
+  RustLib.instance.api.crateGraphQlErrorIsTransient(that: this);
 
   /// Convert error to HTTP status code
   ///
@@ -595,7 +595,7 @@ sealed class GraphQLError with _$GraphQLError {
   /// assert_eq!(error.status_code(), 200); // GraphQL spec: errors return 200 with errors in body
   /// ```
   Future<PlatformInt64> statusCode() =>
-      RustLib.instance.api.crateGraphQlErrorStatusCode(that: this);
+  RustLib.instance.api.crateGraphQlErrorStatusCode(that: this);
 }
 
 /// Snapshot of a GraphQL subscription exchange over WebSocket.
@@ -625,22 +625,22 @@ class GraphQLSubscriptionSnapshot {
 
   @override
   int get hashCode =>
-      operationId.hashCode ^
-      acknowledged.hashCode ^
-      event.hashCode ^
-      errors.hashCode ^
-      completeReceived.hashCode;
+  operationId.hashCode ^
+  acknowledged.hashCode ^
+  event.hashCode ^
+  errors.hashCode ^
+  completeReceived.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is GraphQLSubscriptionSnapshot &&
-          runtimeType == other.runtimeType &&
-          operationId == other.operationId &&
-          acknowledged == other.acknowledged &&
-          event == other.event &&
-          errors == other.errors &&
-          completeReceived == other.completeReceived;
+  identical(this, other) ||
+  other is GraphQLSubscriptionSnapshot &&
+  runtimeType == other.runtimeType &&
+  operationId == other.operationId &&
+  acknowledged == other.acknowledged &&
+  event == other.event &&
+  errors == other.errors &&
+  completeReceived == other.completeReceived;
 }
 
 /// Configuration for gRPC support
@@ -753,30 +753,30 @@ class GrpcConfig {
 
   @override
   int get hashCode =>
-      enabled.hashCode ^
-      maxMessageSize.hashCode ^
-      enableCompression.hashCode ^
-      requestTimeout.hashCode ^
-      maxConcurrentStreams.hashCode ^
-      enableKeepalive.hashCode ^
-      keepaliveInterval.hashCode ^
-      keepaliveTimeout.hashCode ^
-      maxStreamResponseBytes.hashCode;
+  enabled.hashCode ^
+  maxMessageSize.hashCode ^
+  enableCompression.hashCode ^
+  requestTimeout.hashCode ^
+  maxConcurrentStreams.hashCode ^
+  enableKeepalive.hashCode ^
+  keepaliveInterval.hashCode ^
+  keepaliveTimeout.hashCode ^
+  maxStreamResponseBytes.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is GrpcConfig &&
-          runtimeType == other.runtimeType &&
-          enabled == other.enabled &&
-          maxMessageSize == other.maxMessageSize &&
-          enableCompression == other.enableCompression &&
-          requestTimeout == other.requestTimeout &&
-          maxConcurrentStreams == other.maxConcurrentStreams &&
-          enableKeepalive == other.enableKeepalive &&
-          keepaliveInterval == other.keepaliveInterval &&
-          keepaliveTimeout == other.keepaliveTimeout &&
-          maxStreamResponseBytes == other.maxStreamResponseBytes;
+  identical(this, other) ||
+  other is GrpcConfig &&
+  runtimeType == other.runtimeType &&
+  enabled == other.enabled &&
+  maxMessageSize == other.maxMessageSize &&
+  enableCompression == other.enableCompression &&
+  requestTimeout == other.requestTimeout &&
+  maxConcurrentStreams == other.maxConcurrentStreams &&
+  enableKeepalive == other.enableKeepalive &&
+  keepaliveInterval == other.keepaliveInterval &&
+  keepaliveTimeout == other.keepaliveTimeout &&
+  maxStreamResponseBytes == other.maxStreamResponseBytes;
 }
 
 /// JSON-RPC server configuration
@@ -802,20 +802,20 @@ class JsonRpcConfig {
 
   @override
   int get hashCode =>
-      enabled.hashCode ^
-      endpointPath.hashCode ^
-      enableBatch.hashCode ^
-      maxBatchSize.hashCode;
+  enabled.hashCode ^
+  endpointPath.hashCode ^
+  enableBatch.hashCode ^
+  maxBatchSize.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is JsonRpcConfig &&
-          runtimeType == other.runtimeType &&
-          enabled == other.enabled &&
-          endpointPath == other.endpointPath &&
-          enableBatch == other.enableBatch &&
-          maxBatchSize == other.maxBatchSize;
+  identical(this, other) ||
+  other is JsonRpcConfig &&
+  runtimeType == other.runtimeType &&
+  enabled == other.enabled &&
+  endpointPath == other.endpointPath &&
+  enableBatch == other.enableBatch &&
+  maxBatchSize == other.maxBatchSize;
 }
 
 /// JSON-RPC method metadata for routes that support JSON-RPC
@@ -878,24 +878,24 @@ class JsonRpcMethodInfo {
 
   @override
   int get hashCode =>
-      methodName.hashCode ^
-      description.hashCode ^
-      paramsSchema.hashCode ^
-      resultSchema.hashCode ^
-      deprecated.hashCode ^
-      tags.hashCode;
+  methodName.hashCode ^
+  description.hashCode ^
+  paramsSchema.hashCode ^
+  resultSchema.hashCode ^
+  deprecated.hashCode ^
+  tags.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is JsonRpcMethodInfo &&
-          runtimeType == other.runtimeType &&
-          methodName == other.methodName &&
-          description == other.description &&
-          paramsSchema == other.paramsSchema &&
-          resultSchema == other.resultSchema &&
-          deprecated == other.deprecated &&
-          tags == other.tags;
+  identical(this, other) ||
+  other is JsonRpcMethodInfo &&
+  runtimeType == other.runtimeType &&
+  methodName == other.methodName &&
+  description == other.description &&
+  paramsSchema == other.paramsSchema &&
+  resultSchema == other.resultSchema &&
+  deprecated == other.deprecated &&
+  tags == other.tags;
 }
 
 /// JWT authentication configuration
@@ -925,22 +925,22 @@ class JwtConfig {
 
   @override
   int get hashCode =>
-      secret.hashCode ^
-      algorithm.hashCode ^
-      audience.hashCode ^
-      issuer.hashCode ^
-      leeway.hashCode;
+  secret.hashCode ^
+  algorithm.hashCode ^
+  audience.hashCode ^
+  issuer.hashCode ^
+  leeway.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is JwtConfig &&
-          runtimeType == other.runtimeType &&
-          secret == other.secret &&
-          algorithm == other.algorithm &&
-          audience == other.audience &&
-          issuer == other.issuer &&
-          leeway == other.leeway;
+  identical(this, other) ||
+  other is JwtConfig &&
+  runtimeType == other.runtimeType &&
+  secret == other.secret &&
+  algorithm == other.algorithm &&
+  audience == other.audience &&
+  issuer == other.issuer &&
+  leeway == other.leeway;
 }
 
 /// License information
@@ -958,11 +958,11 @@ class LicenseInfo {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is LicenseInfo &&
-          runtimeType == other.runtimeType &&
-          name == other.name &&
-          url == other.url;
+  identical(this, other) ||
+  other is LicenseInfo &&
+  runtimeType == other.runtimeType &&
+  name == other.name &&
+  url == other.url;
 }
 
 /// HTTP method
@@ -1019,34 +1019,34 @@ class OpenApiConfig {
 
   @override
   int get hashCode =>
-      enabled.hashCode ^
-      title.hashCode ^
-      version.hashCode ^
-      description.hashCode ^
-      swaggerUiPath.hashCode ^
-      redocPath.hashCode ^
-      openapiJsonPath.hashCode ^
-      contact.hashCode ^
-      license.hashCode ^
-      servers.hashCode ^
-      securitySchemes.hashCode;
+  enabled.hashCode ^
+  title.hashCode ^
+  version.hashCode ^
+  description.hashCode ^
+  swaggerUiPath.hashCode ^
+  redocPath.hashCode ^
+  openapiJsonPath.hashCode ^
+  contact.hashCode ^
+  license.hashCode ^
+  servers.hashCode ^
+  securitySchemes.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is OpenApiConfig &&
-          runtimeType == other.runtimeType &&
-          enabled == other.enabled &&
-          title == other.title &&
-          version == other.version &&
-          description == other.description &&
-          swaggerUiPath == other.swaggerUiPath &&
-          redocPath == other.redocPath &&
-          openapiJsonPath == other.openapiJsonPath &&
-          contact == other.contact &&
-          license == other.license &&
-          servers == other.servers &&
-          securitySchemes == other.securitySchemes;
+  identical(this, other) ||
+  other is OpenApiConfig &&
+  runtimeType == other.runtimeType &&
+  enabled == other.enabled &&
+  title == other.title &&
+  version == other.version &&
+  description == other.description &&
+  swaggerUiPath == other.swaggerUiPath &&
+  redocPath == other.redocPath &&
+  openapiJsonPath == other.openapiJsonPath &&
+  contact == other.contact &&
+  license == other.license &&
+  servers == other.servers &&
+  securitySchemes == other.securitySchemes;
 }
 
 /// Full parse result returned by `POST /asyncapi/parse`
@@ -1069,24 +1069,24 @@ class ParseResult {
 
   @override
   int get hashCode =>
-      specVersion.hashCode ^
-      title.hashCode ^
-      apiVersion.hashCode ^
-      channels.hashCode ^
-      operations.hashCode ^
-      messages.hashCode;
+  specVersion.hashCode ^
+  title.hashCode ^
+  apiVersion.hashCode ^
+  channels.hashCode ^
+  operations.hashCode ^
+  messages.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ParseResult &&
-          runtimeType == other.runtimeType &&
-          specVersion == other.specVersion &&
-          title == other.title &&
-          apiVersion == other.apiVersion &&
-          channels == other.channels &&
-          operations == other.operations &&
-          messages == other.messages;
+  identical(this, other) ||
+  other is ParseResult &&
+  runtimeType == other.runtimeType &&
+  specVersion == other.specVersion &&
+  title == other.title &&
+  apiVersion == other.apiVersion &&
+  channels == other.channels &&
+  operations == other.operations &&
+  messages == other.messages;
 }
 
 /// A single channel extracted from an AsyncAPI spec
@@ -1112,17 +1112,17 @@ class ParsedChannel {
 
   @override
   int get hashCode =>
-      name.hashCode ^ address.hashCode ^ messages.hashCode ^ bindings.hashCode;
+  name.hashCode ^ address.hashCode ^ messages.hashCode ^ bindings.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ParsedChannel &&
-          runtimeType == other.runtimeType &&
-          name == other.name &&
-          address == other.address &&
-          messages == other.messages &&
-          bindings == other.bindings;
+  identical(this, other) ||
+  other is ParsedChannel &&
+  runtimeType == other.runtimeType &&
+  name == other.name &&
+  address == other.address &&
+  messages == other.messages &&
+  bindings == other.bindings;
 }
 
 /// A resolved message (name + JSON Schema)
@@ -1140,11 +1140,11 @@ class ParsedMessage {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ParsedMessage &&
-          runtimeType == other.runtimeType &&
-          name == other.name &&
-          schema == other.schema;
+  identical(this, other) ||
+  other is ParsedMessage &&
+  runtimeType == other.runtimeType &&
+  name == other.name &&
+  schema == other.schema;
 }
 
 /// A single operation extracted from an AsyncAPI spec
@@ -1169,12 +1169,12 @@ class ParsedOperation {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ParsedOperation &&
-          runtimeType == other.runtimeType &&
-          name == other.name &&
-          action == other.action &&
-          channel == other.channel;
+  identical(this, other) ||
+  other is ParsedOperation &&
+  runtimeType == other.runtimeType &&
+  name == other.name &&
+  action == other.action &&
+  channel == other.channel;
 }
 
 /// RFC 9457 Problem Details for HTTP APIs
@@ -1234,24 +1234,24 @@ class ProblemDetails {
 
   @override
   int get hashCode =>
-      typeUri.hashCode ^
-      title.hashCode ^
-      status.hashCode ^
-      detail.hashCode ^
-      instance.hashCode ^
-      extensions.hashCode;
+  typeUri.hashCode ^
+  title.hashCode ^
+  status.hashCode ^
+  detail.hashCode ^
+  instance.hashCode ^
+  extensions.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ProblemDetails &&
-          runtimeType == other.runtimeType &&
-          typeUri == other.typeUri &&
-          title == other.title &&
-          status == other.status &&
-          detail == other.detail &&
-          instance == other.instance &&
-          extensions == other.extensions;
+  identical(this, other) ||
+  other is ProblemDetails &&
+  runtimeType == other.runtimeType &&
+  typeUri == other.typeUri &&
+  title == other.title &&
+  status == other.status &&
+  detail == other.detail &&
+  instance == other.instance &&
+  extensions == other.extensions;
 }
 
 /// Configuration for schemas with Query and Mutation types
@@ -1273,18 +1273,18 @@ class QueryMutationConfig {
 
   @override
   int get hashCode =>
-      introspectionEnabled.hashCode ^
-      complexityLimit.hashCode ^
-      depthLimit.hashCode;
+  introspectionEnabled.hashCode ^
+  complexityLimit.hashCode ^
+  depthLimit.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is QueryMutationConfig &&
-          runtimeType == other.runtimeType &&
-          introspectionEnabled == other.introspectionEnabled &&
-          complexityLimit == other.complexityLimit &&
-          depthLimit == other.depthLimit;
+  identical(this, other) ||
+  other is QueryMutationConfig &&
+  runtimeType == other.runtimeType &&
+  introspectionEnabled == other.introspectionEnabled &&
+  complexityLimit == other.complexityLimit &&
+  depthLimit == other.depthLimit;
 }
 
 /// Configuration for schemas with only Query type
@@ -1306,18 +1306,18 @@ class QueryOnlyConfig {
 
   @override
   int get hashCode =>
-      introspectionEnabled.hashCode ^
-      complexityLimit.hashCode ^
-      depthLimit.hashCode;
+  introspectionEnabled.hashCode ^
+  complexityLimit.hashCode ^
+  depthLimit.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is QueryOnlyConfig &&
-          runtimeType == other.runtimeType &&
-          introspectionEnabled == other.introspectionEnabled &&
-          complexityLimit == other.complexityLimit &&
-          depthLimit == other.depthLimit;
+  identical(this, other) ||
+  other is QueryOnlyConfig &&
+  runtimeType == other.runtimeType &&
+  introspectionEnabled == other.introspectionEnabled &&
+  complexityLimit == other.complexityLimit &&
+  depthLimit == other.depthLimit;
 }
 
 /// Rate limiting configuration shared across runtimes
@@ -1342,12 +1342,12 @@ class RateLimitConfig {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is RateLimitConfig &&
-          runtimeType == other.runtimeType &&
-          perSecond == other.perSecond &&
-          burst == other.burst &&
-          ipBased == other.ipBased;
+  identical(this, other) ||
+  other is RateLimitConfig &&
+  runtimeType == other.runtimeType &&
+  perSecond == other.perSecond &&
+  burst == other.burst &&
+  ipBased == other.ipBased;
 }
 
 /// HTTP Response with custom status code, headers, and content
@@ -1372,12 +1372,12 @@ class Response {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Response &&
-          runtimeType == other.runtimeType &&
-          content == other.content &&
-          statusCode == other.statusCode &&
-          headers == other.headers;
+  identical(this, other) ||
+  other is Response &&
+  runtimeType == other.runtimeType &&
+  content == other.content &&
+  statusCode == other.statusCode &&
+  headers == other.headers;
 }
 
 /// Snapshot of an Axum response used by higher-level language bindings.
@@ -1402,12 +1402,12 @@ class ResponseSnapshot {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ResponseSnapshot &&
-          runtimeType == other.runtimeType &&
-          status == other.status &&
-          headers == other.headers &&
-          body == other.body;
+  identical(this, other) ||
+  other is ResponseSnapshot &&
+  runtimeType == other.runtimeType &&
+  status == other.status &&
+  headers == other.headers &&
+  body == other.body;
 }
 
 /// Configuration for GraphQL schema building.
@@ -1432,18 +1432,18 @@ class SchemaConfig {
 
   @override
   int get hashCode =>
-      introspectionEnabled.hashCode ^
-      complexityLimit.hashCode ^
-      depthLimit.hashCode;
+  introspectionEnabled.hashCode ^
+  complexityLimit.hashCode ^
+  depthLimit.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is SchemaConfig &&
-          runtimeType == other.runtimeType &&
-          introspectionEnabled == other.introspectionEnabled &&
-          complexityLimit == other.complexityLimit &&
-          depthLimit == other.depthLimit;
+  identical(this, other) ||
+  other is SchemaConfig &&
+  runtimeType == other.runtimeType &&
+  introspectionEnabled == other.introspectionEnabled &&
+  complexityLimit == other.complexityLimit &&
+  depthLimit == other.depthLimit;
 }
 
 @freezed
@@ -1452,11 +1452,11 @@ sealed class SchemaError with _$SchemaError {
 
   /// Generic schema building error
   const factory SchemaError.buildingFailed({required String field0}) =
-      SchemaError_BuildingFailed;
+  SchemaError_BuildingFailed;
 
   /// Configuration validation error
   const factory SchemaError.validationError({required String field0}) =
-      SchemaError_ValidationError;
+  SchemaError_ValidationError;
 
   /// Complexity limit exceeded
   const factory SchemaError.complexityLimitExceeded({
@@ -1568,50 +1568,50 @@ class ServerConfig {
 
   @override
   int get hashCode =>
-      host.hashCode ^
-      port.hashCode ^
-      workers.hashCode ^
-      enableRequestId.hashCode ^
-      maxBodySize.hashCode ^
-      requestTimeout.hashCode ^
-      compression.hashCode ^
-      rateLimit.hashCode ^
-      jwtAuth.hashCode ^
-      apiKeyAuth.hashCode ^
-      staticFiles.hashCode ^
-      gracefulShutdown.hashCode ^
-      shutdownTimeout.hashCode ^
-      asyncapi.hashCode ^
-      openapi.hashCode ^
-      jsonrpc.hashCode ^
-      grpc.hashCode ^
-      backgroundTasks.hashCode ^
-      enableHttpTrace.hashCode;
+  host.hashCode ^
+  port.hashCode ^
+  workers.hashCode ^
+  enableRequestId.hashCode ^
+  maxBodySize.hashCode ^
+  requestTimeout.hashCode ^
+  compression.hashCode ^
+  rateLimit.hashCode ^
+  jwtAuth.hashCode ^
+  apiKeyAuth.hashCode ^
+  staticFiles.hashCode ^
+  gracefulShutdown.hashCode ^
+  shutdownTimeout.hashCode ^
+  asyncapi.hashCode ^
+  openapi.hashCode ^
+  jsonrpc.hashCode ^
+  grpc.hashCode ^
+  backgroundTasks.hashCode ^
+  enableHttpTrace.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ServerConfig &&
-          runtimeType == other.runtimeType &&
-          host == other.host &&
-          port == other.port &&
-          workers == other.workers &&
-          enableRequestId == other.enableRequestId &&
-          maxBodySize == other.maxBodySize &&
-          requestTimeout == other.requestTimeout &&
-          compression == other.compression &&
-          rateLimit == other.rateLimit &&
-          jwtAuth == other.jwtAuth &&
-          apiKeyAuth == other.apiKeyAuth &&
-          staticFiles == other.staticFiles &&
-          gracefulShutdown == other.gracefulShutdown &&
-          shutdownTimeout == other.shutdownTimeout &&
-          asyncapi == other.asyncapi &&
-          openapi == other.openapi &&
-          jsonrpc == other.jsonrpc &&
-          grpc == other.grpc &&
-          backgroundTasks == other.backgroundTasks &&
-          enableHttpTrace == other.enableHttpTrace;
+  identical(this, other) ||
+  other is ServerConfig &&
+  runtimeType == other.runtimeType &&
+  host == other.host &&
+  port == other.port &&
+  workers == other.workers &&
+  enableRequestId == other.enableRequestId &&
+  maxBodySize == other.maxBodySize &&
+  requestTimeout == other.requestTimeout &&
+  compression == other.compression &&
+  rateLimit == other.rateLimit &&
+  jwtAuth == other.jwtAuth &&
+  apiKeyAuth == other.apiKeyAuth &&
+  staticFiles == other.staticFiles &&
+  gracefulShutdown == other.gracefulShutdown &&
+  shutdownTimeout == other.shutdownTimeout &&
+  asyncapi == other.asyncapi &&
+  openapi == other.openapi &&
+  jsonrpc == other.jsonrpc &&
+  grpc == other.grpc &&
+  backgroundTasks == other.backgroundTasks &&
+  enableHttpTrace == other.enableHttpTrace;
 }
 
 /// Server information
@@ -1629,11 +1629,11 @@ class ServerInfo {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ServerInfo &&
-          runtimeType == other.runtimeType &&
-          url == other.url &&
-          description == other.description;
+  identical(this, other) ||
+  other is ServerInfo &&
+  runtimeType == other.runtimeType &&
+  url == other.url &&
+  description == other.description;
 }
 
 @freezed
@@ -1642,11 +1642,11 @@ sealed class SnapshotError with _$SnapshotError {
 
   /// Response header could not be decoded to UTF-8.
   const factory SnapshotError.invalidHeader({required String field0}) =
-      SnapshotError_InvalidHeader;
+  SnapshotError_InvalidHeader;
 
   /// Body decompression failed.
   const factory SnapshotError.decompression({required String field0}) =
-      SnapshotError_Decompression;
+  SnapshotError_Decompression;
 }
 
 /// An individual SSE event
@@ -1687,17 +1687,17 @@ class SseEvent {
 
   @override
   int get hashCode =>
-      eventType.hashCode ^ data.hashCode ^ id.hashCode ^ retry.hashCode;
+  eventType.hashCode ^ data.hashCode ^ id.hashCode ^ retry.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is SseEvent &&
-          runtimeType == other.runtimeType &&
-          eventType == other.eventType &&
-          data == other.data &&
-          id == other.id &&
-          retry == other.retry;
+  identical(this, other) ||
+  other is SseEvent &&
+  runtimeType == other.runtimeType &&
+  eventType == other.eventType &&
+  data == other.data &&
+  id == other.id &&
+  retry == other.retry;
 }
 
 /// Static file serving configuration
@@ -1723,20 +1723,20 @@ class StaticFilesConfig {
 
   @override
   int get hashCode =>
-      directory.hashCode ^
-      routePrefix.hashCode ^
-      indexFile.hashCode ^
-      cacheControl.hashCode;
+  directory.hashCode ^
+  routePrefix.hashCode ^
+  indexFile.hashCode ^
+  cacheControl.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is StaticFilesConfig &&
-          runtimeType == other.runtimeType &&
-          directory == other.directory &&
-          routePrefix == other.routePrefix &&
-          indexFile == other.indexFile &&
-          cacheControl == other.cacheControl;
+  identical(this, other) ||
+  other is StaticFilesConfig &&
+  runtimeType == other.runtimeType &&
+  directory == other.directory &&
+  routePrefix == other.routePrefix &&
+  indexFile == other.indexFile &&
+  cacheControl == other.cacheControl;
 }
 
 /// Represents an uploaded file from multipart/form-data requests.
@@ -1787,22 +1787,22 @@ class UploadFile {
 
   @override
   int get hashCode =>
-      filename.hashCode ^
-      contentType.hashCode ^
-      size.hashCode ^
-      content.hashCode ^
-      contentEncoding.hashCode;
+  filename.hashCode ^
+  contentType.hashCode ^
+  size.hashCode ^
+  content.hashCode ^
+  contentEncoding.hashCode;
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is UploadFile &&
-          runtimeType == other.runtimeType &&
-          filename == other.filename &&
-          contentType == other.contentType &&
-          size == other.size &&
-          content == other.content &&
-          contentEncoding == other.contentEncoding;
+  identical(this, other) ||
+  other is UploadFile &&
+  runtimeType == other.runtimeType &&
+  filename == other.filename &&
+  contentType == other.contentType &&
+  size == other.size &&
+  content == other.content &&
+  contentEncoding == other.contentEncoding;
 }
 
 @freezed
@@ -1811,11 +1811,11 @@ sealed class WebSocketMessage with _$WebSocketMessage {
 
   /// A text message.
   const factory WebSocketMessage.text({required String field0}) =
-      WebSocketMessage_Text;
+  WebSocketMessage_Text;
 
   /// A binary message.
   const factory WebSocketMessage.binary({required Uint8List field0}) =
-      WebSocketMessage_Binary;
+  WebSocketMessage_Binary;
 
   /// A close message with a numeric close code (RFC 6455) and optional reason text.
   ///
@@ -1831,9 +1831,9 @@ sealed class WebSocketMessage with _$WebSocketMessage {
 
   /// A ping message.
   const factory WebSocketMessage.ping({required Uint8List field0}) =
-      WebSocketMessage_Ping;
+  WebSocketMessage_Ping;
 
   /// A pong message.
   const factory WebSocketMessage.pong({required Uint8List field0}) =
-      WebSocketMessage_Pong;
+  WebSocketMessage_Pong;
 }

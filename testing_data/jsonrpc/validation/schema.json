@@ -97,11 +97,7 @@
         },
         "schemaConfig": {
           "type": "string",
-          "enum": [
-            "additionalPropertiesFalse",
-            "additionalPropertiesTrue",
-            "additionalPropertiesDefault"
-          ],
+          "enum": ["additionalPropertiesFalse", "additionalPropertiesTrue", "additionalPropertiesDefault"],
           "description": "Schema configuration variant (used in extra_fields tests)"
         },
         "note": {

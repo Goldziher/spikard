@@ -17,9 +17,7 @@
     "services": [
       {
         "name": "ArgService",
-        "methods": [
-          { "name": "Validate", "input_type": "ArgRequest", "output_type": "ArgResponse" }
-        ]
+        "methods": [{ "name": "Validate", "input_type": "ArgRequest", "output_type": "ArgResponse" }]
       }
     ]
   },

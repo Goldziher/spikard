@@ -17,9 +17,7 @@
     "services": [
       {
         "name": "AuthService",
-        "methods": [
-          { "name": "SecureOp", "input_type": "AuthRequest", "output_type": "AuthResponse" }
-        ]
+        "methods": [{ "name": "SecureOp", "input_type": "AuthRequest", "output_type": "AuthResponse" }]
       }
     ]
   },

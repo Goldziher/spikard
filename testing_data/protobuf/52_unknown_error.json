@@ -17,9 +17,7 @@
     "services": [
       {
         "name": "UnknownService",
-        "methods": [
-          { "name": "Fail", "input_type": "UnknownRequest", "output_type": "UnknownResponse" }
-        ]
+        "methods": [{ "name": "Fail", "input_type": "UnknownRequest", "output_type": "UnknownResponse" }]
       }
     ]
   },

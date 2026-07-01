@@ -8,16 +8,16 @@ version: "3"
 # update, upgrade, publish) are handled by alef.
 #
 # Common entry points:
-#   task setup          -> install all dependencies (rust + alef setup + prek)
+#   task setup          -> install all dependencies (rust + alef setup + poly hooks)
 #   task build          -> build Rust core only (debug)
 #   task build:all      -> build core + bindings (debug)
 #   task build:release  -> build Rust core only (release)
 #   task test           -> run Rust core tests
 #   task e2e:all        -> generate + build + run e2e tests for all bindings
 #   task test:cov       -> tests with coverage
-#   task format         -> format Rust code
+#   task format         -> format all code via poly
 #   task alef:format    -> format Alef-managed generated output
-#   task lint           -> run prek (full pre-commit chain)
+#   task lint           -> lint all code via poly
 #   task update         -> compatible dependency updates everywhere
 #   task upgrade        -> aggressive upgrades
 #   task clean          -> remove all build artifacts
@@ -127,25 +127,24 @@ tasks:
 
   # === Lint & Format ===
   lint:
-    desc: "Lint all code via prek (pre-commit framework)"
+    desc: "Lint all code via poly"
     cmds:
-      - prek run --all-files
+      - poly lint .
 
   lint:check:
     desc: "Lint all code WITHOUT auto-fix (Rust + bindings)"
     cmds:
-      - task: rust:lint:check
-      - alef lint
+      - poly lint .
 
   format:
-    desc: "Format Rust code"
+    desc: "Format all code via poly"
     cmds:
-      - task: rust:format
+      - poly fmt --fix .
 
   format:check:
     desc: "Check code formatting without modifications"
     cmds:
-      - task: rust:format:check
+      - poly fmt --check .
 
   check:
     desc: "Run all checks (format + lint, no modifications)"
@@ -159,7 +158,6 @@ tasks:
     cmds:
       - task: rust:update
       - alef update
-      - prek autoupdate
 
   upgrade:
     desc: "Upgrade all dependencies to latest including breaking changes"
@@ -168,7 +166,6 @@ tasks:
       - task: rust:upgrade
       - task: zig:deps:upgrade
       - alef update --latest
-      - prek autoupdate
       - cmd: |
           if command -v gau >/dev/null 2>&1; then
             gau --recursive .github/
@@ -434,14 +431,14 @@ tasks:
     dir: packages/ruby
 
   php:format:
-    desc: "Format PHP binding with php-cs-fixer"
+    desc: "Format PHP binding with poly"
     cmds:
-      - composer -d packages/php run format
+      - poly fmt --fix packages/php
 
   php:lint:
-    desc: "Lint PHP binding (phpstan + php-cs-fixer)"
+    desc: "Lint PHP binding with poly"
     cmds:
-      - composer -d packages/php run lint
+      - poly lint packages/php
 
   csharp:format:
     desc: "Format C# binding with dotnet format"

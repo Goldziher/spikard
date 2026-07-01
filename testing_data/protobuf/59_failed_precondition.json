@@ -17,9 +17,7 @@
     "services": [
       {
         "name": "StateService",
-        "methods": [
-          { "name": "Proceed", "input_type": "StateRequest", "output_type": "StateResponse" }
-        ]
+        "methods": [{ "name": "Proceed", "input_type": "StateRequest", "output_type": "StateResponse" }]
       }
     ]
   },

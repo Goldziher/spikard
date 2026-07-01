@@ -2,16 +2,13 @@ import Foundation
 import RustBridge
 
 @_silgen_name("spikard_server_config_from_json")
-private func _spikard_server_config_from_json(_ json: UnsafePointer<CChar>)
-  -> UnsafeMutableRawPointer?
+private func _spikard_server_config_from_json(_ json: UnsafePointer<CChar>) -> UnsafeMutableRawPointer?
 
 @_silgen_name("spikard_server_config_free")
 private func _spikard_server_config_free(_ ptr: UnsafeMutableRawPointer?)
 
 @_silgen_name("spikard_app_config")
-private func _spikard_app_config(
-  _ app: UnsafeMutablePointer<OpaquePointer>, _ config: UnsafeMutableRawPointer?
-) -> UnsafeMutableRawPointer?
+private func _spikard_app_config(_ app: UnsafeMutablePointer<OpaquePointer>, _ config: UnsafeMutableRawPointer?) -> UnsafeMutableRawPointer?
 
 /// Errors thrown by service wrapper methods.
 public enum ServiceError: Error {
@@ -28,12 +25,8 @@ public enum ServiceError: Error {
 // Swift calls it via this @_silgen_name import at module scope.
 @_silgen_name("app_route_via_callback")
 private func _app_route_via_callback(
-  _ app: UnsafeMutablePointer<OpaquePointer>, _ builder: RustBridge.RouteBuilder,
-  _ ctx: UnsafeMutableRawPointer?,
-  _ callback:
-    @convention(c) (UnsafeMutableRawPointer?, UnsafePointer<UInt8>?, Int) -> UnsafeMutablePointer<
-      UInt8
-    >?
+  _ app: UnsafeMutablePointer<OpaquePointer>,    _ builder: RustBridge.RouteBuilder,    _ ctx: UnsafeMutableRawPointer?,
+  _ callback: @convention(c) (UnsafeMutableRawPointer?, UnsafePointer<UInt8>?, Int) -> UnsafeMutablePointer<UInt8>?
 ) -> Int32
 /// Spikard application builder.
 public final class App {
@@ -86,11 +79,10 @@ public final class App {
     // Build ServerConfig JSON with host and port
     let configDict: [String: Any] = [
       "host": host,
-      "port": port,
+      "port": port
     ]
     guard let configData = try? JSONSerialization.data(withJSONObject: configDict, options: []),
-      let configJson = String(data: configData, encoding: .utf8)
-    else {
+    let configJson = String(data: configData, encoding: .utf8) else {
       throw ServiceError.runtime("Failed to serialize server config")
     }
 
@@ -119,9 +111,7 @@ public final class App {
   /// # Errors
   ///
   /// Returns an error if route construction fails or if the handler registration fails.
-  public func route(_ handler: @escaping (String) -> String, builder: RustBridge.RouteBuilder)
-    throws
-  {
+  public func route(_ handler: @escaping (String) -> String, builder: RustBridge.RouteBuilder) throws {
     // Box the handler and retain it; the box pointer is passed to the
     // C layer as the trampoline context and released in deinit.
     let handlerBox = HandlerBox(handler)
@@ -129,27 +119,24 @@ public final class App {
     handlerBoxes.append(contextPtr)
 
     // Create a C-compatible callback wrapper
-    let trampolineFunc:
-      @convention(c) (UnsafeMutableRawPointer?, UnsafePointer<UInt8>?, Int) -> UnsafeMutablePointer<
-        UInt8
-      >? = { contextPtr, requestPtr, requestLen in
-        guard let contextPtr = contextPtr else { return nil }
-        guard let requestPtr = requestPtr else { return nil }
+    let trampolineFunc: @convention(c) (UnsafeMutableRawPointer?, UnsafePointer<UInt8>?, Int) -> UnsafeMutablePointer<UInt8>? = { contextPtr, requestPtr, requestLen in
+      guard let contextPtr = contextPtr else { return nil }
+      guard let requestPtr = requestPtr else { return nil }
 
-        // Recover the boxed handler closure from the context pointer
-        let handlerBox = Unmanaged<HandlerBox>.fromOpaque(contextPtr).takeUnretainedValue()
-        let requestData = Data(bytes: requestPtr, count: requestLen)
-        let requestJSON = String(data: requestData, encoding: .utf8) ?? ""
-        let responseJSON = handlerBox.handler(requestJSON)
+      // Recover the boxed handler closure from the context pointer
+      let handlerBox = Unmanaged<HandlerBox>.fromOpaque(contextPtr).takeUnretainedValue()
+      let requestData = Data(bytes: requestPtr, count: requestLen)
+      let requestJSON = String(data: requestData, encoding: .utf8) ?? ""
+      let responseJSON = handlerBox.handler(requestJSON)
 
-        // Allocate response string on heap (Rust side frees via extern "C" { fn free })
-        let responseBytes = responseJSON.utf8CString
-        let responsePtr = UnsafeMutablePointer<UInt8>.allocate(capacity: responseBytes.count)
-        for (i, byte) in responseBytes.enumerated() {
-          responsePtr[i] = UInt8(bitPattern: byte)
-        }
-        return responsePtr
+      // Allocate response string on heap (Rust side frees via extern "C" { fn free })
+      let responseBytes = responseJSON.utf8CString
+      let responsePtr = UnsafeMutablePointer<UInt8>.allocate(capacity: responseBytes.count)
+      for (i, byte) in responseBytes.enumerated() {
+        responsePtr[i] = UInt8(bitPattern: byte)
       }
+      return responsePtr
+    }
 
     guard let inner = inner else { throw ServiceError.invalidHandle }
 
@@ -299,7 +286,7 @@ public final class App {
   /// # Errors
   ///
   /// Returns an error if server construction or execution fails.
-  public func run() throws {
+  public func run() throws -> Void {
     guard let inner = inner else { throw ServiceError.invalidHandle }
 
     // swift-bridge emits `fn run(client: &mut App) -> String;` as a free

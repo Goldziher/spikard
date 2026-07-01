@@ -17,9 +17,7 @@
     "services": [
       {
         "name": "RangeService",
-        "methods": [
-          { "name": "Check", "input_type": "RangeRequest", "output_type": "RangeResponse" }
-        ]
+        "methods": [{ "name": "Check", "input_type": "RangeRequest", "output_type": "RangeResponse" }]
       }
     ]
   },

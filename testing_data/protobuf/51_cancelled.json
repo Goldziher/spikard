@@ -17,9 +17,7 @@
     "services": [
       {
         "name": "CancelService",
-        "methods": [
-          { "name": "Operation", "input_type": "CancelRequest", "output_type": "CancelResponse" }
-        ]
+        "methods": [{ "name": "Operation", "input_type": "CancelRequest", "output_type": "CancelResponse" }]
       }
     ]
   },

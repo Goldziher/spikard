@@ -120,23 +120,13 @@
       "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
       "reason": "Missing @ symbol and proper domain format",
       "valid_examples": ["user@example.com", "alice.johnson@company.co.uk", "bob+tag@domain.org"],
-      "invalid_examples": [
-        "not-an-email",
-        "user@",
-        "@example.com",
-        "user@domain",
-        "user domain@example.com"
-      ]
+      "invalid_examples": ["not-an-email", "user@", "@example.com", "user@domain", "user domain@example.com"]
     },
     "url_validation": {
       "input": "not a url",
       "pattern": "^https?://[\\w.-]+\\.[a-zA-Z]{2,}",
       "reason": "Missing http:// or https:// scheme and valid domain",
-      "valid_examples": [
-        "https://example.com",
-        "http://www.domain.org",
-        "https://subdomain.example.co.uk"
-      ],
+      "valid_examples": ["https://example.com", "http://www.domain.org", "https://subdomain.example.co.uk"],
       "invalid_examples": ["not a url", "example.com", "ftp://example.com", "https://"]
     },
     "phone_validation": {

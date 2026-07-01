@@ -33,10 +33,7 @@ impl spikard::LifecycleHook<axum::http::Request<spikard::Body>, axum::http::Resp
         Box<
             dyn std::future::Future<
                     Output = Result<
-                        spikard::HookResult<
-                            axum::http::Request<spikard::Body>,
-                            axum::http::Response<spikard::Body>,
-                        >,
+                        spikard::HookResult<axum::http::Request<spikard::Body>, axum::http::Response<spikard::Body>>,
                         String,
                     >,
                 > + Send
@@ -99,10 +96,7 @@ impl spikard::LifecycleHook<axum::http::Request<spikard::Body>, axum::http::Resp
         Box<
             dyn std::future::Future<
                     Output = Result<
-                        spikard::HookResult<
-                            axum::http::Response<spikard::Body>,
-                            axum::http::Response<spikard::Body>,
-                        >,
+                        spikard::HookResult<axum::http::Response<spikard::Body>, axum::http::Response<spikard::Body>>,
                         String,
                     >,
                 > + Send
@@ -182,7 +176,11 @@ pub extern "C" fn spikard_app_on_request(
     }
     // SAFETY: name is non-null and caller guarantees valid UTF-8 C string.
     let hook_name = unsafe { CStr::from_ptr(name) }.to_string_lossy().into_owned();
-    let hook = Arc::new(FfiLifecycleHook { name: hook_name, callback, context });
+    let hook = Arc::new(FfiLifecycleHook {
+        name: hook_name,
+        callback,
+        context,
+    });
     // SAFETY: owner was allocated by _new() and is valid until freed.
     unsafe {
         match (*owner).inner.as_mut() {
@@ -208,7 +206,11 @@ pub extern "C" fn spikard_app_pre_validation(
         return 1;
     }
     let hook_name = unsafe { CStr::from_ptr(name) }.to_string_lossy().into_owned();
-    let hook = Arc::new(FfiLifecycleHook { name: hook_name, callback, context });
+    let hook = Arc::new(FfiLifecycleHook {
+        name: hook_name,
+        callback,
+        context,
+    });
     unsafe {
         match (*owner).inner.as_mut() {
             Some(app) => app.pre_validation(hook),
@@ -233,7 +235,11 @@ pub extern "C" fn spikard_app_pre_handler(
         return 1;
     }
     let hook_name = unsafe { CStr::from_ptr(name) }.to_string_lossy().into_owned();
-    let hook = Arc::new(FfiLifecycleHook { name: hook_name, callback, context });
+    let hook = Arc::new(FfiLifecycleHook {
+        name: hook_name,
+        callback,
+        context,
+    });
     unsafe {
         match (*owner).inner.as_mut() {
             Some(app) => app.pre_handler(hook),
@@ -258,7 +264,11 @@ pub extern "C" fn spikard_app_on_response(
         return 1;
     }
     let hook_name = unsafe { CStr::from_ptr(name) }.to_string_lossy().into_owned();
-    let hook = Arc::new(FfiLifecycleHook { name: hook_name, callback, context });
+    let hook = Arc::new(FfiLifecycleHook {
+        name: hook_name,
+        callback,
+        context,
+    });
     unsafe {
         match (*owner).inner.as_mut() {
             Some(app) => app.on_response(hook),
@@ -283,7 +293,11 @@ pub extern "C" fn spikard_app_on_error(
         return 1;
     }
     let hook_name = unsafe { CStr::from_ptr(name) }.to_string_lossy().into_owned();
-    let hook = Arc::new(FfiLifecycleHook { name: hook_name, callback, context });
+    let hook = Arc::new(FfiLifecycleHook {
+        name: hook_name,
+        callback,
+        context,
+    });
     unsafe {
         match (*owner).inner.as_mut() {
             Some(app) => app.on_error(hook),

@@ -4,15 +4,7 @@
   "title": "Spikard GraphQL Test Fixture Schema",
   "description": "Schema for GraphQL query, mutation, subscription, and directive test fixtures used to generate e2e test apps and test suites. Fixtures are organized into categories: queries (field selection and nesting), mutations (data modification), validation (input and schema constraints), scalars (custom scalar types), errors (error handling), and edge_cases (protocol boundaries).",
   "type": "object",
-  "required": [
-    "name",
-    "description",
-    "operation_type",
-    "endpoint",
-    "schema",
-    "request",
-    "expected_response"
-  ],
+  "required": ["name", "description", "operation_type", "endpoint", "schema", "request", "expected_response"],
   "properties": {
     "name": {
       "type": "string",
@@ -338,11 +330,7 @@
           "description": "Tests deeply nested field selection",
           "purpose": "Verify depth limit enforcement",
           "test_cases": 3,
-          "scenarios": [
-            "Valid nested query",
-            "Query exceeds depth limit",
-            "Maximum allowed nesting"
-          ]
+          "scenarios": ["Valid nested query", "Query exceeds depth limit", "Maximum allowed nesting"]
         },
         "large_payload.json": {
           "description": "Tests handling of large result sets",

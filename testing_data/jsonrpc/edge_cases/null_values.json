@@ -118,11 +118,7 @@
       },
       "result": {
         "status": "processed",
-        "nullFields": [
-          "user.profile.bio",
-          "user.profile.avatar",
-          "user.profile.preferences.notifications"
-        ]
+        "nullFields": ["user.profile.bio", "user.profile.avatar", "user.profile.preferences.notifications"]
       }
     },
     {

@@ -45,7 +45,9 @@ pub extern "C" fn spikard_test_client_new(app: *mut AppOpaque) -> *mut TestClien
         Err(_) => return std::ptr::null_mut(),
     };
 
-    Box::into_raw(Box::new(TestClientOpaque { inner: Some(Box::new(client)) }))
+    Box::into_raw(Box::new(TestClientOpaque {
+        inner: Some(Box::new(client)),
+    }))
 }
 
 /// Free a TestClient handle.
@@ -164,7 +166,10 @@ where
 /// - `ptr` must be a valid handle returned by `spikard_test_client_new()`.
 /// - `path` must be a valid null-terminated UTF-8 C string.
 #[no_mangle]
-pub extern "C" fn spikard_test_client_get(ptr: *const TestClientOpaque, path: *const c_char) -> *mut TestResponseOpaque {
+pub extern "C" fn spikard_test_client_get(
+    ptr: *const TestClientOpaque,
+    path: *const c_char,
+) -> *mut TestResponseOpaque {
     if ptr.is_null() || path.is_null() {
         return std::ptr::null_mut();
     }
@@ -177,7 +182,9 @@ pub extern "C" fn spikard_test_client_get(ptr: *const TestClientOpaque, path: *c
     let path_str = unsafe { CStr::from_ptr(path) }.to_string_lossy().into_owned();
 
     match block_on(client.get(&path_str, None, None)) {
-        Ok(snapshot) => Box::into_raw(Box::new(TestResponseOpaque { inner: Box::new(snapshot) })),
+        Ok(snapshot) => Box::into_raw(Box::new(TestResponseOpaque {
+            inner: Box::new(snapshot),
+        })),
         Err(_) => std::ptr::null_mut(),
     }
 }
@@ -219,7 +226,9 @@ pub extern "C" fn spikard_test_client_post(
     };
 
     match block_on(client.post(&path_str, body, None, None, None, None)) {
-        Ok(snapshot) => Box::into_raw(Box::new(TestResponseOpaque { inner: Box::new(snapshot) })),
+        Ok(snapshot) => Box::into_raw(Box::new(TestResponseOpaque {
+            inner: Box::new(snapshot),
+        })),
         Err(_) => std::ptr::null_mut(),
     }
 }
@@ -230,7 +239,10 @@ pub extern "C" fn spikard_test_client_post(
 /// - `ptr` must be a valid handle returned by `spikard_test_client_new()`.
 /// - `path` must be a valid null-terminated UTF-8 C string.
 #[no_mangle]
-pub extern "C" fn spikard_test_client_delete(ptr: *const TestClientOpaque, path: *const c_char) -> *mut TestResponseOpaque {
+pub extern "C" fn spikard_test_client_delete(
+    ptr: *const TestClientOpaque,
+    path: *const c_char,
+) -> *mut TestResponseOpaque {
     if ptr.is_null() || path.is_null() {
         return std::ptr::null_mut();
     }
@@ -243,7 +255,9 @@ pub extern "C" fn spikard_test_client_delete(ptr: *const TestClientOpaque, path:
     let path_str = unsafe { CStr::from_ptr(path) }.to_string_lossy().into_owned();
 
     match block_on(client.delete(&path_str, None, None)) {
-        Ok(snapshot) => Box::into_raw(Box::new(TestResponseOpaque { inner: Box::new(snapshot) })),
+        Ok(snapshot) => Box::into_raw(Box::new(TestResponseOpaque {
+            inner: Box::new(snapshot),
+        })),
         Err(_) => std::ptr::null_mut(),
     }
 }

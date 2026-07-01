@@ -1,224 +1,81 @@
 [dependency-groups]
 dev = [
-  "annotated-types>=0.7.0",
-  "fastapi>=0.136.1",
-  "httpx-sse>=0.4.3",
-  "jsonschema>=4.26.0",
-  "maturin>=1.13.1",
-  "msgspec>=0.21.1",
-  "mypy>=1.20.2",
-  "orjson>=3.11.8",
-  "prek>=0.3.11",
-  "pydantic>=2.13.3",
-  "pyjwt>=2.12.1",
-  "pytest>=9.0.3",
-  "pytest-asyncio>=1.3.0",
-  "pytest-cov>=7.1.0",
-  "pytest-mock>=3.15.1",
-  "pytest-timeout>=2.4.0",
-  "ruff>=0.15.12",
-  "uv-bump",
-  "uvicorn>=0.46.0",
-  "websockets>=16.0",
+    "annotated-types>=0.7.0",
+    "fastapi>=0.136.1",
+    "httpx-sse>=0.4.3",
+    "jsonschema>=4.26.0",
+    "maturin>=1.13.1",
+    "msgspec>=0.21.1",
+    "orjson>=3.11.8",
+    "pydantic>=2.13.3",
+    "pyjwt>=2.12.1",
+    "pyrefly>=1.1.1",
+    "pytest>=9.0.3",
+    "pytest-asyncio>=1.3.0",
+    "pytest-cov>=7.1.0",
+    "pytest-mock>=3.15.1",
+    "pytest-timeout>=2.4.0",
+    "uv-bump",
+    "uvicorn>=0.46.0",
+    "websockets>=16.0",
 ]
-docs = [ "zensical" ]
-doc = [ "zensical" ]
+docs = ["zensical"]
+doc = ["zensical"]
 
 [tool.setuptools]
 packages = []
 
 [tool.uv]
 sources.uv-bump = { git = "https://github.com/Goldziher/uv-bump" }
-workspace.members = [ "packages/python" ]
+workspace.members = ["packages/python"]
 cache-keys = [
-  { file = "pyproject.toml" },
-  { file = "Cargo.toml" },
-  { file = "Cargo.lock" },
-  { file = "crates/**/*.rs" },
-  { file = "crates/**/Cargo.toml" },
-]
-
-[tool.ruff]
-target-version = "py310"
-line-length = 120
-src = [ "packages/python" ]
-format.docstring-code-line-length = 120
-format.docstring-code-format = true
-lint.select = [ "ALL" ]
-lint.ignore = [
-  "ANN401",   # Dynamically typed ANY for kwargs
-  "ASYNC109", # Async function definition with a timeout parameter
-  "ASYNC110", # Use Event instead of sleep in async loop
-  "BLE001",   # Do not catch blind exception - we allow this pattern
-  "COM812",   # Conflicts with formatter
-  "D100",     # Missing docstring in public module
-  "D104",     # Missing docstring in public package
-  "D107",     # Missing docstring in __init__
-  "D205",     # 1 blank line required between summary line and description
-  "E501",     # Line too long, handled by ruff format
-  "EM",       # Exception messages
-  "FBT",      # Boolean-typed positional argument in function definition
-  "FIX",      # We allow todo and fixme comments
-  "ISC001",   # Conflicts with formatter
-  "PD011",    # Creates false positives
-  "PERF203",  # try-except in loops is common in retry/file-walking code
-  "PGH003",   # Required specific mypy ignores
-  "PLR2004",  # Magic value used in comparison
-  "S104",     # Disallows using '0.0.0.0' as a host
-  "S110",     # try-except-pass detected
-  "S603",     # subprocess-without-shell-equals-true
-  "TC001",    # flake8-type-checking: often conflicts with UP035 / runtime `get_type_hints`
-  "TC003",    # flake8-type-checking: see above
-  "TC004",    # flake8-type-checking: see above
-  "TD",       # We allow todo and fixme comments
-  "TRY",      # Try except block, rules are too strict
-]
-lint.exclude = [ "e2e/python/**" ]
-lint.per-file-ignores."**/tests/**/*.*" = [
-  "A005",    # Module shadows standard library
-  "ANN",     # Disable all annotation rules for tests
-  "ARG001",
-  "ARG002",  # Unused method argument
-  "BLE001",  # Disable blind exception catching for tests
-  "D",
-  "INP001",  # Allow implicit namespace packages in tests
-  "N806",    # Variable naming in tests
-  "N815",
-  "PLC",     # Disable all PLC rules for tests
-  "PLR0915",
-  "PLR2004",
-  "PT006",
-  "PT007",
-  "PT013",
-  "RUF012",
-  "S",
-  "SLF001",
-]
-lint.per-file-ignores."examples/**/*.py" = [
-  "ANN202", # Missing return type annotation for private function
-  "ARG002", # Unused method argument (examples show interfaces)
-  "BLE001", # Blind exception catching (common in examples)
-  "D102",   # Missing docstring in public method
-  "D103",   # Missing docstring in public function
-  "INP001", # Implicit namespace package (examples don't need __init__.py)
-  "S101",   # Assertions are fine in examples
-]
-lint.per-file-ignores."packages/python/spikard/datastructures.py" = [
-  "UP035", # Keep typing_extensions.Self fallback for Python 3.10 compatibility
-]
-lint.per-file-ignores."packages/python/tests/*.py" = [
-  "B008",
-  "C901",
-  "E501",
-  "PLR0912",
-  "PLR0913",
-  "PLR0915",
-  "SIM108",
-]
-lint.per-file-ignores."scripts/**/*.py" = [
-  "C901",    # Complex function (CLI scripts have natural branching)
-  "D103",    # Missing docstring in public function
-  "EXE001",  # Shebang is present but file is not executable (CI scripts run via `python`)
-  "PLR0912", # Too many branches (CLI argparse dispatch)
-  "PLR0915", # Too many statements (CLI argparse dispatch)
-  "T201",    # print() is the standard CLI output
-]
-lint.per-file-ignores."tests/*.py" = [
-  "B008",
-  "C901",
-  "E501",
-  "PLR0912",
-  "PLR0913",
-  "PLR0915",
-  "SIM108",
-]
-lint.per-file-ignores."tools/benchmark-harness/apps/**/*.py" = [
-  "ALL", # Generated benchmark code - disable all linting
-]
-lint.isort.known-first-party = [ "spikard" ]
-lint.mccabe.max-complexity = 15
-lint.pydocstyle.convention = "google"
-lint.pylint.max-args = 10
-lint.pylint.max-branches = 15
-lint.pylint.max-returns = 10
-
-[tool.pyproject-fmt]
-keep_full_version = true
-max_supported_python = "3.14"
-
-[tool.mypy]
-mypy_path = "packages/python:test_apps/python"
-exclude = [
-  "examples",
-  "testing_data",
-  "e2e",
-  "tools/benchmark-harness",
-  "tools/app-generator",
-  "test_apps/php/vendor",
-  "scripts/ci/python/select-and-install-wheel.py",
-]
-python_version = "3.14"
-disable_error_code = "import-untyped"
-implicit_reexport = false
-show_error_codes = true
-strict = true
-explicit_package_bases = true
-namespace_packages = true
-overrides = [
-  { module = [
-    "_spikard",
-  ], ignore_missing_imports = true },
-  { module = [
-    "jsonschema",
-  ], ignore_missing_imports = true },
-  { module = [
-    "tests.*",
-  ], disallow_any_explicit = true, disallow_any_expr = false, disable_error_code = [
-    "untyped-decorator",
-    "misc",
-  ] },
+    { file = "pyproject.toml" },
+    { file = "Cargo.toml" },
+    { file = "Cargo.lock" },
+    { file = "crates/**/*.rs" },
+    { file = "crates/**/Cargo.toml" },
 ]
 
 [tool.pytest]
 ini_options.timeout = 300
-ini_options.testpaths = [ "packages/python/tests" ]
-ini_options.python_files = [ "test_*.py", "*_test.py" ]
-ini_options.norecursedirs = [ "dist", "build", "*.egg" ]
+ini_options.testpaths = ["packages/python/tests"]
+ini_options.python_files = ["test_*.py", "*_test.py"]
+ini_options.norecursedirs = ["dist", "build", "*.egg"]
 ini_options.asyncio_mode = "auto"
 ini_options.asyncio_default_fixture_loop_scope = "function"
 
 [tool.coverage]
 run.branch = true
 run.omit = [
-  "*/__pycache__/*",
-  "*/site-packages/*",
-  "packages/python/spikard/_internal.py",
-  "packages/python/spikard/_internal/*",
-  "packages/python/spikard/background.py",
-  "packages/python/spikard/routing.py",
-  "packages/python/spikard/schema.py",
-  "packages/python/spikard/sse.py",
-  "packages/python/spikard/testing.py",
-  "packages/python/spikard/tests/*",
-  "packages/python/spikard/websocket.py",
-  "packages/python/tests/*",
-  "scripts/*",
+    "*/__pycache__/*",
+    "*/site-packages/*",
+    "packages/python/spikard/_internal.py",
+    "packages/python/spikard/_internal/*",
+    "packages/python/spikard/background.py",
+    "packages/python/spikard/routing.py",
+    "packages/python/spikard/schema.py",
+    "packages/python/spikard/sse.py",
+    "packages/python/spikard/testing.py",
+    "packages/python/spikard/tests/*",
+    "packages/python/spikard/websocket.py",
+    "packages/python/tests/*",
+    "scripts/*",
 ]
 run.relative_files = true
-run.source = [ "packages/python/spikard" ]
+run.source = ["packages/python/spikard"]
 report.exclude_lines = [
-  "@(abc\\.)?abstractmethod",
-  "class .*\\bProtocol\\):",
-  "def __repr__",
-  "def __str__",
-  "except ImportError:",
-  "if __name__ == .__main__.:",
-  "if sys.version_info",
-  "if TYPE_CHECKING:",
-  "pragma: no cover",
-  "raise AssertionError",
-  "raise NotImplementedError",
-  "raise NotImplementedError",
+    "@(abc\\.)?abstractmethod",
+    "class .*\\bProtocol\\):",
+    "def __repr__",
+    "def __str__",
+    "except ImportError:",
+    "if __name__ == .__main__.:",
+    "if sys.version_info",
+    "if TYPE_CHECKING:",
+    "pragma: no cover",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "raise NotImplementedError",
 ]
 report.precision = 2
 report.skip_covered = false

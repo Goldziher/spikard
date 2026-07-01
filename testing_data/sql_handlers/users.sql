@@ -7,7 +7,8 @@
 -- @http_tags users
 SELECT id, email, name, active, created_at
 FROM users
-WHERE id = $1;
+WHERE id =
+$1;
 
 -- @name CreateUser
 -- @returns :exec_rows

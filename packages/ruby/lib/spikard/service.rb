@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "spikard"
+
 module Spikard
   # Spikard application builder.
   class App

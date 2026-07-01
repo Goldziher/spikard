@@ -98,13 +98,5 @@
       ]
     }
   },
-  "tags": [
-    "subscriptions",
-    "websocket",
-    "advanced-filtering",
-    "complex-input",
-    "multi-criteria",
-    "enums",
-    "arrays"
-  ]
+  "tags": ["subscriptions", "websocket", "advanced-filtering", "complex-input", "multi-criteria", "enums", "arrays"]
 }

@@ -17,9 +17,7 @@
     "services": [
       {
         "name": "TimeoutService",
-        "methods": [
-          { "name": "SlowOp", "input_type": "TimeoutRequest", "output_type": "TimeoutResponse" }
-        ]
+        "methods": [{ "name": "SlowOp", "input_type": "TimeoutRequest", "output_type": "TimeoutResponse" }]
       }
     ]
   },

@@ -17,9 +17,7 @@
     "services": [
       {
         "name": "CreateService",
-        "methods": [
-          { "name": "Create", "input_type": "CreateRequest", "output_type": "CreateResponse" }
-        ]
+        "methods": [{ "name": "Create", "input_type": "CreateRequest", "output_type": "CreateResponse" }]
       }
     ]
   },

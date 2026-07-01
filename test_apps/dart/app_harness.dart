@@ -88,24 +88,24 @@ Future<void> main() async {
 Method? _methodFromString(String methodStr) {
   switch (methodStr) {
     case 'GET':
-      return Method.get_;
+    return Method.get_;
     case 'POST':
-      return Method.post;
+    return Method.post;
     case 'PUT':
-      return Method.put;
+    return Method.put;
     case 'DELETE':
-      return Method.delete;
+    return Method.delete;
     case 'PATCH':
-      return Method.patch;
+    return Method.patch;
     case 'HEAD':
-      return Method.head;
+    return Method.head;
     case 'OPTIONS':
-      return Method.options;
+    return Method.options;
     case 'CONNECT':
-      return Method.connect;
+    return Method.connect;
     case 'TRACE':
-      return Method.trace;
+    return Method.trace;
     default:
-      return null;
+    return null;
   }
 }

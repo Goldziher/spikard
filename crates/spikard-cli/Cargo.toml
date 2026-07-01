@@ -13,14 +13,7 @@ documentation = "https://docs.rs/spikard-cli"
 readme = "README.md"
 
 [package.metadata.cargo-machete]
-ignored = [
-    "clap_complete",
-    "clap_mangen",
-    "prost",
-    "prost-reflect",
-    "prost-types",
-    "protox",
-]
+ignored = ["clap_complete", "clap_mangen", "prost", "prost-reflect", "prost-types", "protox"]
 
 [lib]
 name = "spikard_cli"
@@ -38,18 +31,18 @@ all = ["mcp", "mcp-http"]
 
 [dependencies]
 anyhow = "1.0"
-asyncapiv3 = "0.1.3" # AsyncAPI v3 spec parsing
+asyncapiv3 = "0.1.3"           # AsyncAPI v3 spec parsing
 axum.workspace = true
 clap.workspace = true
 clap_complete.workspace = true
 clap_mangen.workspace = true
-graphql-parser = "0.4" # GraphQL SDL parsing
-heck = "0.5" # For case conversion (snake_case, PascalCase)
+graphql-parser = "0.4"         # GraphQL SDL parsing
+heck = "0.5"                   # For case conversion (snake_case, PascalCase)
 openapiv3 = "2.2"
-prost = "0.14" # Protocol Buffers runtime
-prost-reflect = "0.16" # Protocol Buffers reflection
-prost-types = "0.14" # Protocol Buffers well-known types
-protox = "0.9" # Protocol Buffers compilation
+prost = "0.14"                 # Protocol Buffers runtime
+prost-reflect = "0.16"         # Protocol Buffers reflection
+prost-types = "0.14"           # Protocol Buffers well-known types
+protox = "0.9"                 # Protocol Buffers compilation
 
 rmcp = { version = "1.7.0", features = ["client", "transport-io"], optional = true }
 scythe-core = { version = "0.10", features = ["serde"] }
@@ -59,7 +52,7 @@ serde_json.workspace = true
 spikard.workspace = true
 spikard-codegen = { workspace = true }
 spikard-http = { workspace = true }
-tempfile = "3.27" # For quality validation temporary files
+tempfile = "3.27"                                                                    # For quality validation temporary files
 thiserror.workspace = true
 tokio.workspace = true
 tracing.workspace = true

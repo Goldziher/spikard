@@ -17,9 +17,7 @@
     "services": [
       {
         "name": "UnavailService",
-        "methods": [
-          { "name": "Request", "input_type": "UnavailRequest", "output_type": "UnavailResponse" }
-        ]
+        "methods": [{ "name": "Request", "input_type": "UnavailRequest", "output_type": "UnavailResponse" }]
       }
     ]
   },

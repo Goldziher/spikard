@@ -17,9 +17,7 @@
     "services": [
       {
         "name": "DataService",
-        "methods": [
-          { "name": "Process", "input_type": "DataRequest", "output_type": "DataResponse" }
-        ]
+        "methods": [{ "name": "Process", "input_type": "DataRequest", "output_type": "DataResponse" }]
       }
     ]
   },

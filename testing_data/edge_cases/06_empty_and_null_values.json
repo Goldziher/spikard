@@ -35,14 +35,7 @@
         }
       },
       "additionalProperties": false,
-      "required": [
-        "explicit_null",
-        "empty_string",
-        "empty_array",
-        "empty_object",
-        "zero_number",
-        "false_boolean"
-      ]
+      "required": ["explicit_null", "empty_string", "empty_array", "empty_object", "zero_number", "false_boolean"]
     }
   },
   "request": {

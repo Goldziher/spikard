@@ -17,9 +17,7 @@
     "services": [
       {
         "name": "SecureService",
-        "methods": [
-          { "name": "AdminAction", "input_type": "SecureRequest", "output_type": "SecureResponse" }
-        ]
+        "methods": [{ "name": "AdminAction", "input_type": "SecureRequest", "output_type": "SecureResponse" }]
       }
     ]
   },
