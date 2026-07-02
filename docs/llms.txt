@@ -1,6 +1,6 @@
 # Spikard
 
-> Polyglot HTTP framework with a Rust core and first-class bindings for 15 languages: Python, TypeScript/Node, Ruby, PHP, Elixir, Go, Java, C#, Kotlin, Dart, Swift, Zig, C, WebAssembly, and R. Type-safe routing, middleware, validation, and lifecycle hooks across all platforms.
+> Polyglot web toolkit with a Rust core and first-class bindings for 15 languages: Python, TypeScript/Node, Ruby, PHP, Elixir, Go, Java, C#, Kotlin, Dart, Swift, Zig, C, WebAssembly, and R. Type-safe routing, middleware, validation, and lifecycle hooks across all platforms.
 
 ## Get Started
 

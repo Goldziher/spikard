@@ -1,6 +1,6 @@
 # Roadmap
 
-Spikard is a Rust-first, polyglot HTTP framework: the Rust core owns correctness and
+Spikard is a Rust-first, polyglot web toolkit: the Rust core owns correctness and
 performance, and thin bindings expose the same behavior to every supported language.
 This roadmap extends that model beyond HTTP into a broader **service toolbox** — the
 same "Rust owns correctness, bindings stay thin" contract applied to storage, message

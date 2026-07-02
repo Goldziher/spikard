@@ -1,6 +1,6 @@
 [project]
 site_name = "Spikard"
-site_description = "A polyglot API toolkit with a Rust core and first-class bindings for Python, TypeScript, Ruby, PHP, and Rust"
+site_description = "A polyglot web toolkit with a Rust core and first-class bindings for Python, TypeScript, Ruby, PHP, and Rust"
 site_url = "https://spikard.dev"
 site_author = "Spikard Contributors"
 repo_name = "Goldziher/spikard"
