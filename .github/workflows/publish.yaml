@@ -1737,7 +1737,7 @@ jobs:
           target: ${{ matrix.target }}
       - name: Build Dart server native
         shell: bash
-        run: cargo build --locked -p spikard-dart --release --target "${{ matrix.target }}"
+        run: cargo build --locked --manifest-path packages/dart/rust/Cargo.toml --release --target "${{ matrix.target }}"
       - name: Stage native library
         shell: bash
         env:
@@ -1746,7 +1746,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist/server-natives
-          cp "target/${TARGET}/release/${LIB}" "dist/server-natives/${LIB}"
+          cp "packages/dart/rust/target/${TARGET}/release/${LIB}" "dist/server-natives/${LIB}"
       - uses: actions/upload-artifact@v7
         with:
           name: dart-server-${{ matrix.rid }}
