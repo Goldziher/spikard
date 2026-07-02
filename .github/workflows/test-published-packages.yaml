@@ -79,7 +79,7 @@ jobs:
           fi
 
           # Packagist (package is goldziher/spikard; p2 metadata is an array of versions)
-          if curl -s "https://repo.packagist.org/p2/goldziher/spikard.json" | jq -e --arg v "$VERSION" '.packages["goldziher/spikard"][] | select(.version == $v)' > /dev/null 2>&1; then
+          if curl -s "https://repo.packagist.org/p2/goldziher/spikard.json" | jq -e --arg v "$VERSION" '.packages["goldziher/spikard"][] | select((.version | ltrimstr("v")) == $v)' > /dev/null 2>&1; then
             echo "✓ Packagist: goldziher/spikard $VERSION found"
           else
             echo "✗ Packagist: goldziher/spikard $VERSION not found"
