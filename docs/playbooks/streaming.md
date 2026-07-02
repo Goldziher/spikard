@@ -82,7 +82,7 @@ async fn test_sse_stream() {
     let router = app.into_router()?;
 
     let client = TestClient::with_router(router);
-    
+
     // Test SSE connection
     let response = client.get("/events").await;
     assert_eq!(response.status_code, 200);
@@ -96,7 +96,7 @@ async fn test_websocket_handler() {
     let router = app.into_router()?;
 
     let client = TestClient::with_router(router);
-    
+
     // Test WebSocket connection (upgrade handshake)
     let response = client.get("/ws").await;
     // Should get 101 Switching Protocols or similar

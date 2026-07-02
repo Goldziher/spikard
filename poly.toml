@@ -14,44 +14,56 @@ exclude = [
     "dist/**",
     "docs/assets/**",
     "docs/snippets/**",
+    "e2e/**",
     "fixtures/**",
     "node_modules/**",
     "readme_templates/**",
     "target/**",
     "templates/readme/**",
+    "test_apps/**",
     "test_documents/**",
     "vendor/**",
+    "crates/spikard-ffi/cbindgen.toml",
+    "crates/spikard-ffi/cmake/**",
+    "crates/spikard-ffi/include/**",
     "crates/spikard-node/service_http_additions.ts",
+    "crates/spikard-node/service.cjs",
+    "crates/spikard-node/service.ts",
+    "crates/spikard-wasm/Cargo.toml",
+    "crates/spikard-wasm/package.json",
+    "packages/dart/rust/src/frb_generated.rs",
+    "packages/csharp/src/**",
+    "packages/dart/lib/src/spikard_bridge_generated/**",
+    "packages/dart/pubspec.yaml",
+    "packages/go/include/**",
+    "packages/go/service.go",
+    "packages/java/*.xml",
+    "packages/java/pom.xml",
+    "packages/java/src/**",
+    "packages/kotlin/build.gradle.kts",
+    "packages/kotlin-android/src/main/kotlin/dev/spikard/android/src/main/**",
+    "packages/node/@spikard/node/service.ts",
+    "packages/php/spikard/Service.php",
+    "packages/php/src/**",
+    "packages/php/stubs/**",
+    "packages/python/pyproject.toml",
+    "packages/python/spikard/**",
+    "packages/ruby/lib/spikard/native.rb",
+    "packages/ruby/lib/spikard/service.rb",
+    "packages/ruby/lib/spikard/service_http_additions.rb",
+    "packages/ruby/sig/**",
+    "packages/swift/Sources/**",
+    "packages/zig/src/**",
 ]
 
 [lint.markdown.rumdl]
-disable = [
-    "MD012",
-    "MD013",
-    "MD024",
-    "MD033",
-    "MD036",
-    "MD041",
-    "MD046",
-    "MD051",
-    "MD076",
-]
+disable = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051", "MD076"]
 
 [fmt.markdown.rumdl]
-disable = [
-    "MD012",
-    "MD013",
-    "MD024",
-    "MD033",
-    "MD036",
-    "MD041",
-    "MD046",
-    "MD051",
-    "MD076",
-]
+disable = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051", "MD076"]
 
 [lint.python.ruff]
-select = [ "ALL" ]
+select = ["ALL"]
 ignore = [
     "ANN401",
     "ASYNC109",
@@ -84,20 +96,15 @@ pylint_max_branches = 15
 pylint_max_returns = 10
 
 [lint.php.mago]
-select = [ "correctness", "security" ]
-ignore = [
-    "strict-assertions",
-    "use-specific-assertions",
-    "no-redundant-variable",
-    "sensitive-parameter",
-]
+select = ["correctness", "security"]
+ignore = ["strict-assertions", "use-specific-assertions", "no-redundant-variable", "sensitive-parameter"]
 php_version = "8.2"
 
 [per-file-ignores]
-"**/api.py" = [ "F401", "I001", "TC006", "UP035" ]
-"**/*.pyi" = [ "A002", "F401", "I001", "PYI033", "TC006", "UP035" ]
-"**/options.py" = [ "F401", "I001", "RUF100" ]
-"**/__init__.py" = [ "I001" ]
+"**/api.py" = ["F401", "I001", "TC006", "UP035"]
+"**/*.pyi" = ["A002", "F401", "I001", "PYI033", "TC006", "UP035"]
+"**/options.py" = ["F401", "I001", "RUF100"]
+"**/__init__.py" = ["I001"]
 "**/tests/**" = [
     "ANN",
     "D103",
@@ -179,6 +186,9 @@ php_version = "8.2"
     "EXE001",
     "A001",
     "N801",
+    "Q003",
+    "typo",
+    "no-loss-of-precision",
 ]
 "**/test_apps/**" = [
     "ANN",
@@ -220,22 +230,38 @@ php_version = "8.2"
     "EXE001",
     "A001",
     "N801",
+    "Q003",
+    "typo",
+    "no-loss-of-precision",
 ]
-"CHANGELOG.md" = [
-    "MD057",
+"Cargo.toml" = ["typo"]
+"**/Cargo.toml" = ["typo"]
+"CHANGELOG.md" = ["MD057"]
+"crates/spikard-core/src/bindings/response.rs" = ["typo"]
+"crates/spikard-core/src/request_data.rs" = ["typo"]
+"crates/spikard-core/tests/bindings_response_tests.rs" = ["typo"]
+"crates/spikard-http/src/grpc/framing.rs" = ["typo"]
+"crates/spikard-http/src/handler_trait.rs" = ["typo"]
+"crates/spikard-http/src/lifecycle/adapter.rs" = ["typo"]
+"crates/spikard-http/src/server/grpc_routing.rs" = ["typo"]
+"crates/spikard-http/src/testing.rs" = ["typo"]
+"crates/spikard-http/tests/testing_helpers.rs" = ["typo"]
+"crates/spikard-http/tests/testing_module_coverage.rs" = ["typo"]
+"crates/spikard-node/service.cjs" = ["no-unused-vars"]
+"crates/spikard-node/service.ts" = ["no-unused-vars"]
+"docs/reference/feature-parity.md" = ["MD057"]
+"packages/kotlin-android/src/main/kotlin/dev/spikard/android/src/main/kotlin/dev/spikard/SecuritySchemeInfo.kt" = [
+    "typo",
 ]
-"docs/reference/feature-parity.md" = [
-    "MD057",
-]
-"scripts/**/*.py" = [
-    "RUF100",
-]
-"templates/readme/**" = [
-    "MD057",
-]
+"packages/kotlin-android/src/main/kotlin/dev/spikard/android/src/main/kotlin/dev/spikard/Spikard.kt" = ["typo"]
+"packages/node/@spikard/node/service.ts" = ["no-unused-vars"]
+"scripts/**/*.py" = ["RUF100"]
+"templates/readme/**" = ["MD057"]
+"testing_data/**/*.json" = ["typo"]
+"typos.toml" = ["typo"]
 
 [hooks]
-stages = [ "pre-commit" ]
+stages = ["pre-commit"]
 
 [hooks.builtin]
 polylint = { exclude = [
@@ -311,7 +337,7 @@ file_safety = { exclude = [
     "crates/spikard-node/service_http_additions.ts",
 ] }
 cargo = true
-commit = { stages = [ "commit-msg" ] }
+commit = { stages = ["commit-msg"] }
 
 [hooks.pre-commit.commands.pyrefly]
 run = "pyrefly check packages/python"

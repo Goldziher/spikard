@@ -105,7 +105,7 @@ Request ID handling is configured at the server level:
             |ctx: RequestContext| async move {
                 let request_id = ctx.header("x-request-id").unwrap_or("unknown");
                 let response_body = json!({"request_id": request_id});
-                
+
                 Ok(axum::http::Response::builder()
                     .status(StatusCode::OK)
                     .body(axum::body::Body::from(response_body.to_string()))?)

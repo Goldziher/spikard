@@ -15,45 +15,27 @@ Spikard's DI system (feature-gated, enabled via `di` feature flag) allows you to
 3. On each route, declare dependencies via `handler_dependencies(["key1", "key2", ...])`
 4. At request-time, the container resolves dependencies and passes them to the handler
 
-## Rust Example
+## Examples
 
-```rust
-use spikard::{App, ServerConfig, get, RequestContext};
-use spikard_core::di::DIContainer;
-use std::sync::Arc;
+=== "Python"
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut container = DIContainer::new();
-    
-    // Register a dependency factory
-    container.register("db_url", Arc::new(|| {
-        Arc::new("postgresql://localhost/mydb".to_string())
-    }))?;
-    
-    let mut config = ServerConfig::default();
-    config.di_container = Some(Arc::new(container));
-    
-    let mut app = App::new().config(config);
-    
-    // Declare dependencies for this route
-    app.route(
-        get("/users").handler_dependencies(vec!["db_url".to_string()]),
-        |ctx: RequestContext| async move {
-            // Dependencies are available via ctx.dependencies()
-            if let Some(deps) = ctx.dependencies() {
-                // Use resolved dependencies...
-            }
-            Ok(axum::http::Response::builder()
-                .status(200)
-                .body(axum::body::Body::from("OK"))?)
-        },
-    )?;
-    
-    app.run().await?;
-    Ok(())
-}
-```
+    --8<-- "snippets/python/dependency_injection.md"
+
+=== "TypeScript"
+
+    --8<-- "snippets/typescript/dependency_injection.md"
+
+=== "Ruby"
+
+    --8<-- "snippets/ruby/dependency_injection.md"
+
+=== "PHP"
+
+    --8<-- "snippets/php/dependency_injection.md"
+
+=== "Rust"
+
+    --8<-- "snippets/rust/dependency_injection.md"
 
 ## Language Binding Support
 

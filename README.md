@@ -17,40 +17,40 @@ Rust-centric polyglot web toolkit. Single Rust core compiled to 15 languages thr
 
   <!-- Language bindings -->
   <a href="https://crates.io/crates/spikard">
-    <img src="https://img.shields.io/crates/v/spikard?style=flat-square" alt="Rust">
+    <img src="https://img.shields.io/crates/v/spikard?color=007ec6&style=flat-square" alt="Rust">
   </a>
   <a href="https://pypi.org/project/spikard/">
-    <img src="https://img.shields.io/pypi/v/spikard?style=flat-square" alt="Python">
+    <img src="https://img.shields.io/pypi/v/spikard?color=007ec6&style=flat-square" alt="Python">
   </a>
   <a href="https://www.npmjs.com/package/@spikard/node">
-    <img src="https://img.shields.io/npm/v/@spikard/node?style=flat-square" alt="Node.js">
+    <img src="https://img.shields.io/npm/v/@spikard/node?color=007ec6&style=flat-square" alt="Node.js">
   </a>
   <a href="https://www.npmjs.com/package/@spikard/node-wasm">
-    <img src="https://img.shields.io/npm/v/@spikard/node-wasm?style=flat-square" alt="WASM">
+    <img src="https://img.shields.io/npm/v/@spikard/node-wasm?color=007ec6&style=flat-square" alt="WASM">
   </a>
   <a href="https://rubygems.org/gems/spikard">
-    <img src="https://img.shields.io/gem/v/spikard?style=flat-square" alt="Ruby">
+    <img src="https://img.shields.io/gem/v/spikard?color=007ec6&style=flat-square" alt="Ruby">
   </a>
   <a href="https://packagist.org/packages/goldziher/spikard">
-    <img src="https://img.shields.io/packagist/v/goldziher/spikard?style=flat-square" alt="PHP">
+    <img src="https://img.shields.io/packagist/v/goldziher/spikard?color=007ec6&style=flat-square" alt="PHP">
   </a>
   <a href="https://hex.pm/packages/spikard">
-    <img src="https://img.shields.io/hexpm/v/spikard?style=flat-square" alt="Elixir">
+    <img src="https://img.shields.io/hexpm/v/spikard?color=007ec6&style=flat-square" alt="Elixir">
   </a>
   <a href="https://central.sonatype.com/artifact/dev.spikard/spikard">
-    <img src="https://img.shields.io/maven-central/v/dev.spikard/spikard?style=flat-square" alt="Java">
+    <img src="https://img.shields.io/maven-central/v/dev.spikard/spikard?color=007ec6&style=flat-square" alt="Java">
   </a>
   <a href="https://github.com/Goldziher/spikard/releases">
-    <img src="https://img.shields.io/github/v/tag/Goldziher/spikard?label=Go&style=flat-square" alt="Go">
+    <img src="https://img.shields.io/github/v/tag/Goldziher/spikard?label=Go&color=007ec6&style=flat-square" alt="Go">
   </a>
   <a href="https://www.nuget.org/packages/Spikard/">
-    <img src="https://img.shields.io/nuget/v/Spikard?style=flat-square" alt="C#">
+    <img src="https://img.shields.io/nuget/v/Spikard?color=007ec6&style=flat-square" alt="C#">
   </a>
   <a href="https://central.sonatype.com/artifact/dev.spikard/spikard">
-    <img src="https://img.shields.io/maven-central/v/dev.spikard/spikard?label=Kotlin&style=flat-square" alt="Kotlin">
+    <img src="https://img.shields.io/maven-central/v/dev.spikard/spikard?label=Kotlin&color=007ec6&style=flat-square" alt="Kotlin">
   </a>
   <a href="https://pub.dev/packages/spikard">
-    <img src="https://img.shields.io/pub/v/spikard?style=flat-square" alt="Dart">
+    <img src="https://img.shields.io/pub/v/spikard?color=007ec6&style=flat-square" alt="Dart">
   </a>
   <a href="https://github.com/Goldziher/spikard/tree/main/packages/swift">
     <img src="https://img.shields.io/badge/Swift-Spikard-007ec6?style=flat-square" alt="Swift">
@@ -68,9 +68,6 @@ Rust-centric polyglot web toolkit. Single Rust core compiled to 15 languages thr
   <!-- Project info -->
   <a href="https://github.com/Goldziher/spikard/blob/main/LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-007ec6?style=flat-square" alt="License">
-  </a>
-  <a href="https://github.com/Goldziher/spikard">
-    <img src="https://img.shields.io/github/stars/Goldziher/spikard?style=flat-square" alt="GitHub Stars">
   </a>
 </div>
 

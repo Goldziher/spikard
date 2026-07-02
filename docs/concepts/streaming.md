@@ -19,4 +19,70 @@ Spikard treats streaming and real-time protocols as first-class citizens so the 
 - Envelope/message schemas validated per message when configured
 - Connection-level auth and capability checks enforced in middleware before the handler executes
 
+## Streaming Response
+
+=== "Python"
+
+    --8<-- "snippets/python/streaming.md"
+
+=== "TypeScript"
+
+    --8<-- "snippets/typescript/streaming.md"
+
+=== "Ruby"
+
+    --8<-- "snippets/ruby/streaming.md"
+
+=== "PHP"
+
+    --8<-- "snippets/php/streaming.md"
+
+=== "Rust"
+
+    --8<-- "snippets/rust/streaming.md"
+
+## Server-Sent Events
+
+=== "Python"
+
+    --8<-- "snippets/python/sse.md"
+
+=== "TypeScript"
+
+    --8<-- "snippets/typescript/sse.md"
+
+=== "Ruby"
+
+    --8<-- "snippets/ruby/sse.md"
+
+=== "PHP"
+
+    --8<-- "snippets/php/sse.md"
+
+=== "Rust"
+
+    --8<-- "snippets/rust/sse.md"
+
+## WebSocket
+
+=== "Python"
+
+    --8<-- "snippets/python/websocket.md"
+
+=== "TypeScript"
+
+    --8<-- "snippets/typescript/websocket.md"
+
+=== "Ruby"
+
+    --8<-- "snippets/ruby/websocket.md"
+
+=== "PHP"
+
+    --8<-- "snippets/php/websocket.md"
+
+=== "Rust"
+
+    --8<-- "snippets/rust/websocket.md"
+
 More details and decisions live in [ADR 0006](../adr/0006-streaming-and-async-protocols.md).

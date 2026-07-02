@@ -115,7 +115,7 @@ go build -v
 | **HTTP routing** | Type-safe route definitions with parameter validation |
 | **Specs** | OpenAPI 3.0 · AsyncAPI 3.0 · GraphQL SDL · JSON-RPC 2.0 |
 | **Middleware** | Via FFI bridge to Rust middleware stack (compression, rate limiting, auth) |
-| **Static linking** — Resulting binary is self-contained |
+| **Static linking** | Resulting binary is self-contained |
 | **Context support** | Full `context.Context` for cancellation and timeouts |
 | **Error handling** | Consistent ProblemDetails JSON across all bindings |
 | **Testing** | Shared fixture suite drives behavior across all language bindings |
