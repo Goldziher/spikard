@@ -36,6 +36,6 @@ Spikard is a polyglot API toolkit with a Rust core and language bindings for 14 
 
 ## Getting Help
 
-- **Questions / bugs**: open an issue at [github.com/Goldziher/spikard](https://github.com/Goldziher/spikard).
+- **Questions / bugs**: open an issue on [GitHub](https://github.com/Goldziher/spikard).
 - **Chat**: join the community Discord (`https://discord.gg/pXxagNK2zN`).
 - **Contributing**: see [Contributing](contributing.md) for coding standards, environment setup, and testing instructions.
