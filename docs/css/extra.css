@@ -17,7 +17,7 @@ html {
   --md-primary-fg-color--light: #4a4858;
   --md-primary-fg-color--dark: #1a1926;
 
-  --md-accent-fg-color: #2abfa1;
+  --md-accent-fg-color: #2b9fe6;
   --md-accent-fg-color-opposite: #8b1a8b;
 
   --md-default-fg-color: #323040;
@@ -37,7 +37,7 @@ html {
   --md-primary-fg-color--light: #4a4858;
   --md-primary-fg-color--dark: #1a1926;
 
-  --md-accent-fg-color: #2abfa1;
+  --md-accent-fg-color: #2b9fe6;
   --md-accent-fg-color-opposite: #8b1a8b;
 
   --md-default-fg-color: #ffffff;
@@ -197,14 +197,14 @@ html {
 
 [data-md-color-scheme="slate"] code {
   background-color: #3c3a4a;
-  color: #2abfa1;
+  color: #2b9fe6;
   padding: 0.2em 0.4em;
   border-radius: 4px;
 }
 
 [data-md-color-scheme="default"] code {
   background-color: #f2f2f4;
-  color: #2abfa1;
+  color: #2b9fe6;
   padding: 0.2em 0.4em;
   border-radius: 4px;
 }
@@ -242,13 +242,13 @@ html {
 
 [data-md-color-scheme="slate"] .highlight .nf,
 [data-md-color-scheme="slate"] .highlight .nc {
-  color: #2abfa1;
+  color: #2b9fe6;
 }
 
 [data-md-color-scheme="default"] .highlight .k,
 [data-md-color-scheme="default"] .highlight .kn,
 [data-md-color-scheme="default"] .highlight .kd {
-  color: #2abfa1;
+  color: #2b9fe6;
 }
 
 [data-md-color-scheme="default"] .highlight .c,
@@ -273,12 +273,12 @@ html {
 [data-md-color-scheme="default"] .highlight .s,
 [data-md-color-scheme="default"] .highlight .s1,
 [data-md-color-scheme="default"] .highlight .s2 {
-  color: #2abfa1;
+  color: #2b9fe6;
 }
 
 [data-md-color-scheme="default"] .highlight .nf,
 [data-md-color-scheme="default"] .highlight .nc {
-  color: #2abfa1;
+  color: #2b9fe6;
 }
 
 .highlight .language-bash,
@@ -365,7 +365,7 @@ html {
 }
 
 [data-md-color-scheme="slate"] .md-button--primary:hover {
-  background-color: #2abfa1;
+  background-color: #2b9fe6;
   color: #000000;
 }
 
@@ -374,7 +374,7 @@ html {
 }
 
 [data-md-color-scheme="slate"] .md-top:hover {
-  background-color: #2abfa1;
+  background-color: #2b9fe6;
   color: #000000;
 }
 
@@ -607,7 +607,7 @@ label[for="__palette_1"] svg {
 }
 
 .md-typeset a {
-  color: #2abfa1;
+  color: #2b9fe6;
   font-family: Inter, sans-serif;
   font-size: 16px;
   font-style: normal;
@@ -622,7 +622,7 @@ label[for="__palette_1"] svg {
 }
 
 [data-md-color-scheme="slate"] .md-typeset a {
-  color: #2abfa1;
+  color: #2b9fe6;
 }
 
 [data-md-color-scheme="slate"] .md-typeset a code {
@@ -673,7 +673,7 @@ strong {
 .md-tabs__link:hover,
 .md-tabs__link:focus,
 .md-tabs__item--active .md-tabs__link {
-  color: #2abfa1 !important;
+  color: #2b9fe6 !important;
 }
 
 .md-tabs__item {
@@ -687,7 +687,7 @@ strong {
   left: 0;
   right: 0;
   height: 2px;
-  background-color: #2abfa1;
+  background-color: #2b9fe6;
 }
 
 .md-tabs__item:hover::after {
@@ -697,7 +697,7 @@ strong {
   left: 0;
   right: 0;
   height: 2px;
-  background-color: #2abfa1;
+  background-color: #2b9fe6;
   opacity: 0.5;
 }
 
@@ -736,7 +736,7 @@ strong {
   background: #fafafa;
   border-radius: 4px;
   padding: 8px 12px;
-  color: #2abfa1;
+  color: #2b9fe6;
 }
 
 [data-md-color-scheme="slate"] .md-nav__link {
@@ -754,7 +754,7 @@ strong {
   background: #323040;
   border-radius: 4px;
   padding: 8px 12px;
-  color: #2abfa1;
+  color: #2b9fe6;
 }
 
 .md-nav--lifted > .md-nav__list > .md-nav__item--active {
@@ -859,17 +859,17 @@ nav.md-nav--secondary > .md-nav__list > .md-nav__item > .md-nav__link {
 }
 
 [data-md-color-scheme="default"] .md-sidebar__scrollwrap::-webkit-scrollbar-thumb {
-  background-color: #2abfa1;
+  background-color: #2b9fe6;
   border-radius: 3px;
 }
 
 [data-md-color-scheme="default"] .md-sidebar__scrollwrap::-webkit-scrollbar-thumb:hover {
-  background-color: #2abfa1;
+  background-color: #2b9fe6;
 }
 
 [data-md-color-scheme="default"] .md-sidebar__scrollwrap {
   scrollbar-width: thin;
-  scrollbar-color: #2abfa1 transparent;
+  scrollbar-color: #2b9fe6 transparent;
 }
 
 [data-md-color-scheme="slate"] .md-sidebar__scrollwrap::-webkit-scrollbar {
@@ -881,7 +881,7 @@ nav.md-nav--secondary > .md-nav__list > .md-nav__item > .md-nav__link {
 }
 
 [data-md-color-scheme="slate"] .md-sidebar__scrollwrap::-webkit-scrollbar-thumb {
-  background-color: #2abfa1;
+  background-color: #2b9fe6;
   border-radius: 3px;
 }
 
@@ -891,7 +891,7 @@ nav.md-nav--secondary > .md-nav__list > .md-nav__item > .md-nav__link {
 
 [data-md-color-scheme="slate"] .md-sidebar__scrollwrap {
   scrollbar-width: thin;
-  scrollbar-color: #2abfa1 transparent;
+  scrollbar-color: #2b9fe6 transparent;
 }
 
 [data-md-color-scheme="default"] .highlight .s {
@@ -1017,7 +1017,7 @@ nav.md-nav--secondary > .md-nav__list > .md-nav__item > .md-nav > .md-nav__list 
 }
 
 [data-md-color-scheme="default"] .md-typeset .task-list-indicator::before {
-  background-color: #2abfa1;
+  background-color: #2b9fe6;
 }
 
 [data-md-color-scheme="default"]
@@ -1025,15 +1025,15 @@ nav.md-nav--secondary > .md-nav__list > .md-nav__item > .md-nav > .md-nav__list 
   .task-list-control
   [type="checkbox"]:checked
   + .task-list-indicator::before {
-  background-color: #2abfa1;
+  background-color: #2b9fe6;
 }
 
 [data-md-color-scheme="slate"] .md-typeset .task-list-indicator::before {
-  background-color: #2abfa1;
+  background-color: #2b9fe6;
 }
 
 [data-md-color-scheme="slate"] .md-typeset .task-list-control [type="checkbox"]:checked + .task-list-indicator::before {
-  background-color: #2abfa1;
+  background-color: #2b9fe6;
 }
 
 [data-md-color-scheme="slate"] .mermaid {
@@ -1048,15 +1048,15 @@ nav.md-nav--secondary > .md-nav__list > .md-nav__item > .md-nav > .md-nav__list 
 }
 
 .md-icon svg {
-  fill: #2abfa1;
+  fill: #2b9fe6;
 }
 
 .md-social__link svg {
-  fill: #2abfa1;
+  fill: #2b9fe6;
 }
 
 .md-header__button svg {
-  fill: #2abfa1;
+  fill: #2b9fe6;
 }
 
 [data-md-color-scheme="default"] .md-top {
@@ -1068,7 +1068,7 @@ nav.md-nav--secondary > .md-nav__list > .md-nav__item > .md-nav > .md-nav__list 
 }
 
 [data-md-color-scheme="default"] .md-top:hover {
-  background-color: #2abfa1;
+  background-color: #2b9fe6;
 }
 
 [data-md-color-scheme="default"] .md-top:hover svg {
@@ -1076,7 +1076,7 @@ nav.md-nav--secondary > .md-nav__list > .md-nav__item > .md-nav > .md-nav__list 
 }
 
 [data-md-color-scheme="slate"] .md-top:hover {
-  background-color: #2abfa1;
+  background-color: #2b9fe6;
 }
 
 [data-md-color-scheme="slate"] .md-top svg {
