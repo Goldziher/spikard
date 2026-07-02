@@ -1772,6 +1772,10 @@ jobs:
         with:
           package-dir: packages/dart/rust
           crate-name: spikard-dart
+          # spikard-dart is a pure-Dart package (no Flutter SDK dep). Skip the
+          # Flutter install so FRB codegen uses setup-dart's latest stable Dart;
+          # Flutter 3.27's bundled Dart 3.6 fails the pubspec's `sdk: >=3.11.0`.
+          setup-flutter: "false"
       - uses: actions/upload-artifact@v7
         with:
           name: dart-package
