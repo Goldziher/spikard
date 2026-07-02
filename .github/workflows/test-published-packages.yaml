@@ -78,16 +78,16 @@ jobs:
             MISSING+=("RubyGems")
           fi
 
-          # Packagist
-          if curl -s "https://repo.packagist.org/p2/spikard/spikard.json" | jq -e ".packages[\"spikard/spikard\"][\"$VERSION\"]" > /dev/null 2>&1; then
-            echo "✓ Packagist: spikard/spikard $VERSION found"
+          # Packagist (package is goldziher/spikard; p2 metadata is an array of versions)
+          if curl -s "https://repo.packagist.org/p2/goldziher/spikard.json" | jq -e --arg v "$VERSION" '.packages["goldziher/spikard"][] | select(.version == $v)' > /dev/null 2>&1; then
+            echo "✓ Packagist: goldziher/spikard $VERSION found"
           else
-            echo "✗ Packagist: spikard/spikard $VERSION not found"
+            echo "✗ Packagist: goldziher/spikard $VERSION not found"
             MISSING+=("Packagist")
           fi
 
-          # crates.io
-          if curl -s "https://crates.io/api/v1/crates/spikard/$VERSION" | jq -e '.version.num' > /dev/null 2>&1; then
+          # crates.io (API rejects requests without a User-Agent)
+          if curl -s -H "User-Agent: spikard-ci (https://github.com/Goldziher/spikard)" "https://crates.io/api/v1/crates/spikard/$VERSION" | jq -e '.version.num' > /dev/null 2>&1; then
             echo "✓ crates.io: spikard $VERSION found"
           else
             echo "✗ crates.io: spikard $VERSION not found"
