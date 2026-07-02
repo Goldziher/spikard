@@ -10,7 +10,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
 import 'frb_generated.io.dart'
-if (dart.library.js_interop) 'frb_generated.web.dart';
+    if (dart.library.js_interop) 'frb_generated.web.dart';
 import 'lib.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'service_api.dart';
@@ -39,7 +39,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
       final libNames = _alefHostLibNames();
       final searchDirs = <Uri>[
         if (_alefHostRid() != null)
-        packageRoot.resolve('src/native/${_alefHostRid()}/'),
+          packageRoot.resolve('src/native/${_alefHostRid()}/'),
         packageRoot.resolve('src/spikard_bridge_generated/'),
       ];
       for (final dir in searchDirs) {
@@ -76,7 +76,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
     // may ship the binary as a Framework bundle (preferred modern packaging)
     // — list that first so the loader finds it before the bare dylib.
     if (Platform.isMacOS)
-    return const ['spikard_dart.framework', 'libspikard_dart.dylib'];
+      return const ['spikard_dart.framework', 'libspikard_dart.dylib'];
     if (Platform.isWindows) return const ['spikard_dart.dll'];
     return const ['libspikard_dart.so'];
   }
@@ -111,18 +111,18 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
   @override
   ApiImplConstructor<RustLibApiImpl, RustLibWire> get apiImplConstructor =>
-  RustLibApiImpl.new;
+      RustLibApiImpl.new;
 
   @override
   WireConstructor<RustLibWire> get wireConstructor =>
-  RustLibWire.fromExternalLibrary;
+      RustLibWire.fromExternalLibrary;
 
   @override
   Future<void> executeRustInitializers() async {}
 
   @override
   ExternalLibraryLoaderConfig get defaultExternalLibraryLoaderConfig =>
-  kDefaultExternalLibraryLoaderConfig;
+      kDefaultExternalLibraryLoaderConfig;
 
   @override
   String get codegenVersion => '2.12.0';
@@ -131,12 +131,12 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   int get rustContentHash => 1160656278;
 
   static const kDefaultExternalLibraryLoaderConfig =
-  ExternalLibraryLoaderConfig(
-    stem: 'spikard_dart',
-    ioDirectory: 'rust/target/release/',
-    webPrefix: 'pkg/',
-    wasmBindgenName: 'wasm_bindgen',
-  );
+      ExternalLibraryLoaderConfig(
+        stem: 'spikard_dart',
+        ioDirectory: 'rust/target/release/',
+        webPrefix: 'pkg/',
+        wasmBindgenName: 'wasm_bindgen',
+      );
 }
 
 abstract class RustLibApi extends BaseApi {
@@ -677,7 +677,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData:
-          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp,
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp,
           decodeErrorData: null,
         ),
         constMeta: kCrateServiceApiAppNewConstMeta,
@@ -688,7 +688,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateServiceApiAppNewConstMeta =>
-  const TaskConstMeta(debugName: "App_new", argNames: []);
+      const TaskConstMeta(debugName: "App_new", argNames: []);
 
   @override
   int crateServiceApiAppOptions({
@@ -907,7 +907,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateServiceApiAppRunConstMeta =>
-  const TaskConstMeta(debugName: "App_run", argNames: ["that"]);
+      const TaskConstMeta(debugName: "App_run", argNames: ["that"]);
 
   @override
   int crateServiceApiAppTrace({
@@ -967,7 +967,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData:
-          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler,
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler,
           decodeErrorData: null,
         ),
         constMeta: kCrateServiceApiDartHandlerHandlerNewConstMeta,
@@ -978,10 +978,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateServiceApiDartHandlerHandlerNewConstMeta =>
-  const TaskConstMeta(
-    debugName: "DartHandlerHandler_new",
-    argNames: ["cb"],
-  );
+      const TaskConstMeta(
+        debugName: "DartHandlerHandler_new",
+        argNames: ["cb"],
+      );
 
   @override
   Future<GraphQlRouteConfig> crateGraphQlRouteConfigDefault() {
@@ -998,7 +998,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData:
-          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig,
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig,
           decodeErrorData: null,
         ),
         constMeta: kCrateGraphQlRouteConfigDefaultConstMeta,
@@ -1009,10 +1009,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateGraphQlRouteConfigDefaultConstMeta =>
-  const TaskConstMeta(
-    debugName: "GraphQlRouteConfig_default",
-    argNames: [],
-  );
+      const TaskConstMeta(
+        debugName: "GraphQlRouteConfig_default",
+        argNames: [],
+      );
 
   @override
   Future<GraphQlRouteConfig> crateGraphQlRouteConfigDescription({
@@ -1037,7 +1037,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData:
-          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig,
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig,
           decodeErrorData: null,
         ),
         constMeta: kCrateGraphQlRouteConfigDescriptionConstMeta,
@@ -1048,10 +1048,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateGraphQlRouteConfigDescriptionConstMeta =>
-  const TaskConstMeta(
-    debugName: "GraphQlRouteConfig_description",
-    argNames: ["that", "description"],
-  );
+      const TaskConstMeta(
+        debugName: "GraphQlRouteConfig_description",
+        argNames: ["that", "description"],
+      );
 
   @override
   Future<GraphQlRouteConfig> crateGraphQlRouteConfigEnablePlayground({
@@ -1076,7 +1076,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData:
-          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig,
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig,
           decodeErrorData: null,
         ),
         constMeta: kCrateGraphQlRouteConfigEnablePlaygroundConstMeta,
@@ -1087,10 +1087,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateGraphQlRouteConfigEnablePlaygroundConstMeta =>
-  const TaskConstMeta(
-    debugName: "GraphQlRouteConfig_enable_playground",
-    argNames: ["that", "enable"],
-  );
+      const TaskConstMeta(
+        debugName: "GraphQlRouteConfig_enable_playground",
+        argNames: ["that", "enable"],
+      );
 
   @override
   Future<String?> crateGraphQlRouteConfigGetDescription({
@@ -1123,10 +1123,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateGraphQlRouteConfigGetDescriptionConstMeta =>
-  const TaskConstMeta(
-    debugName: "GraphQlRouteConfig_get_description",
-    argNames: ["that"],
-  );
+      const TaskConstMeta(
+        debugName: "GraphQlRouteConfig_get_description",
+        argNames: ["that"],
+      );
 
   @override
   Future<String> crateGraphQlRouteConfigGetMethod({
@@ -1159,10 +1159,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateGraphQlRouteConfigGetMethodConstMeta =>
-  const TaskConstMeta(
-    debugName: "GraphQlRouteConfig_get_method",
-    argNames: ["that"],
-  );
+      const TaskConstMeta(
+        debugName: "GraphQlRouteConfig_get_method",
+        argNames: ["that"],
+      );
 
   @override
   Future<String> crateGraphQlRouteConfigGetPath({
@@ -1195,10 +1195,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateGraphQlRouteConfigGetPathConstMeta =>
-  const TaskConstMeta(
-    debugName: "GraphQlRouteConfig_get_path",
-    argNames: ["that"],
-  );
+      const TaskConstMeta(
+        debugName: "GraphQlRouteConfig_get_path",
+        argNames: ["that"],
+      );
 
   @override
   Future<bool> crateGraphQlRouteConfigIsPlaygroundEnabled({
@@ -1231,10 +1231,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateGraphQlRouteConfigIsPlaygroundEnabledConstMeta =>
-  const TaskConstMeta(
-    debugName: "GraphQlRouteConfig_is_playground_enabled",
-    argNames: ["that"],
-  );
+      const TaskConstMeta(
+        debugName: "GraphQlRouteConfig_is_playground_enabled",
+        argNames: ["that"],
+      );
 
   @override
   Future<GraphQlRouteConfig> crateGraphQlRouteConfigMethod({
@@ -1259,7 +1259,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData:
-          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig,
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig,
           decodeErrorData: null,
         ),
         constMeta: kCrateGraphQlRouteConfigMethodConstMeta,
@@ -1270,10 +1270,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateGraphQlRouteConfigMethodConstMeta =>
-  const TaskConstMeta(
-    debugName: "GraphQlRouteConfig_method",
-    argNames: ["that", "method"],
-  );
+      const TaskConstMeta(
+        debugName: "GraphQlRouteConfig_method",
+        argNames: ["that", "method"],
+      );
 
   @override
   Future<GraphQlRouteConfig> crateGraphQlRouteConfigNew() {
@@ -1290,7 +1290,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData:
-          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig,
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig,
           decodeErrorData: null,
         ),
         constMeta: kCrateGraphQlRouteConfigNewConstMeta,
@@ -1301,7 +1301,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateGraphQlRouteConfigNewConstMeta =>
-  const TaskConstMeta(debugName: "GraphQlRouteConfig_new", argNames: []);
+      const TaskConstMeta(debugName: "GraphQlRouteConfig_new", argNames: []);
 
   @override
   Future<GraphQlRouteConfig> crateGraphQlRouteConfigPath({
@@ -1326,7 +1326,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData:
-          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig,
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig,
           decodeErrorData: null,
         ),
         constMeta: kCrateGraphQlRouteConfigPathConstMeta,
@@ -1337,10 +1337,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateGraphQlRouteConfigPathConstMeta =>
-  const TaskConstMeta(
-    debugName: "GraphQlRouteConfig_path",
-    argNames: ["that", "path"],
-  );
+      const TaskConstMeta(
+        debugName: "GraphQlRouteConfig_path",
+        argNames: ["that", "path"],
+      );
 
   @override
   Future<RouteBuilder> crateRouteBuilderCompression({
@@ -1365,7 +1365,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData:
-          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
           decodeErrorData: null,
         ),
         constMeta: kCrateRouteBuilderCompressionConstMeta,
@@ -1376,10 +1376,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateRouteBuilderCompressionConstMeta =>
-  const TaskConstMeta(
-    debugName: "RouteBuilder_compression",
-    argNames: ["that", "compression"],
-  );
+      const TaskConstMeta(
+        debugName: "RouteBuilder_compression",
+        argNames: ["that", "compression"],
+      );
 
   @override
   Future<RouteBuilder> crateRouteBuilderCors({
@@ -1404,7 +1404,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData:
-          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
           decodeErrorData: null,
         ),
         constMeta: kCrateRouteBuilderCorsConstMeta,
@@ -1442,7 +1442,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData:
-          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
           decodeErrorData: null,
         ),
         constMeta: kCrateRouteBuilderFileParamsJsonConstMeta,
@@ -1453,10 +1453,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateRouteBuilderFileParamsJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "RouteBuilder_file_params_json",
-    argNames: ["that", "schema"],
-  );
+      const TaskConstMeta(
+        debugName: "RouteBuilder_file_params_json",
+        argNames: ["that", "schema"],
+      );
 
   @override
   Future<RouteBuilder> crateRouteBuilderHandlerDependencies({
@@ -1481,7 +1481,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData:
-          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
           decodeErrorData: null,
         ),
         constMeta: kCrateRouteBuilderHandlerDependenciesConstMeta,
@@ -1492,10 +1492,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateRouteBuilderHandlerDependenciesConstMeta =>
-  const TaskConstMeta(
-    debugName: "RouteBuilder_handler_dependencies",
-    argNames: ["that", "dependencies"],
-  );
+      const TaskConstMeta(
+        debugName: "RouteBuilder_handler_dependencies",
+        argNames: ["that", "dependencies"],
+      );
 
   @override
   Future<RouteBuilder> crateRouteBuilderHandlerName({
@@ -1520,7 +1520,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData:
-          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
           decodeErrorData: null,
         ),
         constMeta: kCrateRouteBuilderHandlerNameConstMeta,
@@ -1531,10 +1531,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateRouteBuilderHandlerNameConstMeta =>
-  const TaskConstMeta(
-    debugName: "RouteBuilder_handler_name",
-    argNames: ["that", "name"],
-  );
+      const TaskConstMeta(
+        debugName: "RouteBuilder_handler_name",
+        argNames: ["that", "name"],
+      );
 
   @override
   Future<RouteBuilder> crateRouteBuilderNew({
@@ -1556,7 +1556,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData:
-          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
           decodeErrorData: null,
         ),
         constMeta: kCrateRouteBuilderNewConstMeta,
@@ -1594,7 +1594,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData:
-          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
           decodeErrorData: null,
         ),
         constMeta: kCrateRouteBuilderParamsSchemaJsonConstMeta,
@@ -1605,10 +1605,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateRouteBuilderParamsSchemaJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "RouteBuilder_params_schema_json",
-    argNames: ["that", "schema"],
-  );
+      const TaskConstMeta(
+        debugName: "RouteBuilder_params_schema_json",
+        argNames: ["that", "schema"],
+      );
 
   @override
   Future<RouteBuilder> crateRouteBuilderRequestSchemaJson({
@@ -1633,7 +1633,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData:
-          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
           decodeErrorData: null,
         ),
         constMeta: kCrateRouteBuilderRequestSchemaJsonConstMeta,
@@ -1644,10 +1644,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateRouteBuilderRequestSchemaJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "RouteBuilder_request_schema_json",
-    argNames: ["that", "schema"],
-  );
+      const TaskConstMeta(
+        debugName: "RouteBuilder_request_schema_json",
+        argNames: ["that", "schema"],
+      );
 
   @override
   Future<RouteBuilder> crateRouteBuilderResponseSchemaJson({
@@ -1672,7 +1672,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData:
-          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
           decodeErrorData: null,
         ),
         constMeta: kCrateRouteBuilderResponseSchemaJsonConstMeta,
@@ -1683,10 +1683,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateRouteBuilderResponseSchemaJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "RouteBuilder_response_schema_json",
-    argNames: ["that", "schema"],
-  );
+      const TaskConstMeta(
+        debugName: "RouteBuilder_response_schema_json",
+        argNames: ["that", "schema"],
+      );
 
   @override
   Future<RouteBuilder> crateRouteBuilderSync({required RouteBuilder that}) {
@@ -1707,7 +1707,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData:
-          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
           decodeErrorData: null,
         ),
         constMeta: kCrateRouteBuilderSyncConstMeta,
@@ -1718,7 +1718,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateRouteBuilderSyncConstMeta =>
-  const TaskConstMeta(debugName: "RouteBuilder_sync", argNames: ["that"]);
+      const TaskConstMeta(debugName: "RouteBuilder_sync", argNames: ["that"]);
 
   @override
   Future<ResponseSnapshot> crateTestClientGraphql({
@@ -1841,10 +1841,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateTestClientGraphqlSubscriptionConstMeta =>
-  const TaskConstMeta(
-    debugName: "TestClient_graphql_subscription",
-    argNames: ["that", "query", "variables", "operationName"],
-  );
+      const TaskConstMeta(
+        debugName: "TestClient_graphql_subscription",
+        argNames: ["that", "query", "variables", "operationName"],
+      );
 
   @override
   Future<GraphQLSubscriptionSnapshot> crateTestClientGraphqlSubscriptionAt({
@@ -1885,10 +1885,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateTestClientGraphqlSubscriptionAtConstMeta =>
-  const TaskConstMeta(
-    debugName: "TestClient_graphql_subscription_at",
-    argNames: ["that", "endpoint", "query", "variables", "operationName"],
-  );
+      const TaskConstMeta(
+        debugName: "TestClient_graphql_subscription_at",
+        argNames: ["that", "endpoint", "query", "variables", "operationName"],
+      );
 
   @override
   Future<ApiKeyConfig> crateCreateApiKeyConfigFromJson({required String json}) {
@@ -1916,10 +1916,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateApiKeyConfigFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_api_key_config_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_api_key_config_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<AsyncApiConfig> crateCreateAsyncApiConfigFromJson({
@@ -1949,10 +1949,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateAsyncApiConfigFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_async_api_config_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_async_api_config_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<BackgroundJobMetadata> crateCreateBackgroundJobMetadataFromJson({
@@ -1982,10 +1982,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateBackgroundJobMetadataFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_background_job_metadata_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_background_job_metadata_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<BackgroundTaskConfig> crateCreateBackgroundTaskConfigFromJson({
@@ -2015,10 +2015,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateBackgroundTaskConfigFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_background_task_config_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_background_task_config_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<CompressionConfig> crateCreateCompressionConfigFromJson({
@@ -2048,10 +2048,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateCompressionConfigFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_compression_config_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_compression_config_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<ContactInfo> crateCreateContactInfoFromJson({required String json}) {
@@ -2079,10 +2079,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateContactInfoFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_contact_info_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_contact_info_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<CorsConfig> crateCreateCorsConfigFromJson({required String json}) {
@@ -2110,10 +2110,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateCorsConfigFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_cors_config_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_cors_config_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<FullSchemaConfig> crateCreateFullSchemaConfigFromJson({
@@ -2143,10 +2143,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateFullSchemaConfigFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_full_schema_config_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_full_schema_config_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<GrpcConfig> crateCreateGrpcConfigFromJson({required String json}) {
@@ -2174,10 +2174,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateGrpcConfigFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_grpc_config_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_grpc_config_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<JsonRpcConfig> crateCreateJsonRpcConfigFromJson({
@@ -2207,10 +2207,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateJsonRpcConfigFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_json_rpc_config_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_json_rpc_config_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<JsonRpcMethodInfo> crateCreateJsonRpcMethodInfoFromJson({
@@ -2240,10 +2240,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateJsonRpcMethodInfoFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_json_rpc_method_info_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_json_rpc_method_info_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<JwtConfig> crateCreateJwtConfigFromJson({required String json}) {
@@ -2271,10 +2271,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateJwtConfigFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_jwt_config_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_jwt_config_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<LicenseInfo> crateCreateLicenseInfoFromJson({required String json}) {
@@ -2302,10 +2302,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateLicenseInfoFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_license_info_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_license_info_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<OpenApiConfig> crateCreateOpenApiConfigFromJson({
@@ -2335,10 +2335,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateOpenApiConfigFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_open_api_config_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_open_api_config_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<ParseResult> crateCreateParseResultFromJson({required String json}) {
@@ -2366,10 +2366,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateParseResultFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_parse_result_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_parse_result_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<ParsedChannel> crateCreateParsedChannelFromJson({
@@ -2399,10 +2399,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateParsedChannelFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_parsed_channel_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_parsed_channel_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<ParsedMessage> crateCreateParsedMessageFromJson({
@@ -2432,10 +2432,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateParsedMessageFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_parsed_message_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_parsed_message_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<ParsedOperation> crateCreateParsedOperationFromJson({
@@ -2465,10 +2465,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateParsedOperationFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_parsed_operation_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_parsed_operation_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<ProblemDetails> crateCreateProblemDetailsFromJson({
@@ -2498,10 +2498,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateProblemDetailsFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_problem_details_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_problem_details_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<QueryMutationConfig> crateCreateQueryMutationConfigFromJson({
@@ -2531,10 +2531,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateQueryMutationConfigFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_query_mutation_config_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_query_mutation_config_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<QueryOnlyConfig> crateCreateQueryOnlyConfigFromJson({
@@ -2564,10 +2564,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateQueryOnlyConfigFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_query_only_config_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_query_only_config_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<RateLimitConfig> crateCreateRateLimitConfigFromJson({
@@ -2597,10 +2597,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateRateLimitConfigFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_rate_limit_config_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_rate_limit_config_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<Response> crateCreateResponseFromJson({required String json}) {
@@ -2628,10 +2628,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateResponseFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_response_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_response_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<ResponseSnapshot> crateCreateResponseSnapshotFromJson({
@@ -2661,10 +2661,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateResponseSnapshotFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_response_snapshot_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_response_snapshot_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<SchemaConfig> crateCreateSchemaConfigFromJson({required String json}) {
@@ -2692,10 +2692,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateSchemaConfigFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_schema_config_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_schema_config_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<ServerConfig> crateCreateServerConfigFromJson({required String json}) {
@@ -2723,10 +2723,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateServerConfigFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_server_config_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_server_config_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<ServerInfo> crateCreateServerInfoFromJson({required String json}) {
@@ -2754,10 +2754,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateServerInfoFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_server_info_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_server_info_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<SseEvent> crateCreateSseEventFromJson({required String json}) {
@@ -2785,10 +2785,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateSseEventFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_sse_event_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_sse_event_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<StaticFilesConfig> crateCreateStaticFilesConfigFromJson({
@@ -2818,10 +2818,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateStaticFilesConfigFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_static_files_config_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_static_files_config_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<UploadFile> crateCreateUploadFileFromJson({required String json}) {
@@ -2849,10 +2849,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateCreateUploadFileFromJsonConstMeta =>
-  const TaskConstMeta(
-    debugName: "create_upload_file_from_json",
-    argNames: ["json"],
-  );
+      const TaskConstMeta(
+        debugName: "create_upload_file_from_json",
+        argNames: ["json"],
+      );
 
   @override
   Future<String> crateGraphQlErrorErrorType({required GraphQLError that}) {
@@ -2910,10 +2910,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateGraphQlErrorIsTransientConstMeta =>
-  const TaskConstMeta(
-    debugName: "graph_ql_error_is_transient",
-    argNames: ["that"],
-  );
+      const TaskConstMeta(
+        debugName: "graph_ql_error_is_transient",
+        argNames: ["that"],
+      );
 
   @override
   Future<PlatformInt64> crateGraphQlErrorStatusCode({
@@ -2943,10 +2943,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateGraphQlErrorStatusCodeConstMeta =>
-  const TaskConstMeta(
-    debugName: "graph_ql_error_status_code",
-    argNames: ["that"],
-  );
+      const TaskConstMeta(
+        debugName: "graph_ql_error_status_code",
+        argNames: ["that"],
+      );
 
   @override
   Future<FullSchemaConfig> crateSchemaFull() {
@@ -2973,7 +2973,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateSchemaFullConstMeta =>
-  const TaskConstMeta(debugName: "schema_full", argNames: []);
+      const TaskConstMeta(debugName: "schema_full", argNames: []);
 
   @override
   Future<QueryMutationConfig> crateSchemaQueryMutation() {
@@ -3000,7 +3000,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateSchemaQueryMutationConstMeta =>
-  const TaskConstMeta(debugName: "schema_query_mutation", argNames: []);
+      const TaskConstMeta(debugName: "schema_query_mutation", argNames: []);
 
   @override
   Future<QueryOnlyConfig> crateSchemaQueryOnly() {
@@ -3027,7 +3027,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta get kCrateSchemaQueryOnlyConstMeta =>
-  const TaskConstMeta(debugName: "schema_query_only", argNames: []);
+      const TaskConstMeta(debugName: "schema_query_only", argNames: []);
 
   Future<void> Function(int, dynamic)
   encode_DartFn_Inputs_String_Output_String_AnyhowException(
@@ -3066,43 +3066,43 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_App => wire
-  .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp;
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp;
 
   RustArcDecrementStrongCountFnType
   get rust_arc_decrement_strong_count_App => wire
-  .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp;
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_DartHandlerHandler => wire
-  .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler;
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler;
 
   RustArcDecrementStrongCountFnType
   get rust_arc_decrement_strong_count_DartHandlerHandler => wire
-  .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler;
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_GraphQlRouteConfig => wire
-  .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig;
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig;
 
   RustArcDecrementStrongCountFnType
   get rust_arc_decrement_strong_count_GraphQlRouteConfig => wire
-  .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig;
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_RouteBuilder => wire
-  .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder;
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder;
 
   RustArcDecrementStrongCountFnType
   get rust_arc_decrement_strong_count_RouteBuilder => wire
-  .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder;
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_TestClient => wire
-  .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient;
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient;
 
   RustArcDecrementStrongCountFnType
   get rust_arc_decrement_strong_count_TestClient => wire
-  .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient;
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient;
 
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw) {
@@ -3272,7 +3272,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return ApiKeyConfig(
       keys: dco_decode_list_String(arr[0]),
       headerName: dco_decode_String(arr[1]),
@@ -3284,13 +3284,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
       case 0:
-      return AppError_Route(field0: dco_decode_String(raw[1]));
+        return AppError_Route(field0: dco_decode_String(raw[1]));
       case 1:
-      return AppError_Server(field0: dco_decode_String(raw[1]));
+        return AppError_Server(field0: dco_decode_String(raw[1]));
       case 2:
-      return AppError_Decode(field0: dco_decode_String(raw[1]));
+        return AppError_Decode(field0: dco_decode_String(raw[1]));
       default:
-      throw Exception("unreachable");
+        throw Exception("unreachable");
     }
   }
 
@@ -3299,7 +3299,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return AsyncApiConfig(
       enabled: dco_decode_bool(arr[0]),
       spec: dco_decode_opt_String(arr[1]),
@@ -3311,7 +3311,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return BackgroundJobMetadata(
       name: dco_decode_String(arr[0]),
       requestId: dco_decode_opt_String(arr[1]),
@@ -3323,7 +3323,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return BackgroundTaskConfig(
       maxQueueSize: dco_decode_i_64(arr[0]),
       maxConcurrentTasks: dco_decode_i_64(arr[1]),
@@ -3432,7 +3432,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 4)
-    throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return CompressionConfig(
       gzip: dco_decode_bool(arr[0]),
       brotli: dco_decode_bool(arr[1]),
@@ -3446,7 +3446,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return ContactInfo(
       name: dco_decode_opt_String(arr[0]),
       email: dco_decode_opt_String(arr[1]),
@@ -3459,7 +3459,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 6)
-    throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
     return CorsConfig(
       allowedOrigins: dco_decode_list_String(arr[0]),
       allowedMethods: dco_decode_list_String(arr[1]),
@@ -3475,7 +3475,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return FullSchemaConfig(
       introspectionEnabled: dco_decode_bool(arr[0]),
       complexityLimit: dco_decode_opt_box_autoadd_i_64(arr[1]),
@@ -3488,47 +3488,47 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
       case 0:
-      return GraphQLError_ExecutionError(field0: dco_decode_String(raw[1]));
+        return GraphQLError_ExecutionError(field0: dco_decode_String(raw[1]));
       case 1:
-      return GraphQLError_SchemaBuildError(field0: dco_decode_String(raw[1]));
+        return GraphQLError_SchemaBuildError(field0: dco_decode_String(raw[1]));
       case 2:
-      return GraphQLError_RequestHandlingError(
+        return GraphQLError_RequestHandlingError(
           field0: dco_decode_String(raw[1]),
         );
       case 3:
-      return GraphQLError_SerializationError(
+        return GraphQLError_SerializationError(
           field0: dco_decode_String(raw[1]),
         );
       case 4:
-      return GraphQLError_JsonError(field0: dco_decode_String(raw[1]));
+        return GraphQLError_JsonError(field0: dco_decode_String(raw[1]));
       case 5:
-      return GraphQLError_ValidationError(field0: dco_decode_String(raw[1]));
+        return GraphQLError_ValidationError(field0: dco_decode_String(raw[1]));
       case 6:
-      return GraphQLError_ParseError(field0: dco_decode_String(raw[1]));
+        return GraphQLError_ParseError(field0: dco_decode_String(raw[1]));
       case 7:
-      return GraphQLError_AuthenticationError(
+        return GraphQLError_AuthenticationError(
           field0: dco_decode_String(raw[1]),
         );
       case 8:
-      return GraphQLError_AuthorizationError(
+        return GraphQLError_AuthorizationError(
           field0: dco_decode_String(raw[1]),
         );
       case 9:
-      return GraphQLError_NotFound(field0: dco_decode_String(raw[1]));
+        return GraphQLError_NotFound(field0: dco_decode_String(raw[1]));
       case 10:
-      return GraphQLError_RateLimitExceeded(
+        return GraphQLError_RateLimitExceeded(
           field0: dco_decode_String(raw[1]),
         );
       case 11:
-      return GraphQLError_InvalidInput(message: dco_decode_String(raw[1]));
+        return GraphQLError_InvalidInput(message: dco_decode_String(raw[1]));
       case 12:
-      return GraphQLError_ComplexityLimitExceeded();
+        return GraphQLError_ComplexityLimitExceeded();
       case 13:
-      return GraphQLError_DepthLimitExceeded();
+        return GraphQLError_DepthLimitExceeded();
       case 14:
-      return GraphQLError_InternalError(field0: dco_decode_String(raw[1]));
+        return GraphQLError_InternalError(field0: dco_decode_String(raw[1]));
       default:
-      throw Exception("unreachable");
+        throw Exception("unreachable");
     }
   }
 
@@ -3539,7 +3539,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 5)
-    throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return GraphQLSubscriptionSnapshot(
       operationId: dco_decode_String(arr[0]),
       acknowledged: dco_decode_bool(arr[1]),
@@ -3554,7 +3554,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 9)
-    throw Exception('unexpected arr length: expect 9 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 9 but see ${arr.length}');
     return GrpcConfig(
       enabled: dco_decode_bool(arr[0]),
       maxMessageSize: dco_decode_i_64(arr[1]),
@@ -3591,7 +3591,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 4)
-    throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return JsonRpcConfig(
       enabled: dco_decode_bool(arr[0]),
       endpointPath: dco_decode_String(arr[1]),
@@ -3605,7 +3605,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 6)
-    throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
     return JsonRpcMethodInfo(
       methodName: dco_decode_String(arr[0]),
       description: dco_decode_opt_String(arr[1]),
@@ -3621,7 +3621,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 5)
-    throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return JwtConfig(
       secret: dco_decode_String(arr[0]),
       algorithm: dco_decode_String(arr[1]),
@@ -3636,7 +3636,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return LicenseInfo(
       name: dco_decode_String(arr[0]),
       url: dco_decode_opt_String(arr[1]),
@@ -3678,8 +3678,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   dco_decode_list_record_string_security_scheme_info(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>)
-    .map(dco_decode_record_string_security_scheme_info)
-    .toList();
+        .map(dco_decode_record_string_security_scheme_info)
+        .toList();
   }
 
   @protected
@@ -3711,7 +3711,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 11)
-    throw Exception('unexpected arr length: expect 11 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 11 but see ${arr.length}');
     return OpenApiConfig(
       enabled: dco_decode_bool(arr[0]),
       title: dco_decode_String(arr[1]),
@@ -3818,7 +3818,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 6)
-    throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
     return ParseResult(
       specVersion: dco_decode_String(arr[0]),
       title: dco_decode_String(arr[1]),
@@ -3834,7 +3834,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 4)
-    throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return ParsedChannel(
       name: dco_decode_String(arr[0]),
       address: dco_decode_String(arr[1]),
@@ -3848,7 +3848,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return ParsedMessage(
       name: dco_decode_String(arr[0]),
       schema: dco_decode_opt_String(arr[1]),
@@ -3860,7 +3860,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return ParsedOperation(
       name: dco_decode_String(arr[0]),
       action: dco_decode_String(arr[1]),
@@ -3873,7 +3873,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 6)
-    throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
     return ProblemDetails(
       typeUri: dco_decode_String(arr[0]),
       title: dco_decode_String(arr[1]),
@@ -3889,7 +3889,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return QueryMutationConfig(
       introspectionEnabled: dco_decode_bool(arr[0]),
       complexityLimit: dco_decode_opt_box_autoadd_i_64(arr[1]),
@@ -3902,7 +3902,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return QueryOnlyConfig(
       introspectionEnabled: dco_decode_bool(arr[0]),
       complexityLimit: dco_decode_opt_box_autoadd_i_64(arr[1]),
@@ -3915,7 +3915,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return RateLimitConfig(
       perSecond: dco_decode_i_64(arr[0]),
       burst: dco_decode_i_64(arr[1]),
@@ -3950,7 +3950,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return Response(
       content: dco_decode_opt_String(arr[0]),
       statusCode: dco_decode_i_64(arr[1]),
@@ -3963,7 +3963,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return ResponseSnapshot(
       status: dco_decode_i_64(arr[0]),
       headers: dco_decode_Map_String_String_None(arr[1]),
@@ -3976,7 +3976,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 3)
-    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return SchemaConfig(
       introspectionEnabled: dco_decode_bool(arr[0]),
       complexityLimit: dco_decode_opt_box_autoadd_i_64(arr[1]),
@@ -3989,21 +3989,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
       case 0:
-      return SchemaError_BuildingFailed(field0: dco_decode_String(raw[1]));
+        return SchemaError_BuildingFailed(field0: dco_decode_String(raw[1]));
       case 1:
-      return SchemaError_ValidationError(field0: dco_decode_String(raw[1]));
+        return SchemaError_ValidationError(field0: dco_decode_String(raw[1]));
       case 2:
-      return SchemaError_ComplexityLimitExceeded(
+        return SchemaError_ComplexityLimitExceeded(
           limit: dco_decode_i_64(raw[1]),
           actual: dco_decode_i_64(raw[2]),
         );
       case 3:
-      return SchemaError_DepthLimitExceeded(
+        return SchemaError_DepthLimitExceeded(
           limit: dco_decode_i_64(raw[1]),
           actual: dco_decode_i_64(raw[2]),
         );
       default:
-      throw Exception("unreachable");
+        throw Exception("unreachable");
     }
   }
 
@@ -4012,17 +4012,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
       case 0:
-      return SecuritySchemeInfo_Http(
+        return SecuritySchemeInfo_Http(
           scheme: dco_decode_String(raw[1]),
           bearerFormat: dco_decode_String(raw[2]),
         );
       case 1:
-      return SecuritySchemeInfo_ApiKey(
+        return SecuritySchemeInfo_ApiKey(
           location: dco_decode_String(raw[1]),
           name: dco_decode_String(raw[2]),
         );
       default:
-      throw Exception("unreachable");
+        throw Exception("unreachable");
     }
   }
 
@@ -4031,7 +4031,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 19)
-    throw Exception('unexpected arr length: expect 19 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 19 but see ${arr.length}');
     return ServerConfig(
       host: dco_decode_String(arr[0]),
       port: dco_decode_i_64(arr[1]),
@@ -4060,7 +4060,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 2)
-    throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
     return ServerInfo(
       url: dco_decode_String(arr[0]),
       description: dco_decode_opt_String(arr[1]),
@@ -4072,11 +4072,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
       case 0:
-      return SnapshotError_InvalidHeader(field0: dco_decode_String(raw[1]));
+        return SnapshotError_InvalidHeader(field0: dco_decode_String(raw[1]));
       case 1:
-      return SnapshotError_Decompression(field0: dco_decode_String(raw[1]));
+        return SnapshotError_Decompression(field0: dco_decode_String(raw[1]));
       default:
-      throw Exception("unreachable");
+        throw Exception("unreachable");
     }
   }
 
@@ -4085,7 +4085,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 4)
-    throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return SseEvent(
       eventType: dco_decode_opt_String(arr[0]),
       data: dco_decode_String(arr[1]),
@@ -4099,7 +4099,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 4)
-    throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return StaticFilesConfig(
       directory: dco_decode_String(arr[0]),
       routePrefix: dco_decode_String(arr[1]),
@@ -4125,7 +4125,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
     if (arr.length != 5)
-    throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return UploadFile(
       filename: dco_decode_String(arr[0]),
       contentType: dco_decode_opt_String(arr[1]),
@@ -4146,26 +4146,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     switch (raw[0]) {
       case 0:
-      return WebSocketMessage_Text(field0: dco_decode_String(raw[1]));
+        return WebSocketMessage_Text(field0: dco_decode_String(raw[1]));
       case 1:
-      return WebSocketMessage_Binary(
+        return WebSocketMessage_Binary(
           field0: dco_decode_list_prim_u_8_strict(raw[1]),
         );
       case 2:
-      return WebSocketMessage_Close(
+        return WebSocketMessage_Close(
           code: dco_decode_i_64(raw[1]),
           reason: dco_decode_String(raw[2]),
         );
       case 3:
-      return WebSocketMessage_Ping(
+        return WebSocketMessage_Ping(
           field0: dco_decode_list_prim_u_8_strict(raw[1]),
         );
       case 4:
-      return WebSocketMessage_Pong(
+        return WebSocketMessage_Pong(
           field0: dco_decode_list_prim_u_8_strict(raw[1]),
         );
       default:
-      throw Exception("unreachable");
+        throw Exception("unreachable");
     }
   }
 
@@ -4382,16 +4382,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-      var var_field0 = sse_decode_String(deserializer);
-      return AppError_Route(field0: var_field0);
+        var var_field0 = sse_decode_String(deserializer);
+        return AppError_Route(field0: var_field0);
       case 1:
-      var var_field0 = sse_decode_String(deserializer);
-      return AppError_Server(field0: var_field0);
+        var var_field0 = sse_decode_String(deserializer);
+        return AppError_Server(field0: var_field0);
       case 2:
-      var var_field0 = sse_decode_String(deserializer);
-      return AppError_Decode(field0: var_field0);
+        var var_field0 = sse_decode_String(deserializer);
+        return AppError_Decode(field0: var_field0);
       default:
-      throw UnimplementedError('');
+        throw UnimplementedError('');
     }
   }
 
@@ -4609,50 +4609,50 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-      var var_field0 = sse_decode_String(deserializer);
-      return GraphQLError_ExecutionError(field0: var_field0);
+        var var_field0 = sse_decode_String(deserializer);
+        return GraphQLError_ExecutionError(field0: var_field0);
       case 1:
-      var var_field0 = sse_decode_String(deserializer);
-      return GraphQLError_SchemaBuildError(field0: var_field0);
+        var var_field0 = sse_decode_String(deserializer);
+        return GraphQLError_SchemaBuildError(field0: var_field0);
       case 2:
-      var var_field0 = sse_decode_String(deserializer);
-      return GraphQLError_RequestHandlingError(field0: var_field0);
+        var var_field0 = sse_decode_String(deserializer);
+        return GraphQLError_RequestHandlingError(field0: var_field0);
       case 3:
-      var var_field0 = sse_decode_String(deserializer);
-      return GraphQLError_SerializationError(field0: var_field0);
+        var var_field0 = sse_decode_String(deserializer);
+        return GraphQLError_SerializationError(field0: var_field0);
       case 4:
-      var var_field0 = sse_decode_String(deserializer);
-      return GraphQLError_JsonError(field0: var_field0);
+        var var_field0 = sse_decode_String(deserializer);
+        return GraphQLError_JsonError(field0: var_field0);
       case 5:
-      var var_field0 = sse_decode_String(deserializer);
-      return GraphQLError_ValidationError(field0: var_field0);
+        var var_field0 = sse_decode_String(deserializer);
+        return GraphQLError_ValidationError(field0: var_field0);
       case 6:
-      var var_field0 = sse_decode_String(deserializer);
-      return GraphQLError_ParseError(field0: var_field0);
+        var var_field0 = sse_decode_String(deserializer);
+        return GraphQLError_ParseError(field0: var_field0);
       case 7:
-      var var_field0 = sse_decode_String(deserializer);
-      return GraphQLError_AuthenticationError(field0: var_field0);
+        var var_field0 = sse_decode_String(deserializer);
+        return GraphQLError_AuthenticationError(field0: var_field0);
       case 8:
-      var var_field0 = sse_decode_String(deserializer);
-      return GraphQLError_AuthorizationError(field0: var_field0);
+        var var_field0 = sse_decode_String(deserializer);
+        return GraphQLError_AuthorizationError(field0: var_field0);
       case 9:
-      var var_field0 = sse_decode_String(deserializer);
-      return GraphQLError_NotFound(field0: var_field0);
+        var var_field0 = sse_decode_String(deserializer);
+        return GraphQLError_NotFound(field0: var_field0);
       case 10:
-      var var_field0 = sse_decode_String(deserializer);
-      return GraphQLError_RateLimitExceeded(field0: var_field0);
+        var var_field0 = sse_decode_String(deserializer);
+        return GraphQLError_RateLimitExceeded(field0: var_field0);
       case 11:
-      var var_message = sse_decode_String(deserializer);
-      return GraphQLError_InvalidInput(message: var_message);
+        var var_message = sse_decode_String(deserializer);
+        return GraphQLError_InvalidInput(message: var_message);
       case 12:
-      return GraphQLError_ComplexityLimitExceeded();
+        return GraphQLError_ComplexityLimitExceeded();
       case 13:
-      return GraphQLError_DepthLimitExceeded();
+        return GraphQLError_DepthLimitExceeded();
       case 14:
-      var var_field0 = sse_decode_String(deserializer);
-      return GraphQLError_InternalError(field0: var_field0);
+        var var_field0 = sse_decode_String(deserializer);
+        return GraphQLError_InternalError(field0: var_field0);
       default:
-      throw UnimplementedError('');
+        throw UnimplementedError('');
     }
   }
 
@@ -5290,27 +5290,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-      var var_field0 = sse_decode_String(deserializer);
-      return SchemaError_BuildingFailed(field0: var_field0);
+        var var_field0 = sse_decode_String(deserializer);
+        return SchemaError_BuildingFailed(field0: var_field0);
       case 1:
-      var var_field0 = sse_decode_String(deserializer);
-      return SchemaError_ValidationError(field0: var_field0);
+        var var_field0 = sse_decode_String(deserializer);
+        return SchemaError_ValidationError(field0: var_field0);
       case 2:
-      var var_limit = sse_decode_i_64(deserializer);
-      var var_actual = sse_decode_i_64(deserializer);
-      return SchemaError_ComplexityLimitExceeded(
+        var var_limit = sse_decode_i_64(deserializer);
+        var var_actual = sse_decode_i_64(deserializer);
+        return SchemaError_ComplexityLimitExceeded(
           limit: var_limit,
           actual: var_actual,
         );
       case 3:
-      var var_limit = sse_decode_i_64(deserializer);
-      var var_actual = sse_decode_i_64(deserializer);
-      return SchemaError_DepthLimitExceeded(
+        var var_limit = sse_decode_i_64(deserializer);
+        var var_actual = sse_decode_i_64(deserializer);
+        return SchemaError_DepthLimitExceeded(
           limit: var_limit,
           actual: var_actual,
         );
       default:
-      throw UnimplementedError('');
+        throw UnimplementedError('');
     }
   }
 
@@ -5323,21 +5323,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-      var var_scheme = sse_decode_String(deserializer);
-      var var_bearerFormat = sse_decode_String(deserializer);
-      return SecuritySchemeInfo_Http(
+        var var_scheme = sse_decode_String(deserializer);
+        var var_bearerFormat = sse_decode_String(deserializer);
+        return SecuritySchemeInfo_Http(
           scheme: var_scheme,
           bearerFormat: var_bearerFormat,
         );
       case 1:
-      var var_location = sse_decode_String(deserializer);
-      var var_name = sse_decode_String(deserializer);
-      return SecuritySchemeInfo_ApiKey(
+        var var_location = sse_decode_String(deserializer);
+        var var_name = sse_decode_String(deserializer);
+        return SecuritySchemeInfo_ApiKey(
           location: var_location,
           name: var_name,
         );
       default:
-      throw UnimplementedError('');
+        throw UnimplementedError('');
     }
   }
 
@@ -5409,13 +5409,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-      var var_field0 = sse_decode_String(deserializer);
-      return SnapshotError_InvalidHeader(field0: var_field0);
+        var var_field0 = sse_decode_String(deserializer);
+        return SnapshotError_InvalidHeader(field0: var_field0);
       case 1:
-      var var_field0 = sse_decode_String(deserializer);
-      return SnapshotError_Decompression(field0: var_field0);
+        var var_field0 = sse_decode_String(deserializer);
+        return SnapshotError_Decompression(field0: var_field0);
       default:
-      throw UnimplementedError('');
+        throw UnimplementedError('');
     }
   }
 
@@ -5492,23 +5492,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var tag_ = sse_decode_i_32(deserializer);
     switch (tag_) {
       case 0:
-      var var_field0 = sse_decode_String(deserializer);
-      return WebSocketMessage_Text(field0: var_field0);
+        var var_field0 = sse_decode_String(deserializer);
+        return WebSocketMessage_Text(field0: var_field0);
       case 1:
-      var var_field0 = sse_decode_list_prim_u_8_strict(deserializer);
-      return WebSocketMessage_Binary(field0: var_field0);
+        var var_field0 = sse_decode_list_prim_u_8_strict(deserializer);
+        return WebSocketMessage_Binary(field0: var_field0);
       case 2:
-      var var_code = sse_decode_i_64(deserializer);
-      var var_reason = sse_decode_String(deserializer);
-      return WebSocketMessage_Close(code: var_code, reason: var_reason);
+        var var_code = sse_decode_i_64(deserializer);
+        var var_reason = sse_decode_String(deserializer);
+        return WebSocketMessage_Close(code: var_code, reason: var_reason);
       case 3:
-      var var_field0 = sse_decode_list_prim_u_8_strict(deserializer);
-      return WebSocketMessage_Ping(field0: var_field0);
+        var var_field0 = sse_decode_list_prim_u_8_strict(deserializer);
+        return WebSocketMessage_Ping(field0: var_field0);
       case 4:
-      var var_field0 = sse_decode_list_prim_u_8_strict(deserializer);
-      return WebSocketMessage_Pong(field0: var_field0);
+        var var_field0 = sse_decode_list_prim_u_8_strict(deserializer);
+        return WebSocketMessage_Pong(field0: var_field0);
       default:
-      throw UnimplementedError('');
+        throw UnimplementedError('');
     }
   }
 
@@ -5759,14 +5759,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
       case AppError_Route(field0: final field0):
-      sse_encode_i_32(0, serializer);
-      sse_encode_String(field0, serializer);
+        sse_encode_i_32(0, serializer);
+        sse_encode_String(field0, serializer);
       case AppError_Server(field0: final field0):
-      sse_encode_i_32(1, serializer);
-      sse_encode_String(field0, serializer);
+        sse_encode_i_32(1, serializer);
+        sse_encode_String(field0, serializer);
       case AppError_Decode(field0: final field0):
-      sse_encode_i_32(2, serializer);
-      sse_encode_String(field0, serializer);
+        sse_encode_i_32(2, serializer);
+        sse_encode_String(field0, serializer);
     }
   }
 
@@ -5986,48 +5986,48 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
       case GraphQLError_ExecutionError(field0: final field0):
-      sse_encode_i_32(0, serializer);
-      sse_encode_String(field0, serializer);
+        sse_encode_i_32(0, serializer);
+        sse_encode_String(field0, serializer);
       case GraphQLError_SchemaBuildError(field0: final field0):
-      sse_encode_i_32(1, serializer);
-      sse_encode_String(field0, serializer);
+        sse_encode_i_32(1, serializer);
+        sse_encode_String(field0, serializer);
       case GraphQLError_RequestHandlingError(field0: final field0):
-      sse_encode_i_32(2, serializer);
-      sse_encode_String(field0, serializer);
+        sse_encode_i_32(2, serializer);
+        sse_encode_String(field0, serializer);
       case GraphQLError_SerializationError(field0: final field0):
-      sse_encode_i_32(3, serializer);
-      sse_encode_String(field0, serializer);
+        sse_encode_i_32(3, serializer);
+        sse_encode_String(field0, serializer);
       case GraphQLError_JsonError(field0: final field0):
-      sse_encode_i_32(4, serializer);
-      sse_encode_String(field0, serializer);
+        sse_encode_i_32(4, serializer);
+        sse_encode_String(field0, serializer);
       case GraphQLError_ValidationError(field0: final field0):
-      sse_encode_i_32(5, serializer);
-      sse_encode_String(field0, serializer);
+        sse_encode_i_32(5, serializer);
+        sse_encode_String(field0, serializer);
       case GraphQLError_ParseError(field0: final field0):
-      sse_encode_i_32(6, serializer);
-      sse_encode_String(field0, serializer);
+        sse_encode_i_32(6, serializer);
+        sse_encode_String(field0, serializer);
       case GraphQLError_AuthenticationError(field0: final field0):
-      sse_encode_i_32(7, serializer);
-      sse_encode_String(field0, serializer);
+        sse_encode_i_32(7, serializer);
+        sse_encode_String(field0, serializer);
       case GraphQLError_AuthorizationError(field0: final field0):
-      sse_encode_i_32(8, serializer);
-      sse_encode_String(field0, serializer);
+        sse_encode_i_32(8, serializer);
+        sse_encode_String(field0, serializer);
       case GraphQLError_NotFound(field0: final field0):
-      sse_encode_i_32(9, serializer);
-      sse_encode_String(field0, serializer);
+        sse_encode_i_32(9, serializer);
+        sse_encode_String(field0, serializer);
       case GraphQLError_RateLimitExceeded(field0: final field0):
-      sse_encode_i_32(10, serializer);
-      sse_encode_String(field0, serializer);
+        sse_encode_i_32(10, serializer);
+        sse_encode_String(field0, serializer);
       case GraphQLError_InvalidInput(message: final message):
-      sse_encode_i_32(11, serializer);
-      sse_encode_String(message, serializer);
+        sse_encode_i_32(11, serializer);
+        sse_encode_String(message, serializer);
       case GraphQLError_ComplexityLimitExceeded():
-      sse_encode_i_32(12, serializer);
+        sse_encode_i_32(12, serializer);
       case GraphQLError_DepthLimitExceeded():
-      sse_encode_i_32(13, serializer);
+        sse_encode_i_32(13, serializer);
       case GraphQLError_InternalError(field0: final field0):
-      sse_encode_i_32(14, serializer);
-      sse_encode_String(field0, serializer);
+        sse_encode_i_32(14, serializer);
+        sse_encode_String(field0, serializer);
     }
   }
 
@@ -6563,25 +6563,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
       case SchemaError_BuildingFailed(field0: final field0):
-      sse_encode_i_32(0, serializer);
-      sse_encode_String(field0, serializer);
+        sse_encode_i_32(0, serializer);
+        sse_encode_String(field0, serializer);
       case SchemaError_ValidationError(field0: final field0):
-      sse_encode_i_32(1, serializer);
-      sse_encode_String(field0, serializer);
+        sse_encode_i_32(1, serializer);
+        sse_encode_String(field0, serializer);
       case SchemaError_ComplexityLimitExceeded(
         limit: final limit,
         actual: final actual,
       ):
-      sse_encode_i_32(2, serializer);
-      sse_encode_i_64(limit, serializer);
-      sse_encode_i_64(actual, serializer);
+        sse_encode_i_32(2, serializer);
+        sse_encode_i_64(limit, serializer);
+        sse_encode_i_64(actual, serializer);
       case SchemaError_DepthLimitExceeded(
         limit: final limit,
         actual: final actual,
       ):
-      sse_encode_i_32(3, serializer);
-      sse_encode_i_64(limit, serializer);
-      sse_encode_i_64(actual, serializer);
+        sse_encode_i_32(3, serializer);
+        sse_encode_i_64(limit, serializer);
+        sse_encode_i_64(actual, serializer);
     }
   }
 
@@ -6596,16 +6596,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         scheme: final scheme,
         bearerFormat: final bearerFormat,
       ):
-      sse_encode_i_32(0, serializer);
-      sse_encode_String(scheme, serializer);
-      sse_encode_String(bearerFormat, serializer);
+        sse_encode_i_32(0, serializer);
+        sse_encode_String(scheme, serializer);
+        sse_encode_String(bearerFormat, serializer);
       case SecuritySchemeInfo_ApiKey(
         location: final location,
         name: final name,
       ):
-      sse_encode_i_32(1, serializer);
-      sse_encode_String(location, serializer);
-      sse_encode_String(name, serializer);
+        sse_encode_i_32(1, serializer);
+        sse_encode_String(location, serializer);
+        sse_encode_String(name, serializer);
     }
   }
 
@@ -6645,11 +6645,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
       case SnapshotError_InvalidHeader(field0: final field0):
-      sse_encode_i_32(0, serializer);
-      sse_encode_String(field0, serializer);
+        sse_encode_i_32(0, serializer);
+        sse_encode_String(field0, serializer);
       case SnapshotError_Decompression(field0: final field0):
-      sse_encode_i_32(1, serializer);
-      sse_encode_String(field0, serializer);
+        sse_encode_i_32(1, serializer);
+        sse_encode_String(field0, serializer);
     }
   }
 
@@ -6709,21 +6709,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     switch (self) {
       case WebSocketMessage_Text(field0: final field0):
-      sse_encode_i_32(0, serializer);
-      sse_encode_String(field0, serializer);
+        sse_encode_i_32(0, serializer);
+        sse_encode_String(field0, serializer);
       case WebSocketMessage_Binary(field0: final field0):
-      sse_encode_i_32(1, serializer);
-      sse_encode_list_prim_u_8_strict(field0, serializer);
+        sse_encode_i_32(1, serializer);
+        sse_encode_list_prim_u_8_strict(field0, serializer);
       case WebSocketMessage_Close(code: final code, reason: final reason):
-      sse_encode_i_32(2, serializer);
-      sse_encode_i_64(code, serializer);
-      sse_encode_String(reason, serializer);
+        sse_encode_i_32(2, serializer);
+        sse_encode_i_64(code, serializer);
+        sse_encode_String(reason, serializer);
       case WebSocketMessage_Ping(field0: final field0):
-      sse_encode_i_32(3, serializer);
-      sse_encode_list_prim_u_8_strict(field0, serializer);
+        sse_encode_i_32(3, serializer);
+        sse_encode_list_prim_u_8_strict(field0, serializer);
       case WebSocketMessage_Pong(field0: final field0):
-      sse_encode_i_32(4, serializer);
-      sse_encode_list_prim_u_8_strict(field0, serializer);
+        sse_encode_i_32(4, serializer);
+        sse_encode_list_prim_u_8_strict(field0, serializer);
     }
   }
 }
@@ -6732,23 +6732,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 class AppImpl extends RustOpaque implements App {
   // Not to be used by end users
   AppImpl.frbInternalDcoDecode(List<dynamic> wire)
-  : super.frbInternalDcoDecode(wire, _kStaticData);
+    : super.frbInternalDcoDecode(wire, _kStaticData);
 
   // Not to be used by end users
   AppImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-  : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
 
   static final _kStaticData = RustArcStaticData(
     rustArcIncrementStrongCount:
-    RustLib.instance.api.rust_arc_increment_strong_count_App,
+        RustLib.instance.api.rust_arc_increment_strong_count_App,
     rustArcDecrementStrongCount:
-    RustLib.instance.api.rust_arc_decrement_strong_count_App,
+        RustLib.instance.api.rust_arc_decrement_strong_count_App,
     rustArcDecrementStrongCountPtr:
-    RustLib.instance.api.rust_arc_decrement_strong_count_AppPtr,
+        RustLib.instance.api.rust_arc_decrement_strong_count_AppPtr,
   );
 
   void config({required ServerConfig config}) =>
-  RustLib.instance.api.crateServiceApiAppConfig(that: this, config: config);
+      RustLib.instance.api.crateServiceApiAppConfig(that: this, config: config);
 
   int connect({
     required String path,
@@ -6847,7 +6847,7 @@ class AppImpl extends RustOpaque implements App {
 class DartHandlerHandlerImpl extends RustOpaque implements DartHandlerHandler {
   // Not to be used by end users
   DartHandlerHandlerImpl.frbInternalDcoDecode(List<dynamic> wire)
-  : super.frbInternalDcoDecode(wire, _kStaticData);
+    : super.frbInternalDcoDecode(wire, _kStaticData);
 
   // Not to be used by end users
   DartHandlerHandlerImpl.frbInternalSseDecode(
@@ -6857,13 +6857,13 @@ class DartHandlerHandlerImpl extends RustOpaque implements DartHandlerHandler {
 
   static final _kStaticData = RustArcStaticData(
     rustArcIncrementStrongCount:
-    RustLib.instance.api.rust_arc_increment_strong_count_DartHandlerHandler,
+        RustLib.instance.api.rust_arc_increment_strong_count_DartHandlerHandler,
     rustArcDecrementStrongCount:
-    RustLib.instance.api.rust_arc_decrement_strong_count_DartHandlerHandler,
+        RustLib.instance.api.rust_arc_decrement_strong_count_DartHandlerHandler,
     rustArcDecrementStrongCountPtr: RustLib
-    .instance
-    .api
-    .rust_arc_decrement_strong_count_DartHandlerHandlerPtr,
+        .instance
+        .api
+        .rust_arc_decrement_strong_count_DartHandlerHandlerPtr,
   );
 }
 
@@ -6871,7 +6871,7 @@ class DartHandlerHandlerImpl extends RustOpaque implements DartHandlerHandler {
 class GraphQlRouteConfigImpl extends RustOpaque implements GraphQlRouteConfig {
   // Not to be used by end users
   GraphQlRouteConfigImpl.frbInternalDcoDecode(List<dynamic> wire)
-  : super.frbInternalDcoDecode(wire, _kStaticData);
+    : super.frbInternalDcoDecode(wire, _kStaticData);
 
   // Not to be used by end users
   GraphQlRouteConfigImpl.frbInternalSseDecode(
@@ -6881,79 +6881,79 @@ class GraphQlRouteConfigImpl extends RustOpaque implements GraphQlRouteConfig {
 
   static final _kStaticData = RustArcStaticData(
     rustArcIncrementStrongCount:
-    RustLib.instance.api.rust_arc_increment_strong_count_GraphQlRouteConfig,
+        RustLib.instance.api.rust_arc_increment_strong_count_GraphQlRouteConfig,
     rustArcDecrementStrongCount:
-    RustLib.instance.api.rust_arc_decrement_strong_count_GraphQlRouteConfig,
+        RustLib.instance.api.rust_arc_decrement_strong_count_GraphQlRouteConfig,
     rustArcDecrementStrongCountPtr: RustLib
-    .instance
-    .api
-    .rust_arc_decrement_strong_count_GraphQlRouteConfigPtr,
+        .instance
+        .api
+        .rust_arc_decrement_strong_count_GraphQlRouteConfigPtr,
   );
 
   Future<GraphQlRouteConfig> description({required String description}) =>
-  RustLib.instance.api.crateGraphQlRouteConfigDescription(
-    that: this,
-    description: description,
-  );
+      RustLib.instance.api.crateGraphQlRouteConfigDescription(
+        that: this,
+        description: description,
+      );
 
   Future<GraphQlRouteConfig> enablePlayground({required bool enable}) => RustLib
-  .instance
-  .api
-  .crateGraphQlRouteConfigEnablePlayground(that: this, enable: enable);
+      .instance
+      .api
+      .crateGraphQlRouteConfigEnablePlayground(that: this, enable: enable);
 
   Future<String?> getDescription() =>
-  RustLib.instance.api.crateGraphQlRouteConfigGetDescription(that: this);
+      RustLib.instance.api.crateGraphQlRouteConfigGetDescription(that: this);
 
   Future<String> getMethod() =>
-  RustLib.instance.api.crateGraphQlRouteConfigGetMethod(that: this);
+      RustLib.instance.api.crateGraphQlRouteConfigGetMethod(that: this);
 
   Future<String> getPath() =>
-  RustLib.instance.api.crateGraphQlRouteConfigGetPath(that: this);
+      RustLib.instance.api.crateGraphQlRouteConfigGetPath(that: this);
 
   Future<bool> isPlaygroundEnabled() => RustLib.instance.api
-  .crateGraphQlRouteConfigIsPlaygroundEnabled(that: this);
+      .crateGraphQlRouteConfigIsPlaygroundEnabled(that: this);
 
   Future<GraphQlRouteConfig> method({required String method}) => RustLib
-  .instance
-  .api
-  .crateGraphQlRouteConfigMethod(that: this, method: method);
+      .instance
+      .api
+      .crateGraphQlRouteConfigMethod(that: this, method: method);
 
   Future<GraphQlRouteConfig> path({required String path}) =>
-  RustLib.instance.api.crateGraphQlRouteConfigPath(that: this, path: path);
+      RustLib.instance.api.crateGraphQlRouteConfigPath(that: this, path: path);
 }
 
 @sealed
 class RouteBuilderImpl extends RustOpaque implements RouteBuilder {
   // Not to be used by end users
   RouteBuilderImpl.frbInternalDcoDecode(List<dynamic> wire)
-  : super.frbInternalDcoDecode(wire, _kStaticData);
+    : super.frbInternalDcoDecode(wire, _kStaticData);
 
   // Not to be used by end users
   RouteBuilderImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-  : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
 
   static final _kStaticData = RustArcStaticData(
     rustArcIncrementStrongCount:
-    RustLib.instance.api.rust_arc_increment_strong_count_RouteBuilder,
+        RustLib.instance.api.rust_arc_increment_strong_count_RouteBuilder,
     rustArcDecrementStrongCount:
-    RustLib.instance.api.rust_arc_decrement_strong_count_RouteBuilder,
+        RustLib.instance.api.rust_arc_decrement_strong_count_RouteBuilder,
     rustArcDecrementStrongCountPtr:
-    RustLib.instance.api.rust_arc_decrement_strong_count_RouteBuilderPtr,
+        RustLib.instance.api.rust_arc_decrement_strong_count_RouteBuilderPtr,
   );
 
   Future<RouteBuilder> compression({required CompressionConfig compression}) =>
-  RustLib.instance.api.crateRouteBuilderCompression(
-    that: this,
-    compression: compression,
-  );
+      RustLib.instance.api.crateRouteBuilderCompression(
+        that: this,
+        compression: compression,
+      );
 
   Future<RouteBuilder> cors({required CorsConfig cors}) =>
-  RustLib.instance.api.crateRouteBuilderCors(that: this, cors: cors);
+      RustLib.instance.api.crateRouteBuilderCors(that: this, cors: cors);
 
   Future<RouteBuilder> fileParamsJson({required String schema}) => RustLib
-  .instance
-  .api
-  .crateRouteBuilderFileParamsJson(that: this, schema: schema);
+      .instance
+      .api
+      .crateRouteBuilderFileParamsJson(that: this, schema: schema);
 
   Future<RouteBuilder> handlerDependencies({
     required List<String> dependencies,
@@ -6963,44 +6963,44 @@ class RouteBuilderImpl extends RustOpaque implements RouteBuilder {
   );
 
   Future<RouteBuilder> handlerName({required String name}) =>
-  RustLib.instance.api.crateRouteBuilderHandlerName(that: this, name: name);
+      RustLib.instance.api.crateRouteBuilderHandlerName(that: this, name: name);
 
   Future<RouteBuilder> paramsSchemaJson({required String schema}) => RustLib
-  .instance
-  .api
-  .crateRouteBuilderParamsSchemaJson(that: this, schema: schema);
+      .instance
+      .api
+      .crateRouteBuilderParamsSchemaJson(that: this, schema: schema);
 
   Future<RouteBuilder> requestSchemaJson({required String schema}) => RustLib
-  .instance
-  .api
-  .crateRouteBuilderRequestSchemaJson(that: this, schema: schema);
+      .instance
+      .api
+      .crateRouteBuilderRequestSchemaJson(that: this, schema: schema);
 
   Future<RouteBuilder> responseSchemaJson({required String schema}) => RustLib
-  .instance
-  .api
-  .crateRouteBuilderResponseSchemaJson(that: this, schema: schema);
+      .instance
+      .api
+      .crateRouteBuilderResponseSchemaJson(that: this, schema: schema);
 
   Future<RouteBuilder> sync_() =>
-  RustLib.instance.api.crateRouteBuilderSync(that: this);
+      RustLib.instance.api.crateRouteBuilderSync(that: this);
 }
 
 @sealed
 class TestClientImpl extends RustOpaque implements TestClient {
   // Not to be used by end users
   TestClientImpl.frbInternalDcoDecode(List<dynamic> wire)
-  : super.frbInternalDcoDecode(wire, _kStaticData);
+    : super.frbInternalDcoDecode(wire, _kStaticData);
 
   // Not to be used by end users
   TestClientImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-  : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
 
   static final _kStaticData = RustArcStaticData(
     rustArcIncrementStrongCount:
-    RustLib.instance.api.rust_arc_increment_strong_count_TestClient,
+        RustLib.instance.api.rust_arc_increment_strong_count_TestClient,
     rustArcDecrementStrongCount:
-    RustLib.instance.api.rust_arc_decrement_strong_count_TestClient,
+        RustLib.instance.api.rust_arc_decrement_strong_count_TestClient,
     rustArcDecrementStrongCountPtr:
-    RustLib.instance.api.rust_arc_decrement_strong_count_TestClientPtr,
+        RustLib.instance.api.rust_arc_decrement_strong_count_TestClientPtr,
   );
 
   Future<ResponseSnapshot> graphql({

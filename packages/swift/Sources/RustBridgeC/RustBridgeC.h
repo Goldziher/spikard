@@ -6,7 +6,7 @@
 // `cargo build -p spikard-swift` via swift_bridge_build.
 
 #include <stdint.h>
-#include <stdbool.h>
+#include <stdbool.h> 
 typedef struct RustStr { uint8_t* const start; uintptr_t len; } RustStr;
 typedef struct __private__FfiSlice { void* const start; uintptr_t len; } __private__FfiSlice;
 void* __swift_bridge__null_pointer(void);
@@ -245,6 +245,18 @@ void* __swift_bridge__$Vec_FullSchemaConfig$get_mut(void* vec_ptr, uintptr_t ind
 uintptr_t __swift_bridge__$Vec_FullSchemaConfig$len(void* vec_ptr);
 void* __swift_bridge__$Vec_FullSchemaConfig$as_ptr(void* vec_ptr);
 
+typedef struct AsyncApiConfig AsyncApiConfig;
+void __swift_bridge__$AsyncApiConfig$_free(void* self);
+
+void* __swift_bridge__$Vec_AsyncApiConfig$new(void);
+void __swift_bridge__$Vec_AsyncApiConfig$drop(void* vec_ptr);
+void __swift_bridge__$Vec_AsyncApiConfig$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_AsyncApiConfig$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_AsyncApiConfig$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_AsyncApiConfig$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_AsyncApiConfig$len(void* vec_ptr);
+void* __swift_bridge__$Vec_AsyncApiConfig$as_ptr(void* vec_ptr);
+
 typedef struct BackgroundTaskConfig BackgroundTaskConfig;
 void __swift_bridge__$BackgroundTaskConfig$_free(void* self);
 
@@ -448,18 +460,6 @@ void* __swift_bridge__$Vec_ProblemDetails$get(void* vec_ptr, uintptr_t index);
 void* __swift_bridge__$Vec_ProblemDetails$get_mut(void* vec_ptr, uintptr_t index);
 uintptr_t __swift_bridge__$Vec_ProblemDetails$len(void* vec_ptr);
 void* __swift_bridge__$Vec_ProblemDetails$as_ptr(void* vec_ptr);
-
-typedef struct AsyncApiConfig AsyncApiConfig;
-void __swift_bridge__$AsyncApiConfig$_free(void* self);
-
-void* __swift_bridge__$Vec_AsyncApiConfig$new(void);
-void __swift_bridge__$Vec_AsyncApiConfig$drop(void* vec_ptr);
-void __swift_bridge__$Vec_AsyncApiConfig$push(void* vec_ptr, void* item_ptr);
-void* __swift_bridge__$Vec_AsyncApiConfig$pop(void* vec_ptr);
-void* __swift_bridge__$Vec_AsyncApiConfig$get(void* vec_ptr, uintptr_t index);
-void* __swift_bridge__$Vec_AsyncApiConfig$get_mut(void* vec_ptr, uintptr_t index);
-uintptr_t __swift_bridge__$Vec_AsyncApiConfig$len(void* vec_ptr);
-void* __swift_bridge__$Vec_AsyncApiConfig$as_ptr(void* vec_ptr);
 
 typedef struct ParsedChannel ParsedChannel;
 void __swift_bridge__$ParsedChannel$_free(void* self);
@@ -694,6 +694,9 @@ void* __swift_bridge__$FullSchemaConfig$new(bool introspection_enabled, struct _
 bool __swift_bridge__$FullSchemaConfig$introspection_enabled(void* self);
 struct __private__OptionUsize __swift_bridge__$FullSchemaConfig$complexity_limit(void* self);
 struct __private__OptionUsize __swift_bridge__$FullSchemaConfig$depth_limit(void* self);
+void* __swift_bridge__$AsyncApiConfig$new(bool enabled, void* spec);
+bool __swift_bridge__$AsyncApiConfig$enabled(void* self);
+void* __swift_bridge__$AsyncApiConfig$spec(void* self);
 void* __swift_bridge__$BackgroundTaskConfig$new(uintptr_t max_queue_size, uintptr_t max_concurrent_tasks, uint64_t drain_timeout_secs);
 uintptr_t __swift_bridge__$BackgroundTaskConfig$max_queue_size(void* self);
 uintptr_t __swift_bridge__$BackgroundTaskConfig$max_concurrent_tasks(void* self);
@@ -804,9 +807,6 @@ uint16_t __swift_bridge__$ProblemDetails$status(void* self);
 void* __swift_bridge__$ProblemDetails$detail(void* self);
 void* __swift_bridge__$ProblemDetails$instance(void* self);
 void* __swift_bridge__$ProblemDetails$extensions(void* self);
-void* __swift_bridge__$AsyncApiConfig$new(bool enabled, void* spec);
-bool __swift_bridge__$AsyncApiConfig$enabled(void* self);
-void* __swift_bridge__$AsyncApiConfig$spec(void* self);
 void* __swift_bridge__$ParsedChannel$name(void* self);
 void* __swift_bridge__$ParsedChannel$address(void* self);
 void* __swift_bridge__$ParsedChannel$messages(void* self);
@@ -856,6 +856,7 @@ struct __private__ResultPtrAndPtr __swift_bridge__$schema_config_from_json(void*
 struct __private__ResultPtrAndPtr __swift_bridge__$query_only_config_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$query_mutation_config_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$full_schema_config_from_json(void* json);
+struct __private__ResultPtrAndPtr __swift_bridge__$async_api_config_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$background_task_config_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$background_job_metadata_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$rate_limit_config_from_json(void* json);
@@ -870,7 +871,6 @@ struct __private__ResultPtrAndPtr __swift_bridge__$static_files_config_from_json
 struct __private__ResultPtrAndPtr __swift_bridge__$server_config_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$json_rpc_method_info_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$problem_details_from_json(void* json);
-struct __private__ResultPtrAndPtr __swift_bridge__$async_api_config_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$parsed_channel_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$parsed_operation_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$parsed_message_from_json(void* json);
@@ -886,6 +886,7 @@ void* __swift_bridge__$__alef_phantom_vec_schema_config(void);
 void* __swift_bridge__$__alef_phantom_vec_query_only_config(void);
 void* __swift_bridge__$__alef_phantom_vec_query_mutation_config(void);
 void* __swift_bridge__$__alef_phantom_vec_full_schema_config(void);
+void* __swift_bridge__$__alef_phantom_vec_async_api_config(void);
 void* __swift_bridge__$__alef_phantom_vec_background_task_config(void);
 void* __swift_bridge__$__alef_phantom_vec_background_job_metadata(void);
 void* __swift_bridge__$__alef_phantom_vec_cors_config(void);
@@ -903,7 +904,6 @@ void* __swift_bridge__$__alef_phantom_vec_server_config(void);
 void* __swift_bridge__$__alef_phantom_vec_route_builder(void);
 void* __swift_bridge__$__alef_phantom_vec_json_rpc_method_info(void);
 void* __swift_bridge__$__alef_phantom_vec_problem_details(void);
-void* __swift_bridge__$__alef_phantom_vec_async_api_config(void);
 void* __swift_bridge__$__alef_phantom_vec_parsed_channel(void);
 void* __swift_bridge__$__alef_phantom_vec_parsed_operation(void);
 void* __swift_bridge__$__alef_phantom_vec_parsed_message(void);

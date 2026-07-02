@@ -1,14 +1,14 @@
 package e2e_test
 
 import (
-	"fmt"
-	"io"
-	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"testing"
+	"fmt"
+	"io"
+	"net"
 	"time"
 )
 

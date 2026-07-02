@@ -8,7 +8,9 @@ final class App
     private array $registrations = [];
 
     // Create a new application with the default server configuration.
-    public function __construct() {}
+    public function __construct()
+    {
+    }
 
     // Set the server configuration.
     public function config(ServerConfig $config): self
@@ -27,7 +29,7 @@ final class App
     public function route(RouteBuilder $builder, ?callable $handler = null): mixed
     {
         if ($handler !== null) {
-            $this->registrations[] = ['route', [$builder], $handler];
+        $this->registrations[] = ['route', [$builder], $handler];
             return $this;
         }
 
@@ -204,4 +206,5 @@ final class App
     {
         return app_into_router($this->registrations);
     }
+
 }

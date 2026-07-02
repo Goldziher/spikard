@@ -20,7 +20,6 @@ import (
 	"time"
 	"unsafe"
 )
-
 // ──────────────────────────────────────────── Service Definitions ──
 
 // Service: App
@@ -44,7 +43,7 @@ type HandlerFunc func([]byte) ([]byte, error)
 // handlerRegistry maps opaque context indices to Go handlers.
 var (
 	handlerRegistryMu sync.Mutex
-	handlerRegistry           = make(map[uintptr]HandlerFunc)
+	handlerRegistry   = make(map[uintptr]HandlerFunc)
 	handlerNextID     uintptr = 1
 )
 
@@ -98,7 +97,6 @@ func service_handler_callback(ctx unsafe.Pointer, reqCStr *C.char) *C.char {
 	cResp := C.CString(string(respJSON))
 	return cResp
 }
-
 // ──────────────────────────────────────────── Go Service API ──
 
 // App is a wrapper around the native service.
@@ -108,7 +106,6 @@ type App struct {
 	owner unsafe.Pointer // *SPIKARDAppOpaque from C
 	mu    sync.Mutex
 }
-
 // NewApp creates a new App instance.
 func NewApp() (*App, error) {
 	owner := unsafe.Pointer(C.spikard_app_new())
@@ -117,7 +114,6 @@ func NewApp() (*App, error) {
 	}
 	return &App{owner: owner}, nil
 }
-
 // Close frees the App instance.
 func (s *App) Close() {
 	s.mu.Lock()
@@ -127,7 +123,6 @@ func (s *App) Close() {
 		s.owner = nil
 	}
 }
-
 // RegisterRoute registers a handler for the route registration.
 //
 // Register a route using the provided builder and handler function.
@@ -155,7 +150,6 @@ func (s *App) RegisterRoute(handler HandlerFunc, builder *RouteBuilder) error {
 	}
 	return nil
 }
-
 // Get() registers a handler via the get variant.
 //
 // Register a GET route at the given path.
@@ -179,7 +173,6 @@ func (s *App) Get(handler HandlerFunc, path string) error {
 	}
 	return nil
 }
-
 // Post() registers a handler via the post variant.
 //
 // Register a POST route at the given path.
@@ -203,7 +196,6 @@ func (s *App) Post(handler HandlerFunc, path string) error {
 	}
 	return nil
 }
-
 // Put() registers a handler via the put variant.
 //
 // Register a PUT route at the given path.
@@ -227,7 +219,6 @@ func (s *App) Put(handler HandlerFunc, path string) error {
 	}
 	return nil
 }
-
 // Patch() registers a handler via the patch variant.
 //
 // Register a PATCH route at the given path.
@@ -251,7 +242,6 @@ func (s *App) Patch(handler HandlerFunc, path string) error {
 	}
 	return nil
 }
-
 // Delete() registers a handler via the delete variant.
 //
 // Register a DELETE route at the given path.
@@ -275,7 +265,6 @@ func (s *App) Delete(handler HandlerFunc, path string) error {
 	}
 	return nil
 }
-
 // Head() registers a handler via the head variant.
 //
 // Register a HEAD route at the given path.
@@ -299,7 +288,6 @@ func (s *App) Head(handler HandlerFunc, path string) error {
 	}
 	return nil
 }
-
 // Options() registers a handler via the options variant.
 //
 // Register an OPTIONS route at the given path.
@@ -323,7 +311,6 @@ func (s *App) Options(handler HandlerFunc, path string) error {
 	}
 	return nil
 }
-
 // Connect() registers a handler via the connect variant.
 //
 // Register a CONNECT route at the given path.
@@ -347,7 +334,6 @@ func (s *App) Connect(handler HandlerFunc, path string) error {
 	}
 	return nil
 }
-
 // Trace() registers a handler via the trace variant.
 //
 // Register a TRACE route at the given path.
@@ -371,7 +357,6 @@ func (s *App) Trace(handler HandlerFunc, path string) error {
 	}
 	return nil
 }
-
 // Config() configures the service via 'config'.
 //
 // Set the server configuration.
@@ -401,7 +386,6 @@ func (s *App) Config(config *ServerConfig) error {
 	s.owner = unsafe.Pointer(new_owner)
 	return nil
 }
-
 // Run() runs the service's run entrypoint.
 //
 // Run the HTTP server using the configured routes.
