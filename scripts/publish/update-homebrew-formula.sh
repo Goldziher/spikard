@@ -19,19 +19,13 @@ formula="${tap_dir}/Formula/spikard.rb"
   exit 1
 }
 
-work_dir="$(mktemp -d)"
-trap 'rm -rf "$work_dir"' EXIT
-
-# Source archive SHA: GitHub auto-generates the source tarball at /archive/${tag}.tar.gz.
-# Download via curl since `gh release download` only fetches uploaded assets.
-download_source_sha() {
-  local url="https://github.com/Goldziher/spikard/archive/${tag}.tar.gz"
-  echo "Downloading source archive from $url..." >&2
-  curl -fsSL "$url" -o "$work_dir/source.tar.gz"
-  shasum -a 256 "$work_dir/source.tar.gz" | awk '{print $1}'
-}
-
-source_sha=$(download_source_sha)
+# Use a git source (tag + immutable revision) rather than GitHub's auto-generated
+# /archive/${tag}.tar.gz: those tarballs are NOT byte-stable — GitHub regenerates
+# them, so a sha256 captured here can differ from what `brew` downloads minutes
+# later during bottle building ("Formula reports different checksum"). Pinning the
+# commit revision needs no sha256 and is immutable.
+revision="${REVISION:-$(git rev-parse HEAD^{commit})}"
+[[ -n "$revision" ]] || { echo "Could not resolve git revision for $tag" >&2; exit 1; }
 
 write_formula() {
   cat >"$formula" <<EOF
@@ -42,8 +36,9 @@ class Spikard < Formula
   desc "Rust-centric multi-language HTTP framework with polyglot bindings"
   homepage "https://github.com/Goldziher/spikard"
   version "${version}"
-  url "https://github.com/Goldziher/spikard/archive/v#{version}.tar.gz"
-  sha256 "${source_sha}"
+  url "https://github.com/Goldziher/spikard.git",
+      tag:      "${tag}",
+      revision: "${revision}"
   license "MIT"
 
   depends_on "pkg-config" => :build

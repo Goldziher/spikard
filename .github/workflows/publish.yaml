@@ -1265,6 +1265,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ needs.prepare.outputs.tag }}
           VERSION: ${{ needs.prepare.outputs.version }}
+          REVISION: ${{ github.sha }}
           TAP_DIR: ${{ github.workspace }}/homebrew-tap
         run: scripts/publish/update-homebrew-formula.sh
 
