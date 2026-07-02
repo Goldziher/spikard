@@ -25,13 +25,33 @@ exclude = [
 ]
 
 [lint.markdown.rumdl]
-disable = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051", "MD076"]
+disable = [
+    "MD012",
+    "MD013",
+    "MD024",
+    "MD033",
+    "MD036",
+    "MD041",
+    "MD046",
+    "MD051",
+    "MD076",
+]
 
 [fmt.markdown.rumdl]
-disable = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051", "MD076"]
+disable = [
+    "MD012",
+    "MD013",
+    "MD024",
+    "MD033",
+    "MD036",
+    "MD041",
+    "MD046",
+    "MD051",
+    "MD076",
+]
 
 [lint.python.ruff]
-select = ["ALL"]
+select = [ "ALL" ]
 ignore = [
     "ANN401",
     "ASYNC109",
@@ -64,15 +84,20 @@ pylint_max_branches = 15
 pylint_max_returns = 10
 
 [lint.php.mago]
-select = ["correctness", "security"]
-ignore = ["strict-assertions", "use-specific-assertions", "no-redundant-variable", "sensitive-parameter"]
+select = [ "correctness", "security" ]
+ignore = [
+    "strict-assertions",
+    "use-specific-assertions",
+    "no-redundant-variable",
+    "sensitive-parameter",
+]
 php_version = "8.2"
 
 [per-file-ignores]
-"**/api.py" = ["F401", "I001", "TC006", "UP035"]
-"**/*.pyi" = ["A002", "F401", "I001", "PYI033", "TC006", "UP035"]
-"**/options.py" = ["F401", "RUF100"]
-"**/__init__.py" = ["I001"]
+"**/api.py" = [ "F401", "I001", "TC006", "UP035" ]
+"**/*.pyi" = [ "A002", "F401", "I001", "PYI033", "TC006", "UP035" ]
+"**/options.py" = [ "F401", "I001", "RUF100" ]
+"**/__init__.py" = [ "I001" ]
 "**/tests/**" = [
     "ANN",
     "D103",
@@ -111,6 +136,9 @@ php_version = "8.2"
     "RUF015",
     "F541",
     "EXE001",
+    "A001",
+    "N801",
+    "Q003",
 ]
 "**/e2e/**" = [
     "ANN",
@@ -150,6 +178,9 @@ php_version = "8.2"
     "RUF015",
     "F541",
     "EXE001",
+    "A001",
+    "N801",
+    "Q003",
 ]
 "**/test_apps/**" = [
     "ANN",
@@ -189,14 +220,25 @@ php_version = "8.2"
     "RUF015",
     "F541",
     "EXE001",
+    "A001",
+    "N801",
+    "Q003",
 ]
-"CHANGELOG.md" = ["MD057"]
-"docs/reference/feature-parity.md" = ["MD057"]
-"scripts/**/*.py" = ["RUF100"]
-"templates/readme/**" = ["MD057"]
+"CHANGELOG.md" = [
+    "MD057",
+]
+"docs/reference/feature-parity.md" = [
+    "MD057",
+]
+"scripts/**/*.py" = [
+    "RUF100",
+]
+"templates/readme/**" = [
+    "MD057",
+]
 
 [hooks]
-stages = ["pre-commit"]
+stages = [ "pre-commit" ]
 
 [hooks.builtin]
 polylint = { exclude = [
@@ -272,7 +314,7 @@ file_safety = { exclude = [
     "crates/spikard-node/service_http_additions.ts",
 ] }
 cargo = true
-commit = { stages = ["commit-msg"] }
+commit = { stages = [ "commit-msg" ] }
 
 [hooks.pre-commit.commands.pyrefly]
 run = "pyrefly check packages/python"
