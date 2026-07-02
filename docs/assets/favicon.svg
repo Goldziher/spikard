@@ -1,19 +1,34 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="spikard">
 <title>spikard</title>
 <defs>
-<linearGradient id="ig" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2b9fe6"/><stop offset="100%" stop-color="#ffb43f"/></linearGradient>
-<radialGradient id="ib" gradientUnits="userSpaceOnUse" cx="128.0" cy="102.4" r="179.2"><stop offset="0%" stop-color="#2b9fe6" stop-opacity="0.18"/><stop offset="75%" stop-color="#2b9fe6" stop-opacity="0"/></radialGradient>
-<clipPath id="ic"><rect width="256" height="256" rx="56"/></clipPath>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" stop-color="#070714"/>
+<stop offset="55%" stop-color="#10051a"/>
+<stop offset="100%" stop-color="#05040b"/>
+</linearGradient>
+<filter id="neon" x="-50%" y="-50%" width="200%" height="200%">
+<feGaussianBlur in="SourceAlpha" stdDeviation="6" result="soft"/>
+<feFlood flood-color="#ff2bd6" flood-opacity="0.9"/>
+<feComposite in2="soft" operator="in" result="glow"/>
+<feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+</filter>
+<clipPath id="clip"><rect width="256" height="256" rx="48"/></clipPath>
 </defs>
-<g clip-path="url(#ic)">
-<rect width="256" height="256" fill="#080b13"/>
-<rect width="256" height="256" fill="url(#ib)"/>
-<rect x="89.0" y="37.0" width="104.0" height="26.0" fill="url(#ig)"/>
-<rect x="63.0" y="63.0" width="26.0" height="26.0" fill="url(#ig)"/>
-<rect x="63.0" y="89.0" width="26.0" height="26.0" fill="url(#ig)"/>
-<rect x="89.0" y="115.0" width="78.0" height="26.0" fill="url(#ig)"/>
-<rect x="167.0" y="141.0" width="26.0" height="26.0" fill="url(#ig)"/>
-<rect x="167.0" y="167.0" width="26.0" height="26.0" fill="url(#ig)"/>
-<rect x="63.0" y="193.0" width="104.0" height="26.0" fill="url(#ig)"/>
+<g clip-path="url(#clip)">
+<rect width="256" height="256" fill="url(#bg)"/>
+<path d="M0 178H256V256H0Z" fill="#05040b"/>
+<g fill="none" stroke="#00e7ff" stroke-linecap="square" opacity="0.22">
+<path d="M0 181H256M0 201H256M0 225H256"/>
+<path d="M128 178L16 256M128 178L72 256M128 178L128 256M128 178L184 256M128 178L240 256"/>
+</g>
+<g fill="#ff2bd6" filter="url(#neon)" shape-rendering="crispEdges">
+<rect x="89" y="37" width="104" height="26"/>
+<rect x="63" y="63" width="26" height="26"/>
+<rect x="63" y="89" width="26" height="26"/>
+<rect x="89" y="115" width="78" height="26"/>
+<rect x="167" y="141" width="26" height="26"/>
+<rect x="167" y="167" width="26" height="26"/>
+<rect x="63" y="193" width="104" height="26"/>
+</g>
 </g>
 </svg>

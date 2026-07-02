@@ -6,7 +6,7 @@
 
     <groupId>dev.spikard</groupId>
     <artifactId>spikard</artifactId>
-    <version>0.16.0</version>
+    <version>0.16.1</version>
     <packaging>jar</packaging>
 
     <name>spikard</name>

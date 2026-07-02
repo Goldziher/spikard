@@ -1,9 +1,9 @@
 <!-- markdownlint-disable MD033 MD041 -->
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/Goldziher/spikard/main/docs/assets/spikard-banner.svg" alt="spikard — polyglot http framework" width="820">
+<img src="https://raw.githubusercontent.com/Goldziher/spikard/main/docs/assets/spikard-banner.svg" alt="spikard - polyglot web toolkit" width="820">
 
-**Spikard** — Part of the spikard polyglot HTTP framework.
+**Spikard** — Part of the spikard polyglot web toolkit.
 
 Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Kotlin/JVM bindings with idiomatic data classes and coroutine-based async.
 
@@ -93,7 +93,7 @@ Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC code
 **Gradle:**
 
 ```gradle
-implementation 'dev.spikard:spikard:0.16.0'
+implementation 'dev.spikard:spikard:0.16.1'
 ```
 
 **Maven:**
@@ -102,7 +102,7 @@ implementation 'dev.spikard:spikard:0.16.0'
 <dependency>
     <groupId>dev.spikard</groupId>
     <artifactId>spikard</artifactId>
-    <version>0.16.0</version>
+    <version>0.16.1</version>
 </dependency>
 ```
 

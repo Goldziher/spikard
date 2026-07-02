@@ -1,11 +1,11 @@
 <!-- markdownlint-disable MD033 MD041 -->
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/Goldziher/spikard/main/docs/assets/spikard-banner.svg" alt="spikard — polyglot http framework" width="820">
+<img src="https://raw.githubusercontent.com/Goldziher/spikard/main/docs/assets/spikard-banner.svg" alt="spikard - polyglot web toolkit" width="820">
 
-**One HTTP framework, every language.**
+**One web toolkit, every language.**
 
-Rust-centric polyglot HTTP framework. Single Rust core compiled to 15 languages through alef-generated bindings — type-safe routing, OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing.
+Rust-centric polyglot web toolkit. Single Rust core compiled to 15 languages through alef-generated bindings — type-safe routing, OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing.
 
 **Rust core** · Python · TypeScript · Ruby · PHP · Elixir · Go · Java · C# · Kotlin · Dart · Swift · Zig · WASM · C FFI
 

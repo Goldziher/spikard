@@ -1,11 +1,11 @@
 <!-- markdownlint-disable MD033 MD041 -->
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/Goldziher/spikard/main/docs/assets/spikard-banner.svg" alt="spikard — polyglot http framework" width="820">
+<img src="https://raw.githubusercontent.com/Goldziher/spikard/main/docs/assets/spikard-banner.svg" alt="spikard - polyglot web toolkit" width="820">
 
 **Spikard for Go** — Type-safe HTTP framework backed by Rust via static linking.
 
-Go bindings for the spikard polyglot HTTP framework. Backed by the Rust core via CGO static linking.
+Go bindings for the spikard polyglot web toolkit. Backed by the Rust core via CGO static linking.
 
 {% include 'partials/badges.html.jinja' %}
 

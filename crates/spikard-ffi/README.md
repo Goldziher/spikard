@@ -1,9 +1,9 @@
 <!-- markdownlint-disable MD033 MD041 -->
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/Goldziher/spikard/main/docs/assets/spikard-banner.svg" alt="spikard — polyglot http framework" width="820">
+<img src="https://raw.githubusercontent.com/Goldziher/spikard/main/docs/assets/spikard-banner.svg" alt="spikard - polyglot web toolkit" width="820">
 
-**Spikard FFI** — Part of the spikard polyglot HTTP framework.
+**Spikard FFI** — Part of the spikard polyglot web toolkit.
 
 C/C++ FFI bindings for the spikard HTTP framework. Stable ABI shared library for native integration, cross-language bridging (Go, Zig, Kotlin JNI), and embedding the Rust HTTP core into any C-compatible host.
 

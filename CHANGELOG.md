@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.1] - 2026-07-02
+
+### Fixed
+
+- **dart**: refresh `packages/dart/rust/Cargo.lock` so the publish pipeline's
+  `cargo build --locked` succeeds — the workspace-excluded dart crate's lock was left stale by
+  version bumps, which had blocked the Dart native build (and thus pub.dev publishing) on prior
+  releases.
+
+### Changed
+
+- **docs/readme**: rewrote README templates to the sibling-repo hero/collapsible pattern; corrected
+  deferred guides/playbooks/ADRs against the shipped API; rebranded the docs accent to the new
+  pixel-art identity's electric blue.
+- **governance**: replaced prek with poly across `.ai-rulez`.
+
 ## [0.16.0] - 2026-07-02
 
 ### Fixed

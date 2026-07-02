@@ -1,9 +1,9 @@
 <!-- markdownlint-disable MD033 MD041 -->
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/Goldziher/spikard/main/docs/assets/spikard-banner.svg" alt="spikard — polyglot http framework" width="820">
+<img src="https://raw.githubusercontent.com/Goldziher/spikard/main/docs/assets/spikard-banner.svg" alt="spikard - polyglot web toolkit" width="820">
 
-**Spikard** — Part of the spikard polyglot HTTP framework.
+**Spikard** — Part of the spikard polyglot web toolkit.
 
 Rust-centric polyglot HTTP framework built on Axum and Tower-HTTP. Type-safe routing, JSON Schema validation, OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, WebSocket/SSE, lifecycle hooks, and a tower-http middleware stack.
 

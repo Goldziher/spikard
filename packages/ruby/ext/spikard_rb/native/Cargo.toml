@@ -1,6 +1,6 @@
 [package]
 name = "spikard-rb"
-version = "0.16.0"
+version = "0.16.1"
 edition = "2024"
 license = "MIT"
 description = "Rust-centric multi-language HTTP framework with polyglot bindings"
@@ -25,8 +25,8 @@ magnus = "0.8"
 rb-sys = ">=0.9, <0.9.128"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-spikard = { version = "0.16.0", path = "../../../../../crates/spikard", features = ["di"] }
-spikard-core = { path = "../../../../../crates/spikard-core", version = "0.16.0" }
-spikard-graphql = { path = "../../../../../crates/spikard-graphql", version = "0.16.0" }
-spikard-http = { path = "../../../../../crates/spikard-http", version = "0.16.0" }
+spikard = { version = "0.16.1", path = "../../../../../crates/spikard", features = ["di"] }
+spikard-core = { path = "../../../../../crates/spikard-core", version = "0.16.1" }
+spikard-graphql = { path = "../../../../../crates/spikard-graphql", version = "0.16.1" }
+spikard-http = { path = "../../../../../crates/spikard-http", version = "0.16.1" }
 tokio = { version = "1", features = ["rt-multi-thread"] }

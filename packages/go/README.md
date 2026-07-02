@@ -1,11 +1,11 @@
 <!-- markdownlint-disable MD033 MD041 -->
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/Goldziher/spikard/main/docs/assets/spikard-banner.svg" alt="spikard — polyglot http framework" width="820">
+<img src="https://raw.githubusercontent.com/Goldziher/spikard/main/docs/assets/spikard-banner.svg" alt="spikard - polyglot web toolkit" width="820">
 
 **Spikard for Go** — Type-safe HTTP framework backed by Rust via static linking.
 
-Go bindings for the spikard polyglot HTTP framework. Backed by the Rust core via CGO static linking.
+Go bindings for the spikard polyglot web toolkit. Backed by the Rust core via CGO static linking.
 
 <div align="center" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 20px 0;">
   <!-- Built with alef -->
@@ -137,7 +137,7 @@ From [GitHub Releases](https://github.com/Goldziher/spikard/releases):
 
 ```bash
 # Example: Linux x86_64
-curl -LO https://github.com/Goldziher/spikard/releases/download/v0.16.0/go-ffi-linux-x86_64.tar.gz
+curl -LO https://github.com/Goldziher/spikard/releases/download/v0.16.1/go-ffi-linux-x86_64.tar.gz
 tar -xzf go-ffi-linux-x86_64.tar.gz
 
 CGO_LDFLAGS="-L/path/to/lib -lspikard_ffi" go build
