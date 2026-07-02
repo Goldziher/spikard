@@ -1,27 +1,54 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="spikard">
 <title>spikard</title>
 <defs>
-<filter id="redLift" x="-30%" y="-30%" width="160%" height="160%">
-<feDropShadow dx="5" dy="6" stdDeviation="0" flood-color="#3b0005" flood-opacity="0.9"/>
-</filter>
-<clipPath id="clip"><rect width="256" height="256" rx="24"/></clipPath>
+<linearGradient id="g" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0%" stop-color="#2b9fe6"/><stop offset="100%" stop-color="#ffb43f"/></linearGradient>
+<radialGradient id="glow" cx="0.5" cy="0.42" r="0.62"><stop offset="0%" stop-color="#2b9fe6" stop-opacity="0.20"/><stop offset="78%" stop-color="#2b9fe6" stop-opacity="0"/></radialGradient>
+<radialGradient id="gem" cx="0.5" cy="0.5" r="0.5"><stop offset="0%" stop-color="#ffb43f" stop-opacity="0.9"/><stop offset="100%" stop-color="#ffb43f" stop-opacity="0"/></radialGradient>
+<clipPath id="clip"><rect width="256" height="256" rx="56"/></clipPath>
 </defs>
 <g clip-path="url(#clip)">
-<rect width="256" height="256" fill="#020202"/>
-<path d="M18 18H238V238H18Z" fill="none" stroke="#ff1d2d" stroke-width="2"/>
-<g transform="translate(128 128) skewX(-10) translate(-128 -128)" filter="url(#redLift)" shape-rendering="crispEdges">
-<g fill="#ff1d2d">
-<rect x="89" y="37" width="104" height="26"/>
-<rect x="63" y="63" width="26" height="26"/>
-<rect x="63" y="89" width="26" height="26"/>
-<rect x="89" y="115" width="78" height="26"/>
-<rect x="167" y="141" width="26" height="26"/>
-<rect x="167" y="167" width="26" height="26"/>
-<rect x="63" y="193" width="104" height="26"/>
-</g>
-<g fill="#020202">
-<rect x="58" y="96" width="142" height="8"/>
-</g>
-</g>
+<rect width="256" height="256" fill="#080b13"/>
+<rect width="256" height="256" fill="url(#glow)"/>
+<circle cx="128.00" cy="46.55" r="26.07" fill="url(#gem)"/>
+<rect x="87.27" y="38.40" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="103.56" y="38.40" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="119.85" y="38.40" width="16.29" height="16.29" fill="#ffffff"/>
+<rect x="136.15" y="38.40" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="152.44" y="38.40" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="70.98" y="54.69" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="87.27" y="54.69" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="152.44" y="54.69" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="168.73" y="54.69" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="54.69" y="70.98" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="70.98" y="70.98" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="168.73" y="70.98" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="185.02" y="70.98" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="38.40" y="87.27" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="54.69" y="87.27" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="185.02" y="87.27" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="201.31" y="87.27" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="38.40" y="103.56" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="201.31" y="103.56" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="38.40" y="119.85" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="201.31" y="119.85" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="38.40" y="136.15" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="201.31" y="136.15" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="38.40" y="152.44" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="54.69" y="152.44" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="185.02" y="152.44" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="201.31" y="152.44" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="54.69" y="168.73" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="70.98" y="168.73" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="168.73" y="168.73" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="185.02" y="168.73" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="70.98" y="185.02" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="87.27" y="185.02" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="152.44" y="185.02" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="168.73" y="185.02" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="87.27" y="201.31" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="103.56" y="201.31" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="119.85" y="201.31" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="136.15" y="201.31" width="16.29" height="16.29" fill="url(#g)"/>
+<rect x="152.44" y="201.31" width="16.29" height="16.29" fill="url(#g)"/>
 </g>
 </svg>

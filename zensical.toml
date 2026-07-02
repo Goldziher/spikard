@@ -169,7 +169,6 @@ repo = "github"
 search = "search"
 
 [[project.theme.palette]]
-media = "(prefers-color-scheme: dark)"
 scheme = "slate"
 primary = "custom"
 accent = "custom"
@@ -179,7 +178,6 @@ icon = "sun"
 name = "Switch to light mode"
 
 [[project.theme.palette]]
-media = "(prefers-color-scheme: light)"
 scheme = "default"
 primary = "custom"
 accent = "custom"
