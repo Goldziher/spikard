@@ -2878,7 +2878,7 @@ dependencies = [
 
 [[package]]
 name = "spikard"
-version = "0.16.0-rc.3"
+version = "0.16.0-rc.4"
 dependencies = [
  "anyhow",
  "axum",
@@ -2896,7 +2896,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-core"
-version = "0.16.0-rc.3"
+version = "0.16.0-rc.4"
 dependencies = [
  "anyhow",
  "base64",
@@ -2920,7 +2920,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-e2e-rust"
-version = "0.16.0-rc.3"
+version = "0.16.0-rc.4"
 dependencies = [
  "axum",
  "axum-test",
@@ -2937,7 +2937,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-graphql"
-version = "0.16.0-rc.3"
+version = "0.16.0-rc.4"
 dependencies = [
  "async-graphql",
  "axum",
@@ -2956,7 +2956,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-http"
-version = "0.16.0-rc.3"
+version = "0.16.0-rc.4"
 dependencies = [
  "ahash",
  "anyhow",

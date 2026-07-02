@@ -1113,8 +1113,8 @@ app_class = "App"
 # at `Spikard::App` not the top-level `::App`. The override here resolves it.
 register_method = "route"
 run_method = "run"
-# spikard's Response struct names the body payload `content`, not `body`.
-response_body_field = "content"
+# Fixtures use `body` field for expected response payloads.
+response_body_field = "body"
 host = "127.0.0.1"
 port = 8000
 

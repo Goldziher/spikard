@@ -64,7 +64,7 @@ public class HarnessMain {
                 String route = handlerNode.get("route").asText();
                 String method = handlerNode.get("method").asText();
                 int statusCode = responseNode.get("status_code").asInt();
-                JsonNode responseBody = responseNode.get("content");
+                JsonNode responseBody = responseNode.get("body");
                 JsonNode responseHeaders = responseNode.get("headers");
 
                 // Build the full fixture-namespaced route: /fixtures/<fixture_id>{route}
@@ -78,7 +78,7 @@ public class HarnessMain {
                     // Handler ignores request and returns the recorded expected response
                     Map<String, Object> resp = new LinkedHashMap<>();
                     resp.put("status_code", finalStatusCode);
-                    resp.put("content", finalResponseBody);
+                    resp.put("body", finalResponseBody);
                     if (finalResponseHeaders != null && finalResponseHeaders.isObject()) {
                         Map<String, String> headers = new LinkedHashMap<>();
                         finalResponseHeaders.fieldNames().forEachRemaining(name ->
