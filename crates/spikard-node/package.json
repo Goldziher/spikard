@@ -1,6 +1,6 @@
 {
   "name": "@spikard/node",
-  "version": "0.16.0-rc.4",
+  "version": "0.16.0",
   "description": "Rust-centric multi-language HTTP framework with polyglot bindings",
   "license": "MIT",
   "repository": {
@@ -18,13 +18,13 @@
   },
   "files": ["index.js", "index-wrapper.cjs", "index.d.ts", "service.cjs", "*.node"],
   "optionalDependencies": {
-    "@spikard/node-linux-x64-gnu": "0.16.0-rc.4",
-    "@spikard/node-linux-arm64-gnu": "0.16.0-rc.4",
-    "@spikard/node-linux-x64-musl": "0.16.0-rc.4",
-    "@spikard/node-linux-arm64-musl": "0.16.0-rc.4",
-    "@spikard/node-darwin-arm64": "0.16.0-rc.4",
-    "@spikard/node-win32-x64-msvc": "0.16.0-rc.4",
-    "@spikard/node-win32-arm64-msvc": "0.16.0-rc.4"
+    "@spikard/node-linux-x64-gnu": "0.16.0",
+    "@spikard/node-linux-arm64-gnu": "0.16.0",
+    "@spikard/node-linux-x64-musl": "0.16.0",
+    "@spikard/node-linux-arm64-musl": "0.16.0",
+    "@spikard/node-darwin-arm64": "0.16.0",
+    "@spikard/node-win32-x64-msvc": "0.16.0",
+    "@spikard/node-win32-arm64-msvc": "0.16.0"
   },
   "napi": {
     "packageName": "@spikard/node",

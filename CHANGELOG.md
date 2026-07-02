@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-07-02
+
+### Fixed
+
+- **e2e harness**: `response_body_field` corrected from `content` to `body` to match all fixtures —
+  generated harnesses were extracting empty response bodies (~502 failing e2e tests per language).
+- **FFI/Go**: the generated C header now forward-declares the service-owner type
+  (`typedef struct SPIKARDApp SPIKARDApp;`), fixing the "unknown type name" break in the Go/C
+  bindings (via alef v0.30.9).
+- **PHP**: restored the package `composer.json` and wired poly into the php CI job.
+- **Docs**: corrected package names, removed a `Spikard`→`App` rename leftover and fabricated APIs
+  across guides/snippets, and fixed broken reference links.
+
+### Changed
+
+- Consumed alef v0.30.9 and regenerated all bindings; upgraded workspace dependencies
+  (rmcp 2.0, axum-test 21, and others).
+- New pixel-art brand identity (logo, favicon, social card).
+
 ## [0.16.0-rc.4] - 2026-06-25
 
 ### Changed
