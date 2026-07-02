@@ -724,9 +724,10 @@ app.config.cors.allowed_headers = ["Content-Type", "Authorization"]
 
 ```typescript
 // TypeScript
-import { App } from "spikard";
+import { App } from "@spikard/node";
 
-const app = new App({
+const app = new App();
+app.config({
   cors: {
     enabled: true,
     allowedOrigins: ["http://localhost:3000"],
@@ -918,24 +919,9 @@ async def get_user_data(user_id: str):
 app.config.request_timeout = 60  # 60 seconds
 ```
 
-3. Use background tasks for long operations:
+3. Use background task configuration:
 
-```python
-from spikard import BackgroundTask
-
-async def process_upload(file_id: str):
-    # Long-running processing
-    await heavy_processing(file_id)
-
-async def upload_handler(file: UploadFile):
-    file_id = await save_file(file)
-
-    # Return immediately, process in background
-    return {
-        "id": file_id,
-        "status": "processing"
-    }, BackgroundTask(process_upload, file_id)
-```
+Consider using external task queues (Redis, RabbitMQ, or cloud providers) for deferred processing, as background tasks must complete within the request timeout window.
 
 **Prevention Tips:**
 
@@ -960,46 +946,40 @@ The DI container doesn't have a provider for a required dependency.
 
 **Solution:**
 
-Register providers before starting the app:
+Manage dependencies via route-level handlers:
 
 ```python
 # Python
-from spikard import App, Provide
+from spikard import App
 
 class Database:
     def __init__(self, url: str):
         self.url = url
 
 app = App()
+db = Database(url="postgresql://localhost/mydb")
 
-# Register provider
-@app.provide(Database)
-def create_db():
-    return Database(url="postgresql://localhost/mydb")
-
-# Use in handler
-async def get_user(user_id: str, db: Database = Provide()):
+async def get_user(request):
+    user_id = request.path_params.get("id")
     return await db.query(f"SELECT * FROM users WHERE id = {user_id}")
+
+app.get("/users/{id}", get_user)
 ```
 
 ```typescript
 // TypeScript
-import { App, Provide } from "spikard";
+import { App } from "@spikard/node";
 
 class Database {
   constructor(private url: string) {}
 }
 
 const app = new App();
+const db = new Database("postgresql://localhost/mydb");
 
-// Register provider
-app.provide(Database, () => {
-  return new Database("postgresql://localhost/mydb");
-});
-
-// Use in handler
-app.get("/users/:id", async (req, { db }: { db: Database }) => {
-  return await db.query(`SELECT * FROM users WHERE id = ${req.params.id}`);
+app.get("/users/:id", async (req) => {
+  const userId = req.params.id;
+  return await db.query(`SELECT * FROM users WHERE id = ${userId}`);
 });
 ```
 
@@ -1027,32 +1007,7 @@ The client disconnected before the streaming response completed, or the server e
 
 Handle connection errors gracefully:
 
-```python
-# Python
-from spikard import StreamingResponse
-import asyncio
-
-async def stream_data():
-    try:
-        for i in range(100):
-            yield f"data: {i}\n\n"
-            await asyncio.sleep(0.1)
-    except asyncio.CancelledError:
-        # Client disconnected
-        print("Client disconnected, cleaning up...")
-        await cleanup()
-        raise
-    except Exception as e:
-        # Other error during streaming
-        print(f"Streaming error: {e}")
-        yield f"event: error\ndata: {str(e)}\n\n"
-
-async def sse_handler():
-    return StreamingResponse(
-        stream_data(),
-        media_type="text/event-stream"
-    )
-```
+Streaming responses require AsyncAPI schema definitions. Define your stream schema in your AsyncAPI spec and let Spikard manage the connection lifecycle. Implement graceful error handling in your event generator and monitor for client disconnects via timeout or network errors.
 
 **Prevention Tips:**
 
@@ -1079,57 +1034,12 @@ WebSocket connections aren't properly closed, leading to accumulation of stale c
 
 Implement connection lifecycle management:
 
-```python
-# Python
-from spikard import WebSocket
-import asyncio
+WebSocket support is managed through AsyncAPI specifications. Define your WebSocket channels in your AsyncAPI schema and let Spikard handle connection lifecycle, timeouts, and resource cleanup automatically. Monitor your deployment metrics to catch memory growth early:
 
-active_connections = set()
-
-async def websocket_handler(ws: WebSocket):
-    await ws.accept()
-    active_connections.add(ws)
-
-    try:
-        while True:
-            data = await ws.receive_text()
-            await ws.send_text(f"Echo: {data}")
-    except Exception as e:
-        print(f"WebSocket error: {e}")
-    finally:
-        # Always cleanup
-        active_connections.discard(ws)
-        await ws.close()
-
-# Periodic cleanup
-async def cleanup_stale_connections():
-    while True:
-        await asyncio.sleep(60)
-        for ws in list(active_connections):
-            if ws.client_state.disconnected:
-                active_connections.discard(ws)
-```
-
-```typescript
-// TypeScript
-import { WebSocket } from "spikard";
-
-const activeConnections = new Set<WebSocket>();
-
-async function websocketHandler(ws: WebSocket) {
-  activeConnections.add(ws);
-
-  try {
-    for await (const message of ws) {
-      await ws.send(`Echo: ${message}`);
-    }
-  } catch (error) {
-    console.error("WebSocket error:", error);
-  } finally {
-    activeConnections.delete(ws);
-  }
-}
-```
+- Track active connection counts
+- Set connection timeouts and limits
+- Implement periodic health checks
+- Monitor process memory and connection pool usage
 
 **Prevention Tips:**
 
@@ -1555,12 +1465,6 @@ cargo clippy -- -D warnings
 ```bash
 # Verify Spikard version
 spikard --version
-
-# Check for updates
-spikard check-updates
-
-# Validate compatibility
-spikard validate-config
 ```
 
 ---

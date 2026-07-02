@@ -79,13 +79,12 @@ Full production setup with compression, rate limiting, and monitoring:
 ## Server Settings
 
 - `host` / `port` – network binding for the HTTP server
-- `workers` – Tokio worker thread count; defaults to 1. Set explicitly (for example to CPU count) in production.
-- `keep_alive` / `request_timeout` – tune to match upstream load balancers
+- `request_timeout` / `shutdown_timeout` – tune timeouts for your workload
 - `max_body_size` – prevent memory exhaustion from large uploads
 
 ## Middleware Defaults
 
-- Logging/tracing enabled by default with request IDs
+- Request IDs and HTTP tracing are opt-in; enable via `enable_request_id` and `enable_http_trace` in ServerConfig
 - CORS/compression configurable per app or per route
 - Add custom middleware to inject tenant data, auth, or feature flags
 

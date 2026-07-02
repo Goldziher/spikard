@@ -7,24 +7,24 @@ tags:
 ---
 
 ```python
-from spikard import Spikard
-from spikard.config import ServerConfig
+from spikard import App, ServerConfig
 from msgspec import Struct
 
 class User(Struct):
     id: int
     name: str
 
-app = Spikard()
+app = App()
 
-@app.get("/users/{id:int}")
+@app.get_decorator("/users/{id:int}")
 async def get_user(id: int) -> User:
     return User(id=id, name="Alice")
 
-@app.post("/users")
+@app.post_decorator("/users")
 async def create_user(user: User) -> User:
     return user
 
 if __name__ == "__main__":
-    app.run(config=ServerConfig(port=8000))
+    app.config(ServerConfig(port=8000))
+    app.run()
 ```

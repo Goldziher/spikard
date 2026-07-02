@@ -33,22 +33,23 @@ Spikard can run as a compiled Rust binary, via the CLI, or packaged into contain
 
 ## Versioned docs & config
 
-- Publish docs with `task docs:publish` after syncing schemas/code.
+- Publish docs with `task docs:deploy` after syncing schemas/code.
 - Keep configuration declarative and environment-driven (see [Configuration](configuration.md)).
 
 ## Example Dockerfile sketch
 
 ```dockerfile
-FROM rust:1.79-slim AS build
+FROM rust:1.85-slim AS build
 WORKDIR /app
 COPY . .
-RUN cargo build --release -p spikard-http
+RUN cargo build --release
 
 FROM debian:bookworm-slim
 WORKDIR /app
-COPY --from=build /app/target/release/spikard-http /usr/local/bin/spikard
-ENV SPIKARD_PORT=8080
-CMD ["spikard", "--port", "8080"]
+COPY --from=build /app/target/release/your_app /usr/local/bin/your_app
+ENV HOST=0.0.0.0
+ENV PORT=8080
+CMD ["your_app"]
 ```
 
-Adjust packages/runtime depending on whether you run the CLI or embed routes in Rust.
+Replace `your_app` with your binary name. Configure host and port via environment variables in your ServerConfig.

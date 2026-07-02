@@ -42,12 +42,12 @@ Spikard ships 15 language bindings sharing a Rust core. This matrix shows which 
 
 See language-specific binding references for handler syntax, error handling, and middleware attachment:
 
-- [Python API](../api-python.md)
-- [TypeScript / Node API](../api-typescript.md)
-- [Ruby API](../api-ruby.md)
-- [PHP API](../api-php.md)
-- [Elixir API](../api-elixir.md)
-- [Go API](../api-go.md) — coming soon
-- [Java API](../api-java.md) — coming soon
-- [C# API](../api-csharp.md) — coming soon
-- [Rust API](../api-rust.md)
+- [Python API](api-python.md)
+- [TypeScript / Node API](api-typescript.md)
+- [Ruby API](api-ruby.md)
+- [PHP API](api-php.md)
+- [Elixir API](api-elixir.md)
+- [Go API](api-go.md)
+- [Java API](api-java.md)
+- [C# API](api-csharp.md)
+- [Rust API](api-rust.md)

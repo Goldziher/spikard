@@ -1,6 +1,6 @@
 # Spikard Documentation
 
-Spikard is a polyglot API toolkit with a Rust core and first-class bindings for Python, TypeScript/Node, Ruby, PHP, and Rust. It keeps routing, middleware, validation, and streaming semantics identical across languages so teams can mix runtimes without relearning frameworks.
+Spikard is a polyglot API toolkit with a Rust core and language bindings for 14 languages: Python, TypeScript/Node, Ruby, PHP, Elixir, Go, Java, C#, Kotlin, Dart, Swift, Zig, C, and WebAssembly. It keeps routing, middleware, validation, and streaming semantics identical across languages so teams can mix runtimes without relearning frameworks.
 
 ## Hello Route (pick a binding)
 
@@ -36,6 +36,6 @@ Spikard is a polyglot API toolkit with a Rust core and first-class bindings for 
 
 ## Getting Help
 
-- **Questions / bugs**: open an issue at [github.com/Goldziher/Spikard](https://github.com/Goldziher/spikard).
+- **Questions / bugs**: open an issue at [github.com/Goldziher/spikard](https://github.com/Goldziher/spikard).
 - **Chat**: join the community Discord (`https://discord.gg/pXxagNK2zN`).
 - **Contributing**: see [Contributing](contributing.md) for coding standards, environment setup, and testing instructions.

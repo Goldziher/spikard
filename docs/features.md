@@ -12,10 +12,22 @@ Spikard delivers the same runtime and developer experience across languages whil
 
 ## Polyglot Bindings
 
+14 language bindings share the same Rust runtime:
+
 - **Python** via PyO3 with async event-loop orchestration and msgspec validation
 - **TypeScript/Node** via NAPI-RS with Zod-powered schemas
 - **Ruby** via magnus with Ruby-friendly routing and middleware hooks
 - **PHP** via ext-php-rs with native OOP API and async support
+- **Elixir** via Rustler with OTP process integration
+- **Go** via cgo with idiomatic http.Handler compatibility
+- **Java** via JNI and Panama FFM
+- **C#** via P/Invoke with .NET async/await support
+- **Kotlin** via JNI with Android support
+- **Dart** via FFI with Flutter compatibility
+- **Swift** via C FFI with SwiftPM integration
+- **Zig** via C ABI linking
+- **C** via native FFI headers
+- **WebAssembly** for client-side type stubs and serialization
 - **Rust** native API mirroring the binding ergonomics
 
 ## Developer Experience

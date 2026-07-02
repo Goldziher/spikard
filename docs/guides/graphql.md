@@ -15,77 +15,62 @@ The `spikard-graphql` crate provides:
 
 ## Setting Up a GraphQL Schema
 
-Every GraphQL server starts with a schema. Define your types, then create a schema builder.
+GraphQL schema configuration is available through the SDK bindings. Configure introspection, complexity limits, and depth limits using the schema config types.
 
 === "Rust"
 
     ```rust
     use spikard_graphql::{SchemaBuilder, QueryOnlyConfig};
 
-    // Define a simple query type
-    pub struct Query;
-
-    impl Query {
-        pub async fn hello(&self) -> String {
-            "Hello, GraphQL!".to_string()
-        }
-
-        pub async fn greet(&self, name: String) -> String {
-            format!("Hello, {}!", name)
-        }
-    }
-
     // Create a schema with query-only support
-    let config = QueryOnlyConfig::builder()
-        .introspection_enabled(true)
-        .build();
+    let config = QueryOnlyConfig {
+        introspection_enabled: true,
+        complexity_limit: Some(5000),
+        depth_limit: Some(50),
+    };
 
-    let schema = SchemaBuilder::new()
-        .query_only(config)
+    // SchemaBuilder requires Query, Mutation, and Subscription types
+    let schema = SchemaBuilder::new(query_type, mutation_type, subscription_type)
+        .config(config)
         .build();
     ```
 
 === "Python"
 
     ```python
-    from spikard import GraphQLSchemaBuilder, GraphQLSchemaConfig
+    from spikard import QueryOnlyConfig, GraphQLRouteConfig
 
-    # Create a GraphQL schema configuration
-    builder = GraphQLSchemaBuilder()
-    builder.enable_introspection(True)
-    builder.complexity_limit(5000)
-    builder.depth_limit(50)
+    # Create GraphQL configuration
+    config = QueryOnlyConfig(
+        introspection_enabled=True,
+        complexity_limit=5000,
+        depth_limit=50
+    )
 
-    config = builder.build()
-
-    # Note: Python bindings expose schema configuration;
-    # actual schema types are defined in Python classes with
-    # appropriate type hints and decorators.
+    # Configure the GraphQL route
+    graphql_route = GraphQLRouteConfig.new()
+        .path("/graphql")
+        .method("POST")
+        .description("GraphQL API")
     ```
 
 === "TypeScript"
 
     ```typescript
-    import { GraphQLSchemaBuilder, GraphQLSchemaConfig } from 'spikard';
+    import { QueryOnlyConfig, GraphQLRouteConfig } from '@spikard/node';
 
-    // Define query type using TypeScript classes
-    class Query {
-      async hello(): Promise<string> {
-        return 'Hello, GraphQL!';
-      }
+    // Create GraphQL configuration
+    const config: QueryOnlyConfig = {
+      introspection_enabled: true,
+      complexity_limit: 5000,
+      depth_limit: 50,
+    };
 
-      async greet(name: string): Promise<string> {
-        return `Hello, ${name}!`;
-      }
-    }
-
-    // Create schema configuration
-    const builder = new GraphQLSchemaBuilder();
-    builder.enableIntrospection(true);
-    builder.complexityLimit(5000);
-    builder.depthLimit(50);
-
-    const config = builder.build();
+    // Configure the GraphQL route
+    const graphqlRoute = GraphQLRouteConfig.new()
+      .path("/graphql")
+      .method("POST")
+      .description("GraphQL API");
     ```
 
 === "Ruby"
@@ -93,24 +78,18 @@ Every GraphQL server starts with a schema. Define your types, then create a sche
     ```ruby
     require 'spikard'
 
-    # Define query type using Ruby methods
-    class Query
-      def hello
-        'Hello, GraphQL!'
-      end
+    # Create GraphQL configuration
+    config = Spikard::QueryOnlyConfig.new(
+      introspection_enabled: true,
+      complexity_limit: 5000,
+      depth_limit: 50
+    )
 
-      def greet(name:)
-        "Hello, #{name}!"
-      end
-    end
-
-    # Create schema configuration
-    builder = Spikard::GraphQLSchemaBuilder.new
-    builder.enable_introspection(true)
-    builder.complexity_limit(5000)
-    builder.depth_limit(50)
-
-    config = builder.build
+    # Configure the GraphQL route
+    graphql_route = Spikard::GraphQLRouteConfig.new
+      .path("/graphql")
+      .method("POST")
+      .description("GraphQL API")
     ```
 
 === "PHP"
@@ -118,114 +97,85 @@ Every GraphQL server starts with a schema. Define your types, then create a sche
     ```php
     <?php
 
-    use Spikard\GraphQL\SchemaBuilder;
-    use Spikard\GraphQL\SchemaConfig;
+    use Spikard\GraphQLRouteConfig;
+    use Spikard\QueryOnlyConfig;
 
-    // Define query type using PHP class
-    class Query {
-        public function hello(): string {
-            return 'Hello, GraphQL!';
-        }
+    // Create GraphQL configuration
+    $config = new QueryOnlyConfig(
+        introspection_enabled: true,
+        complexity_limit: 5000,
+        depth_limit: 50
+    );
 
-        public function greet(string $name): string {
-            return "Hello, {$name}!";
-        }
-    }
-
-    // Create schema configuration
-    $builder = new SchemaBuilder();
-    $builder->enableIntrospection(true);
-    $builder->complexityLimit(5000);
-    $builder->depthLimit(50);
-
-    $config = $builder->build();
+    // Configure the GraphQL route
+    $graphqlRoute = GraphQLRouteConfig::new()
+        ->path("/graphql")
+        ->method("POST")
+        ->description("GraphQL API");
     ```
 
-## Registering the GraphQL Handler
+## Registering the GraphQL Route
 
-Register your GraphQL endpoint with the Spikard router. The handler implements the `Handler` trait, so it integrates like any HTTP route.
+Register your GraphQL endpoint using the standard route registration API. GraphQL routes use POST by default and integrate with Spikard's middleware stack.
 
 === "Rust"
 
     ```rust
-    use spikard_graphql::{GraphQLExecutor, GraphQLHandler};
-    use spikard_http::{Route, Router, Server, ServerConfig, Method};
-    use std::sync::Arc;
+    use spikard_graphql::GraphQLRouteConfig;
+    use spikard_http::{Server, ServerConfig};
 
-    // Create executor with your schema
-    let executor = Arc::new(GraphQLExecutor::new(schema));
+    // Configure GraphQL route
+    let graphql_config = GraphQLRouteConfig::new()
+        .path("/graphql")
+        .method("POST");
 
-    // Create handler
-    let handler = GraphQLHandler::new(executor);
-
-    // Register route
-    let route = Route::new(
-        "/graphql".to_string(),
-        Method::Post,
-        Arc::new(handler) as Arc<dyn spikard_http::Handler>,
-    );
-
-    let mut router = Router::new();
-    router.register_route(route);
-
-    // Configure and start server
+    // Include in server configuration
     let config = ServerConfig::builder()
         .host("127.0.0.1")
         .port(8000)
         .build();
 
-    let app = Server::with_handlers_and_metadata(
-        config.clone(),
-        vec![(route, handler as Arc<dyn Handler>)],
-        vec![route_metadata],
-    )?;
-    Server::run_with_config(app, config).await?;
+    // GraphQL route is registered via the schema configuration
+    let server = Server::new(config)?;
+    server.run().await?;
     ```
 
 === "Python"
 
     ```python
-    from spikard import Spikard, GraphQLHandler
-    from spikard.config import ServerConfig
+    from spikard import App, GraphQLRouteConfig, ServerConfig
 
-    app = Spikard()
+    app = App()
 
-    # Create GraphQL handler
-    graphql_handler = GraphQLHandler(schema_config)
+    # Configure GraphQL route
+    graphql_config = GraphQLRouteConfig.new()
+    graphql_config.path("/graphql")
+    graphql_config.method("POST")
 
-    # Register route (similar to HTTP handlers)
-    app.register_route(
-        path="/graphql",
-        method="POST",
-        handler=graphql_handler
-    )
+    # Set server configuration
+    app.config(ServerConfig(host="127.0.0.1", port=8000))
 
     # Start server
-    app.run(config=ServerConfig(host="127.0.0.1", port=8000))
+    app.run()
     ```
 
 === "TypeScript"
 
     ```typescript
-    import { Spikard, GraphQLHandler } from 'spikard';
+    import { App, GraphQLRouteConfig, ServerConfig } from '@spikard/node';
 
-    const app = new Spikard();
+    const app = new App();
 
-    // Create GraphQL handler
-    const graphqlHandler = new GraphQLHandler(schemaConfig);
+    // Configure GraphQL route
+    const graphqlConfig = GraphQLRouteConfig.new()
+      .path("/graphql")
+      .method("POST");
 
-    // Register route
-    app.registerRoute({
-      path: '/graphql',
-      method: 'POST',
-      handler: graphqlHandler,
-    });
+    // Set server configuration
+    app.config({ host: '127.0.0.1', port: 8000 });
 
     // Start server
-    await app.run({
-      host: '127.0.0.1',
-      port: 8000,
-    });
+    await app.run();
     ```
 
 === "Ruby"
@@ -235,18 +185,16 @@ Register your GraphQL endpoint with the Spikard router. The handler implements t
 
     app = Spikard::App.new
 
-    # Create GraphQL handler
-    graphql_handler = Spikard::GraphQLHandler.new(schema_config)
+    # Configure GraphQL route
+    graphql_config = Spikard::GraphQLRouteConfig.new
+    graphql_config.path("/graphql")
+    graphql_config.method("POST")
 
-    # Register route
-    app.register_route(
-      path: '/graphql',
-      method: 'POST',
-      handler: graphql_handler
-    )
+    # Set server configuration
+    app.config(host: '127.0.0.1', port: 8000)
 
     # Start server
-    app.run(config: { host: '127.0.0.1', port: 8000 })
+    app.run
     ```
 
 === "PHP"

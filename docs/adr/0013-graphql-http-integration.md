@@ -1,4 +1,4 @@
-# ADR 0007: GraphQL HTTP Integration
+# ADR 0013: GraphQL HTTP Integration
 
 **Status:** Accepted
 

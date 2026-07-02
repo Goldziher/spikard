@@ -35,14 +35,14 @@ Spikard ships a Rust core plus 15 language bindings. Install only what you need;
 === "PHP"
 
     ```bash
-    composer require spikard/spikard
+    composer require goldziher/spikard
     ```
 
     Requires PHP ≥ 8.2. For CI or non-interactive Composer runs:
 
     ```bash
-    composer config allow-plugins.spikard/spikard true
-    composer require spikard/spikard
+    composer config allow-plugins.goldziher/spikard true
+    composer require goldziher/spikard
     ```
 
 === "Elixir"
@@ -58,7 +58,7 @@ Spikard ships a Rust core plus 15 language bindings. Install only what you need;
 === "Go"
 
     ```bash
-    go get github.com/spikard-dev/spikard/packages/go
+    go get github.com/Goldziher/spikard
     ```
 
     Requires Go ≥ 1.21.
@@ -111,7 +111,7 @@ Spikard ships a Rust core plus 15 language bindings. Install only what you need;
     Add to `Package.swift`:
 
     ```swift
-    .package(url: "https://github.com/spikard-dev/spikard.git", from: "0.16.0")
+    .package(url: "https://github.com/Goldziher/spikard.git", from: "0.16.0")
     ```
 
     Requires Swift ≥ 5.9.
@@ -122,7 +122,7 @@ Spikard ships a Rust core plus 15 language bindings. Install only what you need;
 
     ```zig
     .spikard = .{
-        .url = "https://github.com/spikard-dev/spikard/archive/v0.16.0.tar.gz",
+        .url = "https://github.com/Goldziher/spikard/archive/v0.16.0.tar.gz",
         .hash = "...",
     },
     ```
@@ -131,7 +131,7 @@ Spikard ships a Rust core plus 15 language bindings. Install only what you need;
 
 === "C"
 
-    Download the prebuilt C library and header from [GitHub Releases](https://github.com/spikard-dev/spikard/releases):
+    Download the prebuilt C library and header from [GitHub Releases](https://github.com/Goldziher/spikard/releases):
 
     ```c
     #include "spikard.h"
@@ -141,7 +141,7 @@ Spikard ships a Rust core plus 15 language bindings. Install only what you need;
 === "WebAssembly"
 
     ```bash
-    npm install @spikard/wasm
+    npm install @spikard/node-wasm
     ```
 
     WASM provides client-side type stubs and serialization helpers for talking to a remote Spikard server. No server-side runtime.
@@ -149,7 +149,7 @@ Spikard ships a Rust core plus 15 language bindings. Install only what you need;
 === "R"
 
     ```r
-    devtools::install_github("spikard-dev/spikard/packages/r")
+    devtools::install_github("Goldziher/spikard")
     ```
 
     Requires R ≥ 4.1.
@@ -183,4 +183,4 @@ uv sync --group docs --group doc --no-install-workspace
 pnpm install --frozen-lockfile
 ```
 
-When working on docs locally, run `task docs:serve` to launch MkDocs Material with live reload.
+When working on docs locally, run `task docs:serve` to launch Zensical with live reload.

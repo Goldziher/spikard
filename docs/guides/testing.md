@@ -1,6 +1,6 @@
 # Testing
 
-Test your Spikard applications with built-in test clients for all languages. Each test client starts a real server for reliable HTTP, WebSocket, and SSE testing.
+Test your Spikard applications with built-in test clients for all languages. Test clients provide in-process testing without binding a TCP socket, enabling reliable HTTP, WebSocket, and SSE testing.
 
 ## Quick Start
 
