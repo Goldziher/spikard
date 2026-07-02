@@ -523,7 +523,11 @@ jobs:
           php-version: ${{ matrix.php }}
       - uses: xberg-io/actions/setup-rust@v1
         with:
-          toolchain: "1.95"
+          # ext-php-rs requires the nightly-only `abi_vectorcall` feature on
+          # Windows (`#![cfg_attr(windows, feature(abi_vectorcall))]` in the
+          # generated spikard-php lib.rs); stable rejects it. Use nightly for the
+          # Windows target only, stable 1.95 elsewhere.
+          toolchain: ${{ contains(matrix.platform.target, 'windows') && 'nightly' || '1.95' }}
           target: ${{ matrix.platform.target }}
       - uses: xberg-io/actions/build-php-extension@v1
         with:
