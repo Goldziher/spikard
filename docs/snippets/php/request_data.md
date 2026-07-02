@@ -1,11 +1,3 @@
----
-id: php_request_data
-language: php
-title: Request Data
-tags:
-  - php
----
-
 ```php
 <?php
 

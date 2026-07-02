@@ -1,11 +1,3 @@
----
-id: ruby_background_error_recovery
-language: ruby
-title: Background Error Recovery
-tags:
-  - ruby
----
-
 ```ruby
 # app/jobs/resilient_job.rb
 class ResilientJob

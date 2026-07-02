@@ -1,12 +1,3 @@
----
-id: grpc_php_registration
-language: php
-title: Registration
-tags:
-  - grpc
-  - php
----
-
 ```php
 <?php declare(strict_types=1);
 

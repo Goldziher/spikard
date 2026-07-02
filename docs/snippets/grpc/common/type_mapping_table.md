@@ -1,11 +1,3 @@
----
-id: grpc_common_type_mapping_table
-title: Type Mapping Table
-tags:
-  - grpc
-  - common
----
-
 # Protobuf Type Mapping Across Languages
 
 Reference table showing how proto3 types map to native language types in all Spikard-supported languages.

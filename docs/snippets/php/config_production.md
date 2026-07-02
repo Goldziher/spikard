@@ -1,11 +1,3 @@
----
-id: php_config_production
-language: php
-title: Config Production
-tags:
-  - php
----
-
 ```php
 <?php
 

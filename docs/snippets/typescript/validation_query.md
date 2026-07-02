@@ -1,11 +1,3 @@
----
-id: typescript_validation_query
-language: typescript
-title: Validation Query
-tags:
-  - typescript
----
-
 ```typescript
 import { z } from "zod";
 

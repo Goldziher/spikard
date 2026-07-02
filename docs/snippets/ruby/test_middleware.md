@@ -1,11 +1,3 @@
----
-id: ruby_test_middleware
-language: ruby
-title: Test Middleware
-tags:
-  - ruby
----
-
 ```ruby
 it "enforces auth middleware" do
   app = Spikard::App.new

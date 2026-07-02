@@ -1,12 +1,3 @@
----
-id: grpc_typescript_handler_complete
-language: typescript
-title: Handler Complete
-tags:
-  - grpc
-  - typescript
----
-
 ```typescript
 import {
   GrpcHandler,

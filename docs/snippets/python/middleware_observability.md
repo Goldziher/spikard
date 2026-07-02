@@ -1,11 +1,3 @@
----
-id: python_middleware_observability
-language: python
-title: Middleware Observability
-tags:
-  - python
----
-
 ```python
 import logging
 import uuid

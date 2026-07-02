@@ -1,11 +1,3 @@
----
-id: php_quickstart_routes
-language: php
-title: Quickstart Routes
-tags:
-  - php
----
-
 ```php
 <?php
 

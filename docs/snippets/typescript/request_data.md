@@ -1,11 +1,3 @@
----
-id: typescript_request_data
-language: typescript
-title: Request Data
-tags:
-  - typescript
----
-
 ```typescript
 import { Spikard, type Request } from "spikard";
 import { z } from "zod";

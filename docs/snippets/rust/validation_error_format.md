@@ -1,11 +1,3 @@
----
-id: rust_validation_error_format
-language: rust
-title: Validation Error Format
-tags:
-  - rust
----
-
 ```rust
 use serde_json::json;
 

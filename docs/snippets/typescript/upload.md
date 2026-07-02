@@ -1,11 +1,3 @@
----
-id: typescript_upload
-language: typescript
-title: Upload
-tags:
-  - typescript
----
-
 ```typescript
 import { Spikard, UploadFile } from "spikard";
 import { promises as fs } from "fs";

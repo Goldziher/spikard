@@ -1,11 +1,3 @@
----
-id: python_test_middleware
-language: python
-title: Test Middleware
-tags:
-  - python
----
-
 ```python
 @pytest.mark.asyncio
 async def test_auth_middleware():

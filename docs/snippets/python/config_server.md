@@ -1,11 +1,3 @@
----
-id: python_config_server
-language: python
-title: Config Server
-tags:
-  - python
----
-
 ```python
 from spikard import Spikard
 from spikard.config import ServerConfig

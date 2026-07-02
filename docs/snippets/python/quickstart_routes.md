@@ -1,11 +1,3 @@
----
-id: python_quickstart_routes
-language: python
-title: Quickstart Routes
-tags:
-  - python
----
-
 ```python
 from spikard import App, ServerConfig
 from msgspec import Struct

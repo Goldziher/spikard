@@ -1,11 +1,3 @@
----
-id: php_middleware_observability
-language: php
-title: Middleware Observability
-tags:
-  - php
----
-
 ```php
 <?php
 

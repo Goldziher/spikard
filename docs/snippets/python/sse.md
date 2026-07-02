@@ -1,11 +1,3 @@
----
-id: python_sse
-language: python
-title: Sse
-tags:
-  - python
----
-
 ```python
 from spikard import Spikard, SseEvent, sse
 

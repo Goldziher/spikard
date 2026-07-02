@@ -1,11 +1,3 @@
----
-id: grpc_common_codegen_commands
-title: Codegen Commands
-tags:
-  - grpc
-  - common
----
-
 # Code Generation Commands
 
 Generate protobuf code for each language:

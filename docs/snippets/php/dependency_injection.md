@@ -1,11 +1,3 @@
----
-id: php_dependency_injection
-language: php
-title: Dependency Injection
-tags:
-  - php
----
-
 ```php
 <?php
 

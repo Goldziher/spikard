@@ -1,11 +1,3 @@
----
-id: typescript_auth_middleware
-language: typescript
-title: Auth Middleware
-tags:
-  - typescript
----
-
 ```typescript
 import { Spikard, type Request } from "spikard";
 

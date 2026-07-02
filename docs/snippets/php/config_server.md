@@ -1,11 +1,3 @@
----
-id: php_config_server
-language: php
-title: Config Server
-tags:
-  - php
----
-
 ```php
 <?php
 

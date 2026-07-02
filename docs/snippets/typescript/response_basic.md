@@ -1,11 +1,3 @@
----
-id: typescript_response_basic
-language: typescript
-title: Response Basic
-tags:
-  - typescript
----
-
 ```typescript
 import { Spikard } from "spikard";
 

@@ -1,11 +1,3 @@
----
-id: typescript_routing_basic
-language: typescript
-title: Routing Basic
-tags:
-  - typescript
----
-
 ```typescript
 import { Spikard, type Request } from "spikard";
 import { z } from "zod";

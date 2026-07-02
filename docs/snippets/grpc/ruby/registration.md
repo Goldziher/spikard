@@ -1,12 +1,3 @@
----
-id: grpc_ruby_registration
-language: ruby
-title: Registration
-tags:
-  - grpc
-  - ruby
----
-
 ```ruby
 require 'spikard'
 

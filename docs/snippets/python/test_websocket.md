@@ -1,11 +1,3 @@
----
-id: python_test_websocket
-language: python
-title: Test Websocket
-tags:
-  - python
----
-
 ```python
 @pytest.mark.asyncio
 async def test_websocket_echo():

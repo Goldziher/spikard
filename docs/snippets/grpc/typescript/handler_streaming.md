@@ -1,11 +1,3 @@
----
-id: grpc_typescript_handler_streaming
-title: Handler Streaming
-tags:
-  - grpc
-  - typescript
----
-
 # TypeScript gRPC Streaming Handlers
 
 The TypeScript package does not yet expose public streaming gRPC helper types.

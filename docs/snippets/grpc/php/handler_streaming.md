@@ -1,12 +1,3 @@
----
-id: grpc_php_handler_streaming
-language: php
-title: Handler Streaming
-tags:
-  - grpc
-  - php
----
-
 # PHP gRPC Streaming Handlers
 
 Complete PHP implementation examples for client streaming and bidirectional streaming gRPC handlers in Spikard.

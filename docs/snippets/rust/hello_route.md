@@ -1,11 +1,3 @@
----
-id: rust_hello_route
-language: rust
-title: Hello Route
-tags:
-  - rust
----
-
 ```rust
 use axum::response::Json;
 use schemars::JsonSchema;

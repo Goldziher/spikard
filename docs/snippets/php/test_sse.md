@@ -1,11 +1,3 @@
----
-id: php_test_sse
-language: php
-title: Test Sse
-tags:
-  - php
----
-
 ```php
 <?php
 

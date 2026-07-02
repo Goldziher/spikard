@@ -1,11 +1,3 @@
----
-id: ruby_test_quickstart
-language: ruby
-title: Test Quickstart
-tags:
-  - ruby
----
-
 ```ruby
 require 'spikard'
 require 'spec_helper'

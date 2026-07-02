@@ -1,12 +1,3 @@
----
-id: grpc_php_quickstart
-language: php
-title: Quickstart
-tags:
-  - grpc
-  - php
----
-
 ```php
 <?php
 

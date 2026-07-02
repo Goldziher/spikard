@@ -1,11 +1,3 @@
----
-id: typescript_websocket
-language: typescript
-title: Websocket
-tags:
-  - typescript
----
-
 ```typescript
 import { Spikard } from "spikard";
 

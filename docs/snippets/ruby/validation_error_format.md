@@ -1,11 +1,3 @@
----
-id: ruby_validation_error_format
-language: ruby
-title: Validation Error Format
-tags:
-  - ruby
----
-
 ```ruby
 def format_validation_errors(result)
   {

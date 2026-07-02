@@ -1,11 +1,3 @@
----
-id: rust_test_sse
-language: rust
-title: Test Sse
-tags:
-  - rust
----
-
 ```rust
 use axum::{
     response::sse::{Event, Sse},

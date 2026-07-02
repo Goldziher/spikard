@@ -1,11 +1,3 @@
----
-id: php_test_unit
-language: php
-title: Test Unit
-tags:
-  - php
----
-
 ```php
 <?php
 

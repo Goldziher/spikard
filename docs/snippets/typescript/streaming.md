@@ -1,11 +1,3 @@
----
-id: typescript_streaming
-language: typescript
-title: Streaming
-tags:
-  - typescript
----
-
 ```typescript
 import { Spikard, StreamingResponse } from "spikard";
 

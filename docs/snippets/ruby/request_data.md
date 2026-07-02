@@ -1,11 +1,3 @@
----
-id: ruby_request_data
-language: ruby
-title: Request Data
-tags:
-  - ruby
----
-
 ```ruby
 require "spikard"
 

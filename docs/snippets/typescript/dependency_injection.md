@@ -1,11 +1,3 @@
----
-id: typescript_dependency_injection
-language: typescript
-title: Dependency Injection
-tags:
-  - typescript
----
-
 ```typescript
 import { Spikard, type Request } from "spikard";
 

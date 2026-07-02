@@ -1,11 +1,3 @@
----
-id: rust_routing_basic
-language: rust
-title: Routing Basic
-tags:
-  - rust
----
-
 ```rust
 use spikard::prelude::*;
 

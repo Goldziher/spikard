@@ -1,11 +1,3 @@
----
-id: python_background_task
-language: python
-title: Background Task
-tags:
-  - python
----
-
 ```python
 from spikard import Spikard
 from celery import Celery

@@ -1,11 +1,3 @@
----
-id: php_validation_request_body
-language: php
-title: Validation Request Body
-tags:
-  - php
----
-
 ```php
 <?php
 

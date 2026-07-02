@@ -1,11 +1,3 @@
----
-id: typescript_config_production
-language: typescript
-title: Config Production
-tags:
-  - typescript
----
-
 ```typescript
 import { Spikard, runServer } from "spikard";
 import type { ServerConfig } from "spikard";

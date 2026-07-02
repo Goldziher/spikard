@@ -1,11 +1,3 @@
----
-id: python_validation_basic
-language: python
-title: Validation Basic
-tags:
-  - python
----
-
 ```python
 from msgspec import Struct
 

@@ -1,12 +1,3 @@
----
-id: grpc_python_quickstart
-language: python
-title: Quickstart
-tags:
-  - grpc
-  - python
----
-
 ```python
 # user_handler.py
 from spikard import GrpcRequest, GrpcResponse

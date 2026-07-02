@@ -1,11 +1,3 @@
----
-id: typescript_test_middleware
-language: typescript
-title: Test Middleware
-tags:
-  - typescript
----
-
 ```typescript
 it("enforces auth middleware", async () => {
   const app = new Spikard();

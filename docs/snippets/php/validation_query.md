@@ -1,11 +1,3 @@
----
-id: php_validation_query
-language: php
-title: Validation Query
-tags:
-  - php
----
-
 ```php
 <?php
 

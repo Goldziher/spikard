@@ -1,11 +1,3 @@
----
-id: rust_background_monitoring
-language: rust
-title: Background Monitoring
-tags:
-  - rust
----
-
 ```rust
 use spikard::prelude::*;
 use std::sync::atomic::{AtomicU32, Ordering};

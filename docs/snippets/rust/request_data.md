@@ -1,11 +1,3 @@
----
-id: rust_request_data
-language: rust
-title: Request Data
-tags:
-  - rust
----
-
 ```rust
 app.route(post("/orders/:order_id"), |ctx: Context| async move {
     let mut order: serde_json::Value = ctx.json()?;

@@ -1,11 +1,3 @@
----
-id: typescript_test_validation
-language: typescript
-title: Test Validation
-tags:
-  - typescript
----
-
 ```typescript
 it("rejects invalid input", async () => {
   const app = new Spikard();

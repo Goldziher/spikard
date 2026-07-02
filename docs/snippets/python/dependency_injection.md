@@ -1,11 +1,3 @@
----
-id: python_dependency_injection
-language: python
-title: Dependency Injection
-tags:
-  - python
----
-
 ```python
 from spikard import Spikard
 from spikard.di import Provide

@@ -1,11 +1,3 @@
----
-id: php_test_websocket
-language: php
-title: Test Websocket
-tags:
-  - php
----
-
 ```php
 <?php
 

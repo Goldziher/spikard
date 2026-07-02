@@ -1,11 +1,3 @@
----
-id: php_run_app
-language: php
-title: Run App
-tags:
-  - php
----
-
 ```php
 <?php
 

@@ -1,12 +1,3 @@
----
-id: grpc_ruby_quickstart
-language: ruby
-title: Quickstart
-tags:
-  - grpc
-  - ruby
----
-
 ```ruby
 # user_handler.rb
 require 'spikard'

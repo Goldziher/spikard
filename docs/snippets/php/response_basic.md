@@ -1,11 +1,3 @@
----
-id: php_response_basic
-language: php
-title: Response Basic
-tags:
-  - php
----
-
 ```php
 <?php
 

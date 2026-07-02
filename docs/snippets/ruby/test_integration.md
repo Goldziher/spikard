@@ -1,11 +1,3 @@
----
-id: ruby_test_integration
-language: ruby
-title: Test Integration
-tags:
-  - ruby
----
-
 ```ruby
 it "completes user workflow" do
   users_db = {}

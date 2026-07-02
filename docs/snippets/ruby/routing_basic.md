@@ -1,11 +1,3 @@
----
-id: ruby_routing_basic
-language: ruby
-title: Routing Basic
-tags:
-  - ruby
----
-
 ```ruby
 require "spikard"
 

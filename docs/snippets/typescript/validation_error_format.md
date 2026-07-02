@@ -1,11 +1,3 @@
----
-id: typescript_validation_error_format
-language: typescript
-title: Validation Error Format
-tags:
-  - typescript
----
-
 ```typescript
 import { ZodError } from "zod";
 

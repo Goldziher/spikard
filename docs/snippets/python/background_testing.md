@@ -1,11 +1,3 @@
----
-id: python_background_testing
-language: python
-title: Background Testing
-tags:
-  - python
----
-
 ```python
 import pytest
 from celery import current_app

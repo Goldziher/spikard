@@ -1,11 +1,3 @@
----
-id: ruby_validation_request_body
-language: ruby
-title: Validation Request Body
-tags:
-  - ruby
----
-
 ```ruby
 CreateUserSchema = Dry::Schema.Params do
   required(:email).filled(:string, format?: /@/)

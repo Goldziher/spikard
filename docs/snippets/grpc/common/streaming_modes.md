@@ -1,11 +1,3 @@
----
-id: grpc_common_streaming_modes
-title: Streaming Modes
-tags:
-  - grpc
-  - common
----
-
 ## Streaming Modes
 
 | Mode                 | Definition                                             | Use Cases                            |

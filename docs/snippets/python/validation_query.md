@@ -1,11 +1,3 @@
----
-id: python_validation_query
-language: python
-title: Validation Query
-tags:
-  - python
----
-
 ```python
 from msgspec import Struct
 

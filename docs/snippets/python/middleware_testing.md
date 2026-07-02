@@ -1,11 +1,3 @@
----
-id: python_middleware_testing
-language: python
-title: Middleware Testing
-tags:
-  - python
----
-
 ```python
 import pytest
 from your_app import auth_guard

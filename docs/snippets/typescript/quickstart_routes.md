@@ -1,11 +1,3 @@
----
-id: typescript_quickstart_routes
-language: typescript
-title: Quickstart Routes
-tags:
-  - typescript
----
-
 ```typescript
 import { App, ServerConfig } from "@spikard/node";
 import { z } from "zod";

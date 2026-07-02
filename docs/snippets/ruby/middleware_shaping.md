@@ -1,11 +1,3 @@
----
-id: ruby_middleware_shaping
-language: ruby
-title: Middleware Shaping
-tags:
-  - ruby
----
-
 ```ruby
 require 'spikard'
 require 'zlib'

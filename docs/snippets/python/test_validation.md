@@ -1,11 +1,3 @@
----
-id: python_test_validation
-language: python
-title: Test Validation
-tags:
-  - python
----
-
 ```python
 from msgspec import Struct
 

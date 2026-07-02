@@ -1,11 +1,3 @@
----
-id: rust_validation_basic
-language: rust
-title: Validation Basic
-tags:
-  - rust
----
-
 ```rust
 use schemars::JsonSchema;
 use serde::Deserialize;

@@ -1,11 +1,3 @@
----
-id: grpc_python_test_handler
-title: Test Handler
-tags:
-  - grpc
-  - python
----
-
 # Python gRPC Handler Tests
 
 Comprehensive test examples for gRPC handlers using pytest.

@@ -1,11 +1,3 @@
----
-id: ruby_middleware_auth
-language: ruby
-title: Middleware Auth
-tags:
-  - ruby
----
-
 ```ruby
 require 'spikard'
 require 'jwt'

@@ -1,11 +1,3 @@
----
-id: php_config_environment
-language: php
-title: Config Environment
-tags:
-  - php
----
-
 ```php
 <?php
 

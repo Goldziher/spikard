@@ -1,11 +1,3 @@
----
-id: ruby_config_server
-language: ruby
-title: Config Server
-tags:
-  - ruby
----
-
 ```ruby
 require "spikard"
 

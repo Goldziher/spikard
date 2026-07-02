@@ -1,11 +1,3 @@
----
-id: ruby_hello_route
-language: ruby
-title: Hello Route
-tags:
-  - ruby
----
-
 ```ruby
 require "spikard"
 

@@ -1,11 +1,3 @@
----
-id: grpc_common_architecture_diagram
-title: Architecture Diagram
-tags:
-  - grpc
-  - common
----
-
 <pre><code>
 +-------------------------------------------------------------+
 |  Your Handler (Python, TypeScript, Ruby, PHP, Rust)         |

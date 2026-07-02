@@ -1,11 +1,3 @@
----
-id: typescript_test_quickstart
-language: typescript
-title: Test Quickstart
-tags:
-  - typescript
----
-
 ```typescript
 import { describe, it, expect } from "vitest";
 import { Spikard, TestClient } from "@spikard/app";

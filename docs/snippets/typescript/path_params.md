@@ -1,11 +1,3 @@
----
-id: typescript_path_params
-language: typescript
-title: Path Params
-tags:
-  - typescript
----
-
 ```typescript
 import { Spikard, type Request } from "spikard";
 

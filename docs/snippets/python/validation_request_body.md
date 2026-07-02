@@ -1,11 +1,3 @@
----
-id: python_validation_request_body
-language: python
-title: Validation Request Body
-tags:
-  - python
----
-
 ```python
 from msgspec import Struct, ValidationError
 from typing import Annotated

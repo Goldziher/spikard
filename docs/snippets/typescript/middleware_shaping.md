@@ -1,11 +1,3 @@
----
-id: typescript_middleware_shaping
-language: typescript
-title: Middleware Shaping
-tags:
-  - typescript
----
-
 ```typescript
 import { Spikard, type Request, type Response, HTTPError } from "spikard";
 import * as zlib from "zlib";

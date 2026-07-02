@@ -1,11 +1,3 @@
----
-id: ruby_background_task
-language: ruby
-title: Background Task
-tags:
-  - ruby
----
-
 ```ruby
 # Gemfile
 gem 'sidekiq'

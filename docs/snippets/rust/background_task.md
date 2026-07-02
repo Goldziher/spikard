@@ -1,11 +1,3 @@
----
-id: rust_background_task
-language: rust
-title: Background Task
-tags:
-  - rust
----
-
 ```rust
 use spikard::prelude::*;
 use tokio::task;

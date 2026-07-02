@@ -1,11 +1,3 @@
----
-id: php_routing_basic
-language: php
-title: Routing Basic
-tags:
-  - php
----
-
 ```php
 <?php
 

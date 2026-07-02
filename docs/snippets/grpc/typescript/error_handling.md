@@ -1,12 +1,3 @@
----
-id: grpc_typescript_error_handling
-language: typescript
-title: Error Handling
-tags:
-  - grpc
-  - typescript
----
-
 ```typescript
 import { GrpcError, GrpcStatusCode } from "spikard";
 

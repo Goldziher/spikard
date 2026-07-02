@@ -1,11 +1,3 @@
----
-id: grpc_typescript_test_handler
-title: Test Handler
-tags:
-  - grpc
-  - typescript
----
-
 # TypeScript gRPC Handler Tests
 
 Comprehensive test examples for gRPC handlers using Vitest.

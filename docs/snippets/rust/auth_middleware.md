@@ -1,11 +1,3 @@
----
-id: rust_auth_middleware
-language: rust
-title: Auth Middleware
-tags:
-  - rust
----
-
 ```rust
 use spikard::prelude::*;
 use tower_http::auth::RequireAuthorizationLayer;

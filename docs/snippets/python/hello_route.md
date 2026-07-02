@@ -1,11 +1,3 @@
----
-id: python_hello_route
-language: python
-title: Hello Route
-tags:
-  - python
----
-
 ```python
 from spikard import Spikard
 from spikard.config import ServerConfig

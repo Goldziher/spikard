@@ -1,11 +1,3 @@
----
-id: ruby_test_websocket
-language: ruby
-title: Test Websocket
-tags:
-  - ruby
----
-
 ```ruby
 it "echoes websocket messages" do
   app = Spikard::App.new

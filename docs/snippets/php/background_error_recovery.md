@@ -1,11 +1,3 @@
----
-id: php_background_error_recovery
-language: php
-title: Background Error Recovery
-tags:
-  - php
----
-
 ```php
 <?php
 

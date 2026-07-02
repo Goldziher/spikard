@@ -1,11 +1,3 @@
----
-id: php_validation_basic
-language: php
-title: Validation Basic
-tags:
-  - php
----
-
 ```php
 <?php
 

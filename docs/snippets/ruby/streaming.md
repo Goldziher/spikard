@@ -1,11 +1,3 @@
----
-id: ruby_streaming
-language: ruby
-title: Streaming
-tags:
-  - ruby
----
-
 ```ruby
 require "spikard"
 require "json"

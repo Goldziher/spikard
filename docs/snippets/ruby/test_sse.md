@@ -1,11 +1,3 @@
----
-id: ruby_test_sse
-language: ruby
-title: Test Sse
-tags:
-  - ruby
----
-
 ```ruby
 it "streams SSE events" do
   app = Spikard::App.new

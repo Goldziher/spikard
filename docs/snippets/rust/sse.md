@@ -1,11 +1,3 @@
----
-id: rust_sse
-language: rust
-title: Sse
-tags:
-  - rust
----
-
 ```rust
 use spikard::prelude::*;
 use tokio_stream::StreamExt;

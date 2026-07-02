@@ -1,11 +1,3 @@
----
-id: php_auth_middleware
-language: php
-title: Auth Middleware
-tags:
-  - php
----
-
 ```php
 <?php
 

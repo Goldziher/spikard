@@ -1,11 +1,3 @@
----
-id: python_middleware_basic
-language: python
-title: Middleware Basic
-tags:
-  - python
----
-
 ```python
 from spikard import Spikard
 

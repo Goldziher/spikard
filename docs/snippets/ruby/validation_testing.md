@@ -1,11 +1,3 @@
----
-id: ruby_validation_testing
-language: ruby
-title: Validation Testing
-tags:
-  - ruby
----
-
 ```ruby
 require "spikard"
 require "rspec"

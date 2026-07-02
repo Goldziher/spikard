@@ -1,11 +1,3 @@
----
-id: python_test_unit
-language: python
-title: Test Unit
-tags:
-  - python
----
-
 ```python
 @pytest.mark.asyncio
 async def test_user_creation():

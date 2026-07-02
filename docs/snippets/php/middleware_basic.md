@@ -1,11 +1,3 @@
----
-id: php_middleware_basic
-language: php
-title: Middleware Basic
-tags:
-  - php
----
-
 ```php
 <?php
 

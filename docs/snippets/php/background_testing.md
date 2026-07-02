@@ -1,11 +1,3 @@
----
-id: php_background_testing
-language: php
-title: Background Testing
-tags:
-  - php
----
-
 ```php
 <?php
 

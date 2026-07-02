@@ -1,11 +1,3 @@
----
-id: typescript_validation_testing
-language: typescript
-title: Validation Testing
-tags:
-  - typescript
----
-
 ```typescript
 import { describe, it, expect } from "vitest";
 import request from "supertest";

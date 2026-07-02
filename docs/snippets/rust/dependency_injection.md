@@ -1,11 +1,3 @@
----
-id: rust_dependency_injection
-language: rust
-title: Dependency Injection
-tags:
-  - rust
----
-
 ```rust
 use axum::response::Json;
 use schemars::JsonSchema;

@@ -1,12 +1,3 @@
----
-id: grpc_php_error_handling
-language: php
-title: Error Handling
-tags:
-  - grpc
-  - php
----
-
 ```php
 <?php declare(strict_types=1);
 

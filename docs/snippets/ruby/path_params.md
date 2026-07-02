@@ -1,11 +1,3 @@
----
-id: ruby_path_params
-language: ruby
-title: Path Params
-tags:
-  - ruby
----
-
 ```ruby
 require "spikard"
 

@@ -1,11 +1,3 @@
----
-id: rust_test_middleware
-language: rust
-title: Test Middleware
-tags:
-  - rust
----
-
 ```rust
 use axum::{
     body::Body,

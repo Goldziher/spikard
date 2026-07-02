@@ -1,11 +1,3 @@
----
-id: rust_background_testing
-language: rust
-title: Background Testing
-tags:
-  - rust
----
-
 ```rust
 #[cfg(test)]
 mod tests {

@@ -1,11 +1,3 @@
----
-id: php_middleware_testing
-language: php
-title: Middleware Testing
-tags:
-  - php
----
-
 ```php
 <?php
 

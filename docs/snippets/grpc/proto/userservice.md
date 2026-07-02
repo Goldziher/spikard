@@ -1,11 +1,3 @@
----
-id: grpc_proto_userservice
-title: Userservice
-tags:
-  - grpc
-  - proto
----
-
 <pre><code class="language-protobuf">
 syntax = "proto3";
 

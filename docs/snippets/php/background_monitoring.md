@@ -1,11 +1,3 @@
----
-id: php_background_monitoring
-language: php
-title: Background Monitoring
-tags:
-  - php
----
-
 ```php
 <?php
 

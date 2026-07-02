@@ -1,11 +1,3 @@
----
-id: php_background_task
-language: php
-title: Background Task
-tags:
-  - php
----
-
 ```php
 <?php
 

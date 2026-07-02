@@ -1,11 +1,3 @@
----
-id: grpc_common_status_codes_table
-title: Status Codes Table
-tags:
-  - grpc
-  - common
----
-
 # gRPC Status Codes Reference
 
 Complete reference table for all 17 standard gRPC status codes.

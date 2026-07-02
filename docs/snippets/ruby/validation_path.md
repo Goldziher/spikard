@@ -1,11 +1,3 @@
----
-id: ruby_validation_path
-language: ruby
-title: Validation Path
-tags:
-  - ruby
----
-
 ```ruby
 PathParamsSchema = Dry::Schema.Params do
   required(:user_id).filled(:string, format?: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/)

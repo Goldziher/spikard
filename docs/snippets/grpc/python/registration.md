@@ -1,12 +1,3 @@
----
-id: grpc_python_registration
-language: python
-title: Registration
-tags:
-  - grpc
-  - python
----
-
 ```python
 from spikard import create_app
 from spikard.grpc import GrpcService

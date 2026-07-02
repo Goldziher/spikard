@@ -1,11 +1,3 @@
----
-id: typescript_test_websocket
-language: typescript
-title: Test Websocket
-tags:
-  - typescript
----
-
 ```typescript
 it("echoes websocket messages", async () => {
   const app = new Spikard();

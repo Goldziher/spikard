@@ -1,11 +1,3 @@
----
-id: python_routing_basic
-language: python
-title: Routing Basic
-tags:
-  - python
----
-
 ```python
 from spikard import Spikard
 from msgspec import Struct

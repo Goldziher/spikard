@@ -1,11 +1,3 @@
----
-id: rust_validation_request_body
-language: rust
-title: Validation Request Body
-tags:
-  - rust
----
-
 ```rust
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};

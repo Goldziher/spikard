@@ -1,11 +1,3 @@
----
-id: python_path_params
-language: python
-title: Path Params
-tags:
-  - python
----
-
 ```python
 from spikard import Spikard
 from msgspec import Struct

@@ -1,11 +1,3 @@
----
-id: ruby_test_validation
-language: ruby
-title: Test Validation
-tags:
-  - ruby
----
-
 ```ruby
 it "rejects invalid input" do
   app = Spikard::App.new

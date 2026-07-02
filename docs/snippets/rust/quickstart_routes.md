@@ -1,11 +1,3 @@
----
-id: rust_quickstart_routes
-language: rust
-title: Quickstart Routes
-tags:
-  - rust
----
-
 ```rust
 use axum::response::Json;
 use schemars::JsonSchema;

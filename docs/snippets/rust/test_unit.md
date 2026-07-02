@@ -1,11 +1,3 @@
----
-id: rust_test_unit
-language: rust
-title: Test Unit
-tags:
-  - rust
----
-
 ```rust
 use axum::{routing::post, Json, Router};
 use axum_test::TestServer;

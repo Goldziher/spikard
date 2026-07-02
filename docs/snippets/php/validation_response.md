@@ -1,11 +1,3 @@
----
-id: php_validation_response
-language: php
-title: Validation Response
-tags:
-  - php
----
-
 ```php
 <?php
 

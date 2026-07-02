@@ -1,11 +1,3 @@
----
-id: ruby_middleware_testing
-language: ruby
-title: Middleware Testing
-tags:
-  - ruby
----
-
 ```ruby
 require 'spikard'
 require 'rspec'

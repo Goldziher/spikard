@@ -1,11 +1,3 @@
----
-id: ruby_background_monitoring
-language: ruby
-title: Background Monitoring
-tags:
-  - ruby
----
-
 ```ruby
 require 'spikard'
 require 'sidekiq/api'

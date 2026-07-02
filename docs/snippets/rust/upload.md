@@ -1,11 +1,3 @@
----
-id: rust_upload
-language: rust
-title: Upload
-tags:
-  - rust
----
-
 ```rust
 use spikard::prelude::*;
 use spikard::UploadFile;

@@ -1,11 +1,3 @@
----
-id: grpc_proto_user_service_basic
-title: User Service Basic
-tags:
-  - grpc
-  - proto
----
-
 # UserService Proto Definition
 
 Basic protobuf definition for a UserService with GetUser and CreateUser methods.
