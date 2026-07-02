@@ -1,69 +1,70 @@
-/* Spikard docs theme — dark-first, matching the pixel-art banner.
-   Palette: near-black #080b13 base, electric blue #2b9fe6, amber #ffb43f. */
+/* Spikard docs theme — dark-first, matching the red pixel-art banner.
+   Palette: black #020202 base, brand red #ff1d2d, cream #f8d9a2 accent. */
 
 @import url("https://fonts.googleapis.com/css2?family=Exo+2:wght@500;600;700&display=swap");
 
 :root {
-  --spk-ink: #080b13;          /* banner background */
-  --spk-ink-2: #0d1220;        /* raised surface (dark) */
-  --spk-ink-3: #141b2b;        /* code / cards (dark) */
-  --spk-blue: #2b9fe6;
-  --spk-blue-dim: #1f78b4;
-  --spk-amber: #ffb43f;
+  --spk-ink: #0b0b0d;          /* page background (dark) */
+  --spk-ink-2: #141416;        /* raised surface (dark) */
+  --spk-ink-3: #1a1a1e;        /* code / cards (dark) */
+  --spk-black: #020202;        /* banner black — header */
+  --spk-red: #ff1d2d;          /* brand red */
+  --spk-red-light: #ff5a45;
+  --spk-red-dim: #d11525;      /* red for light-mode contrast */
+  --spk-cream: #f8d9a2;        /* banner cream accent */
   --spk-line-dark: rgba(255, 255, 255, 0.08);
-  --spk-line-light: rgba(8, 11, 19, 0.10);
 }
 
 /* ---------- DARK scheme (default / dark-first) ---------- */
 [data-md-color-scheme="slate"] {
-  --md-hue: 220;
-  --md-primary-fg-color: var(--spk-ink);
-  --md-primary-fg-color--light: #10182a;
-  --md-primary-fg-color--dark: #04060c;
-  --md-primary-bg-color: #eef3fb;
-  --md-primary-bg-color--light: rgba(238, 243, 251, 0.7);
+  --md-hue: 0;
+  --md-primary-fg-color: var(--spk-black);
+  --md-primary-fg-color--light: #141416;
+  --md-primary-fg-color--dark: #000000;
+  --md-primary-bg-color: #f4f4f5;
+  --md-primary-bg-color--light: rgba(244, 244, 245, 0.7);
 
-  --md-accent-fg-color: var(--spk-blue);
-  --md-accent-fg-color--transparent: rgba(43, 159, 230, 0.1);
+  --md-accent-fg-color: var(--spk-red);
+  --md-accent-fg-color--transparent: rgba(255, 29, 45, 0.1);
 
   --md-default-bg-color: var(--spk-ink);
-  --md-default-bg-color--light: rgba(8, 11, 19, 0.7);
-  --md-default-fg-color: #e6ecf5;
-  --md-default-fg-color--light: #b7c2d4;
-  --md-default-fg-color--lighter: #8290a8;
-  --md-default-fg-color--lightest: rgba(230, 236, 245, 0.12);
+  --md-default-bg-color--light: rgba(11, 11, 13, 0.7);
+  --md-default-fg-color: #ececec;
+  --md-default-fg-color--light: #bdbdbf;
+  --md-default-fg-color--lighter: #8a8a8d;
+  --md-default-fg-color--lightest: rgba(236, 236, 236, 0.12);
 
-  --md-typeset-a-color: var(--spk-blue);
+  --md-typeset-a-color: var(--spk-red);
   --md-code-bg-color: var(--spk-ink-3);
-  --md-code-fg-color: #d7deea;
-  --md-footer-bg-color: #05070d;
-  --md-footer-bg-color--dark: #05070d;
+  --md-code-fg-color: #dcdcde;
+  --md-footer-bg-color: #050506;
+  --md-footer-bg-color--dark: #050506;
 }
 
 /* ---------- LIGHT scheme ---------- */
 [data-md-color-scheme="default"] {
-  --md-primary-fg-color: var(--spk-ink);       /* keep the dark header in light mode too */
-  --md-primary-fg-color--light: #10182a;
-  --md-primary-fg-color--dark: #04060c;
-  --md-primary-bg-color: #eef3fb;
+  --md-primary-fg-color: var(--spk-black);       /* keep the dark header in light mode too */
+  --md-primary-fg-color--light: #141416;
+  --md-primary-fg-color--dark: #000000;
+  --md-primary-bg-color: #f4f4f5;
 
-  --md-accent-fg-color: var(--spk-blue-dim);
-  --md-accent-fg-color--transparent: rgba(31, 120, 180, 0.1);
+  --md-accent-fg-color: var(--spk-red-dim);
+  --md-accent-fg-color--transparent: rgba(209, 21, 37, 0.1);
 
   --md-default-bg-color: #ffffff;
-  --md-default-fg-color: #1a2130;
-  --md-default-fg-color--light: #4a5568;
-  --md-default-fg-color--lighter: #718096;
+  --md-default-fg-color: #1a1a1c;
+  --md-default-fg-color--light: #4a4a4e;
+  --md-default-fg-color--lighter: #717176;
 
-  --md-typeset-a-color: var(--spk-blue-dim);
-  --md-code-bg-color: #f3f5f9;
-  --md-code-fg-color: #24324a;
+  --md-typeset-a-color: var(--spk-red-dim);
+  --md-code-bg-color: #f5f4f4;
+  --md-code-fg-color: #2a2426;
 }
 
-/* ---------- Header + tabs: always dark, banner-matching ---------- */
+/* ---------- Header + tabs: always black, banner-matching ---------- */
 .md-header,
 .md-tabs {
-  background-color: var(--spk-ink);
+  background-color: var(--spk-black);
   border-bottom: 1px solid var(--spk-line-dark);
 }
 .md-header__title,
@@ -71,24 +72,24 @@
 .md-header .md-ellipsis {
   font-family: "Exo 2", var(--md-text-font-family), sans-serif;
   font-weight: 600;
-  color: #eef3fb;
+  color: #f4f4f5;
 }
-/* Nav tab links — readable on the dark header (this was the invisible-nav bug) */
+/* Nav tab links — readable on the black header (this was the invisible-nav bug) */
 .md-tabs__link {
-  color: rgba(238, 243, 251, 0.72);
+  color: rgba(244, 244, 245, 0.72);
   opacity: 1;
 }
 .md-tabs__link:hover,
 .md-tabs__link--active,
 .md-tabs__item--active .md-tabs__link {
-  color: var(--spk-amber);
+  color: var(--spk-red);
 }
 .md-header__button,
 .md-search__input {
-  color: #eef3fb;
+  color: #f4f4f5;
 }
 .md-search__input::placeholder {
-  color: rgba(238, 243, 251, 0.5);
+  color: rgba(244, 244, 245, 0.5);
 }
 .md-header__button.md-logo img,
 .md-header__button.md-logo svg {
@@ -121,20 +122,20 @@
 }
 .md-typeset .md-button {
   border-radius: 8px;
-  border-color: var(--spk-blue);
+  border-color: var(--spk-red);
   color: var(--md-default-fg-color);
 }
 .md-typeset .md-button--primary {
-  background-color: var(--spk-blue);
-  border-color: var(--spk-blue);
-  color: #05070d;
+  background-color: var(--spk-red);
+  border-color: var(--spk-red);
+  color: #ffffff;
   font-weight: 600;
 }
 .md-typeset .md-button--primary:hover,
 .md-typeset .md-button:hover {
-  background-color: var(--spk-amber);
-  border-color: var(--spk-amber);
-  color: #05070d;
+  background-color: var(--spk-red-light);
+  border-color: var(--spk-red-light);
+  color: #1a0002;
 }
 
 /* ---------- Inline code + code blocks ---------- */
@@ -142,8 +143,8 @@
   border-radius: 4px;
 }
 [data-md-color-scheme="slate"] .md-typeset code {
-  background-color: rgba(43, 159, 230, 0.12);
-  color: #7cc4f0;
+  background-color: rgba(255, 29, 45, 0.13);
+  color: #ff8a80;
 }
 .md-typeset pre > code {
   border-radius: 10px;
@@ -160,8 +161,8 @@
   font-weight: 600;
 }
 .md-typeset .tabbed-set > input:checked + label {
-  color: var(--spk-blue);
-  border-color: var(--spk-blue);
+  color: var(--spk-red);
+  border-color: var(--spk-red);
 }
 
 /* ---------- Admonitions, tables ---------- */
@@ -171,14 +172,14 @@
   border-left-width: 3px;
 }
 .md-typeset table:not([class]) th {
-  background-color: rgba(43, 159, 230, 0.12);
+  background-color: rgba(255, 29, 45, 0.12);
   color: var(--md-default-fg-color);
 }
 
 /* ---------- Nav sidebar contrast ---------- */
 .md-nav__link:hover,
 .md-nav__link--active {
-  color: var(--spk-blue);
+  color: var(--spk-red);
 }
 .md-nav__item .md-nav__link--active {
   font-weight: 600;

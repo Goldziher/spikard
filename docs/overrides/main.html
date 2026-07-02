@@ -66,6 +66,7 @@ gtag("config", "AW-17853694443");
 <meta property="og:image" content="{{ config.site_url }}assets/og-image.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Spikard — polyglot web toolkit" />
 
 <meta name="twitter:card" content="summary_large_image" />
 <meta
@@ -77,6 +78,10 @@ gtag("config", "AW-17853694443");
   content="{% if page and page.meta and page.meta.description %}{{ page.meta.description }}{% else %}{{ config.site_description }}{% endif %}"
 />
 <meta name="twitter:image" content="{{ config.site_url }}assets/og-image.png" />
+<meta name="twitter:image:alt" content="Spikard — polyglot web toolkit" />
+
+<meta name="theme-color" content="#020202" />
+<link rel="apple-touch-icon" href="{{ config.site_url }}assets/apple-touch-icon.png" />
 {% endblock %} {% block container %}
 <div class="md-content" data-md-component="content">
   <article class="md-content__inner md-typeset">

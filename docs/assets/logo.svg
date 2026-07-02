@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="spikard">
-<defs><linearGradient id="g" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0%" stop-color="#2b9fe6"/><stop offset="100%" stop-color="#ffb43f"/></linearGradient></defs>
+<defs><linearGradient id="g" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0%" stop-color="#ff5a45"/><stop offset="100%" stop-color="#ff1d2d"/></linearGradient></defs>
 <rect x="76.80" y="15.36" width="20.48" height="20.48" fill="url(#g)"/>
 <rect x="97.28" y="15.36" width="20.48" height="20.48" fill="url(#g)"/>
 <rect x="117.76" y="15.36" width="20.48" height="20.48" fill="#ffffff"/>

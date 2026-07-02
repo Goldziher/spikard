@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="spikard">
 <title>spikard</title>
 <defs>
-<linearGradient id="g" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0%" stop-color="#2b9fe6"/><stop offset="100%" stop-color="#ffb43f"/></linearGradient>
-<radialGradient id="glow" cx="0.5" cy="0.42" r="0.62"><stop offset="0%" stop-color="#2b9fe6" stop-opacity="0.20"/><stop offset="78%" stop-color="#2b9fe6" stop-opacity="0"/></radialGradient>
-<radialGradient id="gem" cx="0.5" cy="0.5" r="0.5"><stop offset="0%" stop-color="#ffb43f" stop-opacity="0.9"/><stop offset="100%" stop-color="#ffb43f" stop-opacity="0"/></radialGradient>
+<linearGradient id="g" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0%" stop-color="#ff5a45"/><stop offset="100%" stop-color="#ff1d2d"/></linearGradient>
+<radialGradient id="glow" cx="0.5" cy="0.42" r="0.62"><stop offset="0%" stop-color="#ff5a45" stop-opacity="0.20"/><stop offset="78%" stop-color="#ff5a45" stop-opacity="0"/></radialGradient>
+<radialGradient id="gem" cx="0.5" cy="0.5" r="0.5"><stop offset="0%" stop-color="#ff1d2d" stop-opacity="0.9"/><stop offset="100%" stop-color="#ff1d2d" stop-opacity="0"/></radialGradient>
 <clipPath id="clip"><rect width="256" height="256" rx="56"/></clipPath>
 </defs>
 <g clip-path="url(#clip)">
-<rect width="256" height="256" fill="#080b13"/>
+<rect width="256" height="256" fill="#020202"/>
 <rect width="256" height="256" fill="url(#glow)"/>
 <circle cx="128.00" cy="46.55" r="26.07" fill="url(#gem)"/>
 <rect x="87.27" y="38.40" width="16.29" height="16.29" fill="url(#g)"/>
