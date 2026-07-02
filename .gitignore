@@ -221,5 +221,4 @@ vendor/bundle/
 .polylint/
 
 # BEGIN ai-rulez (DO NOT EDIT - managed by ai-rulez)
-.ai-rulez/.generated-manifest.json
 # END ai-rulez

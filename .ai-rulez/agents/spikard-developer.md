@@ -42,4 +42,4 @@ Tools: `tools/benchmark-harness`, `tools/snippet-runner`, `tools/test-generator`
 - `task test:rust`, `task test:python`, `task test:node`, `task test:ruby`, `task test:php` for per-language tests
 - `task alef:generate` runs `alef all --clean --format=false`; use `task alef:format` explicitly when needed
 - `task e2e:generate`, `task e2e:build`, `task e2e:test`, and `task e2e:all` for generated e2e suites
-- Pre-commit hooks enforce formatting, linting, and version sync
+- `poly lint .` / `poly fmt --check .` enforce linting and formatting; `task version:sync` keeps versions aligned

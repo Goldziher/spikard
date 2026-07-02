@@ -12,7 +12,7 @@ description: "Common Task Commands"
 **Setup & Installation**:
 
 - `task setup`: Install all dependencies (Rust, Python, Node, Go, Java, Ruby, etc.)
-- `task setup-pre-commit`: Configure pre-commit hooks
+- `poly hooks install`: Install poly's git hook shims
 
 **Build Commands**:
 
@@ -63,7 +63,7 @@ description: "Common Task Commands"
 
 - `task clean`: Clean build artifacts
 - `task version:sync`: Sync version from Cargo.toml to all manifests (package.json, pyproject.toml, pom.xml, go.mod, Gemfile, etc.)
-- `task pre-commit`: Run pre-commit hooks manually
+- `poly hooks run`: Run poly's git hooks manually
 - `task pdfium:install`: Download and install PDFium library
 - `task smoke`: Run smoke tests (quick validation)
 
