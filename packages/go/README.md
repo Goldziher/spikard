@@ -1,139 +1,100 @@
-# Spikard
+<!-- markdownlint-disable MD033 MD041 -->
+<div align="center">
 
-<div align="center" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 20px 0;">
-  <!-- Built with -->
-  <a href="https://github.com/kreuzberg-dev/alef">
-    <img src="https://img.shields.io/badge/Bindings-alef%20%D7%90-007ec6" alt="Bindings">
-  </a>
+<img src="https://raw.githubusercontent.com/Goldziher/spikard/main/docs/assets/spikard-banner.svg" alt="spikard — polyglot http framework" width="820">
 
-  <!-- Language Bindings -->
-  <a href="https://crates.io/crates/spikard">
-    <img src="https://img.shields.io/crates/v/spikard?label=Rust&color=007ec6" alt="Rust">
-  </a>
-  <a href="https://pypi.org/project/spikard/">
-    <img src="https://img.shields.io/pypi/v/spikard?label=Python&color=007ec6" alt="Python">
-  </a>
-  <a href="https://www.npmjs.com/package/@spikard/node">
-    <img src="https://img.shields.io/npm/v/@spikard/node?label=Node.js&color=007ec6" alt="Node.js">
-  </a>
-  <a href="https://www.npmjs.com/package/@spikard/node-wasm">
-    <img src="https://img.shields.io/npm/v/@spikard/node-wasm?label=WASM&color=007ec6" alt="WASM">
-  </a>
-  <a href="https://rubygems.org/gems/spikard">
-    <img src="https://img.shields.io/gem/v/spikard?label=Ruby&color=007ec6" alt="Ruby">
-  </a>
-  <a href="https://packagist.org/packages/goldziher/spikard">
-    <img src="https://img.shields.io/packagist/v/goldziher/spikard?label=PHP&color=007ec6" alt="PHP">
-  </a>
-  <a href="https://hex.pm/packages/spikard">
-    <img src="https://img.shields.io/hexpm/v/spikard?label=Elixir&color=007ec6" alt="Elixir">
-  </a>
-  <a href="https://central.sonatype.com/artifact/dev.spikard/spikard">
-    <img src="https://img.shields.io/maven-central/v/dev.spikard/spikard?label=Java&color=007ec6" alt="Java">
-  </a>
-  <a href="https://github.com/Goldziher/spikard/releases">
-    <img src="https://img.shields.io/github/v/tag/Goldziher/spikard?label=Go&color=007ec6" alt="Go">
-  </a>
-  <a href="https://www.nuget.org/packages/Spikard/">
-    <img src="https://img.shields.io/nuget/v/Spikard?label=C%23&color=007ec6" alt="C#">
-  </a>
-  <a href="https://central.sonatype.com/artifact/dev.spikard/spikard">
-    <img src="https://img.shields.io/maven-central/v/dev.spikard/spikard?label=Kotlin&color=007ec6" alt="Kotlin">
-  </a>
-  <a href="https://pub.dev/packages/spikard">
-    <img src="https://img.shields.io/pub/v/spikard?label=Dart&color=007ec6" alt="Dart">
-  </a>
-  <a href="https://github.com/Goldziher/spikard/tree/main/packages/swift">
-    <img src="https://img.shields.io/badge/Swift-Spikard-007ec6" alt="Swift">
-  </a>
-  <a href="https://github.com/Goldziher/spikard/tree/main/packages/zig">
-    <img src="https://img.shields.io/badge/Zig-spikard-007ec6" alt="Zig">
-  </a>
-  <a href="https://github.com/Goldziher/spikard/tree/main/crates/spikard-ffi">
-    <img src="https://img.shields.io/badge/C-FFI-007ec6" alt="C FFI">
-  </a>
-  <a href="https://github.com/Goldziher/homebrew-tap">
-    <img src="https://img.shields.io/badge/Homebrew-007ec6?logo=homebrew&logoColor=white" alt="Homebrew">
-  </a>
-
-  <!-- Project Info -->
-  <a href="https://github.com/Goldziher/spikard/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/License-MIT-007ec6" alt="License">
-  </a>
-  <a href="https://github.com/Goldziher/spikard/tree/main/docs">
-    <img src="https://img.shields.io/badge/Docs-spikard-007ec6" alt="Documentation">
-  </a>
-</div>
-
-<div align="center" style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 28px 0 24px;">
-  <a href="https://discord.gg/pXxagNK2zN">
-    <img height="22" src="https://img.shields.io/badge/Discord-Chat-007ec6?logo=discord&logoColor=white" alt="Join Discord">
-  </a>
-</div>
+**Spikard for Go** — Type-safe HTTP framework backed by Rust via static linking.
 
 Go bindings for the spikard polyglot HTTP framework. Backed by the Rust core via CGO static linking.
 
-> **Version 0.16.0**
-> Report issues at [github.com/Goldziher/spikard](https://github.com/Goldziher/spikard/issues).
+<div align="center" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 20px 0;">
+  <!-- Built with alef -->
+  <a href="https://github.com/xberg-io/alef">
+    <img src="https://img.shields.io/badge/built%20with-alef%20%D7%90-007ec6?style=flat-square" alt="Built with alef">
+  </a>
 
-## What This Package Provides
+  <!-- Language bindings -->
+  <a href="https://crates.io/crates/spikard">
+    <img src="https://img.shields.io/crates/v/spikard?style=flat-square" alt="Rust">
+  </a>
+  <a href="https://pypi.org/project/spikard/">
+    <img src="https://img.shields.io/pypi/v/spikard?style=flat-square" alt="Python">
+  </a>
+  <a href="https://www.npmjs.com/package/@spikard/node">
+    <img src="https://img.shields.io/npm/v/@spikard/node?style=flat-square" alt="Node.js">
+  </a>
+  <a href="https://www.npmjs.com/package/@spikard/node-wasm">
+    <img src="https://img.shields.io/npm/v/@spikard/node-wasm?style=flat-square" alt="WASM">
+  </a>
+  <a href="https://rubygems.org/gems/spikard">
+    <img src="https://img.shields.io/gem/v/spikard?style=flat-square" alt="Ruby">
+  </a>
+  <a href="https://packagist.org/packages/goldziher/spikard">
+    <img src="https://img.shields.io/packagist/v/goldziher/spikard?style=flat-square" alt="PHP">
+  </a>
+  <a href="https://hex.pm/packages/spikard">
+    <img src="https://img.shields.io/hexpm/v/spikard?style=flat-square" alt="Elixir">
+  </a>
+  <a href="https://central.sonatype.com/artifact/dev.spikard/spikard">
+    <img src="https://img.shields.io/maven-central/v/dev.spikard/spikard?style=flat-square" alt="Java">
+  </a>
+  <a href="https://github.com/Goldziher/spikard/releases">
+    <img src="https://img.shields.io/github/v/tag/Goldziher/spikard?label=Go&style=flat-square" alt="Go">
+  </a>
+  <a href="https://www.nuget.org/packages/Spikard/">
+    <img src="https://img.shields.io/nuget/v/Spikard?style=flat-square" alt="C#">
+  </a>
+  <a href="https://central.sonatype.com/artifact/dev.spikard/spikard">
+    <img src="https://img.shields.io/maven-central/v/dev.spikard/spikard?label=Kotlin&style=flat-square" alt="Kotlin">
+  </a>
+  <a href="https://pub.dev/packages/spikard">
+    <img src="https://img.shields.io/pub/v/spikard?style=flat-square" alt="Dart">
+  </a>
+  <a href="https://github.com/Goldziher/spikard/tree/main/packages/swift">
+    <img src="https://img.shields.io/badge/Swift-Spikard-007ec6?style=flat-square" alt="Swift">
+  </a>
+  <a href="https://github.com/Goldziher/spikard/tree/main/packages/zig">
+    <img src="https://img.shields.io/badge/Zig-spikard-007ec6?style=flat-square" alt="Zig">
+  </a>
+  <a href="https://github.com/Goldziher/spikard/tree/main/crates/spikard-ffi">
+    <img src="https://img.shields.io/badge/C%20FFI-007ec6?style=flat-square" alt="C FFI">
+  </a>
+  <a href="https://github.com/Goldziher/homebrew-tap">
+    <img src="https://img.shields.io/badge/Homebrew-007ec6?style=flat-square&logo=homebrew&logoColor=white" alt="Homebrew">
+  </a>
 
-- **Go module over the Rust HTTP core** — route definitions, request extraction, validation, and middleware through Go structs and errors.
-- **Spec-driven generation** — OpenAPI, AsyncAPI, GraphQL SDL, JSON-RPC, and SQL-to-HTTP metadata use the shared Rust implementation.
-- **Static-link workflow** — build against `spikard-ffi` and ship a self-contained Go binary.
-- **Cross-binding parity** — behavior matches the Python, Node.js, Ruby, PHP, Elixir, Java, .NET, Kotlin, Dart, Swift, Zig, WASM, Rust, and C FFI packages.
+  <!-- Project info -->
+  <a href="https://github.com/Goldziher/spikard/blob/main/LICENSE">
+    <img src="https://img.shields.io/badge/License-MIT-007ec6?style=flat-square" alt="License">
+  </a>
+  <a href="https://github.com/Goldziher/spikard">
+    <img src="https://img.shields.io/github/stars/Goldziher/spikard?style=flat-square" alt="GitHub Stars">
+  </a>
+</div>
 
-## Install
+[Install](#installation) · [Quick example](#quick-example) · [Static linking](#static-linking) · [Docs](https://github.com/Goldziher/spikard)
 
-### Development (monorepo)
+</div>
 
-```bash
-# Build the static FFI library
-cargo build -p spikard-ffi --release
+---
 
-cd packages/go
-go build -v
-```
+## What you get
 
-### Go Modules
+- **Go module over Rust core** — Route definitions, request extraction, validation, and middleware through Go structs and errors
+- **Spec-driven codegen** — OpenAPI 3.0, AsyncAPI 3.0, GraphQL SDL, JSON-RPC 2.0 — shared Rust implementation across all bindings
+- **Static-link workflow** — Build against `spikard-ffi` and ship a self-contained binary, no runtime library needed
+- **Context-aware** — Full `context.Context` support for cancellation and timeouts
+- **Cross-binding parity** — Behavior matches Python, Node.js, Ruby, PHP, Elixir, Java, .NET, Kotlin, Dart, Swift, Zig, WASM, Rust, and C FFI packages
+
+## Installation
 
 ```bash
 go get github.com/Goldziher/spikard@latest
 ```
 
-You need the `spikard-ffi` static library at link time. See [Building with Static Libraries](#building-with-static-libraries).
+**System requirements:** Go 1.21+, CGO enabled (default). You need the `spikard-ffi` static library at build time — see [Static linking](#static-linking).
 
-### Building with Static Libraries
-
-#### Option 1: Download Pre-built
-
-Download from [GitHub Releases](https://github.com/Goldziher/spikard/releases):
-
-```bash
-# Example: Linux x86_64
-curl -LO https://github.com/Goldziher/spikard/releases/download/v0.16.0/go-ffi-linux-x86_64.tar.gz
-tar -xzf go-ffi-linux-x86_64.tar.gz
-
-CGO_LDFLAGS="-L/path/to/lib -lspikard_ffi" go build
-```
-
-#### Option 2: Build from Source
-
-```bash
-git clone https://github.com/Goldziher/spikard.git
-cd spikard
-cargo build -p spikard-ffi --release
-
-CGO_LDFLAGS="-L$(pwd)/target/release -lspikard_ffi" go build
-```
-
-### System Requirements
-
-- **Go 1.21+** required
-- CGO enabled (default)
-- `spikard-ffi` static library (`libspikard_ffi.a`) at build time
-
-## Quick Start
+## Quick example
 
 ```go
 package main
@@ -162,28 +123,78 @@ func main() {
 Build:
 
 ```bash
-CGO_LDFLAGS="-L$HOME/spikard/lib -lspikard_ffi" go build
+CGO_LDFLAGS="-L/path/to/lib -lspikard_ffi" go build
 ```
+
+## Static linking
+
+The Go module requires the `spikard-ffi` static library (`libspikard_ffi.a`) at link time.
+
+<details>
+<summary><strong>Option 1: Download pre-built</strong></summary>
+
+From [GitHub Releases](https://github.com/Goldziher/spikard/releases):
+
+```bash
+# Example: Linux x86_64
+curl -LO https://github.com/Goldziher/spikard/releases/download/v0.16.0/go-ffi-linux-x86_64.tar.gz
+tar -xzf go-ffi-linux-x86_64.tar.gz
+
+CGO_LDFLAGS="-L/path/to/lib -lspikard_ffi" go build
+```
+
+</details>
+
+<details>
+<summary><strong>Option 2: Build from source</strong></summary>
+
+```bash
+git clone https://github.com/Goldziher/spikard.git
+cd spikard
+cargo build -p spikard-ffi --release
+
+CGO_LDFLAGS="-L$(pwd)/target/release -lspikard_ffi" go build
+```
+
+</details>
+
+<details>
+<summary><strong>Development (monorepo)</strong></summary>
+
+```bash
+# Build the static FFI library
+cargo build -p spikard-ffi --release
+
+cd packages/go
+go build -v
+```
+
+</details>
 
 ## Features
 
-- **HTTP routing** — type-safe route definitions with parameter validation
-- **OpenAPI / AsyncAPI / GraphQL / JSON-RPC** — code generation and spec parsing
-- **Tower middleware** — via FFI bridge to Rust middleware stack
-- **CGO static linking** — resulting binary is self-contained, no runtime library needed
-- **Context-aware** — full `context.Context` support for cancellation and timeouts
+| Feature | Details |
+|---|---|
+| **HTTP routing** | Type-safe route definitions with parameter validation |
+| **Specs** | OpenAPI 3.0 · AsyncAPI 3.0 · GraphQL SDL · JSON-RPC 2.0 |
+| **Middleware** | Via FFI bridge to Rust middleware stack (compression, rate limiting, auth) |
+| **Static linking** — Resulting binary is self-contained |
+| **Context support** | Full `context.Context` for cancellation and timeouts |
+| **Error handling** | Consistent ProblemDetails JSON across all bindings |
+| **Testing** | Shared fixture suite drives behavior across all language bindings |
 
 ## Troubleshooting
 
-| Issue                                  | Fix                                                                                                |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `undefined reference to 'spikard_...'` | `CGO_LDFLAGS` not pointing at the static library. Set `CGO_LDFLAGS="-L/path/to/lib -lspikard_ffi"` |
-| `cannot find -lspikard_ffi`            | Static library missing. Build it: `cargo build -p spikard-ffi --release`                           |
+| Issue | Fix |
+|---|---|
+| `undefined reference to 'spikard_...'` | `CGO_LDFLAGS` not set. Use `CGO_LDFLAGS="-L/path/to/lib -lspikard_ffi"` |
+| `cannot find -lspikard_ffi` | Static library missing. Build: `cargo build -p spikard-ffi --release` |
 
-## Documentation
+## Resources
 
 - **[Repository](https://github.com/Goldziher/spikard)** — source code, examples, and contributing guide
-- **[Examples](https://github.com/Goldziher/spikard/tree/main/packages/go)** — Go-specific examples
+- **[Go package](https://github.com/Goldziher/spikard/tree/main/packages/go)** — Go-specific examples and tests
+- **[Examples](https://github.com/Goldziher/spikard/tree/main/crates/spikard-http/examples)** — working implementations in all supported languages
 - **[Issues](https://github.com/Goldziher/spikard/issues)** — bug reports and feature requests
 
 ## License

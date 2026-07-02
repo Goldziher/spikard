@@ -1,15 +1,28 @@
-# Spikard
+<!-- markdownlint-disable MD033 MD041 -->
+<div align="center">
 
-{% include 'partials/badges.html.jinja' %}
+<img src="https://raw.githubusercontent.com/Goldziher/spikard/main/docs/assets/spikard-banner.svg" alt="spikard — polyglot http framework" width="820">
+
+**Spikard for Python** — Type-safe async HTTP framework backed by Rust.
 
 {{ description }}
 
-## What This Package Provides
+{% include 'partials/badges.html.jinja' %}
 
-- **Python-native HTTP app API** — async route handlers, typed config, request extraction, validation, and middleware hooks.
-- **Spec-driven generation** — OpenAPI, AsyncAPI, GraphQL SDL, JSON-RPC, and SQL-to-HTTP codegen through the shared Rust core.
-- **Fixture-backed parity** — Python behavior is tested against the same fixtures as the Node.js, Ruby, PHP, Elixir, Go, Java, .NET, Kotlin, Dart, Swift, Zig, WASM, Rust, and C FFI packages.
-- **No sidecar server** — the package calls the Rust core directly.
+[Install](#installation) · [Quick example](#quick-example) · [Async/await](#asyncawait-support) · [Docs]({{ repository }})
+
+</div>
+
+---
+
+## What you get
+
+- **Async/await routing** — Native Python async functions as route handlers, integrated with asyncio
+- **Type-safe validation** — Request validation with typed structs and dataclasses, error handling as exceptions
+- **Spec-driven codegen** — OpenAPI 3.0, AsyncAPI 3.0, GraphQL SDL, JSON-RPC 2.0 code generation
+- **Tower middleware** — Compression, rate limiting, timeouts, JWT/API-key auth, static files via the Rust core
+- **Fixture-backed testing** — Behavior tested against shared fixtures with Node.js, Ruby, PHP, Elixir, Go, Java, C#, Kotlin, Dart, Swift, Zig, WASM, Rust, and C FFI packages
+- **No sidecar** — Calls the Rust core directly; no separate server process
 
 ## Installation
 
@@ -17,58 +30,67 @@
 pip install spikard
 ```
 
-### System Requirements
+**System requirements:** Python 3.10+. Pre-built wheels for Linux (x86_64, aarch64), macOS (arm64, x86_64), Windows (x86_64).
 
-- **Python 3.10+** required
-- Pre-built wheels for Linux (x86_64, aarch64), macOS (arm64, x86_64), Windows (x86_64)
-
-## Quick Start
+## Quick example
 
 {{ 'quickstart_routes.md' | include_snippet('python') }}
 
-## Route Definition
+## Async/await support
 
-{{ 'hello_route.md' | include_snippet('python') }}
-
-## Request Handling
-
-{{ 'request_data.md' | include_snippet('python') }}
-
-## Validation
-
-{{ 'validation_basic.md' | include_snippet('python') }}
-
-## Middleware
-
-{{ 'middleware_basic.md' | include_snippet('python') }}
-
-## Server Configuration
-
-{{ 'config_server.md' | include_snippet('python') }}
-
-## Async Support
-
-Full async/await support — handlers are async functions, integrated with asyncio:
+Handlers are native async functions integrated with asyncio — full concurrency with async libraries:
 
 {{ 'run_app.md' | include_snippet('python') }}
 
+<details>
+<summary><strong>Route definition</strong></summary>
+
+{{ 'hello_route.md' | include_snippet('python') }}
+
+</details>
+
+<details>
+<summary><strong>Request handling</strong></summary>
+
+{{ 'request_data.md' | include_snippet('python') }}
+
+</details>
+
+<details>
+<summary><strong>Validation</strong></summary>
+
+{{ 'validation_basic.md' | include_snippet('python') }}
+
+</details>
+
+<details>
+<summary><strong>Middleware & configuration</strong></summary>
+
+{{ 'middleware_basic.md' | include_snippet('python') }}
+
+See [server configuration]({{ repository }}/tree/main/packages/python) for full options.
+
+</details>
+
 ## Features
 
-- **HTTP routing** — type-safe route definitions with path, query, and body parameter validation
-- **OpenAPI / AsyncAPI / GraphQL / JSON-RPC** — code generation and spec parsing
-- **Tower middleware** — compression, rate limiting, timeouts, auth (JWT/API key)
-- **Lifecycle hooks** — `onRequest`, `preValidation`, `preHandler`, `onResponse`, `onError`
-- **Fixture-driven testing** — shared JSON fixtures drive tests across all language bindings
-- **Polyglot** — single Rust core, thin bindings across 15+ languages
+| Feature | Details |
+|---|---|
+| **Async routes** | All handlers are native `async def`, fully concurrent with asyncio |
+| **Type safety** | Request validation with typed structs, automatic type conversion |
+| **HTTP routing** | Path, query, body, and header parameter extraction |
+| **Specs** | OpenAPI 3.0 · AsyncAPI 3.0 · GraphQL SDL · JSON-RPC 2.0 |
+| **Middleware** | Compression · rate limiting · timeouts · auth · static files |
+| **Lifecycle** | Hooks for request, pre-validation, pre-handler, response, error |
+| **Error handling** | Consistent ProblemDetails JSON across all bindings |
+| **Testing** | Shared fixture suite drives behavior across all language bindings |
 
-## Documentation
+## Resources
 
-- **[Repository]({{ repository }})** — source code and contributing guide
+- **[Repository]({{ repository }})** — source code, examples, and contributing guide
+- **[Python package]({{ repository }}/tree/main/packages/python)** — Python-specific examples and tests
+- **[Examples]({{ repository }}/tree/main/crates/spikard-http/examples)** — working implementations in all supported languages
 - **[Issues]({{ repository }}/issues)** — bug reports and feature requests
-
-## Contributing
-
-Contributions are welcome. See [CONTRIBUTING.md]({{ repository }}/blob/main/CONTRIBUTING.md).
 
 ## License
 

@@ -1,52 +1,68 @@
-# Spikard
+<!-- markdownlint-disable MD033 MD041 -->
+<div align="center">
+
+<img src="https://raw.githubusercontent.com/Goldziher/spikard/main/docs/assets/spikard-banner.svg" alt="spikard — polyglot http framework" width="820">
+
+**One HTTP framework, every language.**
+
+Rust-centric polyglot HTTP framework. Single Rust core compiled to 15 languages through alef-generated bindings — type-safe routing, OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing.
+
+**Rust core** · Python · TypeScript · Ruby · PHP · Elixir · Go · Java · C# · Kotlin · Dart · Swift · Zig · WASM · C FFI
 
 {% include 'partials/badges.html.jinja' %}
 
-Rust-centric polyglot HTTP framework with type-safe routing, OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Single Rust core compiled to 15 languages through alef-generated bindings.
+[Install](#installation) · [Why spikard](#why-spikard) · [Quick example](#quick-example) · [Docs](https://github.com/Goldziher/spikard)
 
-**Powered by Rust.** Native performance for HTTP routing, validation, and middleware. Write once, bind everywhere.
+</div>
 
-## Key Features
+---
 
-- **Type-safe across bindings** - HTTP routing with path, query, body, and header validation. Errors convert losslessly between languages.
-- **Polyglot bindings** - Python, TypeScript/Node, Ruby, PHP, Elixir, Go, Java, C#, Kotlin, Dart, Swift, Zig, WASM, Rust, and C FFI.
-- **Fixture-driven testing** - shared JSON fixtures drive tests across language bindings for behavioral consistency.
-- **Schema codegen** - parse OpenAPI 3.0, AsyncAPI 3.0, GraphQL SDL, and JSON-RPC 2.0 specs. Generate handlers and validators per binding.
-- **SQL to HTTP codegen** - annotate SQL queries with `@http GET /path`, `@http_auth bearer:jwt`, and emit route metadata, OpenAPI 3.1 specs, and sidecars.
-- **Tower middleware** - compression, rate limiting, timeouts, request IDs, authentication, and static file serving.
-- **Lifecycle hooks** - `onRequest`, `preValidation`, `preHandler`, `onResponse`, and `onError`.
-- **WebSocket, SSE, background tasks** - bidirectional and server-sent streams plus fire-and-forget background jobs.
-- **CLI and MCP server** - initialize projects, generate code, validate schemas, and integrate with MCP-compatible tools.
+## Why spikard
+
+| Capability | Details |
+|---|---|
+| **Type-safe across bindings** | HTTP routing with path, query, body, and header validation. Errors convert losslessly between languages. |
+| **Polyglot bindings** | Python, TypeScript/Node, Ruby, PHP, Elixir, Go, Java, C#, Kotlin, Dart, Swift, Zig, WASM, Rust, and C FFI. |
+| **Schema codegen** | Parse OpenAPI 3.0, AsyncAPI 3.0, GraphQL SDL, and JSON-RPC 2.0 specs. Generate handlers and validators per binding. |
+| **SQL to HTTP codegen** | Annotate SQL queries with `@http GET /path`, `@http_auth bearer:jwt`, and emit route metadata and OpenAPI specs. |
+| **Tower middleware** | Compression, rate limiting, timeouts, request IDs, JWT/API-key auth, and static file serving. |
+| **Lifecycle hooks** | `onRequest`, `preValidation`, `preHandler`, `onResponse`, and `onError`. |
+| **WebSocket & SSE** | Bidirectional streams and server-sent events. |
+| **Fixture-driven testing** | Shared JSON fixtures drive tests across language bindings for behavioral consistency. |
+| **CLI & MCP server** | Initialize projects, generate code, validate schemas, and integrate with MCP-compatible tools. |
 
 ## Installation
 
-Each binding ships through its native package manager. Use the package README for platform requirements and build details.
+Each binding ships through its native package manager.
 
-| Target  | Package                                | README                                               |
+<!-- markdownlint-disable MD013 -->
+
+| Target  | Package                                | Install                                              |
 | ------- | -------------------------------------- | ---------------------------------------------------- |
-| Rust    | `spikard` on crates.io                 | [crates/spikard](crates/spikard/README.md)           |
-| Python  | `spikard` on PyPI                      | [packages/python](packages/python/README.md)         |
-| Node.js | `@spikard/node` on npm                 | [crates/spikard-node](crates/spikard-node/README.md) |
-| WASM    | `@spikard/node-wasm` on npm            | [crates/spikard-wasm](crates/spikard-wasm/README.md) |
-| Ruby    | `spikard` on RubyGems                  | [packages/ruby](packages/ruby/README.md)             |
-| PHP     | `goldziher/spikard` on Packagist       | [packages/php](packages/php/README.md)               |
-| Elixir  | `spikard` on Hex                       | [packages/elixir](packages/elixir/README.md)         |
-| Go      | `github.com/Goldziher/spikard`         | [packages/go](packages/go/README.md)                 |
-| Java    | `dev.spikard:spikard` on Maven Central | [packages/java](packages/java/README.md)             |
-| C#      | `Spikard` on NuGet                     | [packages/csharp](packages/csharp/README.md)         |
-| Kotlin  | `dev.spikard:spikard` on Maven Central | [packages/kotlin](packages/kotlin/README.md)         |
-| Dart    | `spikard` on pub.dev                   | [packages/dart](packages/dart/README.md)             |
-| Swift   | `Spikard` through SwiftPM              | [packages/swift](packages/swift/README.md)           |
-| Zig     | `spikard` through `build.zig.zon`      | [packages/zig](packages/zig/README.md)               |
-| C FFI   | `spikard-ffi` shared/static library    | [crates/spikard-ffi](crates/spikard-ffi/README.md)   |
+| Rust    | `spikard` on crates.io                 | `cargo add spikard`                                  |
+| Python  | `spikard` on PyPI                      | `pip install spikard`                                |
+| Node.js | `@spikard/node` on npm                 | `npm install @spikard/node`                          |
+| WASM    | `@spikard/node-wasm` on npm            | `npm install @spikard/node-wasm`                     |
+| Ruby    | `spikard` on RubyGems                  | `gem install spikard`                                |
+| PHP     | `goldziher/spikard` on Packagist       | `composer require goldziher/spikard`                 |
+| Elixir  | `spikard` on Hex                       | Add `{:spikard, "~> 0.1"}` to `mix.exs`              |
+| Go      | `github.com/Goldziher/spikard`         | `go get github.com/Goldziher/spikard`                |
+| Java    | `dev.spikard:spikard` on Maven Central | Maven/Gradle — see [Java README](packages/java)      |
+| C#      | `Spikard` on NuGet                     | `dotnet add package Spikard`                         |
+| Kotlin  | `dev.spikard:spikard` on Maven Central | Maven/Gradle — see [Kotlin README](packages/kotlin)  |
+| Dart    | `spikard` on pub.dev                   | `dart pub add spikard`                               |
+| Swift   | `Spikard` via SwiftPM                  | Add to `Package.swift`                               |
+| Zig     | `spikard` via `build.zig.zon`          | Add to build manifest                                |
+| C FFI   | `spikard-ffi` shared/static library    | [GitHub Releases](https://github.com/Goldziher/spikard/releases) |
 
-## Quick Start
+<!-- markdownlint-enable MD013 -->
+
+## Quick example
 
 ### Python
 
 ```python
 from spikard import Spikard
-from spikard.config import ServerConfig
 from msgspec import Struct
 
 class User(Struct):
@@ -60,13 +76,13 @@ async def get_user(id: int) -> User:
     return User(id=id, name="Alice")
 
 if __name__ == "__main__":
-    app.run(config=ServerConfig(port=8000))
+    app.run(port=8000)
 ```
 
 ### TypeScript
 
 ```typescript
-import { Spikard, ServerConfig } from "@spikard/node";
+import { Spikard } from "@spikard/node";
 
 const app = new Spikard();
 
@@ -74,13 +90,22 @@ app.get("/users/{id:int}", async (id: number) => {
   return { id, name: "Alice" };
 });
 
-const config = new ServerConfig({ port: 8000 });
-app.run(config);
+app.run({ port: 8000 });
 ```
+
+<details>
+<summary><strong>More examples</strong> (Ruby · PHP · Elixir · Go · Java · C# · Kotlin · Dart · Swift)</summary>
+
+See the [examples directory](https://github.com/Goldziher/spikard/tree/main/crates/spikard-http/examples) in the repository for working examples in every supported language.
+
+</details>
 
 ## Architecture
 
 All bindings call a shared Rust core through thin language-native layers:
+
+<details>
+<summary><strong>How bindings work</strong></summary>
 
 ```text
 Language bindings (Python, Node, Ruby, Go, Java, C#...)
@@ -94,31 +119,50 @@ crates/spikard-core      HTTP types, validation, errors
 crates/spikard-codegen   OpenAPI, GraphQL, AsyncAPI, JSON-RPC
 ```
 
-Bindings are generated from the Rust API surface via [alef](https://github.com/kreuzberg-dev/alef). Binding code stays thin: type conversion, error conversion, and runtime integration.
+Bindings are generated from the Rust API surface via [alef](https://github.com/xberg-io/alef). Binding code stays thin: type conversion, error conversion, and runtime integration. Business logic, validation, middleware, and codegen all live in Rust.
+
+</details>
+
+<details>
+<summary><strong>Specification support</strong></summary>
+
+- **OpenAPI 3.0** — Route definitions to specs, parameter validators, Swagger/ReDoc UI
+- **GraphQL** — SDL schema parsing, query execution, introspection, Handler trait integration
+- **AsyncAPI 3.0** — Channel/operation extraction, message validators, WebSocket integration
+- **OpenRPC** — JSON-RPC 2.0 method handlers, parameter validation, batch requests
+
+</details>
+
+<details>
+<summary><strong>Middleware stack</strong></summary>
+
+Compression (gzip/brotli), rate limiting, timeouts, request IDs, authentication (JWT/API key), static files. Configured via ServerConfig structs. All middleware is implemented in Rust via tower-http.
+
+</details>
 
 ## Development
 
 ```bash
-task setup
-task build
-task test
-task test:e2e
-task lint
-task format
+task setup     # Install dependencies
+task build     # Build Rust core (debug)
+task test      # Run Rust tests
+task test:all  # Run all tests (Rust + bindings)
+task e2e:all   # Generate + build + run e2e tests
+task format    # Format all code
 ```
 
 Run `task --list` for the full task catalog.
 
-## Project Status
+<details>
+<summary><strong>Project status</strong></summary>
 
-- Rust core is stable.
+- Rust core is stable and production-ready.
 - Binding packages follow the Rust crate version.
 - E2E coverage is fixture-driven and shared across supported language targets.
+- See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on modifying generated bindings.
 
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md). Generated binding and e2e files should be changed through Rust source, fixtures, templates, or `alef.toml`.
+</details>
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT License — see [LICENSE](LICENSE) for details.
