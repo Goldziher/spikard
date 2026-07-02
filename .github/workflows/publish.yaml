@@ -91,20 +91,20 @@ jobs:
 
       - name: Retag for republish
         if: ${{ inputs.republish == true || github.event.client_payload.republish == true }}
-        uses: kreuzberg-dev/actions/retag-for-republish@v1
+        uses: xberg-io/actions/retag-for-republish@v1
         with:
           tag: ${{ inputs.tag || github.event.client_payload.tag }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Resolve release metadata
         id: meta
-        uses: kreuzberg-dev/actions/prepare-release-metadata@v1
+        uses: xberg-io/actions/prepare-release-metadata@v1
         with:
           available-targets: "crates,python,node,ruby,php,cli,homebrew,go,c-ffi,java,csharp,elixir,dart,swift,zig,kotlin,wasm"
 
       - name: Ensure draft GitHub Release exists
         if: ${{ steps.meta.outputs.is_tag == 'true' && steps.meta.outputs.dry_run != 'true' }}
-        uses: kreuzberg-dev/actions/publish-github-release@v1
+        uses: xberg-io/actions/publish-github-release@v1
         with:
           tag: ${{ steps.meta.outputs.tag }}
           target: ${{ steps.meta.outputs.target_sha }}
@@ -124,7 +124,7 @@ jobs:
           fetch-depth: 0
 
       - name: Validate versions
-        uses: kreuzberg-dev/actions/validate-versions@v1
+        uses: xberg-io/actions/validate-versions@v1
         with:
           version: ${{ needs.prepare.outputs.version }}
 
@@ -148,7 +148,7 @@ jobs:
     steps:
       - id: pypi
         if: ${{ needs.prepare.outputs.release_python == 'true' }}
-        uses: kreuzberg-dev/actions/check-registry@v1
+        uses: xberg-io/actions/check-registry@v1
         with:
           registry: pypi
           package: spikard
@@ -156,7 +156,7 @@ jobs:
 
       - id: npm
         if: ${{ needs.prepare.outputs.release_node == 'true' || needs.prepare.outputs.release_wasm == 'true' }}
-        uses: kreuzberg-dev/actions/check-registry@v1
+        uses: xberg-io/actions/check-registry@v1
         with:
           registry: npm
           package: "@spikard/node"
@@ -166,7 +166,7 @@ jobs:
 
       - id: rubygems
         if: ${{ needs.prepare.outputs.release_ruby == 'true' }}
-        uses: kreuzberg-dev/actions/check-registry@v1
+        uses: xberg-io/actions/check-registry@v1
         with:
           registry: rubygems
           package: spikard
@@ -174,7 +174,7 @@ jobs:
 
       - id: packagist
         if: ${{ needs.prepare.outputs.release_php == 'true' }}
-        uses: kreuzberg-dev/actions/check-registry@v1
+        uses: xberg-io/actions/check-registry@v1
         with:
           registry: packagist
           package: goldziher/spikard
@@ -182,7 +182,7 @@ jobs:
 
       - id: crates
         if: ${{ needs.prepare.outputs.release_crates == 'true' }}
-        uses: kreuzberg-dev/actions/check-registry@v1
+        uses: xberg-io/actions/check-registry@v1
         with:
           registry: cratesio
           package: spikard-core
@@ -190,7 +190,7 @@ jobs:
 
       - id: hex
         if: ${{ needs.prepare.outputs.release_elixir == 'true' }}
-        uses: kreuzberg-dev/actions/check-registry@v1
+        uses: xberg-io/actions/check-registry@v1
         with:
           registry: hex
           package: spikard
@@ -198,7 +198,7 @@ jobs:
 
       - id: maven
         if: ${{ needs.prepare.outputs.release_java == 'true' || needs.prepare.outputs.release_kotlin == 'true' }}
-        uses: kreuzberg-dev/actions/check-registry@v1
+        uses: xberg-io/actions/check-registry@v1
         with:
           registry: maven
           package: "dev.spikard:spikard"
@@ -208,7 +208,7 @@ jobs:
 
       - id: nuget
         if: ${{ needs.prepare.outputs.release_csharp == 'true' }}
-        uses: kreuzberg-dev/actions/check-registry@v1
+        uses: xberg-io/actions/check-registry@v1
         with:
           registry: nuget
           package: Spikard
@@ -216,7 +216,7 @@ jobs:
 
       - id: pub
         if: ${{ needs.prepare.outputs.release_dart == 'true' }}
-        uses: kreuzberg-dev/actions/check-registry@v1
+        uses: xberg-io/actions/check-registry@v1
         with:
           registry: pub
           package: spikard
@@ -239,11 +239,11 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
           cache-key-prefix: publish-python-${{ matrix.os }}
-      - uses: kreuzberg-dev/actions/build-python-wheels@v1
+      - uses: xberg-io/actions/build-python-wheels@v1
         with:
           python-version: "3.14"
           package-dir: packages/python
@@ -263,13 +263,13 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
       - uses: actions/setup-python@v6
         with:
           python-version: "3.14"
-      - uses: kreuzberg-dev/actions/build-python-sdist@v1
+      - uses: xberg-io/actions/build-python-sdist@v1
         with:
           package-dir: packages/python
           output-dir: dist/python
@@ -291,10 +291,10 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
-      - uses: kreuzberg-dev/actions/setup-node-workspace@v1
+      - uses: xberg-io/actions/setup-node-workspace@v1
         with:
           node-version: "24"
       - name: Generate TypeScript definitions
@@ -371,17 +371,17 @@ jobs:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - name: Free disk space
         if: runner.os == 'Linux'
-        uses: kreuzberg-dev/actions/free-disk-space-linux@v1
-      - uses: kreuzberg-dev/actions/setup-rust@v1
+        uses: xberg-io/actions/free-disk-space-linux@v1
+      - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
           target: ${{ matrix.rust_target || matrix.target }}
           cache-key-prefix: publish-node-${{ matrix.target }}
-      - uses: kreuzberg-dev/actions/setup-node-workspace@v1
+      - uses: xberg-io/actions/setup-node-workspace@v1
         with:
           node-version: "24"
       - name: Build native module
-        uses: kreuzberg-dev/actions/build-node-napi@v1
+        uses: xberg-io/actions/build-node-napi@v1
         with:
           crate-dir: crates/spikard-node
           target: ${{ matrix.target }}
@@ -402,13 +402,13 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
-      - uses: kreuzberg-dev/actions/setup-node-workspace@v1
+      - uses: xberg-io/actions/setup-node-workspace@v1
         with:
           node-version: "24"
-      - uses: kreuzberg-dev/actions/build-wasm-package@v1
+      - uses: xberg-io/actions/build-wasm-package@v1
         id: build-wasm
         with:
           crate-dir: crates/spikard-wasm
@@ -450,7 +450,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
       - uses: ruby/setup-ruby@v1
@@ -458,7 +458,7 @@ jobs:
           ruby-version: "3.4"
           bundler-cache: true
           working-directory: packages/ruby
-      - uses: kreuzberg-dev/actions/build-ruby-gem@v1
+      - uses: xberg-io/actions/build-ruby-gem@v1
         with:
           package-dir: packages/ruby
           # Skip the registry rewrite on dry-runs (unpublished version cannot
@@ -518,14 +518,14 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: kreuzberg-dev/actions/setup-php@v1
+      - uses: xberg-io/actions/setup-php@v1
         with:
           php-version: ${{ matrix.php }}
-      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
           target: ${{ matrix.platform.target }}
-      - uses: kreuzberg-dev/actions/build-php-extension@v1
+      - uses: xberg-io/actions/build-php-extension@v1
         with:
           crate-name: spikard-php
           lib-name: spikard_php
@@ -534,7 +534,7 @@ jobs:
           # Skip the registry rewrite on dry-runs (unpublished version cannot
           # resolve); build via workspace path-deps instead.
           rewrite-native-deps: ${{ needs.prepare.outputs.dry_run != 'true' }}
-      - uses: kreuzberg-dev/actions/package-php-pie@v1
+      - uses: xberg-io/actions/package-php-pie@v1
         with:
           php-version: ${{ matrix.php }}
           php-ts: nts
@@ -569,19 +569,19 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
           target: ${{ matrix.target }}
       - name: Setup Zig for glibc 2.28 floor
         if: contains(matrix.target, '-linux-gnu')
-        uses: kreuzberg-dev/actions/setup-zig@v1
+        uses: xberg-io/actions/setup-zig@v1
       - name: Install cargo-zigbuild for glibc 2.28 floor
         if: contains(matrix.target, '-linux-gnu')
         shell: bash
         run: command -v cargo-zigbuild || cargo install --locked cargo-zigbuild
       - id: cli
-        uses: kreuzberg-dev/actions/build-rust-cli@v1
+        uses: xberg-io/actions/build-rust-cli@v1
         with:
           package-name: spikard-cli
           binary-name: spikard
@@ -664,15 +664,15 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: kreuzberg-dev/actions/setup-elixir@v1
+      - uses: xberg-io/actions/setup-elixir@v1
         with:
           elixir-version: "1.18"
           otp-version: "27"
-      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
           target: ${{ matrix.target }}
-      - uses: kreuzberg-dev/actions/build-elixir-natives@v1
+      - uses: xberg-io/actions/build-elixir-natives@v1
         env:
           CARGO_TARGET_DIR: ${{ github.workspace }}/target
         with:
@@ -701,10 +701,10 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
-      - uses: kreuzberg-dev/actions/setup-gradle@v1
+      - uses: xberg-io/actions/setup-gradle@v1
         with:
           java-version: "25"
           gradle-version: "9.1.0"
@@ -729,7 +729,7 @@ jobs:
         with:
           path: dist/release-assets
           merge-multiple: true
-      - uses: kreuzberg-dev/actions/upload-release-assets@v1
+      - uses: xberg-io/actions/upload-release-assets@v1
         with:
           tag: ${{ needs.prepare.outputs.tag }}
           working-directory: dist/release-assets
@@ -751,10 +751,10 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
-      - uses: kreuzberg-dev/actions/publish-crates@v1
+      - uses: xberg-io/actions/publish-crates@v1
         with:
           crates: "spikard-core spikard-http spikard-graphql spikard spikard-codegen spikard-cli spikard-ffi"
           version: ${{ needs.prepare.outputs.version }}
@@ -768,28 +768,28 @@ jobs:
       # crates first" error after publish-crates already succeeded.
       - name: Wait for spikard-core indexing
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        uses: kreuzberg-dev/actions/wait-for-package@v1
+        uses: xberg-io/actions/wait-for-package@v1
         with:
           registry: cratesio
           package: spikard-core
           version: ${{ needs.prepare.outputs.version }}
       - name: Wait for spikard-http indexing
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        uses: kreuzberg-dev/actions/wait-for-package@v1
+        uses: xberg-io/actions/wait-for-package@v1
         with:
           registry: cratesio
           package: spikard-http
           version: ${{ needs.prepare.outputs.version }}
       - name: Wait for spikard-graphql indexing
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        uses: kreuzberg-dev/actions/wait-for-package@v1
+        uses: xberg-io/actions/wait-for-package@v1
         with:
           registry: cratesio
           package: spikard-graphql
           version: ${{ needs.prepare.outputs.version }}
       - name: Wait for spikard indexing
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        uses: kreuzberg-dev/actions/wait-for-package@v1
+        uses: xberg-io/actions/wait-for-package@v1
         with:
           registry: cratesio
           package: spikard
@@ -806,7 +806,7 @@ jobs:
           path: dist/python
           pattern: python-*
           merge-multiple: true
-      - uses: kreuzberg-dev/actions/publish-pypi@v1
+      - uses: xberg-io/actions/publish-pypi@v1
         with:
           packages-dir: dist/python
           dry-run: ${{ needs.prepare.outputs.dry_run }}
@@ -832,7 +832,7 @@ jobs:
         with:
           name: node-typescript-defs
           path: typescript-defs
-      - uses: kreuzberg-dev/actions/setup-node-workspace@v1
+      - uses: xberg-io/actions/setup-node-workspace@v1
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org/"
@@ -884,7 +884,7 @@ jobs:
             crates/spikard-node/package.json > "$tmp_pkg_json"
           mv "$tmp_pkg_json" crates/spikard-node/package.json
       - name: Publish platform sub-packages
-        uses: kreuzberg-dev/actions/publish-npm@v1
+        uses: xberg-io/actions/publish-npm@v1
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         with:
@@ -896,7 +896,7 @@ jobs:
       # window where `npm install @spikard/node` fails on unresolved deps.
       - name: Wait for npm indexing (node-linux-x64-gnu)
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        uses: kreuzberg-dev/actions/wait-for-package@v1
+        uses: xberg-io/actions/wait-for-package@v1
         with:
           registry: npm
           package: "@spikard/node-linux-x64-gnu"
@@ -904,14 +904,14 @@ jobs:
           max-attempts: "60"
       - name: Wait for npm indexing (node-linux-arm64-gnu)
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        uses: kreuzberg-dev/actions/wait-for-package@v1
+        uses: xberg-io/actions/wait-for-package@v1
         with:
           registry: npm
           package: "@spikard/node-linux-arm64-gnu"
           version: ${{ needs.prepare.outputs.version }}
           max-attempts: "60"
       - name: Publish main @spikard/node package
-        uses: kreuzberg-dev/actions/publish-npm@v1
+        uses: xberg-io/actions/publish-npm@v1
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         with:
@@ -933,7 +933,7 @@ jobs:
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
-      - uses: kreuzberg-dev/actions/publish-npm@v1
+      - uses: xberg-io/actions/publish-npm@v1
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         with:
@@ -966,7 +966,7 @@ jobs:
       - name: Update RubyGems for OIDC trusted publishing
         run: gem update --system
       - uses: rubygems/configure-rubygems-credentials@v2.0.0
-      - uses: kreuzberg-dev/actions/publish-rubygems@v1
+      - uses: xberg-io/actions/publish-rubygems@v1
         with:
           gems-dir: dist
           dry-run: ${{ needs.prepare.outputs.dry_run }}
@@ -977,7 +977,7 @@ jobs:
     if: ${{ !cancelled() && needs.prepare.outputs.release_php == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.php_exists != 'true') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: kreuzberg-dev/actions/publish-packagist@v1
+      - uses: xberg-io/actions/publish-packagist@v1
         env:
           PACKAGIST_USERNAME: ${{ secrets.PACKAGIST_USERNAME }}
           PACKAGIST_TOKEN: ${{ secrets.PACKAGIST_TOKEN }}
@@ -1001,11 +1001,11 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: kreuzberg-dev/actions/setup-elixir@v1
+      - uses: xberg-io/actions/setup-elixir@v1
         with:
           elixir-version: "1.18"
           otp-version: "27"
-      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
       # Generate the RustlerPrecompiled checksum file (checksum-Elixir.Spikard.Native.exs)
@@ -1015,7 +1015,7 @@ jobs:
       # Targets must match the assets actually uploaded (the build-elixir matrix builds
       # these four triples; Windows is msvc, matching the uploaded artifact name).
       - name: Generate NIF checksum file
-        uses: kreuzberg-dev/actions/generate-elixir-checksums@v1
+        uses: xberg-io/actions/generate-elixir-checksums@v1
         with:
           github-repo: ${{ github.repository }}
           tag: ${{ needs.prepare.outputs.tag }}
@@ -1030,12 +1030,12 @@ jobs:
       # rewrite is skipped (the version isn't on crates.io yet) and a Cargo.lock
       # is generated from the workspace instead. Leaves the rewritten tree for
       # the publish-hex step's `mix hex.publish` to package.
-      - uses: kreuzberg-dev/actions/build-elixir-hex@v1
+      - uses: xberg-io/actions/build-elixir-hex@v1
         with:
           package-dir: packages/elixir
           nif-crate-path: packages/elixir/native/spikard_nif
           dry-run: ${{ needs.prepare.outputs.dry_run }}
-      - uses: kreuzberg-dev/actions/publish-hex@v1
+      - uses: xberg-io/actions/publish-hex@v1
         env:
           HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
         with:
@@ -1055,7 +1055,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "25"
-      - uses: kreuzberg-dev/actions/setup-maven@v1
+      - uses: xberg-io/actions/setup-maven@v1
       - name: Download Java natives (all classifiers)
         uses: actions/download-artifact@v8
         with:
@@ -1074,7 +1074,7 @@ jobs:
           find "$dest" -type f
       - name: Package Java JAR with bundled natives
         run: cd packages/java && mvn -B -DskipTests package
-      - uses: kreuzberg-dev/actions/publish-maven@v1
+      - uses: xberg-io/actions/publish-maven@v1
         env:
           MAVEN_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
@@ -1093,7 +1093,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: kreuzberg-dev/actions/publish-maven-gradle@v1
+      - uses: xberg-io/actions/publish-maven-gradle@v1
         env:
           MAVEN_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
@@ -1138,7 +1138,7 @@ jobs:
           find "$dest" -type f
       - name: Pack NuGet
         run: dotnet pack packages/csharp/Spikard --configuration Release --output dist/nuget
-      - uses: kreuzberg-dev/actions/publish-nuget@v1
+      - uses: xberg-io/actions/publish-nuget@v1
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         with:
@@ -1201,7 +1201,7 @@ jobs:
           done
           ls -la "$out"
           for d in "$out"/*/; do echo "--- $d ---"; ls -la "$d"; done
-      - uses: kreuzberg-dev/actions/publish-zig@v1
+      - uses: xberg-io/actions/publish-zig@v1
         with:
           working-directory: packages/zig
           tag: ${{ needs.prepare.outputs.tag }}
@@ -1222,7 +1222,7 @@ jobs:
     outputs:
       exists: ${{ steps.check.outputs.exists }}
     steps:
-      - uses: kreuzberg-dev/actions/check-registry@v1
+      - uses: xberg-io/actions/check-registry@v1
         id: check
         with:
           registry: homebrew
@@ -1311,10 +1311,10 @@ jobs:
 
       - name: Install Homebrew (Linux)
         if: ${{ matrix.install_brew }}
-        uses: kreuzberg-dev/actions/install-homebrew-linux@v1
+        uses: xberg-io/actions/install-homebrew-linux@v1
 
       - name: Build bottles
-        uses: kreuzberg-dev/actions/homebrew-build-bottles@v1
+        uses: xberg-io/actions/homebrew-build-bottles@v1
         with:
           tag: ${{ needs.prepare.outputs.tag }}
           version: ${{ needs.prepare.outputs.version }}
@@ -1365,7 +1365,7 @@ jobs:
           merge-multiple: true
 
       - name: Merge bottle DSL into formulas
-        uses: kreuzberg-dev/actions/homebrew-merge-bottles@v1
+        uses: xberg-io/actions/homebrew-merge-bottles@v1
         with:
           tag: ${{ needs.prepare.outputs.tag }}
           version: ${{ needs.prepare.outputs.version }}
@@ -1399,10 +1399,10 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
-      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
-      - uses: kreuzberg-dev/actions/build-swift-artifactbundle@v1
+      - uses: xberg-io/actions/build-swift-artifactbundle@v1
         id: bundle
         with:
           crate-name: spikard-swift
@@ -1432,10 +1432,10 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
-      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
-      - uses: kreuzberg-dev/actions/build-swift-package@v1
+      - uses: xberg-io/actions/build-swift-package@v1
         with:
           package-dir: packages/swift
           crate-name: spikard-swift
@@ -1496,7 +1496,7 @@ jobs:
         with:
           name: swift-artifactbundle
           path: dist/swift-bundle
-      - uses: kreuzberg-dev/actions/upload-release-assets@v1
+      - uses: xberg-io/actions/upload-release-assets@v1
         with:
           tag: ${{ needs.prepare.outputs.tag }}
           working-directory: dist/swift-bundle
@@ -1516,7 +1516,7 @@ jobs:
           pattern: php-package-*
           path: dist/php-package
           merge-multiple: true
-      - uses: kreuzberg-dev/actions/upload-release-assets@v1
+      - uses: xberg-io/actions/upload-release-assets@v1
         with:
           tag: ${{ needs.prepare.outputs.tag }}
           working-directory: dist/php-package
@@ -1546,18 +1546,18 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
           target: ${{ matrix.target }}
       - name: Setup Zig for glibc 2.28 floor
         if: contains(matrix.target, '-linux-gnu')
-        uses: kreuzberg-dev/actions/setup-zig@v1
+        uses: xberg-io/actions/setup-zig@v1
       - name: Install cargo-zigbuild for glibc 2.28 floor
         if: contains(matrix.target, '-linux-gnu')
         shell: bash
         run: command -v cargo-zigbuild || cargo install --locked cargo-zigbuild
-      - uses: kreuzberg-dev/actions/build-go-ffi@v1
+      - uses: xberg-io/actions/build-go-ffi@v1
         with:
           target: ${{ matrix.target }}
           crate-name: spikard-ffi
@@ -1590,18 +1590,18 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
           target: ${{ matrix.target }}
       - name: Setup Zig for glibc 2.28 floor
         if: contains(matrix.target, '-linux-gnu')
-        uses: kreuzberg-dev/actions/setup-zig@v1
+        uses: xberg-io/actions/setup-zig@v1
       - name: Install cargo-zigbuild for glibc 2.28 floor
         if: contains(matrix.target, '-linux-gnu')
         shell: bash
         run: command -v cargo-zigbuild || cargo install --locked cargo-zigbuild
-      - uses: kreuzberg-dev/actions/build-rust-ffi@v1
+      - uses: xberg-io/actions/build-rust-ffi@v1
         with:
           crate-name: spikard-ffi
           target: ${{ matrix.target }}
@@ -1646,18 +1646,18 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
           target: ${{ matrix.target }}
       - name: Setup Zig for glibc 2.28 floor
         if: contains(matrix.target, '-linux-gnu')
-        uses: kreuzberg-dev/actions/setup-zig@v1
+        uses: xberg-io/actions/setup-zig@v1
       - name: Install cargo-zigbuild for glibc 2.28 floor
         if: contains(matrix.target, '-linux-gnu')
         shell: bash
         run: command -v cargo-zigbuild || cargo install --locked cargo-zigbuild
-      - uses: kreuzberg-dev/actions/build-java-natives@v1
+      - uses: xberg-io/actions/build-java-natives@v1
         with:
           target: ${{ matrix.target }}
           crate-name: spikard-ffi
@@ -1688,18 +1688,18 @@ jobs:
       - uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
           target: ${{ matrix.target }}
       - name: Setup Zig for glibc 2.28 floor
         if: contains(matrix.target, '-linux-gnu')
-        uses: kreuzberg-dev/actions/setup-zig@v1
+        uses: xberg-io/actions/setup-zig@v1
       - name: Install cargo-zigbuild for glibc 2.28 floor
         if: contains(matrix.target, '-linux-gnu')
         shell: bash
         run: command -v cargo-zigbuild || cargo install --locked cargo-zigbuild
-      - uses: kreuzberg-dev/actions/build-csharp-natives@v1
+      - uses: xberg-io/actions/build-csharp-natives@v1
         with:
           target: ${{ matrix.target }}
           crate-name: spikard-ffi
@@ -1731,7 +1731,7 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
-      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
           target: ${{ matrix.target }}
@@ -1764,11 +1764,11 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
-      - uses: kreuzberg-dev/actions/setup-rust@v1
+      - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
       - uses: dart-lang/setup-dart@v1
-      - uses: kreuzberg-dev/actions/build-dart-package@v1
+      - uses: xberg-io/actions/build-dart-package@v1
         with:
           package-dir: packages/dart/rust
           crate-name: spikard-dart
@@ -1875,7 +1875,7 @@ jobs:
     if: ${{ always() && needs.prepare.outputs.is_tag == 'true' && !contains(needs.*.result, 'failure') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: kreuzberg-dev/actions/finalize-release@v1
+      - uses: xberg-io/actions/finalize-release@v1
         with:
           tag: ${{ needs.prepare.outputs.tag }}
           is-prerelease: ${{ needs.prepare.outputs.is_prerelease }}

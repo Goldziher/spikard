@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Setup textlint
-        uses: kreuzberg-dev/actions/setup-textlint@v1
+        uses: xberg-io/actions/setup-textlint@v1
 
       - name: Run textlint
         run: scripts/ci/docs/textlint.sh
@@ -47,22 +47,22 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Setup Python
-        uses: kreuzberg-dev/actions/setup-python-env@v1
+        uses: xberg-io/actions/setup-python-env@v1
         with:
           python-version: "3.14"
           install-command: "uv sync --all-extras --all-packages --group dev --group docs --no-install-project --no-install-workspace"
 
       - name: Setup Rust
-        uses: kreuzberg-dev/actions/setup-rust@v1
+        uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
           cache-key-prefix: docs
 
       - name: Install Alef
-        uses: kreuzberg-dev/actions/install-alef@v1
+        uses: xberg-io/actions/install-alef@v1
 
       - name: Install Task
-        uses: kreuzberg-dev/actions/install-task@v1
+        uses: xberg-io/actions/install-task@v1
 
       - name: Build documentation
         run: task docs:build

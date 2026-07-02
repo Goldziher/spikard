@@ -93,27 +93,27 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Setup Rust
-        uses: kreuzberg-dev/actions/setup-rust@v1
+        uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
           cache-key-prefix: bindings-${{ matrix.language }}-${{ matrix.os }}
           use-sccache: "true"
 
       - name: Install Alef
-        uses: kreuzberg-dev/actions/install-alef@v1
+        uses: xberg-io/actions/install-alef@v1
 
       - name: Install Task
-        uses: kreuzberg-dev/actions/install-task@v1
+        uses: xberg-io/actions/install-task@v1
 
       - name: Setup Python
         if: matrix.language == 'python'
-        uses: kreuzberg-dev/actions/setup-python-env@v1
+        uses: xberg-io/actions/setup-python-env@v1
         with:
           python-version: "3.14"
 
       - name: Setup Node
         if: matrix.language == 'node'
-        uses: kreuzberg-dev/actions/setup-node-workspace@v1
+        uses: xberg-io/actions/setup-node-workspace@v1
         with:
           node-version: "24"
 
@@ -127,13 +127,13 @@ jobs:
 
       - name: Setup PHP
         if: matrix.language == 'php'
-        uses: kreuzberg-dev/actions/setup-php@v1
+        uses: xberg-io/actions/setup-php@v1
         with:
           php-version: "8.4"
 
       - name: Setup Elixir
         if: matrix.language == 'elixir'
-        uses: kreuzberg-dev/actions/setup-elixir@v1
+        uses: xberg-io/actions/setup-elixir@v1
         with:
           elixir-version: "1.18"
           otp-version: "27"
@@ -153,7 +153,7 @@ jobs:
 
       - name: Setup Maven
         if: matrix.language == 'java'
-        uses: kreuzberg-dev/actions/setup-maven@v1
+        uses: xberg-io/actions/setup-maven@v1
 
       - name: Setup .NET
         if: matrix.language == 'csharp'
@@ -163,7 +163,7 @@ jobs:
 
       - name: Setup Gradle
         if: matrix.language == 'kotlin'
-        uses: kreuzberg-dev/actions/setup-gradle@v1
+        uses: xberg-io/actions/setup-gradle@v1
         with:
           java-version: "25"
           gradle-version: "9.1.0"
@@ -174,15 +174,15 @@ jobs:
 
       - name: Setup Swift
         if: matrix.language == 'swift'
-        uses: kreuzberg-dev/actions/setup-swift@v1
+        uses: xberg-io/actions/setup-swift@v1
 
       - name: Setup Zig
         if: matrix.language == 'zig'
-        uses: kreuzberg-dev/actions/setup-zig@v1
+        uses: xberg-io/actions/setup-zig@v1
 
       - name: Setup wasm-pack
         if: matrix.language == 'wasm'
-        uses: kreuzberg-dev/actions/setup-wasm-pack@v1
+        uses: xberg-io/actions/setup-wasm-pack@v1
 
       - name: Build shared FFI
         if: contains(fromJSON('["go","java","csharp","kotlin","dart","swift","zig"]'), matrix.language)
@@ -190,7 +190,7 @@ jobs:
 
       - name: Build Swift package
         if: matrix.language == 'swift'
-        uses: kreuzberg-dev/actions/build-swift-package@v1
+        uses: xberg-io/actions/build-swift-package@v1
         with:
           package-dir: packages/swift
           crate-name: spikard-swift
