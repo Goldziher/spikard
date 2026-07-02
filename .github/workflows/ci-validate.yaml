@@ -6,7 +6,7 @@ on:
     branches: [main]
     paths:
       - ".github/**"
-      - ".pre-commit-config.yaml"
+      - "poly.toml"
       - ".task/**"
       - ".ai-rulez/**"
       - "alef.toml"
@@ -22,7 +22,7 @@ on:
     branches: [main]
     paths:
       - ".github/**"
-      - ".pre-commit-config.yaml"
+      - "poly.toml"
       - ".task/**"
       - ".ai-rulez/**"
       - "alef.toml"
@@ -59,27 +59,27 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Setup Python
-        uses: kreuzberg-dev/actions/setup-python-env@v1
+        uses: xberg-io/actions/setup-python-env@v1
         with:
           python-version: "3.14"
 
       - name: Setup Rust
-        uses: kreuzberg-dev/actions/setup-rust@v1
+        uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
           cache-key-prefix: validate
           use-sccache: "true"
 
       - name: Setup Node
-        uses: kreuzberg-dev/actions/setup-node-workspace@v1
+        uses: xberg-io/actions/setup-node-workspace@v1
         with:
           node-version: "24"
 
       - name: Install Alef
-        uses: kreuzberg-dev/actions/install-alef@v1
+        uses: xberg-io/actions/install-alef@v1
 
       - name: Install Task
-        uses: kreuzberg-dev/actions/install-task@v1
+        uses: xberg-io/actions/install-task@v1
 
       - name: Verify Alef output
         run: task alef:verify
@@ -93,5 +93,8 @@ jobs:
           reporter: github-check
           fail_level: error
 
-      - name: Run pre-commit validation hooks
-        run: uv run prek run actionlint check-yaml check-toml check-json --all-files
+      - name: Install poly
+        uses: Goldziher/polylint@v0
+
+      - name: Lint (poly)
+        run: task lint:check
