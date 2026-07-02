@@ -71,7 +71,7 @@ pub fn call_js_handler(func: &napi::JsFunction) -> napi::Result<napi::JsObject> 
 }
 ```
 
-#### Ruby (`crates/spikard-rb`)
+#### Ruby (`packages/ruby/ext/spikard_rb/native`)
 
 Magnus handlers wrap invocations with panic shielding:
 
@@ -172,7 +172,7 @@ This matches the RFC 9457-compatible `ProblemDetails` struct and aligns with `te
 - [x] Core `shield_panic()` function in `crates/spikard-core/src/errors.rs`
 - [x] Python binding panic handling in `crates/spikard-py/src/handler.rs`
 - [x] Node binding panic handling in `crates/spikard-node/src/handler.rs`
-- [x] Ruby binding panic handling in `crates/spikard-rb/src/handler.rs`
+- [x] Ruby binding panic handling in `packages/ruby/ext/spikard_rb/native/src/handler.rs`
 - [x] PHP binding panic handling in `crates/spikard-php/src/php/handler.rs`
 - [x] HTTP server panic handling in `crates/spikard-http/src/server/handler.rs`
 - [x] Panic fixtures in `testing_data/panic_handling`
@@ -184,7 +184,7 @@ This matches the RFC 9457-compatible `ProblemDetails` struct and aligns with `te
 - **Core implementation**: `crates/spikard-core/src/errors.rs` (`StructuredError`, `shield_panic()`)
 - **Python binding**: `crates/spikard-py/src/handler.rs`
 - **Node binding**: `crates/spikard-node/src/handler.rs`
-- **Ruby binding**: `crates/spikard-rb/src/handler.rs`
+- **Ruby binding**: `packages/ruby/ext/spikard_rb/native/src/handler.rs`
 - **PHP binding**: `crates/spikard-php/src/php/handler.rs`
 - **HTTP runtime**: `crates/spikard-http/src/server/handler.rs`
 - **Error format**: `testing_data/validation_errors/schema.json`

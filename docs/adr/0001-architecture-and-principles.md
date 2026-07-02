@@ -10,7 +10,7 @@ Spikard is a Rust-first web toolkit that ships comparable APIs across Python, No
 ## Decision
 
 - **Rust core owns correctness and performance**: HTTP parsing, routing, validation, middleware, streaming, SSE, and WebSockets live in `crates/spikard-http` with shared types in `crates/spikard-core`.
-- **Bindings surface idiomatic APIs**: PyO3 (`crates/spikard-py`), napi-rs (`crates/spikard-node`), Magnus (`crates/spikard-rb`), and ext-php-rs (`crates/spikard-php`) expose the same behaviors with language-specific ergonomics (decorators/blocks/functions).
+- **Bindings surface idiomatic APIs**: PyO3 (`crates/spikard-py`), napi-rs (`crates/spikard-node`), Magnus (`packages/ruby/ext/spikard_rb/native`), and ext-php-rs (`crates/spikard-php`) expose the same behaviors with language-specific ergonomics (decorators/blocks/functions).
 - **Spec- and fixture-driven**: `testing_data/` is the canonical contract; fixtures, schemas, and generators drive the HTTP runtime, bindings, and e2e suites.
 - **Code generation is first-class**: `crates/spikard-cli` and `crates/spikard-codegen` generate routes/tests and handlers from OpenAPI, AsyncAPI, OpenRPC, and Protobuf schemas.
 - **Simplicity over reinvention**: prefer standards (IETF drafts, RFC 9457), reuse existing crates (hyper/axum/tower/jsonschema), and keep feature parity instead of per-language divergence.
@@ -25,6 +25,6 @@ Spikard is a Rust-first web toolkit that ships comparable APIs across Python, No
 ## References
 
 - Runtime: `crates/spikard-http`, `crates/spikard-core`
-- Bindings: `crates/spikard-py`, `crates/spikard-node`, `crates/spikard-rb`, `crates/spikard-php`
+- Bindings: `crates/spikard-py`, `crates/spikard-node`, `packages/ruby/ext/spikard_rb/native`, `crates/spikard-php`
 - Fixtures: `testing_data/`
 - Codegen/CLI: `crates/spikard-cli`, `crates/spikard-codegen`

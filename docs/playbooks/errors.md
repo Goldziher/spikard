@@ -7,54 +7,88 @@ Standardize errors so clients can rely on status codes and payload shape.
 === "Python"
 
     ```python
-    from spikard import Response
+    from spikard import App, Response
 
-    @app.get("/fail")
-    async def fail() -> Response:
-        return Response({"error": "bad"}, status=400)
+    app = App()
+
+    async def fail(ctx):
+        return {"error": "bad"}
+
+    app.get("/fail", fail)
     ```
 
 === "TypeScript"
 
     ```typescript
-    import { Spikard } from "spikard";
+    import { App } from "@spikard/node";
 
-    const app = new Spikard();
+    const app = new App();
 
-    app.addRoute(
-      { method: "GET", path: "/fail", handler_name: "fail", is_async: true },
-      async () => ({ statusCode: 400, body: { error: "bad" } }),
-    );
+    app.get("/fail", async () => {
+      return { error: "bad" };
+    });
     ```
 
 === "Ruby"
 
     ```ruby
-    app.get "/fail" do |_request|
-      [{ error: "bad" }, 400]
+    require "spikard"
+
+    app = Spikard::App.new
+
+    app.get("/fail") do |_request|
+      { error: "bad" }
     end
     ```
 
 === "PHP"
 
     ```php
-    use Spikard\Http\Response;
+    <?php
+    declare(strict_types=1);
 
-    #[Get("/fail")]
-    public function fail(): Response
-    {
-        return Response::json(['error' => 'bad'], 400);
-    }
+    namespace App;
+
+    use Spikard\Php\App;
+    use Spikard\Php\Response;
+
+    $app = new App();
+
+    $app->route(
+        "GET",
+        "/fail",
+        function () {
+            return new Response(
+                status: 400,
+                headers: ["content-type" => "application/json"],
+                body: json_encode(["error" => "bad"])
+            );
+        }
+    );
     ```
 
 === "Rust"
 
     ```rust
-    use spikard::prelude::*;
+    use spikard::{App, get, RequestContext, Response};
+    use axum::http::StatusCode;
+    use serde_json::json;
 
-    app.route(get("/fail"), |_ctx: Context| async {
-        Ok(Json(json!({"error": "bad"})).with_status(StatusCode::BAD_REQUEST))
-    })?;
+    let mut app = App::new();
+
+    app.route(
+        get("/fail"),
+        |_ctx: RequestContext| async {
+            let response = Response {
+                status_code: 400,
+                content: Some(json!({"error": "bad"})),
+                headers: Default::default(),
+            };
+            Ok(axum::http::Response::builder()
+                .status(StatusCode::BAD_REQUEST)
+                .body(axum::body::Body::from(response.content.unwrap().to_string()))?)
+        },
+    )?;
     ```
 
 ## Tips

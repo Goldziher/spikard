@@ -19,20 +19,20 @@ Each language has different FFI mechanisms (PyO3, napi-rs, Magnus, ext-php-rs) w
 
 ### Architecture
 
-**Shared FFI Core**: `crates/spikard-bindings-shared/src/grpc_metadata.rs`
+**Shared gRPC Core**: `crates/spikard-http/src/grpc/`
 
 - Common metadata conversion logic (MetadataMap ↔ HashMap)
 - gRPC status code constants and mappings
-- Reused across all language bindings
+- Tonic runtime and request/response handling
 
 **Language-Specific Bindings**:
 
 ```text
 crates/
-├── spikard-py/src/grpc/        # Python (PyO3)
-├── spikard-node/src/grpc/      # Node.js (napi-rs)
-├── spikard-rb/src/grpc/        # Ruby (Magnus)
-└── spikard-php/src/grpc/       # PHP (ext-php-rs)
+├── spikard-py/src/          # Python (PyO3) - includes gRPC support
+├── spikard-node/src/        # Node.js (napi-rs) - includes gRPC support
+├── spikard-php/src/         # PHP (ext-php-rs) - includes gRPC support
+└── packages/ruby/ext/spikard_rb/native/src/  # Ruby (Magnus) - includes gRPC support
 ```
 
 ### Core Principles
@@ -125,7 +125,7 @@ impl PyGrpcRequest {
 }
 ```
 
-**Ruby Binding** (`spikard-rb/src/grpc/handler.rs`):
+**Ruby Binding** (`packages/ruby/ext/spikard_rb/native/src/grpc/handler.rs`):
 
 ```rust
 #[magnus::wrap(class = "Spikard::Grpc::Request")]
@@ -284,13 +284,9 @@ end
 
 ## References
 
-- Shared metadata logic: `crates/spikard-bindings-shared/src/grpc_metadata.rs`
-- Python bindings: `crates/spikard-py/src/grpc/`
-- Node.js bindings: `crates/spikard-node/src/grpc/`
-- Ruby bindings: `crates/spikard-rb/src/grpc/`
-- PHP bindings: `crates/spikard-php/src/grpc/`
-- Runtime core: `crates/spikard-http/src/grpc/`
-- Python tests: `tests/test_grpc_python.py` (103 tests)
-- Ruby tests: `packages/ruby/spec/grpc_spec.rb` (144 tests)
-- TypeScript tests: `packages/node/src/grpc.spec.ts` (84 tests)
-- PHP tests: `packages/php/tests/Grpc*Test.php` (66 tests)
+- gRPC runtime: `crates/spikard-http/src/grpc/`
+- Python bindings: `crates/spikard-py/src/` (gRPC support in progress)
+- Node.js bindings: `crates/spikard-node/src/` (gRPC support in progress)
+- Ruby bindings: `packages/ruby/ext/spikard_rb/native/src/` (gRPC support in progress)
+- PHP bindings: `crates/spikard-php/src/` (gRPC support in progress)
+- Test fixtures: `testing_data/protobuf/` (fixture-driven gRPC test coverage)

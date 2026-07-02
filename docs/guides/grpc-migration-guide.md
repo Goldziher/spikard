@@ -1,51 +1,56 @@
 # gRPC Migration Guide
 
-**Target Audience**: Developers adding gRPC to existing REST or WebSocket applications
-**Estimated Reading Time**: 10 minutes
+**Target Audience**: Developers exploring gRPC integration with Spikard
+**Estimated Reading Time**: 8 minutes
 **Prerequisites**: Familiarity with HTTP/REST APIs and basic Protocol Buffers
+**Status**: gRPC runtime support is implemented; high-level language bindings are planned
 
 ## Table of Contents
 
 1. [Introduction](#introduction)
-2. [Can gRPC and REST Share the Same Server?](#can-grpc-and-rest-share-the-same-server)
-3. [Understanding HTTP/2 Multiplexing](#understanding-http2-multiplexing)
-4. [Routing Configuration](#routing-configuration)
-5. [Port Configuration Options](#port-configuration-options)
-6. [Complete Migration Example](#complete-migration-example)
+2. [Current gRPC Support](#current-grpc-support)
+3. [Can gRPC and REST Share the Same Server?](#can-grpc-and-rest-share-the-same-server)
+4. [Understanding HTTP/2 Multiplexing](#understanding-http2-multiplexing)
+5. [Architecture](#architecture)
+6. [Planned High-Level API](#planned-high-level-api)
 7. [Performance Implications](#performance-implications)
-8. [Common Questions](#common-questions)
-9. [Best Practices](#best-practices)
 
 ## Introduction
 
-Adding gRPC to an existing REST or WebSocket application is a common migration pattern. Unlike frameworks that require separate servers or ports, Spikard leverages HTTP/2's multiplexing capabilities to run both REST and gRPC on the same server instance, simplifying deployment and reducing operational complexity.
+Spikard's gRPC support is built on the Tonic runtime and integrates with the same HTTP/2 server that powers REST endpoints. This guide explains the current architecture and planned APIs for adding gRPC services.
 
-This guide demonstrates how to:
+**Current state**: The low-level gRPC handler trait and routing infrastructure exist in `spikard-http`. High-level language binding APIs are in development.
 
-- Add gRPC services to existing HTTP servers
-- Configure routing for mixed protocol traffic
-- Understand the performance trade-offs
-- Migrate incrementally without breaking existing clients
+## Current gRPC Support
+
+Spikard provides:
+
+- **Binary protocol support** via Tonic gRPC runtime
+- **HTTP/2 multiplexing** to run REST and gRPC on the same port
+- **Code generation** from `.proto` files (`spikard generate protobuf`)
+- **Type-safe handlers** through language-specific bindings
+
+Planned high-level APIs for Python, TypeScript, Rust, Ruby, PHP, and Elixir will simplify handler registration.
 
 ## Can gRPC and REST Share the Same Server?
 
-**Yes!** gRPC and REST can absolutely share the same server instance on the same port.
+**Yes!** Spikard's HTTP/2 server supports both gRPC and REST on the same port via protocol detection.
 
 ### How It Works
 
-gRPC uses HTTP/2 as its transport protocol. Spikard's routing layer automatically detects the protocol based on the request's `Content-Type` header:
+The routing layer automatically detects the protocol based on the request's `Content-Type` header:
 
-- **REST requests**: `Content-Type: application/json`
-- **gRPC requests**: `Content-Type: application/grpc` or `application/grpc+proto`
+- **REST requests**: `Content-Type: application/json` → REST handler
+- **gRPC requests**: `Content-Type: application/grpc*` → gRPC handler
 
-The server examines incoming requests and routes them to the appropriate handler based on this header, enabling transparent protocol multiplexing.
+Spikard's server examines incoming requests and dispatches them to the appropriate handler, enabling transparent protocol multiplexing.
 
 ### Key Benefits
 
-1. **Single Port**: No need for separate ports or proxy configurations
-2. **Shared Middleware**: Rate limiting, authentication, and compression work for both protocols
-3. **Simplified Deployment**: One server process, one configuration file
-4. **Gradual Migration**: Add gRPC endpoints incrementally while maintaining REST compatibility
+1. **Single Port**: Both protocols on the same listener
+2. **Shared Infrastructure**: Common middleware stack (rate limiting, auth, compression) for both protocols
+3. **Simplified Deployment**: One server process, one bind address
+4. **Gradual Migration**: Incrementally add gRPC alongside existing REST endpoints
 
 ## Understanding HTTP/2 Multiplexing
 
@@ -83,43 +88,43 @@ For clients that don't support HTTP/2:
 - gRPC requires HTTP/2 (clients must upgrade)
 - WebSocket connections continue to work via HTTP/1.1 upgrade
 
-## Routing Configuration
+## Architecture
 
-Spikard's routing is content-type aware and requires no special configuration for protocol detection.
+Spikard's gRPC support is built in three layers:
 
-### Automatic Protocol Routing
+### Layer 1: Tonic Runtime
 
-The server automatically routes requests based on the path structure and content type:
+The `spikard-http` crate provides a Tonic-based gRPC server that handles:
 
-**REST Routing**:
+- Protocol detection via `Content-Type` headers
+- HTTP/2 multiplexing with REST endpoints
+- Binary message serialization via protobuf
+- gRPC status codes and metadata handling
 
-```text
-GET /users/123 → Matches route pattern: /users/:id
+### Layer 2: Code Generation
+
+The `spikard-cli` command provides:
+
+```bash
+spikard generate protobuf schema.proto --lang python --output ./generated
 ```
 
-**gRPC Routing**:
+This generates type-safe message structs and handler scaffolding for your target language.
 
-```text
-POST /com.example.UserService/GetUser → Matches service/method pattern
-```
+### Layer 3: Handler Traits
 
-### Routing Implementation
+Language bindings implement the `GrpcHandler` trait:
 
-Under the hood, Spikard uses the `is_grpc_request` function to detect gRPC traffic:
+**Rust** (from `spikard-http`):
 
 ```rust
-// From: crates/spikard-http/src/server/grpc_routing.rs
-pub fn is_grpc_request(request: &Request<Body>) -> bool {
-    request
-        .headers()
-        .get(header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
-        .map(|v| v.starts_with("application/grpc"))
-        .unwrap_or(false)
+pub trait GrpcHandler: Send + Sync {
+    fn call(&self, request: GrpcRequestData) 
+        -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>>;
 }
 ```
 
-This check happens before any route matching, ensuring zero overhead for REST requests.
+Other languages (Python, TypeScript, Ruby, PHP, Elixir) implement equivalent FFI-compatible handler interfaces.
 
 ### Path Patterns
 
@@ -133,237 +138,110 @@ Examples:
 - `/api.v1.OrderService/CreateOrder`
 - `/auth.AuthService/Login`
 
-The gRPC path parser extracts service and method names automatically:
+## Planned High-Level API
 
-```rust
-// Parses "/com.example.UserService/GetUser"
-// Returns: ("com.example.UserService", "GetUser")
-let (service_name, method_name) = parse_grpc_path(path)?;
-```
+The examples below show the **intended** API surface for handler registration, currently in development.
 
-## Port Configuration Options
+### Single Shared Port (Recommended)
 
-You have three primary options for configuring ports when adding gRPC to existing applications.
-
-### Option 1: Single Port (Recommended)
-
-Run both REST and gRPC on the same port using HTTP/2 multiplexing.
+Run REST and gRPC on the same HTTP/2 server and port.
 
 === "Python"
 
 ```python
-from spikard import Spikard
-from spikard.config import ServerConfig
-from spikard.grpc import GrpcHandler
+from spikard import App, ServerConfig
 
 config = ServerConfig(
     host="0.0.0.0",
-    port=8080,
-    workers=4
+    port=8080
 )
 
-app = Spikard(config=config)
+app = App().config(config)
 
 # REST endpoint
-@app.get("/health")
-async def health():
+async def health(request):
     return {"status": "ok"}
 
-# gRPC service
-class UserServiceHandler(GrpcHandler):
-    def service_name(self) -> str:
-        return "com.example.UserService"
+app.get("/health", health)
 
-    async def handle_request(self, request):
-        # Handle gRPC request
-        pass
-
-app.register_grpc_service(UserServiceHandler())
+# gRPC integration is currently available via the low-level
+# GrpcHandler trait in the Rust runtime (spikard-http).
+# High-level Python gRPC registration API is planned.
 
 if __name__ == "__main__":
-    app.run()
+    import asyncio
+    asyncio.run(app.run())
 ```
 
 === "TypeScript"
 
 ```typescript
-import { Spikard, runServer, GrpcHandler, GrpcService } from "spikard";
+import { App, ServerConfig } from "@spikard/node";
 
-const config = {
+const config = new ServerConfig({
   host: "0.0.0.0",
   port: 8080,
-  workers: 4,
-};
-
-const app = new Spikard();
-
-// REST endpoint
-app.addRoute(
-  { method: "GET", path: "/health", handler_name: "health", is_async: true },
-  async () => ({ status: "ok" }),
-);
-
-// gRPC service
-class UserServiceHandler implements GrpcHandler {
-  async handleRequest(request) {
-    // Handle gRPC request
-  }
-}
-
-const grpcService = new GrpcService();
-grpcService.registerUnary("com.example.UserService", "GetUser", new UserServiceHandler());
-app.useGrpc(grpcService);
-
-runServer(app, config);
-```
-
-=== "Ruby"
-
-```ruby
-require "spikard"
-
-# Server listens on port 8080 for both REST and gRPC
-config = Spikard::ServerConfig.new(
-  host: "0.0.0.0",
-  port: 8080,
-  workers: 4
-)
-
-app = Spikard::App.new(config: config)
-
-# REST endpoint
-app.get("/health") do
-  { status: "ok" }
-end
-
-# gRPC service (registered separately)
-user_service = UserServiceHandler.new
-app.register_grpc_service(user_service)
-
-app.run
-```
-
-=== "PHP"
-
-```php
-<?php
-
-declare(strict_types=1);
-
-use Spikard\App;
-use Spikard\Config\ServerConfig;
-use Spikard\Grpc;
-use Spikard\Grpc\HandlerInterface;
-use Spikard\Grpc\Request;
-use Spikard\Grpc\Response;
-
-$config = new ServerConfig(
-    host: '0.0.0.0',
-    port: 8080,
-    workers: 4
-);
-
-$app = new App($config);
-
-// REST endpoint
-$app->get('/health', function () {
-    return ['status' => 'ok'];
 });
 
-// gRPC service
-class UserServiceHandler implements HandlerInterface
-{
-    public function serviceName(): string
-    {
-        return 'com.example.UserService';
-    }
+const app = new App().config(config);
 
-    public function handleRequest(Request $request): Response
-    {
-        // Handle gRPC request
-        return new Response(payload: '');
-    }
+// REST endpoint
+app.get("/health", async (request) => {
+  return { status: "ok" };
+});
+
+// gRPC integration is currently available via the low-level
+// GrpcHandler trait in the Rust runtime (spikard-http).
+// High-level TypeScript gRPC registration API is planned.
+
+if (require.main === module) {
+  app.run();
 }
-
-$grpcService = \Spikard\Grpc::createService();
-$grpcService->registerHandler('com.example.UserService', new UserServiceHandler());
-
-$app->run();
 ```
 
 === "Rust"
 
 ```rust
-use spikard::{App, ServerConfig};
-use spikard::grpc::{GrpcHandler, GrpcRequest, GrpcResponse};
-use async_trait::async_trait;
-use tonic::Status;
+use spikard::{App, ServerConfig, handler_result_from_response, Response};
 
 #[tokio::main]
-async fn main() {
-    let config = ServerConfig::builder()
-        .host("0.0.0.0")
-        .port(8080)
-        .workers(4)
-        .build();
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let config = ServerConfig::default()
+        .with_host("0.0.0.0")
+        .with_port(8080);
 
-    let app = App::new(config);
+    let mut app = App::new().config(config);
 
     // REST endpoint
-    app.get("/health", || async {
-        json!({"status": "ok"})
-    });
+    app.route(
+        spikard::get("/health"),
+        |_ctx| async {
+            let response = Response {
+                status_code: 200,
+                content: Some(serde_json::json!({"status": "ok"})),
+                headers: Default::default(),
+            };
+            handler_result_from_response(Ok(response))
+        },
+    )?;
 
-    // gRPC service
-    struct UserServiceHandler;
+    // gRPC integration is currently available via the low-level
+    // GrpcHandler trait in spikard-http runtime.
+    // High-level Rust gRPC registration API is planned.
 
-    #[async_trait]
-    impl GrpcHandler for UserServiceHandler {
-        fn service_name(&self) -> &'static str {
-            "com.example.UserService"
-        }
-
-        async fn call(&self, request: GrpcRequest) -> Result<GrpcResponse, Status> {
-            // Handle gRPC request
-            Ok(GrpcResponse::new(vec![]))
-        }
-    }
-
-    app.register_grpc_service(UserServiceHandler);
-
-    app.run().await;
+    app.run().await?;
+    Ok(())
 }
 ```
 
-### Option 2: Separate Ports (Legacy Compatibility)
+**Benefits**:
 
-Use separate ports if you need to support legacy clients or have strict network policies.
+- Single bind address and port
+- Shared middleware for both protocols
+- No proxy complexity
+- Simplified deployment
 
-```ruby
-# REST server on port 8080
-rest_config = Spikard::ServerConfig.new(port: 8080)
-rest_app = Spikard::App.new(config: rest_config)
-
-rest_app.get("/health") { { status: "ok" } }
-Thread.new { rest_app.run }
-
-# gRPC server on port 9090
-grpc_config = Spikard::ServerConfig.new(port: 9090)
-grpc_app = Spikard::App.new(config: grpc_config)
-
-grpc_app.register_grpc_service(UserServiceHandler.new)
-grpc_app.run
-```
-
-**Trade-offs**:
-
-- Pro: Easier network policy management
-- Pro: Clearer separation in load balancer configs
-- Con: Double resource usage (2x processes)
-- Con: More complex deployment
-- Con: Shared middleware requires duplication
-
-### Option 3: External Proxy (Enterprise)
+### External Proxy (Enterprise)
 
 Use a proxy like Envoy or nginx to route protocols to different backends.
 

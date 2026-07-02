@@ -166,7 +166,6 @@ spikard generate openapi todo-api.openapi.yaml --lang python --output ./generate
 from dataclasses import dataclass
 from typing import Optional, List
 from uuid import UUID
-from spikard import Request, Response, Handler
 
 @dataclass
 class Todo:
@@ -180,56 +179,49 @@ class CreateTodoRequest:
     """Request to create a todo."""
     title: str
 
-class ListTodosHandler(Handler):
+async def list_todos_handler(ctx) -> dict:
     """Handler for GET /todos."""
+    # Extract query parameters
+    status: Optional[str] = ctx.query_value().get("status") if ctx.query_value() else None
 
-    async def handle(self, request: Request) -> Response:
-        # Extract query parameters
-        status: Optional[str] = request.query.get("status")
+    # TODO: Implement handler logic
+    todos: List[Todo] = []
 
-        # TODO: Implement handler logic
-        todos: List[Todo] = []
+    return {"todos": [{"id": str(t.id), "title": t.title, "status": t.status} for t in todos]}
 
-        return Response(
-            status_code=200,
-            body={"todos": [t.__dict__ for t in todos]}
-        )
-
-class CreateTodoHandler(Handler):
+async def create_todo_handler(ctx) -> dict:
     """Handler for POST /todos."""
+    # Parse request body
+    import json
+    body_dict = json.loads(ctx.body_value())
+    body = CreateTodoRequest(**body_dict)
 
-    async def handle(self, request: Request) -> Response:
-        # Parse request body
-        body = CreateTodoRequest(**request.json())
+    # TODO: Implement handler logic
+    todo = Todo(
+        id=UUID("550e8400-e29b-41d4-a716-446655440000"),
+        title=body.title,
+        status="pending"
+    )
 
-        # TODO: Implement handler logic
-        todo = Todo(
-            id=UUID("550e8400-e29b-41d4-a716-446655440000"),
-            title=body.title,
-            status="pending"
-        )
-
-        return Response(
-            status_code=201,
-            body=todo.__dict__
-        )
+    return {"id": str(todo.id), "title": todo.title, "status": todo.status}
 ```
 
 ### Integration Example
 
 ```python
 # app.py
-from spikard import Spikard
-from generated.todo_handlers import ListTodosHandler, CreateTodoHandler
+from spikard import App
+from generated.todo_handlers import list_todos_handler, create_todo_handler
 
-app = Spikard()
+app = App()
 
 # Register generated handlers
-app.get("/todos", ListTodosHandler())
-app.post("/todos", CreateTodoHandler())
+app.get("/todos", list_todos_handler)
+app.post("/todos", create_todo_handler)
 
 if __name__ == "__main__":
-    app.run()
+    import asyncio
+    asyncio.run(app.run())
 ```
 
 ### TypeScript Example
@@ -587,17 +579,24 @@ class MutationResolvers:
 
 ```python
 # app.py
-from spikard.graphql import GraphQLServer
+from spikard import App
+from spikard import schema_query_mutation
 from generated.graphql.resolvers import QueryResolvers, MutationResolvers
 
-app = GraphQLServer(
-    schema_path="schema.graphql",
-    query_resolvers=QueryResolvers,
-    mutation_resolvers=MutationResolvers
+app = App()
+
+# Build and register GraphQL schema
+config = schema_query_mutation(
+    query=QueryResolvers,
+    mutation=MutationResolvers,
 )
 
+# This requires manual GraphQL route setup; 
+# convenience GraphQL decorators are in development.
+
 if __name__ == "__main__":
-    app.run()
+    import asyncio
+    asyncio.run(app.run())
 ```
 
 ## OpenRPC Code Generation
@@ -1426,8 +1425,8 @@ spikard generate asyncapi <schema> [OPTIONS]
 ### Examples
 
 ```bash
-# Generate only Python DTOs from OpenAPI
-spikard generate openapi api.yaml --lang python --dto --output ./models.py
+# Generate Python DTOs from OpenAPI (choose dto style: dataclass, msgspec, zod, etc.)
+spikard generate openapi api.yaml --lang python --dto dataclass --output ./models.py
 
 # Generate TypeScript types only from GraphQL
 spikard generate graphql schema.graphql --lang typescript --target types --output ./src/graphql/types.ts

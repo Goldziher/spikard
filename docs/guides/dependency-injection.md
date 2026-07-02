@@ -1,31 +1,66 @@
 # Dependency Injection
 
-Register shared services once and inject them into handlers by name. Value dependencies are singletons; factory dependencies can be request-scoped (cacheable) or singletons.
+Spikard's DI system (feature-gated, enabled via `di` feature flag) allows you to declare handler dependencies and have them resolved automatically before execution.
 
-## Register dependencies
+## Core Concepts
 
-=== "Python"
+- **Dependencies are named**: Declare what your handler needs by key (e.g., `"db_pool"`, `"config"`)
+- **Resolution is per-route**: Specify dependencies on each route builder
+- **Scope**: Container owns all dependency instances; resolution happens at request-time
 
-    --8<-- "snippets/python/dependency_injection.md"
+## How It Works
 
-=== "TypeScript"
+1. Define a `DIContainer` with dependency factories
+2. Pass it to `ServerConfig.di_container`
+3. On each route, declare dependencies via `handler_dependencies(["key1", "key2", ...])`
+4. At request-time, the container resolves dependencies and passes them to the handler
 
-    --8<-- "snippets/typescript/dependency_injection.md"
+## Rust Example
 
-=== "Ruby"
+```rust
+use spikard::{App, ServerConfig, get, RequestContext};
+use spikard_core::di::DIContainer;
+use std::sync::Arc;
 
-    --8<-- "snippets/ruby/dependency_injection.md"
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut container = DIContainer::new();
+    
+    // Register a dependency factory
+    container.register("db_url", Arc::new(|| {
+        Arc::new("postgresql://localhost/mydb".to_string())
+    }))?;
+    
+    let mut config = ServerConfig::default();
+    config.di_container = Some(Arc::new(container));
+    
+    let mut app = App::new().config(config);
+    
+    // Declare dependencies for this route
+    app.route(
+        get("/users").handler_dependencies(vec!["db_url".to_string()]),
+        |ctx: RequestContext| async move {
+            // Dependencies are available via ctx.dependencies()
+            if let Some(deps) = ctx.dependencies() {
+                // Use resolved dependencies...
+            }
+            Ok(axum::http::Response::builder()
+                .status(200)
+                .body(axum::body::Body::from("OK"))?)
+        },
+    )?;
+    
+    app.run().await?;
+    Ok(())
+}
+```
 
-=== "PHP"
+## Language Binding Support
 
-    --8<-- "snippets/php/dependency_injection.md"
-
-=== "Rust"
-
-    --8<-- "snippets/rust/dependency_injection.md"
+DI is currently fully implemented in Rust. Language bindings (Python, TypeScript, Ruby, PHP, Elixir) will follow with native APIs aligned to their runtime conventions.
 
 ## Notes
 
-- Value dependencies are cached globally. Use factories for per-request values and set `cacheable`/`use_cache` when you need a fresh value each time.
-- Factories can depend on other dependencies; unresolved or circular graphs fail fast with clear errors.
-- Cleanup generators (Python) and singleton toggles (TypeScript/Ruby) mirror the core DI engine semantics.
+- Dependencies are resolved per-request (not cached globally unless you implement caching within the factory)
+- Circular or missing dependencies fail fast with clear errors
+- The feature is behind a Rust `di` Cargo feature flag

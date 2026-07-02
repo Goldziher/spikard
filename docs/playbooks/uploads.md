@@ -109,7 +109,7 @@ Test your upload handlers with different scenarios:
 === "TypeScript"
 
     ```typescript
-    import { TestClient } from "spikard/testing";
+    import { TestClient } from "@spikard/node";
 
     test("upload success", async () => {
       const client = new TestClient(app);

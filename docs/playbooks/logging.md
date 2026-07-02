@@ -1,81 +1,125 @@
 # Logging & Tracing
 
-Standardize request IDs, structured logs, and tracing across bindings.
+Spikard can optionally enable request ID generation and HTTP trace logging via `ServerConfig`.
 
 ## Inject request IDs
+
+Request ID handling is configured at the server level:
 
 === "Python"
 
     ```python
-    @app.on_request
-    async def request_id(request: dict[str, object]):
-        headers = request.get("headers", {}) if isinstance(request, dict) else {}
-        request_id = headers.get("x-request-id") or request.get("request_id")
-        if isinstance(headers, dict):
-            headers = {**headers, "x-request-id": request_id}
-        return {**request, "headers": headers, "request_id": request_id}
+    from spikard import App, ServerConfig
+
+    config = ServerConfig(
+        enable_request_id=True,  # Auto-generate or forward x-request-id
+        enable_http_trace=True,  # Log all requests/responses
+    )
+
+    app = App().config(config)
+
+    async def my_handler(ctx):
+        # Request ID is available via headers
+        request_id = ctx.header("x-request-id")
+        return {"request_id": request_id}
+
+    app.get("/", my_handler)
     ```
 
 === "TypeScript"
 
     ```typescript
-    import { Spikard, type Request } from "spikard";
+    import { App, ServerConfig } from "@spikard/node";
 
-    const app = new Spikard();
+    const config = new ServerConfig({
+      enableRequestId: true,  // Auto-generate or forward x-request-id
+      enableHttpTrace: true,  // Log all requests/responses
+    });
 
-    app.onRequest(async (request: Request) => {
-      const requestId = request.headers["x-request-id"] ?? crypto.randomUUID();
-      return { ...request, headers: { ...request.headers, "x-request-id": requestId } };
+    const app = new App().config(config);
+
+    app.get("/", async (ctx) => {
+      const requestId = ctx.header("x-request-id");
+      return { request_id: requestId };
     });
     ```
 
 === "Ruby"
 
     ```ruby
-    require "securerandom"
+    require "spikard"
 
-    app.on_request do |request|
-      headers = request[:headers] || {}
-      headers["x-request-id"] ||= SecureRandom.uuid
-      request.merge(headers: headers)
+    config = Spikard::ServerConfig.new(
+      enable_request_id: true,  # Auto-generate or forward x-request-id
+      enable_http_trace: true,  # Log all requests/responses
+    )
+
+    app = Spikard::App.new.config(config)
+
+    app.get("/") do |ctx|
+      request_id = ctx.header("x-request-id")
+      { request_id: request_id }
     end
     ```
 
 === "PHP"
 
     ```php
-    use Spikard\Lifecycle\Request;
-    use Spikard\Lifecycle\LifecycleResult;
+    <?php
+    declare(strict_types=1);
 
-    $app->onRequest(function (Request $request): LifecycleResult {
-        $requestId = $request->headers['x-request-id'] ?? \Ramsey\Uuid\Uuid::uuid4()->toString();
-        $request->headers['x-request-id'] = $requestId;
-        error_log("Request received: {$requestId}");
-        return LifecycleResult::continue($request);
+    namespace App;
+
+    use Spikard\Php\App;
+    use Spikard\Php\ServerConfig;
+
+    $config = new ServerConfig();
+    $config->enableRequestId(true);  // Auto-generate or forward x-request-id
+    $config->enableHttpTrace(true);  // Log all requests/responses
+
+    $app = (new App())->config($config);
+
+    $app->get("/", function ($ctx) {
+        $requestId = $ctx->header("x-request-id");
+        return ["request_id" => $requestId];
     });
     ```
 
 === "Rust"
 
     ```rust
-    use spikard::prelude::*;
-    use uuid::Uuid;
+    use spikard::{App, ServerConfig, get, RequestContext};
+    use axum::http::StatusCode;
+    use serde_json::json;
 
-    let mut app = App::new();
-    app.on_request(|mut request: Request| {
-        let request_id = request
-            .headers
-            .get("x-request-id")
-            .and_then(|h| h.to_str().ok())
-            .unwrap_or_else(|| &Uuid::new_v4().to_string());
-        request.headers.insert("x-request-id", request_id.parse()?);
-        tracing::info!(request_id = %request_id, "request received");
-        Ok(request)
-    });
+    #[tokio::main]
+    async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        let config = ServerConfig::default()
+            .with_enable_request_id(true)    // Auto-generate or forward x-request-id
+            .with_enable_http_trace(true);   // Log all requests/responses
+
+        let mut app = App::new().config(config);
+
+        app.route(
+            get("/"),
+            |ctx: RequestContext| async move {
+                let request_id = ctx.header("x-request-id").unwrap_or("unknown");
+                let response_body = json!({"request_id": request_id});
+                
+                Ok(axum::http::Response::builder()
+                    .status(StatusCode::OK)
+                    .body(axum::body::Body::from(response_body.to_string()))?)
+            },
+        )?;
+
+        app.run().await?;
+        Ok(())
+    }
     ```
 
 ## Tips
 
-- Forward `x-request-id` from clients or generate one; include it in logs and errors.
-- Prefer structured logs (JSON) and tracing exporters (OTel) where available.
-- Keep log volume low in hot paths; push verbose data to debug-only logs.
+- Request ID generation is opt-in: enable `enable_request_id` in `ServerConfig`
+- HTTP trace logging is opt-in: enable `enable_http_trace` in `ServerConfig`
+- Request IDs are forwarded via `x-request-id` headers in responses
+- Include request IDs in error responses and log output for tracing
