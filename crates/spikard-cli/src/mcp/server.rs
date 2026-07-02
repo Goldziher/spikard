@@ -426,7 +426,7 @@ pub async fn start_mcp_server_http(
 fn json_tool_response<T: serde::Serialize>(value: &T) -> Result<CallToolResult, rmcp::ErrorData> {
     let json = serde_json::to_string_pretty(value)
         .map_err(|error| rmcp::ErrorData::internal_error(format!("Failed to serialize result: {}", error), None))?;
-    Ok(CallToolResult::success(vec![Content::text(json)]))
+    Ok(CallToolResult::success(vec![ContentBlock::text(json)]))
 }
 
 fn parse_target_language(language: &str) -> Result<TargetLanguage, rmcp::ErrorData> {
@@ -1080,7 +1080,7 @@ mod tests {
         let text = response
             .content
             .first()
-            .and_then(|content| content.raw.as_text())
+            .and_then(|content| content.as_text())
             .map(|content| content.text.as_str())
             .expect("expected text tool response");
         let summary = app::feature_summary();

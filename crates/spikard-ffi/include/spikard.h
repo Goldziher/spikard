@@ -15,6 +15,10 @@
  */
 typedef struct SPIKARDApiKeyConfig SPIKARDApiKeyConfig;
 /**
+ * Spikard application builder.
+ */
+typedef struct SPIKARDApp SPIKARDApp;
+/**
  * AsyncAPI HTTP endpoint configuration
  */
 typedef struct SPIKARDAsyncApiConfig SPIKARDAsyncApiConfig;

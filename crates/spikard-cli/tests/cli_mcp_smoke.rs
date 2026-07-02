@@ -99,7 +99,7 @@ async fn spikard_mcp_stdio_supports_initialize_list_and_call() -> anyhow::Result
     let text = result
         .content
         .first()
-        .and_then(|content| content.raw.as_text())
+        .and_then(|content| content.as_text())
         .map(|content| content.text.as_str())
         .expect("expected text tool result");
     assert!(text.contains("\"Rust\""));
@@ -134,7 +134,7 @@ async fn spikard_mcp_stdio_can_initialize_a_project() -> anyhow::Result<()> {
     let text = result
         .content
         .first()
-        .and_then(|content| content.raw.as_text())
+        .and_then(|content| content.as_text())
         .map(|content| content.text.as_str())
         .expect("expected text tool result");
     let project_dir = tmp.path().join(project_name);
@@ -260,7 +260,7 @@ async fn spikard_mcp_stdio_init_project_creates_expected_structures_for_each_bin
         let text = result
             .content
             .first()
-            .and_then(|content| content.raw.as_text())
+            .and_then(|content| content.as_text())
             .map(|content| content.text.as_str())
             .expect("expected text tool result");
         let project_dir = tmp.path().join(name);

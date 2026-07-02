@@ -36,7 +36,7 @@ wasm = []
 # native: full axum + full tokio + all server-side deps
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 axum = { workspace = true, features = ["multipart", "ws"] }
-axum-test = { version = "20", features = ["ws"] }
+axum-test = { version = "21", features = ["ws"] }
 h2 = "0.4"
 jiff = "0.2"
 prost = "0.14"

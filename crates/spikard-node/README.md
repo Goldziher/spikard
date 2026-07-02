@@ -109,36 +109,27 @@ yarn add @spikard/node
 ## Quick Start
 
 ```typescript
-import { Spikard, type Request } from "spikard";
+import { App, ServerConfig } from "@spikard/node";
 import { z } from "zod";
 
 const UserSchema = z.object({ id: z.number(), name: z.string() });
 type User = z.infer<typeof UserSchema>;
 
-const app = new Spikard();
+const app = new App();
 
-app.addRoute(
-  { method: "GET", path: "/users/:id", handler_name: "getUser", is_async: true },
-  async (req: Request): Promise<User> => {
-    const id = Number(req.params["id"] ?? 0);
-    return { id, name: "Alice" };
-  },
-);
+app.get("/users/:id", async (req) => {
+  const id = Number(req.params["id"] ?? 0);
+  return { id, name: "Alice" };
+});
 
-app.addRoute(
-  {
-    method: "POST",
-    path: "/users",
-    handler_name: "createUser",
-    request_schema: UserSchema,
-    response_schema: UserSchema,
-    is_async: true,
-  },
-  async (req: Request): Promise<User> => UserSchema.parse(req.json()),
-);
+app.post("/users", async (req) => {
+  const body = await req.json();
+  return UserSchema.parse(body);
+});
 
 if (require.main === module) {
-  app.run({ port: 8000 });
+  app.config(new ServerConfig({ port: 8000 }));
+  app.run();
 }
 ```
 

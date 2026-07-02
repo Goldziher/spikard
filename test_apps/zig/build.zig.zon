@@ -6,7 +6,7 @@
     .dependencies = .{
         .spikard = .{
             .url = "https://github.com/Goldziher/spikard/releases/download/v0.16.0-rc.4/spikard-zig-v0.16.0-rc.4.tar.gz",
-            .hash = "spikard-0.16.0-rc.4-PLACEHOLDER1234567890abcdefABCDEF0987654321",
+            .hash = "spikard-0.16.0-rc.4-344cU-XOShwbQ8T7V2A7bmBBUF-MQHwQ0HRxyzY8IS8K",
         },
     },
     .paths = .{

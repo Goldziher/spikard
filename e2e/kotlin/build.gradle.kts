@@ -26,15 +26,15 @@ repositories {
 dependencies {
     testImplementation(files("../../packages/kotlin/build/libs/spikard-0.16.0-rc.4.jar"))
     testImplementation("net.java.dev.jna:jna:5.18.1")
-    testImplementation("com.fasterxml.jackson.core:jackson-annotations:2.22.0")
-    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.22.0")
-    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.22.0")
+    testImplementation("com.fasterxml.jackson.core:jackson-annotations:2.19.0")
+    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.19.0")
+    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.19.0")
     testImplementation("org.jspecify:jspecify:1.0.0")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
     testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.0")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:6.1.0")
-    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.22.0")
-    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.22.0")
+    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.19.0")
+    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.19.0")
     testImplementation(kotlin("test"))
 }
 

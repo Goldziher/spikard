@@ -28,9 +28,8 @@ pub use spikard_graphql::{FullSchemaConfig, GraphQLRouteConfig, QueryMutationCon
 use spikard_http::server::Server;
 pub use spikard_http::{
     ApiKeyConfig, AsyncApiConfig, BackgroundJobError, BackgroundJobMetadata, BackgroundTaskConfig, CompressionConfig,
-    CorsConfig,
-    GrpcConfig, JsonRpcConfig, JwtConfig, LifecycleHook, LifecycleHooks, LifecycleHooksBuilder, Method, OpenApiConfig,
-    RateLimitConfig, Response, Route, RouteMetadata, ServerConfig, SseEvent, StaticFilesConfig,
+    CorsConfig, GrpcConfig, JsonRpcConfig, JwtConfig, LifecycleHook, LifecycleHooks, LifecycleHooksBuilder, Method,
+    OpenApiConfig, RateLimitConfig, Response, Route, RouteMetadata, ServerConfig, SseEvent, StaticFilesConfig,
     cors::{add_cors_headers, handle_preflight, validate_cors_request},
     handler_response::HandlerResponse,
     handler_trait::HandlerResult,

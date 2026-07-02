@@ -26,9 +26,9 @@ dependencies {
   api("net.java.dev.jna:jna:5.18.1")
   // Jackson is on the public surface because the alef-emitted Java records
   // include `@JsonProperty` annotations for serialization round-tripping.
-  api("com.fasterxml.jackson.core:jackson-annotations:2.21")
-  api("com.fasterxml.jackson.core:jackson-databind:2.22.0")
-  api("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.22.0")
+  api("com.fasterxml.jackson.core:jackson-annotations:2.19.0")
+  api("com.fasterxml.jackson.core:jackson-databind:2.19.0")
+  api("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.19.0")
   // jspecify ships the `@Nullable` / `@NonNull` annotations referenced by the
   // alef-emitted Java facade; it must be on the api configuration so Kotlin
   // consumers see the annotations on cross-language types.
