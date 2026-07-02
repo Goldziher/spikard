@@ -222,21 +222,20 @@ pub fn emit(
     }
     let test_base = test_base.join("e2e");
 
-    let mut files: Vec<GeneratedFile> = Vec::new();
-
-    // Emit HarnessMain.java (server-pattern harness spawner)
-    files.push(GeneratedFile {
-        path: test_base.join("HarnessMain.java"),
-        content: render_harness_main(e2e_config, groups, &java_group_id, &binding_pkg),
-        generated_header: true,
-    });
-
-    // Emit FixtureLoader.java (fixture resource loader helper)
-    files.push(GeneratedFile {
-        path: test_base.join("FixtureLoader.java"),
-        content: render_fixture_loader(&java_group_id),
-        generated_header: true,
-    });
+    let files: Vec<GeneratedFile> = vec![
+        // Emit HarnessMain.java (server-pattern harness spawner)
+        GeneratedFile {
+            path: test_base.join("HarnessMain.java"),
+            content: render_harness_main(e2e_config, groups, &java_group_id, &binding_pkg),
+            generated_header: true,
+        },
+        // Emit FixtureLoader.java (fixture resource loader helper)
+        GeneratedFile {
+            path: test_base.join("FixtureLoader.java"),
+            content: render_fixture_loader(&java_group_id),
+            generated_header: true,
+        },
+    ];
 
     Ok(files)
 }
