@@ -1,0 +1,38 @@
+{
+  "name": "goldziher/spikard",
+  "description": "Rust-centric multi-language HTTP framework with polyglot bindings",
+  "license": "MIT",
+  "type": "php-ext",
+  "require": {
+    "php": ">=8.2"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^13.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "Spikard\\Php\\": "src/"
+    }
+  },
+  "scripts": {
+    "format": "poly fmt --fix",
+    "format:check": "poly fmt --check",
+    "test": "php vendor/bin/phpunit",
+    "lint": "poly lint",
+    "lint:fix": "poly lint --fix && poly fmt --fix"
+  },
+  "php-ext": {
+    "extension-name": "spikard_php",
+    "support-zts": true,
+    "support-nts": true,
+    "download-url-method": "pre-packaged-binary"
+  },
+  "keywords": ["framework", "http", "polyglot", "rust", "web"],
+  "extra": {
+    "pie": {
+      "binary": {
+        "url-template": "https://github.com/Goldziher/spikard/releases/download/{Version}/php_spikard_php-{Version}_php{PhpVersion}-{Arch}-{OSLower}-{Libc}-{TSMode}.tgz"
+      }
+    }
+  }
+}

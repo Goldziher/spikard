@@ -199,6 +199,10 @@ jobs:
         if: matrix.language == 'swift'
         run: cd packages/swift && swift build
 
+      - name: Install poly
+        if: matrix.language == 'php'
+        uses: Goldziher/polylint@v0
+
       - name: Run binding check
         if: matrix.language != 'swift'
         run: ${{ matrix.command }}
