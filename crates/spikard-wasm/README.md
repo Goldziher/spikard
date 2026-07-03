@@ -115,16 +115,16 @@ See the [spikard repository](https://github.com/Goldziher/spikard) for usage exa
 
 ## Features
 
-| Feature | Support |
-|---|---|
-| **Type-safe routing** | Path, query, body, and header parameter validation |
-| **Request extraction** | Typed structs for JSON, form data, multipart, and raw bodies |
-| **Spec support** | OpenAPI 3.0 · AsyncAPI 3.0 · GraphQL SDL · JSON-RPC 2.0 |
-| **Middleware** | Compression, rate limiting, timeouts, authentication, static files |
-| **Lifecycle hooks** | Request, pre-validation, pre-handler, response, and error hooks |
-| **WebSocket & SSE** | Bidirectional streams and server-sent events |
-| **Error handling** | Consistent error responses across all bindings via ProblemDetails |
-| **Fixture testing** | Shared JSON fixtures for behavioral consistency across languages |
+| Feature                | Support                                                            |
+| ---------------------- | ------------------------------------------------------------------ |
+| **Type-safe routing**  | Path, query, body, and header parameter validation                 |
+| **Request extraction** | Typed structs for JSON, form data, multipart, and raw bodies       |
+| **Spec support**       | OpenAPI 3.0 · AsyncAPI 3.0 · GraphQL SDL · JSON-RPC 2.0            |
+| **Middleware**         | Compression, rate limiting, timeouts, authentication, static files |
+| **Lifecycle hooks**    | Request, pre-validation, pre-handler, response, and error hooks    |
+| **WebSocket & SSE**    | Bidirectional streams and server-sent events                       |
+| **Error handling**     | Consistent error responses across all bindings via ProblemDetails  |
+| **Fixture testing**    | Shared JSON fixtures for behavioral consistency across languages   |
 
 <details>
 <summary><strong>Routing</strong></summary>

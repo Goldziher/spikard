@@ -24,7 +24,10 @@ class App:
         """Set the server configuration."""
         self._config = config
         return self
-    def route(self, builder: RouteBuilder) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+
+    def route(
+        self, builder: RouteBuilder
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Register a route using the provided builder and handler function.
 
         # Errors
@@ -37,16 +40,21 @@ class App:
             return fn
 
         return _decorator
+
     def register_route(self, builder: RouteBuilder, handler: Callable[..., Any]) -> App:
         """Register a route callback directly."""
         self._registrations.append(("route", (builder,), handler))
         return self
+
     def get(self, path: str, handler: Callable[..., Any]) -> App:
         """Register a GET route at the given path."""
         builder = RouteBuilder.new(Method.GET, path)
         self._registrations.append(("route", (builder,), handler))
         return self
-    def get_decorator(self, path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+
+    def get_decorator(
+        self, path: str
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Decorator form for Register a GET route at the given path."""
         builder = RouteBuilder.new(Method.GET, path)
 
@@ -55,12 +63,16 @@ class App:
             return fn
 
         return _decorator
+
     def post(self, path: str, handler: Callable[..., Any]) -> App:
         """Register a POST route at the given path."""
         builder = RouteBuilder.new(Method.POST, path)
         self._registrations.append(("route", (builder,), handler))
         return self
-    def post_decorator(self, path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+
+    def post_decorator(
+        self, path: str
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Decorator form for Register a POST route at the given path."""
         builder = RouteBuilder.new(Method.POST, path)
 
@@ -69,12 +81,16 @@ class App:
             return fn
 
         return _decorator
+
     def put(self, path: str, handler: Callable[..., Any]) -> App:
         """Register a PUT route at the given path."""
         builder = RouteBuilder.new(Method.PUT, path)
         self._registrations.append(("route", (builder,), handler))
         return self
-    def put_decorator(self, path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+
+    def put_decorator(
+        self, path: str
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Decorator form for Register a PUT route at the given path."""
         builder = RouteBuilder.new(Method.PUT, path)
 
@@ -83,12 +99,16 @@ class App:
             return fn
 
         return _decorator
+
     def patch(self, path: str, handler: Callable[..., Any]) -> App:
         """Register a PATCH route at the given path."""
         builder = RouteBuilder.new(Method.PATCH, path)
         self._registrations.append(("route", (builder,), handler))
         return self
-    def patch_decorator(self, path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+
+    def patch_decorator(
+        self, path: str
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Decorator form for Register a PATCH route at the given path."""
         builder = RouteBuilder.new(Method.PATCH, path)
 
@@ -97,12 +117,16 @@ class App:
             return fn
 
         return _decorator
+
     def delete(self, path: str, handler: Callable[..., Any]) -> App:
         """Register a DELETE route at the given path."""
         builder = RouteBuilder.new(Method.DELETE, path)
         self._registrations.append(("route", (builder,), handler))
         return self
-    def delete_decorator(self, path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+
+    def delete_decorator(
+        self, path: str
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Decorator form for Register a DELETE route at the given path."""
         builder = RouteBuilder.new(Method.DELETE, path)
 
@@ -111,12 +135,16 @@ class App:
             return fn
 
         return _decorator
+
     def head(self, path: str, handler: Callable[..., Any]) -> App:
         """Register a HEAD route at the given path."""
         builder = RouteBuilder.new(Method.HEAD, path)
         self._registrations.append(("route", (builder,), handler))
         return self
-    def head_decorator(self, path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+
+    def head_decorator(
+        self, path: str
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Decorator form for Register a HEAD route at the given path."""
         builder = RouteBuilder.new(Method.HEAD, path)
 
@@ -125,12 +153,16 @@ class App:
             return fn
 
         return _decorator
+
     def options(self, path: str, handler: Callable[..., Any]) -> App:
         """Register an OPTIONS route at the given path."""
         builder = RouteBuilder.new(Method.OPTIONS, path)
         self._registrations.append(("route", (builder,), handler))
         return self
-    def options_decorator(self, path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+
+    def options_decorator(
+        self, path: str
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Decorator form for Register an OPTIONS route at the given path."""
         builder = RouteBuilder.new(Method.OPTIONS, path)
 
@@ -139,12 +171,16 @@ class App:
             return fn
 
         return _decorator
+
     def connect(self, path: str, handler: Callable[..., Any]) -> App:
         """Register a CONNECT route at the given path."""
         builder = RouteBuilder.new(Method.CONNECT, path)
         self._registrations.append(("route", (builder,), handler))
         return self
-    def connect_decorator(self, path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+
+    def connect_decorator(
+        self, path: str
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Decorator form for Register a CONNECT route at the given path."""
         builder = RouteBuilder.new(Method.CONNECT, path)
 
@@ -153,12 +189,16 @@ class App:
             return fn
 
         return _decorator
+
     def trace(self, path: str, handler: Callable[..., Any]) -> App:
         """Register a TRACE route at the given path."""
         builder = RouteBuilder.new(Method.TRACE, path)
         self._registrations.append(("route", (builder,), handler))
         return self
-    def trace_decorator(self, path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+
+    def trace_decorator(
+        self, path: str
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Decorator form for Register a TRACE route at the given path."""
         builder = RouteBuilder.new(Method.TRACE, path)
 
@@ -167,6 +207,7 @@ class App:
             return fn
 
         return _decorator
+
     def run(self) -> None:
         """Run the HTTP server using the configured routes.
 

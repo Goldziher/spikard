@@ -6,7 +6,7 @@
 // `cargo build -p spikard-swift` via swift_bridge_build.
 
 #include <stdint.h>
-#include <stdbool.h>
+#include <stdbool.h> 
 typedef struct RustStr { uint8_t* const start; uintptr_t len; } RustStr;
 typedef struct __private__FfiSlice { void* const start; uintptr_t len; } __private__FfiSlice;
 void* __swift_bridge__null_pointer(void);
@@ -920,6 +920,7 @@ void* __swift_bridge__$__alef_phantom_vec_request_data(void);
 void* __swift_bridge__$__alef_phantom_vec_method(void);
 void* __swift_bridge__$__alef_phantom_vec_security_scheme_info(void);
 void* __swift_bridge__$__alef_phantom_vec_testing_sse_event(void);
+
 
 
 #endif /* RUST_BRIDGE_C_H */

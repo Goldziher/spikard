@@ -6,7 +6,7 @@ environment:
   sdk: ">=3.11.0 <4.0.0"
 
 dependencies:
-  spikard: ^0.16.0-rc.4
+  spikard: ^0.16.1
   ffi: ^2.2.0
 
 dev_dependencies:

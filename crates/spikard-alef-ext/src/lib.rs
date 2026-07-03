@@ -109,4 +109,80 @@ impl Extension for HttpExtension {
         let cfg = self.loaded_config();
         emit::emit_for_language(api, cfg, language)
     }
+
+    /// Contribute the ergonomic public-API re-exports to the Python package `__init__.py`.
+    ///
+    /// Alef's public-API pass appends these raw lines to the generated
+    /// `packages/python/spikard/__init__.py` with exact-line de-duplication, and — crucially —
+    /// the appended content does not feed the generation-inputs hash, so `alef verify` and the
+    /// per-file hash headers are unaffected (no global rehash of the other languages).
+    ///
+    /// `from .app import App` is evaluated last, so it shadows the low-level
+    /// `from .service import App` the backend already emitted and makes `from spikard import App`
+    /// resolve to the ergonomic `App`. The parameter markers and `register_decoder` are
+    /// re-exported and merged into `__all__`. Non-Python languages contribute nothing.
+    ///
+    /// # Errors
+    ///
+    /// Never fails; always returns `Ok(...)`.
+    fn public_api_additions(
+        &self,
+        _api: &ApiSurface,
+        _cfg: &ExtensionConfig,
+        language: Language,
+    ) -> Result<Vec<String>> {
+        if language != Language::Python {
+            return Ok(Vec::new());
+        }
+        Ok(PYTHON_INIT_ADDITIONS.iter().map(|line| (*line).to_owned()).collect())
+    }
+}
+
+/// Raw lines appended to `packages/python/spikard/__init__.py` to expose the ergonomic surface.
+///
+/// Ordering matters: `from .app import App` is last among the `App` bindings so it shadows the
+/// low-level `from .service import App` the backend already emitted. The final line extends the
+/// backend-generated `__all__` with the ergonomic names (`App` is already listed by the backend).
+const PYTHON_INIT_ADDITIONS: &[&str] = &[
+    "from .app import App",
+    "from .params import Body, Cookie, Header, Path, Query",
+    "from ._internal.converters import register_decoder",
+    "__all__ = [*__all__, \"Body\", \"Cookie\", \"Header\", \"Path\", \"Query\", \"register_decoder\"]",
+];
+
+#[cfg(test)]
+mod tests {
+    use super::{HttpExtension, PYTHON_INIT_ADDITIONS};
+    use alef::Extension;
+    use alef::core::config::Language;
+    use alef::core::ir::ApiSurface;
+
+    #[test]
+    fn python_additions_expose_ergonomic_surface() {
+        let ext = HttpExtension::new();
+        let api = ApiSurface::default();
+        let cfg = ext.parse_config(None).unwrap();
+        let lines = ext.public_api_additions(&api, &cfg, Language::Python).unwrap();
+
+        assert_eq!(lines, PYTHON_INIT_ADDITIONS, "python additions must match the canonical set");
+        // `from .app import App` (ergonomic) is present and comes after any `.service` import in
+        // the additions (there is none), so on append it shadows the backend's low-level import.
+        assert!(lines.iter().any(|l| l == "from .app import App"));
+        assert!(lines.iter().any(|l| l == "from .params import Body, Cookie, Header, Path, Query"));
+        assert!(lines.iter().any(|l| l == "from ._internal.converters import register_decoder"));
+        assert!(lines.iter().any(|l| l.starts_with("__all__ = [*__all__,")));
+    }
+
+    #[test]
+    fn non_python_additions_are_empty() {
+        let ext = HttpExtension::new();
+        let api = ApiSurface::default();
+        let cfg = ext.parse_config(None).unwrap();
+        for lang in [Language::Node, Language::Go, Language::Ruby, Language::Rust] {
+            assert!(
+                ext.public_api_additions(&api, &cfg, lang).unwrap().is_empty(),
+                "{lang:?} must contribute no init additions",
+            );
+        }
+    }
 }

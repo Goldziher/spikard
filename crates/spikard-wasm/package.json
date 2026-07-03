@@ -9,21 +9,18 @@
     "url": "https://github.com/Goldziher/spikard",
     "directory": "crates/spikard-wasm"
   },
-  "publishConfig": {
-    "access": "public"
-  },
-  "type": "module",
   "files": [
     "pkg",
     "*.wasm",
     "*.d.ts",
     "README.md"
   ],
+  "type": "module",
   "main": "pkg/nodejs/spikard_wasm.js",
   "module": "pkg/web/spikard_wasm.js",
   "types": "pkg/nodejs/spikard_wasm.d.ts",
-  "engines": {
-    "node": ">= 22"
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "wasm-pack build --target nodejs --out-dir pkg/nodejs",
@@ -37,5 +34,8 @@
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
     "clean": "rm -rf pkg dist"
+  },
+  "engines": {
+    "node": ">= 22"
   }
 }

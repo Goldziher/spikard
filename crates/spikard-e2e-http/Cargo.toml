@@ -9,7 +9,7 @@ description = "Alef e2e HTTP test-generation extension for the spikard polyglot 
 publish = false
 
 [dependencies]
-alef = { git = "https://github.com/xberg-io/alef", tag = "v0.30.9" }
+alef = { git = "https://github.com/xberg-io/alef", tag = "v0.30.16" }
 anyhow = "1"
 heck = "0.5"
 minijinja = "2"
