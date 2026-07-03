@@ -164,12 +164,23 @@ mod tests {
         let cfg = ext.parse_config(None).unwrap();
         let lines = ext.public_api_additions(&api, &cfg, Language::Python).unwrap();
 
-        assert_eq!(lines, PYTHON_INIT_ADDITIONS, "python additions must match the canonical set");
+        assert_eq!(
+            lines, PYTHON_INIT_ADDITIONS,
+            "python additions must match the canonical set"
+        );
         // `from .app import App` (ergonomic) is present and comes after any `.service` import in
         // the additions (there is none), so on append it shadows the backend's low-level import.
         assert!(lines.iter().any(|l| l == "from .app import App"));
-        assert!(lines.iter().any(|l| l == "from .params import Body, Cookie, Header, Path, Query"));
-        assert!(lines.iter().any(|l| l == "from ._internal.converters import register_decoder"));
+        assert!(
+            lines
+                .iter()
+                .any(|l| l == "from .params import Body, Cookie, Header, Path, Query")
+        );
+        assert!(
+            lines
+                .iter()
+                .any(|l| l == "from ._internal.converters import register_decoder")
+        );
         assert!(lines.iter().any(|l| l.starts_with("__all__ = [*__all__,")));
     }
 

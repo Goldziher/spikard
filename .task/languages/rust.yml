@@ -13,7 +13,7 @@ vars:
   # Crates that build through alef (cdylib/staticlib/native NIFs/extensions) and
   # are excluded from the workspace clippy/build sweep so they don't get
   # double-built.
-  ALEF_EXCLUDES: "--exclude spikard-py --exclude spikard-node --exclude spikard-rb --exclude spikard-php --exclude spikard-elixir --exclude spikard_nif --exclude spikard-ffi --exclude spikard-swift --exclude benchmark-harness"
+  ALEF_EXCLUDES: "--exclude spikard-py --exclude spikard-node --exclude spikard-rb --exclude spikard-php --exclude spikard-elixir --exclude spikard_nif --exclude spikard-ffi --exclude spikard-swift --exclude spikard-wasm --exclude benchmark-harness"
 
 tasks:
   install:
