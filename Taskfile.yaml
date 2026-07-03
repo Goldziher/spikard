@@ -559,9 +559,11 @@ tasks:
       - alef snippets validate --snippets docs/snippets --level syntax
 
   docs:build:
-    desc: "Build documentation"
+    desc: "Build documentation site"
+    # Snippet validation is a separate quality gate (docs:snippets:validate) run in
+    # CI with the language toolchains — it must NOT block the site build/deploy,
+    # which only needs the snippet files to exist (enforced by pymdownx check_paths).
     cmds:
-      - task: docs:snippets:validate
       - uv run zensical build --clean
 
   docs:serve:
