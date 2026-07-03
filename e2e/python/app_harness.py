@@ -8,7 +8,10 @@ returning expected responses. It's driven by conftest.py.
 import json
 import sys
 
-from spikard import App
+# The e2e harness is low-level fixture infrastructure (generic dict handlers,
+# raw RouteBuilder), so it uses the low-level `.service` App primitive rather
+# than the ergonomic top-level `App` (which introspects typed handlers).
+from spikard.service import App
 from spikard import ServerConfig
 from spikard._spikard import RouteBuilder
 from spikard._spikard import Method

@@ -30,7 +30,10 @@ import json
 import sys
 
 {% for import_name in imports %}
-from {{ import_name }} import {{ app_class }}
+# The e2e harness is low-level fixture infrastructure (generic dict handlers,
+# raw RouteBuilder), so it uses the low-level `.service` App primitive rather
+# than the ergonomic top-level `App` (which introspects typed handlers).
+from {{ import_name }}.service import {{ app_class }}
 from {{ import_name }} import ServerConfig
 {% endfor %}
 from {{ route_builder_import }} import {{ route_builder_class }}
