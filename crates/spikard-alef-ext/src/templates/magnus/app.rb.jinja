@@ -26,13 +26,13 @@ module Spikard
   # @example
   #   app = Spikard::App.new
   #
-  #   class CreateUserRequest < Dry::Struct
+  #   class CreateUser < Dry::Struct
   #     attribute :name, Types::String
   #     attribute :age, Types::Integer
   #   end
   #
-  #   app.post("/users") do |user: CreateUserRequest|
-  #     { id: 1, name: user.name, age: user.age }
+  #   app.post("/users", body: CreateUser) do |user|
+  #     user
   #   end
   #
   #   app.run
@@ -57,17 +57,16 @@ module Spikard
     end
 
     # Register a handler for method and path and return it unchanged.
-    def add_route(method, path, handler)
+    def add_route(method, path, handler, body_type: nil)
       method_upper = method.upcase
       raise "Unsupported HTTP method: #{method.inspect}" unless VALID_METHODS.include?(method_upper)
 
-      spec = Introspection.introspect(handler, method_upper, path)
+      spec = Introspection.introspect(handler, method_upper, path, body_type)
 
-      # Convert method string to Method enum value
-      method_enum = method_string_to_enum(method_upper)
-
-      # Create a RouteBuilder and attach schemas for Rust-side validation
-      builder = create_route_builder_with_schemas(method_enum, path, spec)
+      # Create a RouteBuilder and attach schemas for Rust-side validation.
+      # The native RouteBuilder.new accepts the lowercase HTTP method string
+      # (e.g. "post") and maps it to the core Method internally.
+      builder = create_route_builder_with_schemas(method_upper.downcase, path, spec)
 
       # Build the adapter that bridges Rust RequestData → handler kwargs → response
       adapter = make_adapter(spec)
@@ -80,55 +79,29 @@ module Spikard
       raise "Failed to register route #{method_upper} #{path}: #{e.message}"
     end
 
-    # Convert HTTP method string to Method enum value
-    def method_string_to_enum(method_upper)
-      case method_upper
-      when "GET"
-        Spikard::Method::Get
-      when "POST"
-        Spikard::Method::Post
-      when "PUT"
-        Spikard::Method::Put
-      when "PATCH"
-        Spikard::Method::Patch
-      when "DELETE"
-        Spikard::Method::Delete
-      when "HEAD"
-        Spikard::Method::Head
-      when "OPTIONS"
-        Spikard::Method::Options
-      when "CONNECT"
-        Spikard::Method::Connect
-      when "TRACE"
-        Spikard::Method::Trace
-      else
-        raise "Unsupported HTTP method: #{method_upper}"
-      end
-    end
-
     # Register a GET route.
     def get(path, &block)
       add_route("GET", path, block)
     end
 
-    # Register a POST route.
-    def post(path, &block)
-      add_route("POST", path, block)
+    # Register a POST route with optional body DTO class.
+    def post(path, body: nil, &block)
+      add_route("POST", path, block, body_type: body)
     end
 
-    # Register a PUT route.
-    def put(path, &block)
-      add_route("PUT", path, block)
+    # Register a PUT route with optional body DTO class.
+    def put(path, body: nil, &block)
+      add_route("PUT", path, block, body_type: body)
     end
 
-    # Register a PATCH route.
-    def patch(path, &block)
-      add_route("PATCH", path, block)
+    # Register a PATCH route with optional body DTO class.
+    def patch(path, body: nil, &block)
+      add_route("PATCH", path, block, body_type: body)
     end
 
-    # Register a DELETE route.
-    def delete(path, &block)
-      add_route("DELETE", path, block)
+    # Register a DELETE route with optional body DTO class.
+    def delete(path, body: nil, &block)
+      add_route("DELETE", path, block, body_type: body)
     end
 
     # Register a HEAD route.
@@ -152,8 +125,8 @@ module Spikard
     end
 
     # Register a route with an explicit HTTP method (defaults to GET).
-    def route(path, method: "GET", &block)
-      add_route(method, path, block)
+    def route(path, method: "GET", body: nil, &block)
+      add_route(method, path, block, body_type: body)
     end
 
     # Run the HTTP server using the configured routes.
@@ -169,10 +142,11 @@ module Spikard
     private
 
     # Create a RouteBuilder with request and params schemas attached for Rust-side validation.
-    def create_route_builder_with_schemas(method_enum, path, spec)
-      # Create the base RouteBuilder with the HTTP method and path
-      # NOTE: This requires the native Spikard::RouteBuilder to be available
-      builder = Spikard::RouteBuilder.new(method_enum, path)
+    def create_route_builder_with_schemas(method_name, path, spec)
+      # Create the base RouteBuilder with the HTTP method and path.
+      # method_name is the lowercase HTTP verb (e.g. "post"); the native
+      # RouteBuilder maps it to the core Method.
+      builder = Spikard::RouteBuilder.new(method_name, path)
       builder = builder.handler_name(spec.handler.respond_to?(:name) ? spec.handler.name : "handler")
 
       # Attach request schema for body validation if a body parameter exists.
@@ -205,14 +179,17 @@ module Spikard
       handler = spec.handler
 
       lambda do |request_dict|
-        kwargs = build_kwargs(request_dict, spec)
-        result = handler.call(**kwargs)
+        positional, kwargs = build_call_args(request_dict, spec)
+        result = handler.call(*positional, **kwargs)
         to_envelope(result)
       end
     end
 
-    # Split request_dict by source and hydrate each handler kwarg into its Ruby type.
-    def build_kwargs(request_dict, spec)
+    # Build positional and keyword arguments for handler invocation.
+    #
+    # If body_type is provided, the hydrated body DTO is the FIRST positional arg.
+    # Remaining bindings become keyword args (path, query, header, cookie by name).
+    def build_call_args(request_dict, spec)
       validated = request_dict["validated_params"] || {}
       sources = {
         "path" => request_dict["path_params"] || {},
@@ -221,7 +198,16 @@ module Spikard
         "cookie" => request_dict["cookies"] || {}
       }
 
+      positional = []
       kwargs = {}
+
+      # First positional arg: the hydrated body DTO (if body_type provided)
+      if spec.body_param_name && spec.body_type
+        body = request_dict["body"]
+        positional << convert_value(body, spec.body_type)
+      end
+
+      # Keyword args: non-body bindings by name
       spec.bindings.each do |binding|
         raw = nil
         found = false
@@ -247,12 +233,7 @@ module Spikard
         kwargs[binding.name.to_sym] = convert_value(raw, binding.target_type)
       end
 
-      if spec.body_param_name
-        body = request_dict["body"]
-        kwargs[spec.body_param_name.to_sym] = convert_value(body, spec.body_type)
-      end
-
-      kwargs
+      [positional, kwargs]
     end
 
     # Interpret a handler return value into the wire response envelope.
@@ -281,12 +262,27 @@ module Spikard
     def convert_value(raw, target_type)
       return raw if raw.nil?
 
-      # Check if target_type is a Dry::Struct subclass
+      # Check if target_type is a Dry::Struct subclass. The core delivers the
+      # JSON body as a Hash with STRING keys; Dry::Struct expects symbol keys,
+      # so deep-symbolize before instantiating.
       if target_type.is_a?(Class) && target_type < Dry::Struct
-        return target_type.new(raw)
+        return target_type.new(deep_symbolize_keys(raw))
       end
 
       raw
+    end
+
+    # Recursively convert Hash string keys to symbols (Array elements included)
+    # so a JSON-decoded body hydrates cleanly into a Dry::Struct.
+    def deep_symbolize_keys(value)
+      case value
+      when Hash
+        value.each_with_object({}) { |(k, v), acc| acc[k.to_sym] = deep_symbolize_keys(v) }
+      when Array
+        value.map { |element| deep_symbolize_keys(element) }
+      else
+        value
+      end
     end
 
     # Build JSON Schema for query/path/header/cookie parameters.

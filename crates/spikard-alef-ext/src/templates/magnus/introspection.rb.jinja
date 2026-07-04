@@ -38,86 +38,117 @@ module Spikard
       end
     end
 
+    # Derive JSON Schema from a Dry::Struct class.
+    #
+    # Returns nil if body_type is not a Dry::Struct. Otherwise builds a JSON Schema
+    # object by iterating the struct's schema attributes.
+    def self.derive_json_schema(body_type)
+      return nil unless body_type.is_a?(Class) && body_type < Dry::Struct
+
+      properties = {}
+      required = []
+
+      body_type.schema.each do |key|
+        attr_name = key.name.to_s
+        attr_type = key.type
+        attr_required = key.required?
+
+        # Map Dry type to JSON Schema type
+        json_type = json_schema_type_for(attr_type)
+
+        properties[attr_name] = {
+          "type" => json_type
+        }
+
+        required << attr_name if attr_required
+      end
+
+      {
+        "type" => "object",
+        "properties" => properties,
+        "required" => required
+      }
+    end
+
+    # Map a Dry::Types type to a JSON Schema type string.
+    def self.json_schema_type_for(dry_type)
+      # Get the primitive class from the Dry type.
+      primitive = dry_type.respond_to?(:primitive) ? dry_type.primitive : nil
+
+      # Match on the class NAME, not `case primitive when Integer`: `===` on a
+      # class (`Integer === Integer`) is false because the class object is not
+      # an instance of itself, so a `when` clause would never fire.
+      case primitive.to_s
+      when "String", "Symbol"
+        "string"
+      when "Integer"
+        "integer"
+      when "Float", "Numeric", "BigDecimal"
+        "number"
+      when "TrueClass", "FalseClass"
+        "boolean"
+      when "Array"
+        "array"
+      when "Hash"
+        "object"
+      else
+        "string" # Default fallback
+      end
+    end
+
     # Analyse handler and produce a RouteSpec describing how to bind requests.
-    def self.introspect(handler, method, path)
+    #
+    # The handler receives the hydrated body DTO (if body_type provided) as its
+    # FIRST POSITIONAL parameter, and remaining keyword-arg bindings by name.
+    def self.introspect(handler, method, path, body_type)
       path_names = path_param_names(path)
-      method_has_body = !BODYLESS_METHODS.include?(method)
 
       bindings = []
       body_param_name = nil
-      body_type = nil
 
-      # Get method parameters using Ruby's Method#parameters
-      # Each param is [param_type, param_name] where param_type is one of:
-      # :req (required), :opt (optional), :rest, :keyreq (required keyword), :key (optional keyword), :block
-      handler.method(:call).parameters.each do |param_type, param_name|
+      # The first positional parameter (if any) becomes the body param when
+      # body_type is provided. All other parameters become keyword-arg bindings.
+      positional_idx = 0
+
+      # Use handler.parameters (the block's own params), NOT
+      # handler.method(:call).parameters, which for a Proc reflects Proc#call's
+      # signature ([[:rest]]) rather than the block's declared params.
+      handler.parameters.each do |param_type, param_name|
         next if SPECIAL_PARAM_NAMES.include?(param_name.to_s)
-
-        # Skip *args and **kwargs parameters
-        next if param_type == :rest || param_type == :keyreq || param_type == :rest
         next if param_name.nil?
 
+        # Skip *args and **kwargs
+        next if param_type == :rest
+
         param_name_str = param_name.to_s
-        default = nil
 
-        # For blocks passed to add_route, we can't easily get default values
-        # Ruby's Method#parameters doesn't provide type info or defaults directly
-        # We'll treat all parameters as potentially required unless marked otherwise
-
-        source, target_type, is_body = classify_parameter(
-          param_name_str, nil, default, path_names, method_has_body, body_param_name.nil?
-        )
-
-        if is_body
+        # First required/optional positional parameter becomes the body param
+        # (only if body_type was explicitly provided)
+        if body_type && (param_type == :req || param_type == :opt) && positional_idx == 0
           body_param_name = param_name_str
-          body_type = target_type || Object
+          positional_idx += 1
           next
         end
 
-        bindings << Binding.new(
-          param_name_str,
-          source,
-          target_type || Object,
-          default
-        )
+        # Keyword parameters become bindings (query, path, header, cookie)
+        if param_type == :key || param_type == :keyreq
+          # Determine source by name (path > query)
+          source = if path_names.include?(param_name_str)
+                     "path"
+                   else
+                     "query"
+                   end
+
+          bindings << Binding.new(
+            param_name_str,
+            source,
+            String,
+            nil
+          )
+        end
       end
 
       RouteSpec.new(handler, bindings, body_param_name, body_type)
-    end
-
-    # Classify a parameter into (source, target_type, is_body).
-    #
-    # Precedence:
-    # 1. Explicit Header/Cookie/Path/Query/Body markers in defaults
-    # 2. Path membership via {id} patterns
-    # 3. Structured first parameter (implicit body)
-    # 4. Query parameter (default)
-    def self.classify_parameter(name, annotation, default, path_names, method_has_body, body_not_taken)
-      # Check if default is a ParamBase subclass instance
-      if default.is_a?(Header)
-        return ["header", annotation || String, false]
-      elsif default.is_a?(Cookie)
-        return ["cookie", annotation || String, false]
-      elsif default.is_a?(Path)
-        return ["path", annotation || String, false]
-      elsif default.is_a?(Query)
-        return ["query", annotation || String, false]
-      elsif default.is_a?(Body)
-        return ["body", annotation || Object, true]
-      end
-
-      # Check if name is a path parameter
-      if path_names.include?(name)
-        return ["path", annotation || String, false]
-      end
-
-      # For first structured param with body-capable method, treat as implicit body
-      if method_has_body && body_not_taken && annotation&.is_a?(Class) && annotation < Dry::Struct
-        return ["body", annotation, true]
-      end
-
-      # Default to query parameter
-      ["query", annotation || String, false]
     end
 
     # Return the set of path-parameter names in path (handles {id} and {id:int}).
@@ -126,7 +157,7 @@ module Spikard
       path.scan(/\{(\w+)(?::[^{}]+)?\}/).map(&:first).to_set
     end
 
-    BODYLESS_METHODS = Set.new(%w[GET HEAD OPTIONS TRACE CONNECT DELETE]).freeze
+    BODYLESS_METHODS = Set.new(%w[GET HEAD OPTIONS TRACE CONNECT]).freeze
     SPECIAL_PARAM_NAMES = Set.new(%w[self]).freeze
   end
 end
