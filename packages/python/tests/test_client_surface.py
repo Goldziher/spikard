@@ -17,9 +17,7 @@ def test_test_client_has_graphql_methods() -> None:
         "graphql_subscription",
         "graphql_subscription_at",
     ):
-        assert hasattr(client_cls, method_name), (
-            f"TestClient missing method: {method_name}"
-        )
+        assert hasattr(client_cls, method_name), f"TestClient missing method: {method_name}"
 
 
 def test_response_snapshot_is_importable() -> None:
@@ -37,9 +35,7 @@ def test_snapshot_error_is_importable() -> None:
 
 def test_graphql_subscription_snapshot_is_importable() -> None:
     """GraphQLSubscriptionSnapshot is accessible from the spikard binding."""
-    assert hasattr(_spikard, "GraphQLSubscriptionSnapshot"), (
-        "GraphQLSubscriptionSnapshot must be exported"
-    )
+    assert hasattr(_spikard, "GraphQLSubscriptionSnapshot"), "GraphQLSubscriptionSnapshot must be exported"
 
 
 def test_websocket_message_enum_is_importable() -> None:

@@ -4,14 +4,14 @@
 @import url("https://fonts.googleapis.com/css2?family=Exo+2:wght@500;600;700&display=swap");
 
 :root {
-  --spk-ink: #0b0b0d;          /* page background (dark) */
-  --spk-ink-2: #141416;        /* raised surface (dark) */
-  --spk-ink-3: #1a1a1e;        /* code / cards (dark) */
-  --spk-black: #020202;        /* banner black — header */
-  --spk-red: #ff1d2d;          /* brand red */
+  --spk-ink: #0b0b0d; /* page background (dark) */
+  --spk-ink-2: #141416; /* raised surface (dark) */
+  --spk-ink-3: #1a1a1e; /* code / cards (dark) */
+  --spk-black: #020202; /* banner black — header */
+  --spk-red: #ff1d2d; /* brand red */
   --spk-red-light: #ff5a45;
-  --spk-red-dim: #d11525;      /* red for light-mode contrast */
-  --spk-cream: #f8d9a2;        /* banner cream accent */
+  --spk-red-dim: #d11525; /* red for light-mode contrast */
+  --spk-cream: #f8d9a2; /* banner cream accent */
   --spk-line-dark: rgba(255, 255, 255, 0.08);
 }
 
@@ -43,7 +43,7 @@
 
 /* ---------- LIGHT scheme ---------- */
 [data-md-color-scheme="default"] {
-  --md-primary-fg-color: var(--spk-black);       /* keep the dark header in light mode too */
+  --md-primary-fg-color: var(--spk-black); /* keep the dark header in light mode too */
   --md-primary-fg-color--light: #141416;
   --md-primary-fg-color--dark: #000000;
   --md-primary-bg-color: #f4f4f5;

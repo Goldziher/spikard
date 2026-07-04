@@ -65,7 +65,12 @@ module Spikard
         # We'll treat all parameters as potentially required unless marked otherwise
 
         source, target_type, is_body = classify_parameter(
-          param_name_str, nil, default, path_names, method_has_body, body_param_name.nil?
+          param_name_str,
+          nil,
+          default,
+          path_names,
+          method_has_body,
+          body_param_name.nil?
         )
 
         if is_body
@@ -74,12 +79,13 @@ module Spikard
           next
         end
 
-        bindings << Binding.new(
-          param_name_str,
-          source,
-          target_type || Object,
-          default
-        )
+        bindings <<
+          Binding.new(
+            param_name_str,
+            source,
+            target_type || Object,
+            default
+          )
       end
 
       RouteSpec.new(handler, bindings, body_param_name, body_type)

@@ -9,9 +9,9 @@ defmodule Spikard.Errors do
 
     def new(message, status_code \\ 404, problem_details \\ nil) do
       %__MODULE__{
-        message: message,
-        status_code: status_code,
-        problem_details: problem_details
+      message: message,
+      status_code: status_code,
+      problem_details: problem_details
       }
     end
   end
@@ -22,9 +22,9 @@ defmodule Spikard.Errors do
 
     def new(message, status_code \\ 422, problem_details \\ nil) do
       %__MODULE__{
-        message: message,
-        status_code: status_code,
-        problem_details: problem_details
+      message: message,
+      status_code: status_code,
+      problem_details: problem_details
       }
     end
   end
@@ -35,9 +35,9 @@ defmodule Spikard.Errors do
 
     def new(message, status_code \\ 401, problem_details \\ nil) do
       %__MODULE__{
-        message: message,
-        status_code: status_code,
-        problem_details: problem_details
+      message: message,
+      status_code: status_code,
+      problem_details: problem_details
       }
     end
   end
@@ -48,9 +48,9 @@ defmodule Spikard.Errors do
 
     def new(message, status_code \\ 403, problem_details \\ nil) do
       %__MODULE__{
-        message: message,
-        status_code: status_code,
-        problem_details: problem_details
+      message: message,
+      status_code: status_code,
+      problem_details: problem_details
       }
     end
   end
@@ -61,9 +61,9 @@ defmodule Spikard.Errors do
 
     def new(message, status_code \\ 429, problem_details \\ nil) do
       %__MODULE__{
-        message: message,
-        status_code: status_code,
-        problem_details: problem_details
+      message: message,
+      status_code: status_code,
+      problem_details: problem_details
       }
     end
   end
@@ -74,9 +74,9 @@ defmodule Spikard.Errors do
 
     def new(message, status_code \\ 409, problem_details \\ nil) do
       %__MODULE__{
-        message: message,
-        status_code: status_code,
-        problem_details: problem_details
+      message: message,
+      status_code: status_code,
+      problem_details: problem_details
       }
     end
   end
@@ -87,9 +87,9 @@ defmodule Spikard.Errors do
 
     def new(message, status_code \\ 500, problem_details \\ nil) do
       %__MODULE__{
-        message: message,
-        status_code: status_code,
-        problem_details: problem_details
+      message: message,
+      status_code: status_code,
+      problem_details: problem_details
       }
     end
   end

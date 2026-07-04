@@ -147,6 +147,24 @@ def _safe_type_hints(func: Callable[..., Any]) -> dict[str, Any]:
         return dict(getattr(func, "__annotations__", {}) or {})
 
 
+def _classify_marker(default: Any, annotation: Any) -> tuple[str, Any, bool] | None:
+    """Classify an explicit ``Header``/``Cookie``/``Path``/``Query``/``Body`` marker default.
+
+    Returns the ``(source, target_type, is_body)`` tuple for a recognised marker, else ``None``.
+    """
+    if isinstance(default, Header):
+        return "header", _strip_optional(annotation), False
+    if isinstance(default, Cookie):
+        return "cookie", _strip_optional(annotation), False
+    if isinstance(default, Path):
+        return "path", _resolve_wrapped_target(_strip_optional(annotation)), False
+    if isinstance(default, Query):
+        return "query", _resolve_wrapped_target(_strip_optional(annotation)), False
+    if isinstance(default, Body):
+        return "body", _resolve_wrapped_target(annotation), True
+    return None
+
+
 def _classify_parameter(
     name: str,
     annotation: Any,
@@ -161,16 +179,9 @@ def _classify_parameter(
     ``Body[T]``/``Query[T]``/``Path[T]`` generic annotations, then path membership, then a
     structured first parameter (implicit body), else a query parameter.
     """
-    if isinstance(default, Header):
-        return "header", _strip_optional(annotation), False
-    if isinstance(default, Cookie):
-        return "cookie", _strip_optional(annotation), False
-    if isinstance(default, Path):
-        return "path", _resolve_wrapped_target(_strip_optional(annotation)), False
-    if isinstance(default, Query):
-        return "query", _resolve_wrapped_target(_strip_optional(annotation)), False
-    if isinstance(default, Body):
-        return "body", _resolve_wrapped_target(annotation), True
+    marked = _classify_marker(default, annotation)
+    if marked is not None:
+        return marked
 
     origin = get_origin(annotation)
     if origin is Body:
@@ -261,6 +272,7 @@ def _build_params_schema(bindings: list[_Binding]) -> dict[str, Any] | None:
     required: list[str] = []
 
     for binding in bindings:
+        prop: dict[str, Any]
         try:
             prop = field_definition_to_json_schema(FieldDefinition.from_annotation(binding.target_type))
         except (TypeError, ValueError):

@@ -43,9 +43,9 @@ app = Enum.reduce(fixtures, app, fn {fixture_id, fixture}, app_acc ->
     # Create handler closure that captures the expected values
     handler_fn = fn _request ->
       {
-        expected_status,
-        expected_body,
-        expected_headers
+      expected_status,
+      expected_body,
+      expected_headers
       }
     end
 
@@ -63,12 +63,12 @@ app = Enum.reduce(fixtures, app, fn {fixture_id, fixture}, app_acc ->
 
     # If there's a body schema, attach it to the builder
     builder =
-      if is_nil(body_schema) do
-        builder
-      else
-        body_schema_json = Jason.encode!(body_schema)
-        Spikard.RouteBuilder.request_schema_json(builder, body_schema_json)
-      end
+    if is_nil(body_schema) do
+      builder
+    else
+      body_schema_json = Jason.encode!(body_schema)
+      Spikard.RouteBuilder.request_schema_json(builder, body_schema_json)
+    end
 
     # Register the route with the handler
     Spikard.App.route(app_acc, builder, handler_fn)
@@ -77,8 +77,8 @@ end)
 
 # Configure and start the server
 config = struct(Spikard.ServerConfig, %{
-  host: "127.0.0.1",
-  port: 8000
+host: "127.0.0.1",
+port: 8000
 })
 
 app = Spikard.App.config(app, config)

@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.30.19"
+alef_version = "0.31.2"
 languages = [
     "python",
     "node",
@@ -77,6 +77,19 @@ exclude = [
 "templates/readme/**" = ["MD057"]
 "docs/reference/feature-parity.md" = ["MD057"]
 "CHANGELOG.md" = ["MD057"]
+
+# pyrefly type-check suppressions for the ergonomic pyo3 modules emitted by
+# spikard-alef-ext. These are runtime-reconciled pyo3 boundaries a static
+# checker cannot follow (same rationale as alef's built-in api.py sub-config):
+#   - app.py: the ergonomic `options.ServerConfig` and the JSON-string schema
+#     args are reconciled by pyo3 FromPyObject at the _spikard boundary.
+#   - schema.py: `import _spikard` resolves to the compiled extension at runtime.
+#   - datastructures.py: `from typing import Self` (3.11+) behind a
+#     typing_extensions fallback the checker evaluates under python 3.10.
+[workspace.poly.pyrefly-sub-configs]
+"**/app.py" = ["bad-argument-type"]
+"**/schema.py" = ["missing-import"]
+"**/datastructures.py" = ["missing-module-attribute"]
 
 [[crates]]
 name = "spikard"

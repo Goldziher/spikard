@@ -144,6 +144,7 @@ def extract_schemas(
                 if not (is_upload_file or is_list_upload_file):
                     request_schema = extract_json_schema(param_type)
                     if request_schema and "required" in request_schema:
+                        body_type_hints: dict[str, Any]
                         try:
                             body_type_hints = get_type_hints(param_type)
                         except (AttributeError, NameError, TypeError, ValueError):

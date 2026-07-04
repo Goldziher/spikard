@@ -6,8 +6,8 @@ defmodule App do
   """
 
   defstruct [
-    :registrations,
-    :config,
+  :registrations,
+  :config,
   ]
 
   @doc """
@@ -15,7 +15,7 @@ defmodule App do
   """
   def new(options \\ []) do
     %__MODULE__{
-      registrations: [],
+    registrations: [],
     }
   end
 
@@ -39,8 +39,8 @@ defmodule App do
     handler_pid = case handler do
       pid when is_pid(pid) -> pid
       fun when is_function(fun) ->
-        {:ok, pid} = GenServer.start_link(__MODULE__.HandlerWrapper, fun)
-        pid
+      {:ok, pid} = GenServer.start_link(__MODULE__.HandlerWrapper, fun)
+      pid
     end
 
     entry = {"route", {builder}, handler_pid}
@@ -62,16 +62,16 @@ defmodule App do
     def handle_cast({:trait_call, _method, args_json, reply_id}, handler_fn) do
       case Jason.decode(args_json) do
         {:ok, _args} ->
-          # Call the wrapped closure
-          try do
-            response = handler_fn.(nil)
-            response_json = Jason.encode!(response)
-            Native.complete_trait_call(reply_id, response_json)
-          rescue
-            _e -> Native.complete_trait_call(reply_id, "{\"error\": \"handler error\"}")
-          end
+        # Call the wrapped closure
+        try do
+          response = handler_fn.(nil)
+          response_json = Jason.encode!(response)
+          Native.complete_trait_call(reply_id, response_json)
+        rescue
+          _e -> Native.complete_trait_call(reply_id, "{\"error\": \"handler error\"}")
+        end
         {:error, _} ->
-          Native.complete_trait_call(reply_id, "{\"error\": \"json decode error\"}")
+        Native.complete_trait_call(reply_id, "{\"error\": \"json decode error\"}")
       end
       {:noreply, handler_fn}
     end
@@ -156,10 +156,10 @@ defmodule App do
       # Decode JSON args and dispatch to registered handler
       case decode_args_and_dispatch(method, args_json, registrations) do
         {:ok, response} ->
-          Native.complete_trait_call(reply_id, response)
+        Native.complete_trait_call(reply_id, response)
         {:error, reason} ->
-          error_response = %{"error" => reason}
-          Native.complete_trait_call(reply_id, error_response)
+        error_response = %{"error" => reason}
+        Native.complete_trait_call(reply_id, error_response)
       end
       {:noreply, registrations}
     end
@@ -168,26 +168,26 @@ defmodule App do
       # Find handler entry for the method
       case find_handler(method, registrations) do
         nil ->
-          {:error, "Handler not registered for method: #{method}"}
+        {:error, "Handler not registered for method: #{method}"}
         {^method, _metadata, handler} ->
-          # Decode JSON args (assumes handler accepts a single arg)
-          case Jason.decode(args_json) do
-            {:ok, args} ->
-              # Call the registered handler with decoded args
-              try do
-                response = handler.(args)
-                # Encode response to JSON
-                case Jason.encode(response) do
-                  {:ok, response_json} -> {:ok, response_json}
-                  {:error, reason} -> {:error, "Failed to encode response: #{reason}"}
-                end
-              rescue
-                e ->
-                  {:error, "Handler raised exception: #{inspect(e)}"}
-              end
-            {:error, reason} ->
-              {:error, "Failed to decode args: #{reason}"}
+        # Decode JSON args (assumes handler accepts a single arg)
+        case Jason.decode(args_json) do
+          {:ok, args} ->
+          # Call the registered handler with decoded args
+          try do
+            response = handler.(args)
+            # Encode response to JSON
+            case Jason.encode(response) do
+              {:ok, response_json} -> {:ok, response_json}
+              {:error, reason} -> {:error, "Failed to encode response: #{reason}"}
+            end
+          rescue
+            e ->
+            {:error, "Handler raised exception: #{inspect(e)}"}
           end
+          {:error, reason} ->
+          {:error, "Failed to decode args: #{reason}"}
+        end
       end
     end
 

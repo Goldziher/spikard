@@ -241,6 +241,7 @@ module Spikard
           if binding.param_default.is_a?(ParamBase) && binding.param_default.has_default?
             kwargs[binding.name.to_sym] = binding.param_default.get_default
           end
+
           next
         end
 
@@ -260,7 +261,7 @@ module Spikard
     # An object exposing +status_code+, +content+, +headers+ becomes a custom
     # response; anything else is a plain 200 whose body is the serialised value.
     def to_envelope(result)
-      return { status_code: 200, content: nil, headers: {} } if result.nil?
+      return {status_code: 200, content: nil, headers: {}} if result.nil?
 
       if result.is_a?(Hash) && result.key?(:status_code) && result.key?(:content) && result.key?(:headers)
         return result
@@ -268,12 +269,12 @@ module Spikard
 
       # If the result is a Dry::Struct, serialize it to hash
       content = if result.respond_to?(:to_h)
-                  result.to_h
-                else
-                  result
-                end
+        result.to_h
+      else
+        result
+      end
 
-      { status_code: 200, content: content, headers: {} }
+      {status_code: 200, content: content, headers: {}}
     end
 
     # Convert a raw request value to the target type.
@@ -333,7 +334,8 @@ module Spikard
       when /Hash/
         "object"
       else
-        "string"  # Default to string for unknown types
+        # Default to string for unknown types
+        "string"
       end
     end
   end

@@ -145,10 +145,16 @@ impl Extension for HttpExtension {
 /// low-level `from .service import App` the backend already emitted. The final line extends the
 /// backend-generated `__all__` with the ergonomic names (`App` is already listed by the backend).
 const PYTHON_INIT_ADDITIONS: &[&str] = &[
-    "from .app import App",
+    // `# noqa: F811`: the re-import deliberately shadows the low-level
+    // `from .service import App` the backend already emitted, so the public
+    // `App` is the ergonomic one. The shadow is intentional, not a mistake.
+    "from .app import App  # noqa: F811",
     "from .params import Body, Cookie, Header, Path, Query",
     "from ._internal.converters import register_decoder",
-    "__all__ = [*__all__, \"Body\", \"Cookie\", \"Header\", \"Path\", \"Query\", \"register_decoder\"]",
+    // `+=` (not `[*__all__, ...]`): a starred unpack inside an `__all__` list
+    // literal trips ruff PLE0604 ("must contain only strings"); in-place extend
+    // with string literals keeps the export list valid.
+    "__all__ += [\"Body\", \"Cookie\", \"Header\", \"Path\", \"Query\", \"register_decoder\"]",
 ];
 
 /// Raw lines appended to `packages/node/@spikard/node/index.ts` to expose the ergonomic surface.
@@ -189,7 +195,7 @@ mod tests {
         );
         // `from .app import App` (ergonomic) is present and comes after any `.service` import in
         // the additions (there is none), so on append it shadows the backend's low-level import.
-        assert!(lines.iter().any(|l| l == "from .app import App"));
+        assert!(lines.iter().any(|l| l == "from .app import App  # noqa: F811"));
         assert!(
             lines
                 .iter()
@@ -200,7 +206,7 @@ mod tests {
                 .iter()
                 .any(|l| l == "from ._internal.converters import register_decoder")
         );
-        assert!(lines.iter().any(|l| l.starts_with("__all__ = [*__all__,")));
+        assert!(lines.iter().any(|l| l.starts_with("__all__ += [")));
     }
 
     #[test]

@@ -31,9 +31,9 @@ unless System.get_env("SUT_URL") do
 
   # Use `elixir` to execute the harness script with proper code paths
   port = Port.open({:spawn_executable, System.find_executable("elixir")}, [
-    :binary,
-    {:line, 65_536},
-    args: lib_paths ++ [app_harness_bin]
+  :binary,
+  {:line, 65_536},
+  args: lib_paths ++ [app_harness_bin]
   ])
 
   url = "http://127.0.0.1:8000"
@@ -43,21 +43,21 @@ unless System.get_env("SUT_URL") do
   ready = false
 
   {ready, url} =
-    Enum.reduce_while(1..150, {false, url}, fn _, {_, url_acc} ->
-      now = :erlang.monotonic_time(:millisecond)
-      if now > deadline do
-        {:halt, {false, url_acc}}
-      else
-        case :gen_tcp.connect(String.to_charlist("127.0.0.1"), 8000, [], 500) do
-          {:ok, socket} ->
-            :gen_tcp.close(socket)
-            {:halt, {true, url_acc}}
-          {:error, _} ->
-            Process.sleep(100)
-            {:cont, {false, url_acc}}
-        end
+  Enum.reduce_while(1..150, {false, url}, fn _, {_, url_acc} ->
+    now = :erlang.monotonic_time(:millisecond)
+    if now > deadline do
+      {:halt, {false, url_acc}}
+    else
+      case :gen_tcp.connect(String.to_charlist("127.0.0.1"), 8000, [], 500) do
+        {:ok, socket} ->
+        :gen_tcp.close(socket)
+        {:halt, {true, url_acc}}
+        {:error, _} ->
+        Process.sleep(100)
+        {:cont, {false, url_acc}}
       end
-    end)
+    end
+  end)
 
   unless ready do
     Port.close(port)

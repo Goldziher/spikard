@@ -22,23 +22,23 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   });
 
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_AppPtr => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp;
+  .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp;
 
   CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_DartHandlerHandlerPtr => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler;
+  .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler;
 
   CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_GraphQlRouteConfigPtr => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig;
+  .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig;
 
   CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_RouteBuilderPtr => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder;
+  .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder;
 
   CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_TestClientPtr => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient;
+  .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient;
 
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw);
@@ -1355,81 +1355,81 @@ class RustLibWire implements BaseWire {
   rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
     int ptr,
   ) => wasmModule
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
-        ptr,
-      );
+  .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
+    ptr,
+  );
 
   void
   rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
     int ptr,
   ) => wasmModule
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
-        ptr,
-      );
+  .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerApp(
+    ptr,
+  );
 
   void
   rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler(
     int ptr,
   ) => wasmModule
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler(
-        ptr,
-      );
+  .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler(
+    ptr,
+  );
 
   void
   rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler(
     int ptr,
   ) => wasmModule
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler(
-        ptr,
-      );
+  .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDartHandlerHandler(
+    ptr,
+  );
 
   void
   rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(
     int ptr,
   ) => wasmModule
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(
-        ptr,
-      );
+  .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(
+    ptr,
+  );
 
   void
   rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(
     int ptr,
   ) => wasmModule
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(
-        ptr,
-      );
+  .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig(
+    ptr,
+  );
 
   void
   rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
     int ptr,
   ) => wasmModule
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
-        ptr,
-      );
+  .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
+    ptr,
+  );
 
   void
   rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
     int ptr,
   ) => wasmModule
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
-        ptr,
-      );
+  .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
+    ptr,
+  );
 
   void
   rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(
     int ptr,
   ) => wasmModule
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(
-        ptr,
-      );
+  .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(
+    ptr,
+  );
 
   void
   rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(
     int ptr,
   ) => wasmModule
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(
-        ptr,
-      );
+  .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTestClient(
+    ptr,
+  );
 }
 
 @JS('wasm_bindgen')

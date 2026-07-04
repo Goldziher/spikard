@@ -12,9 +12,9 @@
  * `import { App } from 'spikard/service'` for advanced use cases.
  */
 
-import * as service from './service.js';
-import type { z } from 'zod';
-import { zodToJsonSchema } from 'zod-to-json-schema';
+import * as service from "./service.js";
+import type { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
 
 /**
  * Request object passed to typed handlers.
@@ -56,7 +56,7 @@ export interface TypedResponse<T = unknown> {
  * Handler function signature: receives a typed request, returns a response.
  */
 export type Handler<ReqBody = unknown, ResBody = unknown> = (
-  req: TypedRequest<ReqBody>
+  req: TypedRequest<ReqBody>,
 ) => Promise<TypedResponse<ResBody>>;
 
 /**
@@ -93,9 +93,9 @@ export class App {
   get<ReqBody = unknown, ResBody = unknown>(
     path: string,
     config: RouteConfig<ReqBody> = {},
-    handler: Handler<ReqBody, ResBody>
+    handler: Handler<ReqBody, ResBody>,
   ): void {
-    this.registerRoute('GET', path, config, handler);
+    this.registerRoute("GET", path, config, handler);
   }
 
   /**
@@ -104,9 +104,9 @@ export class App {
   post<ReqBody = unknown, ResBody = unknown>(
     path: string,
     config: RouteConfig<ReqBody> = {},
-    handler: Handler<ReqBody, ResBody>
+    handler: Handler<ReqBody, ResBody>,
   ): void {
-    this.registerRoute('POST', path, config, handler);
+    this.registerRoute("POST", path, config, handler);
   }
 
   /**
@@ -115,9 +115,9 @@ export class App {
   put<ReqBody = unknown, ResBody = unknown>(
     path: string,
     config: RouteConfig<ReqBody> = {},
-    handler: Handler<ReqBody, ResBody>
+    handler: Handler<ReqBody, ResBody>,
   ): void {
-    this.registerRoute('PUT', path, config, handler);
+    this.registerRoute("PUT", path, config, handler);
   }
 
   /**
@@ -126,9 +126,9 @@ export class App {
   patch<ReqBody = unknown, ResBody = unknown>(
     path: string,
     config: RouteConfig<ReqBody> = {},
-    handler: Handler<ReqBody, ResBody>
+    handler: Handler<ReqBody, ResBody>,
   ): void {
-    this.registerRoute('PATCH', path, config, handler);
+    this.registerRoute("PATCH", path, config, handler);
   }
 
   /**
@@ -137,9 +137,9 @@ export class App {
   delete<ReqBody = unknown, ResBody = unknown>(
     path: string,
     config: RouteConfig<ReqBody> = {},
-    handler: Handler<ReqBody, ResBody>
+    handler: Handler<ReqBody, ResBody>,
   ): void {
-    this.registerRoute('DELETE', path, config, handler);
+    this.registerRoute("DELETE", path, config, handler);
   }
 
   /**
@@ -148,9 +148,9 @@ export class App {
   head<ReqBody = unknown, ResBody = unknown>(
     path: string,
     config: RouteConfig<ReqBody> = {},
-    handler: Handler<ReqBody, ResBody>
+    handler: Handler<ReqBody, ResBody>,
   ): void {
-    this.registerRoute('HEAD', path, config, handler);
+    this.registerRoute("HEAD", path, config, handler);
   }
 
   /**
@@ -159,9 +159,9 @@ export class App {
   options<ReqBody = unknown, ResBody = unknown>(
     path: string,
     config: RouteConfig<ReqBody> = {},
-    handler: Handler<ReqBody, ResBody>
+    handler: Handler<ReqBody, ResBody>,
   ): void {
-    this.registerRoute('OPTIONS', path, config, handler);
+    this.registerRoute("OPTIONS", path, config, handler);
   }
 
   /**
@@ -175,7 +175,7 @@ export class App {
     method: string,
     path: string,
     config: RouteConfig<ReqBody>,
-    handler: Handler<ReqBody, ResBody>
+    handler: Handler<ReqBody, ResBody>,
   ): void {
     // Get the method enum value
     const methodEnum = this.getMethodEnum(method);
@@ -196,9 +196,7 @@ export class App {
 
     // Create the low-level handler that bridges the typed interface to the raw contract
     // At this point, the request body is already validated by the Rust core
-    const bridgeHandler = async (
-      requestData: Record<string, any>
-    ): Promise<Record<string, any>> => {
+    const bridgeHandler = async (requestData: Record<string, any>): Promise<Record<string, any>> => {
       try {
         // Extract and parse the request body
         // The body is already validated by the Rust core, so we just parse it
@@ -220,8 +218,8 @@ export class App {
           query,
           headers: requestData.headers || {},
           cookies: requestData.cookies || {},
-          method: requestData.method || 'GET',
-          path: requestData.path || '/',
+          method: requestData.method || "GET",
+          path: requestData.path || "/",
           contentType: requestData.content_type,
         };
 
@@ -241,10 +239,10 @@ export class App {
         return {
           status_code: 500,
           content: {
-            error: 'Internal server error',
+            error: "Internal server error",
             details: error instanceof Error ? error.message : String(error),
           },
-          headers: { 'content-type': 'application/json' },
+          headers: { "content-type": "application/json" },
         };
       }
     };
@@ -256,19 +254,17 @@ export class App {
   /**
    * Convert HTTP method string to the service Method enum.
    */
-  private getMethodEnum(
-    method: string
-  ): typeof service.Method[keyof typeof service.Method] | undefined {
-    const methodMap: Record<string, typeof service.Method[keyof typeof service.Method]> = {
-      'GET': service.Method.Get,
-      'POST': service.Method.Post,
-      'PUT': service.Method.Put,
-      'PATCH': service.Method.Patch,
-      'DELETE': service.Method.Delete,
-      'HEAD': service.Method.Head,
-      'OPTIONS': service.Method.Options,
-      'CONNECT': service.Method.Connect,
-      'TRACE': service.Method.Trace,
+  private getMethodEnum(method: string): (typeof service.Method)[keyof typeof service.Method] | undefined {
+    const methodMap: Record<string, (typeof service.Method)[keyof typeof service.Method]> = {
+      GET: service.Method.Get,
+      POST: service.Method.Post,
+      PUT: service.Method.Put,
+      PATCH: service.Method.Patch,
+      DELETE: service.Method.Delete,
+      HEAD: service.Method.Head,
+      OPTIONS: service.Method.Options,
+      CONNECT: service.Method.Connect,
+      TRACE: service.Method.Trace,
     };
     return methodMap[method.toUpperCase()];
   }

@@ -6,8 +6,10 @@ and to specify default values and factories for query/body/path parameters.
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 T = TypeVar("T")
 
