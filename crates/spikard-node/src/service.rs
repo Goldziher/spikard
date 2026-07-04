@@ -4,17 +4,44 @@ use napi::bindgen_prelude::*;
 use napi::threadsafe_function::ThreadsafeFunction;
 use napi_derive::napi;
 use std::sync::Arc;
+
+/// Wrapper that lets an arbitrary JSON handler return participate in
+/// `Either<Promise<_>, _>`. Both `Either` arms and `Promise<T>` require
+/// `ValidateNapiValue`, which `serde_json::Value` does not implement. A handler
+/// return is always the response-envelope object, so `value_type()` is `Object`;
+/// the default `validate` then routes a plain object to the value arm and a
+/// thenable to the promise arm — supporting both sync and async JS handlers.
+pub struct HandlerReturn(serde_json::Value);
+
+impl TypeName for HandlerReturn {
+    fn type_name() -> &'static str {
+        "HandlerReturn"
+    }
+    fn value_type() -> ValueType {
+        ValueType::Object
+    }
+}
+
+impl ValidateNapiValue for HandlerReturn {}
+
+impl FromNapiValue for HandlerReturn {
+    unsafe fn from_napi_value(env: napi::sys::napi_env, napi_val: napi::sys::napi_value) -> Result<Self> {
+        Ok(Self(unsafe { serde_json::Value::from_napi_value(env, napi_val)? }))
+    }
+}
 /// Generated NAPI bridge for the `Handler` contract.
 ///
 /// Wraps a JavaScript callable (async) via ThreadsafeFunction
 /// so it can be used as `Arc<dyn Handler>` from Rust async code.
 pub struct HandlerBridge {
-    handler_fn: ThreadsafeFunction<serde_json::Value, serde_json::Value>,
+    handler_fn: ThreadsafeFunction<serde_json::Value, Either<Promise<HandlerReturn>, HandlerReturn>>,
 }
 
 impl HandlerBridge {
     /// Create a bridge from a JavaScript callable.
-    pub fn new(handler_fn: ThreadsafeFunction<serde_json::Value, serde_json::Value>) -> Self {
+    pub fn new(
+        handler_fn: ThreadsafeFunction<serde_json::Value, Either<Promise<HandlerReturn>, HandlerReturn>>,
+    ) -> Self {
         Self { handler_fn }
     }
 }
@@ -35,11 +62,24 @@ impl spikard::Handler for HandlerBridge {
                 async move {
                     let req_json = serde_json::to_value(&request_data)
                         .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
-                    let resp_json = self
+                    // The JS handler may be sync (returns the response object) or
+                    // async (returns a Promise). `Either<Promise<_>, _>` routes a
+                    // thenable to the `Promise` arm (awaited here) and a plain object
+                    // to the value arm, so both handler styles work.
+                    let resp_either = self
                         .handler_fn
                         .call_async(Ok(req_json))
                         .await
                         .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
+                    let resp_json = match resp_either {
+                        Either::A(promise) => {
+                            promise
+                                .await
+                                .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?
+                                .0
+                        }
+                        Either::B(value) => value.0,
+                    };
                     serde_json::from_value(resp_json)
                         .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)
                 }
@@ -54,11 +94,12 @@ impl spikard::Handler for HandlerBridge {
 /// Each entry in `registrations` is a `[method_name, metadata, callback]` triple
 /// produced by the TypeScript service class.
 #[napi]
+#[allow(clippy::type_complexity)]
 pub async fn app_run(
     registrations: Vec<(
         String,
         Vec<serde_json::Value>,
-        ThreadsafeFunction<serde_json::Value, serde_json::Value>,
+        ThreadsafeFunction<serde_json::Value, Either<Promise<HandlerReturn>, HandlerReturn>>,
     )>,
 ) -> napi::Result<()> {
     let owner = spikard::App::new();
@@ -74,11 +115,12 @@ pub async fn app_run(
 /// Each entry in `registrations` is a `[method_name, metadata, callback]` triple
 /// produced by the TypeScript service class.
 #[napi]
+#[allow(clippy::type_complexity)]
 pub async fn app_into_router(
     registrations: Vec<(
         String,
         Vec<serde_json::Value>,
-        ThreadsafeFunction<serde_json::Value, serde_json::Value>,
+        ThreadsafeFunction<serde_json::Value, Either<Promise<HandlerReturn>, HandlerReturn>>,
     )>,
 ) -> napi::Result<()> {
     let owner = spikard::App::new();
@@ -102,7 +144,7 @@ impl JsApp {
     pub fn route(
         &self,
         builder: &JsRouteBuilder,
-        handler: ThreadsafeFunction<serde_json::Value, serde_json::Value>,
+        handler: ThreadsafeFunction<serde_json::Value, Either<Promise<HandlerReturn>, HandlerReturn>>,
     ) -> napi::Result<()> {
         let builder = (*builder.inner).clone();
         let bridge = HandlerBridge::new(handler);
@@ -120,7 +162,7 @@ impl JsApp {
     pub fn get(
         &self,
         path: String,
-        handler: ThreadsafeFunction<serde_json::Value, serde_json::Value>,
+        handler: ThreadsafeFunction<serde_json::Value, Either<Promise<HandlerReturn>, HandlerReturn>>,
     ) -> napi::Result<()> {
         let builder = spikard::RouteBuilder::new(spikard::Method::Get, path);
         let bridge = HandlerBridge::new(handler);
@@ -138,7 +180,7 @@ impl JsApp {
     pub fn post(
         &self,
         path: String,
-        handler: ThreadsafeFunction<serde_json::Value, serde_json::Value>,
+        handler: ThreadsafeFunction<serde_json::Value, Either<Promise<HandlerReturn>, HandlerReturn>>,
     ) -> napi::Result<()> {
         let builder = spikard::RouteBuilder::new(spikard::Method::Post, path);
         let bridge = HandlerBridge::new(handler);
@@ -156,7 +198,7 @@ impl JsApp {
     pub fn put(
         &self,
         path: String,
-        handler: ThreadsafeFunction<serde_json::Value, serde_json::Value>,
+        handler: ThreadsafeFunction<serde_json::Value, Either<Promise<HandlerReturn>, HandlerReturn>>,
     ) -> napi::Result<()> {
         let builder = spikard::RouteBuilder::new(spikard::Method::Put, path);
         let bridge = HandlerBridge::new(handler);
@@ -174,7 +216,7 @@ impl JsApp {
     pub fn patch(
         &self,
         path: String,
-        handler: ThreadsafeFunction<serde_json::Value, serde_json::Value>,
+        handler: ThreadsafeFunction<serde_json::Value, Either<Promise<HandlerReturn>, HandlerReturn>>,
     ) -> napi::Result<()> {
         let builder = spikard::RouteBuilder::new(spikard::Method::Patch, path);
         let bridge = HandlerBridge::new(handler);
@@ -192,7 +234,7 @@ impl JsApp {
     pub fn delete(
         &self,
         path: String,
-        handler: ThreadsafeFunction<serde_json::Value, serde_json::Value>,
+        handler: ThreadsafeFunction<serde_json::Value, Either<Promise<HandlerReturn>, HandlerReturn>>,
     ) -> napi::Result<()> {
         let builder = spikard::RouteBuilder::new(spikard::Method::Delete, path);
         let bridge = HandlerBridge::new(handler);
@@ -210,7 +252,7 @@ impl JsApp {
     pub fn head(
         &self,
         path: String,
-        handler: ThreadsafeFunction<serde_json::Value, serde_json::Value>,
+        handler: ThreadsafeFunction<serde_json::Value, Either<Promise<HandlerReturn>, HandlerReturn>>,
     ) -> napi::Result<()> {
         let builder = spikard::RouteBuilder::new(spikard::Method::Head, path);
         let bridge = HandlerBridge::new(handler);
@@ -228,7 +270,7 @@ impl JsApp {
     pub fn options(
         &self,
         path: String,
-        handler: ThreadsafeFunction<serde_json::Value, serde_json::Value>,
+        handler: ThreadsafeFunction<serde_json::Value, Either<Promise<HandlerReturn>, HandlerReturn>>,
     ) -> napi::Result<()> {
         let builder = spikard::RouteBuilder::new(spikard::Method::Options, path);
         let bridge = HandlerBridge::new(handler);
@@ -246,7 +288,7 @@ impl JsApp {
     pub fn connect(
         &self,
         path: String,
-        handler: ThreadsafeFunction<serde_json::Value, serde_json::Value>,
+        handler: ThreadsafeFunction<serde_json::Value, Either<Promise<HandlerReturn>, HandlerReturn>>,
     ) -> napi::Result<()> {
         let builder = spikard::RouteBuilder::new(spikard::Method::Connect, path);
         let bridge = HandlerBridge::new(handler);
@@ -264,7 +306,7 @@ impl JsApp {
     pub fn trace(
         &self,
         path: String,
-        handler: ThreadsafeFunction<serde_json::Value, serde_json::Value>,
+        handler: ThreadsafeFunction<serde_json::Value, Either<Promise<HandlerReturn>, HandlerReturn>>,
     ) -> napi::Result<()> {
         let builder = spikard::RouteBuilder::new(spikard::Method::Trace, path);
         let bridge = HandlerBridge::new(handler);

@@ -1,0 +1,167 @@
+/**
+ * Ergonomic typed-handler App wrapper for spikard (TypeScript definitions).
+ *
+ * This module provides a high-level `App` interface with verb decorators
+ * (@app.post, @app.get, etc.) that support typed request/response handling via zod schemas.
+ *
+ * Request validation happens in the Rust core and returns 422 ProblemDetails on validation
+ * failure. Zod schemas are converted to JSON Schema and attached to routes. Handlers receive
+ * validated, typed request data.
+ *
+ * The low-level service App (supporting raw handler registration) is available via
+ * `import { App } from 'spikard/service'` for advanced use cases.
+ */
+
+import type { z } from 'zod';
+import type { JsonSchema7Type } from 'zod-to-json-schema';
+
+/**
+ * Request object passed to typed handlers.
+ * Contains validated request data + extracted parameters from RequestData.
+ */
+export interface TypedRequest<T = unknown> {
+  /** Validated and parsed request body (type-safe, matches schema) */
+  body: T;
+  /** Path parameters (e.g., /users/:id → { id: "123" }) */
+  params: Record<string, string>;
+  /** Query string parameters */
+  query: Record<string, string>;
+  /** HTTP headers (case-insensitive access recommended) */
+  headers: Record<string, string>;
+  /** Cookies */
+  cookies: Record<string, string>;
+  /** HTTP method (GET, POST, etc.) */
+  method: string;
+  /** Request path */
+  path: string;
+  /** Content-Type header value, if present */
+  contentType?: string;
+}
+
+/**
+ * Response object returned by typed handlers.
+ * The handler can omit fields; defaults are applied.
+ */
+export interface TypedResponse<T = unknown> {
+  /** HTTP status code (default: 200) */
+  statusCode?: number;
+  /** Response content (will be JSON-serialized if not a string/buffer) */
+  content?: T;
+  /** Response headers */
+  headers?: Record<string, string>;
+}
+
+/**
+ * Handler function signature: receives a typed request, returns a response.
+ */
+export type Handler<ReqBody = unknown, ResBody = unknown> = (
+  req: TypedRequest<ReqBody>
+) => Promise<TypedResponse<ResBody>>;
+
+/**
+ * Route configuration with optional schema validation.
+ * Schemas are converted to JSON Schema and attached to the Rust core for validation.
+ */
+export interface RouteConfig<ReqBody = unknown> {
+  /** Zod schema to validate the request body (converted to JSON Schema in Rust core) */
+  body?: z.ZodType<ReqBody>;
+  /** Optional query parameters schema (for future use) */
+  query?: z.ZodType<unknown>;
+  /** Optional path parameters schema (for future use) */
+  params?: z.ZodType<unknown>;
+}
+
+/**
+ * Ergonomic, typed-handler App wrapper.
+ *
+ * Provides a clean interface for defining routes with type-safe handlers.
+ * Automatically converts zod schemas to JSON Schema and attaches them to routes.
+ * The Rust core validates all inputs and returns 422 ProblemDetails on validation failure.
+ * Handlers receive typed, validated request data.
+ */
+export declare class App {
+  constructor();
+
+  /**
+   * Register a GET route with optional typed request validation.
+   */
+  get<ReqBody = unknown, ResBody = unknown>(
+    path: string,
+    config?: RouteConfig<ReqBody>,
+    handler?: Handler<ReqBody, ResBody>
+  ): void;
+
+  /**
+   * Register a POST route with optional typed request validation.
+   */
+  post<ReqBody = unknown, ResBody = unknown>(
+    path: string,
+    config?: RouteConfig<ReqBody>,
+    handler?: Handler<ReqBody, ResBody>
+  ): void;
+
+  /**
+   * Register a PUT route with optional typed request validation.
+   */
+  put<ReqBody = unknown, ResBody = unknown>(
+    path: string,
+    config?: RouteConfig<ReqBody>,
+    handler?: Handler<ReqBody, ResBody>
+  ): void;
+
+  /**
+   * Register a PATCH route with optional typed request validation.
+   */
+  patch<ReqBody = unknown, ResBody = unknown>(
+    path: string,
+    config?: RouteConfig<ReqBody>,
+    handler?: Handler<ReqBody, ResBody>
+  ): void;
+
+  /**
+   * Register a DELETE route with optional typed request validation.
+   */
+  delete<ReqBody = unknown, ResBody = unknown>(
+    path: string,
+    config?: RouteConfig<ReqBody>,
+    handler?: Handler<ReqBody, ResBody>
+  ): void;
+
+  /**
+   * Register a HEAD route with optional typed request validation.
+   */
+  head<ReqBody = unknown, ResBody = unknown>(
+    path: string,
+    config?: RouteConfig<ReqBody>,
+    handler?: Handler<ReqBody, ResBody>
+  ): void;
+
+  /**
+   * Register an OPTIONS route with optional typed request validation.
+   */
+  options<ReqBody = unknown, ResBody = unknown>(
+    path: string,
+    config?: RouteConfig<ReqBody>,
+    handler?: Handler<ReqBody, ResBody>
+  ): void;
+
+  /**
+   * Configure the server (host, port, etc.).
+   */
+  config(config: any): void;
+
+  /**
+   * Start the HTTP server.
+   */
+  run(): Promise<void>;
+
+  /**
+   * Build a router (returns the underlying router, advanced use case).
+   */
+  intoRouter(): Promise<void>;
+
+  /**
+   * Get the underlying low-level service App (for advanced use cases).
+   */
+  getServiceApp(): any;
+}

@@ -1,6 +1,15 @@
 // swift-format-ignore-file
 import RustBridgeC
 
+public func uploadFileAsBytesFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$upload_file_as_bytes_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func uploadFileReadToStringFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$upload_file_read_to_string_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func uploadFileContentTypeOrDefaultFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$upload_file_content_type_or_default_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
 public func graphQlRouteConfigPath<GenericIntoRustString: IntoRustString>(_ client: GraphQLRouteConfigRef, _ path: GenericIntoRustString) -> GraphQLRouteConfig {
     GraphQLRouteConfig(ptr: __swift_bridge__$graph_ql_route_config_path(client.ptr, { let rustString = path.intoRustString(); rustString.isOwned = false; return rustString.ptr }()))
 }
@@ -24,6 +33,30 @@ public func graphQlRouteConfigIsPlaygroundEnabled(_ client: GraphQLRouteConfigRe
 }
 public func graphQlRouteConfigGetDescription(_ client: GraphQLRouteConfigRef) -> RustString {
     RustString(ptr: __swift_bridge__$graph_ql_route_config_get_description(client.ptr))
+}
+public func corsConfigAllowedMethodsJoinedFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$cors_config_allowed_methods_joined_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func corsConfigAllowedHeadersJoinedFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$cors_config_allowed_headers_joined_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func corsConfigIsOriginAllowedFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString, _ origin: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$cors_config_is_origin_allowed_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = origin.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func corsConfigIsMethodAllowedFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString, _ method: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$cors_config_is_method_allowed_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = method.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func responseSetHeaderFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString, _ key: GenericIntoRustString, _ value: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$response_set_header_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = key.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = value.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func responseSetCookieFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString, _ key: GenericIntoRustString, _ value: GenericIntoRustString, _ secure: Bool, _ http_only: Bool, _ max_age: Optional<Int64>, _ domain: Optional<GenericIntoRustString>, _ path: Optional<GenericIntoRustString>, _ same_site: Optional<GenericIntoRustString>) throws -> RustString {
+    try { let val = __swift_bridge__$response_set_cookie_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = key.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = value.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), secure, http_only, max_age.intoFfiRepr(), { if let rustString = optionalStringIntoRustString(domain) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(path) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(same_site) { rustString.isOwned = false; return rustString.ptr } else { return nil } }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func sseEventWithIdFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString, _ id: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$sse_event_with_id_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = id.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func sseEventWithRetryFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString, _ retry_ms: UInt64) throws -> RustString {
+    try { let val = __swift_bridge__$sse_event_with_retry_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), retry_ms); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
 public func routeBuilderHandlerName<GenericIntoRustString: IntoRustString>(_ client: RouteBuilderRef, _ name: GenericIntoRustString) -> RouteBuilder {
     RouteBuilder(ptr: __swift_bridge__$route_builder_handler_name(client.ptr, { let rustString = name.intoRustString(); rustString.isOwned = false; return rustString.ptr }()))
@@ -51,6 +84,18 @@ public func routeBuilderSync(_ client: RouteBuilderRef) -> RouteBuilder {
 }
 public func routeBuilderHandlerDependencies<GenericIntoRustString: IntoRustString>(_ client: RouteBuilderRef, _ dependencies: RustVec<GenericIntoRustString>) -> RouteBuilder {
     RouteBuilder(ptr: __swift_bridge__$route_builder_handler_dependencies(client.ptr, { let val = dependencies; val.isOwned = false; return val.ptr }()))
+}
+public func problemDetailsWithDetailFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString, _ detail: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$problem_details_with_detail_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = detail.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func problemDetailsWithInstanceFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString, _ instance: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$problem_details_with_instance_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = instance.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func problemDetailsToJsonFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$problem_details_to_json_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func problemDetailsToJsonPrettyFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$problem_details_to_json_pretty_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
 public func request_noop(_ client: RequestRef) {
     __swift_bridge__$request_noop(client.ptr)

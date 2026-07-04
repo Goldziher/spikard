@@ -185,7 +185,7 @@ class App {
    * Returns an error if server construction or execution fails.
    */
   async run() {
-    return await this._app.run();
+    return await this._app.nativeRun();
   }
   /**
    * Build the underlying Axum router.
@@ -195,7 +195,7 @@ class App {
    * Returns an error if server or router construction fails.
    */
   into_router() {
-    return this._app.intoRouter();
+    return this._app.nativeIntoRouter();
   }
 }
 

@@ -140,7 +140,8 @@ pub fn app_run(registrations: rustler::Term<'_>) -> NifResult<Atom> {
         {
             if method_name == "route" {
                 if let Ok((builder,)) = metadata.decode::<(rustler::ResourceArc<super::RouteBuilder>,)>() {
-                    let builder: spikard::RouteBuilder = (*builder).inner.as_ref().clone();
+                    let builder: spikard::RouteBuilder =
+                        (*builder).inner.read().unwrap_or_else(|e| e.into_inner()).clone();
                     let bridge = ElixirHandlerBridge::new(handler_pid);
                     let handler: Arc<dyn spikard::Handler> = Arc::new(bridge);
                     let _ = owner.route(builder, handler);
@@ -188,7 +189,8 @@ pub fn app_into_router(registrations: rustler::Term<'_>) -> NifResult<Atom> {
         {
             if method_name == "route" {
                 if let Ok((builder,)) = metadata.decode::<(rustler::ResourceArc<super::RouteBuilder>,)>() {
-                    let builder: spikard::RouteBuilder = (*builder).inner.as_ref().clone();
+                    let builder: spikard::RouteBuilder =
+                        (*builder).inner.read().unwrap_or_else(|e| e.into_inner()).clone();
                     let bridge = ElixirHandlerBridge::new(handler_pid);
                     let handler: Arc<dyn spikard::Handler> = Arc::new(bridge);
                     let _ = owner.route(builder, handler);
@@ -223,7 +225,7 @@ pub fn app_get(registrations: rustler::Term<'_>, path: String, handler: rustler:
             reg_entry.decode::<(String, rustler::Term<'_>, rustler::LocalPid)>()
         {
             if let Ok((builder,)) = _metadata.decode::<(rustler::ResourceArc<super::RouteBuilder>,)>() {
-                let builder: spikard::RouteBuilder = (*builder).inner.as_ref().clone();
+                let builder: spikard::RouteBuilder = (*builder).inner.read().unwrap_or_else(|e| e.into_inner()).clone();
                 let bridge = ElixirHandlerBridge::new(handler_pid);
                 let handler: Arc<dyn spikard::Handler> = Arc::new(bridge);
                 let _ = owner.route(builder, handler);
@@ -253,7 +255,7 @@ pub fn app_post(registrations: rustler::Term<'_>, path: String, handler: rustler
             reg_entry.decode::<(String, rustler::Term<'_>, rustler::LocalPid)>()
         {
             if let Ok((builder,)) = _metadata.decode::<(rustler::ResourceArc<super::RouteBuilder>,)>() {
-                let builder: spikard::RouteBuilder = (*builder).inner.as_ref().clone();
+                let builder: spikard::RouteBuilder = (*builder).inner.read().unwrap_or_else(|e| e.into_inner()).clone();
                 let bridge = ElixirHandlerBridge::new(handler_pid);
                 let handler: Arc<dyn spikard::Handler> = Arc::new(bridge);
                 let _ = owner.route(builder, handler);
@@ -283,7 +285,7 @@ pub fn app_put(registrations: rustler::Term<'_>, path: String, handler: rustler:
             reg_entry.decode::<(String, rustler::Term<'_>, rustler::LocalPid)>()
         {
             if let Ok((builder,)) = _metadata.decode::<(rustler::ResourceArc<super::RouteBuilder>,)>() {
-                let builder: spikard::RouteBuilder = (*builder).inner.as_ref().clone();
+                let builder: spikard::RouteBuilder = (*builder).inner.read().unwrap_or_else(|e| e.into_inner()).clone();
                 let bridge = ElixirHandlerBridge::new(handler_pid);
                 let handler: Arc<dyn spikard::Handler> = Arc::new(bridge);
                 let _ = owner.route(builder, handler);
@@ -313,7 +315,7 @@ pub fn app_patch(registrations: rustler::Term<'_>, path: String, handler: rustle
             reg_entry.decode::<(String, rustler::Term<'_>, rustler::LocalPid)>()
         {
             if let Ok((builder,)) = _metadata.decode::<(rustler::ResourceArc<super::RouteBuilder>,)>() {
-                let builder: spikard::RouteBuilder = (*builder).inner.as_ref().clone();
+                let builder: spikard::RouteBuilder = (*builder).inner.read().unwrap_or_else(|e| e.into_inner()).clone();
                 let bridge = ElixirHandlerBridge::new(handler_pid);
                 let handler: Arc<dyn spikard::Handler> = Arc::new(bridge);
                 let _ = owner.route(builder, handler);
@@ -343,7 +345,7 @@ pub fn app_delete(registrations: rustler::Term<'_>, path: String, handler: rustl
             reg_entry.decode::<(String, rustler::Term<'_>, rustler::LocalPid)>()
         {
             if let Ok((builder,)) = _metadata.decode::<(rustler::ResourceArc<super::RouteBuilder>,)>() {
-                let builder: spikard::RouteBuilder = (*builder).inner.as_ref().clone();
+                let builder: spikard::RouteBuilder = (*builder).inner.read().unwrap_or_else(|e| e.into_inner()).clone();
                 let bridge = ElixirHandlerBridge::new(handler_pid);
                 let handler: Arc<dyn spikard::Handler> = Arc::new(bridge);
                 let _ = owner.route(builder, handler);
@@ -373,7 +375,7 @@ pub fn app_head(registrations: rustler::Term<'_>, path: String, handler: rustler
             reg_entry.decode::<(String, rustler::Term<'_>, rustler::LocalPid)>()
         {
             if let Ok((builder,)) = _metadata.decode::<(rustler::ResourceArc<super::RouteBuilder>,)>() {
-                let builder: spikard::RouteBuilder = (*builder).inner.as_ref().clone();
+                let builder: spikard::RouteBuilder = (*builder).inner.read().unwrap_or_else(|e| e.into_inner()).clone();
                 let bridge = ElixirHandlerBridge::new(handler_pid);
                 let handler: Arc<dyn spikard::Handler> = Arc::new(bridge);
                 let _ = owner.route(builder, handler);
@@ -403,7 +405,7 @@ pub fn app_options(registrations: rustler::Term<'_>, path: String, handler: rust
             reg_entry.decode::<(String, rustler::Term<'_>, rustler::LocalPid)>()
         {
             if let Ok((builder,)) = _metadata.decode::<(rustler::ResourceArc<super::RouteBuilder>,)>() {
-                let builder: spikard::RouteBuilder = (*builder).inner.as_ref().clone();
+                let builder: spikard::RouteBuilder = (*builder).inner.read().unwrap_or_else(|e| e.into_inner()).clone();
                 let bridge = ElixirHandlerBridge::new(handler_pid);
                 let handler: Arc<dyn spikard::Handler> = Arc::new(bridge);
                 let _ = owner.route(builder, handler);
@@ -433,7 +435,7 @@ pub fn app_connect(registrations: rustler::Term<'_>, path: String, handler: rust
             reg_entry.decode::<(String, rustler::Term<'_>, rustler::LocalPid)>()
         {
             if let Ok((builder,)) = _metadata.decode::<(rustler::ResourceArc<super::RouteBuilder>,)>() {
-                let builder: spikard::RouteBuilder = (*builder).inner.as_ref().clone();
+                let builder: spikard::RouteBuilder = (*builder).inner.read().unwrap_or_else(|e| e.into_inner()).clone();
                 let bridge = ElixirHandlerBridge::new(handler_pid);
                 let handler: Arc<dyn spikard::Handler> = Arc::new(bridge);
                 let _ = owner.route(builder, handler);
@@ -463,7 +465,7 @@ pub fn app_trace(registrations: rustler::Term<'_>, path: String, handler: rustle
             reg_entry.decode::<(String, rustler::Term<'_>, rustler::LocalPid)>()
         {
             if let Ok((builder,)) = _metadata.decode::<(rustler::ResourceArc<super::RouteBuilder>,)>() {
-                let builder: spikard::RouteBuilder = (*builder).inner.as_ref().clone();
+                let builder: spikard::RouteBuilder = (*builder).inner.read().unwrap_or_else(|e| e.into_inner()).clone();
                 let bridge = ElixirHandlerBridge::new(handler_pid);
                 let handler: Arc<dyn spikard::Handler> = Arc::new(bridge);
                 let _ = owner.route(builder, handler);

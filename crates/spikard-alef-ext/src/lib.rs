@@ -110,6 +110,34 @@ impl Extension for HttpExtension {
         emit::emit_for_language(api, cfg, language)
     }
 
+    /// Rewrite scaffold-pass entry files so the ergonomic surface is reachable
+    /// through the package's real resolution path.
+    ///
+    /// For Node the package `main` is the `CommonJS` `index-wrapper.cjs` (a scaffold
+    /// file), so an ESM `export * from './app'` in the types file never affects
+    /// `require()` resolution and `transform_emitted_files` — which only sees the
+    /// bindings pass — cannot reach it. This scaffold hook rewrites the CJS wrapper
+    /// to also spread the ergonomic `app.cjs` exports (shadowing the low-level
+    /// `App`), appends the type re-export to `index.d.ts`, and adds the zod runtime
+    /// dependencies to `package.json`. Every rewrite is idempotent.
+    ///
+    /// # Errors
+    ///
+    /// Never fails; always returns `Ok(())`.
+    fn transform_scaffold_files(
+        &self,
+        _api: &ApiSurface,
+        _cfg: &ExtensionConfig,
+        language: Language,
+        files: &mut Vec<GeneratedFile>,
+        _env: &TemplateEnv,
+    ) -> Result<()> {
+        if language == Language::Node {
+            emit::napi::wire_ergonomic_entry(files);
+        }
+        Ok(())
+    }
+
     /// Contribute the ergonomic public-API re-exports to language-specific initialization files.
     ///
     /// For Python: Appends lines to `packages/python/spikard/__init__.py` with exact-line

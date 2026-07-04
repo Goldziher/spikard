@@ -16,7 +16,10 @@
       "default": "./index-wrapper.cjs"
     }
   },
-  "files": ["index.js", "index-wrapper.cjs", "index.d.ts", "service.cjs", "*.node"],
+  "files": ["app.cjs", "app.d.ts", "index.js", "index-wrapper.cjs", "index.d.ts", "service.cjs", "*.node"],
+  "dependencies": {
+    "zod": "^3.25.0 || ^4.0.0"
+  },
   "optionalDependencies": {
     "@spikard/node-linux-x64-gnu": "0.16.1",
     "@spikard/node-linux-arm64-gnu": "0.16.1",

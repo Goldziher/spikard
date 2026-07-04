@@ -230,7 +230,7 @@ export class App {
    * Returns an error if server construction or execution fails.
    */
   async run(): Promise<void> {
-    return await this._app.run();
+    return await this._app.nativeRun();
   }
   /**
    * Build the underlying Axum router.
@@ -240,7 +240,7 @@ export class App {
    * Returns an error if server or router construction fails.
    */
   into_router(): Promise<void> {
-    return this._app.intoRouter();
+    return this._app.nativeIntoRouter();
   }
 }
 
