@@ -39,8 +39,8 @@ dependencies = [
 
 [[package]]
 name = "alef"
-version = "0.30.16"
-source = "git+https://github.com/xberg-io/alef?tag=v0.30.16#1f66fc719ccd87e713dba2ced0c3791f27837d64"
+version = "0.30.19"
+source = "git+https://github.com/xberg-io/alef?tag=v0.30.19#63e47851e9e86b2fe8969e9080e514598a43c736"
 dependencies = [
  "ahash",
  "anyhow",
@@ -1349,7 +1349,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -1688,9 +1688,9 @@ dependencies = [
 
 [[package]]
 name = "granit-parser"
-version = "0.0.6"
+version = "0.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "14668345710c92cb04181d9268407067689327d4b055273e3c4179a0777ee6a1"
+checksum = "d03f81ad4732830d85cfd417a9f62cde6dadda4354d37d078a6084a19560aa2d"
 dependencies = [
  "arraydeque",
  "smallvec",
@@ -3449,9 +3449,9 @@ dependencies = [
 
 [[package]]
 name = "rmcp"
-version = "2.0.0"
+version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d52d21e5b342699bc4de690e6104fc4e43255e4e8420ff0f2cbb963aac09da6f"
+checksum = "f00a32c3b81b7b254076a65abd5ab2551209146713ba38f73818657e865e9433"
 dependencies = [
  "async-trait",
  "base64",
@@ -3480,9 +3480,9 @@ dependencies = [
 
 [[package]]
 name = "rmcp-macros"
-version = "2.0.0"
+version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c68cec74c5b3ac73ff46375ae49e161637bda80bba70f0d5db641583bb308ee"
+checksum = "2ee70afb7956da9f30d5348a2539b5eb90d9038f834463657ab717076ac3b1ad"
 dependencies = [
  "darling 0.23.0",
  "proc-macro2",
@@ -3591,7 +3591,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -3684,9 +3684,9 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "scythe-core"
-version = "0.10.0"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3aaf0bb89e516eff759a2bb908fea2e1e77a5f401a08e59ad9337bc9003dd587"
+checksum = "d8682126e91dd9ca1adea8a840f9b8989fa59e5f6b1a270b214c0d1a23d16ee4"
 dependencies = [
  "ahash",
  "serde",
@@ -3725,9 +3725,9 @@ dependencies = [
 
 [[package]]
 name = "serde-saphyr"
-version = "0.0.28"
+version = "0.0.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a15e3bc297370dc9c526bcf0986f29167a9286cfaad404f2f572b3074dabe5ec"
+checksum = "7bd22781911de0ca6debda95f073c8f18bec65d1a94f1fa9573f3102e514cea4"
 dependencies = [
  "ahash",
  "annotate-snippets",
@@ -4101,11 +4101,8 @@ dependencies = [
  "anyhow",
  "heck",
  "minijinja",
- "percent-encoding",
  "serde",
  "serde_json",
- "toml 1.1.2+spec-1.1.0",
- "tracing",
 ]
 
 [[package]]
@@ -4209,7 +4206,6 @@ dependencies = [
  "napi-build",
  "napi-derive",
  "serde",
- "serde_bytes",
  "serde_json",
  "spikard",
  "spikard-core",
@@ -4493,7 +4489,7 @@ dependencies = [
  "getrandom 0.4.3",
  "once_cell",
  "rustix",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -5356,7 +5352,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]

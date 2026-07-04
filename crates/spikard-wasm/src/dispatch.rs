@@ -134,6 +134,11 @@ struct JsRequest {
     body: Option<Vec<u8>>,
 }
 
+// `body` below serializes via `#[serde(with = "serde_bytes")]`, which references
+// the crate only as a string literal. Bind the crate as a path so cargo-machete
+// (which cannot see string-based `with` usage) detects the dependency as used.
+use serde_bytes as _;
+
 #[derive(serde::Serialize)]
 struct JsResponse {
     status: u16,

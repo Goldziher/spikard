@@ -160,9 +160,7 @@ class Header(ParamBase):
         convert_underscores: bool = True,
         schema: dict[str, Any] | None = None,
     ) -> None:
-        super().__init__(
-            default=default, default_factory=default_factory, schema=schema
-        )
+        super().__init__(default=default, default_factory=default_factory, schema=schema)
         self.alias = alias
         self.convert_underscores = convert_underscores
 

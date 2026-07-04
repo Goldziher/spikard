@@ -34,8 +34,7 @@ def field_definition_to_json_schema(field: FieldDefinition) -> dict[str, Any]:
         if len(non_none_types) == 1:
             inner_field = (
                 field.inner_types[0]
-                if field.inner_types
-                and field.inner_types[0].annotation is not type(None)
+                if field.inner_types and field.inner_types[0].annotation is not type(None)
                 else None
             )
             if inner_field:
@@ -49,9 +48,7 @@ def field_definition_to_json_schema(field: FieldDefinition) -> dict[str, Any]:
 
     if field.is_union and not field.is_optional:
         schema["anyOf"] = [
-            field_definition_to_json_schema(inner)
-            for inner in field.inner_types
-            if not inner.is_none_type
+            field_definition_to_json_schema(inner) for inner in field.inner_types if not inner.is_none_type
         ]
         return schema
 
@@ -124,8 +121,7 @@ def _annotation_to_json_schema(python_type: Any) -> dict[str, Any]:
     elif python_type is UUID:
         schema = {"type": "string", "format": "uuid"}
     elif python_type in (Path, PurePath) or (
-        hasattr(python_type, "__origin__")
-        and python_type.__origin__ in (Path, PurePath)
+        hasattr(python_type, "__origin__") and python_type.__origin__ in (Path, PurePath)
     ):
         schema = {"type": "string"}
     elif python_type is dict:

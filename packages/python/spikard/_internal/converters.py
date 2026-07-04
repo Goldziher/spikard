@@ -38,13 +38,7 @@ else:  # pragma: no cover - runtime optional import
 
 BaseModel = typing.cast("type[PydanticBaseModel] | None", PydanticBaseModel)
 
-__all__ = (
-    "clear_decoders",
-    "convert_params",
-    "convert_value",
-    "needs_conversion",
-    "register_decoder",
-)
+__all__ = ("clear_decoders", "convert_params", "convert_value", "needs_conversion", "register_decoder")
 
 
 DecoderFunc = Callable[[type, Any], Any]
@@ -54,9 +48,7 @@ _CUSTOM_DECODERS: list[DecoderFunc] = []
 
 _MSGSPEC_DECODER_CACHE: dict[type, msgspec.json.Decoder[typing.Any]] = {}
 
-_HANDLER_METADATA_CACHE: dict[
-    int, tuple[dict[str, Any] | None, set[str] | None, str | None]
-] = {}
+_HANDLER_METADATA_CACHE: dict[int, tuple[dict[str, Any] | None, set[str] | None, str | None]] = {}
 
 
 def register_decoder(decoder: DecoderFunc) -> None:
@@ -95,11 +87,7 @@ def clear_decoders() -> None:
 
 def supports_msgspec_decoder(target_type: type) -> bool:
     """Return True when msgspec decoding is safe for the given type."""
-    if (
-        BaseModel is not None
-        and isinstance(target_type, type)
-        and issubclass(target_type, BaseModel)
-    ):
+    if BaseModel is not None and isinstance(target_type, type) and issubclass(target_type, BaseModel):
         return False
 
     if isinstance(target_type, type) and hasattr(target_type, "_fields"):
@@ -117,11 +105,7 @@ def _is_typed_dict(type_: type) -> bool:
 
     TypedDict is special - it's just type hints at runtime, the actual value is a dict.
     """
-    return (
-        hasattr(type_, "__annotations__")
-        and hasattr(type_, "__total__")
-        and hasattr(type_, "__required_keys__")
-    )
+    return hasattr(type_, "__annotations__") and hasattr(type_, "__total__") and hasattr(type_, "__required_keys__")
 
 
 def _get_or_create_decoder(target_type: type) -> msgspec.json.Decoder[typing.Any]:
@@ -231,11 +215,7 @@ def _get_upload_file_fields(target_type: type) -> dict[str, bool]:
         Dict mapping field names to whether they're UploadFile types
         Example: {"avatar": True, "username": False}
     """
-    if not (
-        is_dataclass(target_type)
-        or hasattr(target_type, "model_fields")
-        or isinstance(target_type, type)
-    ):
+    if not (is_dataclass(target_type) or hasattr(target_type, "model_fields") or isinstance(target_type, type)):
         return {}
 
     try:
@@ -243,10 +223,7 @@ def _get_upload_file_fields(target_type: type) -> dict[str, bool]:
     except (AttributeError, NameError, TypeError):
         return {}
 
-    return {
-        field_name: _is_upload_file_type(field_type)
-        for field_name, field_type in type_hints.items()
-    }
+    return {field_name: _is_upload_file_type(field_type) for field_name, field_type in type_hints.items()}
 
 
 def _convert_file_json_to_upload_file(file_data: dict[str, Any]) -> Any:
@@ -262,11 +239,7 @@ def _convert_file_json_to_upload_file(file_data: dict[str, Any]) -> Any:
 
     if isinstance(content, str):
         content_encoding = file_data.get("content_encoding", "text")
-        content = (
-            base64.b64decode(content)
-            if content_encoding == "base64"
-            else content.encode("utf-8")
-        )
+        content = base64.b64decode(content) if content_encoding == "base64" else content.encode("utf-8")
     elif not isinstance(content, bytes):
         content = str(content).encode("utf-8")
 
@@ -304,8 +277,7 @@ def _process_upload_file_fields(value: Any, file_fields: dict[str, bool]) -> Any
 
         if isinstance(field_value, list):
             result[field_name] = [
-                _convert_file_json_to_upload_file(f) if isinstance(f, dict) else f
-                for f in field_value
+                _convert_file_json_to_upload_file(f) if isinstance(f, dict) else f for f in field_value
             ]
         elif isinstance(field_value, dict) and "filename" in field_value:
             result[field_name] = _convert_file_json_to_upload_file(field_value)
@@ -313,9 +285,7 @@ def _process_upload_file_fields(value: Any, file_fields: dict[str, bool]) -> Any
     return result
 
 
-def _coerce_file_dicts_for_scalar_fields(
-    value: dict[str, Any], target_type: type
-) -> dict[str, Any]:
+def _coerce_file_dicts_for_scalar_fields(value: dict[str, Any], target_type: type) -> dict[str, Any]:
     """Coerce file metadata dicts into string/bytes for scalar-typed fields."""
     try:
         type_hints = get_type_hints(target_type)
@@ -333,12 +303,8 @@ def _coerce_file_dicts_for_scalar_fields(
 
         origin = get_origin(field_type)
         args = get_args(field_type)
-        wants_str = field_type is str or (
-            origin in (Union, types.UnionType) and str in args
-        )
-        wants_bytes = field_type is bytes or (
-            origin in (Union, types.UnionType) and bytes in args
-        )
+        wants_str = field_type is str or (origin in (Union, types.UnionType) and str in args)
+        wants_bytes = field_type is bytes or (origin in (Union, types.UnionType) and bytes in args)
 
         if not (wants_str or wants_bytes):
             continue
@@ -348,11 +314,7 @@ def _coerce_file_dicts_for_scalar_fields(
 
         if wants_bytes:
             if isinstance(content, str):
-                content = (
-                    base64.b64decode(content)
-                    if content_encoding == "base64"
-                    else content.encode("utf-8")
-                )
+                content = base64.b64decode(content) if content_encoding == "base64" else content.encode("utf-8")
             elif not isinstance(content, bytes):
                 content = str(content).encode("utf-8")
             result[field_name] = content
@@ -400,9 +362,7 @@ def needs_conversion(handler_func: Callable[..., Any]) -> bool:
 
         if origin is Union or origin is types.UnionType:
             non_none_args = [arg for arg in args if arg is not type(None)]
-            if non_none_args and all(
-                arg in (str, int, float, bool, bytes) for arg in non_none_args
-            ):
+            if non_none_args and all(arg in (str, int, float, bool, bytes) for arg in non_none_args):
                 continue
 
         return True
@@ -450,12 +410,7 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
     if type_hints is None:
         return params
 
-    if (
-        "body" in params
-        and first_param_name
-        and first_param_name != "body"
-        and first_param_name not in params
-    ):
+    if "body" in params and first_param_name and first_param_name != "body" and first_param_name not in params:
         params = params.copy()
         params[first_param_name] = params.pop("body")
 
@@ -509,12 +464,7 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
                     decoder = _get_or_create_decoder(target_type)
                     converted[key] = decoder.decode(value)
                     continue
-                except (
-                    TypeError,
-                    ValueError,
-                    msgspec.DecodeError,
-                    msgspec.ValidationError,
-                ):
+                except (TypeError, ValueError, msgspec.DecodeError, msgspec.ValidationError):
                     if strict:
                         raise
                     converted[key] = value
@@ -523,11 +473,7 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
             try:
                 decoded_value = msgspec.json.decode(value)
 
-                if (
-                    isinstance(decoded_value, dict)
-                    and key in decoded_value
-                    and _is_upload_file_type(target_type)
-                ):
+                if isinstance(decoded_value, dict) and key in decoded_value and _is_upload_file_type(target_type):
                     value = decoded_value[key]
                 else:
                     value = decoded_value
@@ -539,26 +485,14 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
                 continue
 
         if _is_upload_file_type(target_type):
-            if (
-                origin is Union
-                and any(arg is UploadFile for arg in args)
-                and isinstance(value, dict)
-            ):
+            if origin is Union and any(arg is UploadFile for arg in args) and isinstance(value, dict):
                 converted[key] = _convert_file_json_to_upload_file(value)
                 continue
             if target_type is UploadFile and isinstance(value, dict):
                 converted[key] = _convert_file_json_to_upload_file(value)
                 continue
-            if (
-                origin is list
-                and args
-                and args[0] is UploadFile
-                and isinstance(value, list)
-            ):
-                converted[key] = [
-                    _convert_file_json_to_upload_file(f) if isinstance(f, dict) else f
-                    for f in value
-                ]
+            if origin is list and args and args[0] is UploadFile and isinstance(value, list):
+                converted[key] = [_convert_file_json_to_upload_file(f) if isinstance(f, dict) else f for f in value]
                 continue
 
         file_fields = _get_upload_file_fields(target_type)
@@ -583,34 +517,24 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
                     if field.name not in value_with_defaults:
                         field_type = type_hints_for_dc.get(field.name, field.type)
                         origin = get_origin(field_type)
-                        if origin in (Union, types.UnionType) and type(
-                            None
-                        ) in get_args(field_type):
+                        if origin in (Union, types.UnionType) and type(None) in get_args(field_type):
                             value_with_defaults[field.name] = None
 
                 converted[key] = target_type(**value_with_defaults)  # type: ignore[operator]
                 continue
             except (TypeError, ValueError) as err:
                 if strict:
-                    raise ValueError(
-                        f"Failed to convert parameter '{key}' to dataclass {target_type}: {err}"
-                    ) from err
+                    raise ValueError(f"Failed to convert parameter '{key}' to dataclass {target_type}: {err}") from err
                 converted[key] = value
                 continue
 
-        if (
-            isinstance(target_type, type)
-            and hasattr(target_type, "_fields")
-            and isinstance(value, dict)
-        ):
+        if isinstance(target_type, type) and hasattr(target_type, "_fields") and isinstance(value, dict):
             try:
                 converted[key] = target_type(**value)
                 continue
             except (TypeError, ValueError) as err:
                 if strict:
-                    raise ValueError(
-                        f"Failed to convert parameter '{key}' to NamedTuple {target_type}: {err}"
-                    ) from err
+                    raise ValueError(f"Failed to convert parameter '{key}' to NamedTuple {target_type}: {err}") from err
                 converted[key] = value
                 continue
 
@@ -626,12 +550,7 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
                     else:
                         converted[key] = value
                     continue
-            except (
-                TypeError,
-                ValueError,
-                msgspec.DecodeError,
-                msgspec.ValidationError,
-            ) as err:
+            except (TypeError, ValueError, msgspec.DecodeError, msgspec.ValidationError) as err:
                 if strict:
                     raise ValueError(
                         f"Failed to convert parameter '{key}' to msgspec.Struct {target_type}: {err}"
@@ -639,11 +558,7 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
                 converted[key] = value
                 continue
 
-        if (
-            BaseModel is not None
-            and isinstance(target_type, type)
-            and issubclass(target_type, BaseModel)
-        ):
+        if BaseModel is not None and isinstance(target_type, type) and issubclass(target_type, BaseModel):
             try:
                 if (
                     isinstance(value, list)
@@ -654,15 +569,10 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
                 ):
                     item_cls = typing.cast("typing.Any", args[0])
                     converted[key] = [
-                        item_cls.model_validate(item)
-                        if isinstance(item, dict)
-                        else item
-                        for item in value
+                        item_cls.model_validate(item) if isinstance(item, dict) else item for item in value
                     ]
                 elif isinstance(value, dict):
-                    converted[key] = typing.cast(
-                        "typing.Any", target_type
-                    ).model_validate(value)
+                    converted[key] = typing.cast("typing.Any", target_type).model_validate(value)
                 else:
                     converted[key] = value
                 continue
@@ -682,16 +592,9 @@ def convert_params(  # noqa: C901, PLR0912, PLR0915
                 builtin_types=(datetime, date, time, timedelta),
                 dec_hook=_default_dec_hook,
             )
-        except (
-            msgspec.DecodeError,
-            msgspec.ValidationError,
-            TypeError,
-            ValueError,
-        ) as err:
+        except (msgspec.DecodeError, msgspec.ValidationError, TypeError, ValueError) as err:
             if strict:
-                raise ValueError(
-                    f"Failed to convert parameter '{key}' to type {target_type}: {err}"
-                ) from err
+                raise ValueError(f"Failed to convert parameter '{key}' to type {target_type}: {err}") from err
             converted[key] = value
 
     return converted
@@ -740,21 +643,9 @@ def convert_value(  # noqa: C901, PLR0911, PLR0912
     if _is_upload_file_type(target_type):
         if target_type is UploadFile and isinstance(value, dict):
             return _convert_file_json_to_upload_file(value)
-        if (
-            origin is list
-            and args
-            and args[0] is UploadFile
-            and isinstance(value, list)
-        ):
-            return [
-                _convert_file_json_to_upload_file(f) if isinstance(f, dict) else f
-                for f in value
-            ]
-        if (
-            origin in (Union, types.UnionType)
-            and any(a is UploadFile for a in args)
-            and isinstance(value, dict)
-        ):
+        if origin is list and args and args[0] is UploadFile and isinstance(value, list):
+            return [_convert_file_json_to_upload_file(f) if isinstance(f, dict) else f for f in value]
+        if origin in (Union, types.UnionType) and any(a is UploadFile for a in args) and isinstance(value, dict):
             return _convert_file_json_to_upload_file(value)
 
     file_fields = _get_upload_file_fields(target_type)
@@ -769,30 +660,20 @@ def convert_value(  # noqa: C901, PLR0911, PLR0912
                 if field.name not in value_with_defaults:
                     field_type = type_hints_for_dc.get(field.name, field.type)
                     field_origin = get_origin(field_type)
-                    if field_origin in (Union, types.UnionType) and type(
-                        None
-                    ) in get_args(field_type):
+                    if field_origin in (Union, types.UnionType) and type(None) in get_args(field_type):
                         value_with_defaults[field.name] = None
             return target_type(**value_with_defaults)  # type: ignore[operator]
         except (TypeError, ValueError) as err:
             if strict:
-                raise ValueError(
-                    f"Failed to convert value to dataclass {target_type}: {err}"
-                ) from err
+                raise ValueError(f"Failed to convert value to dataclass {target_type}: {err}") from err
             return value
 
-    if (
-        isinstance(target_type, type)
-        and hasattr(target_type, "_fields")
-        and isinstance(value, dict)
-    ):
+    if isinstance(target_type, type) and hasattr(target_type, "_fields") and isinstance(value, dict):
         try:
             return target_type(**value)
         except (TypeError, ValueError) as err:
             if strict:
-                raise ValueError(
-                    f"Failed to convert value to NamedTuple {target_type}: {err}"
-                ) from err
+                raise ValueError(f"Failed to convert value to NamedTuple {target_type}: {err}") from err
             return value
 
     if isinstance(target_type, type) and issubclass(target_type, msgspec.Struct):
@@ -813,32 +694,19 @@ def convert_value(  # noqa: C901, PLR0911, PLR0912
                 builtin_types=(datetime, date, time, timedelta),
                 dec_hook=_default_dec_hook,
             )
-        except (
-            TypeError,
-            ValueError,
-            msgspec.DecodeError,
-            msgspec.ValidationError,
-        ) as err:
+        except (TypeError, ValueError, msgspec.DecodeError, msgspec.ValidationError) as err:
             if strict:
-                raise ValueError(
-                    f"Failed to convert value to msgspec.Struct {target_type}: {err}"
-                ) from err
+                raise ValueError(f"Failed to convert value to msgspec.Struct {target_type}: {err}") from err
             return value
 
-    if (
-        BaseModel is not None
-        and isinstance(target_type, type)
-        and issubclass(target_type, BaseModel)
-    ):
+    if BaseModel is not None and isinstance(target_type, type) and issubclass(target_type, BaseModel):
         try:
             if isinstance(value, dict):
                 return typing.cast("typing.Any", target_type).model_validate(value)
             return value
         except Exception as err:
             if strict:
-                raise ValueError(
-                    f"Failed to convert value to Pydantic model {target_type}: {err}"
-                ) from err
+                raise ValueError(f"Failed to convert value to Pydantic model {target_type}: {err}") from err
             return value
 
     try:
@@ -851,7 +719,5 @@ def convert_value(  # noqa: C901, PLR0911, PLR0912
         )
     except (msgspec.DecodeError, msgspec.ValidationError, TypeError, ValueError) as err:
         if strict:
-            raise ValueError(
-                f"Failed to convert value to type {target_type}: {err}"
-            ) from err
+            raise ValueError(f"Failed to convert value to type {target_type}: {err}") from err
         return value

@@ -110,17 +110,16 @@ impl Extension for HttpExtension {
         emit::emit_for_language(api, cfg, language)
     }
 
-    /// Contribute the ergonomic public-API re-exports to the Python package `__init__.py`.
+    /// Contribute the ergonomic public-API re-exports to language-specific initialization files.
     ///
-    /// Alef's public-API pass appends these raw lines to the generated
-    /// `packages/python/spikard/__init__.py` with exact-line de-duplication, and — crucially —
-    /// the appended content does not feed the generation-inputs hash, so `alef verify` and the
-    /// per-file hash headers are unaffected (no global rehash of the other languages).
+    /// For Python: Appends lines to `packages/python/spikard/__init__.py` with exact-line
+    /// de-duplication. The appended content does not feed the generation-inputs hash,
+    /// so `alef verify` remains fast. `from .app import App` is last to shadow the
+    /// low-level `from .service import App` and make `from spikard import App` ergonomic.
     ///
-    /// `from .app import App` is evaluated last, so it shadows the low-level
-    /// `from .service import App` the backend already emitted and makes `from spikard import App`
-    /// resolve to the ergonomic `App`. The parameter markers and `register_decoder` are
-    /// re-exported and merged into `__all__`. Non-Python languages contribute nothing.
+    /// For Node (TypeScript): Appends re-export lines to the generated index file so
+    /// `import { App } from '@spikard/node'` resolves to the ergonomic App (not the
+    /// low-level service App).
     ///
     /// # Errors
     ///
@@ -131,10 +130,12 @@ impl Extension for HttpExtension {
         _cfg: &ExtensionConfig,
         language: Language,
     ) -> Result<Vec<String>> {
-        if language != Language::Python {
-            return Ok(Vec::new());
+        match language {
+            Language::Python => Ok(PYTHON_INIT_ADDITIONS.iter().map(|line| (*line).to_owned()).collect()),
+            Language::Node => Ok(NODE_INIT_ADDITIONS.iter().map(|line| (*line).to_owned()).collect()),
+            Language::Ruby => Ok(RUBY_INIT_ADDITIONS.iter().map(|line| (*line).to_owned()).collect()),
+            _ => Ok(Vec::new()),
         }
-        Ok(PYTHON_INIT_ADDITIONS.iter().map(|line| (*line).to_owned()).collect())
     }
 }
 
@@ -150,9 +151,27 @@ const PYTHON_INIT_ADDITIONS: &[&str] = &[
     "__all__ = [*__all__, \"Body\", \"Cookie\", \"Header\", \"Path\", \"Query\", \"register_decoder\"]",
 ];
 
+/// Raw lines appended to `packages/node/@spikard/node/index.ts` to expose the ergonomic surface.
+///
+/// Ordering matters: `export * from './app'` comes after any low-level App re-exports from the
+/// backend so it shadows them, making `import { App } from '@spikard/node'` resolve to the
+/// ergonomic App (which provides typed route registration with zod schema validation).
+const NODE_INIT_ADDITIONS: &[&str] = &["export * from './app';"];
+
+/// Raw lines appended to `packages/ruby/lib/spikard.rb` to expose the ergonomic surface.
+///
+/// Ordering matters: `require_relative 'spikard/app'` comes after the backend's low-level
+/// imports so the ergonomic App class shadows the low-level one, making `require 'spikard'`
+/// and `Spikard::App.new` resolve to the ergonomic typed-handler App.
+const RUBY_INIT_ADDITIONS: &[&str] = &[
+    "require_relative 'spikard/app'",
+    "require_relative 'spikard/params'",
+    "require_relative 'spikard/introspection'",
+];
+
 #[cfg(test)]
 mod tests {
-    use super::{HttpExtension, PYTHON_INIT_ADDITIONS};
+    use super::{HttpExtension, NODE_INIT_ADDITIONS, PYTHON_INIT_ADDITIONS, RUBY_INIT_ADDITIONS};
     use alef::Extension;
     use alef::core::config::Language;
     use alef::core::ir::ApiSurface;
@@ -185,11 +204,43 @@ mod tests {
     }
 
     #[test]
-    fn non_python_additions_are_empty() {
+    fn node_additions_expose_ergonomic_surface() {
         let ext = HttpExtension::new();
         let api = ApiSurface::default();
         let cfg = ext.parse_config(None).unwrap();
-        for lang in [Language::Node, Language::Go, Language::Ruby, Language::Rust] {
+        let lines = ext.public_api_additions(&api, &cfg, Language::Node).unwrap();
+
+        assert_eq!(
+            lines, NODE_INIT_ADDITIONS,
+            "node additions must match the canonical set"
+        );
+        // `export * from './app'` shadows the backend's low-level App re-exports
+        assert!(lines.iter().any(|l| l == "export * from './app';"));
+    }
+
+    #[test]
+    fn ruby_additions_expose_ergonomic_surface() {
+        let ext = HttpExtension::new();
+        let api = ApiSurface::default();
+        let cfg = ext.parse_config(None).unwrap();
+        let lines = ext.public_api_additions(&api, &cfg, Language::Ruby).unwrap();
+
+        assert_eq!(
+            lines, RUBY_INIT_ADDITIONS,
+            "ruby additions must match the canonical set"
+        );
+        // Ergonomic app.rb is required after backend's low-level service.rb so it shadows
+        assert!(lines.iter().any(|l| l == "require_relative 'spikard/app'"));
+        assert!(lines.iter().any(|l| l == "require_relative 'spikard/params'"));
+        assert!(lines.iter().any(|l| l == "require_relative 'spikard/introspection'"));
+    }
+
+    #[test]
+    fn other_languages_additions_are_empty() {
+        let ext = HttpExtension::new();
+        let api = ApiSurface::default();
+        let cfg = ext.parse_config(None).unwrap();
+        for lang in [Language::Go, Language::Rust] {
             assert!(
                 ext.public_api_additions(&api, &cfg, lang).unwrap().is_empty(),
                 "{lang:?} must contribute no init additions",

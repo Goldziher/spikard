@@ -192,11 +192,11 @@ e2e/elixir/cover/
 e2e/elixir/.fetch
 e2e/elixir/doc/
 e2e/php/var/
-tests/test_apps/elixir/_build/
-tests/test_apps/elixir/deps/
-tests/test_apps/elixir/mix.lock
-tests/test_apps/elixir/*.beam
-tests/test_apps/ruby/spec/examples.txt
+test_apps/elixir/_build/
+test_apps/elixir/deps/
+test_apps/elixir/mix.lock
+test_apps/elixir/*.beam
+test_apps/ruby/spec/examples.txt
 tools/benchmark-harness/apps/*/_build/
 tools/benchmark-harness/apps/*/deps/
 tools/benchmark-harness/apps/spikard-rust/target/

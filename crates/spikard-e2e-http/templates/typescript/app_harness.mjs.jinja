@@ -5,17 +5,24 @@
  * This harness is spawned as a subprocess and runs the SUT app,
  * registering handlers per fixture. It loads all fixtures, creates
  * handlers that return expected responses, and serves on a configured port.
+ *
+ * The e2e harness is low-level fixture infrastructure (generic dict handlers,
+ * raw RouteBuilder), so it uses the low-level `.service` App primitive rather
+ * than the ergonomic top-level `App` (which introspects typed handlers).
  */
 
 {% if import_style == "named" %}
 {% for import_name in imports -%}
-import { {{ app_class }}, {{ server_config_factory_import }}, {{ method_enum }}, {{ route_builder_class }}, CorsConfig, CompressionConfig, ApiKeyAuthConfig, JwtAuthConfig, BearerAuthConfig } from '{{ import_name }}';
+import { {{ app_class }}, {{ method_enum }}, {{ route_builder_class }}, CorsConfig, CompressionConfig, ApiKeyAuthConfig, JwtAuthConfig, BearerAuthConfig } from '{{ import_name }}/service';
+import { {{ server_config_factory_import }} } from '{{ import_name }}';
 {% endfor -%}
 {% else %}
 {% for import_name in imports -%}
+import _servicePkg from '{{ import_name }}/service';
 import _pkg from '{{ import_name }}';
 {% endfor -%}
-const { {{ app_class }}, {{ server_config_factory_import }}, {{ method_enum }}, {{ route_builder_class }}, CorsConfig, CompressionConfig, ApiKeyAuthConfig, JwtAuthConfig, BearerAuthConfig } = _pkg;
+const { {{ app_class }}, {{ method_enum }}, {{ route_builder_class }}, CorsConfig, CompressionConfig, ApiKeyAuthConfig, JwtAuthConfig, BearerAuthConfig } = _servicePkg;
+const { {{ server_config_factory_import }} } = _pkg;
 {% endif %}
 
 // Load fixtures from the inline JSON payload.

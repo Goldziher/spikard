@@ -1686,7 +1686,7 @@ extension OpenApiConfigRef {
         { let val = __swift_bridge__$OpenApiConfig$license(ptr); if val != nil { return LicenseInfo(ptr: val!) } else { return nil } }()
     }
 
-    public func servers() -> RustVec<RustString> {
+    public func servers() -> RustVec<ServerInfo> {
         RustVec(ptr: __swift_bridge__$OpenApiConfig$servers(ptr))
     }
 
@@ -2272,7 +2272,7 @@ extension ServerConfigRef {
         { let val = __swift_bridge__$ServerConfig$api_key_auth(ptr); if val != nil { return ApiKeyConfig(ptr: val!) } else { return nil } }()
     }
 
-    public func staticFiles() -> RustVec<RustString> {
+    public func staticFiles() -> RustVec<StaticFilesConfig> {
         RustVec(ptr: __swift_bridge__$ServerConfig$static_files(ptr))
     }
 
@@ -2935,15 +2935,15 @@ extension ParseResultRef {
         RustString(ptr: __swift_bridge__$ParseResult$api_version(ptr))
     }
 
-    public func channels() -> RustVec<RustString> {
+    public func channels() -> RustVec<ParsedChannel> {
         RustVec(ptr: __swift_bridge__$ParseResult$channels(ptr))
     }
 
-    public func operations() -> RustVec<RustString> {
+    public func operations() -> RustVec<ParsedOperation> {
         RustVec(ptr: __swift_bridge__$ParseResult$operations(ptr))
     }
 
-    public func messages() -> RustVec<RustString> {
+    public func messages() -> RustVec<ParsedMessage> {
         RustVec(ptr: __swift_bridge__$ParseResult$messages(ptr))
     }
 }

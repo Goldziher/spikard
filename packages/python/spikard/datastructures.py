@@ -37,9 +37,7 @@ _UPLOAD_FILE_JSON_SCHEMA = {
 }
 
 
-UploadFileType = Annotated[
-    Any, msgspec.Meta(extra_json_schema=_UPLOAD_FILE_JSON_SCHEMA)
-]
+UploadFileType = Annotated[Any, msgspec.Meta(extra_json_schema=_UPLOAD_FILE_JSON_SCHEMA)]
 
 
 class UploadFile:
@@ -109,9 +107,7 @@ class UploadFile:
         self.headers = headers or {}
         self._content = content
 
-        self._file: SpooledTemporaryFile[bytes] = SpooledTemporaryFile(
-            max_size=max_spool_size, mode="w+b"
-        )  # noqa: SIM115
+        self._file: SpooledTemporaryFile[bytes] = SpooledTemporaryFile(max_size=max_spool_size, mode="w+b")  # noqa: SIM115
         self._file.write(content)
         self._file.seek(0)
 
@@ -254,12 +250,7 @@ class UploadFile:
         """Enter context manager (sync)."""
         return self
 
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: object,
-    ) -> None:
+    def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: object) -> None:
         """Exit context manager (sync)."""
         self.close()
 
@@ -268,10 +259,7 @@ class UploadFile:
         return self
 
     async def __aexit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: object,
+        self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: object
     ) -> None:
         """Exit async context manager."""
         await self.aclose()

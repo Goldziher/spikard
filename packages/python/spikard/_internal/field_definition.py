@@ -60,9 +60,7 @@ def _merge_grouped_metadata(meta: Any, is_sequence_container: bool) -> dict[str,
     """Flatten grouped metadata entries into a single dictionary."""
     merged: dict[str, Any] = {}
     for sub_meta in meta:
-        merged.update(
-            _extract_annotated_types_constraints(sub_meta, is_sequence_container)
-        )
+        merged.update(_extract_annotated_types_constraints(sub_meta, is_sequence_container))
     return merged
 
 
@@ -86,9 +84,7 @@ def _extract_numeric_constraints(meta: Any) -> dict[str, Any]:
     return {}
 
 
-def _extract_length_constraints(
-    meta: Any, is_sequence_container: bool
-) -> dict[str, Any]:
+def _extract_length_constraints(meta: Any, is_sequence_container: bool) -> dict[str, Any]:
     """Extract length-related constraints."""
     if annotated_types is None:
         return {}
@@ -120,9 +116,7 @@ def _extract_predicate_constraints(meta: Any) -> dict[str, Any]:
     return {}
 
 
-def _extract_annotated_types_constraints(
-    meta: Any, is_sequence_container: bool
-) -> dict[str, Any]:
+def _extract_annotated_types_constraints(meta: Any, is_sequence_container: bool) -> dict[str, Any]:
     """Extract constraints from annotated_types metadata.
 
     Args:
@@ -212,9 +206,7 @@ class FieldDefinition:
         return self.annotation == other.annotation  # type: ignore[no-any-return]
 
     def __hash__(self) -> int:
-        return hash(
-            (self.name, self.raw, self.annotation, self.origin, self.inner_types)
-        )
+        return hash((self.name, self.raw, self.annotation, self.origin, self.inner_types))
 
     @property
     def has_default(self) -> bool:
@@ -300,9 +292,7 @@ class FieldDefinition:
             if self.origin in UnionTypes:
                 return all(t.is_subclass_of(cl) for t in self.inner_types)
 
-            return self.origin not in UnionTypes and is_class_and_subclass(
-                self.origin, cl
-            )
+            return self.origin not in UnionTypes and is_class_and_subclass(self.origin, cl)
 
         return self.annotation is not Any and is_class_and_subclass(self.annotation, cl)
 
@@ -326,9 +316,7 @@ class FieldDefinition:
         Returns:
             FieldDefinition
         """
-        unwrapped, metadata, wrappers = unwrap_annotation(
-            annotation if annotation is not Empty else Any
-        )
+        unwrapped, metadata, wrappers = unwrap_annotation(annotation if annotation is not Empty else Any)
         origin = get_origin(unwrapped)
 
         annotation_args = () if origin is abc.Callable else get_args(unwrapped)
@@ -338,9 +326,7 @@ class FieldDefinition:
             extra_constraints = kwargs.get("extra", {}).copy()
 
             for meta in metadata:
-                constraints = _extract_annotated_types_constraints(
-                    meta, is_sequence_container
-                )
+                constraints = _extract_annotated_types_constraints(meta, is_sequence_container)
                 extra_constraints.update(constraints)
 
             if extra_constraints:
@@ -369,9 +355,7 @@ class FieldDefinition:
                 }
                 extra_constraints["source"] = source_map.get(class_name, "query")
 
-                if hasattr(default_val, "schema") and getattr(
-                    default_val, "schema", None
-                ):
+                if hasattr(default_val, "schema") and getattr(default_val, "schema", None):
                     schema_dict = default_val.schema  # type: ignore[union-attr]
                     if schema_dict:
                         extra_constraints.update(schema_dict)
@@ -382,28 +366,19 @@ class FieldDefinition:
         kwargs.setdefault("args", annotation_args)
         kwargs.setdefault("default", Empty)
         kwargs.setdefault("extra", {})
-        kwargs.setdefault(
-            "inner_types",
-            tuple(FieldDefinition.from_annotation(arg) for arg in annotation_args),
-        )
-        kwargs.setdefault(
-            "instantiable_origin", get_instantiable_origin(origin, unwrapped)
-        )
+        kwargs.setdefault("inner_types", tuple(FieldDefinition.from_annotation(arg) for arg in annotation_args))
+        kwargs.setdefault("instantiable_origin", get_instantiable_origin(origin, unwrapped))
         kwargs.setdefault("metadata", metadata)
         kwargs.setdefault("name", "")
         kwargs.setdefault("origin", origin)
         kwargs.setdefault("raw", annotation)
-        kwargs.setdefault(
-            "safe_generic_origin", get_safe_generic_origin(origin, unwrapped)
-        )
+        kwargs.setdefault("safe_generic_origin", get_safe_generic_origin(origin, unwrapped))
         kwargs.setdefault("type_wrappers", wrappers)
 
         return FieldDefinition(**kwargs)
 
     @classmethod
-    def from_parameter(
-        cls, parameter: Parameter, fn_type_hints: dict[str, Any]
-    ) -> FieldDefinition:
+    def from_parameter(cls, parameter: Parameter, fn_type_hints: dict[str, Any]) -> FieldDefinition:
         """Initialize FieldDefinition from an inspect.Parameter.
 
         Args:
@@ -423,7 +398,5 @@ class FieldDefinition:
         return FieldDefinition.from_annotation(
             annotation=annotation,
             name=parameter.name,
-            default=Empty
-            if parameter.default is Signature.empty
-            else parameter.default,
+            default=Empty if parameter.default is Signature.empty else parameter.default,
         )

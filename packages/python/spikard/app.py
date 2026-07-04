@@ -75,9 +75,7 @@ def _shared_loop() -> asyncio.AbstractEventLoop:
     with _LOOP_LOCK:
         if _LOOP is None:
             new_loop = asyncio.new_event_loop()
-            thread = threading.Thread(
-                target=new_loop.run_forever, name="spikard-handler-loop", daemon=True
-            )
+            thread = threading.Thread(target=new_loop.run_forever, name="spikard-handler-loop", daemon=True)
             thread.start()
             _LOOP = new_loop
         return _LOOP
@@ -95,14 +93,7 @@ def _run_coroutine(coro: Any) -> Any:
 class _Binding:
     """Resolved binding for a single non-body handler parameter."""
 
-    __slots__ = (
-        "declared_annotation",
-        "has_plain_default",
-        "name",
-        "param_default",
-        "source",
-        "target_type",
-    )
+    __slots__ = ("declared_annotation", "has_plain_default", "name", "param_default", "source", "target_type")
 
     def __init__(
         self,
@@ -137,9 +128,7 @@ def _strip_optional(annotation: Any) -> Any:
 
 def _is_optional(annotation: Any) -> bool:
     """Return True when ``annotation`` is ``Optional``/``T | None``."""
-    return get_origin(annotation) in (Union, types.UnionType) and type(
-        None
-    ) in get_args(annotation)
+    return get_origin(annotation) in (Union, types.UnionType) and type(None) in get_args(annotation)
 
 
 def _resolve_wrapped_target(annotation: Any) -> Any:
@@ -232,28 +221,18 @@ def _introspect(func: Callable[..., Any], method: str, path: str) -> _RouteSpec:
     for pname, param in signature.parameters.items():
         if pname in _SPECIAL_PARAM_NAMES:
             continue
-        if param.kind in (
-            inspect.Parameter.VAR_POSITIONAL,
-            inspect.Parameter.VAR_KEYWORD,
-        ):
+        if param.kind in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD):
             continue
 
         annotation = type_hints.get(pname, param.annotation)
         if annotation is inspect.Parameter.empty:
             annotation = Any
 
-        default = (
-            param.default if param.default is not inspect.Parameter.empty else _MISSING
-        )
+        default = param.default if param.default is not inspect.Parameter.empty else _MISSING
         param_default = None if default is _MISSING else default
 
         source, target_type, is_body = _classify_parameter(
-            pname,
-            annotation,
-            param_default,
-            path_names,
-            method_has_body,
-            body_param_name is not None,
+            pname, annotation, param_default, path_names, method_has_body, body_param_name is not None
         )
 
         if is_body:
@@ -261,9 +240,7 @@ def _introspect(func: Callable[..., Any], method: str, path: str) -> _RouteSpec:
             body_type = target_type
             continue
 
-        has_plain_default = default is not _MISSING and not isinstance(
-            default, ParamBase
-        )
+        has_plain_default = default is not _MISSING and not isinstance(default, ParamBase)
         bindings.append(
             _Binding(
                 name=pname,
@@ -285,21 +262,16 @@ def _build_params_schema(bindings: list[_Binding]) -> dict[str, Any] | None:
 
     for binding in bindings:
         try:
-            prop = field_definition_to_json_schema(
-                FieldDefinition.from_annotation(binding.target_type)
-            )
+            prop = field_definition_to_json_schema(FieldDefinition.from_annotation(binding.target_type))
         except (TypeError, ValueError):
             prop = {}
         prop["source"] = binding.source
         properties[binding.name] = prop
 
         param_has_default = binding.has_plain_default or (
-            isinstance(binding.param_default, ParamBase)
-            and binding.param_default.has_default()
+            isinstance(binding.param_default, ParamBase) and binding.param_default.has_default()
         )
-        if binding.source == "path" or (
-            not param_has_default and not _is_optional(binding.declared_annotation)
-        ):
+        if binding.source == "path" or (not param_has_default and not _is_optional(binding.declared_annotation)):
             required.append(binding.name)
 
     if not properties:
@@ -327,11 +299,7 @@ def _to_envelope(result: Any) -> dict[str, Any]:
         return {"content": None, "status_code": 200, "headers": {}}
 
     status_code = getattr(result, "status_code", None)
-    if (
-        status_code is not None
-        and hasattr(result, "content")
-        and hasattr(result, "headers")
-    ):
+    if status_code is not None and hasattr(result, "content") and hasattr(result, "headers"):
         raw_headers = getattr(result, "headers", None) or {}
         return {
             "content": _jsonable(getattr(result, "content", None)),
@@ -363,10 +331,7 @@ def _build_kwargs(request_dict: dict[str, Any], spec: _RouteSpec) -> dict[str, A
                 raw = container[binding.name]
 
         if raw is _MISSING:
-            if (
-                isinstance(binding.param_default, ParamBase)
-                and binding.param_default.has_default()
-            ):
+            if isinstance(binding.param_default, ParamBase) and binding.param_default.has_default():
                 kwargs[binding.name] = binding.param_default.get_default()
             continue
 
@@ -375,19 +340,13 @@ def _build_kwargs(request_dict: dict[str, Any], spec: _RouteSpec) -> dict[str, A
     if spec.body_param_name is not None:
         body = request_dict.get("body")
         raw_body = request_dict.get("raw_body")
-        raw_bytes = (
-            bytes(raw_body) if isinstance(raw_body, (list, bytes, bytearray)) else None
-        )
-        kwargs[spec.body_param_name] = convert_value(
-            body, spec.body_type, raw_body=raw_bytes
-        )
+        raw_bytes = bytes(raw_body) if isinstance(raw_body, (list, bytes, bytearray)) else None
+        kwargs[spec.body_param_name] = convert_value(body, spec.body_type, raw_body=raw_bytes)
 
     return kwargs
 
 
-def _make_adapter(
-    spec: _RouteSpec, *, is_async: bool
-) -> Callable[[dict[str, Any]], Any]:
+def _make_adapter(spec: _RouteSpec, *, is_async: bool) -> Callable[[dict[str, Any]], Any]:
     """Create the synchronous Python callable registered with the Rust bridge for one route.
 
     The Rust bridge invokes the returned callable as ``adapter(request_dict)`` on a blocking
@@ -449,9 +408,7 @@ class App:
         self._app.config(config)
         return self
 
-    def add_route(
-        self, method: str, path: str, handler: Callable[..., Any]
-    ) -> Callable[..., Any]:
+    def add_route(self, method: str, path: str, handler: Callable[..., Any]) -> Callable[..., Any]:
         """Register ``handler`` for ``method`` and ``path`` and return it unchanged."""
         method_upper = method.upper()
         method_enum = getattr(_Method, method_upper, None)
@@ -496,9 +453,7 @@ class App:
         except (TypeError, ValueError):
             return None
 
-    def _method_decorator(
-        self, method: str
-    ) -> Callable[[str], Callable[[Callable[..., Any]], Callable[..., Any]]]:
+    def _method_decorator(self, method: str) -> Callable[[str], Callable[[Callable[..., Any]], Callable[..., Any]]]:
         def register(path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
             def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
                 return self.add_route(method, path, func)
@@ -543,9 +498,7 @@ class App:
         """Register a TRACE route."""
         return self._method_decorator("TRACE")(path)
 
-    def route(
-        self, path: str, method: str = "GET"
-    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    def route(self, path: str, method: str = "GET") -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Register a route with an explicit HTTP method (defaults to GET)."""
         return self._method_decorator(method)(path)
 

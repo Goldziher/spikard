@@ -13,7 +13,14 @@ documentation = "https://docs.rs/spikard-cli"
 readme = "README.md"
 
 [package.metadata.cargo-machete]
-ignored = ["clap_complete", "clap_mangen", "prost", "prost-reflect", "prost-types", "protox"]
+ignored = [
+    "clap_complete",
+    "clap_mangen",
+    "prost",
+    "prost-reflect",
+    "prost-types",
+    "protox",
+]
 
 [lib]
 name = "spikard_cli"
@@ -44,10 +51,10 @@ prost-reflect = "0.16"         # Protocol Buffers reflection
 prost-types = "0.14"           # Protocol Buffers well-known types
 protox = "0.9"                 # Protocol Buffers compilation
 
-rmcp = { version = "2.0.0", features = ["client", "transport-io"], optional = true }
-scythe-core = { version = "0.10", features = ["serde"] }
+rmcp = { version = "2.1.0", features = ["client", "transport-io"], optional = true }
+scythe-core = { version = "0.11", features = ["serde"] }
 serde.workspace = true
-serde-saphyr = "0.0.28"
+serde-saphyr = "0.0.29"
 serde_json.workspace = true
 spikard.workspace = true
 spikard-codegen = { workspace = true }

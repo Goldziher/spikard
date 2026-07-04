@@ -52,17 +52,11 @@ def get_instantiable_origin(origin: Any, _annotation: Any) -> Any:
     if origin is None:
         return None
 
-    if origin is Sequence or (
-        hasattr(origin, "__origin__") and origin.__origin__ is Sequence
-    ):
+    if origin is Sequence or (hasattr(origin, "__origin__") and origin.__origin__ is Sequence):
         return list
-    if origin is Mapping or (
-        hasattr(origin, "__origin__") and origin.__origin__ is Mapping
-    ):
+    if origin is Mapping or (hasattr(origin, "__origin__") and origin.__origin__ is Mapping):
         return dict
-    if origin is Collection or (
-        hasattr(origin, "__origin__") and origin.__origin__ is Collection
-    ):
+    if origin is Collection or (hasattr(origin, "__origin__") and origin.__origin__ is Collection):
         return list
 
     return origin
@@ -111,9 +105,9 @@ def is_non_string_sequence(annotation: Any) -> bool:
     origin = get_origin(annotation) or annotation
 
     try:
-        return is_class_and_subclass(
-            origin, (list, tuple, set, frozenset, Sequence)
-        ) and not is_class_and_subclass(origin, (str, bytes))
+        return is_class_and_subclass(origin, (list, tuple, set, frozenset, Sequence)) and not is_class_and_subclass(
+            origin, (str, bytes)
+        )
     except TypeError:
         return False
 
@@ -130,8 +124,6 @@ def is_non_string_iterable(annotation: Any) -> bool:
     origin = get_origin(annotation) or annotation
 
     try:
-        return is_class_and_subclass(origin, Iterable) and not is_class_and_subclass(
-            origin, (str, bytes)
-        )
+        return is_class_and_subclass(origin, Iterable) and not is_class_and_subclass(origin, (str, bytes))
     except TypeError:
         return False

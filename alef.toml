@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.30.16"
+alef_version = "0.30.19"
 languages = [
     "python",
     "node",
@@ -172,7 +172,6 @@ features = ["di"]
 exclude_platforms = ["darwin-x64"]
 
 [crates.node.extra_dependencies]
-serde_bytes = "0.11"
 tokio = { version = "1", features = ["full"] }
 # Required by alef-generated handler bridges that reference
 # `axum::http::Request<axum::body::Body>` (declared opaque type).

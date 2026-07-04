@@ -16,9 +16,7 @@ from spikard._internal import (
 from spikard.datastructures import UploadFile
 
 
-def extract_parameter_schema(
-    func: Callable[..., Any], path: str | None = None
-) -> dict[str, Any] | None:
+def extract_parameter_schema(func: Callable[..., Any], path: str | None = None) -> dict[str, Any] | None:
     """Extract JSON Schema from function signature for parameter validation.
 
     This analyzes the function's type hints using the universal FieldDefinition IR
@@ -51,18 +49,13 @@ def extract_parameter_schema(
         path_param_names = set(re.findall(r"\{(\w+)\}", path))
 
     sig = inspect.signature(func)
-    params_list = [
-        p
-        for p in sig.parameters.values()
-        if p.name not in ("self", "cls", "request", "req")
-    ]
+    params_list = [p for p in sig.parameters.values() if p.name not in ("self", "cls", "request", "req")]
     first_param_is_body = False
     if params_list:
         first_param_name = params_list[0].name
         first_field_def = parsed_sig.parameters.get(first_param_name)
         if first_field_def and (
-            _is_structured_type(first_field_def.annotation)
-            or _is_upload_file_type(first_field_def.annotation)
+            _is_structured_type(first_field_def.annotation) or _is_upload_file_type(first_field_def.annotation)
         ):
             first_param_is_body = True
 

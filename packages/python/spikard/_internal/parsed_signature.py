@@ -61,9 +61,7 @@ class ParsedSignature:
         return cls.from_signature(signature, fn_type_hints)
 
     @classmethod
-    def from_signature(
-        cls, signature: Signature, fn_type_hints: dict[str, type]
-    ) -> ParsedSignature:
+    def from_signature(cls, signature: Signature, fn_type_hints: dict[str, type]) -> ParsedSignature:
         """Parse an :class:`inspect.Signature` instance.
 
         Args:
@@ -74,9 +72,7 @@ class ParsedSignature:
             ParsedSignature
         """
         parameters = tuple(
-            FieldDefinition.from_parameter(
-                parameter=parameter, fn_type_hints=fn_type_hints
-            )
+            FieldDefinition.from_parameter(parameter=parameter, fn_type_hints=fn_type_hints)
             for name, parameter in signature.parameters.items()
             if name not in ("self", "cls")
         )
@@ -85,9 +81,7 @@ class ParsedSignature:
         return_type = FieldDefinition.from_annotation(return_annotation)
 
         if "return" not in fn_type_hints:
-            return_type = FieldDefinition.from_annotation(
-                Empty, name="return", default=Empty
-            )
+            return_type = FieldDefinition.from_annotation(Empty, name="return", default=Empty)
 
         return cls(
             parameters={p.name: p for p in parameters},

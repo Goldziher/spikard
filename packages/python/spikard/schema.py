@@ -4,15 +4,7 @@ import dataclasses
 import inspect
 import types
 from collections.abc import Callable
-from typing import (
-    Any,
-    Protocol,
-    Union,
-    get_args,
-    get_origin,
-    get_type_hints,
-    runtime_checkable,
-)
+from typing import Any, Protocol, Union, get_args, get_origin, get_type_hints, runtime_checkable
 
 import msgspec
 
@@ -50,11 +42,7 @@ def is_typeddict(obj: Any) -> bool:
     Returns:
         True if obj is a TypedDict class
     """
-    return (
-        isinstance(obj, type)
-        and hasattr(obj, "__required_keys__")
-        and hasattr(obj, "__optional_keys__")
-    )
+    return isinstance(obj, type) and hasattr(obj, "__required_keys__") and hasattr(obj, "__optional_keys__")
 
 
 def is_json_schema_dict(obj: Any) -> bool:
@@ -150,9 +138,7 @@ def extract_schemas(
             if param_type:
                 is_upload_file = param_type is UploadFile
                 is_list_upload_file = (
-                    get_origin(param_type) is list
-                    and get_args(param_type)
-                    and get_args(param_type)[0] is UploadFile
+                    get_origin(param_type) is list and get_args(param_type) and get_args(param_type)[0] is UploadFile
                 )
 
                 if not (is_upload_file or is_list_upload_file):
@@ -180,9 +166,7 @@ def extract_schemas(
                         if optional_upload_fields:
                             required_fields = request_schema.get("required", [])
                             request_schema["required"] = [
-                                field
-                                for field in required_fields
-                                if field not in optional_upload_fields
+                                field for field in required_fields if field not in optional_upload_fields
                             ]
 
     response_schema = None
@@ -274,25 +258,19 @@ def extract_json_schema(schema_source: Any) -> dict[str, Any] | None:  # noqa: C
             schema = msgspec.json.schema(schema_source)
             return resolve_msgspec_ref(schema)
         except Exception as e:
-            raise TypeError(
-                f"Failed to extract schema from TypedDict {schema_source.__name__}: {e}"
-            ) from e
+            raise TypeError(f"Failed to extract schema from TypedDict {schema_source.__name__}: {e}") from e
 
     if isinstance(schema_source, type) and isinstance(schema_source, PydanticV2Model):
         try:
             return schema_source.model_json_schema()
         except Exception as e:
-            raise TypeError(
-                f"Failed to extract schema from Pydantic v2 model {schema_source.__name__}: {e}"
-            ) from e
+            raise TypeError(f"Failed to extract schema from Pydantic v2 model {schema_source.__name__}: {e}") from e
 
     if isinstance(schema_source, type) and isinstance(schema_source, PydanticV1Model):
         try:
             return schema_source.schema()
         except Exception as e:
-            raise TypeError(
-                f"Failed to extract schema from Pydantic v1 model {schema_source.__name__}: {e}"
-            ) from e
+            raise TypeError(f"Failed to extract schema from Pydantic v1 model {schema_source.__name__}: {e}") from e
 
     if isinstance(schema_source, type) and dataclasses.is_dataclass(schema_source):
         try:
@@ -304,8 +282,7 @@ def extract_json_schema(schema_source: Any) -> dict[str, Any] | None:  # noqa: C
                 field_type = type_hints.get(field.name, field.type)
 
                 has_default = (
-                    field.default is not dataclasses.MISSING
-                    or field.default_factory is not dataclasses.MISSING
+                    field.default is not dataclasses.MISSING or field.default_factory is not dataclasses.MISSING
                 )
 
                 is_optional_type = False
@@ -327,9 +304,7 @@ def extract_json_schema(schema_source: Any) -> dict[str, Any] | None:  # noqa: C
                 "title": schema_source.__name__,
             }
         except Exception as e:
-            raise TypeError(
-                f"Failed to extract schema from dataclass {schema_source.__name__}: {e}"
-            ) from e
+            raise TypeError(f"Failed to extract schema from dataclass {schema_source.__name__}: {e}") from e
 
     if isinstance(schema_source, type) and hasattr(schema_source, "_fields"):
         try:
@@ -365,9 +340,7 @@ def extract_json_schema(schema_source: Any) -> dict[str, Any] | None:  # noqa: C
                 "title": schema_source.__name__,
             }
         except Exception as e:
-            raise TypeError(
-                f"Failed to extract schema from NamedTuple {schema_source.__name__}: {e}"
-            ) from e
+            raise TypeError(f"Failed to extract schema from NamedTuple {schema_source.__name__}: {e}") from e
 
     try:
         schema = msgspec.json.schema(schema_source, schema_hook=schema_hook)

@@ -41,6 +41,22 @@ fn make_env() -> Environment<'static> {
         include_str!("../templates/magnus/service_rb_sse_method.rb.jinja").to_owned(),
     )
     .expect("built-in template parse failed");
+    // Ergonomic API templates
+    env.add_template_owned(
+        "app.rb.jinja".to_owned(),
+        include_str!("../templates/magnus/app.rb.jinja").to_owned(),
+    )
+    .expect("built-in template parse failed");
+    env.add_template_owned(
+        "params.rb.jinja".to_owned(),
+        include_str!("../templates/magnus/params.rb.jinja").to_owned(),
+    )
+    .expect("built-in template parse failed");
+    env.add_template_owned(
+        "introspection.rb.jinja".to_owned(),
+        include_str!("../templates/magnus/introspection.rb.jinja").to_owned(),
+    )
+    .expect("built-in template parse failed");
     env
 }
 
@@ -185,39 +201,71 @@ fn gen_service_additions(env: &Environment<'static>, cfg: &HttpExtensionConfig) 
     out
 }
 
+fn emit_ergonomic(env: &Environment<'static>) -> Vec<GeneratedFile> {
+    let mut files = Vec::new();
+
+    // Emit app.rb
+    let app_content = render(env, "app.rb.jinja", context! {});
+    files.push(GeneratedFile {
+        path: PathBuf::from("packages/ruby/lib/spikard/app.rb"),
+        content: app_content,
+        generated_header: true,
+    });
+
+    // Emit params.rb
+    let params_content = render(env, "params.rb.jinja", context! {});
+    files.push(GeneratedFile {
+        path: PathBuf::from("packages/ruby/lib/spikard/params.rb"),
+        content: params_content,
+        generated_header: true,
+    });
+
+    // Emit introspection.rb
+    let introspection_content = render(env, "introspection.rb.jinja", context! {});
+    files.push(GeneratedFile {
+        path: PathBuf::from("packages/ruby/lib/spikard/introspection.rb"),
+        content: introspection_content,
+        generated_header: true,
+    });
+
+    files
+}
+
 /// Emit Ruby HTTP extension files.
 ///
 /// # Errors
 ///
 /// Returns an error if template rendering fails.
 pub fn emit(api: &ApiSurface, cfg: &HttpExtensionConfig) -> Result<Vec<GeneratedFile>> {
-    if cfg.lifecycle_hooks.is_empty()
-        && cfg.websocket_routes.is_empty()
-        && cfg.sse_routes.is_empty()
-        && cfg.error_types.is_empty()
-    {
-        return Ok(vec![]);
-    }
-
     let env = make_env();
     let mut files = Vec::new();
 
-    let errors_content = gen_error_classes(&env, api, cfg);
-    if !errors_content.is_empty() {
-        files.push(GeneratedFile {
-            path: PathBuf::from("packages/ruby/lib/spikard/errors.rb"),
-            content: errors_content,
-            generated_header: true,
-        });
-    }
+    // Always emit ergonomic API files (app.rb, params.rb, introspection.rb)
+    files.extend(emit_ergonomic(&env));
 
-    let additions = gen_service_additions(&env, cfg);
-    if !additions.is_empty() {
-        files.push(GeneratedFile {
-            path: PathBuf::from("packages/ruby/lib/spikard/service_http_additions.rb"),
-            content: additions,
-            generated_header: true,
-        });
+    // Conditionally emit HTTP-extension-specific files
+    if !cfg.lifecycle_hooks.is_empty()
+        || !cfg.websocket_routes.is_empty()
+        || !cfg.sse_routes.is_empty()
+        || !cfg.error_types.is_empty()
+    {
+        let errors_content = gen_error_classes(&env, api, cfg);
+        if !errors_content.is_empty() {
+            files.push(GeneratedFile {
+                path: PathBuf::from("packages/ruby/lib/spikard/errors.rb"),
+                content: errors_content,
+                generated_header: true,
+            });
+        }
+
+        let additions = gen_service_additions(&env, cfg);
+        if !additions.is_empty() {
+            files.push(GeneratedFile {
+                path: PathBuf::from("packages/ruby/lib/spikard/service_http_additions.rb"),
+                content: additions,
+                generated_header: true,
+            });
+        }
     }
 
     Ok(files)

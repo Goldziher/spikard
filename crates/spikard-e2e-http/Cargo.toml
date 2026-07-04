@@ -8,16 +8,18 @@ repository = "https://github.com/Goldziher/spikard"
 description = "Alef e2e HTTP test-generation extension for the spikard polyglot framework"
 publish = false
 
+# serde is used only through its derive macro (`#[derive(Serialize)]` in
+# streaming/accessors.rs); cargo-machete does not detect derive-only usage.
+[package.metadata.cargo-machete]
+ignored = ["serde"]
+
 [dependencies]
-alef = { git = "https://github.com/xberg-io/alef", tag = "v0.30.16" }
+alef = { git = "https://github.com/xberg-io/alef", tag = "v0.30.19" }
 anyhow = "1"
 heck = "0.5"
 minijinja = "2"
-percent-encoding = "2"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1"
-toml = "1.1"
-tracing = "0.1"
 
 [lints]
 workspace = true
