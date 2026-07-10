@@ -14,7 +14,11 @@ formula="${tap_dir}/Formula/spikard.rb"
   exit 1
 }
 
-revision="${REVISION:-$(git rev-parse HEAD^{commit})}"
+# Resolve the revision from the release TAG, not HEAD: earlier publish steps
+# (e.g. the Swift job committing the Package.swift checksum) can advance HEAD
+# past the tag within the same run, which would pin the formula to a commit the
+# tag does not point at and make `brew` reject it ("<tag> should be <sha>").
+revision="${REVISION:-$(git rev-parse "${tag}^{commit}")}"
 [[ -n "$revision" ]] || { echo "Could not resolve git revision for $tag" >&2; exit 1; }
 
 write_formula() {

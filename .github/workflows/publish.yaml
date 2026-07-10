@@ -1265,7 +1265,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ needs.prepare.outputs.tag }}
           VERSION: ${{ needs.prepare.outputs.version }}
-          REVISION: ${{ github.sha }}
+          # ~keep Pin the formula to the release target commit resolved at run start,
+          # ~keep not github.sha: an earlier publish step (Swift Package.swift checksum
+          # ~keep commit) can advance the branch mid-run, and a moved revision makes
+          # ~keep brew reject the bottle ("<tag> should be <sha>").
+          REVISION: ${{ needs.prepare.outputs.target_sha }}
           TAP_DIR: ${{ github.workspace }}/homebrew-tap
         run: scripts/publish/update-homebrew-formula.sh
 
