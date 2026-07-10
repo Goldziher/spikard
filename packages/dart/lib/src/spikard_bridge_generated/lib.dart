@@ -9,7 +9,7 @@ import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'lib.freezed.dart';
 
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `HandlerResult`, `ParseRequest`, `RequestData`, `Request`, `TestingSseEvent`, `ValidateRequest`, `ValidationResponse`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
 
 /// Create a simple schema configuration with only Query type.
 ///
@@ -166,6 +166,8 @@ abstract class GraphQlRouteConfig implements RustOpaqueInterface {
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<RouteBuilder>>
 abstract class RouteBuilder implements RustOpaqueInterface {
+  Future<RouteBuilder> bodyLimit({required PlatformInt64 maxBytes});
+
   Future<RouteBuilder> compression({required CompressionConfig compression});
 
   Future<RouteBuilder> cors({required CorsConfig cors});
@@ -187,6 +189,8 @@ abstract class RouteBuilder implements RustOpaqueInterface {
   Future<RouteBuilder> paramsSchemaJson({required String schema});
 
   Future<RouteBuilder> requestSchemaJson({required String schema});
+
+  Future<RouteBuilder> requestTimeout({required PlatformInt64 seconds});
 
   Future<RouteBuilder> responseSchemaJson({required String schema});
 
@@ -256,6 +260,9 @@ sealed class AppError with _$AppError {
 
   /// Failed to extract DTO from the request context.
   const factory AppError.decode({required String field0}) = AppError_Decode;
+
+  /// GraphQL route registration failed (e.g. an unrecognized `schema_type`).
+  const factory AppError.graphQl({required String field0}) = AppError_GraphQL;
 }
 
 /// AsyncAPI HTTP endpoint configuration
@@ -549,6 +556,13 @@ sealed class GraphQLError with _$GraphQLError {
   const factory GraphQLError.depthLimitExceeded() =
   GraphQLError_DepthLimitExceeded;
 
+  /// Introspection query rejected because introspection is disabled
+  ///
+  /// Occurs when a query selects `__schema` or `__type` while the schema was
+  /// configured with introspection disabled.
+  const factory GraphQLError.introspectionDisabled() =
+  GraphQLError_IntrospectionDisabled;
+
   /// Internal server error
   ///
   /// Occurs when an unexpected internal error happens.
@@ -574,14 +588,16 @@ sealed class GraphQLError with _$GraphQLError {
   /// Convert error to HTTP status code
   ///
   /// Maps GraphQL error types to appropriate HTTP status codes:
-  /// - 400: Bad Request for parse/request-handling errors
+  /// - 400: Bad Request for request-handling errors (malformed HTTP request body)
   /// - 401: Unauthorized for authentication errors
   /// - 403: Forbidden for authorization errors
-  /// - 404: Not Found for resource not found
-  /// - 422: Unprocessable Entity for validation failures
   /// - 429: Too Many Requests for rate limit errors
   /// - 500: Internal Server Error for schema/serialization/internal errors
-  /// - 200: OK for GraphQL execution errors returned in GraphQL response body
+  /// - 200: OK for errors arising from processing the GraphQL document itself
+  ///   (parse errors, validation failures, complexity/depth-limit rejections,
+  ///   execution errors, invalid input, not-found results) — per the GraphQL
+  ///   spec, these are reported as `errors` in the response body rather than
+  ///   as HTTP-level failures.
   ///
   /// # Examples
   ///

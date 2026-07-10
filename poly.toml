@@ -33,42 +33,6 @@ disable = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051
 [fmt.markdown.rumdl]
 disable = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051", "MD076"]
 
-[lint.uncomment]
-enabled = true
-remove_todos = false
-remove_fixme = false
-remove_docs = false
-use_default_ignores = true
-preserve_patterns = ["SAFETY", "HACK", "WORKAROUND", "NOTE"]
-
-[lint.typos]
-extend_ignore_words = [
-    "bre",
-    "caf",
-    "Caf",
-    "enumerables",
-    "Enumerables",
-    "fo",
-    "Fo",
-    "FO",
-    "fre",
-    "hte",
-    "Hte",
-    "Iz",
-    "Jod",
-    "lsit",
-    "nam",
-    "ND",
-    "Parm",
-    "ser",
-    "tre",
-    "Tre",
-    "Ue",
-    "ure",
-    "Userr",
-    "wre",
-]
-
 [lint.python.ruff]
 select = ["ALL"]
 ignore = [
@@ -106,6 +70,40 @@ pylint_max_returns = 10
 select = ["correctness", "security"]
 ignore = ["strict-assertions", "use-specific-assertions", "no-redundant-variable", "sensitive-parameter"]
 php_version = "8.2"
+
+[lint.typos.extend_words]
+Caf = "Caf"
+Enumerables = "Enumerables"
+FO = "FO"
+Fo = "Fo"
+Hte = "Hte"
+Iz = "Iz"
+Jod = "Jod"
+ND = "ND"
+Parm = "Parm"
+Tre = "Tre"
+Ue = "Ue"
+Userr = "Userr"
+bre = "bre"
+caf = "caf"
+enumerables = "enumerables"
+fo = "fo"
+fre = "fre"
+hte = "hte"
+lsit = "lsit"
+nam = "nam"
+ser = "ser"
+tre = "tre"
+ure = "ure"
+wre = "wre"
+
+[lint.uncomment]
+enabled = true
+remove_todos = false
+remove_fixme = false
+remove_docs = false
+use_default_ignores = true
+preserve_patterns = ["SAFETY", "HACK", "WORKAROUND", "NOTE"]
 
 [per-file-ignores]
 "**/api.py" = ["F401", "I001", "TC006", "UP035"]
@@ -193,8 +191,6 @@ php_version = "8.2"
     "EXE001",
     "A001",
     "N801",
-    "comment",
-    "doc-comment",
 ]
 "**/test_apps/**" = [
     "ANN",
@@ -238,6 +234,7 @@ php_version = "8.2"
     "N801",
 ]
 "CHANGELOG.md" = ["MD057"]
+"Package.swift" = ["comment", "doc-comment"]
 "crates/spikard-elixir/**" = ["comment", "doc-comment"]
 "crates/spikard-ffi/**" = ["comment", "doc-comment"]
 "crates/spikard-node/**" = ["comment", "doc-comment", "no-unused-vars"]
@@ -247,10 +244,9 @@ php_version = "8.2"
 "docs/reference/feature-parity.md" = ["MD057"]
 "e2e/**" = ["comment", "doc-comment", "D101", "D415", "no-loss-of-precision", "PTH100", "PTH118", "PTH120"]
 "packages/**" = ["comment", "doc-comment", "no-unused-vars"]
-"Package.swift" = ["comment", "doc-comment"]
 "scripts/**/*.py" = ["RUF100"]
-"test_apps/**" = ["comment", "doc-comment", "no-loss-of-precision"]
 "templates/readme/**" = ["MD057"]
+"test_apps/**" = ["comment", "doc-comment", "no-loss-of-precision"]
 
 [hooks]
 stages = ["pre-commit"]
@@ -311,10 +307,6 @@ fmt = { exclude = [
     "packages/go/include/spikard.h",
 ] }
 file_safety = { exclude = [
-    # Rust source files legitimately begin with `#![...]` inner attributes,
-    # which the shebang-executable check misreads as a `#!` script header.
-    # Rust files are compiled, never executable scripts, so skip file-safety.
-    "**/*.rs",
     "**/*.freezed.dart",
     "**/*.g.dart",
     "**/*.jinja",
@@ -340,6 +332,9 @@ file_safety = { exclude = [
     "crates/spikard-ffi/include/spikard.h",
     "crates/spikard-node/service_http_additions.ts",
     "packages/go/include/spikard.h",
+    "**/*.rs",
+    "**/app_harness.*",
+    "**/run_tests.*",
 ] }
 cargo = true
 commit = { stages = ["commit-msg"] }

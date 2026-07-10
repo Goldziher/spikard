@@ -79,6 +79,12 @@ public func routeBuilderCors(_ client: RouteBuilderRef, _ cors: CorsConfig) -> R
 public func routeBuilderCompression(_ client: RouteBuilderRef, _ compression: CompressionConfig) -> RouteBuilder {
     RouteBuilder(ptr: __swift_bridge__$route_builder_compression(client.ptr, {compression.isOwned = false; return compression.ptr;}()))
 }
+public func routeBuilderBodyLimit(_ client: RouteBuilderRef, _ max_bytes: UInt) -> RouteBuilder {
+    RouteBuilder(ptr: __swift_bridge__$route_builder_body_limit(client.ptr, max_bytes))
+}
+public func routeBuilderRequestTimeout(_ client: RouteBuilderRef, _ seconds: UInt64) -> RouteBuilder {
+    RouteBuilder(ptr: __swift_bridge__$route_builder_request_timeout(client.ptr, seconds))
+}
 public func routeBuilderSync(_ client: RouteBuilderRef) -> RouteBuilder {
     RouteBuilder(ptr: __swift_bridge__$route_builder_sync(client.ptr))
 }
@@ -127,6 +133,9 @@ public func run(_ client: AppRefMut) -> RustString {
 public func routeBuilderNew<GenericIntoRustString: IntoRustString>(_ method: MethodRef, _ path: GenericIntoRustString) -> RouteBuilder {
     RouteBuilder(ptr: __swift_bridge__$route_builder_new(method.ptr, { let rustString = path.intoRustString(); rustString.isOwned = false; return rustString.ptr }()))
 }
+public func schemaConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> SchemaConfig {
+    try { let val = __swift_bridge__$schema_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return SchemaConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
 public func corsConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> CorsConfig {
     try { let val = __swift_bridge__$cors_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return CorsConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
@@ -135,9 +144,6 @@ public func compressionConfigFromJson<GenericIntoRustString: IntoRustString>(_ j
 }
 public func uploadFileFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> UploadFile {
     try { let val = __swift_bridge__$upload_file_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return UploadFile(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
-}
-public func schemaConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> SchemaConfig {
-    try { let val = __swift_bridge__$schema_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return SchemaConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
 public func queryOnlyConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> QueryOnlyConfig {
     try { let val = __swift_bridge__$query_only_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return QueryOnlyConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()

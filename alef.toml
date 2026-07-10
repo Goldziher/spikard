@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.32.3"
+alef_version = "0.34.8"
 languages = [
     "python",
     "node",
@@ -52,7 +52,49 @@ RequestData = "spikard_http::handler_trait::RequestData"
 HandlerResult = "spikard_http::handler_trait::HandlerResult"
 
 [workspace.poly]
-exclude = ["crates/spikard-node/service_http_additions.ts"]
+exclude = [
+    "crates/spikard-ffi/include/spikard.h",
+    "crates/spikard-node/service_http_additions.ts",
+    "packages/go/include/spikard.h",
+]
+# Rust `#![...]` inner attributes are misread as `#!` shebangs; skip Rust in file-safety only.
+# Generated harness scripts carry a shebang but are run via their interpreter (mode 644), so
+# skip them in the shebang-executable check too.
+file-safety-exclude = ["**/*.rs", "**/app_harness.*", "**/run_tests.*"]
+
+[workspace.poly.uncomment]
+enabled = true
+remove-todos = false
+remove-fixme = false
+remove-docs = false
+use-default-ignores = true
+preserve-patterns = ["SAFETY", "HACK", "WORKAROUND", "NOTE"]
+
+[workspace.poly.typos.extend-words]
+bre = "bre"
+caf = "caf"
+Caf = "Caf"
+enumerables = "enumerables"
+Enumerables = "Enumerables"
+fo = "fo"
+Fo = "Fo"
+FO = "FO"
+fre = "fre"
+hte = "hte"
+Hte = "Hte"
+Iz = "Iz"
+Jod = "Jod"
+lsit = "lsit"
+nam = "nam"
+ND = "ND"
+Parm = "Parm"
+ser = "ser"
+tre = "tre"
+Tre = "Tre"
+Ue = "Ue"
+ure = "ure"
+Userr = "Userr"
+wre = "wre"
 
 [workspace.poly.per-file-ignores]
 # noqa is redundant under the poly ruff config.
@@ -60,6 +102,18 @@ exclude = ["crates/spikard-node/service_http_additions.ts"]
 "templates/readme/**" = ["MD057"]
 "docs/reference/feature-parity.md" = ["MD057"]
 "CHANGELOG.md" = ["MD057"]
+# Generated binding/e2e/test-app trees carry alef-authored comments and docs that
+# the uncomment lint would otherwise flag; exempt them from comment/doc-comment.
+"crates/spikard-elixir/**" = ["comment", "doc-comment"]
+"crates/spikard-ffi/**" = ["comment", "doc-comment"]
+"crates/spikard-node/**" = ["comment", "doc-comment", "no-unused-vars"]
+"crates/spikard-php/**" = ["comment", "doc-comment"]
+"crates/spikard-py/**" = ["comment", "doc-comment"]
+"crates/spikard-wasm/**" = ["comment", "doc-comment"]
+"packages/**" = ["comment", "doc-comment", "no-unused-vars"]
+"e2e/**" = ["comment", "doc-comment", "D101", "D415", "no-loss-of-precision", "PTH100", "PTH118", "PTH120"]
+"test_apps/**" = ["comment", "doc-comment", "no-loss-of-precision"]
+"Package.swift" = ["comment", "doc-comment"]
 
 [workspace.poly.pyrefly-sub-configs]
 "**/app.py" = ["bad-argument-type"]

@@ -1854,6 +1854,22 @@ SPIKARDRouteBuilder *spikard_route_builder_compression(SPIKARDRouteBuilder *this
                                                        const SPIKARDCompressionConfig *compression);
 
 /**
+ * Attach a per-route maximum request body size in bytes, overriding the server-global default.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+SPIKARDRouteBuilder *spikard_route_builder_body_limit(SPIKARDRouteBuilder *this_,
+                                                      uintptr_t max_bytes);
+
+/**
+ * Attach a per-route request timeout in seconds, overriding the server-global default.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+SPIKARDRouteBuilder *spikard_route_builder_request_timeout(SPIKARDRouteBuilder *this_,
+                                                           uint64_t seconds);
+
+/**
  * Mark the route as synchronous.
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.

@@ -86,13 +86,14 @@ extension AppErrorPatterns on AppError {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( AppError_Route value)?  route,TResult Function( AppError_Server value)?  server,TResult Function( AppError_Decode value)?  decode,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( AppError_Route value)?  route,TResult Function( AppError_Server value)?  server,TResult Function( AppError_Decode value)?  decode,TResult Function( AppError_GraphQL value)?  graphQl,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case AppError_Route() when route != null:
 return route(_that);case AppError_Server() when server != null:
 return server(_that);case AppError_Decode() when decode != null:
-return decode(_that);case _:
+return decode(_that);case AppError_GraphQL() when graphQl != null:
+return graphQl(_that);case _:
   return orElse();
 
 }
@@ -110,13 +111,14 @@ return decode(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( AppError_Route value)  route,required TResult Function( AppError_Server value)  server,required TResult Function( AppError_Decode value)  decode,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( AppError_Route value)  route,required TResult Function( AppError_Server value)  server,required TResult Function( AppError_Decode value)  decode,required TResult Function( AppError_GraphQL value)  graphQl,}){
 final _that = this;
 switch (_that) {
 case AppError_Route():
 return route(_that);case AppError_Server():
 return server(_that);case AppError_Decode():
-return decode(_that);}
+return decode(_that);case AppError_GraphQL():
+return graphQl(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -130,13 +132,14 @@ return decode(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( AppError_Route value)?  route,TResult? Function( AppError_Server value)?  server,TResult? Function( AppError_Decode value)?  decode,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( AppError_Route value)?  route,TResult? Function( AppError_Server value)?  server,TResult? Function( AppError_Decode value)?  decode,TResult? Function( AppError_GraphQL value)?  graphQl,}){
 final _that = this;
 switch (_that) {
 case AppError_Route() when route != null:
 return route(_that);case AppError_Server() when server != null:
 return server(_that);case AppError_Decode() when decode != null:
-return decode(_that);case _:
+return decode(_that);case AppError_GraphQL() when graphQl != null:
+return graphQl(_that);case _:
   return null;
 
 }
@@ -153,12 +156,13 @@ return decode(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String field0)?  route,TResult Function( String field0)?  server,TResult Function( String field0)?  decode,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String field0)?  route,TResult Function( String field0)?  server,TResult Function( String field0)?  decode,TResult Function( String field0)?  graphQl,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case AppError_Route() when route != null:
 return route(_that.field0);case AppError_Server() when server != null:
 return server(_that.field0);case AppError_Decode() when decode != null:
-return decode(_that.field0);case _:
+return decode(_that.field0);case AppError_GraphQL() when graphQl != null:
+return graphQl(_that.field0);case _:
   return orElse();
 
 }
@@ -176,12 +180,13 @@ return decode(_that.field0);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String field0)  route,required TResult Function( String field0)  server,required TResult Function( String field0)  decode,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String field0)  route,required TResult Function( String field0)  server,required TResult Function( String field0)  decode,required TResult Function( String field0)  graphQl,}) {final _that = this;
 switch (_that) {
 case AppError_Route():
 return route(_that.field0);case AppError_Server():
 return server(_that.field0);case AppError_Decode():
-return decode(_that.field0);}
+return decode(_that.field0);case AppError_GraphQL():
+return graphQl(_that.field0);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -195,12 +200,13 @@ return decode(_that.field0);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String field0)?  route,TResult? Function( String field0)?  server,TResult? Function( String field0)?  decode,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String field0)?  route,TResult? Function( String field0)?  server,TResult? Function( String field0)?  decode,TResult? Function( String field0)?  graphQl,}) {final _that = this;
 switch (_that) {
 case AppError_Route() when route != null:
 return route(_that.field0);case AppError_Server() when server != null:
 return server(_that.field0);case AppError_Decode() when decode != null:
-return decode(_that.field0);case _:
+return decode(_that.field0);case AppError_GraphQL() when graphQl != null:
+return graphQl(_that.field0);case _:
   return null;
 
 }
@@ -407,6 +413,72 @@ as String,
 }
 
 /// @nodoc
+
+
+class AppError_GraphQL extends AppError {
+  const AppError_GraphQL({required this.field0}): super._();
+
+
+@override final  String field0;
+
+/// Create a copy of AppError
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AppError_GraphQLCopyWith<AppError_GraphQL> get copyWith => _$AppError_GraphQLCopyWithImpl<AppError_GraphQL>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppError_GraphQL&&(identical(other.field0, field0) || other.field0 == field0));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,field0);
+
+@override
+String toString() {
+  return 'AppError.graphQl(field0: $field0)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AppError_GraphQLCopyWith<$Res> implements $AppErrorCopyWith<$Res> {
+  factory $AppError_GraphQLCopyWith(AppError_GraphQL value, $Res Function(AppError_GraphQL) _then) = _$AppError_GraphQLCopyWithImpl;
+@override @useResult
+$Res call({
+ String field0
+});
+
+
+
+
+}
+/// @nodoc
+class _$AppError_GraphQLCopyWithImpl<$Res>
+    implements $AppError_GraphQLCopyWith<$Res> {
+  _$AppError_GraphQLCopyWithImpl(this._self, this._then);
+
+  final AppError_GraphQL _self;
+  final $Res Function(AppError_GraphQL) _then;
+
+/// Create a copy of AppError
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? field0 = null,}) {
+  return _then(AppError_GraphQL(
+field0: null == field0 ? _self.field0 : field0 // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$GraphQLError {
 
 
@@ -450,7 +522,7 @@ extension GraphQLErrorPatterns on GraphQLError {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( GraphQLError_ExecutionError value)?  executionError,TResult Function( GraphQLError_SchemaBuildError value)?  schemaBuildError,TResult Function( GraphQLError_RequestHandlingError value)?  requestHandlingError,TResult Function( GraphQLError_SerializationError value)?  serializationError,TResult Function( GraphQLError_JsonError value)?  jsonError,TResult Function( GraphQLError_ValidationError value)?  validationError,TResult Function( GraphQLError_ParseError value)?  parseError,TResult Function( GraphQLError_AuthenticationError value)?  authenticationError,TResult Function( GraphQLError_AuthorizationError value)?  authorizationError,TResult Function( GraphQLError_NotFound value)?  notFound,TResult Function( GraphQLError_RateLimitExceeded value)?  rateLimitExceeded,TResult Function( GraphQLError_InvalidInput value)?  invalidInput,TResult Function( GraphQLError_ComplexityLimitExceeded value)?  complexityLimitExceeded,TResult Function( GraphQLError_DepthLimitExceeded value)?  depthLimitExceeded,TResult Function( GraphQLError_InternalError value)?  internalError,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( GraphQLError_ExecutionError value)?  executionError,TResult Function( GraphQLError_SchemaBuildError value)?  schemaBuildError,TResult Function( GraphQLError_RequestHandlingError value)?  requestHandlingError,TResult Function( GraphQLError_SerializationError value)?  serializationError,TResult Function( GraphQLError_JsonError value)?  jsonError,TResult Function( GraphQLError_ValidationError value)?  validationError,TResult Function( GraphQLError_ParseError value)?  parseError,TResult Function( GraphQLError_AuthenticationError value)?  authenticationError,TResult Function( GraphQLError_AuthorizationError value)?  authorizationError,TResult Function( GraphQLError_NotFound value)?  notFound,TResult Function( GraphQLError_RateLimitExceeded value)?  rateLimitExceeded,TResult Function( GraphQLError_InvalidInput value)?  invalidInput,TResult Function( GraphQLError_ComplexityLimitExceeded value)?  complexityLimitExceeded,TResult Function( GraphQLError_DepthLimitExceeded value)?  depthLimitExceeded,TResult Function( GraphQLError_IntrospectionDisabled value)?  introspectionDisabled,TResult Function( GraphQLError_InternalError value)?  internalError,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case GraphQLError_ExecutionError() when executionError != null:
@@ -467,7 +539,8 @@ return notFound(_that);case GraphQLError_RateLimitExceeded() when rateLimitExcee
 return rateLimitExceeded(_that);case GraphQLError_InvalidInput() when invalidInput != null:
 return invalidInput(_that);case GraphQLError_ComplexityLimitExceeded() when complexityLimitExceeded != null:
 return complexityLimitExceeded(_that);case GraphQLError_DepthLimitExceeded() when depthLimitExceeded != null:
-return depthLimitExceeded(_that);case GraphQLError_InternalError() when internalError != null:
+return depthLimitExceeded(_that);case GraphQLError_IntrospectionDisabled() when introspectionDisabled != null:
+return introspectionDisabled(_that);case GraphQLError_InternalError() when internalError != null:
 return internalError(_that);case _:
   return orElse();
 
@@ -486,7 +559,7 @@ return internalError(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( GraphQLError_ExecutionError value)  executionError,required TResult Function( GraphQLError_SchemaBuildError value)  schemaBuildError,required TResult Function( GraphQLError_RequestHandlingError value)  requestHandlingError,required TResult Function( GraphQLError_SerializationError value)  serializationError,required TResult Function( GraphQLError_JsonError value)  jsonError,required TResult Function( GraphQLError_ValidationError value)  validationError,required TResult Function( GraphQLError_ParseError value)  parseError,required TResult Function( GraphQLError_AuthenticationError value)  authenticationError,required TResult Function( GraphQLError_AuthorizationError value)  authorizationError,required TResult Function( GraphQLError_NotFound value)  notFound,required TResult Function( GraphQLError_RateLimitExceeded value)  rateLimitExceeded,required TResult Function( GraphQLError_InvalidInput value)  invalidInput,required TResult Function( GraphQLError_ComplexityLimitExceeded value)  complexityLimitExceeded,required TResult Function( GraphQLError_DepthLimitExceeded value)  depthLimitExceeded,required TResult Function( GraphQLError_InternalError value)  internalError,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( GraphQLError_ExecutionError value)  executionError,required TResult Function( GraphQLError_SchemaBuildError value)  schemaBuildError,required TResult Function( GraphQLError_RequestHandlingError value)  requestHandlingError,required TResult Function( GraphQLError_SerializationError value)  serializationError,required TResult Function( GraphQLError_JsonError value)  jsonError,required TResult Function( GraphQLError_ValidationError value)  validationError,required TResult Function( GraphQLError_ParseError value)  parseError,required TResult Function( GraphQLError_AuthenticationError value)  authenticationError,required TResult Function( GraphQLError_AuthorizationError value)  authorizationError,required TResult Function( GraphQLError_NotFound value)  notFound,required TResult Function( GraphQLError_RateLimitExceeded value)  rateLimitExceeded,required TResult Function( GraphQLError_InvalidInput value)  invalidInput,required TResult Function( GraphQLError_ComplexityLimitExceeded value)  complexityLimitExceeded,required TResult Function( GraphQLError_DepthLimitExceeded value)  depthLimitExceeded,required TResult Function( GraphQLError_IntrospectionDisabled value)  introspectionDisabled,required TResult Function( GraphQLError_InternalError value)  internalError,}){
 final _that = this;
 switch (_that) {
 case GraphQLError_ExecutionError():
@@ -503,7 +576,8 @@ return notFound(_that);case GraphQLError_RateLimitExceeded():
 return rateLimitExceeded(_that);case GraphQLError_InvalidInput():
 return invalidInput(_that);case GraphQLError_ComplexityLimitExceeded():
 return complexityLimitExceeded(_that);case GraphQLError_DepthLimitExceeded():
-return depthLimitExceeded(_that);case GraphQLError_InternalError():
+return depthLimitExceeded(_that);case GraphQLError_IntrospectionDisabled():
+return introspectionDisabled(_that);case GraphQLError_InternalError():
 return internalError(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
@@ -518,7 +592,7 @@ return internalError(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( GraphQLError_ExecutionError value)?  executionError,TResult? Function( GraphQLError_SchemaBuildError value)?  schemaBuildError,TResult? Function( GraphQLError_RequestHandlingError value)?  requestHandlingError,TResult? Function( GraphQLError_SerializationError value)?  serializationError,TResult? Function( GraphQLError_JsonError value)?  jsonError,TResult? Function( GraphQLError_ValidationError value)?  validationError,TResult? Function( GraphQLError_ParseError value)?  parseError,TResult? Function( GraphQLError_AuthenticationError value)?  authenticationError,TResult? Function( GraphQLError_AuthorizationError value)?  authorizationError,TResult? Function( GraphQLError_NotFound value)?  notFound,TResult? Function( GraphQLError_RateLimitExceeded value)?  rateLimitExceeded,TResult? Function( GraphQLError_InvalidInput value)?  invalidInput,TResult? Function( GraphQLError_ComplexityLimitExceeded value)?  complexityLimitExceeded,TResult? Function( GraphQLError_DepthLimitExceeded value)?  depthLimitExceeded,TResult? Function( GraphQLError_InternalError value)?  internalError,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( GraphQLError_ExecutionError value)?  executionError,TResult? Function( GraphQLError_SchemaBuildError value)?  schemaBuildError,TResult? Function( GraphQLError_RequestHandlingError value)?  requestHandlingError,TResult? Function( GraphQLError_SerializationError value)?  serializationError,TResult? Function( GraphQLError_JsonError value)?  jsonError,TResult? Function( GraphQLError_ValidationError value)?  validationError,TResult? Function( GraphQLError_ParseError value)?  parseError,TResult? Function( GraphQLError_AuthenticationError value)?  authenticationError,TResult? Function( GraphQLError_AuthorizationError value)?  authorizationError,TResult? Function( GraphQLError_NotFound value)?  notFound,TResult? Function( GraphQLError_RateLimitExceeded value)?  rateLimitExceeded,TResult? Function( GraphQLError_InvalidInput value)?  invalidInput,TResult? Function( GraphQLError_ComplexityLimitExceeded value)?  complexityLimitExceeded,TResult? Function( GraphQLError_DepthLimitExceeded value)?  depthLimitExceeded,TResult? Function( GraphQLError_IntrospectionDisabled value)?  introspectionDisabled,TResult? Function( GraphQLError_InternalError value)?  internalError,}){
 final _that = this;
 switch (_that) {
 case GraphQLError_ExecutionError() when executionError != null:
@@ -535,7 +609,8 @@ return notFound(_that);case GraphQLError_RateLimitExceeded() when rateLimitExcee
 return rateLimitExceeded(_that);case GraphQLError_InvalidInput() when invalidInput != null:
 return invalidInput(_that);case GraphQLError_ComplexityLimitExceeded() when complexityLimitExceeded != null:
 return complexityLimitExceeded(_that);case GraphQLError_DepthLimitExceeded() when depthLimitExceeded != null:
-return depthLimitExceeded(_that);case GraphQLError_InternalError() when internalError != null:
+return depthLimitExceeded(_that);case GraphQLError_IntrospectionDisabled() when introspectionDisabled != null:
+return introspectionDisabled(_that);case GraphQLError_InternalError() when internalError != null:
 return internalError(_that);case _:
   return null;
 
@@ -553,7 +628,7 @@ return internalError(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String field0)?  executionError,TResult Function( String field0)?  schemaBuildError,TResult Function( String field0)?  requestHandlingError,TResult Function( String field0)?  serializationError,TResult Function( String field0)?  jsonError,TResult Function( String field0)?  validationError,TResult Function( String field0)?  parseError,TResult Function( String field0)?  authenticationError,TResult Function( String field0)?  authorizationError,TResult Function( String field0)?  notFound,TResult Function( String field0)?  rateLimitExceeded,TResult Function( String message)?  invalidInput,TResult Function()?  complexityLimitExceeded,TResult Function()?  depthLimitExceeded,TResult Function( String field0)?  internalError,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String field0)?  executionError,TResult Function( String field0)?  schemaBuildError,TResult Function( String field0)?  requestHandlingError,TResult Function( String field0)?  serializationError,TResult Function( String field0)?  jsonError,TResult Function( String field0)?  validationError,TResult Function( String field0)?  parseError,TResult Function( String field0)?  authenticationError,TResult Function( String field0)?  authorizationError,TResult Function( String field0)?  notFound,TResult Function( String field0)?  rateLimitExceeded,TResult Function( String message)?  invalidInput,TResult Function()?  complexityLimitExceeded,TResult Function()?  depthLimitExceeded,TResult Function()?  introspectionDisabled,TResult Function( String field0)?  internalError,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case GraphQLError_ExecutionError() when executionError != null:
 return executionError(_that.field0);case GraphQLError_SchemaBuildError() when schemaBuildError != null:
@@ -569,7 +644,8 @@ return notFound(_that.field0);case GraphQLError_RateLimitExceeded() when rateLim
 return rateLimitExceeded(_that.field0);case GraphQLError_InvalidInput() when invalidInput != null:
 return invalidInput(_that.message);case GraphQLError_ComplexityLimitExceeded() when complexityLimitExceeded != null:
 return complexityLimitExceeded();case GraphQLError_DepthLimitExceeded() when depthLimitExceeded != null:
-return depthLimitExceeded();case GraphQLError_InternalError() when internalError != null:
+return depthLimitExceeded();case GraphQLError_IntrospectionDisabled() when introspectionDisabled != null:
+return introspectionDisabled();case GraphQLError_InternalError() when internalError != null:
 return internalError(_that.field0);case _:
   return orElse();
 
@@ -588,7 +664,7 @@ return internalError(_that.field0);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String field0)  executionError,required TResult Function( String field0)  schemaBuildError,required TResult Function( String field0)  requestHandlingError,required TResult Function( String field0)  serializationError,required TResult Function( String field0)  jsonError,required TResult Function( String field0)  validationError,required TResult Function( String field0)  parseError,required TResult Function( String field0)  authenticationError,required TResult Function( String field0)  authorizationError,required TResult Function( String field0)  notFound,required TResult Function( String field0)  rateLimitExceeded,required TResult Function( String message)  invalidInput,required TResult Function()  complexityLimitExceeded,required TResult Function()  depthLimitExceeded,required TResult Function( String field0)  internalError,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String field0)  executionError,required TResult Function( String field0)  schemaBuildError,required TResult Function( String field0)  requestHandlingError,required TResult Function( String field0)  serializationError,required TResult Function( String field0)  jsonError,required TResult Function( String field0)  validationError,required TResult Function( String field0)  parseError,required TResult Function( String field0)  authenticationError,required TResult Function( String field0)  authorizationError,required TResult Function( String field0)  notFound,required TResult Function( String field0)  rateLimitExceeded,required TResult Function( String message)  invalidInput,required TResult Function()  complexityLimitExceeded,required TResult Function()  depthLimitExceeded,required TResult Function()  introspectionDisabled,required TResult Function( String field0)  internalError,}) {final _that = this;
 switch (_that) {
 case GraphQLError_ExecutionError():
 return executionError(_that.field0);case GraphQLError_SchemaBuildError():
@@ -604,7 +680,8 @@ return notFound(_that.field0);case GraphQLError_RateLimitExceeded():
 return rateLimitExceeded(_that.field0);case GraphQLError_InvalidInput():
 return invalidInput(_that.message);case GraphQLError_ComplexityLimitExceeded():
 return complexityLimitExceeded();case GraphQLError_DepthLimitExceeded():
-return depthLimitExceeded();case GraphQLError_InternalError():
+return depthLimitExceeded();case GraphQLError_IntrospectionDisabled():
+return introspectionDisabled();case GraphQLError_InternalError():
 return internalError(_that.field0);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -619,7 +696,7 @@ return internalError(_that.field0);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String field0)?  executionError,TResult? Function( String field0)?  schemaBuildError,TResult? Function( String field0)?  requestHandlingError,TResult? Function( String field0)?  serializationError,TResult? Function( String field0)?  jsonError,TResult? Function( String field0)?  validationError,TResult? Function( String field0)?  parseError,TResult? Function( String field0)?  authenticationError,TResult? Function( String field0)?  authorizationError,TResult? Function( String field0)?  notFound,TResult? Function( String field0)?  rateLimitExceeded,TResult? Function( String message)?  invalidInput,TResult? Function()?  complexityLimitExceeded,TResult? Function()?  depthLimitExceeded,TResult? Function( String field0)?  internalError,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String field0)?  executionError,TResult? Function( String field0)?  schemaBuildError,TResult? Function( String field0)?  requestHandlingError,TResult? Function( String field0)?  serializationError,TResult? Function( String field0)?  jsonError,TResult? Function( String field0)?  validationError,TResult? Function( String field0)?  parseError,TResult? Function( String field0)?  authenticationError,TResult? Function( String field0)?  authorizationError,TResult? Function( String field0)?  notFound,TResult? Function( String field0)?  rateLimitExceeded,TResult? Function( String message)?  invalidInput,TResult? Function()?  complexityLimitExceeded,TResult? Function()?  depthLimitExceeded,TResult? Function()?  introspectionDisabled,TResult? Function( String field0)?  internalError,}) {final _that = this;
 switch (_that) {
 case GraphQLError_ExecutionError() when executionError != null:
 return executionError(_that.field0);case GraphQLError_SchemaBuildError() when schemaBuildError != null:
@@ -635,7 +712,8 @@ return notFound(_that.field0);case GraphQLError_RateLimitExceeded() when rateLim
 return rateLimitExceeded(_that.field0);case GraphQLError_InvalidInput() when invalidInput != null:
 return invalidInput(_that.message);case GraphQLError_ComplexityLimitExceeded() when complexityLimitExceeded != null:
 return complexityLimitExceeded();case GraphQLError_DepthLimitExceeded() when depthLimitExceeded != null:
-return depthLimitExceeded();case GraphQLError_InternalError() when internalError != null:
+return depthLimitExceeded();case GraphQLError_IntrospectionDisabled() when introspectionDisabled != null:
+return introspectionDisabled();case GraphQLError_InternalError() when internalError != null:
 return internalError(_that.field0);case _:
   return null;
 
@@ -1492,6 +1570,38 @@ int get hashCode => runtimeType.hashCode;
 @override
 String toString() {
   return 'GraphQLError.depthLimitExceeded()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class GraphQLError_IntrospectionDisabled extends GraphQLError {
+  const GraphQLError_IntrospectionDisabled(): super._();
+
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_IntrospectionDisabled);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'GraphQLError.introspectionDisabled()';
 }
 
 
