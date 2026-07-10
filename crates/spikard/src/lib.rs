@@ -6,6 +6,7 @@
 //! by the shared `spikard-http` runtime, ensuring identical validation and
 //! middleware behaviour across languages.
 
+mod graphql_schemas;
 pub mod upload;
 pub mod validation;
 
@@ -188,6 +189,98 @@ impl App {
         self.routes.push((route, handler));
         self.metadata.push(metadata);
         Ok(self)
+    }
+
+    /// Register a `/graphql`-style route backed by one of Spikard's built-in
+    /// async-graphql test schemas.
+    ///
+    /// This is a binding-friendly entry point: unlike [`spikard_graphql::GraphQLHandler`],
+    /// which is generic over the GraphQL root types and therefore cannot cross an FFI
+    /// boundary, this method is monomorphic. Callers select a schema by name and the
+    /// concrete `GraphQLHandler<Query, Mutation, Subscription>` is constructed internally
+    /// and registered as an `Arc<dyn Handler>`.
+    ///
+    /// The built-in schemas exist to exercise Spikard's GraphQL execution path end to
+    /// end (see `fixtures/graphql_schema.json`); they are not meant to be extended with
+    /// application-specific fields. Hosts that need a custom GraphQL schema should build
+    /// their own `GraphQLHandler` in Rust and register it via [`App::route`].
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The HTTP path to serve GraphQL requests on (e.g. `/graphql`).
+    /// * `method` - The HTTP method to accept (fixtures always use `POST`).
+    /// * `schema_type` - One of `"query_only"`, `"query_mutation"`, or `"full"`.
+    /// * `config` - Introspection/complexity/depth limits applied to the selected schema.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`AppError::GraphQL`] if `schema_type` is not a recognized built-in schema
+    /// name, and [`AppError::Route`] if route construction fails.
+    pub fn register_graphql_route(
+        &mut self,
+        path: impl Into<String>,
+        method: Method,
+        schema_type: &str,
+        config: &SchemaConfig,
+    ) -> std::result::Result<&mut Self, AppError> {
+        use graphql_schemas::{
+            BuiltinGraphQLSchema, FullQueryRoot, MutationRoot, QueryMutationQueryRoot, QueryOnlyRoot,
+            apply_schema_config,
+        };
+        use spikard_graphql::{GraphQLExecutor, GraphQLHandler};
+
+        let path = path.into();
+        let selected = BuiltinGraphQLSchema::parse(schema_type)
+            .ok_or_else(|| AppError::GraphQL(format!("unknown GraphQL schema_type: {schema_type}")))?;
+
+        let request_schema = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "query": {"type": "string"},
+                "variables": {"type": "object"},
+                "operationName": {"type": "string"}
+            },
+            "required": ["query"]
+        });
+
+        let handler: Arc<dyn Handler> = match selected {
+            BuiltinGraphQLSchema::QueryOnly => {
+                let builder = async_graphql::Schema::build(
+                    QueryOnlyRoot,
+                    async_graphql::EmptyMutation,
+                    async_graphql::EmptySubscription,
+                );
+                let schema = apply_schema_config(builder, config).finish();
+                Arc::new(GraphQLHandler::new(Arc::new(GraphQLExecutor::with_introspection(
+                    schema,
+                    config.introspection_enabled,
+                ))))
+            }
+            BuiltinGraphQLSchema::QueryMutation => {
+                let builder = async_graphql::Schema::build(
+                    QueryMutationQueryRoot,
+                    MutationRoot,
+                    async_graphql::EmptySubscription,
+                );
+                let schema = apply_schema_config(builder, config).finish();
+                Arc::new(GraphQLHandler::new(Arc::new(GraphQLExecutor::with_introspection(
+                    schema,
+                    config.introspection_enabled,
+                ))))
+            }
+            BuiltinGraphQLSchema::Full => {
+                let builder =
+                    async_graphql::Schema::build(FullQueryRoot, MutationRoot, async_graphql::EmptySubscription);
+                let schema = apply_schema_config(builder, config).finish();
+                Arc::new(GraphQLHandler::new(Arc::new(GraphQLExecutor::with_introspection(
+                    schema,
+                    config.introspection_enabled,
+                ))))
+            }
+        };
+
+        let route_builder = RouteBuilder::new(method, path).request_schema_json(request_schema);
+        self.route(route_builder, handler)
     }
 
     /// Register a WebSocket handler for the specified path.
@@ -651,12 +744,17 @@ pub enum AppError {
     /// Failed to extract DTO from the request context.
     #[error("Failed to decode payload: {0}")]
     Decode(String),
+    /// GraphQL route registration failed (e.g. an unrecognized `schema_type`).
+    #[error("Failed to register GraphQL route: {0}")]
+    GraphQL(String),
 }
 
 impl From<AppError> for (StatusCode, String) {
     fn from(err: AppError) -> Self {
         match err {
-            AppError::Route(msg) | AppError::Server(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg),
+            AppError::Route(msg) | AppError::Server(msg) | AppError::GraphQL(msg) => {
+                (StatusCode::INTERNAL_SERVER_ERROR, msg)
+            }
             AppError::Decode(msg) => (StatusCode::BAD_REQUEST, msg),
         }
     }

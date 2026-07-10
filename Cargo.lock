@@ -3987,6 +3987,7 @@ name = "spikard"
 version = "0.16.1"
 dependencies = [
  "anyhow",
+ "async-graphql",
  "axum",
  "axum-test",
  "base64",

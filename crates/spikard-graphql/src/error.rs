@@ -104,6 +104,13 @@ pub enum GraphQLError {
     #[error("Query depth limit exceeded")]
     DepthLimitExceeded,
 
+    /// Introspection query rejected because introspection is disabled
+    ///
+    /// Occurs when a query selects `__schema` or `__type` while the schema was
+    /// configured with introspection disabled.
+    #[error("GraphQL introspection is disabled")]
+    IntrospectionDisabled,
+
     /// Internal server error
     ///
     /// Occurs when an unexpected internal error happens.
@@ -115,14 +122,16 @@ impl GraphQLError {
     /// Convert error to HTTP status code
     ///
     /// Maps GraphQL error types to appropriate HTTP status codes:
-    /// - 400: Bad Request for parse/request-handling errors
+    /// - 400: Bad Request for request-handling errors (malformed HTTP request body)
     /// - 401: Unauthorized for authentication errors
     /// - 403: Forbidden for authorization errors
-    /// - 404: Not Found for resource not found
-    /// - 422: Unprocessable Entity for validation failures
     /// - 429: Too Many Requests for rate limit errors
     /// - 500: Internal Server Error for schema/serialization/internal errors
-    /// - 200: OK for GraphQL execution errors returned in GraphQL response body
+    /// - 200: OK for errors arising from processing the GraphQL document itself
+    ///   (parse errors, validation failures, complexity/depth-limit rejections,
+    ///   execution errors, invalid input, not-found results) — per the GraphQL
+    ///   spec, these are reported as `errors` in the response body rather than
+    ///   as HTTP-level failures.
     ///
     /// # Examples
     ///
@@ -138,16 +147,23 @@ impl GraphQLError {
     #[must_use]
     pub const fn status_code(&self) -> u16 {
         match self {
-            Self::ParseError(_) | Self::JsonError(_) | Self::RequestHandlingError(_) => 400,
-            Self::ValidationError(_)
-            | Self::InvalidInput { .. }
-            | Self::ComplexityLimitExceeded
-            | Self::DepthLimitExceeded => 422,
+            Self::RequestHandlingError(_) => 400,
             Self::AuthenticationError(_) => 401,
             Self::AuthorizationError(_) => 403,
-            Self::NotFound(_) => 404,
+            // Per the GraphQL spec, errors arising from processing a GraphQL document
+            // (parse errors, validation failures, complexity/depth-limit rejections,
+            // execution errors, invalid input, and not-found results) are reported as
+            // `errors` in a 200 OK response body, not as HTTP error statuses.
+            Self::ParseError(_)
+            | Self::JsonError(_)
+            | Self::ValidationError(_)
+            | Self::InvalidInput { .. }
+            | Self::NotFound(_)
+            | Self::ExecutionError(_)
+            | Self::ComplexityLimitExceeded
+            | Self::DepthLimitExceeded
+            | Self::IntrospectionDisabled => 200,
             Self::RateLimitExceeded(_) => 429,
-            Self::ExecutionError(_) => 200,
             Self::SchemaBuildError(_) | Self::SerializationError(_) | Self::InternalError(_) => 500,
         }
     }
@@ -185,6 +201,20 @@ impl GraphQLError {
     /// ```
     #[must_use]
     pub fn to_graphql_response(&self) -> Value {
+        // Complexity/depth-limit rejections and introspection-disabled rejections
+        // are reported as bare GraphQL errors (message only, no extensions),
+        // matching the response shape asserted by `fixtures/graphql_schema.json`.
+        if matches!(
+            self,
+            Self::ComplexityLimitExceeded | Self::DepthLimitExceeded | Self::IntrospectionDisabled
+        ) {
+            return json!({
+                "errors": [{
+                    "message": self.to_string()
+                }]
+            });
+        }
+
         json!({
             "errors": [{
                 "message": self.to_string(),
@@ -226,7 +256,7 @@ impl GraphQLError {
     ///
     /// let error = GraphQLError::ValidationError("Invalid query".to_string());
     /// let json = error.to_http_response();
-    /// assert_eq!(json["status"], 422);
+    /// assert_eq!(json["status"], 200);
     /// ```
     #[must_use]
     pub fn to_http_response(&self) -> Value {
@@ -236,7 +266,8 @@ impl GraphQLError {
             Self::ValidationError(_)
             | Self::InvalidInput { .. }
             | Self::ComplexityLimitExceeded
-            | Self::DepthLimitExceeded => "Validation Failed",
+            | Self::DepthLimitExceeded
+            | Self::IntrospectionDisabled => "Validation Failed",
             Self::AuthenticationError(_) => "Unauthorized",
             Self::AuthorizationError(_) => "Forbidden",
             Self::NotFound(_) => "Not Found",
@@ -300,6 +331,7 @@ impl GraphQLError {
             Self::InvalidInput { .. } => "VALIDATION_ERROR",
             Self::ComplexityLimitExceeded => "GRAPHQL_COMPLEXITY_LIMIT_EXCEEDED",
             Self::DepthLimitExceeded => "GRAPHQL_DEPTH_LIMIT_EXCEEDED",
+            Self::IntrospectionDisabled => "GRAPHQL_INTROSPECTION_DISABLED",
             Self::InternalError(_) => "INTERNAL_SERVER_ERROR",
         }
     }
@@ -323,6 +355,7 @@ impl GraphQLError {
             Self::InvalidInput { .. } => "https://spikard.dev/errors/validation-error",
             Self::ComplexityLimitExceeded => "https://spikard.dev/errors/complexity-limit-exceeded",
             Self::DepthLimitExceeded => "https://spikard.dev/errors/depth-limit-exceeded",
+            Self::IntrospectionDisabled => "https://spikard.dev/errors/introspection-disabled",
             Self::InternalError(_) => "https://spikard.dev/errors/internal-server-error",
         }
     }
@@ -335,13 +368,13 @@ mod tests {
     #[test]
     fn test_status_code_parse_error() {
         let error = GraphQLError::ParseError("Invalid syntax".to_string());
-        assert_eq!(error.status_code(), 400);
+        assert_eq!(error.status_code(), 200);
     }
 
     #[test]
     fn test_status_code_validation_error() {
         let error = GraphQLError::ValidationError("Invalid query".to_string());
-        assert_eq!(error.status_code(), 422);
+        assert_eq!(error.status_code(), 200);
     }
 
     #[test]
@@ -359,7 +392,7 @@ mod tests {
     #[test]
     fn test_status_code_not_found() {
         let error = GraphQLError::NotFound("User not found".to_string());
-        assert_eq!(error.status_code(), 404);
+        assert_eq!(error.status_code(), 200);
     }
 
     #[test]
@@ -384,7 +417,7 @@ mod tests {
         assert!(response["errors"][0]["message"].is_string());
         assert!(response["errors"][0]["extensions"]["code"].is_string());
         assert_eq!(response["errors"][0]["extensions"]["code"], "GRAPHQL_VALIDATION_FAILED");
-        assert_eq!(response["errors"][0]["extensions"]["status"], 422);
+        assert_eq!(response["errors"][0]["extensions"]["status"], 200);
     }
 
     #[test]
@@ -417,7 +450,7 @@ mod tests {
     fn test_json_error_creation() {
         let json_error = GraphQLError::JsonError("Invalid JSON".to_string());
         assert_eq!(json_error.error_code(), "JSON_ERROR");
-        assert_eq!(json_error.status_code(), 400);
+        assert_eq!(json_error.status_code(), 200);
     }
 
     #[test]
@@ -433,7 +466,7 @@ mod tests {
         };
 
         let response = error.to_http_response();
-        assert_eq!(response["status"], 422);
+        assert_eq!(response["status"], 200);
         assert_eq!(response["title"], "Validation Failed");
     }
 
@@ -449,7 +482,7 @@ mod tests {
     fn test_not_found_error_conversion() {
         let error = GraphQLError::NotFound("Product ID 123 not found".to_string());
         let response = error.to_http_response();
-        assert_eq!(response["status"], 404);
+        assert_eq!(response["status"], 200);
         assert_eq!(response["title"], "Not Found");
         assert_eq!(response["errors"][0]["type"], "NOT_FOUND");
     }
@@ -468,37 +501,39 @@ mod tests {
     #[test]
     fn test_complexity_limit_exceeded_status_code() {
         let error = GraphQLError::ComplexityLimitExceeded;
-        assert_eq!(error.status_code(), 422);
+        assert_eq!(error.status_code(), 200);
         assert_eq!(error.error_code(), "GRAPHQL_COMPLEXITY_LIMIT_EXCEEDED");
     }
 
     #[test]
     fn test_depth_limit_exceeded_status_code() {
         let error = GraphQLError::DepthLimitExceeded;
-        assert_eq!(error.status_code(), 422);
+        assert_eq!(error.status_code(), 200);
         assert_eq!(error.error_code(), "GRAPHQL_DEPTH_LIMIT_EXCEEDED");
     }
 
     #[test]
     fn test_complexity_limit_exceeded_response() {
+        // Complexity-limit rejections use a bare GraphQL error (message only, no
+        // `extensions`), matching `fixtures/graphql_schema.json`.
         let error = GraphQLError::ComplexityLimitExceeded;
         let response = error.to_graphql_response();
         assert_eq!(
-            response["errors"][0]["extensions"]["code"],
-            "GRAPHQL_COMPLEXITY_LIMIT_EXCEEDED"
+            response,
+            serde_json::json!({"errors": [{"message": "Query complexity limit exceeded"}]})
         );
-        assert_eq!(response["errors"][0]["extensions"]["status"], 422);
     }
 
     #[test]
     fn test_depth_limit_exceeded_response() {
+        // Depth-limit rejections use a bare GraphQL error (message only, no
+        // `extensions`), matching `fixtures/graphql_schema.json`.
         let error = GraphQLError::DepthLimitExceeded;
         let response = error.to_graphql_response();
         assert_eq!(
-            response["errors"][0]["extensions"]["code"],
-            "GRAPHQL_DEPTH_LIMIT_EXCEEDED"
+            response,
+            serde_json::json!({"errors": [{"message": "Query depth limit exceeded"}]})
         );
-        assert_eq!(response["errors"][0]["extensions"]["status"], 422);
     }
 
     #[test]

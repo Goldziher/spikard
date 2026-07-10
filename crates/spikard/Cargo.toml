@@ -25,6 +25,7 @@ di = ["spikard-http/di", "spikard-core/di"]
 
 [dependencies]
 anyhow = "1.0"
+async-graphql = "7"
 axum.workspace = true
 axum-test = "21"
 base64 = "0.22"
