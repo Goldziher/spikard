@@ -41,6 +41,7 @@ use async_graphql::{Request, Value as GraphQLValue, Variables};
 use async_graphql_parser::types::{
     BaseType, ServiceDocument, Type as AstType, TypeDefinition, TypeKind, TypeSystemDefinition,
 };
+use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 use std::collections::HashMap;
 
@@ -50,7 +51,7 @@ use crate::error::GraphQLError;
 ///
 /// `path` is the dot-separated sequence of field names from the operation root to the field
 /// that should fail, e.g. `"user"` for a top-level field or `"order.customer"` for a nested one.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FieldErrorSpec {
     /// Dot-separated path to the field that should error.
     pub path: String,
@@ -59,7 +60,7 @@ pub struct FieldErrorSpec {
 }
 
 /// Configuration for building and executing a dynamic-SDL schema.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct DynamicSchemaConfig {
     /// Whether introspection queries (`__schema`, `__type`) are permitted.
     pub introspection_enabled: bool,

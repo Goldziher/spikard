@@ -185,6 +185,30 @@ void* __swift_bridge__$Vec_UploadFile$get_mut(void* vec_ptr, uintptr_t index);
 uintptr_t __swift_bridge__$Vec_UploadFile$len(void* vec_ptr);
 void* __swift_bridge__$Vec_UploadFile$as_ptr(void* vec_ptr);
 
+typedef struct FieldErrorSpec FieldErrorSpec;
+void __swift_bridge__$FieldErrorSpec$_free(void* self);
+
+void* __swift_bridge__$Vec_FieldErrorSpec$new(void);
+void __swift_bridge__$Vec_FieldErrorSpec$drop(void* vec_ptr);
+void __swift_bridge__$Vec_FieldErrorSpec$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_FieldErrorSpec$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_FieldErrorSpec$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_FieldErrorSpec$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_FieldErrorSpec$len(void* vec_ptr);
+void* __swift_bridge__$Vec_FieldErrorSpec$as_ptr(void* vec_ptr);
+
+typedef struct DynamicSchemaConfig DynamicSchemaConfig;
+void __swift_bridge__$DynamicSchemaConfig$_free(void* self);
+
+void* __swift_bridge__$Vec_DynamicSchemaConfig$new(void);
+void __swift_bridge__$Vec_DynamicSchemaConfig$drop(void* vec_ptr);
+void __swift_bridge__$Vec_DynamicSchemaConfig$push(void* vec_ptr, void* item_ptr);
+void* __swift_bridge__$Vec_DynamicSchemaConfig$pop(void* vec_ptr);
+void* __swift_bridge__$Vec_DynamicSchemaConfig$get(void* vec_ptr, uintptr_t index);
+void* __swift_bridge__$Vec_DynamicSchemaConfig$get_mut(void* vec_ptr, uintptr_t index);
+uintptr_t __swift_bridge__$Vec_DynamicSchemaConfig$len(void* vec_ptr);
+void* __swift_bridge__$Vec_DynamicSchemaConfig$as_ptr(void* vec_ptr);
+
 typedef struct GraphQLRouteConfig GraphQLRouteConfig;
 void __swift_bridge__$GraphQLRouteConfig$_free(void* self);
 
@@ -673,6 +697,12 @@ void* __swift_bridge__$UploadFile$content_encoding(void* self);
 struct __private__ResultPtrAndPtr __swift_bridge__$upload_file_as_bytes_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$upload_file_read_to_string_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$upload_file_content_type_or_default_from_json(void* json);
+void* __swift_bridge__$FieldErrorSpec$path(void* self);
+void* __swift_bridge__$FieldErrorSpec$message(void* self);
+void* __swift_bridge__$DynamicSchemaConfig$new(bool introspection_enabled, struct __private__OptionUsize max_complexity, struct __private__OptionUsize max_depth, void* field_errors);
+bool __swift_bridge__$DynamicSchemaConfig$introspection_enabled(void* self);
+struct __private__OptionUsize __swift_bridge__$DynamicSchemaConfig$max_complexity(void* self);
+struct __private__OptionUsize __swift_bridge__$DynamicSchemaConfig$max_depth(void* self);
 void* __swift_bridge__$graph_ql_route_config_path(void* client, void* path);
 void* __swift_bridge__$graph_ql_route_config_method(void* client, void* method);
 void* __swift_bridge__$graph_ql_route_config_enable_playground(void* client, bool enable);
@@ -898,6 +928,8 @@ struct __private__ResultPtrAndPtr __swift_bridge__$server_info_from_json(void* j
 struct __private__ResultPtrAndPtr __swift_bridge__$method_from_json(void* json);
 struct __private__ResultPtrAndPtr __swift_bridge__$security_scheme_info_from_json(void* json);
 void* __swift_bridge__$__alef_phantom_vec_upload_file(void);
+void* __swift_bridge__$__alef_phantom_vec_field_error_spec(void);
+void* __swift_bridge__$__alef_phantom_vec_dynamic_schema_config(void);
 void* __swift_bridge__$__alef_phantom_vec_graph_ql_route_config(void);
 void* __swift_bridge__$__alef_phantom_vec_schema_config(void);
 void* __swift_bridge__$__alef_phantom_vec_query_only_config(void);
@@ -937,7 +969,6 @@ void* __swift_bridge__$__alef_phantom_vec_request_data(void);
 void* __swift_bridge__$__alef_phantom_vec_method(void);
 void* __swift_bridge__$__alef_phantom_vec_security_scheme_info(void);
 void* __swift_bridge__$__alef_phantom_vec_testing_sse_event(void);
-
 
 
 #endif /* RUST_BRIDGE_C_H */

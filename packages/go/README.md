@@ -134,7 +134,7 @@ From [GitHub Releases](https://github.com/Goldziher/spikard/releases):
 
 ```bash
 # Example: Linux x86_64
-curl -LO https://github.com/Goldziher/spikard/releases/download/v0.16.1/go-ffi-linux-x86_64.tar.gz
+curl -LO https://github.com/Goldziher/spikard/releases/download/v0.17.0-rc.1/go-ffi-linux-x86_64.tar.gz
 tar -xzf go-ffi-linux-x86_64.tar.gz
 
 CGO_LDFLAGS="-L/path/to/lib -lspikard_ffi" go build

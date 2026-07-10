@@ -1,6 +1,6 @@
 [package]
 name = "spikard-e2e-http"
-version = "0.16.1"
+version = "0.17.0-rc.1"
 edition = "2024"
 authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
 license = "MIT"

@@ -1,6 +1,6 @@
 [package]
 name = "spikard-ffi"
-version = "0.16.1"
+version = "0.17.0-rc.1"
 edition = "2021"
 license = "MIT"
 description = "Rust-centric multi-language HTTP framework with polyglot bindings"
@@ -30,10 +30,10 @@ di = ["spikard/di"]
 [dependencies]
 ahash = "0.8"
 serde_json = "1"
-spikard = { path = "../spikard", version = "0.16.1", features = ["di"] }
-spikard-core = { path = "../spikard-core", version = "0.16.1" }
-spikard-graphql = { path = "../spikard-graphql", version = "0.16.1" }
-spikard-http = { path = "../spikard-http", version = "0.16.1" }
+spikard = { path = "../spikard", version = "0.17.0-rc.1", features = ["di"] }
+spikard-core = { path = "../spikard-core", version = "0.17.0-rc.1" }
+spikard-graphql = { path = "../spikard-graphql", version = "0.17.0-rc.1" }
+spikard-http = { path = "../spikard-http", version = "0.17.0-rc.1" }
 tokio = { version = "1", features = ["full"] }
 
 [build-dependencies]

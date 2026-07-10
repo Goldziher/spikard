@@ -229,6 +229,12 @@ public func securitySchemeInfoFromJson<GenericIntoRustString: IntoRustString>(_ 
 public func __alef_phantom_vec_upload_file() -> RustVec<UploadFile> {
     RustVec(ptr: __swift_bridge__$__alef_phantom_vec_upload_file())
 }
+public func __alef_phantom_vec_field_error_spec() -> RustVec<FieldErrorSpec> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_field_error_spec())
+}
+public func __alef_phantom_vec_dynamic_schema_config() -> RustVec<DynamicSchemaConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_dynamic_schema_config())
+}
 public func __alef_phantom_vec_graph_ql_route_config() -> RustVec<GraphQLRouteConfig> {
     RustVec(ptr: __swift_bridge__$__alef_phantom_vec_graph_ql_route_config())
 }
@@ -439,6 +445,183 @@ extension UploadFile: Vectorizable {
 
     public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
         __swift_bridge__$Vec_UploadFile$len(vecPtr)
+    }
+}
+
+
+public class FieldErrorSpec: FieldErrorSpecRefMut {
+    public var isOwned: Bool = true
+
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+
+    deinit {
+        if isOwned {
+            __swift_bridge__$FieldErrorSpec$_free(ptr)
+        }
+    }
+}
+public class FieldErrorSpecRefMut: FieldErrorSpecRef {
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+}
+public class FieldErrorSpecRef {
+    public var ptr: UnsafeMutableRawPointer
+
+    public init(ptr: UnsafeMutableRawPointer) {
+        self.ptr = ptr
+    }
+}
+extension FieldErrorSpecRef {
+    public func path() -> RustString {
+        RustString(ptr: __swift_bridge__$FieldErrorSpec$path(ptr))
+    }
+
+    public func message() -> RustString {
+        RustString(ptr: __swift_bridge__$FieldErrorSpec$message(ptr))
+    }
+}
+extension FieldErrorSpec: Vectorizable {
+    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+        __swift_bridge__$Vec_FieldErrorSpec$new()
+    }
+
+    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+        __swift_bridge__$Vec_FieldErrorSpec$drop(vecPtr)
+    }
+
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: FieldErrorSpec) {
+        __swift_bridge__$Vec_FieldErrorSpec$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    }
+
+    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
+        let pointer = __swift_bridge__$Vec_FieldErrorSpec$pop(vecPtr)
+        if pointer == nil {
+            return nil
+        } else {
+            return (FieldErrorSpec(ptr: pointer!) as! Self)
+        }
+    }
+
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<FieldErrorSpecRef> {
+        let pointer = __swift_bridge__$Vec_FieldErrorSpec$get(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return FieldErrorSpecRef(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<FieldErrorSpecRefMut> {
+        let pointer = __swift_bridge__$Vec_FieldErrorSpec$get_mut(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return FieldErrorSpecRefMut(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<FieldErrorSpecRef> {
+        UnsafePointer<FieldErrorSpecRef>(OpaquePointer(__swift_bridge__$Vec_FieldErrorSpec$as_ptr(vecPtr)))
+    }
+
+    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+        __swift_bridge__$Vec_FieldErrorSpec$len(vecPtr)
+    }
+}
+
+
+public class DynamicSchemaConfig: DynamicSchemaConfigRefMut {
+    public var isOwned: Bool = true
+
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+
+    deinit {
+        if isOwned {
+            __swift_bridge__$DynamicSchemaConfig$_free(ptr)
+        }
+    }
+}
+extension DynamicSchemaConfig {
+    public convenience init(_ introspection_enabled: Bool, _ max_complexity: Optional<UInt>, _ max_depth: Optional<UInt>, _ field_errors: RustVec<FieldErrorSpec>) {
+        self.init(ptr: __swift_bridge__$DynamicSchemaConfig$new(introspection_enabled, max_complexity.intoFfiRepr(), max_depth.intoFfiRepr(), { let val = field_errors; val.isOwned = false; return val.ptr }()))
+    }
+}
+public class DynamicSchemaConfigRefMut: DynamicSchemaConfigRef {
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+}
+public class DynamicSchemaConfigRef {
+    public var ptr: UnsafeMutableRawPointer
+
+    public init(ptr: UnsafeMutableRawPointer) {
+        self.ptr = ptr
+    }
+}
+extension DynamicSchemaConfigRef {
+    public func introspectionEnabled() -> Bool {
+        __swift_bridge__$DynamicSchemaConfig$introspection_enabled(ptr)
+    }
+
+    public func maxComplexity() -> Optional<UInt> {
+        __swift_bridge__$DynamicSchemaConfig$max_complexity(ptr).intoSwiftRepr()
+    }
+
+    public func maxDepth() -> Optional<UInt> {
+        __swift_bridge__$DynamicSchemaConfig$max_depth(ptr).intoSwiftRepr()
+    }
+}
+extension DynamicSchemaConfig: Vectorizable {
+    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+        __swift_bridge__$Vec_DynamicSchemaConfig$new()
+    }
+
+    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+        __swift_bridge__$Vec_DynamicSchemaConfig$drop(vecPtr)
+    }
+
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: DynamicSchemaConfig) {
+        __swift_bridge__$Vec_DynamicSchemaConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    }
+
+    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
+        let pointer = __swift_bridge__$Vec_DynamicSchemaConfig$pop(vecPtr)
+        if pointer == nil {
+            return nil
+        } else {
+            return (DynamicSchemaConfig(ptr: pointer!) as! Self)
+        }
+    }
+
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<DynamicSchemaConfigRef> {
+        let pointer = __swift_bridge__$Vec_DynamicSchemaConfig$get(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return DynamicSchemaConfigRef(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<DynamicSchemaConfigRefMut> {
+        let pointer = __swift_bridge__$Vec_DynamicSchemaConfig$get_mut(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return DynamicSchemaConfigRefMut(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<DynamicSchemaConfigRef> {
+        UnsafePointer<DynamicSchemaConfigRef>(OpaquePointer(__swift_bridge__$Vec_DynamicSchemaConfig$as_ptr(vecPtr)))
+    }
+
+    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+        __swift_bridge__$Vec_DynamicSchemaConfig$len(vecPtr)
     }
 }
 
@@ -4099,6 +4282,3 @@ extension App: Vectorizable {
         __swift_bridge__$Vec_App$len(vecPtr)
     }
 }
-
-
-

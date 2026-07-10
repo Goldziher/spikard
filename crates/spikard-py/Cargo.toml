@@ -1,6 +1,6 @@
 [package]
 name = "spikard-py"
-version = "0.16.1"
+version = "0.17.0-rc.1"
 edition = "2024"
 license = "MIT"
 description = "Rust-centric multi-language HTTP framework with polyglot bindings"
@@ -30,8 +30,8 @@ pyo3 = { version = "0.29" }
 pyo3-async-runtimes = { version = "0.29", features = ["tokio-runtime"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-spikard = { version = "0.16.1", path = "../spikard", features = ["di"] }
-spikard-core = { path = "../spikard-core", version = "0.16.1" }
-spikard-graphql = { path = "../spikard-graphql", version = "0.16.1" }
-spikard-http = { path = "../spikard-http", version = "0.16.1" }
+spikard = { version = "0.17.0-rc.1", path = "../spikard", features = ["di"] }
+spikard-core = { path = "../spikard-core", version = "0.17.0-rc.1" }
+spikard-graphql = { path = "../spikard-graphql", version = "0.17.0-rc.1" }
+spikard-http = { path = "../spikard-http", version = "0.17.0-rc.1" }
 tokio = { features = ["full"], version = "1" }

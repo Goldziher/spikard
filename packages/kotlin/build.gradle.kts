@@ -16,7 +16,7 @@ plugins {
 }
 
 group = "dev.spikard"
-version = "0.16.1"
+version = "0.17.0-rc.1"
 
 repositories {
     mavenCentral()

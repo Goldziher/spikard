@@ -275,6 +275,8 @@ exclude_types = [
     "QueryOnlyConfig",
     "SchemaConfig",
     "FullSchemaConfig",
+    "DynamicSchemaConfig",
+    "FieldErrorSpec",
 ]
 
 [crates.wasm.extra_dependencies]
@@ -1063,7 +1065,7 @@ name = "Spikard"
 
 [crates.e2e.registry.packages.zig]
 name = "spikard"
-hash = "spikard-0.16.1-PLACEHOLDER1234567890abcdefABCDEF0987654321"
+hash = "spikard-0.17.0-rc.1-PLACEHOLDER1234567890abcdefABCDEF0987654321"
 
 [crates.e2e.registry.packages.wasm]
 name = "@spikard/node-wasm"

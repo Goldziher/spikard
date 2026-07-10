@@ -24,31 +24,12 @@ importers:
   crates/spikard-node:
     dependencies:
       zod:
-        specifier: ^3.23.8
-        version: 3.25.76
-      zod-to-json-schema:
-        specifier: ^3.23.5
-        version: 3.25.2(zod@3.25.76)
+        specifier: ^3.25.0 || ^4.0.0
+        version: 4.4.3
     devDependencies:
       '@napi-rs/cli':
         specifier: ^3.6.2
         version: 3.6.2(@emnapi/core@1.9.0)(@emnapi/runtime@1.9.0)(@types/node@22.19.19)
-    optionalDependencies:
-      '@spikard/node-darwin-arm64':
-        specifier: 0.16.1
-        version: 0.16.1
-      '@spikard/node-linux-arm64-gnu':
-        specifier: 0.16.1
-        version: 0.16.1
-      '@spikard/node-linux-x64-gnu':
-        specifier: 0.16.1
-        version: 0.16.1
-      '@spikard/node-win32-arm64-msvc':
-        specifier: 0.16.1
-        version: 0.16.1
-      '@spikard/node-win32-x64-msvc':
-        specifier: 0.16.1
-        version: 0.16.1
 
   e2e/node:
     devDependencies:
@@ -1088,38 +1069,6 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@spikard/node-darwin-arm64@0.16.1':
-    resolution: {integrity: sha512-QDZ7G4umQaRDsMUCG5dKtWMfUZTQCmsYK2fJZnYDipRS6ueOn3EJ06NeML4+qRP5Y/bl/jLbYdQ9bDr0WIJWJA==}
-    engines: {node: '>= 22'}
-    cpu: [arm64]
-    os: [darwin]
-
-  '@spikard/node-linux-arm64-gnu@0.16.1':
-    resolution: {integrity: sha512-d4zA/4J+a38rkS65zGrhZV/49SacBADzdQCO/EhHDLhy2BMuOx8BxbBmqVaFY8bfGHy23As/0/fGlWa7iePVgw==}
-    engines: {node: '>= 22'}
-    cpu: [arm64]
-    os: [linux]
-    libc: [glibc]
-
-  '@spikard/node-linux-x64-gnu@0.16.1':
-    resolution: {integrity: sha512-BOcIZeT9Z9SqxA+2c8Np1PfQVDtZK2BArnJJXF/jCfq1Fd7cjy/zsbIqJwMg8zfoC6bS3gLlUaglJvdKTTIWRQ==}
-    engines: {node: '>= 22'}
-    cpu: [x64]
-    os: [linux]
-    libc: [glibc]
-
-  '@spikard/node-win32-arm64-msvc@0.16.1':
-    resolution: {integrity: sha512-SY+uW7hrLpjxHOOB3cEFxYG1KWS+lt1VwE/vC72Nv5akU1pasTXuoBG7T+ci04MXeFB2MafD9W80+5GjQO6jPw==}
-    engines: {node: '>= 22'}
-    cpu: [arm64]
-    os: [win32]
-
-  '@spikard/node-win32-x64-msvc@0.16.1':
-    resolution: {integrity: sha512-vP2pAyqg5E0sWv+SqtPlimucagNC7LpD/tM0GBtMqCG8A0BnXgyBTkdc87BeyVzZbyQeZWHYnW99WBw6OTFB/Q==}
-    engines: {node: '>= 22'}
-    cpu: [x64]
-    os: [win32]
-
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
@@ -1471,14 +1420,6 @@ packages:
     resolution: {integrity: sha512-hUrmaWBdVDcxvYqnyh09zunKzROWjbZTiNy8dBEjkS7ehEDQibXJ7XvlmtbwuTclUiIyN+CyXQD4Vmko8fNm8w==}
     engines: {node: '>=8'}
     hasBin: true
-
-  zod-to-json-schema@3.25.2:
-    resolution: {integrity: sha512-O/PgfnpT1xKSDeQYSCfRI5Gy3hPf91mKVDuYLUHZJMiDFptvP41MSnWofm8dnCm0256ZNfZIM7DSzuSMAFnjHA==}
-    peerDependencies:
-      zod: ^3.25.28 || ^4
-
-  zod@3.25.76:
-    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
   zod@4.4.3:
     resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
@@ -2197,21 +2138,6 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.62.2':
     optional: true
 
-  '@spikard/node-darwin-arm64@0.16.1':
-    optional: true
-
-  '@spikard/node-linux-arm64-gnu@0.16.1':
-    optional: true
-
-  '@spikard/node-linux-x64-gnu@0.16.1':
-    optional: true
-
-  '@spikard/node-win32-arm64-msvc@0.16.1':
-    optional: true
-
-  '@spikard/node-win32-x64-msvc@0.16.1':
-    optional: true
-
   '@standard-schema/spec@1.1.0': {}
 
   '@tybys/wasm-util@0.10.2':
@@ -2530,11 +2456,5 @@ snapshots:
     dependencies:
       siginfo: 2.0.0
       stackback: 0.0.2
-
-  zod-to-json-schema@3.25.2(zod@3.25.76):
-    dependencies:
-      zod: 3.25.76
-
-  zod@3.25.76: {}
 
   zod@4.4.3: {}

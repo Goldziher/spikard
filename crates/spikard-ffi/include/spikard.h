@@ -40,6 +40,17 @@ typedef struct SPIKARDContactInfo SPIKARDContactInfo;
  */
 typedef struct SPIKARDCorsConfig SPIKARDCorsConfig;
 /**
+ * Configuration for building and executing a dynamic-SDL schema.
+ */
+typedef struct SPIKARDDynamicSchemaConfig SPIKARDDynamicSchemaConfig;
+/**
+ * A field-level error to inject at a specific response path.
+ *
+ * `path` is the dot-separated sequence of field names from the operation root to the field
+ * that should fail, e.g. `"user"` for a top-level field or `"order.customer"` for a nested one.
+ */
+typedef struct SPIKARDFieldErrorSpec SPIKARDFieldErrorSpec;
+/**
  * Configuration for fully-featured schemas with Query, Mutation, and Subscription types
  */
 typedef struct SPIKARDFullSchemaConfig SPIKARDFullSchemaConfig;
@@ -443,6 +454,62 @@ char *spikard_upload_file_read_to_string(const SPIKARDUploadFile *this_);
  * freed with the appropriate free function.
  */
 char *spikard_upload_file_content_type_or_default(const SPIKARDUploadFile *this_);
+
+/**
+ * Free a `FieldErrorSpec` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void spikard_field_error_spec_free(SPIKARDFieldErrorSpec *ptr);
+
+/**
+ * Get the `path` field from a `FieldErrorSpec`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_field_error_spec_path(const SPIKARDFieldErrorSpec *ptr);
+
+/**
+ * Get the `message` field from a `FieldErrorSpec`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_field_error_spec_message(const SPIKARDFieldErrorSpec *ptr);
+
+/**
+ * Free a `DynamicSchemaConfig` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void spikard_dynamic_schema_config_free(SPIKARDDynamicSchemaConfig *ptr);
+
+/**
+ * Get the `introspection_enabled` field from a `DynamicSchemaConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t spikard_dynamic_schema_config_introspection_enabled(const SPIKARDDynamicSchemaConfig *ptr);
+
+/**
+ * Get the `max_complexity` field from a `DynamicSchemaConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uintptr_t spikard_dynamic_schema_config_max_complexity(const SPIKARDDynamicSchemaConfig *ptr);
+
+/**
+ * Get the `max_depth` field from a `DynamicSchemaConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uintptr_t spikard_dynamic_schema_config_max_depth(const SPIKARDDynamicSchemaConfig *ptr);
+
+/**
+ * Get the `field_errors` field from a `DynamicSchemaConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_dynamic_schema_config_field_errors(const SPIKARDDynamicSchemaConfig *ptr);
 
 /**
  * Free a `GraphQLRouteConfig` handle.
