@@ -559,7 +559,6 @@ fn test_typescript_generator_strict_typing() {
     let output = generator.generate_handler_app(&spec).unwrap();
 
     assert!(output.contains("z.infer"), "Should use zod.infer for type safety");
-    // The TODO comment may mention 'any' but the actual types shouldn't
     assert!(
         output.matches("z.string()").count() > 0,
         "Should use specific Zod types"

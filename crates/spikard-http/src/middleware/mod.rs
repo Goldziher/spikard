@@ -43,16 +43,13 @@ pub(crate) struct RouteInfo {
 fn sniff_multipart_boundary(raw: &bytes::Bytes) -> Option<String> {
     let bytes = raw.as_ref();
     let mut start = 0usize;
-    // Skip any leading CR/LF bytes.
     while start < bytes.len() && (bytes[start] == b'\r' || bytes[start] == b'\n') {
         start += 1;
     }
-    // Require leading `--`.
     if bytes.get(start)? != &b'-' || bytes.get(start + 1)? != &b'-' {
         return None;
     }
     let token_start = start + 2;
-    // Read boundary token up to CR / LF / space / tab.
     let mut end = token_start;
     while end < bytes.len() {
         let c = bytes[end];
@@ -149,7 +146,6 @@ pub async fn validate_content_type_middleware(
 
         let content_kind = validation::validate_content_type_headers_and_classify(headers, 0)?;
 
-        // Extract Content-Length limit if present. Use this as the limit for to_bytes.
         let body_limit = if let Some(cl_header) = headers.get(axum::http::header::CONTENT_LENGTH) {
             if let Ok(cl_str) = cl_header.to_str() {
                 cl_str.parse::<usize>().unwrap_or(usize::MAX)
@@ -319,11 +315,6 @@ pub async fn validate_content_type_middleware(
                     validation::validate_content_length(headers, body_bytes.len())?;
                 }
 
-                // Body-sniff fallback: the Alef e2e harness (and some HTTP clients) send
-                // multipart payloads with `Content-Type: application/json` instead of
-                // `multipart/form-data; boundary=...`. Detect this by inspecting the
-                // leading bytes; if they begin with `--<token>`, treat the body as
-                // multipart rather than JSON to avoid a spurious 400 Bad Request.
                 if let Some(boundary) = sniff_multipart_boundary(&body_bytes) {
                     let synth_ct = format!("multipart/form-data; boundary={}", boundary);
                     parts.headers.insert(

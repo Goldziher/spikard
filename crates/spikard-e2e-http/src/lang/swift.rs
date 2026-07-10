@@ -19,10 +19,6 @@ use heck::ToUpperCamelCase;
 use minijinja::{Environment, context};
 use std::path::PathBuf;
 
-// ---------------------------------------------------------------------------
-// Template environment
-// ---------------------------------------------------------------------------
-
 /// Build the private template environment holding the Swift HTTP templates.
 fn make_env() -> Environment<'static> {
     let mut env = Environment::new();
@@ -45,19 +41,11 @@ fn render(env: &Environment<'static>, name: &str, ctx: minijinja::Value) -> Stri
         .unwrap_or_default()
 }
 
-// ---------------------------------------------------------------------------
-// App harness renderer (ported from alef `swift/project.rs::render_app_harness`).
-// ---------------------------------------------------------------------------
-
 /// Split a string into UTF-8-safe chunks of max ~30000 bytes.
 /// Each chunk is wrapped as a Swift raw string literal with a safe delimiter level.
 fn chunk_fixtures_for_swift(json: &str) -> Vec<String> {
     const CHUNK_SIZE: usize = 30000;
 
-    // Find the longest consecutive run of `#` characters in the JSON.
-    // Swift raw string delimiters use `#"..."#`, `##"..."##`, etc., where
-    // the number of `#` on both sides must match and exceed any consecutive `#`
-    // run inside the string content.
     let mut max_hash_run = 0;
     let mut current_run = 0;
     for c in json.chars() {
@@ -68,26 +56,20 @@ fn chunk_fixtures_for_swift(json: &str) -> Vec<String> {
             current_run = 0;
         }
     }
-    // Use one more `#` than the longest run to guarantee no collision.
     let delimiter_level = max_hash_run + 1;
     let delimiter = "#".repeat(delimiter_level);
 
     let mut chunks = Vec::new();
 
-    // Split at UTF-8 char boundaries (not byte boundaries) to avoid breaking
-    // multi-byte UTF-8 sequences.
     let mut current_chunk = String::new();
     for c in json.chars() {
-        // If adding this char would exceed CHUNK_SIZE, save current chunk and start new one.
         if !current_chunk.is_empty() && current_chunk.len() + c.len_utf8() > CHUNK_SIZE {
-            // Wrap the chunk in a raw string literal.
             chunks.push(format!("{0}\"{1}\"{0}", delimiter, current_chunk));
             current_chunk.clear();
         }
         current_chunk.push(c);
     }
 
-    // Don't forget the last chunk.
     if !current_chunk.is_empty() {
         chunks.push(format!("{0}\"{1}\"{0}", delimiter, current_chunk));
     }
@@ -101,7 +83,6 @@ fn chunk_fixtures_for_swift(json: &str) -> Vec<String> {
 fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup], module_name: &str) -> String {
     let env = make_env();
 
-    // Collect all HTTP fixtures from all groups.
     let mut fixtures_map = serde_json::Map::new();
 
     for group in groups {
@@ -137,7 +118,6 @@ fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup], module_na
     let host = &e2e_config.harness.host;
     let port = e2e_config.harness.port;
     let app_class = e2e_config.harness.app_class_for_lang("swift");
-    // Swift methods are camelCase per Swift API design guidelines.
     let register_route_method = e2e_config
         .harness
         .register_method_idiomatic("swift")
@@ -146,10 +126,7 @@ fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup], module_na
     let method_enum = &e2e_config.harness.method_enum;
     let run_method = e2e_config.harness.run_method_for_lang("swift");
 
-    // Build imports: include harness.imports config plus the binding module_name.
-    // Get language-specific imports for swift with fallback to global imports.
     let mut imports = e2e_config.harness.imports_for_lang("swift");
-    // Prepend the binding module_name if not already present (case-insensitive check).
     if !imports.iter().any(|i| i.to_lowercase() == module_name.to_lowercase()) {
         imports.insert(0, module_name.to_string());
     }
@@ -176,10 +153,6 @@ fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup], module_na
     render(&env, "swift/app_harness.swift.jinja", ctx)
 }
 
-// ---------------------------------------------------------------------------
-// Public emit entry point
-// ---------------------------------------------------------------------------
-
 /// Emit Swift's server-pattern file: `app_harness.swift` (the executable harness).
 ///
 /// Returns the server-pattern `GeneratedFile`s at `e2e/swift_e2e/Sources/Harness/main.swift`,
@@ -201,7 +174,6 @@ pub fn emit(
         return Ok(vec![]);
     }
 
-    // Derive module_name from the package config, mirroring alef swift.rs lines 76-96.
     let swift_pkg = e2e_config.resolve_package("swift");
     let pkg_name = swift_pkg
         .as_ref()
@@ -211,14 +183,9 @@ pub fn emit(
     let module_name_str = pkg_name.to_upper_camel_case();
     let module_name = module_name_str.as_str();
 
-    // The harness lives under e2e/swift_e2e/ (not e2e/swift/) to avoid SwiftPM
-    // package identity collision with the binding dependency at packages/swift/.
-    // See alef swift.rs lines 50-57 for the rationale.
     let output_base = PathBuf::from(e2e_config.effective_output()).join("swift_e2e");
 
     let app_harness_body = render_app_harness(e2e_config, groups, module_name);
-    // Prepend the generated header (double-slash comments for Swift).
-    // Set generated_header: false because the header is already baked into content.
     let app_harness_content = format!("{}{}", hash::header(CommentStyle::DoubleSlash), app_harness_body);
 
     Ok(vec![GeneratedFile {

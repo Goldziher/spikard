@@ -105,7 +105,6 @@ pub struct CorsConfig {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub allow_credentials: Option<bool>,
 
-    // Optimized caches (lazy-initialized on first use)
     #[serde(skip)]
     #[doc(hidden)]
     #[cfg_attr(alef, alef(skip))]
@@ -146,12 +145,10 @@ impl CorsConfig {
 
     /// Check if all requested headers are allowed (O(n) where n = num requested headers)
     pub fn are_headers_allowed(&self, requested: &[&str]) -> bool {
-        // Check if wildcard is set
         if self.allowed_headers.iter().any(|h| h == "*") {
             return true;
         }
 
-        // Check each requested header
         requested.iter().all(|req_header| {
             self.allowed_headers
                 .iter()

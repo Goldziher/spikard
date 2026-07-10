@@ -125,7 +125,6 @@ pub struct EnumValue {
 /// Protocol Buffer type enumeration
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ProtoType {
-    // Scalar types
     Double,
     Float,
     Int32,
@@ -141,7 +140,6 @@ pub enum ProtoType {
     Bool,
     String,
     Bytes,
-    // Complex types (resolved by name in the schema)
     Message(String),
     Enum(String),
 }
@@ -196,11 +194,6 @@ pub fn parse_proto_schema_with_includes(path: &Path, include_paths: &[PathBuf]) 
 
 /// Parse a Protobuf schema from a string
 pub fn parse_proto_schema_string(content: &str) -> Result<ProtobufSchema> {
-    // For Phase 1, we implement a basic parser that validates proto3 syntax
-    // and extracts the essential structure.
-    // A production implementation would use protox for full parsing with
-    // complete support for nested structures and all field details.
-
     let mut schema = ProtobufSchema {
         package: None,
         messages: HashMap::new(),
@@ -211,10 +204,8 @@ pub fn parse_proto_schema_string(content: &str) -> Result<ProtobufSchema> {
         description: None,
     };
 
-    // Extract syntax declaration
     schema.syntax = extract_syntax_declaration(content).unwrap_or_else(|| "proto3".to_string());
 
-    // Validate proto3 syntax
     if schema.syntax != "proto3" {
         return Err(anyhow!(
             "Only proto3 syntax is supported. Found: {}\n\
@@ -224,13 +215,10 @@ pub fn parse_proto_schema_string(content: &str) -> Result<ProtobufSchema> {
         ));
     }
 
-    // Extract package name
     schema.package = extract_package_name(content);
 
-    // Extract imports
     schema.imports = extract_imports(content);
 
-    // Extract top-level definitions
     parse_top_level_definitions(content, &mut schema)?;
 
     Ok(schema)
@@ -314,7 +302,6 @@ fn extract_syntax_declaration(content: &str) -> Option<String> {
     for line in content.lines() {
         let trimmed = line.trim();
         if trimmed.starts_with("syntax") {
-            // Try to extract syntax value: syntax = "proto3";
             let quote_start = trimmed.find('"')?;
             let remaining = &trimmed[quote_start + 1..];
             let quote_end = remaining.find('"')?;
@@ -329,10 +316,9 @@ fn extract_package_name(content: &str) -> Option<String> {
     for line in content.lines() {
         let trimmed = line.trim();
         if trimmed.starts_with("package") && !trimmed.starts_with("package ") {
-            continue; // Not a package declaration
+            continue;
         }
         if let Some(package_part) = trimmed.strip_prefix("package ") {
-            // Extract package name: package com.example.service;
             let semicolon_pos = package_part.find(';')?;
             let package_name = package_part[..semicolon_pos].trim();
             return Some(package_name.to_string());
@@ -347,7 +333,6 @@ fn extract_imports(content: &str) -> Vec<String> {
     for line in content.lines() {
         let trimmed = line.trim();
         if trimmed.starts_with("import ") && trimmed.contains('"') {
-            // Extract import path: import "google/protobuf/timestamp.proto";
             if let Some(quote_start) = trimmed.find('"') {
                 let remaining = &trimmed[quote_start + 1..];
                 if let Some(quote_end) = remaining.find('"') {
@@ -709,10 +694,7 @@ fn parse_proto_type(type_str: &str) -> ProtoType {
         "bool" => ProtoType::Bool,
         "string" => ProtoType::String,
         "bytes" => ProtoType::Bytes,
-        _ => {
-            // Assume it's a message or enum type
-            ProtoType::Message(type_str.to_string())
-        }
+        _ => ProtoType::Message(type_str.to_string()),
     }
 }
 

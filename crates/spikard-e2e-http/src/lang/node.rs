@@ -78,11 +78,6 @@ fn render(env: &Environment<'static>, name: &str, ctx: minijinja::Value) -> Stri
         .unwrap_or_default()
 }
 
-// ---------------------------------------------------------------------------
-// JSON-to-JavaScript literal helpers (from alef `typescript/json.rs`).
-// Only the helpers consumed by the HTTP path are copied.
-// ---------------------------------------------------------------------------
-
 /// Convert a `serde_json::Value` to a JavaScript literal string.
 fn json_to_js(value: &serde_json::Value) -> String {
     match value {
@@ -92,7 +87,6 @@ fn json_to_js(value: &serde_json::Value) -> String {
         }
         serde_json::Value::Bool(b) => b.to_string(),
         serde_json::Value::Number(n) => {
-            // For integers outside JS safe range, emit as string to avoid precision loss.
             if let Some(i) = n.as_i64()
                 && !(-9_007_199_254_740_991..=9_007_199_254_740_991).contains(&i)
             {
@@ -114,7 +108,6 @@ fn json_to_js(value: &serde_json::Value) -> String {
             let entries: Vec<String> = map
                 .iter()
                 .map(|(k, v)| {
-                    // Quote keys that aren't valid JS identifiers (contain hyphens, spaces, etc.)
                     let key = if k.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '$')
                         && !k.starts_with(|c: char| c.is_ascii_digit())
                     {
@@ -162,18 +155,12 @@ fn json_to_js_multiline(value: &serde_json::Value, indent: usize) -> String {
                 .collect();
             format!("{{\n{}\n{pad}}}", entries.join("\n"))
         }
-        // Non-object values are emitted inline.
         other => json_to_js(other),
     }
 }
 
-// ---------------------------------------------------------------------------
-// App harness renderer (from alef `typescript/config.rs::render_app_harness`).
-// ---------------------------------------------------------------------------
-
 #[must_use]
 pub fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup]) -> String {
-    // Collect all HTTP fixtures from all groups.
     let mut fixtures_map = serde_json::Map::new();
 
     for group in groups {
@@ -181,15 +168,12 @@ pub fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup]) -> St
             if fixture.http.is_none() {
                 continue;
             }
-            // Convert the fixture to JSON for the harness to load.
-            // We only need the http field, handler, request, and expected_response.
             let http_data = &fixture.http.as_ref().unwrap();
             let mut handler_obj = serde_json::json!({
                 "route": &http_data.handler.route,
                 "method": &http_data.handler.method,
                 "body_schema": http_data.handler.body_schema.clone(),
             });
-            // Include middleware if present for CORS preflight registration
             if let Some(middleware) = &http_data.handler.middleware
                 && let Ok(middleware_json) = serde_json::to_value(middleware)
                 && let serde_json::Value::Object(ref obj) = handler_obj
@@ -201,7 +185,6 @@ pub fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup]) -> St
             let mut request_obj = serde_json::json!({
                 "path": &http_data.request.path,
             });
-            // Include content_type if present for multipart/form-encoded detection
             if let Some(ct) = &http_data.request.content_type
                 && let serde_json::Value::Object(ref obj) = request_obj
             {
@@ -233,27 +216,14 @@ pub fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup]) -> St
     let app_class = e2e_config.harness.app_class_for_lang("node");
     let method_enum = &e2e_config.harness.method_enum;
     let run_method = e2e_config.harness.run_method_for_lang("node");
-    // Node.js NAPI-RS binding has two route-registration forms:
-    // - route() is a single-arg decorator returning a callable
-    // - register_route() is a two-arg direct method
-    // The harness uses two-arg registration, so always use registerRoute (camelCased).
     let register_method = "registerRoute".to_string();
 
-    // For NAPI-RS bindings (Node.js/WASM), detect the constructor pattern.
-    // If imports include "/node" or "wasm", use App.new() factory method.
-    // Otherwise, use traditional new App() constructor.
     let constructor_method = if imports.iter().any(|imp| imp.contains("/node") || imp.contains("wasm")) {
         ".new()"
     } else {
         "new"
     };
 
-    // napi-rs does not expose `new`-able JS constructors for Rust types — Rust
-    // constructors become static factory methods (`RouteBuilder.new(...)`).
-    // wasm-bindgen DOES expose them as proper JS constructors, so it keeps the
-    // `new RouteBuilder(...)` syntax. Detect by import path the same way as the
-    // App constructor selection above; the value is consumed by the harness
-    // template's `{% if route_builder_constructor_method == ".new" %}` branch.
     let route_builder_constructor_method = if imports.iter().any(|imp| imp.contains("/node")) {
         ".new"
     } else {
@@ -262,10 +232,6 @@ pub fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup]) -> St
 
     let route_builder_class = e2e_config.harness.route_builder.as_deref().unwrap_or("RouteBuilder");
 
-    // Determine which ServerConfig factory expression to use (backend-specific defaults).
-    // Node uses `serverConfigDefault()` factory; wasm-bindgen exposes the
-    // `WasmServerConfig` class with a default constructor; generic TypeScript
-    // bindings fall back to `new ServerConfig()`.
     let factory_lang = if imports.iter().any(|imp| imp.contains("/node")) {
         "node"
     } else if imports.iter().any(|imp| imp.contains("wasm")) {
@@ -274,8 +240,6 @@ pub fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup]) -> St
         "typescript"
     };
     let server_config_factory = e2e_config.harness.server_config_factory_for_lang(factory_lang);
-    // Companion import identifier: when the factory is a bare-identifier call,
-    // the destructure import must include that identifier.
     let server_config_factory_import = e2e_config
         .harness
         .server_config_factory_import_for_lang(factory_lang)
@@ -307,18 +271,12 @@ pub fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup]) -> St
     )
 }
 
-// ---------------------------------------------------------------------------
-// Per-fixture HTTP test-case renderer
-// (from alef `typescript/test_file/http.rs`).
-// ---------------------------------------------------------------------------
-
 pub fn render_http_test_case(out: &mut String, fixture: &Fixture) {
     let Some(http) = &fixture.http else {
         return;
     };
 
     let test_name = sanitize_ident(&fixture.id);
-    // Escape backslashes and double quotes for use in a double-quoted JS string.
     let description = fixture.description.replace('\\', "\\\\").replace('"', "\\\"");
 
     if http.expected_response.status_code == 101 {
@@ -327,8 +285,6 @@ pub fn render_http_test_case(out: &mut String, fixture: &Fixture) {
 
     let method = http.request.method.to_uppercase();
 
-    // Detect content-type so the renderer can decide between JSON-encoded and
-    // raw (form-urlencoded / multipart) body emission.
     let content_type_lower = http
         .request
         .headers
@@ -355,41 +311,30 @@ pub fn render_http_test_case(out: &mut String, fixture: &Fixture) {
         .map(str::trim)
         .is_some_and(|t| t.eq_ignore_ascii_case("multipart/form-data"));
 
-    // If multipart but no request body, synthesize from body_schema
     let effective_body = if is_multipart && http.request.body.is_none() && http.handler.body_schema.is_some() {
-        // Synthesize a minimal multipart body from the schema
         Some(synthesize_multipart_body_from_schema(&http.handler.body_schema))
     } else {
         http.request.body.clone()
     };
 
-    // Determine if we need to auto-add Content-Type header for JSON body.
     let has_body = effective_body.is_some();
     let has_content_type = !content_type_lower.is_empty();
     let needs_json_content_type = has_body && !is_form_body && !is_multipart && !has_content_type;
 
     let has_headers = !http.request.headers.is_empty() || needs_json_content_type || is_multipart && has_body;
 
-    // Build the body entry if present.
     let body_entry: Option<String> = effective_body.as_ref().map(|body| {
         let js_body = json_to_js(body);
         let body_is_string = matches!(body, serde_json::Value::String(_));
 
-        // For multipart/form-data or form-urlencoded, the body is raw bytes as a string.
-        // Wrap in Buffer.from() to send as UTF-8 bytes without JSON.stringify.
         if (is_form_body || is_multipart) && body_is_string {
-            // Raw form-urlencoded or multipart: wrap string in Buffer.from() to send as bytes
             format!("body: Buffer.from({js_body}, 'utf-8')")
         } else {
             format!("body: JSON.stringify({js_body})")
         }
     });
 
-    // Build the fetch init object. Use multi-line form when headers or body
-    // are present so the output matches what oxfmt would produce; use inline
-    // form for the simple method+redirect-only case.
     let fetch_init: String = if has_headers || body_entry.is_some() {
-        // Multi-line object: each entry on its own line, trailing commas.
         let mut lines: Vec<String> = Vec::new();
         lines.push(format!("      method: \"{method}\","));
         lines.push("      redirect: \"manual\",".to_string());
@@ -398,7 +343,6 @@ pub fn render_http_test_case(out: &mut String, fixture: &Fixture) {
                 .request
                 .headers
                 .iter()
-                // Skip Content-Type for multipart fixtures — we'll add the correct one below
                 .filter(|(k, _)| !(is_multipart && k.eq_ignore_ascii_case("content-type")))
                 .map(|(k, v)| {
                     let expanded_v = expand_fixture_templates(v);
@@ -409,7 +353,6 @@ pub fn render_http_test_case(out: &mut String, fixture: &Fixture) {
                 header_lines.push("        \"Content-Type\": \"application/json\",".to_string());
             }
             if is_multipart && has_body {
-                // For multipart bodies, add the correct Content-Type with boundary
                 header_lines
                     .push("        \"Content-Type\": \"multipart/form-data; boundary=alef-boundary\",".to_string());
             }
@@ -422,17 +365,14 @@ pub fn render_http_test_case(out: &mut String, fixture: &Fixture) {
         }
         format!("{{\n{}\n    }}", lines.join("\n"))
     } else {
-        // Inline: no headers, no body — only method and redirect.
         format!("{{ method: \"{method}\", redirect: \"manual\" }}")
     };
 
     let init_str = fetch_init;
-    // Server-pattern: construct path as /fixtures/{fixture_id}{request_path}
     let path = format!("/fixtures/{}{}", &fixture.id, &http.request.path);
 
     let status = http.expected_response.status_code;
 
-    // Determine body type and prepare context
     let (has_text_body, text_body) = if let Some(expected_body) = &http.expected_response.body {
         if expected_body.is_null() || expected_body.is_string() && expected_body.as_str() == Some("") {
             (false, String::new())
@@ -451,9 +391,6 @@ pub fn render_http_test_case(out: &mut String, fixture: &Fixture) {
         } else if let serde_json::Value::String(_) = expected_body {
             (false, String::new())
         } else {
-            // Use multi-line form for objects so the output is stable under
-            // oxfmt (formatters leave properly-indented multi-line objects
-            // unchanged). Scalar and array values stay inline.
             (true, json_to_js_multiline(expected_body, 4))
         }
     } else {
@@ -479,7 +416,6 @@ pub fn render_http_test_case(out: &mut String, fixture: &Fixture) {
         (false, Vec::new())
     };
 
-    // Build header assertions
     let mut header_assertions: Vec<minijinja::Value> = Vec::new();
     for (header_name, header_value) in &http.expected_response.headers {
         let lower_name = header_name.to_lowercase();
@@ -500,7 +436,6 @@ pub fn render_http_test_case(out: &mut String, fixture: &Fixture) {
         });
     }
 
-    // Build validation error assertions
     let body_has_content = matches!(&http.expected_response.body, Some(v)
         if !(v.is_null() || (v.is_string() && v.as_str() == Some(""))));
     let (has_validation_errors, validation_errors) =
@@ -563,7 +498,6 @@ fn synthesize_multipart_body_from_schema(schema: &Option<serde_json::Value>) -> 
 
     if let Some(props) = schema_val.get("properties").and_then(|p| p.as_object()) {
         for (key, prop_schema) in props {
-            // Check if this is a binary/file field
             let is_binary = prop_schema
                 .get("format")
                 .and_then(|f| f.as_str())
@@ -588,7 +522,6 @@ fn synthesize_multipart_body_from_schema(schema: &Option<serde_json::Value>) -> 
         }
     }
 
-    // RFC 2388: final boundary must be terminated with `--` and CRLF
     body.push_str(&format!("--{boundary}--\r\n"));
     serde_json::Value::String(body)
 }

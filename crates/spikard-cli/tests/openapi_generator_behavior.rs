@@ -105,14 +105,12 @@ fn iter_paths_visits_all_http_methods_and_operation_ids() {
 fn extract_request_and_response_types_handle_refs_and_ranges() {
     let mut spec = OpenAPI::default();
 
-    // components.schemas["Widget"]
     let widget_schema = empty_object_schema();
     spec.components
         .get_or_insert_with(Default::default)
         .schemas
         .insert("Widget".to_string(), ReferenceOr::Item(widget_schema));
 
-    // request body uses $ref (should format type name from ref name)
     let request_body = RequestBody {
         content: {
             let mut content: openapiv3::Content = Default::default();
@@ -130,7 +128,6 @@ fn extract_request_and_response_types_handle_refs_and_ranges() {
         ..Default::default()
     };
 
-    // 2XX range response uses inline schema (should return default response type)
     let response = Response {
         content: {
             let mut content: openapiv3::Content = Default::default();

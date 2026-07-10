@@ -28,7 +28,6 @@ impl PythonGenerationState {
 
 impl OpenRpcGenerator for PythonOpenRpcGenerator {
     fn generate_handler_app(&self, spec: &OpenRpcSpec) -> Result<String> {
-        // Generate the body first so we can detect which imports are actually used.
         let mut body = String::new();
         let mut state = PythonGenerationState::new();
 
@@ -58,8 +57,6 @@ impl OpenRpcGenerator for PythonOpenRpcGenerator {
         body.push_str("# Method Router\n");
         body.push_str("# ============================================================================\n\n");
 
-        // Now build the header with only the imports actually needed.
-        // Use patterns that match `date` as a complete type token (not as a prefix of `datetime`).
         let uses_datetime = body.contains(": datetime") || body.contains("| datetime");
         let uses_date = body.contains(": date\n")
             || body.contains(": date\r")

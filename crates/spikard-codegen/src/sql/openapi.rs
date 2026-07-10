@@ -34,13 +34,8 @@ impl OpenApiInfo {
 /// Build an OpenAPI 3.1 document from a list of SQL-derived routes. The
 /// returned `Value` is ready to be `serde_json::to_writer_pretty`-ed to disk.
 pub fn openapi_from_routes(routes: &[SqlRoute], info: &OpenApiInfo) -> Value {
-    // Collect security schemes (one per distinct auth requirement) so we can
-    // reference them by name on per-operation `security` lists.
     let (security_schemes, scheme_names) = collect_security_schemes(routes);
 
-    // Group operations by path so multiple methods on the same path share a
-    // `PathItem`. Using IndexMap keeps insertion order stable for snapshot
-    // testing.
     let mut paths: IndexMap<String, Map<String, Value>> = IndexMap::new();
     for route in routes {
         let entry = paths.entry(route.http.path.clone()).or_default();
@@ -394,7 +389,6 @@ mod tests {
     fn groups_methods_under_shared_path() {
         let routes = build_two_routes();
         let spec = openapi_from_routes(&routes, &OpenApiInfo::new("t", "1"));
-        // /users has POST; /users/{id} has GET.
         assert!(spec["paths"]["/users"]["post"].is_object());
         assert!(spec["paths"]["/users/{id}"]["get"].is_object());
     }
@@ -451,7 +445,6 @@ mod tests {
         let routes = build_two_routes();
         let spec = openapi_from_routes(&routes, &OpenApiInfo::new("t", "1"));
         let schemes = &spec["components"]["securitySchemes"];
-        // Both routes share `bearer:jwt`, so exactly one scheme is registered.
         assert_eq!(schemes.as_object().unwrap().len(), 1);
         let (_name, scheme) = schemes.as_object().unwrap().iter().next().unwrap();
         assert_eq!(scheme["type"], "http");
@@ -467,16 +460,13 @@ mod tests {
         let sec = op["security"].as_array().unwrap();
         assert_eq!(sec.len(), 1);
         let scheme_name = sec[0].as_object().unwrap().keys().next().unwrap();
-        // The name must exist in components.securitySchemes.
         assert!(spec["components"]["securitySchemes"][scheme_name].is_object());
     }
 
     #[test]
     fn no_204_response_carries_body() {
         let mut q = create_user_query();
-        // Use :exec instead of :exec_rows to get the 204-default path.
         q.command = QueryCommand::Exec;
-        // adjust the @http_status to omit explicit codes
         q.custom.retain(|a| a.name != "http_status");
         let route = route_from_query(&q, &empty_catalog(), &BuildOptions::default())
             .unwrap()

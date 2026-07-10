@@ -1,13 +1,4 @@
-# HTTP extension config — consumed by crates/spikard-alef-ext at generation time.
-# This file is read by HttpExtensionConfig::load_from_alef_toml() (which looks for
-# spikard-http.toml in the current working directory).
-#
-# The schema mirrors the former [[crates.lifecycle_hooks]], [[crates.websocket_routes]],
-# [[crates.sse_routes]], and [[crates.error_types]] blocks that lived in alef.toml
-# before the HTTP-domain IR was extracted into this extension.
 
-# ---------------------------------------------------------------------------
-# Lifecycle hooks
 # ---------------------------------------------------------------------------
 
 [[lifecycle_hooks]]
@@ -40,27 +31,18 @@ callback_contract = "ErrorHook"
 doc = "Called when a handler returns an error."
 is_async = true
 
-# ---------------------------------------------------------------------------
-# WebSocket routes
-# ---------------------------------------------------------------------------
 
 [[websocket_routes]]
 handler_wrapper_type = "WebSocketHandlerWrapper"
 socket_type = "WebSocketConnection"
 doc = "Register a WebSocket upgrade handler at the given path."
 
-# ---------------------------------------------------------------------------
-# SSE routes
-# ---------------------------------------------------------------------------
 
 [[sse_routes]]
 producer_wrapper_type = "SseProducerWrapper"
 event_type = "SseEvent"
 doc = "Register an SSE event producer at the given path."
 
-# ---------------------------------------------------------------------------
-# Error types
-# ---------------------------------------------------------------------------
 
 [[error_types]]
 name = "NotFoundError"

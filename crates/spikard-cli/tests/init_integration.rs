@@ -18,10 +18,6 @@ use spikard_cli::codegen::TargetLanguage;
 use spikard_cli::init::{InitEngine, InitRequest};
 use tempfile::TempDir;
 
-// ============================================================================
-// PYTHON LANGUAGE SCAFFOLDER TESTS
-// ============================================================================
-
 #[test]
 fn test_init_python_creates_all_files() -> anyhow::Result<()> {
     let temp_dir = TempDir::new()?;
@@ -36,11 +32,9 @@ fn test_init_python_creates_all_files() -> anyhow::Result<()> {
 
     let response = InitEngine::execute(request)?;
 
-    // Verify response structure
     assert!(!response.files_created.is_empty(), "Should create files");
     assert!(!response.next_steps.is_empty(), "Should have next steps");
 
-    // Verify expected files exist
     assert!(project_dir.join("pyproject.toml").exists());
     assert!(project_dir.join("README.md").exists());
     assert!(project_dir.join(".gitignore").exists());
@@ -68,7 +62,6 @@ fn test_init_python_pyproject_toml_content() -> anyhow::Result<()> {
     let pyproject_path = project_dir.join("pyproject.toml");
     let content = std::fs::read_to_string(&pyproject_path)?;
 
-    // Verify pyproject.toml contains required fields
     assert!(content.contains("[project]"));
     assert!(content.contains("name = \"test_proj\""));
     assert!(content.contains("version = \"0.1.0\""));
@@ -99,7 +92,6 @@ fn test_init_python_with_underscores_in_name() -> anyhow::Result<()> {
     assert!(project_dir.join("src/api_service/__init__.py").exists());
     assert!(project_dir.join("src/api_service/app.py").exists());
 
-    // Verify pyproject.toml has the correct project name
     let pyproject_content = std::fs::read_to_string(project_dir.join("pyproject.toml"))?;
     assert!(pyproject_content.contains("name = \"api_service\""));
 
@@ -123,7 +115,6 @@ fn test_init_python_app_module_content() -> anyhow::Result<()> {
     let app_path = project_dir.join("src/health_api/app.py");
     let content = std::fs::read_to_string(&app_path)?;
 
-    // Verify app module contains required elements
     assert!(content.contains("from spikard import ServerConfig, Spikard"));
     assert!(content.contains("app = Spikard()"));
     assert!(content.contains("@app.get(\"/health\")"));
@@ -146,16 +137,11 @@ fn test_init_python_next_steps() -> anyhow::Result<()> {
 
     let response = InitEngine::execute(request)?;
 
-    // Verify next steps contain expected guidance
     assert!(response.next_steps.len() >= 2);
     assert!(response.next_steps[0].contains("cd next_step_test"));
 
     Ok(())
 }
-
-// ============================================================================
-// TYPESCRIPT LANGUAGE SCAFFOLDER TESTS
-// ============================================================================
 
 #[test]
 fn test_init_typescript_creates_all_files() -> anyhow::Result<()> {
@@ -171,7 +157,6 @@ fn test_init_typescript_creates_all_files() -> anyhow::Result<()> {
 
     let response = InitEngine::execute(request)?;
 
-    // Verify files created
     assert!(response.files_created.len() >= 8);
     assert!(project_dir.join("package.json").exists());
     assert!(project_dir.join("tsconfig.json").exists());
@@ -202,7 +187,6 @@ fn test_init_typescript_package_json_content() -> anyhow::Result<()> {
     let package_json_path = project_dir.join("package.json");
     let content = std::fs::read_to_string(&package_json_path)?;
 
-    // Verify package.json content
     assert!(content.contains("\"name\"") && content.contains("test-service"));
     assert!(content.contains("\"version\": \"0.0.1\"") || content.contains("\"version\""));
     assert!(content.contains("\"type\": \"module\""));
@@ -230,7 +214,6 @@ fn test_init_typescript_tsconfig_content() -> anyhow::Result<()> {
     let tsconfig_path = project_dir.join("tsconfig.json");
     let content = std::fs::read_to_string(&tsconfig_path)?;
 
-    // Verify tsconfig.json has expected configuration
     assert!(content.contains("strict"));
     assert!(content.contains("moduleResolution"));
     assert!(content.contains("target"));
@@ -255,7 +238,6 @@ fn test_init_typescript_app_module_content() -> anyhow::Result<()> {
     let app_path = project_dir.join("src/app.ts");
     let content = std::fs::read_to_string(&app_path)?;
 
-    // Verify app module structure
     assert!(content.contains("import"));
     assert!(content.contains("export const app = new Spikard()"));
     assert!(!content.contains("app.run("));
@@ -277,7 +259,6 @@ fn test_init_typescript_next_steps() -> anyhow::Result<()> {
 
     let response = InitEngine::execute(request)?;
 
-    // Verify next steps
     assert!(response.next_steps.len() >= 2);
     assert!(response.next_steps[0].contains("cd ts-steps"));
     assert!(response.next_steps.iter().any(|s| s.contains("pnpm")));
@@ -299,19 +280,13 @@ fn test_init_typescript_with_valid_kebab_case() -> anyhow::Result<()> {
 
     let response = InitEngine::execute(request)?;
 
-    // TypeScript requires kebab-case format
     let package_json = std::fs::read_to_string(project_dir.join("package.json"))?;
     assert!(package_json.contains("my-api"));
 
-    // Next steps should reference kebab-case
     assert!(response.next_steps[0].contains("my-api"));
 
     Ok(())
 }
-
-// ============================================================================
-// RUST LANGUAGE SCAFFOLDER TESTS
-// ============================================================================
 
 #[test]
 fn test_init_rust_creates_all_files() -> anyhow::Result<()> {
@@ -327,10 +302,8 @@ fn test_init_rust_creates_all_files() -> anyhow::Result<()> {
 
     let response = InitEngine::execute(request)?;
 
-    // Verify file count
     assert!(response.files_created.len() >= 6);
 
-    // Verify expected files exist
     assert!(project_dir.join("Cargo.toml").exists());
     assert!(project_dir.join("src/main.rs").exists());
     assert!(project_dir.join("src/lib.rs").exists());
@@ -358,7 +331,6 @@ fn test_init_rust_cargo_toml_content() -> anyhow::Result<()> {
     let cargo_toml_path = project_dir.join("Cargo.toml");
     let content = std::fs::read_to_string(&cargo_toml_path)?;
 
-    // Verify Cargo.toml contains required fields
     assert!(content.contains("[package]"));
     assert!(content.contains("name = \"rust-service\"") || content.contains("name = \"rust_service\""));
     assert!(content.contains("version = \"0.1.0\""));
@@ -386,7 +358,6 @@ fn test_init_rust_main_rs_content() -> anyhow::Result<()> {
     let main_rs_path = project_dir.join("src/main.rs");
     let content = std::fs::read_to_string(&main_rs_path)?;
 
-    // Verify main.rs has main function
     assert!(content.contains("fn main"));
     assert!(content.contains("#[tokio::main]") || content.contains("async fn main"));
 
@@ -410,7 +381,6 @@ fn test_init_rust_lib_rs_content() -> anyhow::Result<()> {
     let lib_rs_path = project_dir.join("src/lib.rs");
     let content = std::fs::read_to_string(&lib_rs_path)?;
 
-    // Verify lib.rs exists and has module documentation
     assert!(!content.is_empty());
 
     Ok(())
@@ -430,7 +400,6 @@ fn test_init_rust_next_steps() -> anyhow::Result<()> {
 
     let response = InitEngine::execute(request)?;
 
-    // Verify next steps
     assert!(response.next_steps.len() >= 3);
     assert!(response.next_steps[0].contains("cd rust_steps"));
     assert!(response.next_steps.iter().any(|s| s.contains("cargo test")));
@@ -438,10 +407,6 @@ fn test_init_rust_next_steps() -> anyhow::Result<()> {
 
     Ok(())
 }
-
-// ============================================================================
-// RUBY LANGUAGE SCAFFOLDER TESTS
-// ============================================================================
 
 #[test]
 fn test_init_ruby_creates_all_files() -> anyhow::Result<()> {
@@ -499,10 +464,6 @@ fn test_init_ruby_next_steps() -> anyhow::Result<()> {
     Ok(())
 }
 
-// ============================================================================
-// PHP LANGUAGE SCAFFOLDER TESTS
-// ============================================================================
-
 #[test]
 fn test_init_php_creates_all_files() -> anyhow::Result<()> {
     let temp_dir = TempDir::new()?;
@@ -517,10 +478,8 @@ fn test_init_php_creates_all_files() -> anyhow::Result<()> {
 
     let response = InitEngine::execute(request)?;
 
-    // Verify file count
     assert!(response.files_created.len() >= 8);
 
-    // Verify expected files exist
     assert!(project_dir.join("composer.json").exists());
     assert!(project_dir.join("phpstan.neon").exists());
     assert!(project_dir.join("phpunit.xml").exists());
@@ -550,7 +509,6 @@ fn test_init_php_composer_json_content() -> anyhow::Result<()> {
     let composer_json_path = project_dir.join("composer.json");
     let content = std::fs::read_to_string(&composer_json_path)?;
 
-    // Verify composer.json structure
     assert!(content.contains("\"name\""));
     assert!(content.contains("\"description\""));
     assert!(content.contains("\"require\""));
@@ -579,7 +537,6 @@ fn test_init_php_app_class_content() -> anyhow::Result<()> {
     let app_php_path = project_dir.join("src/AppController.php");
     let content = std::fs::read_to_string(&app_php_path)?;
 
-    // Verify PHP file structure
     assert!(content.contains("<?php"));
     assert!(content.contains("declare(strict_types=1)"));
     assert!(content.contains("final class AppController"));
@@ -601,7 +558,6 @@ fn test_init_php_next_steps() -> anyhow::Result<()> {
 
     let response = InitEngine::execute(request)?;
 
-    // Verify next steps
     assert!(response.next_steps.len() >= 2);
     assert!(response.next_steps[0].contains("cd php_steps"));
     assert!(response.next_steps.iter().any(|s| s.contains("composer")));
@@ -609,10 +565,6 @@ fn test_init_php_next_steps() -> anyhow::Result<()> {
 
     Ok(())
 }
-
-// ============================================================================
-// ELIXIR LANGUAGE SCAFFOLDER TESTS
-// ============================================================================
 
 #[test]
 fn test_init_elixir_creates_real_project_structure() -> anyhow::Result<()> {
@@ -715,10 +667,6 @@ fn test_init_php_with_uppercase_and_underscore() -> anyhow::Result<()> {
     Ok(())
 }
 
-// ============================================================================
-// ERROR HANDLING TESTS
-// ============================================================================
-
 #[test]
 fn test_init_invalid_python_project_name_with_hyphen() {
     let temp_dir = TempDir::new().unwrap();
@@ -733,7 +681,6 @@ fn test_init_invalid_python_project_name_with_hyphen() {
 
     let result = InitEngine::execute(request);
     assert!(result.is_err());
-    // Directory should not be created when validation fails
     assert!(!project_dir.exists());
 }
 
@@ -766,7 +713,6 @@ fn test_init_invalid_typescript_project_name_with_underscore() {
         schema_path: None,
     };
 
-    // TypeScript validation rejects underscores
     let result = InitEngine::execute(request);
     assert!(result.is_err());
     assert!(!project_dir.exists());
@@ -827,7 +773,6 @@ fn test_init_directory_already_exists() -> anyhow::Result<()> {
     let temp_dir = TempDir::new()?;
     let project_dir = temp_dir.path().join("existing");
 
-    // Create the directory first
     std::fs::create_dir_all(&project_dir)?;
 
     let request = InitRequest {
@@ -840,7 +785,6 @@ fn test_init_directory_already_exists() -> anyhow::Result<()> {
     let result = InitEngine::execute(request);
     assert!(result.is_err());
 
-    // Verify the error is about directory already existing
     let err_msg = format!("{:?}", result);
     assert!(err_msg.contains("already exists") || err_msg.contains("DirectoryAlreadyExists"));
 
@@ -864,10 +808,6 @@ fn test_init_with_nonexistent_schema_path() {
     assert!(result.is_err());
     assert!(!project_dir.exists());
 }
-
-// ============================================================================
-// INTEGRATION AND EDGE CASE TESTS
-// ============================================================================
 
 #[test]
 fn test_init_creates_nested_directory_structure() -> anyhow::Result<()> {
@@ -894,7 +834,6 @@ fn test_init_creates_nested_directory_structure() -> anyhow::Result<()> {
 fn test_init_all_languages_minimal_file_count() -> anyhow::Result<()> {
     let temp_base = TempDir::new()?;
 
-    // Test Python
     let py_dir = temp_base.path().join("py_test");
     let py_request = InitRequest {
         project_name: "py_test".to_string(),
@@ -905,7 +844,6 @@ fn test_init_all_languages_minimal_file_count() -> anyhow::Result<()> {
     let py_response = InitEngine::execute(py_request)?;
     assert!(py_response.files_created.len() >= 6);
 
-    // Test TypeScript (use kebab-case)
     let ts_dir = temp_base.path().join("ts-test");
     let ts_request = InitRequest {
         project_name: "ts-test".to_string(),
@@ -916,7 +854,6 @@ fn test_init_all_languages_minimal_file_count() -> anyhow::Result<()> {
     let ts_response = InitEngine::execute(ts_request)?;
     assert!(ts_response.files_created.len() >= 8);
 
-    // Test Rust
     let rs_dir = temp_base.path().join("rs_test");
     let rs_request = InitRequest {
         project_name: "rs_test".to_string(),
@@ -927,7 +864,6 @@ fn test_init_all_languages_minimal_file_count() -> anyhow::Result<()> {
     let rs_response = InitEngine::execute(rs_request)?;
     assert!(rs_response.files_created.len() >= 6);
 
-    // Test PHP
     let php_dir = temp_base.path().join("php_test");
     let php_request = InitRequest {
         project_name: "php_test".to_string(),
@@ -938,7 +874,6 @@ fn test_init_all_languages_minimal_file_count() -> anyhow::Result<()> {
     let php_response = InitEngine::execute(php_request)?;
     assert!(php_response.files_created.len() >= 8);
 
-    // Test Elixir
     let ex_dir = temp_base.path().join("elixir_test");
     let ex_request = InitRequest {
         project_name: "elixir_test".to_string(),
@@ -966,7 +901,6 @@ fn test_init_response_paths_are_absolute() -> anyhow::Result<()> {
 
     let response = InitEngine::execute(request)?;
 
-    // Verify all returned paths are absolute
     for path in &response.files_created {
         assert!(path.is_absolute(), "Path should be absolute: {:?}", path);
     }
@@ -998,7 +932,6 @@ fn test_init_python_single_letter_project_name() -> anyhow::Result<()> {
 fn test_init_multiple_consecutive_operations() -> anyhow::Result<()> {
     let temp_base = TempDir::new()?;
 
-    // Initialize first project
     let proj1_dir = temp_base.path().join("project1");
     let request1 = InitRequest {
         project_name: "project1".to_string(),
@@ -1008,7 +941,6 @@ fn test_init_multiple_consecutive_operations() -> anyhow::Result<()> {
     };
     let response1 = InitEngine::execute(request1)?;
 
-    // Initialize second project in same temp directory
     let proj2_dir = temp_base.path().join("project2");
     let request2 = InitRequest {
         project_name: "project2".to_string(),
@@ -1018,7 +950,6 @@ fn test_init_multiple_consecutive_operations() -> anyhow::Result<()> {
     };
     let response2 = InitEngine::execute(request2)?;
 
-    // Verify both projects were created correctly
     assert!(!response1.files_created.is_empty());
     assert!(!response2.files_created.is_empty());
     assert!(proj1_dir.exists());

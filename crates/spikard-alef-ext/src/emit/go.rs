@@ -62,23 +62,12 @@ fn render(env: &Environment<'static>, name: &str, ctx: minijinja::Value) -> Stri
 pub fn emit(_api: &ApiSurface, cfg: &HttpExtensionConfig) -> Result<Vec<GeneratedFile>> {
     let env = make_env();
 
-    // The ergonomic typed-handler layer (`app.go`) wraps the low-level `App`
-    // with struct-DTO route registration: it derives a JSON Schema from the
-    // DTO type via reflection and delegates request validation to the Rust
-    // core (invalid bodies -> 422 ProblemDetails before the handler runs).
-    // It is self-contained (only stdlib) and always emitted.
     let mut files = vec![GeneratedFile {
         path: PathBuf::from("packages/go/app.go"),
         content: render(&env, "app.go.jinja", context! {}),
         generated_header: true,
     }];
 
-    // Only emit error types for the Go binding. The Config struct, Run
-    // method, lifecycle hook registration, and chi-based helpers in the
-    // remaining templates conflict with binding.go's existing ServerConfig
-    // / App.Run / CorsConfig / RateLimitConfig / StaticFilesConfig and
-    // assume chi as a dep (it isn't). Error types are self-contained and
-    // unique to the HTTP extension surface.
     if cfg.error_types.is_empty() {
         return Ok(files);
     }

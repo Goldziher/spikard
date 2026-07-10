@@ -27,16 +27,13 @@ impl GraphQLGenerator for PythonGenerator {
         code.push_str("# Any manual changes will be overwritten on the next generation.\n");
         code.push_str("\"\"\"GraphQL types generated from schema.\"\"\"\n\n");
 
-        // Check if we need to import Enum
         let has_enums = schema.types.values().any(|t| t.kind == TypeKind::Enum);
-        // Check if we need to import Struct
         let has_structs = schema.types.values().any(|t| {
             matches!(t.kind, TypeKind::InputObject | TypeKind::Object)
                 && t.name != "Query"
                 && t.name != "Mutation"
                 && t.name != "Subscription"
         });
-        // Check if we need to import TypeAlias
         let has_unions = schema.types.values().any(|t| t.kind == TypeKind::Union);
 
         code.push_str("from __future__ import annotations\n");
@@ -53,10 +50,8 @@ impl GraphQLGenerator for PythonGenerator {
 
         code.push('\n');
 
-        // Create type mapper for Python
         let mapper = TypeMapper::new(TargetLanguage::Python, Some(schema));
 
-        // Generate enums first
         for type_def in schema.types.values() {
             if type_def.kind == TypeKind::Enum {
                 code.push_str(&format!("class {}(str, Enum):\n", type_def.name));
@@ -76,7 +71,6 @@ impl GraphQLGenerator for PythonGenerator {
             }
         }
 
-        // Generate input objects and types
         for type_def in schema.types.values() {
             if type_def.kind == TypeKind::InputObject {
                 code.push_str(&format!(
@@ -143,9 +137,6 @@ impl GraphQLGenerator for PythonGenerator {
                 }
                 code.push_str("\n\n");
             } else if type_def.kind == TypeKind::Union {
-                // Union types: use TypeAlias with quoted string for forward references
-                // Quote the value to avoid "used before definition" errors in mypy --strict
-                // The TypeAlias annotation tells mypy this is a type alias, not a string variable
                 let members = type_def.possible_types.join(" | ");
                 code.push_str(&format!("{}: TypeAlias = \"{}\"\n", type_def.name, members));
                 code.push('\n');
@@ -172,17 +163,14 @@ impl GraphQLGenerator for PythonGenerator {
         code.push_str("if TYPE_CHECKING:\n");
         code.push_str("    from graphql import GraphQLResolveInfo\n");
 
-        // Collect all type names used in resolver return types and arguments
         let mut used_types: std::collections::HashSet<String> = std::collections::HashSet::new();
 
         for query in &schema.queries {
-            // Add return type
             if let Some(type_name) = extract_base_type_name(&query.type_name)
                 && is_custom_type(&type_name, schema)
             {
                 used_types.insert(type_name);
             }
-            // Add argument types
             for arg in &query.arguments {
                 if let Some(type_name) = extract_base_type_name(&arg.type_name)
                     && is_custom_type(&type_name, schema)
@@ -193,13 +181,11 @@ impl GraphQLGenerator for PythonGenerator {
         }
 
         for mutation in &schema.mutations {
-            // Add return type
             if let Some(type_name) = extract_base_type_name(&mutation.type_name)
                 && is_custom_type(&type_name, schema)
             {
                 used_types.insert(type_name);
             }
-            // Add argument types
             for arg in &mutation.arguments {
                 if let Some(type_name) = extract_base_type_name(&arg.type_name)
                     && is_custom_type(&type_name, schema)
@@ -224,7 +210,6 @@ impl GraphQLGenerator for PythonGenerator {
             }
         }
 
-        // Add imports for all used types
         if !used_types.is_empty() {
             let mut sorted_types: Vec<_> = used_types.iter().collect();
             sorted_types.sort();
@@ -234,10 +219,8 @@ impl GraphQLGenerator for PythonGenerator {
 
         code.push('\n');
 
-        // Create type mapper for Python
         let _mapper = TypeMapper::new(TargetLanguage::Python, Some(schema));
 
-        // Helper closure to format resolver signature
         let format_resolver =
             |name: &str, field: &crate::codegen::graphql::spec_parser::GraphQLField, schema: &GraphQLSchema| {
                 let mut sig = format!(
@@ -270,7 +253,6 @@ impl GraphQLGenerator for PythonGenerator {
                 sig
             };
 
-        // Query resolvers
         if !schema.queries.is_empty() {
             code.push_str("# Query resolvers\n\n");
             for field in &schema.queries {
@@ -282,7 +264,6 @@ impl GraphQLGenerator for PythonGenerator {
             code.push('\n');
         }
 
-        // Mutation resolvers
         if !schema.mutations.is_empty() {
             code.push_str("# Mutation resolvers\n\n");
             for field in &schema.mutations {
@@ -358,7 +339,6 @@ impl GraphQLGenerator for PythonGenerator {
     fn generate_schema_definition(&self, schema: &GraphQLSchema) -> Result<String> {
         let mut code = String::new();
 
-        // Header with generation info
         code.push_str("#!/usr/bin/env python3\n");
         code.push_str("# ruff: noqa: EXE001\n");
         code.push_str("# DO NOT EDIT - Auto-generated by Spikard CLI\n");
@@ -368,7 +348,6 @@ impl GraphQLGenerator for PythonGenerator {
         code.push_str("\"\"\"GraphQL Schema Definition.\"\"\"\n\n");
         code.push_str("from __future__ import annotations\n\n");
 
-        // Build imports based on what's in the schema
         let mut ariadne_imports = vec!["make_executable_schema", "QueryType"];
         if !schema.mutations.is_empty() {
             ariadne_imports.push("MutationType");
@@ -378,7 +357,6 @@ impl GraphQLGenerator for PythonGenerator {
         }
         code.push_str(&format!("from ariadne import {}\n\n", ariadne_imports.join(", ")));
 
-        // Reconstruct and embed the SDL using SdlBuilder
         let sdl = SdlBuilder::new(schema).build();
         code.push_str("# GraphQL Schema Definition Language (SDL)\n");
         code.push_str("#\n");
@@ -386,7 +364,6 @@ impl GraphQLGenerator for PythonGenerator {
         code.push_str("# in the GraphQL schema.\n");
         code.push_str("type_defs = \"\"\"\n");
 
-        // Embed the SDL in triple-quoted string with proper indentation
         for line in sdl.lines() {
             if line.is_empty() {
                 code.push('\n');
@@ -399,7 +376,6 @@ impl GraphQLGenerator for PythonGenerator {
 
         code.push_str("\"\"\"\n\n");
 
-        // Create QueryType instance
         code.push_str("# Query resolvers\n");
         code.push_str("query = QueryType()\n\n");
         code.push_str("def _register_query_resolvers() -> None:\n");
@@ -416,7 +392,6 @@ impl GraphQLGenerator for PythonGenerator {
         }
         code.push_str("_register_query_resolvers()\n\n");
 
-        // Create MutationType instance (if mutations exist)
         if !schema.mutations.is_empty() {
             code.push_str("# Mutation resolvers\n");
             code.push_str("mutation = MutationType()\n\n");
@@ -431,7 +406,6 @@ impl GraphQLGenerator for PythonGenerator {
             code.push_str("_register_mutation_resolvers()\n\n");
         }
 
-        // Create SubscriptionType instance (if subscriptions exist)
         if !schema.subscriptions.is_empty() {
             code.push_str("# Subscription resolvers\n");
             code.push_str("subscription = SubscriptionType()\n\n");
@@ -456,14 +430,12 @@ impl GraphQLGenerator for PythonGenerator {
             code.push_str("_register_subscription_resolvers()\n\n");
         }
 
-        // Build the executable schema
         code.push_str("# Executable GraphQL Schema\n");
         code.push_str("#\n");
         code.push_str("# Combines the type definitions with resolvers to create\n");
         code.push_str("# a fully functional GraphQL schema ready for use with\n");
         code.push_str("# Ariadne GraphQL or similar frameworks.\n");
 
-        // Determine which resolvers to pass
         let mut resolvers = vec!["query".to_string()];
         if !schema.mutations.is_empty() {
             resolvers.push("mutation".to_string());
@@ -476,7 +448,6 @@ impl GraphQLGenerator for PythonGenerator {
         code.push_str(&resolvers.join(", "));
         code.push_str(")\n\n");
 
-        // Export type_defs for advanced use cases
         code.push_str("# Exported for advanced use cases where the SDL\n");
         code.push_str("# string might be needed directly.\n");
         code.push_str("__all__ = [\"schema\", \"type_defs\"]\n");
@@ -496,9 +467,8 @@ impl GraphQLGenerator for PythonGenerator {
         let resolvers = self.generate_resolvers(schema)?;
         let schema_def = self.generate_schema_definition(schema)?;
 
-        // Extract imports and code, separately tracking what was in types section
         fn extract_header_imports_and_code(s: &str) -> (Vec<String>, Vec<String>, Vec<String>) {
-            let mut header_lines: Vec<String> = Vec::new(); // shebang, comments, docstring
+            let mut header_lines: Vec<String> = Vec::new();
             let mut imports: Vec<String> = Vec::new();
             let mut code: Vec<String> = Vec::new();
             let mut in_header_docstring = false;
@@ -509,29 +479,22 @@ impl GraphQLGenerator for PythonGenerator {
             for line in s.lines() {
                 let trimmed = line.trim();
 
-                // Skip header section before code starts
                 if !past_header {
-                    // Handle header docstrings (module-level docstrings at top)
                     if trimmed.starts_with("\"\"\"") {
-                        // One-line docstring: starts and ends with """
                         if trimmed.len() >= 6 && trimmed.ends_with("\"\"\"") && !trimmed.starts_with("\"\"\"\"") {
-                            // Skip one-line docstring entirely
                             header_lines.push(line.to_string());
                             continue;
                         }
-                        // Multi-line docstring: toggle state
                         header_lines.push(line.to_string());
                         in_header_docstring = !in_header_docstring;
                         continue;
                     }
 
-                    // Lines inside multi-line docstring
                     if in_header_docstring {
                         header_lines.push(line.to_string());
                         continue;
                     }
 
-                    // Lines in preamble (shebang, DO NOT EDIT, etc.)
                     if trimmed.starts_with("#!/")
                         || trimmed.starts_with("# ruff:")
                         || trimmed.starts_with("# DO NOT EDIT")
@@ -543,12 +506,10 @@ impl GraphQLGenerator for PythonGenerator {
                         continue;
                     }
 
-                    // Skip empty lines in header
                     if trimmed.is_empty() {
                         continue;
                     }
 
-                    // We've hit actual content; mark header as passed
                     past_header = true;
                 }
 
@@ -563,8 +524,6 @@ impl GraphQLGenerator for PythonGenerator {
                     in_type_checking_block = false;
                 }
 
-                // Now past header - categorize the rest
-                // Skip __future__ imports - only keep in types section
                 if trimmed.starts_with("from __future__") {
                     if !found_import_section {
                         imports.push(line.to_string());
@@ -580,13 +539,11 @@ impl GraphQLGenerator for PythonGenerator {
                     continue;
                 }
 
-                // Categorize: imports vs. code
                 if trimmed.starts_with("import ") || trimmed.starts_with("from ") {
                     imports.push(line.to_string());
                     found_import_section = true;
                 } else {
                     if trimmed.is_empty() && !found_import_section && imports.is_empty() {
-                        // Skip empty lines before imports start
                         continue;
                     }
                     code.push(line.to_string());
@@ -600,11 +557,9 @@ impl GraphQLGenerator for PythonGenerator {
         let (_resolvers_header, resolvers_imports, resolvers_code) = extract_header_imports_and_code(&resolvers);
         let (_schema_def_header, schema_def_imports, schema_def_code) = extract_header_imports_and_code(&schema_def);
 
-        // Collect all external imports (skip "from .types" imports)
         let mut all_imports: Vec<String> = types_imports;
         for imp in resolvers_imports.iter().chain(schema_def_imports.iter()) {
             let trimmed = imp.trim();
-            // Skip imports from .types (relative imports from types module)
             if trimmed.starts_with("from .types") {
                 continue;
             }
@@ -613,25 +568,18 @@ impl GraphQLGenerator for PythonGenerator {
             }
         }
 
-        // Build final result with proper Python import structure:
-        // 1. Header (shebang, comments)
-        // 2. All imports
-        // 3. All code (type definitions + resolvers + schema)
         let mut result = String::new();
 
-        // Add header
         for header_line in types_header {
             result.push_str(&header_line);
             result.push('\n');
         }
 
-        // Add all imports
         for imp in &all_imports {
             result.push_str(imp);
             result.push('\n');
         }
 
-        // Add types code
         if !types_code.is_empty() {
             result.push('\n');
             for line in types_code {
@@ -640,7 +588,6 @@ impl GraphQLGenerator for PythonGenerator {
             }
         }
 
-        // Add resolvers code
         if !resolvers_code.is_empty() {
             result.push('\n');
             for line in resolvers_code {
@@ -649,7 +596,6 @@ impl GraphQLGenerator for PythonGenerator {
             }
         }
 
-        // Add schema definition code
         if !schema_def_code.is_empty() {
             result.push('\n');
             for line in schema_def_code {
@@ -658,7 +604,6 @@ impl GraphQLGenerator for PythonGenerator {
             }
         }
 
-        // Trim excess trailing newlines and add single newline
         result = result.trim_end().to_string();
         result.push('\n');
 
@@ -744,6 +689,5 @@ fn is_custom_type(type_name: &str, schema: &GraphQLSchema) -> bool {
         return false;
     }
 
-    // Check if it's defined in the schema
     schema.types.contains_key(type_name)
 }

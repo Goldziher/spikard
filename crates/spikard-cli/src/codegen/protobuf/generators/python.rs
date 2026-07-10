@@ -67,13 +67,11 @@ impl ProtobufGenerator for PythonProtobufGenerator {
             code.push_str(&format!("PROTOBUF_PACKAGE = \"{package}\"\n\n"));
         }
 
-        // Generate message definitions
         for message in schema.messages.values() {
             code.push_str(&self.generate_message_class(message));
             code.push_str("\n\n");
         }
 
-        // Generate enum definitions
         for enum_def in schema.enums.values() {
             code.push_str(&self.generate_enum_class(enum_def));
             code.push_str("\n\n");
@@ -101,7 +99,6 @@ impl ProtobufGenerator for PythonProtobufGenerator {
             code.push_str(&format!("PROTOBUF_PACKAGE = \"{package}\"\n\n"));
         }
 
-        // Generate service definitions
         if schema.services.is_empty() {
             code.push_str("# No services defined in this schema.\n");
         } else {
@@ -149,10 +146,8 @@ impl PythonProtobufGenerator {
     fn generate_message_class(&self, message: &MessageDef) -> String {
         let mut code = String::new();
 
-        // Class definition
         code.push_str(&format!("class {}(_message.Message):\n", message.name));
 
-        // Docstring
         if let Some(desc) = &message.description {
             code.push_str(&format!("    \"\"\"{}.\"\"\"\n", escape_string(desc, "python")));
         } else {
@@ -162,9 +157,7 @@ impl PythonProtobufGenerator {
         if message.fields.is_empty() {
             code.push_str("    pass\n");
         } else {
-            // Add field type hints
             for field in &message.fields {
-                // Field comment if available
                 if let Some(desc) = &field.description {
                     code.push_str(&format!("    # {desc}\n"));
                 }
@@ -178,11 +171,9 @@ impl PythonProtobufGenerator {
                 code.push_str(&format!("    {field_name}: {field_type}\n"));
             }
 
-            // Constructor
             code.push('\n');
             code.push_str("    def __init__(self");
 
-            // Constructor parameters
             for field in &message.fields {
                 let field_name = sanitize_identifier(&field.name, "python");
                 let is_optional = field.label == FieldLabel::Optional;
@@ -196,7 +187,6 @@ impl PythonProtobufGenerator {
                         field_type.clone()
                     };
 
-                // Default value based on type
                 let default_val = if is_repeated || is_optional {
                     "None".to_string()
                 } else if matches!(field.field_type, ProtoType::Message(_) | ProtoType::Enum(_)) {
@@ -227,7 +217,6 @@ impl PythonProtobufGenerator {
 
         code.push_str(&format!("class {}(int):\n", enum_def.name));
 
-        // Docstring
         if let Some(desc) = &enum_def.description {
             code.push_str(&format!("    \"\"\"{}.\"\"\"\n", escape_string(desc, "python")));
         } else {
@@ -253,10 +242,8 @@ impl PythonProtobufGenerator {
     fn generate_service_class(&self, service: &ServiceDef) -> String {
         let mut code = String::new();
 
-        // Service class
         code.push_str(&format!("class {}Servicer:\n", service.name));
 
-        // Docstring
         if let Some(desc) = &service.description {
             code.push_str(&format!(
                 "    \"\"\"Server handler interface for {}. {}.\"\"\"\n",
@@ -276,17 +263,14 @@ impl PythonProtobufGenerator {
             for method in &service.methods {
                 code.push('\n');
 
-                // Method docstring
                 if let Some(desc) = &method.description {
                     code.push_str(&format!("    # {desc}\n"));
                 }
 
-                // Build method signature
                 let method_name = sanitize_identifier(&method.name.to_snake_case(), "python");
                 let request_type = &method.input_type;
                 let response_type = &method.output_type;
 
-                // Determine if async is needed and return type
                 let (async_keyword, return_type) = if method.output_streaming {
                     ("async ".to_string(), format!("AsyncIterator[{response_type}]"))
                 } else {
@@ -313,10 +297,6 @@ mod tests {
         EnumDef, EnumValue, FieldDef, FieldLabel, MessageDef, MethodDef, ProtoType, ServiceDef,
     };
     use std::collections::HashMap;
-
-    // ============================================================================
-    // Helper Functions for Test Setup
-    // ============================================================================
 
     /// Create a basic ProtobufSchema for testing
     fn create_test_schema(package: &str) -> ProtobufSchema {
@@ -392,7 +372,6 @@ mod tests {
 
     /// Check if generated Python code contains valid Python syntax markers
     fn has_valid_python_syntax(code: &str) -> bool {
-        // Check for essential Python syntax elements
         code.contains("class ") && code.contains("def ") && code.contains("\"\"\"")
     }
 
@@ -406,17 +385,12 @@ mod tests {
         code.contains("async def ")
     }
 
-    // ============================================================================
-    // Test 1: Basic Syntax Validation
-    // ============================================================================
-
     /// Verify that generated Python code contains valid syntax elements and
     /// can be structurally parsed by checking for essential Python keywords.
     #[test]
     fn test_generated_python_has_valid_syntax() {
         let mut schema = create_test_schema("test.v1");
 
-        // Create a message with multiple field types
         let message = MessageDef {
             name: "User".to_string(),
             fields: vec![
@@ -447,7 +421,6 @@ mod tests {
         let generator = PythonProtobufGenerator;
         let code = generator.generate_messages(&schema).unwrap();
 
-        // Verify essential Python syntax elements
         assert!(
             code.contains("class User(_message.Message):"),
             "Generated code must contain class definition with proper inheritance"
@@ -462,10 +435,6 @@ mod tests {
             "Generated code must have valid Python syntax structure"
         );
     }
-
-    // ============================================================================
-    // Test 2: Type Hints Validation
-    // ============================================================================
 
     /// Verify that all generated fields have proper type annotations.
     /// Type hints should be present for all field types including Optional and list.
@@ -515,7 +484,6 @@ mod tests {
         let generator = PythonProtobufGenerator;
         let code = generator.generate_message_class(&message);
 
-        // Verify type hints for all fields
         assert!(
             code.contains("required_string: str"),
             "Required string field must have str type hint"
@@ -534,10 +502,6 @@ mod tests {
         );
         assert!(has_type_hints(&code), "Generated code must contain type hints");
     }
-
-    // ============================================================================
-    // Test 3: Message Structure Validation
-    // ============================================================================
 
     /// Verify that message classes have proper structure including:
     /// - Class inheritance from _message.Message
@@ -582,19 +546,16 @@ mod tests {
         let generator = PythonProtobufGenerator;
         let code = generator.generate_message_class(&message);
 
-        // Verify class structure
         assert!(
             code.contains("class Product(_message.Message):"),
             "Message must be a proper class inheriting from _message.Message"
         );
 
-        // Verify docstring
         assert!(
             code.contains("Product information"),
             "Message class must have descriptive docstring"
         );
 
-        // Verify field declarations
         assert!(
             code.contains("product_id: str"),
             "Field 'product_id' must be declared with correct type"
@@ -608,7 +569,6 @@ mod tests {
             "Field 'in_stock' must be declared with correct type"
         );
 
-        // Verify constructor
         assert!(
             code.contains("def __init__(self"),
             "Message must have __init__ constructor"
@@ -618,10 +578,6 @@ mod tests {
             "Constructor must have proper return type annotation"
         );
     }
-
-    // ============================================================================
-    // Test 4: Service Async Methods Validation
-    // ============================================================================
 
     /// Verify that generated service methods are async and properly defined.
     /// All RPC methods must use 'async def' and include proper context parameter.
@@ -661,13 +617,11 @@ mod tests {
         let generator = PythonProtobufGenerator;
         let code = generator.generate_service_class(&service);
 
-        // Verify service class structure
         assert!(
             code.contains("class UserServiceServicer:"),
             "Service must be a proper Python class with 'Servicer' suffix"
         );
 
-        // Verify docstring
         assert!(
             code.contains("Server handler interface for UserService"),
             "Service must have descriptive docstring"
@@ -677,7 +631,6 @@ mod tests {
             "Service must have descriptive docstring"
         );
 
-        // Verify all methods are async
         assert!(code.contains("async def create_user"), "Unary method must be async");
         assert!(
             code.contains("async def list_users"),
@@ -688,13 +641,11 @@ mod tests {
             "Bidirectional streaming method must be async"
         );
 
-        // Verify context parameter is included
         assert!(
             code.contains("grpc.aio.ServicerContext"),
             "Methods must have gRPC context parameter"
         );
 
-        // Verify async return types for streaming
         assert!(
             code.contains("AsyncIterator[User]"),
             "Server streaming method must return AsyncIterator"
@@ -703,10 +654,6 @@ mod tests {
         assert!(has_async_methods(&code), "Service must have async methods");
     }
 
-    // ============================================================================
-    // Test 5: Type Mapping Correctness
-    // ============================================================================
-
     /// Verify that protobuf types are correctly mapped to Python types.
     /// Tests all scalar types and complex types with various field labels.
     #[test]
@@ -714,7 +661,6 @@ mod tests {
         let message = MessageDef {
             name: "AllTypes".to_string(),
             fields: vec![
-                // Integer types
                 FieldDef {
                     name: "int32_field".to_string(),
                     number: 1,
@@ -739,7 +685,6 @@ mod tests {
                     default_value: None,
                     description: None,
                 },
-                // Floating point types
                 FieldDef {
                     name: "float_field".to_string(),
                     number: 4,
@@ -756,7 +701,6 @@ mod tests {
                     default_value: None,
                     description: None,
                 },
-                // Boolean type
                 FieldDef {
                     name: "bool_field".to_string(),
                     number: 6,
@@ -765,7 +709,6 @@ mod tests {
                     default_value: None,
                     description: None,
                 },
-                // String type
                 FieldDef {
                     name: "string_field".to_string(),
                     number: 7,
@@ -774,7 +717,6 @@ mod tests {
                     default_value: None,
                     description: None,
                 },
-                // Bytes type
                 FieldDef {
                     name: "bytes_field".to_string(),
                     number: 8,
@@ -783,7 +725,6 @@ mod tests {
                     default_value: None,
                     description: None,
                 },
-                // Optional types
                 FieldDef {
                     name: "optional_string".to_string(),
                     number: 9,
@@ -800,7 +741,6 @@ mod tests {
                     default_value: None,
                     description: None,
                 },
-                // Repeated types
                 FieldDef {
                     name: "repeated_string".to_string(),
                     number: 11,
@@ -826,25 +766,19 @@ mod tests {
         let generator = PythonProtobufGenerator;
         let code = generator.generate_message_class(&message);
 
-        // Verify integer type mappings
         assert!(code.contains("int32_field: int"), "int32 must map to int");
         assert!(code.contains("int64_field: int"), "int64 must map to int");
         assert!(code.contains("uint32_field: int"), "uint32 must map to int");
 
-        // Verify floating point mappings
         assert!(code.contains("float_field: float"), "float must map to float");
         assert!(code.contains("double_field: float"), "double must map to float");
 
-        // Verify boolean mapping
         assert!(code.contains("bool_field: bool"), "bool must map to bool");
 
-        // Verify string mapping
         assert!(code.contains("string_field: str"), "string must map to str");
 
-        // Verify bytes mapping
         assert!(code.contains("bytes_field: bytes"), "bytes must map to bytes");
 
-        // Verify optional mappings
         assert!(
             code.contains("optional_string: str | None"),
             "optional string must map to `str | None`"
@@ -854,7 +788,6 @@ mod tests {
             "optional int must map to `int | None`"
         );
 
-        // Verify repeated mappings
         assert!(
             code.contains("repeated_string: list[str]"),
             "repeated string must map to list[str]"
@@ -864,10 +797,6 @@ mod tests {
             "repeated int must map to list[int]"
         );
     }
-
-    // ============================================================================
-    // Additional Quality Tests
-    // ============================================================================
 
     /// Verify that imports are correctly generated at the top of the file
     #[test]
@@ -879,11 +808,9 @@ mod tests {
         let generator = PythonProtobufGenerator;
         let code = generator.generate_messages(&schema).unwrap();
 
-        // Verify file header
         assert!(code.starts_with("#!/usr/bin/env python3"), "Must have Python shebang");
         assert!(code.contains("# DO NOT EDIT"), "Must have auto-generation warning");
 
-        // Verify imports
         assert!(
             code.contains("from __future__ import annotations"),
             "Must import annotations for type hints"
@@ -892,7 +819,6 @@ mod tests {
             code.contains("from google.protobuf import message as _message"),
             "Must import protobuf message module"
         );
-        // Verify package comment
         assert!(
             code.contains("PROTOBUF_PACKAGE = \"example.service\""),
             "Must include package metadata"
@@ -909,11 +835,9 @@ mod tests {
         let generator = PythonProtobufGenerator;
         let code = generator.generate_services(&schema).unwrap();
 
-        // Verify file header
         assert!(code.starts_with("#!/usr/bin/env python3"), "Must have Python shebang");
         assert!(code.contains("# DO NOT EDIT"), "Must have auto-generation warning");
 
-        // Verify imports
         assert!(
             code.contains("from __future__ import annotations"),
             "Must import annotations"
@@ -959,10 +883,8 @@ mod tests {
         let generator = PythonProtobufGenerator;
         let code = generator.generate_enum_class(&enum_def);
 
-        // Verify enum class structure
         assert!(code.contains("class Status(int):"), "Enum must inherit from int");
 
-        // Verify enum values
         assert!(code.contains("UNKNOWN = 0"), "Enum must have UNKNOWN value");
         assert!(code.contains("ACTIVE = 1"), "Enum must have ACTIVE value");
         assert!(code.contains("INACTIVE = 2"), "Enum must have INACTIVE value");
@@ -976,7 +898,6 @@ mod tests {
         let generator = PythonProtobufGenerator;
         let code = generator.generate_message_class(&message);
 
-        // Empty messages should contain pass statement
         assert!(code.contains("pass"), "Empty message must contain pass statement");
         assert!(code.contains("class Empty"), "Message name must be present");
     }
@@ -1012,7 +933,6 @@ mod tests {
         let generator = PythonProtobufGenerator;
         let code = generator.generate_message_class(&message);
 
-        // Verify field comments
         assert!(
             code.contains("Unique user identifier"),
             "Field description must be included as comment"
@@ -1062,7 +982,6 @@ mod tests {
         let generator = PythonProtobufGenerator;
         let code = generator.generate_message_class(&message);
 
-        // Verify constructor has all parameters
         assert!(code.contains("name: str"), "Constructor must have name parameter");
         assert!(code.contains("count: int"), "Constructor must have count parameter");
         assert!(
@@ -1070,7 +989,6 @@ mod tests {
             "Constructor must have optional_value parameter"
         );
 
-        // Verify default values
         assert!(
             code.contains("name: str = \"\""),
             "String field should default to empty string"
@@ -1081,10 +999,6 @@ mod tests {
             "Optional field should default to None"
         );
     }
-
-    // ============================================================================
-    // Backward Compatibility Tests
-    // ============================================================================
 
     #[test]
     fn test_generate_simple_message() {

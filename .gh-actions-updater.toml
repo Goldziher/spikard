@@ -1,12 +1,12 @@
-# gh-actions-updater (gau) configuration.
-#
-# Pin every GitHub Actions reference to its MAJOR version (e.g. actions/checkout@v6,
-# ruby/setup-ruby@v1) so routine minor/patch releases don't churn the workflows and
-# the pre-commit hook stays a no-op between intentional major bumps.
+# ~keep gh-actions-updater (gau) configuration.
+
+# ~keep Pin every GitHub Actions reference to its MAJOR version (e.g. actions/checkout@v6,
+# ~keep ruby/setup-ruby@v1) so routine minor/patch releases don't churn the workflows and
+# ~keep the pre-commit hook stays a no-op between intentional major bumps.
 [update]
 pin_style = "major"
 
 [scan]
-# Only ever touch spikard's own workflows — never vendored/dependency workflows
-# (node_modules, bundled gems, composer vendor trees, etc.).
+# ~keep Only ever touch spikard's own workflows — never vendored/dependency workflows
+# ~keep (node_modules, bundled gems, composer vendor trees, etc.).
 exclude = ["node_modules/**", "**/node_modules/**", "**/vendor/**"]

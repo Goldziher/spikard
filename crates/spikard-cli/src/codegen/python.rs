@@ -51,8 +51,6 @@ impl PythonGenerator {
         let uses_query = self.uses_query_params();
         let uses_body = self.uses_request_body();
 
-        // B008 is only triggered when the route generator emits `Query(default=...)`
-        // in argument defaults; including it unconditionally trips RUF100 on DTO-only output.
         let noqa = if uses_query {
             "# ruff: noqa: B008, I001, INP001\n\n"
         } else {

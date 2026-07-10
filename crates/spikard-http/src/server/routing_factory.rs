@@ -30,8 +30,6 @@ async fn call_with_optional_hooks(
     handler: Arc<dyn Handler>,
     hooks: Option<Arc<crate::LifecycleHooks>>,
 ) -> HandlerResult {
-    // Performance: Fast path for requests without hooks (common case).
-    // Only invoke lifecycle execution when hooks are actually registered.
     if hooks.as_ref().is_some_and(|h| !h.is_empty()) {
         lifecycle_execution::execute_with_lifecycle_hooks(req, request_data, handler, hooks).await
     } else {
@@ -140,7 +138,6 @@ impl MethodRouterFactory {
         include_headers: bool,
         include_cookies: bool,
     ) -> MethodRouter {
-        // Performance: Removed redundant outer clones. Each match arm clones only when needed.
         let without_body_options = request_extraction::WithoutBodyExtractionOptions {
             include_raw_query_params,
             include_query_params_json,
@@ -151,7 +148,6 @@ impl MethodRouterFactory {
         if method.expects_body() {
             match method {
                 HttpMethod::Post => {
-                    // Performance: Clone directly from parameters, avoiding intermediate clone.
                     let handler_for_closure = handler.clone();
                     let hooks_for_closure = hooks.clone();
                     axum::routing::post(move |path_params: Path<HashMap<String, String>>, req: AxumRequest| {
@@ -370,7 +366,6 @@ impl MethodRouterFactory {
         include_headers: bool,
         include_cookies: bool,
     ) -> MethodRouter {
-        // Performance: Removed redundant outer clones. Each match arm clones only when needed.
         let without_body_options = request_extraction::WithoutBodyExtractionOptions {
             include_raw_query_params,
             include_query_params_json,

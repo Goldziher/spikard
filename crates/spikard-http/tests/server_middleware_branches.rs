@@ -208,8 +208,6 @@ async fn rate_limit_builder_covers_ip_and_global_key_extractors() {
 /// even when the route has a request schema (`expects_json_body` = true).
 #[tokio::test]
 async fn grpc_content_type_is_not_rejected_on_json_route() {
-    // Route with a schema (expects_json_body = true) — this attaches the
-    // validate_content_type_middleware which previously returned 415 for gRPC.
     let schema = serde_json::json!({
         "type": "object",
         "properties": { "name": { "type": "string" } },
@@ -239,7 +237,6 @@ async fn grpc_content_type_is_not_rejected_on_json_route() {
         .expect("router");
     let server = axum_test::TestServer::new(router);
 
-    // All standard gRPC content-types must pass through without 415.
     for content_type in &[
         "application/grpc",
         "application/grpc+proto",

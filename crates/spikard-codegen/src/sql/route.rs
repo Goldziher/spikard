@@ -245,13 +245,7 @@ fn build_response_schema(
                 Ok(row)
             }
         }
-        QueryCommand::Many => {
-            let row = row_object_schema(query, catalog, opts)?;
-            Ok(json!({ "type": "array", "items": row }))
-        }
-        QueryCommand::Grouped => {
-            // For grouped queries we proxy to :many at this layer; richer
-            // shaping will arrive once scythe's grouped codegen lands.
+        QueryCommand::Many | QueryCommand::Grouped => {
             let row = row_object_schema(query, catalog, opts)?;
             Ok(json!({ "type": "array", "items": row }))
         }
@@ -457,8 +451,6 @@ mod tests {
 
     #[test]
     fn handler_name_distinct_from_scythe_fn() {
-        // scythe's `fn_name` would emit `get_user` from `@name GetUser`; the
-        // route handler must not collide with that.
         let route = route_from_query(&get_user_query(), &empty_catalog(), &BuildOptions::default())
             .unwrap()
             .unwrap();
@@ -492,7 +484,6 @@ mod tests {
             .unwrap();
         assert_eq!(route.param_locations.get("limit"), Some(&HttpParamBinding::Query));
         let params = &route.metadata["parameter_schema"];
-        // @optional removes them from `required`; they're still in properties.
         assert!(params["properties"]["limit"].is_object());
         assert!(params["required"].is_null() || !params["required"].as_array().unwrap().iter().any(|v| v == "limit"));
     }
@@ -588,13 +579,13 @@ mod tests {
         let route = route_from_query(&create_user_query(), &empty_catalog(), &BuildOptions::default())
             .unwrap()
             .unwrap();
-        assert_eq!(route.default_status, 200); // exec_rows default
+        assert_eq!(route.default_status, 200);
     }
 
     #[test]
     fn single_body_param_recorded_in_metadata() {
         let mut q = create_user_query();
-        q.params.truncate(1); // only `email`
+        q.params.truncate(1);
         let route = route_from_query(&q, &empty_catalog(), &BuildOptions::default())
             .unwrap()
             .unwrap();

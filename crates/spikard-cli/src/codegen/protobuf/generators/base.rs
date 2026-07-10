@@ -27,7 +27,6 @@ pub fn map_proto_type_to_language(
     is_repeated: bool,
 ) -> String {
     let base_type = match (proto_type, language) {
-        // Python mappings
         (ProtoType::Double, "python") => "float",
         (ProtoType::Float, "python") => "float",
         (ProtoType::Int32, "python") => "int",
@@ -46,7 +45,6 @@ pub fn map_proto_type_to_language(
         (ProtoType::Message(name), "python") => name.as_str(),
         (ProtoType::Enum(name), "python") => name.as_str(),
 
-        // TypeScript mappings
         (ProtoType::Double, "typescript") => "number",
         (ProtoType::Float, "typescript") => "number",
         (ProtoType::Int32, "typescript") => "number",
@@ -65,7 +63,6 @@ pub fn map_proto_type_to_language(
         (ProtoType::Message(name), "typescript") => name.as_str(),
         (ProtoType::Enum(name), "typescript") => name.as_str(),
 
-        // Rust mappings
         (ProtoType::Double, "rust") => "f64",
         (ProtoType::Float, "rust") => "f32",
         (ProtoType::Int32, "rust") => "i32",
@@ -84,7 +81,6 @@ pub fn map_proto_type_to_language(
         (ProtoType::Message(name), "rust") => name.as_str(),
         (ProtoType::Enum(name), "rust") => name.as_str(),
 
-        // Ruby mappings
         (ProtoType::Double, "ruby") => "Float",
         (ProtoType::Float, "ruby") => "Float",
         (ProtoType::Int32, "ruby") => "Integer",
@@ -103,7 +99,6 @@ pub fn map_proto_type_to_language(
         (ProtoType::Message(name), "ruby") => name.as_str(),
         (ProtoType::Enum(name), "ruby") => name.as_str(),
 
-        // PHP mappings
         (ProtoType::Double, "php") => "float",
         (ProtoType::Float, "php") => "float",
         (ProtoType::Int32, "php") => "int",
@@ -122,13 +117,10 @@ pub fn map_proto_type_to_language(
         (ProtoType::Message(name), "php") => name.as_str(),
         (ProtoType::Enum(name), "php") => name.as_str(),
 
-        // Default fallback
         _ => "mixed",
     };
 
-    // Handle repeated (list) types
     if is_repeated {
-        // Repeated fields are inherently optional in proto3, but can't be wrapped further
         match language {
             "python" => format!("list[{base_type}]"),
             "typescript" => format!("{base_type}[]"),
@@ -138,7 +130,6 @@ pub fn map_proto_type_to_language(
             _ => format!("list[{base_type}]"),
         }
     } else if is_optional {
-        // Handle optional types
         match language {
             "python" => format!("Optional[{base_type}]"),
             "typescript" => format!("{base_type} | null"),
@@ -169,7 +160,6 @@ pub fn sanitize_identifier(name: &str, language: &str) -> String {
         })
         .collect();
 
-    // Trim and collapse underscores
     ident = ident.trim_matches('_').to_string();
     while ident.contains("__") {
         ident = ident.replace("__", "_");
@@ -181,16 +171,12 @@ pub fn sanitize_identifier(name: &str, language: &str) -> String {
         ident = format!("_{ident}");
     }
 
-    // Apply language-specific casing
     match language {
-        "python" => ident, // Keep snake_case for Python
-        "typescript" | "javascript" => {
-            // Convert to camelCase for TypeScript/JavaScript
-            to_camel_case(&ident)
-        }
-        "rust" => ident, // Keep snake_case for Rust
-        "ruby" => ident, // Keep snake_case for Ruby
-        "php" => ident,  // Keep snake_case for PHP
+        "python" => ident,
+        "typescript" | "javascript" => to_camel_case(&ident),
+        "rust" => ident,
+        "ruby" => ident,
+        "php" => ident,
         _ => ident,
     }
 }
@@ -283,8 +269,8 @@ pub fn indent(code: &str, spaces: usize) -> String {
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
 pub enum CommentStyle {
-    Hash,        // Python, Ruby: #
-    DoubleSlash, // TypeScript, PHP: //
+    Hash,
+    DoubleSlash,
 }
 
 /// Generate standardized file header with auto-generation warning
@@ -296,13 +282,11 @@ pub enum CommentStyle {
 pub fn generate_file_header(comment_style: CommentStyle, additional_lines: &[&str]) -> String {
     let mut header = String::new();
 
-    // Add any language-specific lines first
     for line in additional_lines {
         header.push_str(line);
         header.push('\n');
     }
 
-    // Add standard warning comment
     let comment = match comment_style {
         CommentStyle::Hash => "#",
         CommentStyle::DoubleSlash => "//",

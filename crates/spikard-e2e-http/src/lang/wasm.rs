@@ -19,10 +19,6 @@ use anyhow::Result;
 use minijinja::{Environment, context};
 use std::path::PathBuf;
 
-// ---------------------------------------------------------------------------
-// Template environment
-// ---------------------------------------------------------------------------
-
 /// Build the private template environment holding the TypeScript/WASM HTTP templates.
 fn make_env() -> Environment<'static> {
     let mut env = Environment::new();
@@ -50,17 +46,12 @@ fn render(env: &Environment<'static>, name: &str, ctx: minijinja::Value) -> Stri
         .unwrap_or_default()
 }
 
-// ---------------------------------------------------------------------------
-// App harness renderer (ported from alef `wasm.rs::render_wasm_app_harness`).
-// ---------------------------------------------------------------------------
-
 /// Render the server-pattern `app_harness.mjs` that spawns the SUT HTTP server.
 /// Uses the wasm-bindgen nodejs package instead of the node NAPI-RS package.
 ///
 /// Ported verbatim from alef's `wasm.rs::render_wasm_app_harness`.
 #[must_use]
 fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup], wasm_pkg_name: &str) -> String {
-    // Collect all HTTP fixtures from all groups.
     let mut fixtures_map = serde_json::Map::new();
 
     for group in groups {
@@ -74,7 +65,6 @@ fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup], wasm_pkg_
                 "method": &http_data.handler.method,
                 "body_schema": http_data.handler.body_schema.clone(),
             });
-            // Include middleware if present for CORS preflight registration
             if let Some(middleware) = &http_data.handler.middleware
                 && let Ok(middleware_json) = serde_json::to_value(middleware)
                 && let serde_json::Value::Object(ref obj) = handler_obj
@@ -86,8 +76,6 @@ fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup], wasm_pkg_
             let mut request_obj = serde_json::json!({
                 "path": &http_data.request.path,
             });
-            // Include content_type if present so the harness can detect
-            // multipart/form-encoded bodies and synthesize them correctly.
             if let Some(ct) = &http_data.request.content_type
                 && let serde_json::Value::Object(ref obj) = request_obj
             {
@@ -118,18 +106,12 @@ fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup], wasm_pkg_
     let app_class = e2e_config.harness.app_class_for_lang("wasm");
     let method_enum = &e2e_config.harness.method_enum;
     let run_method = e2e_config.harness.run_method_for_lang("wasm");
-    // wasm-bindgen emits JS-idiomatic camelCase method names, so the harness
-    // must call `registerRoute` (or whatever override is configured), not the
-    // canonical snake_case identifier from the config.
     let register_method = e2e_config
         .harness
         .register_method_idiomatic("wasm")
         .unwrap_or_else(|| "registerRoute".to_string());
     let route_builder_class = e2e_config.harness.route_builder.as_deref().unwrap_or("RouteBuilder");
 
-    // wasm-bindgen exposes ServerConfig as a class with a default constructor,
-    // so the harness must use `new WasmServerConfig()` and include
-    // `WasmServerConfig` in the destructure import.
     let server_config_factory = e2e_config.harness.server_config_factory_for_lang("wasm");
     let server_config_factory_import = e2e_config
         .harness
@@ -175,10 +157,6 @@ fn render_global_setup_server() -> String {
     )
 }
 
-// ---------------------------------------------------------------------------
-// Public emit entrypoint (called by the orchestrator).
-// ---------------------------------------------------------------------------
-
 /// Emit the WASM server-pattern `GeneratedFile`s.
 ///
 /// Returns `app_harness.mjs` and `globalSetup.ts` under `e2e/wasm/` when:
@@ -194,16 +172,13 @@ pub fn emit(
     e2e_config: &E2eConfig,
     config: &alef::ResolvedCrateConfig,
 ) -> Result<Vec<GeneratedFile>> {
-    // Gate 1: Check for HTTP fixtures (uses `needs_mock_server` like alef does)
     let has_http_fixtures = groups
         .iter()
         .flat_map(|g| g.fixtures.iter())
         .any(|f| f.needs_mock_server());
 
-    // Gate 2: Check if harness imports are configured
     let has_harness_imports = !e2e_config.harness.imports.is_empty();
 
-    // Gate 3: Check if App class is excluded from the WASM binding
     let app_class_excluded = config
         .wasm
         .as_ref()
@@ -216,9 +191,6 @@ pub fn emit(
         return Ok(Vec::new());
     }
 
-    // Derive pkg_name exactly as alef does at `wasm.rs:74-78`:
-    // - Prefer name from `[crates.e2e.packages.wasm].name`
-    // - Fall back to `config.wasm_package_name()`
     let wasm_pkg = e2e_config.resolve_package("wasm");
     let pkg_name = wasm_pkg
         .as_ref()

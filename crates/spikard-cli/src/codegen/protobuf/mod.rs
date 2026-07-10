@@ -6,13 +6,11 @@
 pub mod generators;
 pub mod spec_parser;
 
-// Re-export parser types and functions for public use
 pub use spec_parser::{
     EnumDef, EnumValue, FieldDef, FieldLabel, MessageDef, MethodDef, ProtoType, ProtobufSchema, parse_proto_schema,
     parse_proto_schema_string, parse_proto_schema_with_includes,
 };
 
-// Re-export generators trait
 pub use generators::{ProtobufGenerator, ProtobufTarget};
 
 use anyhow::Result;

@@ -675,7 +675,6 @@ end
             output.push_str(".new(body_data)\n\n");
         }
 
-        // Generate TODO implementation
         output.push_str("    # TODO: Implement this endpoint\n");
 
         match method {

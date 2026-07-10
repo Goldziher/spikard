@@ -46,7 +46,6 @@ impl TypeScriptGenerator {
         list_item_nullable: bool,
         schema: Option<&GraphQLSchema>,
     ) -> String {
-        // Use shared TypeMapper for consistent type mapping across all generators
         let mapper = TypeMapper::new(TargetLanguage::TypeScript, schema);
         mapper.map_type_with_list_nullability(field_type, is_nullable, is_list, list_item_nullable)
     }
@@ -59,7 +58,6 @@ impl TypeScriptGenerator {
 
         let mut args = vec![];
         for arg in &field.arguments {
-            // Use arg name as-is since GraphQL names are already valid identifiers
             let arg_type = self.map_type_with_list_item_nullability(
                 &arg.type_name,
                 arg.is_nullable,
@@ -67,7 +65,6 @@ impl TypeScriptGenerator {
                 arg.list_item_nullable,
             );
 
-            // Mark as optional if nullable
             let optional = if arg.is_nullable { "?" } else { "" };
             args.push(format!("{}{}: {}", arg.name, optional, arg_type));
         }
@@ -77,7 +74,6 @@ impl TypeScriptGenerator {
 
     /// Generate resolver function type for a single field
     fn gen_resolver_function_type(&self, field: &GraphQLField) -> String {
-        // Use field name as-is since GraphQL names are already valid identifiers
         let args_type = self.gen_args_type(field);
         let return_type = self.map_type_with_list_item_nullability(
             &field.type_name,
@@ -94,7 +90,6 @@ impl TypeScriptGenerator {
 
     /// Generate resolver implementation for a single field
     fn gen_resolver_impl(&self, type_name: &str, field: &GraphQLField) -> String {
-        // Use field name as-is since GraphQL names are already valid identifiers
         format!(
             "  {}: async (parent, args, context, info) => {{\n    throw new Error('Not implemented: {}.{}');\n  }},",
             field.name, type_name, field.name
@@ -126,7 +121,6 @@ impl TypeScriptGenerator {
         }
 
         let mut code = String::new();
-        // Create instance name: first letter lowercase + rest of type_name + "Resolvers"
         let instance_name = if let Some(first_char) = type_name.chars().next() {
             let lowercased_first = first_char.to_lowercase().to_string();
             format!("{}{}", lowercased_first, &type_name[first_char.len_utf8()..])
@@ -157,16 +151,13 @@ impl GraphQLGenerator for TypeScriptGenerator {
         code.push_str("// This file was automatically generated from your GraphQL schema.\n");
         code.push_str("// Any manual changes will be overwritten on the next generation.\n\n");
 
-        // Generate all type definitions (skip built-in scalars)
         for (type_name, type_def) in &schema.types {
             if matches!(type_name.as_str(), "String" | "Int" | "Float" | "Boolean" | "ID") {
                 continue;
             }
 
-            // Generate type based on kind
             match type_def.kind {
                 TypeKind::Object => {
-                    // Generate JSDoc from description
                     code.push_str("/**\n");
                     if let Some(desc) = &type_def.description {
                         for line in desc.lines() {
@@ -179,7 +170,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
                     code.push_str(&format!("export interface {} {{\n", type_def.name));
 
                     for field in &type_def.fields {
-                        // Add JSDoc for field
                         if let Some(field_desc) = &field.description {
                             code.push_str("  /**\n");
                             for line in field_desc.lines() {
@@ -188,7 +178,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
                             code.push_str("   */\n");
                         }
 
-                        // Add deprecated tag if present
                         if let Some(reason) = &field.deprecation_reason {
                             code.push_str(&format!("  /** @deprecated {reason} */\n"));
                         }
@@ -205,7 +194,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
                     code.push_str("}\n\n");
                 }
                 TypeKind::InputObject => {
-                    // Generate JSDoc from description
                     code.push_str("/**\n");
                     if let Some(desc) = &type_def.description {
                         for line in desc.lines() {
@@ -218,7 +206,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
                     code.push_str(&format!("export interface {} {{\n", type_def.name));
 
                     for field in &type_def.input_fields {
-                        // Add JSDoc for field
                         if let Some(field_desc) = &field.description {
                             code.push_str("  /**\n");
                             for line in field_desc.lines() {
@@ -235,13 +222,11 @@ impl GraphQLGenerator for TypeScriptGenerator {
                             field.list_item_nullable,
                         );
 
-                        // For input types, use the full type union including null
                         code.push_str(&format!("  {field_name}: {field_type};\n"));
                     }
                     code.push_str("}\n\n");
                 }
                 TypeKind::Enum => {
-                    // Generate JSDoc from description
                     code.push_str("/**\n");
                     if let Some(desc) = &type_def.description {
                         for line in desc.lines() {
@@ -254,7 +239,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
                     code.push_str(&format!("export enum {} {{\n", type_def.name));
 
                     for value in &type_def.enum_values {
-                        // Add JSDoc for value
                         if let Some(value_desc) = &value.description {
                             code.push_str("  /**\n");
                             for line in value_desc.lines() {
@@ -263,7 +247,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
                             code.push_str("   */\n");
                         }
 
-                        // Add deprecated tag if present
                         if value.is_deprecated {
                             if let Some(reason) = &value.deprecation_reason {
                                 code.push_str(&format!("  /** @deprecated {reason} */\n"));
@@ -277,7 +260,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
                     code.push_str("}\n\n");
                 }
                 TypeKind::Scalar => {
-                    // Generate JSDoc from description
                     code.push_str("/**\n");
                     if let Some(desc) = &type_def.description {
                         for line in desc.lines() {
@@ -290,7 +272,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
                     code.push_str(&format!("export type {} = string;\n\n", type_def.name));
                 }
                 TypeKind::Union => {
-                    // Generate JSDoc from description
                     code.push_str("/**\n");
                     if let Some(desc) = &type_def.description {
                         for line in desc.lines() {
@@ -305,7 +286,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
                     code.push_str(&format!("export type {} = {};\n\n", type_def.name, union_members));
                 }
                 TypeKind::Interface => {
-                    // Generate JSDoc from description
                     code.push_str("/**\n");
                     if let Some(desc) = &type_def.description {
                         for line in desc.lines() {
@@ -318,7 +298,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
                     code.push_str(&format!("export interface {} {{\n", type_def.name));
 
                     for field in &type_def.fields {
-                        // Add JSDoc for field
                         if let Some(field_desc) = &field.description {
                             code.push_str("  /**\n");
                             for line in field_desc.lines() {
@@ -327,7 +306,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
                             code.push_str("   */\n");
                         }
 
-                        // Add deprecated tag if present
                         if let Some(reason) = &field.deprecation_reason {
                             code.push_str(&format!("  /** @deprecated {reason} */\n"));
                         }
@@ -347,7 +325,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
             }
         }
 
-        // Generate Query interface
         if !schema.queries.is_empty() {
             code.push_str("/**\n");
             code.push_str(" * Query\n");
@@ -355,7 +332,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
             code.push_str("export interface Query {\n");
 
             for field in &schema.queries {
-                // Add JSDoc for field
                 if let Some(field_desc) = &field.description {
                     code.push_str("  /**\n");
                     for line in field_desc.lines() {
@@ -364,7 +340,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
                     code.push_str("   */\n");
                 }
 
-                // Add deprecated tag if present
                 if let Some(reason) = &field.deprecation_reason {
                     code.push_str(&format!("  /** @deprecated {reason} */\n"));
                 }
@@ -381,7 +356,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
             code.push_str("}\n\n");
         }
 
-        // Generate Mutation interface
         if !schema.mutations.is_empty() {
             code.push_str("/**\n");
             code.push_str(" * Mutation\n");
@@ -389,7 +363,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
             code.push_str("export interface Mutation {\n");
 
             for field in &schema.mutations {
-                // Add JSDoc for field
                 if let Some(field_desc) = &field.description {
                     code.push_str("  /**\n");
                     for line in field_desc.lines() {
@@ -398,7 +371,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
                     code.push_str("   */\n");
                 }
 
-                // Add deprecated tag if present
                 if let Some(reason) = &field.deprecation_reason {
                     code.push_str(&format!("  /** @deprecated {reason} */\n"));
                 }
@@ -421,7 +393,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
     fn generate_resolvers(&self, schema: &GraphQLSchema) -> Result<String> {
         let mut code = String::new();
 
-        // Header and imports
         code.push_str("// DO NOT EDIT - Auto-generated by Spikard CLI\n");
         code.push_str("// GraphQL Resolvers\n");
         code.push_str("//\n");
@@ -429,8 +400,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
         code.push_str("// Any manual changes will be overwritten on the next generation.\n\n");
         code.push_str("import { GraphQLResolveInfo } from 'graphql';\n\n");
 
-        // Generate Query resolver types and implementations
-        // Always generate Query type, even if empty
         if schema.queries.is_empty() {
             code.push_str("export type QueryResolvers = Record<string, never>;\n\n");
             code.push_str("export const queryResolvers: QueryResolvers = {};\n\n");
@@ -439,8 +408,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
             code.push_str(&self.gen_resolver_impl_section("Query", &schema.queries));
         }
 
-        // Generate Mutation resolver types and implementations
-        // Always generate Mutation type, even if empty
         if schema.mutations.is_empty() {
             code.push_str("export type MutationResolvers = Record<string, never>;\n\n");
             code.push_str("export const mutationResolvers: MutationResolvers = {};\n\n");
@@ -449,7 +416,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
             code.push_str(&self.gen_resolver_impl_section("Mutation", &schema.mutations));
         }
 
-        // Generate Subscription resolver types and implementations
         if !schema.subscriptions.is_empty() {
             code.push_str(&self.gen_resolver_type_def("Subscription", &schema.subscriptions));
             code.push_str(&self.gen_resolver_impl_section("Subscription", &schema.subscriptions));
@@ -462,7 +428,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
         let formatter = TypeScriptFormatter::new();
         let mut sections = Vec::new();
 
-        // Header
         let metadata = HeaderMetadata {
             auto_generated: true,
             schema_file: None,
@@ -471,7 +436,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
         let header = formatter.format_header(&metadata);
         sections.push(Section::Header(header));
 
-        // Imports
         let imports = vec![Import::with_items(
             "@graphql-tools/schema",
             vec!["makeExecutableSchema"],
@@ -479,13 +443,10 @@ impl GraphQLGenerator for TypeScriptGenerator {
         let imports_str = formatter.format_imports(&imports);
         sections.push(Section::Imports(imports_str));
 
-        // Body with SDL and exports
         let mut body = String::new();
 
-        // Reconstruct SDL
         let sdl = self.reconstruct_sdl(schema);
 
-        // SDL as a template literal with proper escaping
         body.push_str("// TODO: Import your resolvers module:\n");
         body.push_str("// import { resolvers } from './resolvers';\n\n");
         body.push_str("export type Resolvers = Record<string, unknown>;\n");
@@ -498,7 +459,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
         body.push_str(" */\n");
         body.push_str("const typeDefs = `\n");
 
-        // Escape SDL lines for template literal
         for line in sdl.lines() {
             body.push_str("  ");
             body.push_str(&escape_template_literal(line, EscapeContext::JavaScript));
@@ -507,7 +467,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
 
         body.push_str("`;\n\n");
 
-        // Executable schema
         body.push_str("/**\n");
         body.push_str(" * Executable GraphQL Schema\n");
         body.push_str(" *\n");
@@ -520,7 +479,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
         body.push_str("  resolvers,\n");
         body.push_str("});\n\n");
 
-        // Export typeDefs
         body.push_str("/**\n");
         body.push_str(" * GraphQL Type Definitions\n");
         body.push_str(" *\n");
@@ -531,7 +489,6 @@ impl GraphQLGenerator for TypeScriptGenerator {
 
         sections.push(Section::Body(body));
 
-        // Merge and format
         let result = formatter.merge_sections(&sections);
         Ok(result)
     }
@@ -560,7 +517,6 @@ mod tests {
     #[test]
     fn test_map_type_list() {
         let generator = TypeScriptGenerator;
-        // Default map_type assumes nullable list items
         assert_eq!(generator.map_type("String", false, true), "(string | null)[]");
         assert_eq!(generator.map_type("Int", false, true), "(number | null)[]");
     }
@@ -568,7 +524,6 @@ mod tests {
     #[test]
     fn test_map_type_nullable_list() {
         let generator = TypeScriptGenerator;
-        // Default map_type assumes nullable list items
         assert_eq!(generator.map_type("String", true, true), "(string | null)[] | null");
         assert_eq!(generator.map_type("Int", true, true), "(number | null)[] | null");
     }

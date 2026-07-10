@@ -70,26 +70,11 @@ pub enum EscapeContext {
 #[must_use]
 pub fn escape_quotes(s: &str, context: EscapeContext) -> String {
     match context {
-        EscapeContext::Python => {
-            // Python single-quoted strings: escape single quotes and backslashes
-            s.replace('\\', "\\\\").replace('\'', "\\'")
-        }
-        EscapeContext::JavaScript => {
-            // JavaScript single-quoted strings: escape single quotes and backslashes
-            s.replace('\\', "\\\\").replace('\'', "\\'")
-        }
-        EscapeContext::Ruby => {
-            // Ruby single-quoted strings: escape single quotes and backslashes
-            s.replace('\\', "\\\\").replace('\'', "\\'")
-        }
-        EscapeContext::Php => {
-            // PHP single-quoted strings: escape single quotes and backslashes
-            s.replace('\\', "\\\\").replace('\'', "\\'")
-        }
-        EscapeContext::Rust => {
-            // Rust string literals: escape single quotes and backslashes
-            s.replace('\\', "\\\\").replace('\'', "\\'")
-        }
+        EscapeContext::Python => s.replace('\\', "\\\\").replace('\'', "\\'"),
+        EscapeContext::JavaScript => s.replace('\\', "\\\\").replace('\'', "\\'"),
+        EscapeContext::Ruby => s.replace('\\', "\\\\").replace('\'', "\\'"),
+        EscapeContext::Php => s.replace('\\', "\\\\").replace('\'', "\\'"),
+        EscapeContext::Rust => s.replace('\\', "\\\\").replace('\'', "\\'"),
     }
 }
 
@@ -118,22 +103,10 @@ pub fn escape_quotes(s: &str, context: EscapeContext) -> String {
 #[must_use]
 pub fn escape_double_quotes(s: &str, context: EscapeContext) -> String {
     match context {
-        EscapeContext::Python | EscapeContext::Rust => {
-            // Python and Rust: escape backslashes first, then double quotes
-            s.replace('\\', "\\\\").replace('"', "\\\"")
-        }
-        EscapeContext::JavaScript => {
-            // JavaScript: same as Python but also escape backticks
-            s.replace('\\', "\\\\").replace('"', "\\\"")
-        }
-        EscapeContext::Ruby => {
-            // Ruby: same escaping as Python
-            s.replace('\\', "\\\\").replace('"', "\\\"")
-        }
-        EscapeContext::Php => {
-            // PHP: same escaping as Python
-            s.replace('\\', "\\\\").replace('"', "\\\"")
-        }
+        EscapeContext::Python | EscapeContext::Rust => s.replace('\\', "\\\\").replace('"', "\\\""),
+        EscapeContext::JavaScript => s.replace('\\', "\\\\").replace('"', "\\\""),
+        EscapeContext::Ruby => s.replace('\\', "\\\\").replace('"', "\\\""),
+        EscapeContext::Php => s.replace('\\', "\\\\").replace('"', "\\\""),
     }
 }
 
@@ -163,12 +136,8 @@ pub fn escape_double_quotes(s: &str, context: EscapeContext) -> String {
 #[must_use]
 pub fn escape_template_literal(s: &str, context: EscapeContext) -> String {
     match context {
-        EscapeContext::JavaScript => {
-            // Escape backticks, dollar signs, and backslashes
-            s.replace('\\', "\\\\").replace('`', "\\`").replace('$', "\\$")
-        }
+        EscapeContext::JavaScript => s.replace('\\', "\\\\").replace('`', "\\`").replace('$', "\\$"),
         EscapeContext::Python | EscapeContext::Ruby | EscapeContext::Php | EscapeContext::Rust => {
-            // Other languages don't use template literals, just escape standard sequences
             s.replace('\\', "\\\\").replace('"', "\\\"")
         }
     }
@@ -205,33 +174,11 @@ pub fn escape_template_literal(s: &str, context: EscapeContext) -> String {
 #[must_use]
 pub fn escape_for_docstring(s: &str, context: EscapeContext) -> String {
     match context {
-        EscapeContext::Python => {
-            // Python triple-quoted docstrings:
-            // Replace """ with \" \" \" to break up the delimiter sequence
-            // This is safer than trying to escape within the string since Python
-            // doesn't support escaping triple quotes with backslashes
-            s.replace("\"\"\"", "\" \" \"")
-        }
-        EscapeContext::JavaScript => {
-            // JSDoc comments: standard escape for double quotes and special comment markers
-            // Avoid */ and /** within the docstring
-            s.replace("*/", "*\\/").replace('\\', "\\\\").replace('"', "\\\"")
-        }
-        EscapeContext::Ruby => {
-            // YARD documentation: standard escape for quotes
-            // Ruby uses # for comments, so avoid breaking those
-            s.replace('\\', "\\\\").replace('"', "\\\"")
-        }
-        EscapeContext::Php => {
-            // PHPDoc comments: standard escape for quotes and special markers
-            // Avoid */ and /** within the docstring
-            s.replace("*/", "*\\/").replace('\\', "\\\\").replace('"', "\\\"")
-        }
-        EscapeContext::Rust => {
-            // Rustdoc: standard escape for quotes
-            // Avoid breaking /// or //! comment markers
-            s.replace('\\', "\\\\").replace('"', "\\\"")
-        }
+        EscapeContext::Python => s.replace("\"\"\"", "\" \" \""),
+        EscapeContext::JavaScript => s.replace("*/", "*\\/").replace('\\', "\\\\").replace('"', "\\\""),
+        EscapeContext::Ruby => s.replace('\\', "\\\\").replace('"', "\\\""),
+        EscapeContext::Php => s.replace("*/", "*\\/").replace('\\', "\\\\").replace('"', "\\\""),
+        EscapeContext::Rust => s.replace('\\', "\\\\").replace('"', "\\\""),
     }
 }
 
@@ -261,9 +208,6 @@ pub fn escape_for_docstring(s: &str, context: EscapeContext) -> String {
 /// ```
 #[must_use]
 pub fn escape_graphql_sdl_description(s: &str, _context: EscapeContext) -> String {
-    // GraphQL SDL descriptions use triple-quoted strings.
-    // Escape """ with \"\"\", similar to GraphQL string escaping
-    // This produces valid GraphQL SDL that can be parsed
     s.replace("\"\"\"", "\\\"\\\"\\\"")
 }
 
@@ -291,7 +235,6 @@ pub fn escape_graphql_sdl_description(s: &str, _context: EscapeContext) -> Strin
 /// ```
 #[must_use]
 pub fn escape_graphql_string(s: &str, _context: EscapeContext) -> String {
-    // GraphQL string escaping: escape quotes and backslashes
     s.replace('\\', "\\\\").replace('"', "\\\"")
 }
 
@@ -329,8 +272,8 @@ pub fn escape_json_string(s: &str, _context: EscapeContext) -> String {
             '\n' => result.push_str("\\n"),
             '\r' => result.push_str("\\r"),
             '\t' => result.push_str("\\t"),
-            '\x08' => result.push_str("\\b"), // backspace
-            '\x0C' => result.push_str("\\f"), // form feed
+            '\x08' => result.push_str("\\b"),
+            '\x0C' => result.push_str("\\f"),
             c if c.is_control() => {
                 result.push_str(&format!("\\u{:04x}", c as u32));
             }
@@ -594,7 +537,6 @@ mod tests {
 
         #[test]
         fn test_docstring_all_contexts() {
-            // All contexts should handle basic docstring escaping
             for context in &[
                 EscapeContext::Python,
                 EscapeContext::JavaScript,

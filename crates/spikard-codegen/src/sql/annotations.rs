@@ -242,8 +242,6 @@ pub fn parse_http_annotations(custom: &[CustomAnnotation]) -> Result<Option<Http
             "http_description" => {
                 description = Some(ann.value.trim().to_string()).filter(|s| !s.is_empty());
             }
-            // Annotations spikard doesn't recognise are ignored here — they
-            // belong to some other consumer layered on top of scythe.
             _ => {}
         }
     }

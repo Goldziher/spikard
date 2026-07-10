@@ -47,10 +47,8 @@ pub(crate) mod handler;
 pub(crate) mod service;
 pub(crate) mod streaming;
 
-// Re-export types used from integration tests and binding crates
-pub use handler::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData};
-// Internal implementation details only
 pub(crate) use handler::RpcMode;
+pub use handler::{GrpcHandler, GrpcHandlerResult, GrpcRequestData, GrpcResponseData};
 pub(crate) use service::{GenericGrpcService, parse_grpc_path};
 
 use serde::{Deserialize, Serialize};
@@ -187,7 +185,7 @@ const fn default_true() -> bool {
 }
 
 const fn default_max_message_size() -> usize {
-    4 * 1024 * 1024 // 4MB
+    4 * 1024 * 1024
 }
 
 const fn default_max_concurrent_streams() -> u32 {
@@ -195,11 +193,11 @@ const fn default_max_concurrent_streams() -> u32 {
 }
 
 const fn default_keepalive_interval() -> u64 {
-    75 // seconds
+    75
 }
 
 const fn default_keepalive_timeout() -> u64 {
-    20 // seconds
+    20
 }
 
 /// Registry for gRPC handlers
@@ -349,8 +347,6 @@ mod tests {
         }
 
         fn service_name(&self) -> &'static str {
-            // Since we can't return a reference to self.0 with 'static lifetime,
-            // we need to use a workaround. In real usage, service names should be static.
             "test.Service"
         }
     }

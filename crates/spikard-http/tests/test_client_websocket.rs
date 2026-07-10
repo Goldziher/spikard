@@ -50,7 +50,6 @@ async fn close_with_going_away_triggers_on_disconnect() {
         .await
         .expect("close_with should not fail");
 
-    // Give the server time to process the close and call on_disconnect.
     let result = timeout(Duration::from_secs(2), async {
         loop {
             if disconnected.load(Ordering::SeqCst) {
@@ -89,12 +88,10 @@ async fn close_default_triggers_on_disconnect() {
 /// Test: `Message::Close(None)` from server maps to client-side `Close { code: 1005, reason: None }`.
 #[tokio::test]
 async fn server_close_without_frame_maps_to_code_1005() {
-    // Create a server that immediately sends Close(None) after upgrading.
     let app = axum::Router::new().route(
         "/ws",
         get(|ws: axum::extract::ws::WebSocketUpgrade| async move {
             ws.on_upgrade(|mut socket| async move {
-                // Send a close frame with no code/reason.
                 let _ = socket.send(axum::extract::ws::Message::Close(None)).await;
             })
         }),

@@ -4,9 +4,6 @@ internal: true
 includes:
   platforms: ../config/platforms.yml
 
-# Use the project's extension-aware binary (spikard-alef registers the HTTP +
-# e2e-http extensions). The stock `alef` binary lacks Extension::emit_e2e and
-# would delete the server-pattern e2e harness files on `generate`/`e2e generate`.
 vars:
   ALEF: "cargo run -p spikard-alef --release --"
 
@@ -18,9 +15,6 @@ tasks:
       - "{{.ALEF}} readme"
       - "{{.ALEF}} docs"
       - "{{.ALEF}} generate --clean"
-      # scaffold re-emits package manifests (e.g. the napi platform
-      # optionalDependencies) at the new version; without it a version bump
-      # leaves crates/spikard-node/package.json pinned to the prior version.
       - "{{.ALEF}} scaffold"
       - "{{.ALEF}} stubs"
       - "{{.ALEF}} e2e generate"

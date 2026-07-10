@@ -83,19 +83,14 @@ impl<'a> SdlBuilder<'a> {
     pub fn build(&self) -> String {
         let mut sdl = String::new();
 
-        // Add directives first
         sdl.push_str(&self.format_directives());
 
-        // Add Query type
         sdl.push_str(&self.format_queries());
 
-        // Add Mutation type
         sdl.push_str(&self.format_mutations());
 
-        // Add Subscription type
         sdl.push_str(&self.format_subscriptions());
 
-        // Add all custom types
         sdl.push_str(&self.format_types());
 
         sdl.trim_end().to_string()
@@ -197,7 +192,6 @@ impl<'a> SdlBuilder<'a> {
         let mut result = String::new();
 
         for (type_name, type_def) in &self.schema.types {
-            // Skip built-in scalar types
             if matches!(
                 type_name.as_str(),
                 "String" | "Int" | "Float" | "Boolean" | "ID" | "DateTime" | "Date" | "Time" | "JSON" | "Upload"
@@ -412,18 +406,15 @@ impl<'a> SdlBuilder<'a> {
     fn format_field(&self, field: &GraphQLField) -> String {
         let mut result = String::new();
 
-        // Add description if present
         if let Some(desc) = &field.description {
             result.push_str("  \"\"\"");
             result.push_str(desc);
             result.push_str("\"\"\"\n");
         }
 
-        // Add field name
         result.push_str("  ");
         result.push_str(&field.name);
 
-        // Add arguments if present
         if !field.arguments.is_empty() {
             result.push('(');
             for (i, arg) in field.arguments.iter().enumerate() {
@@ -446,7 +437,6 @@ impl<'a> SdlBuilder<'a> {
             result.push(')');
         }
 
-        // Add return type
         result.push_str(": ");
         result.push_str(&self.format_gql_type(
             &field.type_name,
@@ -455,7 +445,6 @@ impl<'a> SdlBuilder<'a> {
             field.list_item_nullable,
         ));
 
-        // Add deprecation directive if present
         if let Some(reason) = &field.deprecation_reason {
             result.push_str(" @deprecated(reason: \"");
             result.push_str(&reason.replace('"', "\\\""));
@@ -495,10 +484,8 @@ impl<'a> SdlBuilder<'a> {
     /// format_gql_type("String", true, true, true) => "[String]"
     /// ```
     fn format_gql_type(&self, type_name: &str, is_nullable: bool, is_list: bool, list_item_nullable: bool) -> String {
-        // Strip any existing GraphQL notation to prevent double notation (e.g., "String!!" vs "String!")
         let clean_type = type_name.trim_matches(|c| c == '!' || c == '[' || c == ']');
 
-        // Build type with list notation if applicable
         let mut result = if is_list {
             if list_item_nullable {
                 format!("[{clean_type}]")
@@ -509,7 +496,6 @@ impl<'a> SdlBuilder<'a> {
             clean_type.to_string()
         };
 
-        // Add non-null marker if type is non-nullable
         if !is_nullable {
             result.push('!');
         }
@@ -627,11 +613,8 @@ mod tests {
         };
         let builder = SdlBuilder::new(&schema);
 
-        // Should strip existing notation to avoid double notation
         assert_eq!(builder.format_gql_type("String!", false, false, false), "String!");
-        // Input has list notation but is_list=true so it rebuilds correctly
         assert_eq!(builder.format_gql_type("[String!]!", false, true, false), "[String!]!");
-        // Input has notation but parameters override it
         assert_eq!(builder.format_gql_type("String!", true, false, false), "String");
     }
 }

@@ -5,8 +5,6 @@ use spikard_cli::codegen::{
 use std::fs;
 use std::path::Path;
 
-// Basic model generation tests
-
 #[test]
 fn php_generator_emits_models_and_controller_skeletons() {
     let spec: OpenAPI = serde_json::from_value(serde_json::json!({
@@ -172,8 +170,6 @@ fn php_generator_handles_empty_models() {
     assert!(output.contains("readonly class Empty"));
     assert!(output.contains("// Empty schema"));
 }
-
-// Controller and route generation tests
 
 #[test]
 fn php_generator_creates_controllers_from_paths() {
@@ -653,7 +649,6 @@ fn php_generator_escapes_special_characters_in_strings() {
     let generator = PhpGenerator::new(spec, PhpDtoStyle::ReadonlyClass);
     let output = generator.generate().expect("generate");
 
-    // Should contain the API title (escaped)
     assert!(output.contains("Test with") || output.contains("quotes") || output.contains("special"));
 }
 

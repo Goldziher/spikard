@@ -118,8 +118,6 @@ impl ProblemDetails {
 
     /// Add all extensions from a JSON object
     #[must_use]
-    // reason: builder pattern; consuming `Value` by value matches the builder chain convention
-    // and avoids forcing callers to borrow temporaries from `json!()` macros.
     #[allow(clippy::needless_pass_by_value)]
     pub fn with_extensions(mut self, extensions: Value) -> Self {
         if let Some(obj) = extensions.as_object() {

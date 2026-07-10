@@ -113,7 +113,6 @@ impl<'a> TypeMapper<'a> {
     /// assert_eq!(mapper.map_scalar("[String!]!"), "str"); // Strips brackets
     /// ```
     pub fn map_scalar(&self, gql_type: &str) -> String {
-        // Extract the base type name by removing !, [, and ]
         let base_type = gql_type.trim_matches(|c| c == '!' || c == '[' || c == ']');
 
         match self.language {
@@ -187,20 +186,16 @@ impl<'a> TypeMapper<'a> {
                 "Float" => "f64".to_string(),
                 "Boolean" => "bool".to_string(),
                 "ID" => "String".to_string(),
-                custom => {
-                    // Rust uses PascalCase for custom types
-
-                    custom
-                        .split('_')
-                        .map(|part| {
-                            let mut chars = part.chars();
-                            match chars.next() {
-                                None => String::new(),
-                                Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
-                            }
-                        })
-                        .collect::<String>()
-                }
+                custom => custom
+                    .split('_')
+                    .map(|part| {
+                        let mut chars = part.chars();
+                        match chars.next() {
+                            None => String::new(),
+                            Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+                        }
+                    })
+                    .collect::<String>(),
             },
         }
     }
@@ -333,8 +328,6 @@ impl<'a> TypeMapper<'a> {
                 }
             }
             TargetLanguage::Php => {
-                // PHP doesn't have proper generic list syntax in all versions
-                // We use simple array type without generics
                 let with_list = if is_list { "array".to_string() } else { base };
 
                 if is_nullable {
@@ -397,7 +390,6 @@ impl<'a> TypeMapper<'a> {
         is_list: bool,
         list_item_nullable: bool,
     ) -> String {
-        // Strip any existing GraphQL notation from type_name to prevent double notation
         let clean_type = type_name.trim_matches(|c| c == '!' || c == '[' || c == ']');
 
         let mut result = if is_list {
@@ -422,7 +414,6 @@ impl<'a> TypeMapper<'a> {
 mod tests {
     use super::*;
 
-    // Test Python scalar mapping
     #[test]
     fn test_python_scalar_mapping() {
         let mapper = TypeMapper::new(TargetLanguage::Python, None);
@@ -433,7 +424,6 @@ mod tests {
         assert_eq!(mapper.map_scalar("ID"), "str");
     }
 
-    // Test TypeScript scalar mapping
     #[test]
     fn test_typescript_scalar_mapping() {
         let mapper = TypeMapper::new(TargetLanguage::TypeScript, None);
@@ -444,7 +434,6 @@ mod tests {
         assert_eq!(mapper.map_scalar("ID"), "string");
     }
 
-    // Test Ruby scalar mapping
     #[test]
     fn test_ruby_scalar_mapping() {
         let mapper = TypeMapper::new(TargetLanguage::Ruby, None);
@@ -455,7 +444,6 @@ mod tests {
         assert_eq!(mapper.map_scalar("ID"), "String");
     }
 
-    // Test PHP scalar mapping
     #[test]
     fn test_php_scalar_mapping() {
         let mapper = TypeMapper::new(TargetLanguage::Php, None);
@@ -466,7 +454,6 @@ mod tests {
         assert_eq!(mapper.map_scalar("ID"), "string");
     }
 
-    // Test Rust scalar mapping
     #[test]
     fn test_rust_scalar_mapping() {
         let mapper = TypeMapper::new(TargetLanguage::Rust, None);
@@ -477,7 +464,6 @@ mod tests {
         assert_eq!(mapper.map_scalar("ID"), "String");
     }
 
-    // Test Python type mapping with nullability
     #[test]
     fn test_python_nullability() {
         let mapper = TypeMapper::new(TargetLanguage::Python, None);
@@ -487,7 +473,6 @@ mod tests {
         assert_eq!(mapper.map_type("Int", true, false), "int | None");
     }
 
-    // Test TypeScript type mapping with nullability
     #[test]
     fn test_typescript_nullability() {
         let mapper = TypeMapper::new(TargetLanguage::TypeScript, None);
@@ -497,7 +482,6 @@ mod tests {
         assert_eq!(mapper.map_type("Int", true, false), "number | null");
     }
 
-    // Test Ruby type mapping with nullability
     #[test]
     fn test_ruby_nullability() {
         let mapper = TypeMapper::new(TargetLanguage::Ruby, None);
@@ -507,7 +491,6 @@ mod tests {
         assert_eq!(mapper.map_type("Integer", true, false), "Integer | nil");
     }
 
-    // Test PHP type mapping with nullability
     #[test]
     fn test_php_nullability() {
         let mapper = TypeMapper::new(TargetLanguage::Php, None);
@@ -517,18 +500,15 @@ mod tests {
         assert_eq!(mapper.map_type("int", true, false), "?int");
     }
 
-    // Test Rust type mapping with nullability
     #[test]
     fn test_rust_nullability() {
         let mapper = TypeMapper::new(TargetLanguage::Rust, None);
         assert_eq!(mapper.map_type("String", false, false), "String");
         assert_eq!(mapper.map_type("String", true, false), "Option<String>");
-        // Int is the GraphQL type, which maps to i32 in Rust
         assert_eq!(mapper.map_type("Int", false, false), "i32");
         assert_eq!(mapper.map_type("Int", true, false), "Option<i32>");
     }
 
-    // Test Python list handling
     #[test]
     fn test_python_lists() {
         let mapper = TypeMapper::new(TargetLanguage::Python, None);
@@ -544,7 +524,6 @@ mod tests {
         );
     }
 
-    // Test TypeScript list handling
     #[test]
     fn test_typescript_lists() {
         let mapper = TypeMapper::new(TargetLanguage::TypeScript, None);
@@ -560,7 +539,6 @@ mod tests {
         );
     }
 
-    // Test Ruby list handling
     #[test]
     fn test_ruby_lists() {
         let mapper = TypeMapper::new(TargetLanguage::Ruby, None);
@@ -576,7 +554,6 @@ mod tests {
         );
     }
 
-    // Test PHP list handling
     #[test]
     fn test_php_lists() {
         let mapper = TypeMapper::new(TargetLanguage::Php, None);
@@ -584,7 +561,6 @@ mod tests {
         assert_eq!(mapper.map_type("string", true, true), "?array");
     }
 
-    // Test Rust list handling
     #[test]
     fn test_rust_lists() {
         let mapper = TypeMapper::new(TargetLanguage::Rust, None);
@@ -600,7 +576,6 @@ mod tests {
         );
     }
 
-    // Test format_gql_type
     #[test]
     fn test_format_gql_type() {
         let mapper = TypeMapper::new(TargetLanguage::Python, None);
@@ -612,7 +587,6 @@ mod tests {
         assert_eq!(mapper.format_gql_type("String", true, true, false), "[String!]");
     }
 
-    // Test format_gql_type strips existing notation
     #[test]
     fn test_format_gql_type_strips_notation() {
         let mapper = TypeMapper::new(TargetLanguage::Python, None);
@@ -620,7 +594,6 @@ mod tests {
         assert_eq!(mapper.format_gql_type("String!", true, false, false), "String");
     }
 
-    // Test that scalar type mapping handles brackets
     #[test]
     fn test_scalar_type_strips_brackets() {
         let mapper = TypeMapper::new(TargetLanguage::Python, None);
@@ -628,7 +601,6 @@ mod tests {
         assert_eq!(mapper.map_scalar("[Int]"), "int");
     }
 
-    // Test custom types
     #[test]
     fn test_custom_types() {
         let mapper = TypeMapper::new(TargetLanguage::Python, None);

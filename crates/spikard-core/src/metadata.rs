@@ -183,15 +183,12 @@ pub fn extract_path_parameters(path: &str) -> Vec<ParameterMetadata> {
             continue;
         }
 
-        // Brace-enclosed form: {name} or {name:type} or {*name} (catch-all)
         if let Some(inner) = segment.strip_prefix('{').and_then(|s| s.strip_suffix('}')) {
-            // Strip leading wildcard marker used for catch-all params ({*name})
             let inner = inner.strip_prefix('*').unwrap_or(inner);
             let (name, constraint) = if let Some((n, c)) = inner.split_once(':') {
                 let n = n.trim();
                 let c = c.trim();
                 if n.is_empty() || c.is_empty() {
-                    // Malformed; treat the whole thing as the name
                     (inner.trim(), None)
                 } else {
                     (n, Some(c))
@@ -220,7 +217,6 @@ pub fn extract_path_parameters(path: &str) -> Vec<ParameterMetadata> {
             continue;
         }
 
-        // Colon-prefix style: :name (shelf / axum 0.7 style)
         if let Some(name) = segment.strip_prefix(':') {
             let name = name.trim();
             if name.is_empty() {

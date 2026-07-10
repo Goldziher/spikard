@@ -59,11 +59,8 @@ impl Formatter for PythonFormatter {
     fn format_header(&self, metadata: &HeaderMetadata) -> String {
         let mut header = String::new();
 
-        // Shebang for executable Python scripts
         header.push_str("#!/usr/bin/env python3\n");
 
-        // Ruff directives to suppress common auto-gen warnings
-        // EXE001: shebang, I001: unsorted imports (we handle sorting)
         header.push_str("# ruff: noqa: EXE001, I001\n");
 
         if metadata.auto_generated {
@@ -76,7 +73,6 @@ impl Formatter for PythonFormatter {
             }
         }
 
-        // Standard module docstring
         header.push_str("\n\"\"\"GraphQL types generated from schema.\"\"\"\n");
 
         header
@@ -87,13 +83,11 @@ impl Formatter for PythonFormatter {
             return String::new();
         }
 
-        // Categorize imports
         let mut future_imports = Vec::new();
         let mut stdlib_imports = BTreeMap::new();
         let mut third_party_imports = BTreeMap::new();
         let mut local_imports = BTreeMap::new();
 
-        // Known Python standard library modules (common ones)
         let stdlib_modules = [
             "abc",
             "argparse",
@@ -310,7 +304,6 @@ impl Formatter for PythonFormatter {
 
         let mut output = String::new();
 
-        // Format future imports (always first)
         if !future_imports.is_empty() {
             for import in &future_imports {
                 output.push_str(&format_python_import(import));
@@ -319,7 +312,6 @@ impl Formatter for PythonFormatter {
             output.push('\n');
         }
 
-        // Format stdlib imports
         if !stdlib_imports.is_empty() {
             for imports_vec in stdlib_imports.values() {
                 for import in imports_vec {
@@ -330,7 +322,6 @@ impl Formatter for PythonFormatter {
             output.push('\n');
         }
 
-        // Format third-party imports
         if !third_party_imports.is_empty() {
             for imports_vec in third_party_imports.values() {
                 for import in imports_vec {
@@ -341,7 +332,6 @@ impl Formatter for PythonFormatter {
             output.push('\n');
         }
 
-        // Format local imports
         if !local_imports.is_empty() {
             for imports_vec in local_imports.values() {
                 for import in imports_vec {
@@ -351,15 +341,12 @@ impl Formatter for PythonFormatter {
             }
         }
 
-        // Remove trailing blank lines
         output.trim_end().to_string()
     }
 
     fn format_docstring(&self, content: &str) -> String {
-        // Escape triple quotes in the content to avoid breaking the docstring
         let escaped = content.replace("\"\"\"", r#"\"\"\""#);
 
-        // Format as triple-quoted string
         format!("\"\"\"{escaped}\"\"\"")
     }
 
@@ -368,14 +355,12 @@ impl Formatter for PythonFormatter {
         let mut imports = String::new();
         let mut body = String::new();
 
-        // Parse sections into their components
         for section in sections {
             match section {
                 Section::Header(content) => {
                     if header.is_empty() {
                         header = content.clone();
                     }
-                    // Skip duplicate headers
                 }
                 Section::Imports(content) => {
                     if imports.is_empty() {
@@ -392,25 +377,21 @@ impl Formatter for PythonFormatter {
 
         let mut output = String::new();
 
-        // Add header (trim trailing whitespace)
         if !header.is_empty() {
             output.push_str(header.trim_end());
             output.push_str("\n\n");
         }
 
-        // Add imports (trim trailing whitespace)
         if !imports.is_empty() {
             output.push_str(imports.trim_end());
             output.push_str("\n\n");
         }
 
-        // Add body (trim trailing whitespace)
         if !body.is_empty() {
             output.push_str(body.trim_end());
             output.push('\n');
         }
 
-        // Ensure single trailing newline
         output.trim_end().to_string() + "\n"
     }
 }
@@ -418,10 +399,8 @@ impl Formatter for PythonFormatter {
 /// Format a single Python import statement
 fn format_python_import(import: &Import) -> String {
     if import.items.is_empty() {
-        // Simple module import: import module
         format!("import {}", import.module)
     } else {
-        // Specific items: from module import item1, item2
         let items = import.items.join(", ");
         format!("from {} import {}", import.module, items)
     }
@@ -484,7 +463,6 @@ mod tests {
         let output = formatter.format_imports(&imports);
         let lines: Vec<&str> = output.lines().collect();
 
-        // Should be: future, then stdlib (typing), then third-party (graphql, msgspec)
         assert_eq!(lines[0], "from __future__ import annotations");
         assert!(lines.contains(&"from typing import List, Dict"));
         assert!(lines.contains(&"import graphql"));
@@ -537,7 +515,6 @@ mod tests {
         let output = formatter.merge_sections(&sections);
         let lines: Vec<&str> = output.lines().collect();
 
-        // Should have header, blank line, imports, blank line, body
         assert!(lines[0].contains("#!/usr/bin/env python3"));
         assert!(lines.iter().any(|l| l.contains("from typing import List")));
         assert!(lines.iter().any(|l| l.contains("class MyType")));

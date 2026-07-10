@@ -19,16 +19,13 @@ impl ProjectScaffolder for RubyScaffolder {
 
         let mut files = vec![];
 
-        // Gemfile
         files.push(ScaffoldedFile::new(PathBuf::from("Gemfile"), self.generate_gemfile()));
 
-        // .gitignore
         files.push(ScaffoldedFile::new(
             PathBuf::from(".gitignore"),
             self.generate_gitignore(),
         ));
 
-        // README.md
         files.push(ScaffoldedFile::new(
             PathBuf::from("README.md"),
             self.generate_readme(&snake_name),
@@ -39,19 +36,16 @@ impl ProjectScaffolder for RubyScaffolder {
             self.generate_server_script(&snake_name, &module_name),
         ));
 
-        // lib/my_app.rb
         files.push(ScaffoldedFile::new(
             PathBuf::from(format!("lib/{snake_name}.rb")),
             self.generate_app_rb(&module_name),
         ));
 
-        // sig/my_app.rbs
         files.push(ScaffoldedFile::new(
             PathBuf::from(format!("sig/{snake_name}.rbs")),
             self.generate_app_rbs(&snake_name, &module_name),
         ));
 
-        // spec/my_app_spec.rb
         files.push(ScaffoldedFile::new(
             PathBuf::from(format!("spec/{snake_name}_spec.rb")),
             self.generate_app_spec_rb(&snake_name, &module_name),
@@ -62,10 +56,8 @@ impl ProjectScaffolder for RubyScaffolder {
             self.generate_spec_helper(),
         ));
 
-        // .rspec
         files.push(ScaffoldedFile::new(PathBuf::from(".rspec"), self.generate_rspec()));
 
-        // Rakefile (optional, for task automation)
         files.push(ScaffoldedFile::new(PathBuf::from("Rakefile"), self.generate_rakefile()));
 
         Ok(files)
@@ -441,7 +433,6 @@ mod tests {
 
         assert!(!files.is_empty(), "Should create multiple files");
 
-        // Check expected files exist in the vec
         let file_paths: Vec<_> = files.iter().map(|f| f.path.to_string_lossy().to_string()).collect();
 
         assert!(file_paths.iter().any(|p| p == "Gemfile"));

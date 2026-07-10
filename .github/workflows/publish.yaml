@@ -222,9 +222,9 @@ jobs:
           package: spikard
           version: ${{ needs.prepare.outputs.version }}
 
-      # Zig has no central registry. It is consumed directly from the GitHub
-      # release tag, so publish-zig is gated only on whether the release was
-      # requested, not on a registry check.
+      # ~keep Zig has no central registry. It is consumed directly from the GitHub
+      # ~keep release tag, so publish-zig is gated only on whether the release was
+      # ~keep requested, not on a registry check.
 
   build-python:
     name: Build Python wheels
@@ -251,11 +251,11 @@ jobs:
 
   build-python-sdist:
     name: Build Python sdist
-    # The sdist compiles on the consumer's machine, so its Cargo.toml must carry
-    # registry version-deps, not workspace paths. build-python-sdist@v1 rewrites
-    # them (--require-registry) then runs maturin sdist, so the core crates must be
-    # on crates.io first. The status guard lets it run when publish-crates is
-    # skipped, blocking only on its actual failure.
+    # ~keep The sdist compiles on the consumer's machine, so its Cargo.toml must carry
+    # ~keep registry version-deps, not workspace paths. build-python-sdist@v1 rewrites
+    # ~keep them (--require-registry) then runs maturin sdist, so the core crates must be
+    # ~keep on crates.io first. The status guard lets it run when publish-crates is
+    # ~keep skipped, blocking only on its actual failure.
     needs: [prepare, publish-crates]
     if: ${{ !cancelled() && needs.publish-crates.result != 'failure' && needs.prepare.outputs.release_python == 'true' }}
     runs-on: ubuntu-latest
@@ -273,9 +273,9 @@ jobs:
         with:
           package-dir: packages/python
           output-dir: dist/python
-          # On dry-runs the in-flight version isn't on crates.io, so the
-          # --require-registry rewrite can't resolve. Skip it and build via
-          # workspace path-deps; real releases publish the core crates first.
+          # ~keep On dry-runs the in-flight version isn't on crates.io, so the
+          # ~keep --require-registry rewrite can't resolve. Skip it and build via
+          # ~keep workspace path-deps; real releases publish the core crates first.
           rewrite-native-deps: ${{ needs.prepare.outputs.dry_run != 'true' }}
       - uses: actions/upload-artifact@v7
         with:
@@ -298,15 +298,15 @@ jobs:
         with:
           node-version: "24"
       - name: Generate TypeScript definitions
-        # napi build emits index.js + index.d.ts as a side effect; both are
-        # platform-agnostic (the platform binary lives in @spikard/node-<rid>).
-        # Generated once on linux-x86_64 and shared across publish-node staging.
-        # service.cjs is alef-generated source — committed in the repo, not
-        # produced by napi — so we copy it from the checkout, not from a build
-        # artifact.
-        # `--platform` is required to make napi-rs 3.x emit the index.js JS
-        # shim alongside the binary; without it only the native module is
-        # produced and the cp step below fails with "No such file or directory".
+        # ~keep napi build emits index.js + index.d.ts as a side effect; both are
+        # ~keep platform-agnostic (the platform binary lives in @spikard/node-<rid>).
+        # ~keep Generated once on linux-x86_64 and shared across publish-node staging.
+        # ~keep service.cjs is alef-generated source — committed in the repo, not
+        # ~keep produced by napi — so we copy it from the checkout, not from a build
+        # ~keep artifact.
+        # ~keep `--platform` is required to make napi-rs 3.x emit the index.js JS
+        # ~keep shim alongside the binary; without it only the native module is
+        # ~keep produced and the cp step below fails with "No such file or directory".
         shell: bash
         run: |
           set -euo pipefail
@@ -363,8 +363,8 @@ jobs:
               rust_target: aarch64-pc-windows-msvc,
               use_napi_cross: false,
             }
-          # musl and armv7 targets deferred — napi-cross artifact path mismatch
-          # ("No dist dir found") blocks cross-compiled bindings in build-node-napi@v1.
+          # ~keep musl and armv7 targets deferred — napi-cross artifact path mismatch
+          # ~keep ("No dist dir found") blocks cross-compiled bindings in build-node-napi@v1.
     steps:
       - uses: actions/checkout@v6
         with:
@@ -412,10 +412,10 @@ jobs:
         id: build-wasm
         with:
           crate-dir: crates/spikard-wasm
-          # Build every wasm-pack target (web/bundler/nodejs/deno) into pkg/<target>/
-          # so the published package.json main/module/types resolve, and strip the
-          # wasm-pack-emitted pkg/.gitignore ("*") that otherwise makes npm drop all
-          # of pkg/ from the tarball. See the package.json "build:all" script.
+          # ~keep Build every wasm-pack target (web/bundler/nodejs/deno) into pkg/<target>/
+          # ~keep so the published package.json main/module/types resolve, and strip the
+          # ~keep wasm-pack-emitted pkg/.gitignore ("*") that otherwise makes npm drop all
+          # ~keep of pkg/ from the tarball. See the package.json "build:all" script.
           build-command: npm run build:all
           pack-tarball: "true"
       - uses: actions/upload-artifact@v7
@@ -425,11 +425,11 @@ jobs:
 
   build-ruby:
     name: Build Ruby gem (${{ matrix.label }})
-    # build-ruby-gem@v1 rewrites workspace path-deps to registry version-deps
-    # (--require-registry) before compiling, so the core crates must be on
-    # crates.io first: order after publish-crates. The status guard lets the build
-    # still run when publish-crates is skipped (crates already published), blocking
-    # only on its actual failure.
+    # ~keep build-ruby-gem@v1 rewrites workspace path-deps to registry version-deps
+    # ~keep (--require-registry) before compiling, so the core crates must be on
+    # ~keep crates.io first: order after publish-crates. The status guard lets the build
+    # ~keep still run when publish-crates is skipped (crates already published), blocking
+    # ~keep only on its actual failure.
     needs: [prepare, publish-crates]
     if: ${{ !cancelled() && needs.publish-crates.result != 'failure' && needs.prepare.outputs.release_ruby == 'true' }}
     runs-on: ${{ matrix.os }}
@@ -442,10 +442,10 @@ jobs:
           - { os: ubuntu-latest, label: linux-x86_64 }
           - { os: ubuntu-24.04-arm, label: linux-aarch64 }
           - { os: macos-latest, label: macos-arm64 }
-          # Opt-in legs for the remaining CROSS_PLATFORMS entries (x86_64-darwin,
-          # x64-mingw-ucrt); without them those consumers fall back to the source gem.
-          # - { os: macos-15-intel, label: macos-x86_64 }
-          # - { os: windows-latest, label: windows-x86_64 }
+          # ~keep Opt-in legs for the remaining CROSS_PLATFORMS entries (x86_64-darwin,
+          # ~keep x64-mingw-ucrt); without them those consumers fall back to the source gem.
+          # ~keep - { os: macos-15-intel, label: macos-x86_64 }
+          # ~keep - { os: windows-latest, label: windows-x86_64 }
     steps:
       - uses: actions/checkout@v6
         with:
@@ -461,15 +461,15 @@ jobs:
       - uses: xberg-io/actions/build-ruby-gem@v1
         with:
           package-dir: packages/ruby
-          # Skip the registry rewrite on dry-runs (unpublished version cannot
-          # resolve); build via workspace path-deps instead.
+          # ~keep Skip the registry rewrite on dry-runs (unpublished version cannot
+          # ~keep resolve); build via workspace path-deps instead.
           rewrite-native-deps: ${{ needs.prepare.outputs.dry_run != 'true' }}
       - name: Package platform gem
-        # `rake compile` builds the native extension for this runner's platform;
-        # rake-compiler then tags the `rake build` gem with the current platform
-        # (e.g. -x86_64-linux), alongside the fallback source gem. Without the
-        # compile, `rake build` emits a source-only gem that forces every consumer
-        # to compile from source on `gem install`.
+        # ~keep `rake compile` builds the native extension for this runner's platform;
+        # ~keep rake-compiler then tags the `rake build` gem with the current platform
+        # ~keep (e.g. -x86_64-linux), alongside the fallback source gem. Without the
+        # ~keep compile, `rake build` emits a source-only gem that forces every consumer
+        # ~keep to compile from source on `gem install`.
         working-directory: packages/ruby
         shell: bash
         run: |
@@ -477,9 +477,9 @@ jobs:
           bundle exec rake build
       - name: Drop source gem on non-canonical builders
         if: ${{ matrix.label != 'linux-x86_64' }}
-        # Only the canonical linux-x86_64 builder ships the fallback source gem;
-        # other runners emit byte-different source gems that collide under the
-        # publish merge. Keep only platform-tagged gems (Rakefile CROSS_PLATFORMS).
+        # ~keep Only the canonical linux-x86_64 builder ships the fallback source gem;
+        # ~keep other runners emit byte-different source gems that collide under the
+        # ~keep publish merge. Keep only platform-tagged gems (Rakefile CROSS_PLATFORMS).
         shell: bash
         run: |
           shopt -s nullglob
@@ -498,9 +498,9 @@ jobs:
 
   build-php:
     name: Build PHP extension (php${{ matrix.php }} ${{ matrix.platform.label }})
-    # build-php-extension@v1 rewrites path-deps to registry versions before
-    # building; the core crates must be published first. The status guard lets the
-    # build run when publish-crates is skipped, blocking only on its actual failure.
+    # ~keep build-php-extension@v1 rewrites path-deps to registry versions before
+    # ~keep building; the core crates must be published first. The status guard lets the
+    # ~keep build run when publish-crates is skipped, blocking only on its actual failure.
     needs: [prepare, publish-crates]
     if: ${{ !cancelled() && needs.publish-crates.result != 'failure' && needs.prepare.outputs.release_php == 'true' }}
     runs-on: ${{ matrix.platform.os }}
@@ -523,10 +523,10 @@ jobs:
           php-version: ${{ matrix.php }}
       - uses: xberg-io/actions/setup-rust@v1
         with:
-          # ext-php-rs requires the nightly-only `abi_vectorcall` feature on
-          # Windows (`#![cfg_attr(windows, feature(abi_vectorcall))]` in the
-          # generated spikard-php lib.rs); stable rejects it. Use nightly for the
-          # Windows target only, stable 1.95 elsewhere.
+          # ~keep ext-php-rs requires the nightly-only `abi_vectorcall` feature on
+          # ~keep Windows (`#![cfg_attr(windows, feature(abi_vectorcall))]` in the
+          # ~keep generated spikard-php lib.rs); stable rejects it. Use nightly for the
+          # ~keep Windows target only, stable 1.95 elsewhere.
           toolchain: ${{ contains(matrix.platform.target, 'windows') && 'nightly' || '1.95' }}
           target: ${{ matrix.platform.target }}
       - uses: xberg-io/actions/build-php-extension@v1
@@ -535,8 +535,8 @@ jobs:
           lib-name: spikard_php
           php-version: ${{ matrix.php }}
           php-ts: nts
-          # Skip the registry rewrite on dry-runs (unpublished version cannot
-          # resolve); build via workspace path-deps instead.
+          # ~keep Skip the registry rewrite on dry-runs (unpublished version cannot
+          # ~keep resolve); build via workspace path-deps instead.
           rewrite-native-deps: ${{ needs.prepare.outputs.dry_run != 'true' }}
       - uses: xberg-io/actions/package-php-pie@v1
         with:
@@ -614,10 +614,10 @@ jobs:
 
   build-elixir:
     name: Build Elixir NIF (${{ matrix.label }})
-    # build-elixir-natives@v1 rewrites path-deps to registry versions before
-    # building (so the hex source fallback resolves); needs published crates. The
-    # status guard lets the build run when publish-crates is skipped, blocking only
-    # on its actual failure.
+    # ~keep build-elixir-natives@v1 rewrites path-deps to registry versions before
+    # ~keep building (so the hex source fallback resolves); needs published crates. The
+    # ~keep status guard lets the build run when publish-crates is skipped, blocking only
+    # ~keep on its actual failure.
     needs: [prepare, publish-crates]
     if: ${{ !cancelled() && needs.publish-crates.result != 'failure' && needs.prepare.outputs.release_elixir == 'true' }}
     runs-on: ${{ matrix.os }}
@@ -686,8 +686,8 @@ jobs:
           package-dir: packages/elixir
           nif-version: ${{ needs.prepare.outputs.version }}
           nif-api-version: ${{ matrix.nif }}
-          # Skip the registry rewrite on dry-runs (unpublished version cannot
-          # resolve); build via workspace path-deps instead.
+          # ~keep Skip the registry rewrite on dry-runs (unpublished version cannot
+          # ~keep resolve); build via workspace path-deps instead.
           rewrite-native-deps: ${{ needs.prepare.outputs.dry_run != 'true' }}
       - uses: actions/upload-artifact@v7
         with:
@@ -696,8 +696,8 @@ jobs:
 
   build-jvm-dotnet-dart-swift-zig:
     name: Build Kotlin package
-    # Kotlin-only: Java jar is built in publish-maven (with per-platform natives),
-    # C# nupkg in publish-nuget, Dart in the dart-* jobs, Zig in publish-zig.
+    # ~keep Kotlin-only: Java jar is built in publish-maven (with per-platform natives),
+    # ~keep C# nupkg in publish-nuget, Dart in the dart-* jobs, Zig in publish-zig.
     needs: prepare
     if: ${{ needs.prepare.outputs.release_kotlin == 'true' }}
     runs-on: ubuntu-latest
@@ -714,7 +714,7 @@ jobs:
           gradle-version: "9.1.0"
       - name: Build Kotlin package
         run: |
-          # Host FFI build so any Gradle test that dlopens spikard_ffi resolves it.
+          # ~keep Host FFI build so any Gradle test that dlopens spikard_ffi resolves it.
           cargo build --release -p spikard-ffi
           cd packages/kotlin && gradle build --no-daemon && cd ../..
       - uses: actions/upload-artifact@v7
@@ -763,13 +763,13 @@ jobs:
           crates: "spikard-core spikard-http spikard-graphql spikard spikard-codegen spikard-cli spikard-ffi"
           version: ${{ needs.prepare.outputs.version }}
           dry-run: ${{ needs.prepare.outputs.dry_run }}
-      # Poll the crates.io sparse index for each workspace member that
-      # binding crates depend on. Without this, the binding-build jobs
-      # immediately run alef vendor's `cargo update -p <name>` + `cargo
-      # metadata --locked` validation against an index that hasn't seen
-      # the newly-published version yet, producing the misleading
-      # "workspace-member version not yet published — publish core
-      # crates first" error after publish-crates already succeeded.
+      # ~keep Poll the crates.io sparse index for each workspace member that
+      # ~keep binding crates depend on. Without this, the binding-build jobs
+      # ~keep immediately run alef vendor's `cargo update -p <name>` + `cargo
+      # ~keep metadata --locked` validation against an index that hasn't seen
+      # ~keep the newly-published version yet, producing the misleading
+      # ~keep "workspace-member version not yet published — publish core
+      # ~keep crates first" error after publish-crates already succeeded.
       - name: Wait for spikard-core indexing
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
         uses: xberg-io/actions/wait-for-package@v1
@@ -841,11 +841,11 @@ jobs:
           node-version: "24"
           registry-url: "https://registry.npmjs.org/"
       - name: Stage platform packages and main package
-        # Per-platform Node artifact layout: one tarball per target staging
-        # crates/spikard-node/npm/<platform>/. The main package needs an
-        # optionalDependencies map listing every platform sub-package so
-        # npm install resolves the correct binary per host. publish-npm@v1
-        # operates on a single package dir, so the staging is inlined here.
+        # ~keep Per-platform Node artifact layout: one tarball per target staging
+        # ~keep crates/spikard-node/npm/<platform>/. The main package needs an
+        # ~keep optionalDependencies map listing every platform sub-package so
+        # ~keep npm install resolves the correct binary per host. publish-npm@v1
+        # ~keep operates on a single package dir, so the staging is inlined here.
         shell: bash
         run: |
           set -euo pipefail
@@ -859,7 +859,7 @@ jobs:
              typescript-defs/service.cjs \
              crates/spikard-node/
 
-          # Pack each platform sub-package as a tarball alongside the main one.
+          # ~keep Pack each platform sub-package as a tarball alongside the main one.
           cd crates/spikard-node/npm
           for dir in */; do
             if [ -f "$dir/package.json" ]; then
@@ -868,10 +868,10 @@ jobs:
           done
           cd ../../..
 
-          # Stamp main package optionalDependencies with the real platform
-          # sub-package versions we just built. alef pre-renders this map,
-          # but rewriting it here keeps the publish self-consistent even if
-          # the matrix is trimmed (e.g. musl excluded above).
+          # ~keep Stamp main package optionalDependencies with the real platform
+          # ~keep sub-package versions we just built. alef pre-renders this map,
+          # ~keep but rewriting it here keeps the publish self-consistent even if
+          # ~keep the matrix is trimmed (e.g. musl excluded above).
           tmp_pkg_json="$(mktemp)"
           optional_deps_json='{}'
           for platform_pkg_json in crates/spikard-node/npm/*/package.json; do
@@ -895,9 +895,9 @@ jobs:
           packages-dir: crates/spikard-node/npm
           npm-tag: ${{ needs.prepare.outputs.npm_tag }}
           dry-run: ${{ needs.prepare.outputs.dry_run }}
-      # Wait for the platform sub-packages to index before publishing the main
-      # package, whose optionalDependencies reference them — otherwise there is a
-      # window where `npm install @spikard/node` fails on unresolved deps.
+      # ~keep Wait for the platform sub-packages to index before publishing the main
+      # ~keep package, whose optionalDependencies reference them — otherwise there is a
+      # ~keep window where `npm install @spikard/node` fails on unresolved deps.
       - name: Wait for npm indexing (node-linux-x64-gnu)
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
         uses: xberg-io/actions/wait-for-package@v1
@@ -958,15 +958,15 @@ jobs:
         with:
           pattern: rubygems-*
           path: dist
-          # No merge-multiple: the canonical linux-x86_64 builder also ships the
-          # fallback source gem spikard-<version>.gem, whose basename collides
-          # across runners. publish-rubygems globs recursively and dedupes.
+          # ~keep No merge-multiple: the canonical linux-x86_64 builder also ships the
+          # ~keep fallback source gem spikard-<version>.gem, whose basename collides
+          # ~keep across runners. publish-rubygems globs recursively and dedupes.
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.4"
           bundler-cache: false
-      # Trusted publishing (OIDC) needs a recent RubyGems; the runner's bundled
-      # version can be too old for configure-rubygems-credentials.
+      # ~keep Trusted publishing (OIDC) needs a recent RubyGems; the runner's bundled
+      # ~keep version can be too old for configure-rubygems-credentials.
       - name: Update RubyGems for OIDC trusted publishing
         run: gem update --system
       - uses: rubygems/configure-rubygems-credentials@v2.0.0
@@ -995,10 +995,10 @@ jobs:
   publish-hex:
     name: Publish Hex
     needs: [prepare, check-registries, build-elixir, upload-release-assets]
-    # Excludes dry-runs: generate-elixir-checksums (required for mix hex.build's
-    # checksum-*.exs files-list entry) downloads the per-platform NIF tarballs
-    # from the GitHub Release, which upload-release-assets only attaches on a
-    # real tag release.
+    # ~keep Excludes dry-runs: generate-elixir-checksums (required for mix hex.build's
+    # ~keep checksum-*.exs files-list entry) downloads the per-platform NIF tarballs
+    # ~keep from the GitHub Release, which upload-release-assets only attaches on a
+    # ~keep real tag release.
     if: ${{ !cancelled() && needs.prepare.outputs.release_elixir == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && needs.build-elixir.result == 'success' && needs.upload-release-assets.result == 'success' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.hex_exists != 'true') }}
     runs-on: ubuntu-latest
     steps:
@@ -1012,12 +1012,12 @@ jobs:
       - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
-      # Generate the RustlerPrecompiled checksum file (checksum-Elixir.Spikard.Native.exs)
-      # by downloading the per-platform NIF tarballs that upload-release-assets attached
-      # to the GitHub Release. mix.exs lists `checksum-*.exs` in its files: glob, so this
-      # must exist before `mix hex.build` runs or the build fails with "Missing files".
-      # Targets must match the assets actually uploaded (the build-elixir matrix builds
-      # these four triples; Windows is msvc, matching the uploaded artifact name).
+      # ~keep Generate the RustlerPrecompiled checksum file (checksum-Elixir.Spikard.Native.exs)
+      # ~keep by downloading the per-platform NIF tarballs that upload-release-assets attached
+      # ~keep to the GitHub Release. mix.exs lists `checksum-*.exs` in its files: glob, so this
+      # ~keep must exist before `mix hex.build` runs or the build fails with "Missing files".
+      # ~keep Targets must match the assets actually uploaded (the build-elixir matrix builds
+      # ~keep these four triples; Windows is msvc, matching the uploaded artifact name).
       - name: Generate NIF checksum file
         uses: xberg-io/actions/generate-elixir-checksums@v1
         with:
@@ -1028,12 +1028,12 @@ jobs:
           nif-versions: "2.16,2.17"
           targets: x86_64-unknown-linux-gnu,aarch64-unknown-linux-gnu,aarch64-apple-darwin,x86_64-pc-windows-msvc
           output-path: packages/elixir/checksum-Elixir.Spikard.Native.exs
-      # Build the Hex source tarball with the NIF crate's workspace path-deps
-      # rewritten to registry version-deps, so the published package compiles
-      # standalone when a consumer has no precompiled NIF. On dry-runs the
-      # rewrite is skipped (the version isn't on crates.io yet) and a Cargo.lock
-      # is generated from the workspace instead. Leaves the rewritten tree for
-      # the publish-hex step's `mix hex.publish` to package.
+      # ~keep Build the Hex source tarball with the NIF crate's workspace path-deps
+      # ~keep rewritten to registry version-deps, so the published package compiles
+      # ~keep standalone when a consumer has no precompiled NIF. On dry-runs the
+      # ~keep rewrite is skipped (the version isn't on crates.io yet) and a Cargo.lock
+      # ~keep is generated from the workspace instead. Leaves the rewritten tree for
+      # ~keep the publish-hex step's `mix hex.publish` to package.
       - uses: xberg-io/actions/build-elixir-hex@v1
         with:
           package-dir: packages/elixir
@@ -1073,7 +1073,7 @@ jobs:
           dest=packages/java/src/main/resources/natives
           rm -rf "$dest"
           mkdir -p "$dest"
-          # build-java-natives@v1 artifacts already carry <classifier>/lib… layout.
+          # ~keep build-java-natives@v1 artifacts already carry <classifier>/lib… layout.
           cp -R dist/java-natives/. "$dest/"
           find "$dest" -type f
       - name: Package Java JAR with bundled natives
@@ -1105,10 +1105,10 @@ jobs:
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         with:
           working-directory: packages/kotlin
-          # build.gradle.kts applies the vanniktech maven-publish plugin, so the
-          # action's default `publishAndReleaseToMavenCentral` task uploads with
-          # publishingType=AUTOMATIC and auto-releases the Central Portal
-          # deployment (no manual staging-close step).
+          # ~keep build.gradle.kts applies the vanniktech maven-publish plugin, so the
+          # ~keep action's default `publishAndReleaseToMavenCentral` task uploads with
+          # ~keep publishingType=AUTOMATIC and auto-releases the Central Portal
+          # ~keep deployment (no manual staging-close step).
           dry-run: ${{ needs.prepare.outputs.dry_run }}
 
   publish-nuget:
@@ -1133,11 +1133,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # csproj packs runtimes/** relative to packages/csharp/Spikard/
+          # ~keep csproj packs runtimes/** relative to packages/csharp/Spikard/
           dest=packages/csharp/Spikard/runtimes
           rm -rf "$dest"
           mkdir -p "$dest"
-          # build-csharp-natives@v1 artifacts already carry runtimes/<rid>/native/ layout.
+          # ~keep build-csharp-natives@v1 artifacts already carry runtimes/<rid>/native/ layout.
           cp -R dist/csharp-natives/runtimes/. "$dest/"
           find "$dest" -type f
       - name: Pack NuGet
@@ -1152,12 +1152,12 @@ jobs:
 
   publish-zig:
     name: Publish Zig metadata
-    # Depends on build-c-ffi so the per-target FFI artifacts are available for
-    # multi-platform-ffi-dir bundling into the published Zig tarball.
+    # ~keep Depends on build-c-ffi so the per-target FFI artifacts are available for
+    # ~keep multi-platform-ffi-dir bundling into the published Zig tarball.
     needs: [prepare, build-c-ffi]
-    # No zig_exists gate: Zig has no central registry, so the check-registries
-    # "exists" probe is a GitHub-release-tag lookup that is always true here.
-    # publish-zig is idempotent (update-existing), so it runs on every fresh tag.
+    # ~keep No zig_exists gate: Zig has no central registry, so the check-registries
+    # ~keep "exists" probe is a GitHub-release-tag lookup that is always true here.
+    # ~keep publish-zig is idempotent (update-existing), so it runs on every fresh tag.
     if: ${{ !cancelled() && needs.prepare.outputs.release_zig == 'true' && needs.build-c-ffi.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
@@ -1174,10 +1174,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # spikard c-ffi tarballs are spikard-c-ffi-<version>-<platform>.tar.gz,
-          # each containing <stage>/lib/* and <stage>/include/*.h where <stage> is
-          # spikard-ffi-<platform>. Derive the platform from the stage dir (the
-          # platform label itself contains a dash) and map it to the zig RID layout.
+          # ~keep spikard c-ffi tarballs are spikard-c-ffi-<version>-<platform>.tar.gz,
+          # ~keep each containing <stage>/lib/* and <stage>/include/*.h where <stage> is
+          # ~keep spikard-ffi-<platform>. Derive the platform from the stage dir (the
+          # ~keep platform label itself contains a dash) and map it to the zig RID layout.
           declare -A RID_FOR=(
             ["linux-x86_64"]="linux-x64"
             ["linux-aarch64"]="linux-arm64"
@@ -1323,7 +1323,7 @@ jobs:
         with:
           tag: ${{ needs.prepare.outputs.tag }}
           version: ${{ needs.prepare.outputs.version }}
-          # brew tap name (maps to the Goldziher/homebrew-tap repo); brew adds the homebrew- prefix.
+          # ~keep brew tap name (maps to the Goldziher/homebrew-tap repo); brew adds the homebrew- prefix.
           tap: Goldziher/tap
           formulas: spikard
           out-dir: ${{ github.workspace }}/bottle-json
@@ -1484,9 +1484,9 @@ jobs:
           git commit -m "chore(swift): update Package.swift with checksum for v${{ needs.prepare.outputs.version }}"
           git tag -f "${{ needs.prepare.outputs.tag }}"
           git push origin -f "refs/tags/${{ needs.prepare.outputs.tag }}"
-          # Also publish the checksummed commit to a release/swift/<version> branch. The
-          # alef-generated Swift e2e/test-app pins `branch: "release/swift/<version>"`, so this
-          # ref must exist for SwiftPM to resolve the package with the substituted checksum.
+          # ~keep Also publish the checksummed commit to a release/swift/<version> branch. The
+          # ~keep alef-generated Swift e2e/test-app pins `branch: "release/swift/<version>"`, so this
+          # ~keep ref must exist for SwiftPM to resolve the package with the substituted checksum.
           git push origin -f "HEAD:refs/heads/release/swift/${{ needs.prepare.outputs.version }}"
 
   upload-swift-bundle:
@@ -1777,9 +1777,9 @@ jobs:
         with:
           package-dir: packages/dart/rust
           crate-name: spikard-dart
-          # spikard-dart is a pure-Dart package (no Flutter SDK dep). Skip the
-          # Flutter install so FRB codegen uses setup-dart's latest stable Dart;
-          # Flutter 3.27's bundled Dart 3.6 fails the pubspec's `sdk: >=3.11.0`.
+          # ~keep spikard-dart is a pure-Dart package (no Flutter SDK dep). Skip the
+          # ~keep Flutter install so FRB codegen uses setup-dart's latest stable Dart;
+          # ~keep Flutter 3.27's bundled Dart 3.6 fails the pubspec's `sdk: >=3.11.0`.
           setup-flutter: "false"
       - uses: actions/upload-artifact@v7
         with:
@@ -1817,8 +1817,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # spikard's FRB loader (frb_generated.dart::_alefResolveExternalLibrary)
-          # resolves natives from lib/src/native/<rid>/ with Dart x64/arm64 naming.
+          # ~keep spikard's FRB loader (frb_generated.dart::_alefResolveExternalLibrary)
+          # ~keep resolves natives from lib/src/native/<rid>/ with Dart x64/arm64 naming.
           for entry in \
             "linux-x64:libspikard_dart.so" \
             "linux-arm64:libspikard_dart.so" \

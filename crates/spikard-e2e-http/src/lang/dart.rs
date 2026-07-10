@@ -16,10 +16,6 @@ use anyhow::Result;
 use minijinja::{Environment, context};
 use std::path::PathBuf;
 
-// ---------------------------------------------------------------------------
-// Template environment
-// ---------------------------------------------------------------------------
-
 /// Build the private template environment holding the Dart HTTP templates.
 fn make_env() -> Environment<'static> {
     let mut env = Environment::new();
@@ -42,16 +38,11 @@ fn render(env: &Environment<'static>, name: &str, ctx: minijinja::Value) -> Stri
         .unwrap_or_default()
 }
 
-// ---------------------------------------------------------------------------
-// App harness renderer (ported from alef `dart/project.rs::render_app_harness`).
-// ---------------------------------------------------------------------------
-
 /// Render the server-pattern `app_harness.dart` that spawns the SUT HTTP server.
 ///
 /// Ported verbatim from alef's `dart/project.rs::render_app_harness`.
 #[must_use]
 fn render_app_harness(groups: &[FixtureGroup], e2e_config: &E2eConfig, pkg_name: &str) -> String {
-    // Collect all HTTP fixtures from all groups.
     let mut fixtures_map = serde_json::Map::new();
 
     for group in groups {
@@ -61,7 +52,6 @@ fn render_app_harness(groups: &[FixtureGroup], e2e_config: &E2eConfig, pkg_name:
 
                 let mut http_obj = serde_json::Map::new();
 
-                // handler: route, method, body_schema
                 let mut handler_obj = serde_json::Map::new();
                 handler_obj.insert("route".to_string(), serde_json::json!(http.handler.route));
                 handler_obj.insert("method".to_string(), serde_json::json!(http.handler.method.as_str()));
@@ -72,7 +62,6 @@ fn render_app_harness(groups: &[FixtureGroup], e2e_config: &E2eConfig, pkg_name:
                 }
                 http_obj.insert("handler".to_string(), serde_json::Value::Object(handler_obj));
 
-                // expected_response: status_code, body, headers
                 let mut response_obj = serde_json::Map::new();
                 response_obj.insert(
                     "status_code".to_string(),
@@ -102,11 +91,8 @@ fn render_app_harness(groups: &[FixtureGroup], e2e_config: &E2eConfig, pkg_name:
 
     let fixtures_json = serde_json::to_string(&fixtures_map).unwrap_or_else(|_| "{}".to_string());
 
-    // Derive the bridge module name from the package name:
-    // e.g. "my_pkg" → "my_pkg_bridge_generated"
     let bridge_module = format!("{pkg_name}_bridge_generated");
 
-    // Render using the Jinja template.
     let ctx = context! {
         fixtures_json => fixtures_json,
         pkg_name => pkg_name,
@@ -116,10 +102,6 @@ fn render_app_harness(groups: &[FixtureGroup], e2e_config: &E2eConfig, pkg_name:
     };
     render(&make_env(), "dart/app_harness.dart.jinja", ctx)
 }
-
-// ---------------------------------------------------------------------------
-// Public emit entrypoint (called by the orchestrator).
-// ---------------------------------------------------------------------------
 
 /// Emit the Dart server-pattern `GeneratedFile`s.
 ///
@@ -139,7 +121,6 @@ pub fn emit(
         return Ok(Vec::new());
     }
 
-    // Resolve package config, mirroring alef's `dart.rs:34-51`.
     let dart_pkg = e2e_config.resolve_package("dart");
     let pkg_name = dart_pkg
         .as_ref()

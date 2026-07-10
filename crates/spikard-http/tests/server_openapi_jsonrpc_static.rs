@@ -299,7 +299,6 @@ async fn static_response_route_serves_pre_built_response() {
     use spikard_http::{StaticResponse, StaticResponseHandler};
     use std::sync::atomic::{AtomicBool, Ordering};
 
-    // A handler that tracks whether call() was invoked.
     static HANDLER_CALLED: AtomicBool = AtomicBool::new(false);
     struct SpyHandler {
         inner: StaticResponseHandler,
@@ -355,7 +354,6 @@ async fn static_response_route_serves_pre_built_response() {
     assert_eq!(resp.status_code(), StatusCode::OK);
     assert_eq!(resp.text(), r#"{"status":"healthy"}"#);
     assert_eq!(resp.header("content-type").to_str().unwrap(), "application/json");
-    // The static fast-path should have served the response without calling the handler.
     assert!(
         !HANDLER_CALLED.load(Ordering::SeqCst),
         "Handler.call() should not be invoked for static response routes"
@@ -421,12 +419,10 @@ async fn static_and_dynamic_routes_coexist() {
     let app = build_router_with_handlers_and_config(routes, config, vec![static_meta, dynamic_meta]).expect("router");
     let server = axum_test::TestServer::new(app);
 
-    // Static route
     let resp = server.get("/health").await;
     assert_eq!(resp.status_code(), StatusCode::OK);
     assert_eq!(resp.text(), "OK");
 
-    // Dynamic route still works
     let resp = server.get("/api/items/550e8400-e29b-41d4-a716-446655440000").await;
     assert_eq!(resp.status_code(), StatusCode::OK);
     let json: serde_json::Value = serde_json::from_str(&resp.text()).expect("json");

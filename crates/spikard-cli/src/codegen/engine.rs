@@ -201,7 +201,6 @@ impl CodegenEngine {
             ) => {
                 let schema = super::protobuf::parse_proto_schema_with_includes(&request.schema_path, include_paths)?;
 
-                // Parse target string to ProtobufTarget enum
                 let proto_target = match target.as_str() {
                     "all" => super::protobuf::generators::ProtobufTarget::All,
                     "messages" => super::protobuf::generators::ProtobufTarget::Messages,
@@ -429,7 +428,6 @@ impl CodegenEngine {
         let parsed_schema =
             parse_graphql_schema(schema_path).with_context(|| format!("Failed to parse {}", schema_path.display()))?;
 
-        // Generate code based on language
         let code = match language {
             TargetLanguage::Python => {
                 let generator = PythonGenerator;
@@ -497,7 +495,6 @@ impl CodegenEngine {
             Self::validate_generated_code(language, &code)?;
         }
 
-        // For Ruby, also generate RBS type signatures when appropriate
         let mut assets = vec![Self::write_asset(
             output,
             format!("{} GraphQL code", language_name(language)),
@@ -508,7 +505,6 @@ impl CodegenEngine {
             let generator = RubyGenerator;
             let rbs_code = generator.generate_type_signatures(&parsed_schema)?;
 
-            // Determine RBS output path (replace .rb extension with .rbs)
             let rbs_output = output.with_extension("rbs");
 
             assets.push(Self::write_asset(
@@ -777,7 +773,6 @@ mod tests {
         let dir = tempdir().unwrap();
         let schema_path = dir.path().join("test.proto");
 
-        // Write a minimal proto3 schema
         let proto_schema = r#"syntax = "proto3";
 
 package test;

@@ -58,7 +58,6 @@ fn make_env() -> Environment<'static> {
 pub fn emit(_api: &ApiSurface, cfg: &HttpExtensionConfig) -> Result<Vec<GeneratedFile>> {
     let mut files = Vec::new();
 
-    // Emit the static ergonomic app files
     for (rel, content) in STATIC_FILES {
         files.push(GeneratedFile {
             path: PathBuf::from(PACKAGE_DIR).join(rel),
@@ -67,7 +66,6 @@ pub fn emit(_api: &ApiSurface, cfg: &HttpExtensionConfig) -> Result<Vec<Generate
         });
     }
 
-    // Emit lifecycle hook additions if present
     if !cfg.lifecycle_hooks.is_empty() {
         let env = make_env();
         let mut out = String::new();
@@ -129,7 +127,6 @@ fn wire_cjs_wrapper(content: &mut String) {
         let insert_at = pos + service_require.len();
         content.insert_str(insert_at, "\nconst _app = require(\"./app.cjs\");");
     }
-    // Spread the ergonomic exports last so its `App` shadows the low-level one.
     *content = content.replace("..._service };", "..._service, ..._app };");
 }
 
@@ -151,17 +148,12 @@ fn wire_types_entry(content: &mut String) {
 /// default, so one is inserted before `optionalDependencies`. Both edits are
 /// idempotent (guarded on the ergonomic file / dependency already being present).
 fn wire_package_json(content: &mut String) {
-    // Include the ergonomic assets in the published file list.
     if !content.contains("\"app.cjs\"") {
         *content = content.replace(
             "\"files\": [\"index.js\",",
             "\"files\": [\"app.cjs\", \"app.d.ts\", \"index.js\",",
         );
     }
-    // Add the zod runtime dependency the ergonomic layer needs to derive JSON
-    // Schema from DTOs. zod >= 3.25 (and v4) ships a native `toJSONSchema`, so no
-    // separate converter package is required. Insert a `dependencies` block
-    // before `optionalDependencies`.
     if !content.contains("\"zod\"") {
         let dep_block = "\"dependencies\": {\n    \"zod\": \"^3.25.0 || ^4.0.0\"\n  },\n  ";
         if let Some(pos) = content.find("\"optionalDependencies\":") {

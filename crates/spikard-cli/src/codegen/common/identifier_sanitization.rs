@@ -359,34 +359,27 @@ pub fn sanitize_identifier(name: &str, language: TargetLanguage) -> String {
         return "field".to_string();
     }
 
-    // Step 1: Replace invalid characters with underscores
     let mut ident: String = name
         .chars()
         .map(|c| if c.is_ascii_alphanumeric() || c == '_' { c } else { '_' })
         .collect();
 
-    // Step 2: Clean up multiple consecutive underscores
     while ident.contains("__") {
         ident = ident.replace("__", "_");
     }
 
-    // Step 3: Remove leading/trailing underscores (but preserve if they're part of valid names)
     ident = ident.trim_matches('_').to_string();
 
-    // Step 4: Handle empty result
     if ident.is_empty() {
         return "field".to_string();
     }
 
-    // Step 5: Prefix with underscore if starts with digit
     if ident.chars().next().unwrap().is_ascii_digit() {
         ident.insert(0, '_');
     }
 
-    // Step 6: Lowercase the identifier
     let lower_ident = ident.to_lowercase();
 
-    // Step 7: Handle reserved keywords
     let is_reserved = language
         .reserved_keywords()
         .iter()
@@ -540,7 +533,6 @@ pub fn sanitize_identifier_pascal_case(name: &str, language: TargetLanguage) -> 
 mod tests {
     use super::*;
 
-    // Python tests
     #[test]
     fn test_python_reserved_keywords() {
         assert_eq!(sanitize_identifier("class", TargetLanguage::Python), "_class");
@@ -569,7 +561,6 @@ mod tests {
         assert_eq!(sanitize_identifier("my_var", TargetLanguage::Python), "my_var");
     }
 
-    // TypeScript tests
     #[test]
     fn test_typescript_reserved_keywords() {
         assert_eq!(sanitize_identifier("const", TargetLanguage::TypeScript), "_const");
@@ -587,7 +578,6 @@ mod tests {
     #[test]
     fn test_typescript_non_keywords() {
         assert_eq!(sanitize_identifier("name", TargetLanguage::TypeScript), "name");
-        // sanitize_identifier lowercases everything - use sanitize_identifier_camel_case for camelCase
         assert_eq!(sanitize_identifier("userId", TargetLanguage::TypeScript), "userid");
         assert_eq!(
             sanitize_identifier_camel_case("user_id", TargetLanguage::TypeScript),
@@ -595,7 +585,6 @@ mod tests {
         );
     }
 
-    // Rust tests
     #[test]
     fn test_rust_reserved_keywords() {
         assert_eq!(sanitize_identifier("fn", TargetLanguage::Rust), "r#fn");
@@ -615,7 +604,6 @@ mod tests {
         assert_eq!(sanitize_identifier("my_function", TargetLanguage::Rust), "my_function");
     }
 
-    // Ruby tests
     #[test]
     fn test_ruby_reserved_keywords() {
         assert_eq!(sanitize_identifier("def", TargetLanguage::Ruby), "_def");
@@ -634,7 +622,6 @@ mod tests {
         assert_eq!(sanitize_identifier("my_var", TargetLanguage::Ruby), "my_var");
     }
 
-    // PHP tests
     #[test]
     fn test_php_reserved_keywords() {
         assert_eq!(sanitize_identifier("abstract", TargetLanguage::Php), "_abstract");
@@ -652,7 +639,6 @@ mod tests {
         assert_eq!(sanitize_identifier("my_class", TargetLanguage::Php), "my_class");
     }
 
-    // Generic tests
     #[test]
     fn test_sanitize_invalid_characters() {
         assert_eq!(
@@ -753,16 +739,13 @@ mod tests {
 
     #[test]
     fn test_combined_keyword_and_format() {
-        // Keyword handling with case conversion - "hello_class" is not a keyword, just contains "class"
         let result = sanitize_identifier_camel_case("hello_class", TargetLanguage::TypeScript);
-        assert_eq!(result, "helloClass"); // compound identifier, not a keyword
+        assert_eq!(result, "helloClass");
         assert!(!result.starts_with('_'));
 
-        // Snake case: "HelloClass" -> "hello_class" which is NOT a reserved keyword
         let result = sanitize_identifier_snake_case("HelloClass", TargetLanguage::Python);
         assert_eq!(result, "hello_class");
 
-        // Single keyword in snake_case should be prefixed
         let result = sanitize_identifier_snake_case("Class", TargetLanguage::Python);
         assert_eq!(result, "_class");
     }

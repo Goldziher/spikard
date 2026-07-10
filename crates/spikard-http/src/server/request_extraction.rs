@@ -14,10 +14,6 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::OnceLock;
 
-// Performance: Static singletons for empty collections.
-// These avoid allocating new empty HashMaps/Values for every request that doesn't
-// need them (e.g., requests without query params, headers disabled, etc.).
-
 /// Static empty JSON object value, shared across all requests without query params.
 fn empty_json_object() -> Arc<Value> {
     static EMPTY: OnceLock<Arc<Value>> = OnceLock::new();
@@ -51,7 +47,6 @@ fn extract_query_params_and_raw(
 ) -> (Value, HashMap<String, Vec<String>>) {
     let query_string = uri.query().unwrap_or("");
     if query_string.is_empty() {
-        // Performance: Return empty object for empty query string.
         return (Value::Object(serde_json::Map::new()), HashMap::new());
     }
 
@@ -63,8 +58,6 @@ fn extract_query_params_and_raw(
         ),
         (true, false) => {
             let pairs = parse_query_string(query_string.as_bytes(), '&');
-            // Performance: Pre-allocate HashMap with estimated unique key count.
-            // In practice, most keys are unique, so pairs.len() is a good estimate.
             let mut raw = HashMap::with_capacity(pairs.len());
             for (k, v) in pairs {
                 raw.entry(k).or_insert_with(Vec::new).push(v);
@@ -74,7 +67,6 @@ fn extract_query_params_and_raw(
         (true, true) => {
             let pairs = parse_query_string(query_string.as_bytes(), '&');
             let json = parse_query_pairs_to_json(&pairs, true);
-            // Performance: Pre-allocate HashMap with estimated unique key count.
             let mut raw = HashMap::with_capacity(pairs.len());
             for (k, v) in pairs {
                 raw.entry(k).or_insert_with(Vec::new).push(v);
@@ -89,7 +81,6 @@ pub fn extract_headers(headers: &axum::http::HeaderMap) -> HashMap<String, Strin
     let mut map = HashMap::with_capacity(headers.len());
     for (name, value) in headers.iter() {
         if let Ok(val_str) = value.to_str() {
-            // `HeaderName::as_str()` is already normalized to lowercase.
             map.insert(name.as_str().to_string(), val_str.to_string());
         }
     }
@@ -118,8 +109,6 @@ pub fn extract_cookies(headers: &axum::http::HeaderMap) -> HashMap<String, Strin
         return HashMap::new();
     };
 
-    // Performance: Estimate cookie count by counting semicolons + 1.
-    // Typical cookie string: "session=abc; user=123; theme=dark"
     let estimated_count = cookie_str.bytes().filter(|&b| b == b';').count() + 1;
     let mut cookies = HashMap::with_capacity(estimated_count);
 
@@ -157,14 +146,12 @@ pub fn create_request_data_without_body(
     let (query_params, raw_query_params) =
         extract_query_params_and_raw(uri, options.include_raw_query_params, options.include_query_params_json);
 
-    // Performance: Use static singleton for empty path params (common for routes without params).
     let path_params_arc = if path_params.is_empty() {
         empty_path_params()
     } else {
         Arc::new(path_params)
     };
 
-    // Performance: Use static singleton for empty query params.
     let query_params_arc = if matches!(query_params, Value::Object(ref m) if m.is_empty()) {
         empty_json_object()
     } else if matches!(query_params, Value::Null) {
@@ -192,7 +179,6 @@ pub fn create_request_data_without_body(
         } else {
             empty_string_map()
         },
-        // Performance: Use static null value singleton.
         body: null_json_value(),
         raw_body: None,
         method: method.as_str().to_string(),
@@ -236,14 +222,12 @@ pub async fn create_request_data_with_body(
     let (query_params, raw_query_params) =
         extract_query_params_and_raw(&parts.uri, include_raw_query_params, include_query_params_json);
 
-    // Performance: Use static singleton for empty path params.
     let path_params_arc = if path_params.is_empty() {
         empty_path_params()
     } else {
         Arc::new(path_params)
     };
 
-    // Performance: Use static singleton for empty/null query params.
     let query_params_arc = if matches!(query_params, Value::Object(ref m) if m.is_empty()) {
         empty_json_object()
     } else if matches!(query_params, Value::Null) {
@@ -252,7 +236,6 @@ pub async fn create_request_data_with_body(
         Arc::new(query_params)
     };
 
-    // Performance: Reuse pre-parsed JSON if available, otherwise use static null.
     let body_arc = if let Some(parsed) = parts.extensions.get::<crate::middleware::PreParsedJson>() {
         Arc::new(parsed.0.clone())
     } else {

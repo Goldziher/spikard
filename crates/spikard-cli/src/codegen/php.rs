@@ -379,7 +379,6 @@ impl PhpGenerator {
         let mut required_docs = Vec::new();
         let mut optional_docs = Vec::new();
 
-        // First pass: partition properties into required and optional
         for (prop_name, prop_schema_ref) in &obj.properties {
             let is_required = obj.required.contains(prop_name);
             let field_name = Self::to_camel_case(prop_name);
@@ -415,7 +414,6 @@ impl PhpGenerator {
             }
         }
 
-        // Combine: required first, then optional
         let mut property_lines = required_props;
         property_lines.extend(optional_props);
         let mut property_docs = required_docs;
@@ -919,10 +917,7 @@ impl PhpGenerator {
                 SchemaKind::Type(Type::Number(_)) => "float".to_string(),
                 SchemaKind::Type(Type::Integer(_)) => "int".to_string(),
                 SchemaKind::Type(Type::Boolean(_)) => "bool".to_string(),
-                SchemaKind::Type(Type::Array(_)) => {
-                    // Use plain 'array' for native type hints; generic syntax is only for PHPDoc
-                    "array".to_string()
-                }
+                SchemaKind::Type(Type::Array(_)) => "array".to_string(),
                 SchemaKind::Type(Type::Object(obj)) if !obj.properties.is_empty() => inline_name
                     .map(ToOwned::to_owned)
                     .or_else(|| {
@@ -1396,7 +1391,7 @@ impl PhpGenerator {
         output.push_str(&format!("): {return_type}\n    {{\n"));
     }
 
-    /// Append function body (TODO stub)
+    /// Append placeholder function body.
     fn append_function_body(&self, output: &mut String) {
         output.push_str("        // TODO: Implement this endpoint\n");
         output.push_str("        throw new \\RuntimeException('Not implemented');\n");

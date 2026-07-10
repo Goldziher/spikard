@@ -574,7 +574,6 @@ paths:
 
 components:
   schemas:
-    # Request/Response Schemas
     HealthResponse:
       type: object
       description: Service health status
@@ -768,7 +767,6 @@ components:
           minimum: 0
           description: Total pages
 
-    # Error Schemas (RFC 9457)
     ErrorResponse:
       type: object
       description: RFC 9457 Problem Details for HTTP APIs

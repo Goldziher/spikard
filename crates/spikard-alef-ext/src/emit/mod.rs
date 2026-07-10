@@ -42,7 +42,6 @@ pub fn emit_for_language(
         Language::Dart => dart::emit(api, cfg),
         Language::Swift => swift::emit(api, cfg),
         Language::Zig => zig::emit(api, cfg),
-        // Non-emitting targets — no HTTP extension output needed.
         Language::Ffi | Language::Wasm | Language::R | Language::Rust | Language::Gleam | Language::C => Ok(vec![]),
     }
 }

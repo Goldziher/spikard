@@ -13,13 +13,6 @@ pub(super) fn render_swift_tool_calls_deep(root_expr: &str, tail: &str) -> Strin
     use heck::ToLowerCamelCase;
     let segs = parse_tail(tail);
     let mut expr = root_expr.to_string();
-    // First-class `StreamToolCall` struct: every field is a Codable Swift
-    // property (no parens). Index access on `[StreamToolCall]` returns the
-    // element directly (non-optional). Subsequent `Optional` properties chain
-    // with `?.`. Track whether the prior segment yielded a non-optional value:
-    // - after `Index`, the element is non-optional → next field uses `.`
-    // - after the first optional property access (`?.`), every subsequent
-    //   field also uses `?.` (chained optional)
     let mut prev_is_optional = false;
     for seg in &segs {
         match seg {
@@ -31,9 +24,6 @@ pub(super) fn render_swift_tool_calls_deep(root_expr: &str, tail: &str) -> Strin
                 let prop = f.to_lower_camel_case();
                 let sep = if prev_is_optional { "?." } else { "." };
                 expr = format!("{expr}{sep}{prop}");
-                // All `StreamToolCall` fields (function/id/arguments) are
-                // `Optional<...>` in the first-class binding, so chaining
-                // henceforth uses `?.`.
                 prev_is_optional = true;
             }
         }
@@ -46,7 +36,6 @@ pub(super) fn render_swift_tool_calls_deep(root_expr: &str, tail: &str) -> Strin
 /// `as_ref().and_then(...)` so the final value is a `&str` (for name/id/arguments).
 pub(super) fn render_rust_tool_calls_deep(chunks_var: &str, tail: &str) -> String {
     let segs = parse_tail(tail);
-    // Locate index segment (rust uses .nth(n) on the iterator instead of [N] on a Vec)
     let idx = segs.iter().find_map(|s| match s {
         TailSeg::Index(n) => Some(*n),
         _ => None,
@@ -67,8 +56,6 @@ pub(super) fn render_rust_tool_calls_deep(chunks_var: &str, tail: &str) -> Strin
         None => base,
     };
 
-    // Chain Option-aware field access. Every field on StreamToolCall is Option<...>;
-    // the leaf (String fields) uses `.as_deref()` to project to `&str`.
     let mut expr = with_nth;
     for (i, f) in field_segs.iter().enumerate() {
         let is_leaf = i == field_segs.len() - 1;
@@ -96,7 +83,6 @@ pub(super) fn parse_tail(tail: &str) -> Vec<TailSeg> {
     let mut rest = tail;
     while !rest.is_empty() {
         if let Some(inner) = rest.strip_prefix('[') {
-            // Array index: `[N]`
             if let Some(close) = inner.find(']') {
                 let idx_str = &inner[..close];
                 if let Ok(idx) = idx_str.parse::<usize>() {
@@ -107,7 +93,6 @@ pub(super) fn parse_tail(tail: &str) -> Vec<TailSeg> {
                 break;
             }
         } else if let Some(inner) = rest.strip_prefix('.') {
-            // Field name: up to next `.` or `[`
             let end = inner.find(['.', '[']).unwrap_or(inner.len());
             segs.push(TailSeg::Field(inner[..end].to_string()));
             rest = &inner[end..];
@@ -158,7 +143,6 @@ pub(super) fn render_deep_tail(root_expr: &str, tail: &str, lang: &str) -> Strin
                 out = format!("({out})[{n}]");
             }
             (TailSeg::Index(n), _) => {
-                // rust-like for go (but we handle Field differently), python, node, ts, kotlin, etc.
                 out = format!("({out})[{n}]");
             }
             (TailSeg::Field(f), "rust") => {
@@ -177,17 +161,11 @@ pub(super) fn render_deep_tail(root_expr: &str, tail: &str, lang: &str) -> Strin
                 out.push_str("()");
             }
             (TailSeg::Field(f), "kotlin") => {
-                // Use safe-call `?.` for all field accessors in Kotlin deep paths.
-                // All streaming tool-call sub-fields (`function`, `id`, `name`,
-                // `arguments`) are nullable in the generated Java records, so `?.`
-                // is always correct here and prevents "non-null asserted call on
-                // nullable receiver" compile errors.
                 out.push_str("?.");
                 out.push_str(&f.to_lower_camel_case());
                 out.push_str("()");
             }
             (TailSeg::Field(f), "kotlin_android") => {
-                // kotlin-android: Kotlin data classes use property access (no parens).
                 out.push_str("?.");
                 out.push_str(&f.to_lower_camel_case());
             }
@@ -196,10 +174,6 @@ pub(super) fn render_deep_tail(root_expr: &str, tail: &str, lang: &str) -> Strin
                 out.push_str(&f.to_pascal_case());
             }
             (TailSeg::Field(f), "php") => {
-                // Streaming PHP accessors operate on json_decoded stdClass with
-                // snake_case property names (JSON wire format), not the camelCase
-                // properties exposed on the PHP wrapper class. Use the raw field
-                // name verbatim.
                 out.push_str("->");
                 out.push_str(f);
             }
@@ -215,7 +189,6 @@ pub(super) fn render_deep_tail(root_expr: &str, tail: &str, lang: &str) -> Strin
                 out.push('.');
                 out.push_str(f);
             }
-            // node, wasm, typescript, kotlin, dart, swift all use camelCase
             (TailSeg::Field(f), _) => {
                 out.push('.');
                 out.push_str(&f.to_lower_camel_case());

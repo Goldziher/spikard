@@ -7,16 +7,12 @@ pub mod generators;
 pub mod sdl;
 pub mod spec_parser;
 
-// Re-export parser types and functions for public use
 pub use spec_parser::{
     GraphQLArgument, GraphQLDirective, GraphQLEnumValue, GraphQLField, GraphQLInputField, GraphQLSchema, GraphQLType,
     TypeKind, parse_graphql_schema, parse_graphql_sdl, parse_graphql_sdl_string,
 };
 
-// Re-export generators trait and implementations
 pub use generators::{GraphQLGenerator, RustGenerator};
-
-// Re-export SDL utilities
 
 use anyhow::Result;
 
@@ -104,22 +100,16 @@ pub fn generate_python_graphql(schema: &str, target: &str) -> Result<String> {
     use generators::GraphQLGenerator;
     use generators::python::PythonGenerator;
 
-    // Parse the GraphQL schema string
     let parsed_schema = parse_graphql_sdl_string(schema)?;
 
-    // Create the Python generator
     let generator = PythonGenerator;
 
-    // Generate code based on target
     match target {
         "all" => generator.generate_complete(&parsed_schema),
         "types" => generator.generate_types(&parsed_schema),
         "resolvers" => generator.generate_resolvers(&parsed_schema),
         "schema" => generator.generate_schema_definition(&parsed_schema),
-        _ => {
-            // Default to complete generation for unknown targets
-            generator.generate_complete(&parsed_schema)
-        }
+        _ => generator.generate_complete(&parsed_schema),
     }
 }
 
@@ -141,22 +131,16 @@ pub fn generate_typescript_graphql(schema: &str, target: &str) -> Result<String>
     use generators::GraphQLGenerator;
     use generators::typescript::TypeScriptGenerator;
 
-    // Parse the GraphQL schema string
     let parsed_schema = parse_graphql_sdl_string(schema)?;
 
-    // Create the TypeScript generator
     let generator = TypeScriptGenerator;
 
-    // Generate code based on target
     match target {
         "all" => generator.generate_complete(&parsed_schema),
         "types" => generator.generate_types(&parsed_schema),
         "resolvers" => generator.generate_resolvers(&parsed_schema),
         "schema" => generator.generate_schema_definition(&parsed_schema),
-        _ => {
-            // Default to complete generation for unknown targets
-            generator.generate_complete(&parsed_schema)
-        }
+        _ => generator.generate_complete(&parsed_schema),
     }
 }
 
@@ -175,22 +159,16 @@ pub fn generate_typescript_graphql(schema: &str, target: &str) -> Result<String>
 ///
 /// Generated Rust code as a string, or an error if parsing/generation fails
 pub fn generate_rust_graphql(schema: &str, target: &str) -> Result<String> {
-    // Parse the GraphQL schema string
     let parsed_schema = parse_graphql_sdl_string(schema)?;
 
-    // Create the Rust generator
     let generator = RustGenerator::new();
 
-    // Generate code based on target
     match target {
         "all" => generator.generate_complete(&parsed_schema),
         "types" => generator.generate_types(&parsed_schema),
         "resolvers" => generator.generate_resolvers(&parsed_schema),
         "schema" => generator.generate_schema_definition(&parsed_schema),
-        _ => {
-            // Default to complete generation for unknown targets
-            generator.generate_complete(&parsed_schema)
-        }
+        _ => generator.generate_complete(&parsed_schema),
     }
 }
 
@@ -289,22 +267,16 @@ pub fn generate_php_graphql(schema: &str, target: &str) -> Result<String> {
     use generators::GraphQLGenerator;
     use generators::php::PhpGenerator;
 
-    // Parse the GraphQL schema string
     let parsed_schema = parse_graphql_sdl_string(schema)?;
 
-    // Create the PHP generator
     let generator = PhpGenerator;
 
-    // Generate code based on target
     match target {
         "all" => generator.generate_complete(&parsed_schema),
         "types" => generator.generate_types(&parsed_schema),
         "resolvers" => generator.generate_resolvers(&parsed_schema),
         "schema" => generator.generate_schema_definition(&parsed_schema),
-        _ => {
-            // Default to complete generation for unknown targets
-            generator.generate_complete(&parsed_schema)
-        }
+        _ => generator.generate_complete(&parsed_schema),
     }
 }
 

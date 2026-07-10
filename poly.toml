@@ -22,7 +22,9 @@ exclude = [
     "test_documents/**",
     "vendor/**",
     "**/Cargo.toml",
+    "crates/spikard-ffi/include/spikard.h",
     "crates/spikard-node/service_http_additions.ts",
+    "packages/go/include/spikard.h",
 ]
 
 [lint.markdown.rumdl]
@@ -30,6 +32,42 @@ disable = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051
 
 [fmt.markdown.rumdl]
 disable = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051", "MD076"]
+
+[lint.uncomment]
+enabled = true
+remove_todos = false
+remove_fixme = false
+remove_docs = false
+use_default_ignores = true
+preserve_patterns = ["SAFETY", "HACK", "WORKAROUND", "NOTE"]
+
+[lint.typos]
+extend_ignore_words = [
+    "bre",
+    "caf",
+    "Caf",
+    "enumerables",
+    "Enumerables",
+    "fo",
+    "Fo",
+    "FO",
+    "fre",
+    "hte",
+    "Hte",
+    "Iz",
+    "Jod",
+    "lsit",
+    "nam",
+    "ND",
+    "Parm",
+    "ser",
+    "tre",
+    "Tre",
+    "Ue",
+    "ure",
+    "Userr",
+    "wre",
+]
 
 [lint.python.ruff]
 select = ["ALL"]
@@ -155,6 +193,8 @@ php_version = "8.2"
     "EXE001",
     "A001",
     "N801",
+    "comment",
+    "doc-comment",
 ]
 "**/test_apps/**" = [
     "ANN",
@@ -198,15 +238,25 @@ php_version = "8.2"
     "N801",
 ]
 "CHANGELOG.md" = ["MD057"]
+"crates/spikard-elixir/**" = ["comment", "doc-comment"]
+"crates/spikard-ffi/**" = ["comment", "doc-comment"]
+"crates/spikard-node/**" = ["comment", "doc-comment", "no-unused-vars"]
+"crates/spikard-php/**" = ["comment", "doc-comment"]
+"crates/spikard-py/**" = ["comment", "doc-comment"]
+"crates/spikard-wasm/**" = ["comment", "doc-comment"]
 "docs/reference/feature-parity.md" = ["MD057"]
+"e2e/**" = ["comment", "doc-comment", "D101", "D415", "no-loss-of-precision", "PTH100", "PTH118", "PTH120"]
+"packages/**" = ["comment", "doc-comment", "no-unused-vars"]
+"Package.swift" = ["comment", "doc-comment"]
 "scripts/**/*.py" = ["RUF100"]
+"test_apps/**" = ["comment", "doc-comment", "no-loss-of-precision"]
 "templates/readme/**" = ["MD057"]
 
 [hooks]
 stages = ["pre-commit"]
 
 [hooks.builtin]
-polylint = { exclude = [
+lint = { exclude = [
     "**/*.freezed.dart",
     "**/*.g.dart",
     "**/*.jinja",
@@ -229,9 +279,11 @@ polylint = { exclude = [
     "test_documents/**",
     "vendor/**",
     "**/Cargo.toml",
+    "crates/spikard-ffi/include/spikard.h",
     "crates/spikard-node/service_http_additions.ts",
+    "packages/go/include/spikard.h",
 ] }
-polyfmt = { exclude = [
+fmt = { exclude = [
     "**/*.freezed.dart",
     "**/*.g.dart",
     "**/*.jinja",
@@ -254,7 +306,9 @@ polyfmt = { exclude = [
     "test_documents/**",
     "vendor/**",
     "**/Cargo.toml",
+    "crates/spikard-ffi/include/spikard.h",
     "crates/spikard-node/service_http_additions.ts",
+    "packages/go/include/spikard.h",
 ] }
 file_safety = { exclude = [
     "**/*.freezed.dart",
@@ -279,7 +333,9 @@ file_safety = { exclude = [
     "test_documents/**",
     "vendor/**",
     "**/Cargo.toml",
+    "crates/spikard-ffi/include/spikard.h",
     "crates/spikard-node/service_http_additions.ts",
+    "packages/go/include/spikard.h",
 ] }
 cargo = true
 commit = { stages = ["commit-msg"] }

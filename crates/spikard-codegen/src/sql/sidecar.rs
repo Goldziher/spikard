@@ -4,7 +4,7 @@
 //! The OpenAPI spec emitted by [`crate::sql::openapi_from_routes`] stays vanilla
 //! — no `x-*` extensions — so any generic OpenAPI consumer sees a normal
 //! document. The sidecar JSON carries everything spikard's per-language
-//! generators need to replace `raise NotImplementedError("TODO")` stubs with
+//! generators need to replace placeholder stubs with
 //! real bodies that call into scythe-generated query functions.
 
 use std::collections::BTreeMap;
@@ -126,8 +126,6 @@ where
         QueryCommand::Exec => "void".to_string(),
         QueryCommand::ExecRows => "rows".to_string(),
         _ => {
-            // Compose a tuple-style string of the row's column types; the
-            // generator translates this into the language's row struct.
             let cols: Vec<String> = query
                 .columns
                 .iter()

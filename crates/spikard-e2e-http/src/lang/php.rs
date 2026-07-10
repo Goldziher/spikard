@@ -19,10 +19,6 @@ use anyhow::Result;
 use minijinja::{Environment, context};
 use std::path::PathBuf;
 
-// ---------------------------------------------------------------------------
-// Template environment
-// ---------------------------------------------------------------------------
-
 /// Build the private template environment holding the PHP HTTP templates.
 fn make_env() -> Environment<'static> {
     let mut env = Environment::new();
@@ -44,10 +40,6 @@ fn render(env: &Environment<'static>, name: &str, ctx: minijinja::Value) -> Stri
         .render(ctx)
         .unwrap_or_default()
 }
-
-// ---------------------------------------------------------------------------
-// App harness renderer (ported from alef `php/project.rs::render_app_harness`).
-// ---------------------------------------------------------------------------
 
 /// Render the server-pattern `app_harness.php` that spawns the SUT HTTP server.
 ///
@@ -101,13 +93,10 @@ fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup], pkg_path:
 
     let header = hash::header(CommentStyle::DoubleSlash);
 
-    // Derive route_builder_import from imports[0] → PHP namespace.
-    // E.g. imports[0] = "my_pkg" → namespace MyPkg\Php
     let route_builder_import = if imports.is_empty() {
         "App\\Php".to_string()
     } else {
         let module_name = &imports[0];
-        // Normalize module name to PHP namespace (my_pkg → MyPkg, sample_core → SampleCore)
         module_name
             .split('_')
             .map(|p| {
@@ -145,10 +134,6 @@ fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup], pkg_path:
     render(&env, "php/app_harness.php.jinja", ctx)
 }
 
-// ---------------------------------------------------------------------------
-// Public emit entrypoint (called by the orchestrator).
-// ---------------------------------------------------------------------------
-
 /// Emit the PHP server-pattern `GeneratedFile`s.
 ///
 /// Returns `app_harness.php` under `e2e/php/` when:
@@ -169,8 +154,6 @@ pub fn emit(
         return Ok(Vec::new());
     }
 
-    // Derive pkg_path the same way alef's PhpCodegen does:
-    // prefer `[crates.e2e.packages.php].path`, fall back to "../../packages/php".
     let php_pkg = e2e_config.resolve_package("php");
     let pkg_path = php_pkg
         .as_ref()

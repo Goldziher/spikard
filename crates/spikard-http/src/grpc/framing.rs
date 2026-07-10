@@ -106,7 +106,7 @@ pub fn encode_grpc_message(payload: Bytes) -> Result<Bytes, Status> {
         .map_err(|_| Status::resource_exhausted("gRPC message exceeds 4GB frame length limit"))?;
 
     let mut framed = BytesMut::with_capacity(GRPC_MESSAGE_HEADER_LEN + payload.len());
-    framed.put_u8(0); // compression flag: uncompressed
+    framed.put_u8(0);
     framed.put_u32(message_length);
     framed.extend_from_slice(&payload);
 
@@ -158,18 +158,14 @@ pub async fn parse_grpc_client_stream(
     grpc_encoding: Option<&str>,
     compression_enabled: bool,
 ) -> Result<MessageStream, Status> {
-    // Convert body into bytes
     let body_bytes = axum::body::to_bytes(body, usize::MAX)
         .await
         .map_err(|e| Status::internal(format!("Failed to read body: {}", e)))?;
 
-    // Create a buffered reader
     let buffer = BytesMut::from(&body_bytes[..]);
 
-    // Parse frames from the buffer
     let messages = parse_all_frames(buffer, max_message_size, grpc_encoding, compression_enabled)?;
 
-    // Convert to a MessageStream
     Ok(Box::pin(stream::iter(messages.into_iter().map(Ok))))
 }
 
@@ -183,14 +179,12 @@ fn parse_all_frames(
     let mut messages = Vec::new();
 
     while !buffer.is_empty() {
-        // Check if we have enough bytes for the frame header
         if buffer.len() < GRPC_MESSAGE_HEADER_LEN {
             return Err(Status::internal(
                 "Incomplete gRPC frame header: expected 5 bytes, got less",
             ));
         }
 
-        // Read the compression flag (1 byte)
         let compression_flag = buffer[0];
         if compression_flag > 1 {
             return Err(Status::invalid_argument(format!(
@@ -199,12 +193,10 @@ fn parse_all_frames(
             )));
         }
 
-        // Read the message length (4 bytes, big-endian)
         let length_bytes = &buffer[1..GRPC_MESSAGE_HEADER_LEN];
         let message_length =
             u32::from_be_bytes([length_bytes[0], length_bytes[1], length_bytes[2], length_bytes[3]]) as usize;
 
-        // Validate message length against max size
         if message_length > max_message_size {
             return Err(Status::resource_exhausted(format!(
                 "Message size {} exceeds maximum allowed size of {}",
@@ -212,7 +204,6 @@ fn parse_all_frames(
             )));
         }
 
-        // Check if we have the complete message
         let total_frame_size = GRPC_MESSAGE_HEADER_LEN + message_length;
         if buffer.len() < total_frame_size {
             return Err(Status::internal(
@@ -220,7 +211,6 @@ fn parse_all_frames(
             ));
         }
 
-        // Extract the message bytes and decompress if needed.
         let message_bytes = &buffer[GRPC_MESSAGE_HEADER_LEN..total_frame_size];
         let message = if compression_flag == 0 {
             Bytes::copy_from_slice(message_bytes)
@@ -229,7 +219,6 @@ fn parse_all_frames(
         };
         messages.push(message);
 
-        // Advance the buffer
         buffer.advance(total_frame_size);
     }
 
@@ -291,12 +280,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_single_frame_parsing() {
-        // Frame: compression=0, length=5, message="hello"
-        let frame = vec![
-            0x00, // compression: no
-            0x00, 0x00, 0x00, 0x05, // length: 5 bytes (big-endian)
-            b'h', b'e', b'l', b'l', b'o', // message
-        ];
+        let frame = vec![0x00, 0x00, 0x00, 0x00, 0x05, b'h', b'e', b'l', b'l', b'o'];
 
         let body = axum::body::Body::from(frame);
         let mut stream = parse_grpc_client_stream(body, 1024, None, true).await.unwrap();
@@ -329,15 +313,12 @@ mod tests {
 
     #[tokio::test]
     async fn test_multiple_frames() {
-        // Two frames back-to-back
         let mut frame = Vec::new();
 
-        // Frame 1: "hello"
         frame.push(0x00);
         frame.extend_from_slice(&[0x00, 0x00, 0x00, 0x05]);
         frame.extend_from_slice(b"hello");
 
-        // Frame 2: "world"
         frame.push(0x00);
         frame.extend_from_slice(&[0x00, 0x00, 0x00, 0x05]);
         frame.extend_from_slice(b"world");
@@ -369,11 +350,11 @@ mod tests {
     #[tokio::test]
     async fn test_frame_size_at_limit() {
         let max_size = 10;
-        let message = b"0123456789"; // exactly 10 bytes
+        let message = b"0123456789";
 
         let mut frame = Vec::new();
         frame.push(0x00);
-        frame.extend_from_slice(&[0x00, 0x00, 0x00, 0x0a]); // length: 10
+        frame.extend_from_slice(&[0x00, 0x00, 0x00, 0x0a]);
         frame.extend_from_slice(message);
 
         let body = axum::body::Body::from(frame);
@@ -387,11 +368,11 @@ mod tests {
     #[tokio::test]
     async fn test_frame_exceeds_limit() {
         let max_size = 5;
-        let message = b"toolong"; // 7 bytes, exceeds 5-byte limit
+        let message = b"toolong";
 
         let mut frame = Vec::new();
         frame.push(0x00);
-        frame.extend_from_slice(&[0x00, 0x00, 0x00, 0x07]); // length: 7
+        frame.extend_from_slice(&[0x00, 0x00, 0x00, 0x07]);
         frame.extend_from_slice(message);
 
         let body = axum::body::Body::from(frame);
@@ -405,7 +386,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_incomplete_frame_header() {
-        // Only 3 bytes of 5-byte header
         let frame = vec![0x00, 0x00, 0x00];
 
         let body = axum::body::Body::from(frame);
@@ -419,11 +399,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_incomplete_frame_body() {
-        // Header says 10 bytes but only provide 5
         let mut frame = Vec::new();
         frame.push(0x00);
-        frame.extend_from_slice(&[0x00, 0x00, 0x00, 0x0a]); // length: 10
-        frame.extend_from_slice(b"short"); // only 5 bytes
+        frame.extend_from_slice(&[0x00, 0x00, 0x00, 0x0a]);
+        frame.extend_from_slice(b"short");
 
         let body = axum::body::Body::from(frame);
         let result = parse_grpc_client_stream(body, 1024, None, true).await;
@@ -437,7 +416,7 @@ mod tests {
     #[tokio::test]
     async fn test_compression_flag_set_with_missing_encoding_header() {
         let mut frame = Vec::new();
-        frame.push(0x01); // compression: yes
+        frame.push(0x01);
         frame.extend_from_slice(&[0x00, 0x00, 0x00, 0x05]);
         frame.extend_from_slice(b"hello");
 
@@ -453,7 +432,7 @@ mod tests {
     #[tokio::test]
     async fn test_compression_flag_set_with_unsupported_encoding() {
         let mut frame = Vec::new();
-        frame.push(0x01); // compression: yes
+        frame.push(0x01);
         frame.extend_from_slice(&[0x00, 0x00, 0x00, 0x05]);
         frame.extend_from_slice(b"hello");
 
@@ -470,7 +449,7 @@ mod tests {
     #[tokio::test]
     async fn test_compression_flag_set_when_compression_disabled() {
         let mut frame = Vec::new();
-        frame.push(0x01); // compression: yes
+        frame.push(0x01);
         frame.extend_from_slice(&[0x00, 0x00, 0x00, 0x05]);
         frame.extend_from_slice(b"hello");
 
@@ -491,7 +470,7 @@ mod tests {
         let compressed = encoder.finish().unwrap();
 
         let mut frame = Vec::new();
-        frame.push(0x01); // compression: yes
+        frame.push(0x01);
         frame.extend_from_slice(&(compressed.len() as u32).to_be_bytes());
         frame.extend_from_slice(&compressed);
 
@@ -505,11 +484,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_large_message_length() {
-        // Test with large length value (but within max_message_size for this test)
         let message = b"x".repeat(1000);
         let mut frame = Vec::new();
         frame.push(0x00);
-        frame.extend_from_slice(&[0x00, 0x00, 0x03, 0xe8]); // length: 1000 (big-endian)
+        frame.extend_from_slice(&[0x00, 0x00, 0x03, 0xe8]);
         frame.extend_from_slice(&message);
 
         let body = axum::body::Body::from(frame);
@@ -522,10 +500,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_zero_length_message() {
-        // Frame with 0-byte message (valid in gRPC)
         let mut frame = Vec::new();
         frame.push(0x00);
-        frame.extend_from_slice(&[0x00, 0x00, 0x00, 0x00]); // length: 0
+        frame.extend_from_slice(&[0x00, 0x00, 0x00, 0x00]);
 
         let body = axum::body::Body::from(frame);
         let mut stream = parse_grpc_client_stream(body, 1024, None, true).await.unwrap();
@@ -539,21 +516,17 @@ mod tests {
     async fn test_multiple_frames_with_mixed_sizes() {
         let mut frame = Vec::new();
 
-        // Frame 1: "abc" (3 bytes)
         frame.push(0x00);
         frame.extend_from_slice(&[0x00, 0x00, 0x00, 0x03]);
         frame.extend_from_slice(b"abc");
 
-        // Frame 2: "defghij" (7 bytes)
         frame.push(0x00);
         frame.extend_from_slice(&[0x00, 0x00, 0x00, 0x07]);
         frame.extend_from_slice(b"defghij");
 
-        // Frame 3: "" (0 bytes)
         frame.push(0x00);
         frame.extend_from_slice(&[0x00, 0x00, 0x00, 0x00]);
 
-        // Frame 4: "x" (1 byte)
         frame.push(0x00);
         frame.extend_from_slice(&[0x00, 0x00, 0x00, 0x01]);
         frame.extend_from_slice(b"x");
@@ -579,16 +552,8 @@ mod tests {
 
     #[test]
     fn test_big_endian_length_parsing() {
-        // Test that length is correctly parsed as big-endian
-        // Big-endian u32(256) = bytes [0x00, 0x00, 0x01, 0x00]
-        let buffer = BytesMut::from(
-            &[
-                0x00, // compression flag
-                0x00, 0x00, 0x01, 0x00, // length: 256 in big-endian
-            ][..],
-        );
+        let buffer = BytesMut::from(&[0x00, 0x00, 0x00, 0x01, 0x00][..]);
 
-        // Extract the 4-byte length manually to verify
         let length_bytes = &buffer[1..5];
         let length = u32::from_be_bytes([length_bytes[0], length_bytes[1], length_bytes[2], length_bytes[3]]);
 
@@ -597,12 +562,7 @@ mod tests {
 
     #[test]
     fn test_big_endian_max_value() {
-        // Test maximum u32 value in big-endian
-        let buffer = BytesMut::from(
-            &[
-                0x00, 0xff, 0xff, 0xff, 0xff, // max u32
-            ][..],
-        );
+        let buffer = BytesMut::from(&[0x00, 0xff, 0xff, 0xff, 0xff][..]);
 
         let length_bytes = &buffer[1..5];
         let length = u32::from_be_bytes([length_bytes[0], length_bytes[1], length_bytes[2], length_bytes[3]]);
@@ -617,7 +577,7 @@ mod tests {
 
         let mut frame = Vec::new();
         frame.push(0x00);
-        frame.extend_from_slice(&[0x00, 0x00, 0x00, 0x96]); // length: 150
+        frame.extend_from_slice(&[0x00, 0x00, 0x00, 0x96]);
         frame.extend_from_slice(&message);
 
         let body = axum::body::Body::from(frame);
@@ -632,7 +592,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_stream_collects_all_messages() {
-        // Ensure that the returned stream properly yields all messages
         let mut frame = Vec::new();
 
         for i in 0..10 {

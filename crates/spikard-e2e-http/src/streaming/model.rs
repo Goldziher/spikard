@@ -43,10 +43,6 @@ pub const STREAMING_VIRTUAL_FIELDS: &[&str] = &[
     "no_chunks_after_done",
     "tool_calls",
     "finish_reason",
-    // Event-stream variant predicates: resolve against the collected `chunks`
-    // list where each item is a tagged union with `page` / `error` / `complete`
-    // variants. `event_count_min` is a synonym for the chunk
-    // count, used with `greater_than_or_equal` to assert "at least N events".
     "stream.has_page_event",
     "stream.has_error_event",
     "stream.has_complete_event",
@@ -76,7 +72,6 @@ pub fn is_streaming_virtual_field(field: &str) -> bool {
     if STREAMING_VIRTUAL_FIELDS.contains(&field) {
         return true;
     }
-    // Check deep-path prefixes: `tool_calls[…` or `tool_calls.`
     for root in STREAMING_VIRTUAL_ROOTS {
         if field.len() > root.len() && field.starts_with(root) {
             let rest = &field[root.len()..];

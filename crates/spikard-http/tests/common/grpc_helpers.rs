@@ -633,7 +633,6 @@ impl GrpcHandler for EchoMockHandler {
 mod tests {
     use super::*;
 
-    // Mock handler for testing gRPC functionality
     struct TestHandler;
     impl GrpcHandler for TestHandler {
         fn call(&self, _request: GrpcRequestData) -> Pin<Box<dyn Future<Output = GrpcHandlerResult> + Send>> {
@@ -1007,6 +1006,5 @@ mod tests {
     fn test_grpc_test_client_creation() {
         let _client = create_grpc_test_client();
         let _new_client = GrpcTestClient::new();
-        // Just ensure it can be created without panicking
     }
 }

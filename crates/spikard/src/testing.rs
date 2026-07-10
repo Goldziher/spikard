@@ -22,13 +22,11 @@
 use super::{App, AppError};
 use axum_test::{TestServer as AxumTestServer, TestServerConfig, Transport};
 
+pub use spikard_http::testing::SseEvent as TestSseEvent;
 pub use spikard_http::testing::{
     GraphQLSubscriptionSnapshot, MultipartFilePart, ResponseSnapshot, SnapshotError, SseStream, TestClient,
     WebSocketConnection, WebSocketMessage, build_multipart_body, encode_urlencoded_body,
 };
-// spikard_http::testing::SseEvent (data: String) differs from the crate-root spikard_http::SseEvent
-// (data: Value). Re-export under a distinct name to avoid the collision for callers that need both.
-pub use spikard_http::testing::SseEvent as TestSseEvent;
 
 /// Construct a [`TestClient`] from a fully-built [`App`].
 ///

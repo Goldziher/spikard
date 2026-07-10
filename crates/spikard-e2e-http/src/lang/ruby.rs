@@ -33,10 +33,6 @@ use std::collections::HashMap;
 use std::fmt::Write as FmtWrite;
 use std::path::PathBuf;
 
-// ---------------------------------------------------------------------------
-// Template environment
-// ---------------------------------------------------------------------------
-
 /// Build the private template environment holding the Ruby HTTP templates.
 fn make_env() -> Environment<'static> {
     let mut env = Environment::new();
@@ -74,10 +70,6 @@ fn render(env: &Environment<'static>, name: &str, ctx: minijinja::Value) -> Stri
         .unwrap_or_default()
 }
 
-// ---------------------------------------------------------------------------
-// Value helpers (from alef `ruby/values.rs`).
-// ---------------------------------------------------------------------------
-
 /// Convert a module path (e.g., "spikard") to Ruby `PascalCase` module name
 /// (e.g., "Spikard").
 fn ruby_module_name(module_path: &str) -> String {
@@ -106,10 +98,6 @@ fn json_to_ruby(value: &serde_json::Value) -> String {
     }
 }
 
-// ---------------------------------------------------------------------------
-// HTTP method helper (from alef `ruby/http.rs`).
-// ---------------------------------------------------------------------------
-
 /// Convert an uppercase HTTP method string to Ruby's `Net::HTTP` class name.
 /// Ruby uses title-cased names: Get, Post, Put, Delete, Patch, Head, Options, Trace.
 fn http_method_class(method: &str) -> String {
@@ -119,10 +107,6 @@ fn http_method_class(method: &str) -> String {
         Some(first) => first.to_uppercase().collect::<String>() + &chars.as_str().to_lowercase(),
     }
 }
-
-// ---------------------------------------------------------------------------
-// Middleware value builder (from alef `ruby/project.rs::build_middleware_value`).
-// ---------------------------------------------------------------------------
 
 /// Convert the fixture's `HttpMiddleware` into a `serde_json::Value` suitable
 /// for embedding in the harness fixture JSON.
@@ -135,7 +119,6 @@ fn build_middleware_value(middleware: &Option<HttpMiddleware>) -> serde_json::Va
 
     let mut map = serde_json::Map::new();
 
-    // --- cors ---
     if let Some(cors) = &mw.cors {
         let mut cors_map = serde_json::Map::new();
         cors_map.insert("allowed_origins".to_string(), serde_json::json!(cors.allow_origins));
@@ -160,16 +143,11 @@ fn build_middleware_value(middleware: &Option<HttpMiddleware>) -> serde_json::Va
     }
 }
 
-// ---------------------------------------------------------------------------
-// App harness renderer (from alef `ruby/project.rs::render_app_harness`).
-// ---------------------------------------------------------------------------
-
 /// Render the server-pattern `app_harness.rb` that spawns the SUT HTTP server.
 ///
 /// Ported verbatim from alef's `ruby/project.rs::render_app_harness`.
 #[must_use]
 pub fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup]) -> String {
-    // Collect all HTTP fixtures from all groups.
     let mut fixtures_map = serde_json::Map::new();
 
     for group in groups {
@@ -202,10 +180,8 @@ pub fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup]) -> St
     }
 
     let fixtures_json_raw = serde_json::to_string(&fixtures_map).unwrap_or_default();
-    // Escape the JSON for safe embedding in a Ruby string literal.
     let fixtures_json = ruby_string_literal(&fixtures_json_raw);
 
-    // Apply language-specific overrides for Ruby.
     let imports = e2e_config
         .harness
         .imports_for_lang("ruby")
@@ -226,7 +202,6 @@ pub fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup]) -> St
         String::new()
     };
 
-    // Ruby method names are snake_case by convention.
     let register_route_method = e2e_config
         .harness
         .register_method_idiomatic("ruby")
@@ -248,7 +223,6 @@ pub fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup]) -> St
 
     let header = hash::header(CommentStyle::Hash);
 
-    // Derive Ruby-namespaced class names from imports[0] when explicit values are not configured.
     let module_prefix = if imports_ref.is_empty() {
         String::new()
     } else {
@@ -283,10 +257,6 @@ pub fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup]) -> St
     )
 }
 
-// ---------------------------------------------------------------------------
-// Environment variable setup (from alef `ruby/project.rs::render_env_setup`).
-// ---------------------------------------------------------------------------
-
 /// Render environment variable setup lines for `spec_helper.rb`.
 /// Returns empty string if env is empty; otherwise returns alphabetically-sorted
 /// `ENV[k] ||= v` assignments, each on its own line.
@@ -306,11 +276,6 @@ fn render_env_setup(env: &HashMap<String, String>) -> String {
 
     out
 }
-
-// ---------------------------------------------------------------------------
-// Server-pattern spec_helper renderer
-// (from alef `ruby/project.rs::render_spec_helper` uses_harness branch).
-// ---------------------------------------------------------------------------
 
 /// Render the server-pattern `spec/spec_helper.rb` that spawns `app_harness.rb`.
 ///
@@ -405,10 +370,6 @@ end
     out
 }
 
-// ---------------------------------------------------------------------------
-// Multipart body synthesizer (from alef `ruby/http.rs::synthesize_multipart_body`).
-// ---------------------------------------------------------------------------
-
 /// Synthesize a multipart body from the handler's body schema properties.
 fn synthesize_multipart_body(props: &serde_json::Map<String, serde_json::Value>) -> String {
     const BOUNDARY: &str = "alef-boundary";
@@ -438,13 +399,8 @@ fn synthesize_multipart_body(props: &serde_json::Map<String, serde_json::Value>)
 
     body.push_str(&format!("--{BOUNDARY}--\r\n"));
 
-    // Use ruby_string_literal to properly escape the multipart body.
     ruby_string_literal(&body)
 }
-
-// ---------------------------------------------------------------------------
-// Per-fixture SUT test renderer (from alef `ruby/http.rs::render_http_example_sut`).
-// ---------------------------------------------------------------------------
 
 /// Render an `RSpec` example for an HTTP server-pattern test fixture (SUT harness).
 ///
@@ -454,7 +410,6 @@ fn render_http_example_sut(out: &mut String, fixture: &Fixture, env: &Environmen
         return;
     };
 
-    // HTTP 101 (WebSocket upgrade) cannot be tested via Net::HTTP.
     if http.expected_response.status_code == 101 {
         let description_literal = ruby_string_literal(&fixture.description);
         let method = http.request.method.to_uppercase();
@@ -481,7 +436,6 @@ fn render_http_example_sut(out: &mut String, fixture: &Fixture, env: &Environmen
     };
     let description_literal = ruby_string_literal(&desc_with_period);
 
-    // Build request headers dict literal.
     let mut header_entries: Vec<String> = http
         .request
         .headers
@@ -499,7 +453,6 @@ fn render_http_example_sut(out: &mut String, fixture: &Fixture, env: &Environmen
     let method_class = http_method_class(&method);
     let path = format!("/fixtures/{}{}", &fixture.id, &http.request.path);
 
-    // Detect content-type.
     let content_type_lower = http
         .request
         .headers
@@ -521,7 +474,6 @@ fn render_http_example_sut(out: &mut String, fixture: &Fixture, env: &Environmen
         .map(str::trim)
         .is_some_and(|t| t.eq_ignore_ascii_case("multipart/form-data"));
 
-    // Synthesize multipart body if needed.
     let multipart_body_ruby = if is_multipart && http.request.body.is_none() {
         if let Some(schema) = &http.handler.body_schema {
             if schema.get("type").and_then(|t| t.as_str()) == Some("object") {
@@ -540,7 +492,6 @@ fn render_http_example_sut(out: &mut String, fixture: &Fixture, env: &Environmen
         String::new()
     };
 
-    // Determine request body.
     let (has_body, body_ruby, is_raw_body) = if let Some(body) = &http.request.body {
         let is_raw = body.is_string();
         (true, json_to_ruby(body), is_raw)
@@ -550,7 +501,6 @@ fn render_http_example_sut(out: &mut String, fixture: &Fixture, env: &Environmen
         (false, String::new(), false)
     };
 
-    // Determine response body expectations.
     let (has_text_body, text_ruby) = if let Some(serde_json::Value::String(s)) = &http.expected_response.body {
         (true, ruby_string_literal(s))
     } else {
@@ -589,7 +539,6 @@ fn render_http_example_sut(out: &mut String, fixture: &Fixture, env: &Environmen
         (false, Vec::new())
     };
 
-    // Build header assertions.
     let mut header_assertions: Vec<minijinja::Value> = Vec::new();
     let mut header_names: Vec<String> = http.expected_response.headers.keys().cloned().collect();
     header_names.sort();
@@ -603,7 +552,6 @@ fn render_http_example_sut(out: &mut String, fixture: &Fixture, env: &Environmen
         });
     }
 
-    // Build validation error expectations.
     let (has_validation_errors, validation_errors) = if http.expected_response.status_code == 422 {
         if let Some(body) = &http.expected_response.body {
             if let Some(obj) = body.as_object() {
@@ -663,10 +611,6 @@ fn render_http_example_sut(out: &mut String, fixture: &Fixture, env: &Environmen
     out.push_str(&rendered);
 }
 
-// ---------------------------------------------------------------------------
-// Spec file renderer (HTTP-fixture slice of alef `ruby/spec_file.rs::render_spec_file`).
-// ---------------------------------------------------------------------------
-
 /// Render one `spec/{category}_spec.rb` for the server-pattern (`uses_harness` = true).
 ///
 /// Only the HTTP-fixture path is exercised for server-pattern Ruby e2e suites:
@@ -678,13 +622,9 @@ fn render_spec_file_server(
     gem_name: &str,
     env: &Environment<'static>,
 ) -> String {
-    // Build requires list. spec_helper MUST be required first to ensure ENV vars
-    // are set before the native binding loads.
     let has_http = fixtures.iter().any(|f| f.http.is_some());
     let mut requires = Vec::new();
 
-    // spec_helper is always needed when has_http is true (server-pattern always
-    // writes spec_helper.rb; this matches alef's `needs_spec_helper || has_http` gate).
     if has_http {
         requires.push("spec_helper".to_string());
     }
@@ -693,7 +633,6 @@ fn render_spec_file_server(
     requires.push(require_name.replace('-', "_"));
     requires.push("json".to_string());
 
-    // Build examples.
     let mut examples: Vec<String> = Vec::new();
     for fixture in fixtures {
         if fixture.http.is_some() {
@@ -701,7 +640,6 @@ fn render_spec_file_server(
             render_http_example_sut(&mut out, fixture, env);
             examples.push(out);
         } else {
-            // Non-HTTP fixture: emit a skip block (no assertions to validate).
             let test_name = sanitize_ident(&fixture.id);
             let description_literal = ruby_string_literal(&format!("{test_name}: {}", fixture.description));
             let mut out = String::new();
@@ -727,10 +665,6 @@ fn render_spec_file_server(
     )
 }
 
-// ---------------------------------------------------------------------------
-// Public emit entry point
-// ---------------------------------------------------------------------------
-
 /// Emit Ruby's server-pattern files.
 ///
 /// Returns the server-pattern `GeneratedFile`s at `e2e/ruby/...`, gated identically
@@ -755,22 +689,18 @@ pub fn emit(
 
     let mut files: Vec<GeneratedFile> = Vec::new();
 
-    // 1. app_harness.rb
     files.push(GeneratedFile {
         path: base.join("app_harness.rb"),
         content: render_app_harness(e2e_config, groups),
         generated_header: true,
     });
 
-    // 2. spec/spec_helper.rb (server variant)
     files.push(GeneratedFile {
         path: spec_base.join("spec_helper.rb"),
         content: render_spec_helper_server(e2e_config),
         generated_header: true,
     });
 
-    // 3. spec/{category}_spec.rb — one per fixture group that has active fixtures.
-    // Resolve call config module path and gem name using the ruby override, mirroring alef.
     let lang = "ruby";
     let call = &e2e_config.call;
     let overrides = call.overrides.get(lang);
@@ -792,8 +722,6 @@ pub fn emit(
             .fixtures
             .iter()
             .filter(|f| {
-                // Mirror alef's `should_include_fixture`: skip excluded categories and
-                // fixtures whose skip directive applies to ruby.
                 if !e2e_config.exclude_categories.is_empty()
                     && e2e_config.exclude_categories.contains(&f.resolved_category())
                 {
@@ -807,7 +735,6 @@ pub fn emit(
             continue;
         }
 
-        // Skip the entire file if no fixture produces output (HTTP tests always do).
         let has_any_output = active.iter().any(|f| f.http.is_some() || !f.assertions.is_empty());
         if !has_any_output {
             continue;

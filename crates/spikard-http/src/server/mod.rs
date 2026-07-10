@@ -624,8 +624,6 @@ fn build_router_with_handlers_inner(
                 handler
             };
 
-            // Check for static_response before wrapping in ValidatingHandler,
-            // since ValidatingHandler doesn't delegate static_response().
             let static_resp = handler.static_response();
             let validating_handler = Arc::new(handler::ValidatingHandler::new(handler, &route));
             handlers_by_method.insert(route.method.clone(), (route, validating_handler, static_resp));
@@ -644,18 +642,7 @@ fn build_router_with_handlers_inner(
         for (_method, (route, handler, static_resp_opt)) in handlers_by_method {
             let method = route.method.clone();
 
-            // Fast-path: if the handler declares a static response, bypass the
-            // entire middleware pipeline (validation, hooks, request extraction).
-            //
             // NOTE: static routes also bypass CORS handling, content-type
-            // validation, and HTTP tracing. If CORS headers are needed they
-            // must be included in `StaticResponse.headers` explicitly.
-            //
-            // Non-parameterized paths are also inserted into the FastRouter for
-            // O(1) HashMap-based lookup as the outermost middleware. The Axum
-            // route below serves as fallback — it handles the same request if
-            // the FastRouter layer is somehow bypassed and also covers
-            // parameterized static routes that cannot go into the FastRouter.
             if let Some(static_resp) = static_resp_opt {
                 let resp_status = static_resp.status;
 
@@ -671,8 +658,6 @@ fn build_router_with_handlers_inner(
                     fast_router.insert(http_method, &axum_path_for_fast, &static_resp);
                 }
 
-                // Axum fallback handler — uses the same `to_response()` as the
-                // FastRouter and `StaticResponseHandler::call`.
                 let static_handler = move || {
                     let resp = static_resp.to_response();
                     async move { resp }
@@ -738,10 +723,6 @@ fn build_router_with_handlers_inner(
                 }
             };
 
-            // Only apply content-type validation middleware for methods that
-            // carry a request body. GET/DELETE/HEAD/OPTIONS/TRACE never have
-            // meaningful content-type headers, so the middleware just adds
-            // into_parts/from_parts overhead for those methods.
             let method_router = if matches!(
                 route.method,
                 crate::Method::Post | crate::Method::Put | crate::Method::Patch
@@ -786,12 +767,6 @@ fn build_router_with_handlers_inner(
             if !axum_path.starts_with('/') {
                 axum_path = format!("/{}", axum_path);
             }
-            // Also register the path with a trailing slash so that requests
-            // to e.g. GET /app/ are handled by the same route as GET /app.
-            // Axum does not perform trailing-slash normalization automatically.
-            // Skip catch-all paths (containing `{*`) — appending `/` to those
-            // creates an invalid route because catch-all parameters must be at
-            // the very end of a pattern.
             if axum_path != "/" && !axum_path.ends_with('/') && !axum_path.contains("{*") {
                 app = app.route(&format!("{}/", axum_path), router.clone());
             }
@@ -803,8 +778,6 @@ fn build_router_with_handlers_inner(
         app = app.layer(TraceLayer::new_for_http());
     }
 
-    // Install the fast-router as the outermost middleware so that static-response
-    // routes are served without entering the Axum routing tree at all.
     if fast_router.has_routes() {
         let fast_router = Arc::new(fast_router);
         app = app.layer(axum::middleware::from_fn(
@@ -922,9 +895,6 @@ pub(crate) fn build_router_with_handlers_and_config_and_grpc(
         app = app.layer(axum::middleware::from_fn_with_state(state, grpc_routing_middleware));
     }
 
-    // Only add the sensitive-header redaction layer when auth middleware is
-    // configured — without auth there is nothing to redact, and the layer
-    // otherwise adds per-request overhead.
     if config.jwt_auth.is_some() || config.api_key_auth.is_some() {
         app = app.layer(SetSensitiveRequestHeadersLayer::new([
             axum::http::header::AUTHORIZATION,
@@ -1001,9 +971,6 @@ pub(crate) fn build_router_with_handlers_and_config_and_grpc(
             .layer(SetRequestIdLayer::x_request_id(MakeRequestUuid));
     }
 
-    // Only add the body-limit layer when a limit is explicitly configured.
-    // Omitting the layer entirely (instead of `disable()`) avoids a no-op
-    // middleware dispatch on every request.
     if let Some(max_size) = config.max_body_size {
         app = app.layer(DefaultBodyLimit::max(max_size));
     }

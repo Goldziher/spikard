@@ -37,15 +37,6 @@ impl StreamingFieldResolver {
                 "var {chunks_var} = new java.util.ArrayList<{}>();\n        var _it = {stream_var}.iterator();\n        while (_it.hasNext()) {{ {chunks_var}.add(_it.next()); }}",
                 item_type?
             )),
-            // PHP binding's chat_stream returns Vec<String> (each element is a
-            // JSON-serialized chunk) because ext-php-rs can't expose Rust
-            // iterators directly. Decode each element and recursively
-            // camelCase the keys so accessor chains like
-            // `$c->choices[0]->delta->finishReason` resolve against what the
-            // non-streaming PHP binding returns (camelCase getters). Three
-            // input shapes are tolerated: (a) array of JSON strings — the
-            // current binding; (b) single concatenated JSON — older binding
-            // output; (c) a real iterator — future binding upgrade.
             "php" => Some(format!(
                 "$__camel = function ($v) use (&$__camel) {{ \
                     if (is_array($v)) {{ \
@@ -76,23 +67,9 @@ impl StreamingFieldResolver {
             "python" => Some(format!(
                 "{chunks_var} = []\n    async for chunk in {stream_var}:\n        {chunks_var}.append(chunk)"
             )),
-            "kotlin" => {
-                // Kotlin: streaming adapters return Iterator<item type> (from Java bridge).
-                // Drain into a Kotlin List using asSequence().toList().
-                Some(format!("val {chunks_var} = {stream_var}.asSequence().toList()"))
-            }
-            "kotlin_android" => {
-                // kotlin-android: streaming adapters return Flow<item type> (kotlinx.coroutines).
-                // Collect inside a runBlocking coroutine scope using Flow.toList().
-                Some(format!("val {chunks_var} = {stream_var}.toList()"))
-            }
+            "kotlin" => Some(format!("val {chunks_var} = {stream_var}.asSequence().toList()")),
+            "kotlin_android" => Some(format!("val {chunks_var} = {stream_var}.toList()")),
             "elixir" => Some(format!("{chunks_var} = Enum.to_list({stream_var})")),
-            // WASM's chatStream returns a hand-rolled `ChatStreamIterator`
-            // struct that exposes `next()` returning `Promise<chunk | null>`,
-            // not a JS async iterable. wasm-bindgen does not auto-emit the
-            // `Symbol.asyncIterator` protocol, so `for await` on this object
-            // throws `TypeError: stream is not async iterable`. Drain via an
-            // explicit while/next() loop instead.
             "wasm" => Some(format!(
                 "const {chunks_var}: any[] = [];\n    while (true) {{ const _chunk = await {stream_var}.next(); if (_chunk == null) break; {chunks_var}.push(_chunk); }}"
             )),
@@ -100,11 +77,6 @@ impl StreamingFieldResolver {
                 "const {chunks_var}: any[] = [];\n    for await (const _chunk of {stream_var}) {{ {chunks_var}.push(_chunk); }}"
             )),
             "swift" => {
-                // Swift's chat-stream wrapper returns AsyncThrowingStream<ChunkType, Error>,
-                // so consumers drain it with `for try await chunk in stream { ... }`. The
-                // chunk type is decoded from the bridge-boundary JSON inside the wrapper —
-                // here we just collect the typed Swift values.
-                // The item type must come from adapter metadata or an explicit override.
                 let item_type = item_type?;
                 Some(format!(
                     "var {chunks_var}: [{item_type}] = []\n        for try await _chunk in {stream_var} {{ {chunks_var}.append(_chunk) }}"
@@ -135,12 +107,6 @@ impl StreamingFieldResolver {
         let chunk_free = format!("{ffi_prefix}_{item_snake}_free");
         let free_string = format!("{ffi_prefix}_free_string");
 
-        // Zig 0.16: ArrayList is unmanaged — no stored allocator.
-        // Use `.empty` to initialize, pass `std.heap.c_allocator` to each mutation.
-        // `stream_var` is the opaque stream handle obtained via `_start`.
-        // We collect every chunk's JSON string into `chunks_var: ArrayList([]u8)`
-        // and concatenate delta content into `{chunks_var}_content: ArrayList(u8)`.
-        // Accessors use `.items.len` and `{chunks_var}_content.items` on these lists.
         format!(
             concat!(
                 "var {chunks_var}: std.ArrayList([]u8) = .empty;

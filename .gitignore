@@ -220,8 +220,10 @@ vendor/bundle/
 # poly lint cache
 .polylint/
 
-# BEGIN ai-rulez (DO NOT EDIT - managed by ai-rulez)
-# END ai-rulez
 
 # Ergonomic smoke server runtime logs
 e2e/ergonomic/**/.server.log
+
+# BEGIN ai-rulez (DO NOT EDIT - managed by ai-rulez)
+.ai-rulez/.generated-manifest.json
+# END ai-rulez

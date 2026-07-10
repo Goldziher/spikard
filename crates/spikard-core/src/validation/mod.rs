@@ -65,8 +65,6 @@ impl SchemaValidator {
         self.preprocess_value_with_schema(data, &self.schema)
     }
 
-    // reason: &self is needed to make recursive calls; the method carries schema state
-    // and may gain direct field access in future without breaking callers.
     #[allow(clippy::only_used_in_recursion, clippy::self_only_used_in_recursion)]
     fn preprocess_value_with_schema(&self, data: &Value, schema: &Value) -> Value {
         if let Some(schema_obj) = schema.as_object() {
@@ -122,9 +120,6 @@ impl SchemaValidator {
     ///
     /// # Too Many Lines
     /// This function is complex due to error mapping logic.
-    // reason: option_if_let_else — deeply nested closures harm readability here;
-    // uninlined_format_args — several format strings use variables that must remain
-    // separate for clarity; too_many_lines — error-mapping pipeline is inherently long.
     #[allow(clippy::option_if_let_else, clippy::uninlined_format_args, clippy::too_many_lines)]
     pub fn validate(&self, data: &Value) -> Result<(), ValidationError> {
         let processed_data = self.preprocess_binary_fields(data);
@@ -231,8 +226,6 @@ impl SchemaValidator {
                         ErrorCondition::TypeMismatch { expected_type }
                     }
                     ErrorCondition::AdditionalProperties { .. } => {
-                        // reason: param_name is borrowed in the if-branch via unwrap_or(&param_name);
-                        // the else-branch therefore cannot move out of param_name and must clone.
                         #[allow(clippy::redundant_clone)]
                         let unexpected_field = if param_name.contains('/') {
                             param_name.split('/').next_back().unwrap_or(&param_name).to_string()

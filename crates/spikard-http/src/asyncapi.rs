@@ -16,8 +16,6 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::sync::Arc;
 
-// ── Configuration ──────────────────────────────────────────────────────────────
-
 /// AsyncAPI HTTP endpoint configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AsyncApiConfig {
@@ -27,16 +25,12 @@ pub struct AsyncApiConfig {
     pub spec: Option<serde_json::Value>,
 }
 
-// ── Shared state for axum handlers ────────────────────────────────────────────
-
 /// State shared across AsyncAPI HTTP handlers
 #[derive(Clone)]
 pub(crate) struct AsyncApiState {
     /// Optionally pre-registered spec for GET /asyncapi.json
     pub registered_spec: Option<Arc<Value>>,
 }
-
-// ── Parser types ──────────────────────────────────────────────────────────────
 
 /// A single channel extracted from an AsyncAPI spec
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -82,8 +76,6 @@ pub struct ParseResult {
     pub messages: Vec<ParsedMessage>,
 }
 
-// ── Internal parsing helpers ──────────────────────────────────────────────────
-
 /// Parse an AsyncAPI 3.0 spec from a JSON [`Value`] and return structured data.
 ///
 /// # Errors
@@ -92,8 +84,6 @@ pub struct ParseResult {
 pub fn parse_asyncapi_value(spec: &Value) -> Result<ParseResult, String> {
     use asyncapiv3::spec::AsyncApiSpec;
 
-    // Check asyncapi version field before attempting full deserialization to
-    // produce a friendly error for unsupported versions (e.g. "2.0.0").
     if let Some(version) = spec.get("asyncapi").and_then(Value::as_str) {
         if version != "3.0.0" {
             return Err(format!("unsupported AsyncAPI version: {version}, expected 3.0.0"));
@@ -107,13 +97,11 @@ pub fn parse_asyncapi_value(spec: &Value) -> Result<ParseResult, String> {
 
     let AsyncApiSpec::V3_0_0(v3) = raw;
 
-    // Version is always 3.0.0 at this point (enforced by serde tag + pre-check above)
     let spec_version = "3.0.0".to_string();
 
     let title = v3.info.title.clone();
     let api_version = v3.info.version.clone();
 
-    // Re-serialize so we can use JSON pointer resolution
     let spec_doc =
         serde_json::to_value(&v3).map_err(|e| format!("Failed to serialize AsyncAPI spec for $ref resolution: {e}"))?;
 
@@ -141,7 +129,7 @@ fn extract_channels(v3: &asyncapiv3::spec::AsyncApiV3Spec, spec_doc: &Value) -> 
             Either::Right(channel) => {
                 let address = channel.address.clone().unwrap_or_else(|| name.clone());
                 let messages: Vec<String> = channel.messages.keys().cloned().collect();
-                // Pull bindings from raw spec_doc because asyncapiv3::ChannelBindings is TODO (empty struct)
+                // ~keep asyncapiv3 does not expose channel binding fields, so raw spec_doc preserves them.
                 let bindings = spec_doc
                     .pointer(&format!("/channels/{}/bindings", name.replace('/', "~1")))
                     .cloned();
@@ -152,13 +140,10 @@ fn extract_channels(v3: &asyncapiv3::spec::AsyncApiV3Spec, spec_doc: &Value) -> 
                     bindings,
                 });
             }
-            Either::Left(_) => {
-                // Skip channel $refs — forward-compat
-            }
+            Either::Left(_) => {}
         }
     }
 
-    // Deterministic order
     channels.sort_by(|a, b| a.name.cmp(&b.name));
     Ok(channels)
 }
@@ -178,7 +163,6 @@ fn extract_operations(v3: &asyncapiv3::spec::AsyncApiV3Spec) -> Result<Vec<Parse
                 }
                 .to_string();
 
-                // Resolve channel ref to channel name
                 let channel_ref = &op.channel.reference;
                 let channel = channel_ref
                     .strip_prefix("#/channels/")
@@ -205,7 +189,6 @@ fn extract_messages(v3: &asyncapiv3::spec::AsyncApiV3Spec, spec_doc: &Value) -> 
 
     let mut messages: HashMap<String, Option<Value>> = HashMap::new();
 
-    // From components.messages
     for (msg_name, msg_ref_or) in &v3.components.messages {
         match msg_ref_or {
             Either::Right(msg) => {
@@ -221,7 +204,6 @@ fn extract_messages(v3: &asyncapiv3::spec::AsyncApiV3Spec, spec_doc: &Value) -> 
         }
     }
 
-    // From inline channel messages
     for (channel_name, channel_ref_or) in &v3.channels {
         match channel_ref_or {
             Either::Right(channel) => {
@@ -233,9 +215,7 @@ fn extract_messages(v3: &asyncapiv3::spec::AsyncApiV3Spec, spec_doc: &Value) -> 
                             let schema = extract_schema_from_message(msg, spec_doc);
                             messages.entry(full_name).or_insert(schema);
                         }
-                        Either::Left(_) => {
-                            // $ref — the component-level pass above handles this
-                        }
+                        Either::Left(_) => {}
                     }
                 }
             }
@@ -264,8 +244,6 @@ fn extract_schema_from_message(message: &asyncapiv3::spec::message::Message, spe
     }
 }
 
-// ── Validation helpers ────────────────────────────────────────────────────────
-
 /// Validate a message payload against its channel/message schema.
 ///
 /// Returns `(valid, errors)`.
@@ -284,7 +262,6 @@ pub fn validate_message(
 
     let spec_doc = serde_json::to_value(&v3).map_err(|e| format!("Failed to serialize spec: {e}"))?;
 
-    // Find the channel
     let channel = v3
         .channels
         .get(channel_name)
@@ -295,7 +272,6 @@ pub fn validate_message(
         Either::Left(_) => return Err(format!("Channel '{channel_name}' is a $ref, not inline")),
     };
 
-    // Find the message schema within the channel
     let msg_ref_or = channel
         .messages
         .get(message_name)
@@ -313,20 +289,16 @@ pub fn validate_message(
     let schema = match schema {
         Some(s) => s,
         None => {
-            // No schema — any payload is valid
             return Ok((true, Vec::new()));
         }
     };
 
-    // Validate using jsonschema
     let compiled = jsonschema::validator_for(&schema).map_err(|e| format!("Failed to compile schema: {e}"))?;
 
     let errors: Vec<String> = compiled.iter_errors(payload).map(|e| e.to_string()).collect();
 
     Ok((errors.is_empty(), errors))
 }
-
-// ── $ref resolution (minimal, for payload schemas only) ──────────────────────
 
 fn decode_pointer_segment(segment: &str) -> String {
     segment.replace("~1", "/").replace("~0", "~")
@@ -376,8 +348,6 @@ fn normalize_schema_ref_value(value: Value) -> Value {
     value
 }
 
-// ── HTTP request/response types ───────────────────────────────────────────────
-
 /// Request body for `POST /asyncapi/parse`
 #[derive(Debug, Deserialize)]
 pub struct ParseRequest {
@@ -401,8 +371,6 @@ pub struct ValidateRequest {
     pub message: String,
     pub payload: serde_json::Value,
 }
-
-// ── Axum handlers ─────────────────────────────────────────────────────────────
 
 /// `POST /asyncapi/parse`
 ///
@@ -439,8 +407,6 @@ pub(crate) async fn handle_asyncapi_json(State(state): State<AsyncApiState>) -> 
         ),
     }
 }
-
-// ── Problem Details helper ────────────────────────────────────────────────────
 
 fn problem_response(status: StatusCode, detail: &str) -> Response {
     let body = serde_json::json!({
@@ -529,7 +495,6 @@ mod tests {
             "info": { "title": "No version field", "version": "1.0.0" },
             "channels": {}
         });
-        // Missing asyncapi field — should fail deserialization
         let result = parse_asyncapi_value(&spec);
         assert!(result.is_err(), "should fail when asyncapi field is missing");
     }

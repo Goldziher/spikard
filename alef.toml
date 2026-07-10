@@ -45,47 +45,22 @@ path = "crates/spikard-http/src/lib.rs"
 search = 'version = "\d+\.\d+\.\d+"'
 replace = 'version = "{version}"'
 
-# These types appear in handler-contract dispatch signatures and the service wire
-# types but are not generated as binding types. Declaring them opaque makes alef
-# treat them as known (black-box) references so the validator does not emit
-# `unknown_named_type` for them.
 [workspace.opaque_types]
-# `Request` carries axum's `Body` generic; without `<axum::body::Body>` the wasm
-# wrapper emits `Arc<axum::http::Request>` (E0107) and the FFI `_free` shim emits
-# `*mut axum::http::Request` (E0107). Including the generic in the rust_path also
-# triggers alef's "skip wasm wrapper for generic paths" rule so wasm-bindgen does
 # not attempt to model the parameterised type as a `#[wasm_bindgen]` class.
 Request = "axum::http::Request<axum::body::Body>"
 RequestData = "spikard_http::handler_trait::RequestData"
 HandlerResult = "spikard_http::handler_trait::HandlerResult"
 
-# Repo-specific poly lint/fmt suppressions merged into the generated poly.toml
-# (survives `alef scaffold` regeneration). Only hand-written residuals belong
-# here; generated-code residuals are emitter gaps and must be fixed upstream.
 [workspace.poly]
-exclude = [
-    # Hand-written class-body injection fragment (not standalone-parseable by oxc).
-    "crates/spikard-node/service_http_additions.ts",
-]
+exclude = ["crates/spikard-node/service_http_additions.ts"]
 
 [workspace.poly.per-file-ignores]
-# Hand-written CI script: module name intentionally hyphenated; the stale N999
 # noqa is redundant under the poly ruff config.
 "scripts/**/*.py" = ["RUF100"]
-# README templates + reference docs link to paths that only exist in generated
-# output (relative to the rendered file, not the template/source location).
 "templates/readme/**" = ["MD057"]
 "docs/reference/feature-parity.md" = ["MD057"]
 "CHANGELOG.md" = ["MD057"]
 
-# pyrefly type-check suppressions for the ergonomic pyo3 modules emitted by
-# spikard-alef-ext. These are runtime-reconciled pyo3 boundaries a static
-# checker cannot follow (same rationale as alef's built-in api.py sub-config):
-#   - app.py: the ergonomic `options.ServerConfig` and the JSON-string schema
-#     args are reconciled by pyo3 FromPyObject at the _spikard boundary.
-#   - schema.py: `import _spikard` resolves to the compiled extension at runtime.
-#   - datastructures.py: `from typing import Self` (3.11+) behind a
-#     typing_extensions fallback the checker evaluates under python 3.10.
 [workspace.poly.pyrefly-sub-configs]
 "**/app.py" = ["bad-argument-type"]
 "**/schema.py" = ["missing-import"]
@@ -99,10 +74,6 @@ version_from = "Cargo.toml"
 workspace_root = "."
 features = ["di"]
 auto_path_mappings = false
-# Pre-existing surface gaps that alef v0.22.15's hardened validation now flags
-# as errors. These types/methods are excluded from bindings via downstream
-# config; the underlying surface fixes belong in the workspace cleanup tracked
-# separately. Remove entries here once the upstream surface is repaired.
 suppress_validation_codes = [
     "lossy_sanitized_surface",
     "unknown_named_type",
@@ -166,9 +137,6 @@ output = "packages/python/spikard/"
 
 [crates.python.extra_dependencies]
 tokio = { version = "1", features = ["full"] }
-# Required by the generated service.rs handler bridge: the Handler::call trait
-# signature uses axum::http::Request<axum::body::Body> (the bridge ignores the raw
-# request and operates on the RequestData wire type, but must match the trait).
 axum = { version = "0.8", default-features = false }
 
 [crates.build_commands.python]
@@ -179,29 +147,15 @@ build_release = "cd packages/python && maturin develop --release"
 [crates.node]
 package_name = "@spikard/node"
 features = ["di"]
-# Intel macOS (x86_64-apple-darwin / napi `darwin-x64`) is not a shipped target —
-# the publish pipeline builds Apple Silicon (arm64) macOS only. Drop it so the
-# generated package.json does not emit a dangling optionalDependency/stub.
 exclude_platforms = ["darwin-x64"]
 
 [crates.node.extra_dependencies]
 tokio = { version = "1", features = ["full"] }
-# Required by alef-generated handler bridges that reference
-# `axum::http::Request<axum::body::Body>` (declared opaque type).
 axum = { version = "0.8", default-features = false }
 
 [crates.ruby]
 gem_name = "spikard"
 features = ["di"]
-# Magnus `TypedData` requires the wrapped Rust type to be `Send`. The declared
-# opaque core types `HandlerResult`, `Request`, `RequestData` (declared in
-# `[workspace.opaque_types]`) transitively contain `axum::body::Body` which is
-# `!Send`, so emitting `magnus::wrap(class = "Spikard::HandlerResult") pub
-# struct HandlerResult { inner: Arc<spikard_http::handler_trait::HandlerResult> }`
-# fails to compile with E0277 "the trait `Send` is not implemented for
-# `UnsyncBoxBody<Bytes, Error>`". Exclude them at the ruby binding level; Ruby
-# consumers drive request handling through the high-level `App.serve` entrypoint
-# and never touch raw HandlerResult/Request/RequestData wrappers.
 exclude_types = ["HandlerResult", "Request", "RequestData"]
 
 [crates.ruby.extra_dependencies]
@@ -221,11 +175,6 @@ build_release = "cargo build --manifest-path packages/ruby/ext/spikard_rb/native
 extension_name = "spikard_php"
 feature_gate = "extension-module"
 features = ["di"]
-# Alef cannot map Option<serde_json::Value> parameters to PHP types — ext-php-rs
-# has no FromZval impl for serde_json::Value. TestClient.graphql* methods accept
-# Option<Value> variables maps. Exclude the entire class for PHP until alef
-# serializes Value params to JSON-string at the PHP boundary; consumers can
-# build/run TestClient via the public API in other bindings.
 exclude_types = ["TestClient"]
 
 [crates.elixir]
@@ -237,20 +186,6 @@ nif_targets = [
     "x86_64-unknown-linux-gnu",
     "x86_64-pc-windows-msvc",
 ]
-# Alef bug (track upstream):
-# - UploadFile: alef emits a local elixir-side UploadFile struct AND From impls
-#   that pass the local type to spikard::UploadFile::from, producing a type
-#   mismatch. The binding works without it (no Elixir consumer can usefully
-#   construct an UploadFile across the BEAM boundary).
-# - TestClient: graphql_* methods take Option<serde_json::Value> for variables;
-#   alef maps these to Option<String> in the elixir layer, causing a parameter
-#   type mismatch. Same shape as the PHP issue.
-#
-# Rustler `Resource: Sized + Send + Sync + 'static` rejects the wrapper structs
-# for declared opaque core types (HandlerResult, Request, RequestData) because
-# they transitively contain `axum::body::Body` which is `!Send`. Same root cause
-# as the magnus exclusion in `[crates.ruby]`; Elixir consumers do not interact
-# with these raw handle types directly.
 exclude_types = ["UploadFile", "TestClient", "HandlerResult", "Request", "RequestData"]
 
 [crates.elixir.extra_dependencies]
@@ -285,16 +220,11 @@ exclude_types = [
     "StaticFilesConfig",
     "WebSocketHandler",
     "WebSocketMessage",
-    # UploadFile lives in the spikard facade (crates/spikard/src/upload.rs); the
-    # wasm binding depends on spikard-http directly, which doesn't re-export it.
     "UploadFile",
-    # spikard-graphql is not in the wasm dep tree
     "GraphQLError",
     "GraphQLRouteConfig",
     "QueryMutationConfig",
     "QueryOnlyConfig",
-    # SchemaConfig and FullSchemaConfig are from spikard-graphql; they're
-    # re-exported via the spikard facade but the wasm crate doesn't use them.
     "SchemaConfig",
     "FullSchemaConfig",
 ]
@@ -323,10 +253,6 @@ exclude_types = [
     "MultipartFilePart",
 ]
 
-# Alef declares `Request = "axum::http::Request"` as a workspace opaque, and its
-# FFI codegen emits `_free(ptr: *mut axum::http::Request)` lifecycle symbols so the
-# C-side consumers can free handles. The binding crate therefore needs axum as a
-# direct dependency.
 [crates.ffi.extra_dependencies]
 axum = { version = "0.8", default-features = false }
 
@@ -347,11 +273,6 @@ style = "frb"
 spikard-core = { path = "../../../crates/spikard-core" }
 spikard-graphql = { path = "../../../crates/spikard-graphql" }
 spikard-http = { path = "../../../crates/spikard-http" }
-# `Request = "axum::http::Request<axum::body::Body>"` (declared in
-# `[workspace.opaque_types]`) generates FFI shims that reference `axum::http`
-# and `axum::body` paths. Without axum as a direct dependency, dart-side
-# `cargo build` fails with E0433 cannot find module `axum`. Same pattern as
-# the FFI/node/swift extra_deps additions.
 axum = { version = "0.8", default-features = false }
 
 [crates.build_commands.dart]
@@ -376,8 +297,6 @@ package_name = "Spikard"
 spikard-core = { path = "../../../crates/spikard-core" }
 spikard-graphql = { path = "../../../crates/spikard-graphql" }
 spikard-http = { path = "../../../crates/spikard-http" }
-# Required by alef-generated handler bridges that reference
-# `axum::http::Request<axum::body::Body>` (declared opaque type).
 axum = { version = "0.8", default-features = false }
 
 [crates.csharp]
@@ -396,11 +315,6 @@ build = "cd packages/kotlin && gradle build -x test --no-daemon"
 build_release = "cd packages/kotlin && gradle build -x test --no-daemon"
 
 [crates.build_commands.kotlin_android]
-# Android library scaffold (packages/kotlin-android/build.gradle.kts + AGP)
-# is not yet emitted by alef's kotlin_android backend. Binding code is compiled
-# via the cargo-built JNI ffi crate; e2e tests build their own gradle project
-# under e2e/kotlin_android/. Binding-level gradle build is a no-op until alef
-# emits a full Android library scaffold.
 precondition = "command -v gradle >/dev/null 2>&1"
 before = "cargo build -p spikard-ffi"
 build = ":"
@@ -420,25 +334,15 @@ build_release = "cd packages/zig && zig build -Doptimize=ReleaseSafe -Dffi_path=
 [crates.zig]
 module_name = "spikard"
 
-# ---------------------------------------------------------------------------
-# Service API — App builder + handler contracts
-# ---------------------------------------------------------------------------
 
 [[crates.services]]
 owner_type = "App"
 constructor = "new"
 configurators = ["config"]
 skip_languages = ["wasm", "kotlin_android"]
-# napi `JsApp` (and the parallel wrappers in other host backends) wrap the real
-# owner behind `inner: Arc<Mutex<spikard::App>>`. The verb-method emission needs
-# to unlock that mutex before forwarding to the base method on the real owner.
 host_app_inner_accessor = "self.inner.lock().expect(\"app mutex poisoned\")"
 
 # NOTE: websocket/sse registrations are temporarily omitted. Their contracts
-# (WebSocketHandler/SseEventProducer) use `-> impl Future` (RPITIT) return types and
-# are NOT dyn-compatible, so the current `Arc<dyn Contract>` handler-bridge codegen
-# cannot wrap them. Re-add once the service-API codegen supports non-object-safe
-# contracts via a concrete wrapper struct instead of a trait object.
 [[crates.services.registrations]]
 method = "route"
 callback_param = "handler"
@@ -449,9 +353,6 @@ callback_contract = "Handler"
 name = "get"
 fixed = { method = "Get" }
 doc = "Register a GET route at the given path."
-# Per-language emission style and handler-shape overrides.
-# Parsed by alef when RegistrationVariantSpec.languages is wired; ignored by
-# earlier versions. All verb variants share the same per-language overrides.
 languages = { python = { style = "decorator", handler_shape = "introspect_params" }, node = { style = "verb_decorator", handler_shape = "context_object" }, ruby = { style = "verb_decorator", handler_shape = "request_response" }, php = { style = "verb_decorator", handler_shape = "request_response" }, elixir = { style = "dsl", handler_shape = "context_object" }, go = { style = "verb_decorator", handler_shape = "request_response" }, java = { style = "verb_decorator", handler_shape = "context_object" }, csharp = { style = "attribute", handler_shape = "introspect_params", method_prefix = "Map" }, kotlin = { style = "dsl", handler_shape = "context_object" }, kotlin_android = { style = "dsl", handler_shape = "context_object" }, dart = { style = "verb_decorator", handler_shape = "request_response" }, swift = { style = "verb_decorator", handler_shape = "context_object" }, zig = { style = "verb_decorator", handler_shape = "request_response" } }
 
 [[crates.services.registrations.variants]]
@@ -516,18 +417,12 @@ dispatch_method = "call"
 is_async = true
 wire_request_type = "RequestData"
 wire_response_type = "Response"
-# The dispatch method `call(&self, request: Request<Body>, request_data: RequestData)` receives a
-# foreign framework type the wire bridge ignores; supply it verbatim. The bridge produces the
-# library's real dispatch return type via the response adapter.
 dispatch_extra_params = ["_request: spikard::Request<spikard::Body>"]
 wire_param_name = "request_data"
 dispatch_return_type = "spikard::HandlerResult"
 response_adapter = "spikard::handler_result_from_response"
 
 # NOTE: lifecycle_hooks, websocket_routes, sse_routes, and error_types sections
-# have been removed from alef.toml as part of the HTTP-domain IR extraction from
-# alef core. These will be restored via spikard-alef-ext when the extension
-# mechanism is wired in (Phase D).
 
 [crates.output]
 python = "crates/spikard-py/src/"
@@ -548,10 +443,8 @@ zig = "packages/zig/src/"
 
 [crates.exclude]
 methods = [
-    # std::io trait impls — require trait in scope, &mut [u8] params
     "UploadFile.read",
     "UploadFile.seek",
-    # Methods with unknown external types (StatusCode, axum::Response, etc.)
     "ProblemDetails.status_code",
     "ProblemDetails.with_extension",
     "ProblemDetails.with_extensions",
@@ -559,86 +452,45 @@ methods = [
     "ProblemDetails.internal_server_error_debug",
     "GraphQLError.to_graphql_response",
     "GraphQLError.to_http_response",
-    # Methods returning type aliases or excluded types
     "SchemaConfig.validate",
     "SchemaConfig.set_introspection_enabled",
     "SchemaConfig.set_complexity_limit",
     "SchemaConfig.set_depth_limit",
     "ServerConfig.builder",
-    # Methods with complex params not auto-delegatable
     "Route.from_metadata",
     "Route.with_jsonrpc_method",
     "Response.with_status",
     "SseEvent.with_type",
-    # TestClient: from_router takes axum::Router (opaque external type — bindings use
-    # test_client_from_app free function instead). http_server returns Arc<TestServer>
-    # (internal axum-test type).
     "TestClient.from_router",
     "TestClient.http_server",
-    # WebSocketConnection: new() takes TestWebSocket (axum-test internal type).
-    # send_json/receive_json use generic type params that can't cross FFI.
-    # send_message/receive_message use WsMessage (axum-test external enum).
     "WebSocketConnection.new",
     "WebSocketConnection.send_json",
     "WebSocketConnection.receive_json",
     "WebSocketConnection.send_message",
     "WebSocketConnection.receive_message",
-    # TestServer (spikard wrapper): from_router takes axum::Router; call takes
-    # axum::http::Request<Body>. The binding entry point is test_client_from_app.
     "TestServer.from_router",
     "TestServer.from_app",
     "TestServer.call",
     "TestServer.connect_websocket",
-    # Alef Value-return-type misclassification bug (track upstream): methods returning
-    # Result<serde_json::Value, _> are inferred as Result<String, _>, producing a
-    # mismatched-types error at the binding boundary. Remove once alef maps Value
-    # returns to the per-language JSON type (dict/object/Hash/etc.).
     "ResponseSnapshot.json",
     "ResponseSnapshot.graphql_data",
     "ResponseSnapshot.graphql_errors",
     "TestingSseEvent.as_json",
-    # Generic inherent methods on App / RouteBuilder — bindings drive registration
-    # through the JSON-schema variants below; the generic builder methods are Rust-only
-    # ergonomics that cannot cross FFI without explicit monomorphization metadata.
     "App.route",
     "App.websocket",
     "App.websocket_with_schemas",
     "App.sse",
     "App.sse_with_schema",
-    # `App.config(mut self, ...) -> Self` is non-delegatable through the napi `&self`
-    # wrapper (it would consume the Arc<Mutex<App>> inner); configuration is wired via
-    # `ServerConfig` builder + `App::new(config)` in the binding-side service entrypoint.
     "App.config",
-    # `App.run(self) -> Result<(), AppError>` consumes `self` by value, so the
-    # standard alef per-type-method generator cannot auto-delegate it through the
-    # napi `&self` wrapper — it would emit a `compile_error!` placeholder body.
-    # Listing the method here suppresses that placeholder. Since alef v0.23.62
-    # service entrypoints declared under `[[crates.services.entrypoints]]` ignore
-    # `exclude.methods` for their three emission sites (free-function shim,
-    # wrapper class method, and import line), `app_run(registrations: ...)` and
-    # the wrapper's `async run()` method are still emitted via the
-    # registration-replay path so the e2e harness can drive the server.
     "App.run",
-    # `are_headers_allowed` in `crates/spikard-http/src/cors.rs` is a PRIVATE free
-    # function. The alef extractor still associates it with `CorsConfig` via name
-    # prefix matching (the function name starts with `are_headers_…` and lives in
-    # the same module as `CorsConfig`), even though `extract_function` now skips
-    # private *free* functions at the extraction boundary. Until the
-    # function→type association heuristic is tightened, keep the exclude here.
     "CorsConfig.are_headers_allowed",
     "RouteBuilder.request_body",
     "RouteBuilder.response_body",
     "RouteBuilder.params",
 ]
 types = [
-    # Not part of public API — closures, Arc<dyn Handler>, internal protocol types
     "Route",
     "RouteMetadata",
-    # SseEventProducer and WebSocketHandler use RPITIT (`-> impl Future`) on all
-    # trait methods. Alef cannot resolve the `Future` return to a known binding
-    # type and emits `unknown_named_type`. These traits are also not dyn-compatible,
-    # so the Arc<dyn Contract> handler-bridge cannot wrap them. Exclude until alef
-    # supports non-object-safe contracts via a concrete wrapper.
     "SseEventProducer",
     "WebSocketHandler",
     "BackgroundHandle",
@@ -649,9 +501,6 @@ types = [
     "JsonRpcRequestOrBatch",
     "JsonRpcResponseType",
     "ValidatedParams",
-    # Internal implementation types — pub(crate) in source, but alef extracts
-    # them via re-exports/use paths; keep listed until alef respects the original
-    # visibility on disambiguated names.
     "BackgroundJobFuture",
     "BackgroundRuntime",
     "BackgroundShutdownError",
@@ -677,13 +526,7 @@ types = [
     "PreParsedJson",
     "PreReadBody",
     "RegistryError",
-    # RequestContext is the Rust-side handler ergonomic wrapper (holds Request<Body>,
-    # returns borrows); it does not cross FFI — handlers receive the RequestData wire
-    # type. Pulled into the surface only because App lives in crates/spikard/src/lib.rs.
     "RequestContext",
-    # RequestData is the Handler wire-request type, used by-NAME in the service config
-    # (wire_request_type) and serialized as the *core* spikard::RequestData in the handler
-    # bridge — it is NOT needed as a generated pyclass (and has no Default, which broke codegen).
     "RequestData",
     "ResolvedDependencies",
     "RouteInfo",
@@ -693,14 +536,10 @@ types = [
     "ValidatingHandler",
     "WebSocketState",
     "WithoutBodyExtractionOptions",
-    # Internal bindings types
     "RawResponse",
     "StaticAsset",
     "StructuredError",
-    # AsyncApiState is pub(crate); alef extracts it via re-export. Keep until
-    # visibility filter is reliable on disambiguated names.
     "AsyncApiState",
-    # Internal protocol types
     "JsonRpcState",
     "JsonRpcMethodRegistry",
     "JsonRpcRequest",
@@ -708,12 +547,10 @@ types = [
     "JsonRpcError",
     "JsonRpcErrorResponse",
     "JsonRpcRouter",
-    # Internal gRPC types
     "GrpcHandlerResult",
     "GrpcHandler",
     "GrpcRegistry",
     "StreamingRequest",
-    # Internal server types
     "Server",
     "ServerConfigBuilder",
     "StaticResponseHandler",
@@ -721,30 +558,15 @@ types = [
     "RouteHandler",
     "Router",
     "SchemaRegistry",
-    # Opaque validators (can't cross FFI usefully)
     "SchemaValidator",
     "ParameterValidator",
     "ValidationError",
     "ValidationErrorDetail",
-    # Internal enums with wrong module paths
     "ParameterSource",
     "BackgroundSpawnError",
-    # TestServer is the internal axum-test-based server (uses TestWebSocket etc.);
-    # bindings use TestClient + test_client_from_app instead.
     "TestServer",
-    # WebSocketConnection wraps axum-test's TestWebSocket; its async receive_* methods
-    # hold a MutexGuard across await (not Send), causing compile errors in PyO3 bindings.
-    # GraphQL subscriptions are covered by TestClient.graphql_subscription instead.
     "WebSocketConnection",
-    # SseStream.events() returns spikard_http::testing::SseEvent (data: String) which
-    # conflicts with the binding's SseEvent type (mapped from spikard_http::SseEvent,
-    # data: Value). Excluded until alef can map the two SseEvent variants independently.
     "SseStream",
-    # Alef re-export deduplication bug (track upstream): a type reachable via both
-    # a `pub use` re-export and its original module path gets extracted twice and
-    # disambiguated with a numeric suffix or module prefix, escaping the user's
-    # exclude entry for the original name. Remove these once alef merges re-exports
-    # to their definition site.
     "LifecycleHooks2",
     "LifecycleHooksBuilder2",
     "RequestData2",
@@ -753,15 +575,7 @@ types = [
     "HandlerResponse2",
     "ErrorMapperErrorCondition",
     "TestingWebSocketMessage",
-    # Alef visibility/disambiguation bug (track upstream): pub(crate) GrpcRegistry
-    # gets emitted as GrpcGrpcRegistry (parent-module-prefixed) despite the original
-    # being excluded AND non-pub. Remove once alef respects pub(crate) on
-    # disambiguated names.
     "GrpcGrpcRegistry",
-    # Public generic items that cannot cross FFI without monomorphization metadata
-    # — excluded via fully qualified path so the alef v0.23.0+ `unsupported_generic_item`
-    # validator can filter them out before erroring. These are internal helper aliases
-    # / lifecycle plumbing that bindings do not need.
     "HookResult",
     "TargetLifecycleHooks",
     "NativeLifecycleHook",
@@ -773,9 +587,6 @@ functions = [
     "request_hook",
     "response_hook",
     "shield_panic",
-    # Public generic axum handler builders — not part of the polyglot binding surface
-    # (handlers are wired via tower-http internally). Exclude so the v0.23.0+
-    # `unsupported_generic_item` validator passes.
     "sse_handler",
     "websocket_handler",
     "add_cors_headers",
@@ -848,19 +659,12 @@ functions = [
     "validate_json_content_type",
     "validate_jsonrpc_method_name",
     "validate_method_name",
-    # Internal testing helpers — low-level plumbing, not part of the binding surface
     "build_multipart_body",
     "encode_urlencoded_body",
-    # test_client_from_app takes App (a Rust-only builder with closure handlers);
-    # bindings cannot construct App — each binding exposes its own factory method
-    # (language-native handler registration → TestClient) in the packages/ wrapper.
     "test_client_from_app",
-    # AsyncAPI axum handler functions: take axum extractors (Json, State) that alef
-    # cannot map to binding types. These are route handlers, not user-facing API.
     "handle_asyncapi_validate",
     "handle_asyncapi_json",
     "handle_asyncapi_parse",
-    # AsyncAPI helpers: internal implementation; not user-facing API.
     "parse_asyncapi_value",
     "validate_message",
 ]
@@ -873,8 +677,6 @@ typecheck = "mypy packages/python/"
 
 [crates.lint.node]
 precondition = "command -v pnpm >/dev/null 2>&1"
-# service_http_additions.ts is a class-body fragment emitted by spikard-alef-ext
-# for splicing, not a valid standalone TS module, so oxfmt cannot parse it.
 format = "pnpm dlx oxfmt crates/spikard-node '!**/service_http_additions.ts'"
 check = "pnpm dlx oxlint --fix crates/spikard-node"
 typecheck = "pnpm tsc --noEmit -p crates/spikard-node/tsconfig.json"
@@ -914,11 +716,6 @@ format = "cd packages/kotlin && gradle ktlintFormat --no-daemon"
 check = "cd packages/kotlin && gradle ktlintCheck --no-daemon"
 
 [crates.lint.kotlin_android]
-# Android library scaffold (packages/kotlin-android/build.gradle.kts + AGP) is
-# not yet emitted by alef's kotlin_android backend (see crates.build_commands.kotlin_android
-# above for context). Binding code is compiled via the cargo-built JNI ffi
-# crate; e2e tests build their own gradle project. Lint commands are no-ops
-# until alef emits a full Android library scaffold.
 precondition = "command -v gradle >/dev/null 2>&1"
 format = ":"
 check = ":"
@@ -947,10 +744,6 @@ check = "pnpm dlx oxlint --fix crates/spikard-wasm"
 precondition = "test -d crates/spikard-ffi/include"
 check = "find crates/spikard-ffi/include -name '*.h' | xargs clang-format --dry-run --Werror"
 
-# `--no-install-project`: the uv project lives at crates/spikard-py/src/, but its
-# maturin `manifest-path` (../../crates/spikard-py/Cargo.toml) only resolves from the
-# deployed packages/python/ dir, so building the extension here fails. An upgrade only
-# needs to relock dependencies — the extension is built separately via `maturin develop`.
 [crates.update.python]
 precondition = "command -v uv >/dev/null 2>&1"
 update = "cd crates/spikard-py/src/ && uv sync --all-packages --all-extras --no-install-project"
@@ -1073,11 +866,6 @@ e2e = "cd e2e/wasm && pnpm vitest run"
 [crates.publish]
 core_crate = "crates/spikard"
 
-# ruby + elixir intentionally use alef's default `Registry` vendor mode: their
-# native ext / NIF builds the Rust crate from source on the user's machine and
-# pulls spikard from crates.io (path-deps rewritten to registry version-deps).
-# The old `core-only` vendoring left an unresolvable `path =` in the shipped
-# manifest, which is exactly issue #87 (gem fails to install).
 [crates.publish.languages.elixir]
 nif_versions = ["2.16", "2.17"]
 
@@ -1099,50 +887,26 @@ languages = [
     "dart",
     "swift",
     "zig",
-    # wasm is included; alef auto-skips HTTP-shaped fixtures (those with
-    # `mock_response` or `http.expected_response`) for the wasm target because
-    # the wasm binding exports validateJsonSchema + problemDetails only, not the
-    # handle_request HTTP adapter. Non-HTTP fixtures still generate runnable tests.
     "wasm",
-    # brew: a Homebrew formula test app (registry mode) that installs the published
-    # CLI via `brew install` and exercises it, verifying the tap/bottle release.
     "brew",
 ]
 
 [crates.e2e.harness]
-# Server-pattern harness config for HTTP fixtures.
-# When HTTP fixtures are present, the harness spawns the SUT app and registers
-# handlers per fixture, returning canned expected responses.
-#
-# `register_method = "route"` is the canonical 'register a route' verb that
-# every binding's App class exposes. Alef applies per-language identifier
-# casing (snake_case for python/ruby/elixir/rust/php, camelCase for node /
-# wasm / java / swift / dart / kotlin, PascalCase for go / csharp), so the
-# canonical lowercase `route` round-trips unchanged in every language.
 imports = ["spikard"]
 app_class = "App"
-# alef v0.22.27+ ruby harness accepts FQDN paths; spikard gem's Ruby App lives
-# at `Spikard::App` not the top-level `::App`. The override here resolves it.
 register_method = "route"
 run_method = "run"
-# Fixtures use `body` field for expected response payloads.
 response_body_field = "body"
 host = "127.0.0.1"
 port = 8000
 
 [crates.e2e.harness.overrides.node]
-# Node binding ships as @spikard/node, not bare spikard.
 imports = ["@spikard/node"]
 
 [crates.e2e.harness.overrides.ruby]
-# The Ruby spikard gem nests its app class under the `Spikard` module
-# (`Spikard::App`). alef v0.22.27+ ruby harness uses the configured `app_class`
-# verbatim (without prefixing `::`), so the FQDN is required.
 app_class = "Spikard::App"
 
 [crates.e2e.harness.overrides.swift]
-# Swift module names are PascalCase (capitalized). The base config specifies
-# lowercase "spikard", but Swift requires `import Spikard` (uppercase).
 imports = ["Spikard"]
 
 [crates.e2e.call]
@@ -1238,11 +1002,6 @@ name = "dev.spikard:spikard"
 name = "Spikard"
 
 [crates.e2e.registry.packages.kotlin]
-# Published Maven artifactId only — the group (`dev.spikard`) comes from
-# `[crates.kotlin] package`. The kotlin binding publishes under artifactId
-# `spikard-kotlin` (see packages/kotlin/build.gradle.kts), distinct from the
-# sibling Java facade `dev.spikard:spikard`. The generated registry coordinate
-# is `dev.spikard:spikard-kotlin:<version>`.
 name = "spikard-kotlin"
 
 [crates.e2e.registry.packages.kotlin_android]
@@ -1256,10 +1015,6 @@ name = "Spikard"
 
 [crates.e2e.registry.packages.zig]
 name = "spikard"
-# Placeholder hash for registry-mode zig dep — version intentionally set to 0.0.0
-# so alef's stale-hash detection emits a fallback comment instead of using this
-# string verbatim. Refresh after the first real spikard zig package release via
-# `alef sync-versions` (which auto-populates from the published tarball).
 hash = "spikard-0.16.1-PLACEHOLDER1234567890abcdefABCDEF0987654321"
 
 [crates.e2e.registry.packages.wasm]

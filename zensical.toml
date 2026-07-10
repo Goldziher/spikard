@@ -11,7 +11,6 @@ copyright = "Copyright &copy; 2023-2026 Spikard Contributors"
 extra_css = ["css/extra.css"]
 
 nav = [
-    # Landing & Getting Started
     { "Home" = "index.md" },
     { "Getting Started" = [
         { "Installation" = "getting-started/installation.md" },
@@ -19,7 +18,6 @@ nav = [
         { "Init Command" = "getting-started/init-command.md" },
     ] },
 
-    # Core Concepts & Features
     { "Features" = "features.md" },
     { "Roadmap" = "roadmap.md" },
     { "Concepts" = [
@@ -33,7 +31,6 @@ nav = [
         { "Python Binding Architecture" = "python/architecture.md" },
     ] },
 
-    # User Guides
     { "Guides" = [
         { "Routing Basics" = "guides/routing.md" },
         { "Requests & Responses" = "guides/requests.md" },
@@ -52,15 +49,12 @@ nav = [
         { "Protobuf & gRPC" = "guides/protobuf-grpc.md" },
     ] },
 
-    # Command Line
     { "CLI" = "cli/usage.md" },
 
-    # Migration & Bindings
     { "Migration" = [
         { "v0.15 → v0.16" = "migration/v0.15-to-v0.16.md" },
     ] },
 
-    # Language Bindings
     { "Bindings" = [
         { "Python" = "reference/api-python.md" },
         { "TypeScript & Node" = "reference/api-typescript.md" },
@@ -70,7 +64,6 @@ nav = [
         { "Elixir" = "reference/api-elixir.md" },
     ] },
 
-    # Practical Patterns
     { "Playbooks" = [
         { "Auth & Guards" = "playbooks/auth.md" },
         { "Logging & Tracing" = "playbooks/logging.md" },
@@ -80,7 +73,6 @@ nav = [
         { "Background Tasks" = "playbooks/background.md" },
     ] },
 
-    # API Documentation
     { "API Reference" = [
         { "Feature Parity" = "reference/feature-parity.md" },
         { "Types" = "reference/types.md" },
@@ -88,12 +80,10 @@ nav = [
         { "Errors" = "reference/errors.md" },
     ] },
 
-    # Testing
     { "Testing" = [
         { "gRPC Fixtures" = "testing/grpc-fixtures.md" },
     ] },
 
-    # Architecture Decisions
     { "Architecture Decisions" = [
         { "ADR Overview" = "adr/README.md" },
         { "ADR 0001 - Architecture and Principles" = "adr/0001-architecture-and-principles.md" },
@@ -121,10 +111,8 @@ nav = [
         { "ADR 0023 - CloudEvents Handlers" = "adr/0023-cloudevents-handlers.md" },
     ] },
 
-    # Support
     { "Troubleshooting" = "troubleshooting.md" },
 
-    # Community
     { "Contributing" = "contributing.md" },
     { "Changelog" = "changelog.md" },
 ]
@@ -186,7 +174,6 @@ accent = "custom"
 icon = "moon"
 name = "Switch to dark mode"
 
-# Markdown Extensions
 [project.markdown_extensions.admonition]
 [project.markdown_extensions.attr_list]
 [project.markdown_extensions.def_list]
@@ -234,7 +221,6 @@ options = { custom_icons = ["docs/overrides/.icons"] }
 base_path = ["docs/snippets", "docs", "."]
 check_paths = true
 
-# Plugins
 [project.plugins.search]
 [project.plugins.tags]
 
@@ -242,7 +228,6 @@ check_paths = true
 minify_html = true
 
 
-# Extra
 [project.extra]
 
 [project.extra.analytics]

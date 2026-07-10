@@ -95,7 +95,6 @@ impl Formatter for RubyFormatter {
     fn format_header(&self, metadata: &HeaderMetadata) -> String {
         let mut header = String::new();
 
-        // Magic comment: frozen_string_literal (required for Ruby 3+)
         header.push_str("# frozen_string_literal: true\n");
 
         if metadata.auto_generated {
@@ -116,7 +115,6 @@ impl Formatter for RubyFormatter {
             return String::new();
         }
 
-        // Separate stdlib and gem requires
         let mut stdlib_requires = BTreeMap::new();
         let mut gem_requires = BTreeMap::new();
 
@@ -130,22 +128,18 @@ impl Formatter for RubyFormatter {
 
         let mut result = String::new();
 
-        // Write stdlib requires first
         for module in stdlib_requires.keys() {
             result.push_str(&format!("require '{module}'\n"));
         }
 
-        // Add blank line between stdlib and gems if both exist
         if !stdlib_requires.is_empty() && !gem_requires.is_empty() {
             result.push('\n');
         }
 
-        // Write gem requires
         for module in gem_requires.keys() {
             result.push_str(&format!("require '{module}'\n"));
         }
 
-        // Remove trailing newline (will be added during merge)
         if result.ends_with('\n') {
             result.pop();
         }
@@ -163,10 +157,8 @@ impl Formatter for RubyFormatter {
         let mut result = String::new();
 
         if lines.len() == 1 {
-            // Single-line YARD comment
             result.push_str(&format!("# {}", lines[0]));
         } else {
-            // Multi-line YARD documentation
             for line in lines {
                 if line.trim().is_empty() {
                     result.push_str("#\n");
@@ -174,7 +166,6 @@ impl Formatter for RubyFormatter {
                     result.push_str(&format!("# {line}\n"));
                 }
             }
-            // Remove trailing newline added by last iteration
             if result.ends_with('\n') {
                 result.pop();
             }
@@ -186,7 +177,6 @@ impl Formatter for RubyFormatter {
     fn merge_sections(&self, sections: &[Section]) -> String {
         let mut parts = Vec::new();
 
-        // Extract and organize sections
         let mut header = String::new();
         let mut imports = String::new();
         let mut body = String::new();
@@ -199,7 +189,6 @@ impl Formatter for RubyFormatter {
             }
         }
 
-        // Build final output
         if !header.is_empty() {
             parts.push(header);
         }
@@ -212,10 +201,8 @@ impl Formatter for RubyFormatter {
             parts.push(body);
         }
 
-        // Join with single blank line between sections
         let result = parts.join("\n\n");
 
-        // Ensure trailing newline
         if result.is_empty() {
             String::new()
         } else if result.ends_with('\n') {

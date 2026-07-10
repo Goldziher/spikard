@@ -358,7 +358,6 @@ impl WebSocketMessage {
                 let reason = if reason_str.is_empty() { None } else { Some(reason_str) };
                 WebSocketMessage::Close { code, reason }
             }
-            // RFC 6455 §7.1.5: no close frame means no status code — use 1005
             WsMessage::Close(None) | WsMessage::Frame(_) => WebSocketMessage::Close {
                 code: 1005,
                 reason: None,

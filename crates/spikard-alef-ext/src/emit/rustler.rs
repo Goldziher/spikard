@@ -16,13 +16,6 @@ fn prefixed_module(module_prefix: &str, module: &str) -> String {
     }
 }
 
-// Lifecycle hook helpers are intentionally NOT emitted as a separate Elixir file:
-// 1. The fragment-style emission (top-level @doc/def) fails Elixir compilation.
-// 2. Wrapping in a defmodule would require the App struct to carry per-hook
-//    fields, which the alef rustler service.ex emitter does not yet declare.
-// Until the rustler service emitter exposes those fields (or accepts an
-// augment_surface injection point), this file is omitted.
-
 fn emit_error_types(types: &[ErrorTypeDef], module_prefix: &str) -> String {
     if types.is_empty() {
         return String::new();
@@ -80,7 +73,6 @@ pub fn emit(api: &ApiSurface, cfg: &HttpExtensionConfig) -> Result<Vec<Generated
     let mut files = Vec::new();
     let prefix = module_prefix(api);
 
-    // Lifecycle hook helper emission is deferred — see emit_lifecycle_hooks().
     let _ = &cfg.lifecycle_hooks;
 
     let errors_content = emit_error_types(&cfg.error_types, &prefix);

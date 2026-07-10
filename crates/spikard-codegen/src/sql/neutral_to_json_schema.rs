@@ -96,8 +96,6 @@ pub fn neutral_to_json_schema(
         return Ok(json!({ "type": "object", "properties": Value::Object(props) }));
     }
     if neutral.starts_with("json_typed<") {
-        // `@json col = TypeName` is currently emitted as opaque JSON; future
-        // versions can resolve to `$ref` once a schema registry exists.
         return Ok(json!({}));
     }
 
@@ -158,11 +156,6 @@ pub fn json_schema_for(
 /// Composite field types arrive as raw SQL strings, so we lean on scythe's own
 /// resolver via its public API.
 fn scythe_core_neutral_for(sql_type: &str, catalog: &Catalog) -> String {
-    // The exact mapping function in scythe-core is `pub(super)` and not
-    // exposed. We approximate by deferring to the catalog's enum/composite
-    // lookups plus a small static table that covers the common cases. The
-    // analyzer has already run, so any neutral type we miss here only affects
-    // recursively-defined composite fields.
     let lower = sql_type.to_lowercase();
     let stripped = lower.split('(').next().unwrap_or(&lower).trim().to_string();
     match stripped.as_str() {

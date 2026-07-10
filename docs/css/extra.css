@@ -1,21 +1,17 @@
-/* Spikard docs theme — dark-first, matching the red pixel-art banner.
-   Palette: black #020202 base, brand red #ff1d2d, cream #f8d9a2 accent. */
-
 @import url("https://fonts.googleapis.com/css2?family=Exo+2:wght@500;600;700&display=swap");
 
 :root {
-  --spk-ink: #0b0b0d; /* page background (dark) */
-  --spk-ink-2: #141416; /* raised surface (dark) */
-  --spk-ink-3: #1a1a1e; /* code / cards (dark) */
-  --spk-black: #020202; /* banner black — header */
-  --spk-red: #ff1d2d; /* brand red */
+  --spk-ink: #0b0b0d;
+  --spk-ink-2: #141416;
+  --spk-ink-3: #1a1a1e;
+  --spk-black: #020202;
+  --spk-red: #ff1d2d;
   --spk-red-light: #ff5a45;
-  --spk-red-dim: #d11525; /* red for light-mode contrast */
-  --spk-cream: #f8d9a2; /* banner cream accent */
+  --spk-red-dim: #d11525;
+  --spk-cream: #f8d9a2;
   --spk-line-dark: rgba(255, 255, 255, 0.08);
 }
 
-/* ---------- DARK scheme (default / dark-first) ---------- */
 [data-md-color-scheme="slate"] {
   --md-hue: 0;
   --md-primary-fg-color: var(--spk-black);
@@ -41,9 +37,8 @@
   --md-footer-bg-color--dark: #050506;
 }
 
-/* ---------- LIGHT scheme ---------- */
 [data-md-color-scheme="default"] {
-  --md-primary-fg-color: var(--spk-black); /* keep the dark header in light mode too */
+  --md-primary-fg-color: var(--spk-black);
   --md-primary-fg-color--light: #141416;
   --md-primary-fg-color--dark: #000000;
   --md-primary-bg-color: #f4f4f5;
@@ -61,7 +56,6 @@
   --md-code-fg-color: #2a2426;
 }
 
-/* ---------- Header + tabs: always black, banner-matching ---------- */
 .md-header,
 .md-tabs {
   background-color: var(--spk-black);
@@ -74,7 +68,6 @@
   font-weight: 600;
   color: #f4f4f5;
 }
-/* Nav tab links — readable on the black header (this was the invisible-nav bug) */
 .md-tabs__link {
   color: rgba(244, 244, 245, 0.72);
   opacity: 1;
@@ -97,7 +90,6 @@
   width: auto;
 }
 
-/* ---------- Headings ---------- */
 .md-typeset h1,
 .md-typeset h2,
 .md-typeset h3,
@@ -115,7 +107,6 @@
   padding-bottom: 0.25rem;
 }
 
-/* ---------- Links, buttons ---------- */
 .md-typeset a {
   text-decoration-thickness: 0.06em;
   text-underline-offset: 0.15em;
@@ -138,7 +129,6 @@
   color: #1a0002;
 }
 
-/* ---------- Inline code + code blocks ---------- */
 .md-typeset code {
   border-radius: 4px;
 }
@@ -155,7 +145,6 @@
   border-radius: 10px;
 }
 
-/* ---------- Content tabs (language pickers) ---------- */
 .md-typeset .tabbed-set > label {
   color: var(--md-default-fg-color--light);
   font-weight: 600;
@@ -165,7 +154,6 @@
   border-color: var(--spk-red);
 }
 
-/* ---------- Admonitions, tables ---------- */
 .md-typeset .admonition,
 .md-typeset details {
   border-radius: 10px;
@@ -176,7 +164,6 @@
   color: var(--md-default-fg-color);
 }
 
-/* ---------- Nav sidebar contrast ---------- */
 .md-nav__link:hover,
 .md-nav__link--active {
   color: var(--spk-red);
@@ -185,7 +172,6 @@
   font-weight: 600;
 }
 
-/* ---------- Hero banner on the homepage ---------- */
 .spk-hero {
   margin: 0 0 2rem;
 }
@@ -199,7 +185,6 @@
   color: var(--md-default-fg-color--light);
 }
 
-/* smooth scroll */
 html {
   scroll-behavior: smooth;
 }

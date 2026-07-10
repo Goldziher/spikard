@@ -17,34 +17,28 @@ impl ProjectScaffolder for RustScaffolder {
         let crate_name = kebab_name.replace('-', "_");
         let mut files = Vec::new();
 
-        // Create Cargo.toml
         files.push(ScaffoldedFile::new(
             PathBuf::from("Cargo.toml"),
             self.generate_cargo_toml(&kebab_name),
         ));
 
-        // Create src/main.rs
         files.push(ScaffoldedFile::new(
             PathBuf::from("src/main.rs"),
             self.generate_main_rs(),
         ));
 
-        // Create src/lib.rs
         files.push(ScaffoldedFile::new(PathBuf::from("src/lib.rs"), self.generate_lib_rs()));
 
-        // Create tests/integration_test.rs
         files.push(ScaffoldedFile::new(
             PathBuf::from("tests/integration_test.rs"),
             self.generate_integration_test(&crate_name),
         ));
 
-        // Create .gitignore
         files.push(ScaffoldedFile::new(
             PathBuf::from(".gitignore"),
             self.generate_gitignore(),
         ));
 
-        // Create README.md
         files.push(ScaffoldedFile::new(
             PathBuf::from("README.md"),
             self.generate_readme(project_name, &kebab_name),

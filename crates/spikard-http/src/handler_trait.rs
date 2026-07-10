@@ -386,8 +386,6 @@ impl Handler for StaticResponseHandler {
         _request: Request<Body>,
         _request_data: RequestData,
     ) -> Pin<Box<dyn Future<Output = HandlerResult> + Send + '_>> {
-        // This should never be called — the server fast-path intercepts first.
-        // Provide a working fallback just in case.
         let resp = self.response.to_response();
         Box::pin(async move { Ok(resp) })
     }

@@ -1,16 +1,16 @@
 name: Publish pub.dev
 
-# pub.dev OIDC trusted publishing rejects tokens originating from `release`
-# events; only `push` and `workflow_dispatch` are accepted.
-#
-# The spikard Dart package ships prebuilt server natives staged under
-# lib/src/native/<rid>/ (linux/macos/windows). Those are produced by the main
-# publish.yaml workflow, so we cannot rebuild them here. Instead publish.yaml's
-# trigger-pubdev job dispatches this workflow with the run_id of that run, and
-# this workflow downloads the dart-package-assembled artifact from it.
-#
-# One-time setup: on pub.dev → spikard package → Admin → Automated publishing,
-# set the workflow path to `.github/workflows/publish-pubdev.yaml`.
+# ~keep pub.dev OIDC trusted publishing rejects tokens originating from `release`
+# ~keep events; only `push` and `workflow_dispatch` are accepted.
+
+# ~keep The spikard Dart package ships prebuilt server natives staged under
+# ~keep lib/src/native/<rid>/ (linux/macos/windows). Those are produced by the main
+# ~keep publish.yaml workflow, so we cannot rebuild them here. Instead publish.yaml's
+# ~keep trigger-pubdev job dispatches this workflow with the run_id of that run, and
+# ~keep this workflow downloads the dart-package-assembled artifact from it.
+
+# ~keep One-time setup: on pub.dev → spikard package → Admin → Automated publishing,
+# ~keep set the workflow path to `.github/workflows/publish-pubdev.yaml`.
 
 on:
   workflow_dispatch:

@@ -57,10 +57,8 @@ impl GenericGrpcService {
         method_name: String,
         request: Request<Bytes>,
     ) -> Result<Response<Bytes>, Status> {
-        // Extract metadata and payload from Tonic request
         let (metadata, _extensions, payload) = request.into_parts();
 
-        // Create our internal request representation
         let grpc_request = GrpcRequestData {
             service_name,
             method_name,
@@ -68,10 +66,8 @@ impl GenericGrpcService {
             metadata,
         };
 
-        // Call the handler
         let result: GrpcHandlerResult = self.handler.call(grpc_request).await;
 
-        // Convert result to Tonic response
         match result {
             Ok(grpc_response) => {
                 let mut response = Response::new(grpc_response.payload);
@@ -121,10 +117,8 @@ impl GenericGrpcService {
         request: Request<Bytes>,
         max_stream_response_bytes: Option<usize>,
     ) -> Result<Response<axum::body::Body>, Status> {
-        // Extract metadata and payload from Tonic request
         let (metadata, _extensions, payload) = request.into_parts();
 
-        // Create our internal request representation
         let grpc_request = GrpcRequestData {
             service_name,
             method_name,
@@ -132,15 +126,12 @@ impl GenericGrpcService {
             metadata,
         };
 
-        // Call the handler's server streaming method
         let message_stream: MessageStream = self.handler.call_server_stream(grpc_request).await?;
 
-        // Apply cumulative byte cap if configured
         let message_stream = crate::grpc::streaming::limit_message_stream(message_stream, max_stream_response_bytes);
 
         let body = grpc_stream_body(message_stream);
 
-        // Create response with streaming body
         let response = Response::new(body);
 
         Ok(response)
@@ -194,14 +185,12 @@ impl GenericGrpcService {
         max_message_size: usize,
         compression_enabled: bool,
     ) -> Result<Response<Bytes>, Status> {
-        // Extract metadata and body from Tonic request
         let (metadata, _extensions, body) = request.into_parts();
         let request_encoding = metadata
             .get("grpc-encoding")
             .and_then(|value| value.to_str().ok())
             .map(str::to_owned);
 
-        // Parse HTTP/2 body into stream of gRPC frames with size validation
         let message_stream = crate::grpc::framing::parse_grpc_client_stream(
             body,
             max_message_size,
@@ -210,7 +199,6 @@ impl GenericGrpcService {
         )
         .await?;
 
-        // Create our internal streaming request representation
         let streaming_request = crate::grpc::streaming::StreamingRequest {
             service_name,
             method_name,
@@ -218,11 +206,9 @@ impl GenericGrpcService {
             metadata,
         };
 
-        // Call the handler's client streaming method
         let response: crate::grpc::handler::GrpcHandlerResult =
             self.handler.call_client_stream(streaming_request).await;
 
-        // Convert result to Tonic response
         match response {
             Ok(grpc_response) => {
                 let mut tonic_response = Response::new(grpc_response.payload);
@@ -274,14 +260,12 @@ impl GenericGrpcService {
         compression_enabled: bool,
         max_stream_response_bytes: Option<usize>,
     ) -> Result<Response<axum::body::Body>, Status> {
-        // Extract metadata and body from Tonic request
         let (metadata, _extensions, body) = request.into_parts();
         let request_encoding = metadata
             .get("grpc-encoding")
             .and_then(|value| value.to_str().ok())
             .map(str::to_owned);
 
-        // Parse HTTP/2 body into stream of gRPC frames with size validation
         let message_stream = crate::grpc::framing::parse_grpc_client_stream(
             body,
             max_message_size,
@@ -290,7 +274,6 @@ impl GenericGrpcService {
         )
         .await?;
 
-        // Create our internal streaming request representation
         let streaming_request = crate::grpc::streaming::StreamingRequest {
             service_name,
             method_name,
@@ -298,10 +281,8 @@ impl GenericGrpcService {
             metadata,
         };
 
-        // Call the handler's bidirectional streaming method
         let response_stream: MessageStream = self.handler.call_bidi_stream(streaming_request).await?;
 
-        // Apply cumulative byte cap if configured
         let response_stream = crate::grpc::streaming::limit_message_stream(response_stream, max_stream_response_bytes);
 
         let body = grpc_stream_body(response_stream);
@@ -414,7 +395,6 @@ fn grpc_code_number(code: tonic::Code) -> &'static str {
 /// assert_eq!(method, "GetUser");
 /// ```
 pub fn parse_grpc_path(path: &str) -> Result<(String, String), Status> {
-    // gRPC paths are in the format: /<package>.<service>/<method>
     let path = path.trim_start_matches('/');
     let parts: Vec<&str> = path.split('/').collect();
 

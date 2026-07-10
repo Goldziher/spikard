@@ -26,10 +26,6 @@ use spikard_cli::codegen::{
 /// other-language validations remain parallel.
 static RUST_CARGO_VALIDATION_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
-// ============================================================================
-// RUST CODE GENERATION TESTS
-// ============================================================================
-
 #[test]
 fn test_rust_generate_simple_object_type() -> Result<()> {
     let schema = r#"
@@ -48,7 +44,6 @@ fn test_rust_generate_simple_object_type() -> Result<()> {
         result.contains("async_graphql::SimpleObject"),
         "SimpleObject derive missing"
     );
-    // Verify all three fields are present in the struct (order may vary)
     assert!(result.contains("id"), "id field reference missing");
     assert!(result.contains("name"), "name field reference missing");
     assert!(result.contains("email"), "email field reference missing");
@@ -364,15 +359,12 @@ fn test_rust_generate_complete_output() -> Result<()> {
 
     let result = generate_rust_graphql(schema, "all")?;
 
-    // Should include types
     assert!(result.contains("pub struct User"), "User type missing");
     assert!(result.contains("async_graphql::SimpleObject"), "SimpleObject missing");
 
-    // Should include resolvers
     assert!(result.contains("pub struct Query"), "Query resolver missing");
     assert!(result.contains("pub async fn user"), "user resolver missing");
 
-    // Should include schema
     assert!(result.contains("pub fn build_schema()"), "build_schema missing");
 
     Ok(())
@@ -391,7 +383,6 @@ fn test_rust_nullable_list_handling() -> Result<()> {
 
     let result = generate_rust_graphql(schema, "resolvers")?;
 
-    // Just verify no panics and that it generates something reasonable
     assert!(result.contains("Vec<"), "list type handling missing");
     assert!(result.contains("Option<"), "nullable type handling missing");
     assert!(result.contains("pub async fn"), "resolver functions missing");
@@ -440,10 +431,6 @@ fn test_rust_field_with_multiple_arguments() -> Result<()> {
     Ok(())
 }
 
-// ============================================================================
-// EDGE CASES AND ERROR HANDLING
-// ============================================================================
-
 #[test]
 fn test_recursive_type_definition() -> Result<()> {
     let schema = r#"
@@ -457,7 +444,6 @@ fn test_recursive_type_definition() -> Result<()> {
     let result = generate_rust_graphql(schema, "types")?;
 
     assert!(result.contains("pub struct TreeNode"), "TreeNode not generated");
-    // Just verify recursive reference is handled (might be Vec or other representation)
     assert!(result.contains("TreeNode"), "recursive type reference missing");
     assert!(result.contains("children"), "children field missing");
 
@@ -498,7 +484,6 @@ fn test_empty_schema_handling() -> Result<()> {
         }
     "#;
 
-    // Should not error, but generate minimal code
     let result = generate_rust_graphql(schema, "types")?;
     assert!(
         result.contains("// GraphQL type definitions"),
@@ -526,12 +511,10 @@ fn test_schema_with_descriptions() -> Result<()> {
 
     let result = generate_rust_graphql(schema, "types")?;
 
-    // Should handle descriptions without errors
     assert!(
         result.contains("pub struct User"),
         "User with descriptions not generated"
     );
-    // Just check that both fields are mentioned somewhere
     assert!(result.contains("id"), "id field reference missing");
     assert!(result.contains("name"), "name field reference missing");
 
@@ -549,7 +532,6 @@ fn test_schema_with_deprecated_fields() -> Result<()> {
 
     let result = generate_rust_graphql(schema, "resolvers")?;
 
-    // Should handle deprecation without errors
     assert!(
         result.contains("pub async fn old_field"),
         "deprecated field still generated"
@@ -570,10 +552,6 @@ fn test_invalid_graphql_sdl_returns_error() {
     let result = generate_rust_graphql(invalid_schema, "types");
     assert!(result.is_err(), "should reject invalid SDL");
 }
-
-// ============================================================================
-// SCHEMA PARSING TESTS
-// ============================================================================
 
 #[test]
 fn test_parse_simple_schema() -> Result<()> {
@@ -676,10 +654,6 @@ fn test_parse_schema_with_all_type_kinds() -> Result<()> {
     Ok(())
 }
 
-// ============================================================================
-// PYTHON CODE GENERATION TESTS
-// ============================================================================
-
 #[test]
 fn test_python_generate_msgspec_struct() -> Result<()> {
     let schema = r#"
@@ -765,12 +739,10 @@ fn test_python_generate_union_type() -> Result<()> {
 
     let result = generate_python_graphql(schema, "types")?;
 
-    // Union types are generated with TypeAlias annotation for mypy --strict compliance
     assert!(
         result.contains("SearchResult: TypeAlias = \"User | Post\""),
         "SearchResult union not generated"
     );
-    // Ensure we don't have the non-strict version
     assert!(
         !result.contains("| Any"),
         "SearchResult should not include | Any for mypy compliance"
@@ -1074,10 +1046,6 @@ fn test_python_generated_graphql_validates() -> Result<()> {
 
     Ok(())
 }
-
-// ============================================================================
-// TYPESCRIPT CODE GENERATION TESTS
-// ============================================================================
 
 #[test]
 fn test_typescript_generate_basic_output() -> Result<()> {
@@ -1490,17 +1458,11 @@ fn test_typescript_schema_definition_no_broken_imports() -> Result<()> {
 
     let result = generate_typescript_graphql(schema, "schema")?;
 
-    // Verify it doesn't have the broken import at the top level (not in comments)
-    // The generated code should NOT have an active import statement like:
-    // import { resolvers } from './resolvers';
-    // But it's OK to have it in comments or TODO sections
-
-    // Extract just the imports section (first 1000 chars usually)
     let imports_section = &result[..std::cmp::min(1000, result.len())];
     let has_broken_import = imports_section.lines().any(|line| {
-        !line.trim_start().starts_with('*') &&  // Not a comment
-             !line.trim_start().starts_with("//") &&  // Not a comment
-             line.contains("import { resolvers } from './resolvers'")
+        !line.trim_start().starts_with('*')
+            && !line.trim_start().starts_with("//")
+            && line.contains("import { resolvers } from './resolvers'")
     });
 
     assert!(
@@ -1508,31 +1470,23 @@ fn test_typescript_schema_definition_no_broken_imports() -> Result<()> {
         "ERROR: TypeScript schema definition has broken import statement in code"
     );
 
-    // Verify it imports makeExecutableSchema
     assert!(
         result.contains("import { makeExecutableSchema }"),
         "ERROR: Missing makeExecutableSchema import"
     );
 
-    // Verify it has resolver instructions
     assert!(
         result.contains("TODO") && result.contains("{ resolvers } from './resolvers'"),
         "ERROR: Missing resolver instructions"
     );
 
-    // Verify it exports typeDefs
     assert!(result.contains("export { typeDefs }"), "ERROR: Missing typeDefs export");
 
-    // Note: createSchema factory function removed - users implement resolvers separately
-    // The schema is exported directly via makeExecutableSchema
-
-    // Verify SDL is embedded
     assert!(
         result.contains("const typeDefs") && result.contains("type Query"),
         "ERROR: Missing SDL in typeDefs"
     );
 
-    // Verify field names are documented
     assert!(
         result.contains("hello") && result.contains("user"),
         "ERROR: Query field names not documented"
@@ -1545,10 +1499,6 @@ fn test_typescript_schema_definition_no_broken_imports() -> Result<()> {
 
     Ok(())
 }
-
-// ============================================================================
-// RUBY CODE GENERATION TESTS
-// ============================================================================
 
 #[test]
 fn test_ruby_generate_object_class() -> Result<()> {
@@ -1688,7 +1638,6 @@ fn test_ruby_field_nullability() -> Result<()> {
 
     let result = generate_ruby_graphql(schema, "types")?;
 
-    // Required fields should have null: false
     assert!(
         result.contains("field :id") && result.contains("null: false"),
         "id should not be nullable"
@@ -1697,7 +1646,6 @@ fn test_ruby_field_nullability() -> Result<()> {
         result.contains("field :name") && result.contains("null: false"),
         "name should not be nullable"
     );
-    // Optional fields should have null: true
     assert!(
         result.contains("field :bio") && result.contains("null: true"),
         "bio should be nullable"
@@ -1802,7 +1750,6 @@ fn test_ruby_deprecation_reason() -> Result<()> {
 
     let result = generate_ruby_graphql(schema, "resolvers")?;
 
-    // Just verify it doesn't panic and generates resolvers
     assert!(
         result.contains("def old_field") || result.contains("oldField"),
         "deprecated field method missing"
@@ -1924,10 +1871,6 @@ fn test_ruby_generated_graphql_validates() -> Result<()> {
     Ok(())
 }
 
-// ============================================================================
-// PHP CODE GENERATION TESTS
-// ============================================================================
-
 #[test]
 fn test_php_generate_object_class() -> Result<()> {
     let schema = r#"
@@ -2026,7 +1969,6 @@ fn test_php_strict_types() -> Result<()> {
 
     let result = generate_php_graphql(schema, "types")?;
 
-    // Should have strict_types declaration at the top
     let lines: Vec<&str> = result.lines().collect();
     let has_opening_tag = lines.iter().any(|l| l.contains("<?php"));
     let has_strict = lines.iter().any(|l| l.contains("declare(strict_types=1)"));
@@ -2106,7 +2048,6 @@ fn test_php_resolver_signatures() -> Result<()> {
 
     let result = generate_php_graphql(schema, "resolvers")?;
 
-    // Should contain resolver methods with type hints
     assert!(
         result.contains("function") || result.contains("public"),
         "resolver method missing"
@@ -2323,10 +2264,6 @@ fn test_php_mutation_resolver() -> Result<()> {
     Ok(())
 }
 
-// ============================================================================
-// PYTHON EDGE CASES
-// ============================================================================
-
 #[test]
 fn test_python_snake_case_conversion() -> Result<()> {
     let schema = r#"
@@ -2341,9 +2278,7 @@ fn test_python_snake_case_conversion() -> Result<()> {
 
     let result = generate_python_graphql(schema, "resolvers")?;
 
-    // Should convert camelCase to snake_case in function names
     assert!(result.contains("async def resolve_user"), "User resolver missing");
-    // Fields in docstring should be handled correctly
     assert!(result.contains("def resolve"), "resolver functions missing");
 
     Ok(())
@@ -2361,7 +2296,6 @@ fn test_python_special_field_names() -> Result<()> {
 
     let result = generate_python_graphql(schema, "resolvers")?;
 
-    // Should handle underscore-prefixed names
     assert!(result.contains("async def resolve"), "resolver generation failed");
 
     Ok(())
@@ -2384,7 +2318,6 @@ fn test_python_deeply_nested_lists() -> Result<()> {
 
     let result = generate_python_graphql(schema, "types")?;
 
-    // Verify nested types are generated
     assert!(result.contains("class User"), "User type missing");
     assert!(result.contains("class Post"), "Post type missing");
     assert!(result.contains("class Tag"), "Tag type missing");
@@ -2409,7 +2342,6 @@ fn test_python_complex_argument_types() -> Result<()> {
 
     let result = generate_python_graphql(schema, "types")?;
 
-    // Verify input types are generated
     assert!(result.contains("class FilterInput"), "FilterInput class missing");
     assert!(result.contains("query: str"), "query field missing");
     assert!(result.contains("limit: int | None"), "nullable limit field missing");
@@ -2442,10 +2374,6 @@ fn test_python_enum_with_descriptions() -> Result<()> {
     Ok(())
 }
 
-// ============================================================================
-// INTEGRATION TESTS (Multi-Language Consistency)
-// ============================================================================
-
 #[test]
 fn test_all_languages_parse_same_schema() -> Result<()> {
     let schema = r#"
@@ -2459,7 +2387,6 @@ fn test_all_languages_parse_same_schema() -> Result<()> {
         }
     "#;
 
-    // All should succeed without errors
     let _rust = generate_rust_graphql(schema, "types")?;
     let _python = generate_python_graphql(schema, "types")?;
     let _typescript = generate_typescript_graphql(schema, "types")?;
@@ -2486,7 +2413,6 @@ fn test_schema_parsing_consistency() -> Result<()> {
 
     let parsed = parse_graphql_sdl_string(schema)?;
 
-    // Verify parsed structure consistency
     assert!(!parsed.queries.is_empty(), "queries should be parsed");
     assert_eq!(parsed.queries.len(), 1, "should have 1 query");
     assert_eq!(parsed.queries[0].name, "users");
@@ -2496,7 +2422,6 @@ fn test_schema_parsing_consistency() -> Result<()> {
     let user = &parsed.types["User"];
     assert_eq!(user.fields.len(), 4, "User should have 4 fields");
 
-    // Verify all Rust generation targets work
     assert!(generate_rust_graphql(schema, "types").is_ok());
     assert!(generate_rust_graphql(schema, "resolvers").is_ok());
     assert!(generate_rust_graphql(schema, "schema").is_ok());
@@ -2573,10 +2498,8 @@ fn test_complex_real_world_schema() -> Result<()> {
         }
     "#;
 
-    // Should parse without error
     let parsed = parse_graphql_sdl_string(schema)?;
 
-    // Verify complex structures
     assert!(parsed.types.contains_key("User"));
     assert!(parsed.types.contains_key("Post"));
     assert!(parsed.types.contains_key("Comment"));
@@ -2586,7 +2509,6 @@ fn test_complex_real_world_schema() -> Result<()> {
     assert!(parsed.types.contains_key("CreatePostInput"));
     assert!(parsed.types.contains_key("UpdatePostInput"));
 
-    // Should generate code for all targets
     assert!(generate_rust_graphql(schema, "types").is_ok());
     assert!(generate_rust_graphql(schema, "resolvers").is_ok());
     assert!(generate_rust_graphql(schema, "schema").is_ok());

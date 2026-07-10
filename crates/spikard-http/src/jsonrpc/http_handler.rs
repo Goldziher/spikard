@@ -40,7 +40,6 @@
 
 use super::router::{JsonRpcRequestOrBatch, JsonRpcRouter};
 use crate::handler_trait::RequestData;
-// wasm: crate::server is gated not(target_arch = "wasm32"); use a local header extractor instead
 #[cfg(not(target_arch = "wasm32"))]
 use crate::server::request_extraction::extract_headers;
 use axum::{

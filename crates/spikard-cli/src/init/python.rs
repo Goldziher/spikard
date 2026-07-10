@@ -19,7 +19,6 @@ pub struct PythonScaffolder;
 impl PythonScaffolder {
     /// Convert a project name to a valid Python package name (`snake_case`)
     fn to_package_name(project_name: &str) -> String {
-        // Replace hyphens with underscores and convert to lowercase
         project_name.replace('-', "_").to_lowercase()
     }
 
@@ -202,37 +201,31 @@ impl ProjectScaffolder for PythonScaffolder {
 
         let mut files = Vec::new();
 
-        // pyproject.toml
         files.push(ScaffoldedFile::new(
             PathBuf::from("pyproject.toml"),
             Self::generate_pyproject_toml(project_name, &package_name),
         ));
 
-        // src/{package_name}/__init__.py
         files.push(ScaffoldedFile::new(
             PathBuf::from(format!("src/{package_name}/__init__.py")),
             Self::generate_init_py(),
         ));
 
-        // src/{package_name}/app.py
         files.push(ScaffoldedFile::new(
             PathBuf::from(format!("src/{package_name}/app.py")),
             Self::generate_app_module(&package_name),
         ));
 
-        // tests/test_app.py
         files.push(ScaffoldedFile::new(
             PathBuf::from("tests/test_app.py"),
             Self::generate_test_app(&package_name),
         ));
 
-        // .gitignore
         files.push(ScaffoldedFile::new(
             PathBuf::from(".gitignore"),
             Self::generate_gitignore(),
         ));
 
-        // README.md
         files.push(ScaffoldedFile::new(
             PathBuf::from("README.md"),
             Self::generate_readme(project_name, &package_name),
@@ -268,7 +261,6 @@ mod tests {
     fn test_scaffold_creates_files() {
         let files = PythonScaffolder.scaffold(Path::new("."), "test_app").unwrap();
 
-        // Check that we have the expected files
         assert!(files.iter().any(|f| f.path == PathBuf::from("pyproject.toml")));
         assert!(files.iter().any(|f| f.path == PathBuf::from("tests/test_app.py")));
         assert!(files.iter().any(|f| f.path == PathBuf::from(".gitignore")));

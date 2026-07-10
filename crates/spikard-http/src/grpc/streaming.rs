@@ -198,7 +198,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_limit_message_stream_exact_limit_passes_all_messages() {
-        // Limit exactly equals total size (4 * 100 = 400): all four should pass.
         let stream = make_four_message_stream();
         let mut limited = limit_message_stream(stream, Some(400));
 
@@ -212,8 +211,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_limit_message_stream_exceeded_aborts_stream() {
-        // Limit of 200 bytes: first two messages (200 bytes total) pass; the
-        // third message (300 bytes consumed) triggers resource_exhausted.
         let stream = make_four_message_stream();
         let mut limited = limit_message_stream(stream, Some(200));
 
@@ -223,7 +220,6 @@ mod tests {
         let item2 = limited.next().await.expect("should have item 2");
         assert!(item2.is_ok(), "item 2 should be Ok");
 
-        // Third poll: consumed would be 300 > 200 → resource_exhausted error
         let item3 = limited.next().await.expect("should have item 3");
         let err = item3.expect_err("item 3 should be a resource_exhausted error");
         assert_eq!(err.code(), tonic::Code::ResourceExhausted);
@@ -233,7 +229,6 @@ mod tests {
             err.message()
         );
 
-        // Stream terminates: no fourth message
         let item4 = limited.next().await;
         assert!(item4.is_none(), "stream should be terminated after resource_exhausted");
     }
@@ -255,8 +250,5 @@ mod tests {
         let err = item2.expect_err("should propagate inner error");
         assert_eq!(err.code(), tonic::Code::Internal);
         assert_eq!(err.message(), "upstream failure");
-
-        // After an inner error the underlying stream may or may not continue;
-        // what matters is the error was faithfully propagated.
     }
 }

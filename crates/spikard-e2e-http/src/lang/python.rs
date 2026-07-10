@@ -21,10 +21,6 @@ use alef::e2e::fixture::{FixtureGroup, HttpMiddleware};
 use minijinja::{Environment, context};
 use serde_json::json;
 
-// ---------------------------------------------------------------------------
-// Template environment
-// ---------------------------------------------------------------------------
-
 /// Build the private template environment holding the Python HTTP templates.
 fn make_env() -> Environment<'static> {
     let mut env = Environment::new();
@@ -47,10 +43,6 @@ fn render(env: &Environment<'static>, name: &str, ctx: minijinja::Value) -> Stri
         .unwrap_or_default()
 }
 
-// ---------------------------------------------------------------------------
-// Middleware value builder (from alef `python/config.rs::build_middleware_value`).
-// ---------------------------------------------------------------------------
-
 /// Convert the fixture's `HttpMiddleware` into a `serde_json::Value` suitable
 /// for embedding in the harness fixture JSON.
 ///
@@ -63,10 +55,8 @@ fn build_middleware_value(middleware: Option<&HttpMiddleware>) -> serde_json::Va
 
     let mut map = serde_json::Map::new();
 
-    // --- cors ---
     if let Some(cors) = &mw.cors {
         let mut cors_map = serde_json::Map::new();
-        // Remap allow_* → allowed_* to match the binding's CorsConfig.from_json().
         cors_map.insert("allowed_origins".to_string(), json!(cors.allow_origins));
         cors_map.insert("allowed_methods".to_string(), json!(cors.allow_methods));
         cors_map.insert("allowed_headers".to_string(), json!(cors.allow_headers));
@@ -82,7 +72,6 @@ fn build_middleware_value(middleware: Option<&HttpMiddleware>) -> serde_json::Va
         map.insert("cors".to_string(), serde_json::Value::Object(cors_map));
     }
 
-    // --- pass-through middlewares ---
     for (key, value) in [
         ("jwt_auth", &mw.jwt_auth),
         ("api_key_auth", &mw.api_key_auth),
@@ -103,10 +92,6 @@ fn build_middleware_value(middleware: Option<&HttpMiddleware>) -> serde_json::Va
     }
 }
 
-// ---------------------------------------------------------------------------
-// App harness renderer (from alef `python/config.rs::render_app_harness`).
-// ---------------------------------------------------------------------------
-
 /// Render the server-pattern `app_harness.py` that spawns the SUT HTTP server.
 ///
 /// Ported verbatim from alef's `python/config.rs::render_app_harness` (3-arg form).
@@ -121,7 +106,6 @@ pub fn render_app_harness(
     groups: &[FixtureGroup],
     crate_config: &ResolvedCrateConfig,
 ) -> String {
-    // Collect all HTTP fixtures from all groups.
     let mut fixtures_map = serde_json::Map::new();
 
     for group in groups {
@@ -178,7 +162,6 @@ pub fn render_app_harness(
     };
     let method_enum_import = route_builder_import.clone();
 
-    // Check if App.config is excluded from bindings.
     let skip_app_config = crate_config.exclude.methods.iter().any(|m| m == "App.config");
 
     let env = make_env();
@@ -205,11 +188,6 @@ pub fn render_app_harness(
         },
     )
 }
-
-// ---------------------------------------------------------------------------
-// Server-pattern conftest renderer
-// (from alef `python/config.rs::render_conftest` uses_harness branch).
-// ---------------------------------------------------------------------------
 
 /// Emit a Python snippet that copies every `[e2e.env]` entry into `os.environ`
 /// using `setdefault`. Returns empty string when no env vars are configured.

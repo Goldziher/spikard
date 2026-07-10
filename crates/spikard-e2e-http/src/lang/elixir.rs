@@ -23,10 +23,6 @@ use alef::e2e::config::E2eConfig;
 use alef::e2e::fixture::FixtureGroup;
 use minijinja::{Environment, context};
 
-// ---------------------------------------------------------------------------
-// Template environment
-// ---------------------------------------------------------------------------
-
 /// Build the private template environment holding the Elixir HTTP templates.
 fn make_env() -> Environment<'static> {
     let mut env = Environment::new();
@@ -48,10 +44,6 @@ fn render(env: &Environment<'static>, name: &str, ctx: minijinja::Value) -> Stri
         .render(ctx)
         .unwrap_or_default()
 }
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
 
 /// Convert a `snake_case` or hyphenated module name to Elixir's `PascalCase`.
 ///
@@ -91,11 +83,6 @@ fn render_env_setup_block(e2e_config: &E2eConfig) -> String {
     out
 }
 
-// ---------------------------------------------------------------------------
-// App harness renderer
-// (from alef `elixir/project.rs::render_app_harness`)
-// ---------------------------------------------------------------------------
-
 /// Render the server-pattern `app_harness.exs` that serves SUT fixtures.
 ///
 /// Ported verbatim from alef's `elixir/project.rs::render_app_harness`.
@@ -106,7 +93,6 @@ fn render_env_setup_block(e2e_config: &E2eConfig) -> String {
 /// template authoring error, not a runtime condition).
 #[must_use]
 pub fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup], config: &ResolvedCrateConfig) -> String {
-    // Collect all HTTP fixtures from all groups.
     let mut fixtures_map = serde_json::Map::new();
 
     for group in groups {
@@ -137,11 +123,9 @@ pub fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup], confi
     }
 
     let fixtures_json_str = serde_json::to_string(&fixtures_map).unwrap_or_default();
-    // Escape backslashes and quotes for Elixir string literal.
     let fixtures_json = fixtures_json_str.replace('\\', "\\\\").replace('"', "\\\"");
     let fixtures_json = format!("\"{fixtures_json}\"");
 
-    // Apply per-language harness overrides on top of the top-level harness config.
     let harness_override = e2e_config.harness.overrides.get("elixir");
     let imports_override = harness_override.and_then(|o| o.imports.as_ref());
     let imports: &[String] = imports_override.unwrap_or(&e2e_config.harness.imports);
@@ -168,7 +152,6 @@ pub fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup], confi
         "."
     };
 
-    // Build module paths for RouteBuilder, Method, and App using the binding name from imports[0].
     let module_prefix = if imports.is_empty() {
         String::new()
     } else {
@@ -180,7 +163,6 @@ pub fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup], confi
     let unqualified_app_class = app_class.unwrap_or("App");
     let app_class_name = format!("{module_prefix}{unqualified_app_class}");
 
-    // Check if App.config is excluded from bindings.
     let config_method_key = format!("{app_class_name}.config");
     let skip_app_config = config.exclude.methods.iter().any(|m| m == &config_method_key);
 
@@ -205,11 +187,6 @@ pub fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup], confi
         },
     )
 }
-
-// ---------------------------------------------------------------------------
-// Server-pattern test_helper renderer
-// (from alef `elixir/project.rs::render_test_helper` uses_harness branch)
-// ---------------------------------------------------------------------------
 
 /// Render the server-pattern `test/test_helper.exs` that spawns `app_harness.exs`.
 ///
@@ -295,10 +272,6 @@ end
 "#
     )
 }
-
-// ---------------------------------------------------------------------------
-// Top-level emit function (extension dispatch target)
-// ---------------------------------------------------------------------------
 
 /// Emit Elixir's server-pattern e2e files.
 ///

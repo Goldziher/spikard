@@ -337,10 +337,7 @@ impl QualityValidator {
                 )
                 .map(|_| ())
             }
-            TargetLanguage::Php => {
-                // PHP doesn't have a separate type checker; covered by lint
-                Ok(())
-            }
+            TargetLanguage::Php => Ok(()),
             TargetLanguage::Elixir => Ok(()),
         }
     }
@@ -496,7 +493,6 @@ impl QualityValidator {
     pub fn validate_all(&self, code: &str) -> Result<ValidationReport, QualityError> {
         let mut report = ValidationReport::new();
 
-        // Syntax validation
         match self.validate_syntax(code) {
             Ok(()) => report.syntax_passed = true,
             Err(e) => {
@@ -505,7 +501,6 @@ impl QualityValidator {
             }
         }
 
-        // Type validation
         match self.validate_types(code) {
             Ok(()) => report.types_passed = true,
             Err(e) => {
@@ -514,7 +509,6 @@ impl QualityValidator {
             }
         }
 
-        // Lint validation
         match self.validate_lint(code) {
             Ok(()) => report.lint_passed = true,
             Err(e) => {
@@ -1086,9 +1080,6 @@ class Schema
         envs: &[(&str, &std::ffi::OsStr)],
         _code: &str,
     ) -> Result<String, QualityError> {
-        // mypy 2.x has a known nondeterministic INTERNAL ERROR crash. Retry up to
-        // 3 times when we detect the signature; surface all other failures
-        // immediately.
         let max_attempts = 3;
         let mut last_err: Option<QualityError> = None;
         for _ in 0..max_attempts {
@@ -1133,7 +1124,6 @@ struct RustTempProject {
 }
 
 struct TypeScriptTempProject {
-    // _workdir holds the TempDir alive for RAII cleanup; path is not read directly.
     _workdir: TempDir,
     config_path: PathBuf,
 }
@@ -1289,12 +1279,6 @@ fn write_stub_file(path: &Path, contents: &str) -> Result<(), QualityError> {
 fn rust_temp_manifest() -> String {
     let spikard_path = workspace_root().join("crates/spikard");
 
-    // alloc-stdlib is pinned to =0.2.2 to keep alloc-no-stdlib at 2.0.4.
-    // brotli 8.0.3 pulls alloc-no-stdlib 2.0.4 directly, but the unbounded
-    // alloc-stdlib transitive (via brotli-decompressor) resolves to 0.2.3,
-    // which pulls alloc-no-stdlib 3.0.0. The graph then contains both
-    // versions and their incompatible Allocator<T> trait impls, breaking
-    // every brotli-touching crate the validator includes via spikard.
     format!(
         r#"[package]
 name = "spikard_codegen_validation"

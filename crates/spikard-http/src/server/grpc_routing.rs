@@ -16,7 +16,7 @@ use std::sync::Arc;
 fn grpc_status_to_http(code: tonic::Code) -> StatusCode {
     match code {
         tonic::Code::Ok => StatusCode::OK,
-        tonic::Code::Cancelled => StatusCode::from_u16(499).unwrap(), // Client Closed Request
+        tonic::Code::Cancelled => StatusCode::from_u16(499).unwrap(),
         tonic::Code::Unknown => StatusCode::INTERNAL_SERVER_ERROR,
         tonic::Code::InvalidArgument => StatusCode::BAD_REQUEST,
         tonic::Code::DeadlineExceeded => StatusCode::GATEWAY_TIMEOUT,
@@ -54,10 +54,8 @@ pub(crate) async fn route_grpc_request(
     config: &GrpcConfig,
     request: Request<Body>,
 ) -> Result<Response<Body>, (StatusCode, String)> {
-    // Extract the request path
     let path = request.uri().path();
 
-    // Parse service and method names from the path
     let (service_name, method_name) = match parse_grpc_path(path) {
         Ok(names) => names,
         Err(status) => {
@@ -68,7 +66,6 @@ pub(crate) async fn route_grpc_request(
         }
     };
 
-    // Look up the handler for this service and method
     let (handler, rpc_mode) = match registry.get(&service_name, &method_name) {
         Some((h, mode)) => (h, mode),
         None => {
@@ -81,10 +78,8 @@ pub(crate) async fn route_grpc_request(
         }
     };
 
-    // Create the service bridge
     let service = crate::grpc::GenericGrpcService::new(handler);
 
-    // Dispatch based on RPC mode
     match rpc_mode {
         RpcMode::Unary => {
             handle_unary_request(
@@ -148,13 +143,11 @@ async fn handle_unary_request(
     compression_enabled: bool,
     request: Request<Body>,
 ) -> Result<Response<Body>, (StatusCode, String)> {
-    // Convert the Axum request to bytes with the configured size limit
     let (parts, body) = request.into_parts();
     let request_encoding = parts.headers.get("grpc-encoding").and_then(|value| value.to_str().ok());
     let body_bytes = match axum::body::to_bytes(body, unary_message_read_limit(max_message_size)).await {
         Ok(bytes) => bytes,
         Err(e) => {
-            // Check if error is due to size limit (axum returns "body size exceeded" or similar)
             let error_msg = e.to_string();
             if error_msg.contains("body") || error_msg.contains("size") || error_msg.contains("exceeded") {
                 return Err((
@@ -174,10 +167,8 @@ async fn handle_unary_request(
         }
     };
 
-    // Create a Tonic request
     let mut tonic_request = tonic::Request::new(payload);
 
-    // Copy headers to Tonic metadata
     for (key, value) in parts.headers.iter() {
         if let Ok(value_str) = value.to_str()
             && let Ok(metadata_value) = value_str.parse::<tonic::metadata::MetadataValue<tonic::metadata::Ascii>>()
@@ -189,7 +180,6 @@ async fn handle_unary_request(
         }
     }
 
-    // Use the service bridge to handle the request
     let tonic_response = match service.handle_unary(service_name, method_name, tonic_request).await {
         Ok(resp) => resp,
         Err(status) => {
@@ -198,7 +188,6 @@ async fn handle_unary_request(
         }
     };
 
-    // Convert Tonic response to Axum response
     let payload = tonic_response.get_ref().clone();
     let framed_payload = match encode_grpc_message(payload) {
         Ok(framed) => framed,
@@ -213,7 +202,6 @@ async fn handle_unary_request(
         .status(StatusCode::OK)
         .header("content-type", "application/grpc+proto");
 
-    // Copy metadata to response headers
     for key_value in metadata.iter() {
         if let tonic::metadata::KeyAndValueRef::Ascii(key, value) = key_value
             && let Ok(header_value) = axum::http::HeaderValue::from_str(value.to_str().unwrap_or(""))
@@ -222,10 +210,8 @@ async fn handle_unary_request(
         }
     }
 
-    // Add gRPC status trailer (success)
     response = response.header("grpc-status", "0");
 
-    // Convert bytes::Bytes to Body
     let response = response.body(Body::from(framed_payload)).map_err(|e| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -246,13 +232,11 @@ async fn handle_server_streaming_request(
     max_stream_response_bytes: Option<usize>,
     request: Request<Body>,
 ) -> Result<Response<Body>, (StatusCode, String)> {
-    // Convert the Axum request to bytes with the configured size limit
     let (parts, body) = request.into_parts();
     let request_encoding = parts.headers.get("grpc-encoding").and_then(|value| value.to_str().ok());
     let body_bytes = match axum::body::to_bytes(body, unary_message_read_limit(max_message_size)).await {
         Ok(bytes) => bytes,
         Err(e) => {
-            // Check if error is due to size limit (axum returns "body size exceeded" or similar)
             let error_msg = e.to_string();
             if error_msg.contains("body") || error_msg.contains("size") || error_msg.contains("exceeded") {
                 return Err((
@@ -272,10 +256,8 @@ async fn handle_server_streaming_request(
         }
     };
 
-    // Create a Tonic request
     let mut tonic_request = tonic::Request::new(payload);
 
-    // Copy headers to Tonic metadata
     for (key, value) in parts.headers.iter() {
         if let Ok(value_str) = value.to_str()
             && let Ok(metadata_value) = value_str.parse::<tonic::metadata::MetadataValue<tonic::metadata::Ascii>>()
@@ -287,7 +269,6 @@ async fn handle_server_streaming_request(
         }
     }
 
-    // Use the service bridge to handle the streaming request
     let tonic_response = match service
         .handle_server_stream(service_name, method_name, tonic_request, max_stream_response_bytes)
         .await
@@ -299,7 +280,6 @@ async fn handle_server_streaming_request(
         }
     };
 
-    // Convert Tonic response to Axum response
     let body = tonic_response.into_inner();
     let response = Response::builder()
         .status(StatusCode::OK)
@@ -324,14 +304,10 @@ async fn handle_client_streaming_request(
     compression_enabled: bool,
     request: Request<Body>,
 ) -> Result<Response<Body>, (StatusCode, String)> {
-    // Extract request parts - keep body as stream for frame parsing
     let (parts, body) = request.into_parts();
 
-    // Create a Tonic request with streaming body
-    // Body will be parsed by service.handle_client_stream using frame parser
     let mut tonic_request = tonic::Request::new(body);
 
-    // Copy headers to Tonic metadata
     for (key, value) in parts.headers.iter() {
         if let Ok(value_str) = value.to_str()
             && let Ok(metadata_value) = value_str.parse::<tonic::metadata::MetadataValue<tonic::metadata::Ascii>>()
@@ -343,8 +319,6 @@ async fn handle_client_streaming_request(
         }
     }
 
-    // Use the service bridge to handle the client streaming request
-    // Frame parsing and size validation happens in handle_client_stream
     let tonic_response = match service
         .handle_client_stream(
             service_name,
@@ -362,7 +336,6 @@ async fn handle_client_streaming_request(
         }
     };
 
-    // Convert Tonic response to Axum response
     let payload = tonic_response.get_ref().clone();
     let framed_payload = match encode_grpc_message(payload) {
         Ok(framed) => framed,
@@ -377,7 +350,6 @@ async fn handle_client_streaming_request(
         .status(StatusCode::OK)
         .header("content-type", "application/grpc+proto");
 
-    // Copy metadata to response headers
     for key_value in metadata.iter() {
         if let tonic::metadata::KeyAndValueRef::Ascii(key, value) = key_value
             && let Ok(header_value) = axum::http::HeaderValue::from_str(value.to_str().unwrap_or(""))
@@ -386,10 +358,8 @@ async fn handle_client_streaming_request(
         }
     }
 
-    // Add gRPC status trailer (success)
     response = response.header("grpc-status", "0");
 
-    // Convert bytes::Bytes to Body
     let response = response.body(Body::from(framed_payload)).map_err(|e| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -431,14 +401,10 @@ async fn handle_bidirectional_streaming_request(
     max_stream_response_bytes: Option<usize>,
     request: Request<Body>,
 ) -> Result<Response<Body>, (StatusCode, String)> {
-    // Extract request parts - keep body as stream for frame parsing
     let (parts, body) = request.into_parts();
 
-    // Create a Tonic request with streaming body
-    // Body will be parsed by service.handle_bidi_stream using frame parser
     let mut tonic_request = tonic::Request::new(body);
 
-    // Copy HTTP headers to gRPC metadata
     for (key, value) in parts.headers.iter() {
         if let Ok(value_str) = value.to_str()
             && let Ok(metadata_value) = value_str.parse::<tonic::metadata::MetadataValue<tonic::metadata::Ascii>>()
@@ -450,7 +416,6 @@ async fn handle_bidirectional_streaming_request(
         }
     }
 
-    // Call service handler - frame parsing and size validation happens inside
     let tonic_response = match service
         .handle_bidi_stream(
             service_name,
@@ -469,7 +434,6 @@ async fn handle_bidirectional_streaming_request(
         }
     };
 
-    // Convert Tonic response to Axum response with streaming body
     let body = tonic_response.into_inner();
     let response = Response::builder()
         .status(StatusCode::OK)
@@ -734,7 +698,6 @@ mod tests {
 
     #[test]
     fn test_grpc_status_to_http_mappings() {
-        // Test all gRPC status codes map correctly
         assert_eq!(grpc_status_to_http(tonic::Code::Ok), StatusCode::OK);
         assert_eq!(
             grpc_status_to_http(tonic::Code::Cancelled),
@@ -797,7 +760,7 @@ mod tests {
         let registry = Arc::new(registry);
 
         let mut config = GrpcConfig::default();
-        config.max_message_size = 100; // Set small limit
+        config.max_message_size = 100;
 
         let request = Request::builder()
             .uri("/test.EchoService/Echo")
@@ -805,7 +768,6 @@ mod tests {
             .body(Body::from(framed_message(b"test payload")))
             .unwrap();
 
-        // This should succeed since payload is small
         let result = route_grpc_request(registry.clone(), &config, request).await;
         assert!(result.is_ok());
     }
@@ -817,9 +779,8 @@ mod tests {
         let registry = Arc::new(registry);
 
         let mut config = GrpcConfig::default();
-        config.max_message_size = 10; // Set very small limit
+        config.max_message_size = 10;
 
-        // Create a large payload that exceeds the limit
         let large_payload = vec![b'x'; 1000];
         let framed_payload = encode_grpc_message(Bytes::from(large_payload)).unwrap();
         let request = Request::builder()
@@ -912,7 +873,6 @@ mod tests {
                 mut request: StreamingRequest,
             ) -> Pin<Box<dyn Future<Output = Result<GrpcResponseData, tonic::Status>> + Send>> {
                 Box::pin(async move {
-                    // Make sure routing copied request headers into metadata.
                     assert!(request.metadata.get("x-request-id").is_some());
 
                     let mut first = None;
@@ -939,12 +899,7 @@ mod tests {
         let registry = Arc::new(registry);
         let config = GrpcConfig::default();
 
-        // Single gRPC frame: compression=0, length=5, message="hello"
-        let frame = vec![
-            0x00, // compression: no
-            0x00, 0x00, 0x00, 0x05, // length: 5 bytes
-            b'h', b'e', b'l', b'l', b'o',
-        ];
+        let frame = vec![0x00, 0x00, 0x00, 0x00, 0x05, b'h', b'e', b'l', b'l', b'o'];
 
         let request = Request::builder()
             .uri("/test.ClientStreamService/ClientStream")
@@ -998,12 +953,7 @@ mod tests {
         let registry = Arc::new(registry);
         let config = GrpcConfig::default();
 
-        // Provide a well-formed request frame so the frame parser succeeds.
-        let frame = vec![
-            0x00, // compression: no
-            0x00, 0x00, 0x00, 0x01, // length: 1 byte
-            b'x',
-        ];
+        let frame = vec![0x00, 0x00, 0x00, 0x00, 0x01, b'x'];
 
         let request = Request::builder()
             .uri("/test.BidiService/Chat")
@@ -1030,7 +980,6 @@ mod tests {
 
     #[tokio::test]
     async fn test_route_grpc_request_client_streaming_unsupported_encoding_maps_to_501() {
-        // Use a handler that would succeed, but the request is invalid before handler gets called.
         struct NeverCalledHandler;
 
         impl GrpcHandler for NeverCalledHandler {
@@ -1064,12 +1013,7 @@ mod tests {
         let registry = Arc::new(registry);
         let config = GrpcConfig::default();
 
-        // Compression flag = 1 with unsupported grpc-encoding => UNIMPLEMENTED.
-        let frame = vec![
-            0x01, // compression: yes
-            0x00, 0x00, 0x00, 0x01, // length: 1 byte
-            b'x',
-        ];
+        let frame = vec![0x01, 0x00, 0x00, 0x00, 0x01, b'x'];
 
         let request = Request::builder()
             .uri("/test.BadClientStreamService/ClientStream")
@@ -1118,12 +1062,7 @@ mod tests {
         let registry = Arc::new(registry);
         let config = GrpcConfig::default();
 
-        // Compression flag = 1 with no grpc-encoding => INVALID_ARGUMENT.
-        let frame = vec![
-            0x01, // compression: yes
-            0x00, 0x00, 0x00, 0x01, // length: 1 byte
-            b'x',
-        ];
+        let frame = vec![0x01, 0x00, 0x00, 0x00, 0x01, b'x'];
 
         let request = Request::builder()
             .uri("/test.BadClientStreamService/ClientStream")
@@ -1182,7 +1121,7 @@ mod tests {
         let compressed_payload = encoder.finish().unwrap();
 
         let mut frame = Vec::new();
-        frame.push(0x01); // compression: yes
+        frame.push(0x01);
         frame.extend_from_slice(&(compressed_payload.len() as u32).to_be_bytes());
         frame.extend_from_slice(&compressed_payload);
 
@@ -1241,7 +1180,7 @@ mod tests {
         let compressed_payload = encoder.finish().unwrap();
 
         let mut frame = Vec::new();
-        frame.push(0x01); // compression: yes
+        frame.push(0x01);
         frame.extend_from_slice(&(compressed_payload.len() as u32).to_be_bytes());
         frame.extend_from_slice(&compressed_payload);
 

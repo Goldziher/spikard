@@ -131,7 +131,6 @@ impl ParameterValidator {
 
             for (key, child) in obj {
                 match key.as_str() {
-                    // Structural keywords we support in the coercion pass, and metadata keywords.
                     "type"
                     | "format"
                     | "properties"
@@ -148,7 +147,6 @@ impl ParameterValidator {
                     | "$schema"
                     | "$id" => {}
 
-                    // Anything else may impose constraints we don't enforce manually.
                     _ => return true,
                 }
 
@@ -239,8 +237,6 @@ impl ParameterValidator {
     ///
     /// # Errors
     /// Returns a validation error if parameter validation fails.
-    // reason: too_many_lines — multi-source parameter validation (query/path/header/cookie)
-    // with per-type coercion cannot be meaningfully split without losing context.
     #[allow(clippy::too_many_lines)]
     pub fn validate_and_extract(
         &self,
@@ -328,8 +324,6 @@ impl ParameterValidator {
                     };
                     let (item_type, item_format) = self.array_item_type_and_format(&param_def.name);
 
-                    // reason: option_if_let_else — the Some arm has a loop with early-return
-                    // logic that does not fit neatly into a closure.
                     #[allow(clippy::option_if_let_else)]
                     let coerced_items = match array_value.as_array() {
                         Some(items) => {

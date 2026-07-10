@@ -107,8 +107,6 @@ impl SchemaConfig {
     ///
     /// Returns an error if the configuration is invalid (currently all configurations are valid)
     pub const fn validate(&self) -> SchemaResult<()> {
-        // Configuration is valid if introspection and limits are set
-        // Add specific validation rules as needed
         Ok(())
     }
 }

@@ -18,46 +18,38 @@ impl ProjectScaffolder for TypeScriptScaffolder {
 
         let mut files = vec![];
 
-        // package.json
         files.push(ScaffoldedFile::new(
             PathBuf::from("package.json"),
             self.generate_package_json(&kebab_name),
         ));
 
-        // tsconfig.json
         files.push(ScaffoldedFile::new(
             PathBuf::from("tsconfig.json"),
             self.generate_tsconfig(),
         ));
 
-        // vitest.config.ts
         files.push(ScaffoldedFile::new(
             PathBuf::from("vitest.config.ts"),
             self.generate_vitest_config(),
         ));
 
-        // .gitignore
         files.push(ScaffoldedFile::new(
             PathBuf::from(".gitignore"),
             self.generate_gitignore(),
         ));
 
-        // README.md
         files.push(ScaffoldedFile::new(
             PathBuf::from("README.md"),
             self.generate_readme(&kebab_name),
         ));
 
-        // src/app.ts
         files.push(ScaffoldedFile::new(PathBuf::from("src/app.ts"), self.generate_app_ts()));
 
-        // src/server.ts
         files.push(ScaffoldedFile::new(
             PathBuf::from("src/server.ts"),
             self.generate_server_ts(),
         ));
 
-        // tests/app.spec.ts
         files.push(ScaffoldedFile::new(
             PathBuf::from("tests/app.spec.ts"),
             self.generate_app_spec_ts(),
@@ -385,7 +377,6 @@ mod tests {
 
         assert!(!files.is_empty(), "Should create multiple files");
 
-        // Check expected files exist in the vec
         let file_paths: Vec<_> = files.iter().map(|f| f.path.to_string_lossy().to_string()).collect();
 
         assert!(file_paths.iter().any(|p| p == "package.json"));

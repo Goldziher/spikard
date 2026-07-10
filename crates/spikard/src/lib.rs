@@ -164,11 +164,9 @@ impl App {
         if self.config.lifecycle_hooks.is_none() {
             self.config.lifecycle_hooks = Some(Arc::new(LifecycleHooks::new()));
         }
-        // Fast path: we hold the only reference.
         if Arc::get_mut(self.config.lifecycle_hooks.as_mut().unwrap()).is_some() {
             return Arc::get_mut(self.config.lifecycle_hooks.as_mut().unwrap()).unwrap();
         }
-        // Slow path: reclaim the inner value from the shared Arc so we can mutate it.
         let hooks = Arc::try_unwrap(self.config.lifecycle_hooks.take().unwrap())
             .unwrap_or_else(|_| panic!("lifecycle_hooks Arc is shared during App construction"));
         self.config.lifecycle_hooks = Some(Arc::new(hooks));

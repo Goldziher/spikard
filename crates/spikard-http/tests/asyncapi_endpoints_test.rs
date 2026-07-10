@@ -10,8 +10,6 @@ use serde_json::{Value, json};
 use spikard_http::server::build_router_with_handlers_and_config;
 use spikard_http::{AsyncApiConfig, ServerConfig};
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 fn build_server_with_asyncapi(spec: Option<Value>) -> axum_test::TestServer {
     let config = ServerConfig {
         asyncapi: Some(AsyncApiConfig { enabled: true, spec }),
@@ -78,8 +76,6 @@ fn order_api_spec() -> Value {
         "components": {}
     })
 }
-
-// ── POST /asyncapi/parse ──────────────────────────────────────────────────────
 
 #[tokio::test]
 async fn post_asyncapi_parse_valid_spec_returns_200_with_structured_result() {
@@ -220,8 +216,6 @@ async fn post_asyncapi_parse_summary_fields_fixture() {
     assert_eq!(body["channels"].as_array().map(std::vec::Vec::len), Some(1));
 }
 
-// ── POST /asyncapi/validate ───────────────────────────────────────────────────
-
 #[tokio::test]
 async fn post_asyncapi_validate_valid_payload_returns_valid_true() {
     let server = build_server_with_asyncapi(None);
@@ -284,8 +278,6 @@ async fn post_asyncapi_validate_unknown_channel_returns_400() {
     assert_eq!(body["status"], 400);
 }
 
-// ── GET /asyncapi.json ────────────────────────────────────────────────────────
-
 #[tokio::test]
 async fn get_asyncapi_json_returns_registered_spec() {
     let spec = minimal_valid_spec();
@@ -301,7 +293,6 @@ async fn get_asyncapi_json_returns_registered_spec() {
 
 #[tokio::test]
 async fn get_asyncapi_json_without_registered_spec_returns_404_problem_details() {
-    // enabled=true but spec=None
     let server = build_server_with_asyncapi(None);
 
     let response = server.get("/asyncapi.json").await;

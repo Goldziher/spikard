@@ -21,10 +21,6 @@ use anyhow::Result;
 use minijinja::{Environment, context};
 use std::path::PathBuf;
 
-// ---------------------------------------------------------------------------
-// Template environment
-// ---------------------------------------------------------------------------
-
 /// Build the private template environment holding the Java HTTP templates.
 fn make_env() -> Environment<'static> {
     let mut env = Environment::new();
@@ -47,10 +43,6 @@ fn render(env: &Environment<'static>, name: &str, ctx: minijinja::Value) -> Stri
         .unwrap_or_default()
 }
 
-// ---------------------------------------------------------------------------
-// HarnessMain renderer (ported from alef `java/project.rs::render_harness_main`).
-// ---------------------------------------------------------------------------
-
 /// Render HarnessMain.java for server-pattern e2e tests.
 ///
 /// This harness loads fixtures from classpath resources, registers handlers via
@@ -71,10 +63,6 @@ fn render_harness_main(
     let app_class = app_class_owned.as_deref().unwrap_or("App");
     let run_method_owned = e2e_config.harness.run_method_for_lang("java");
     let run_method = run_method_owned.as_deref().unwrap_or("run");
-    // Java methods are camelCase by convention. `register_method_idiomatic`
-    // honors `[crates.e2e.harness.overrides.java]` first, then converts the
-    // canonical name to camelCase (e.g. `register_route` → `registerRoute`).
-    // The actual Java facade method is `registerAppRoute`, so expand bare `route` to it.
     let register_method = e2e_config
         .harness
         .register_method_idiomatic("java")
@@ -86,7 +74,6 @@ fn render_harness_main(
     };
     let body_field = &e2e_config.harness.response_body_field;
 
-    // Collect all HTTP fixtures for this harness to register.
     let mut fixture_ids: Vec<String> = Vec::new();
     for group in groups {
         for fixture in &group.fixtures {
@@ -113,10 +100,6 @@ fn render_harness_main(
 
     render(&make_env(), "java/harness_main.jinja", ctx)
 }
-
-// ---------------------------------------------------------------------------
-// FixtureLoader renderer (ported from alef `java/project.rs::render_fixture_loader`).
-// ---------------------------------------------------------------------------
 
 /// Render FixtureLoader.java helper that loads fixture JSON files from classpath.
 ///
@@ -185,10 +168,6 @@ fn render_fixture_loader(java_group_id: &str) -> String {
     out
 }
 
-// ---------------------------------------------------------------------------
-// Public emit entry point
-// ---------------------------------------------------------------------------
-
 /// Emit Java's server-pattern files.
 ///
 /// Returns the server-pattern `GeneratedFile`s at `e2e/java/...`, gated identically
@@ -214,7 +193,6 @@ pub fn emit(
     let java_group_id = config.java_group_id();
     let binding_pkg = config.java_package();
 
-    // Base paths: e2e/java/
     let output_base = PathBuf::from(e2e_config.effective_output()).join("java");
     let mut test_base = output_base.join("src").join("test").join("java");
     for segment in java_group_id.split('.') {
@@ -223,13 +201,11 @@ pub fn emit(
     let test_base = test_base.join("e2e");
 
     let files: Vec<GeneratedFile> = vec![
-        // Emit HarnessMain.java (server-pattern harness spawner)
         GeneratedFile {
             path: test_base.join("HarnessMain.java"),
             content: render_harness_main(e2e_config, groups, &java_group_id, &binding_pkg),
             generated_header: true,
         },
-        // Emit FixtureLoader.java (fixture resource loader helper)
         GeneratedFile {
             path: test_base.join("FixtureLoader.java"),
             content: render_fixture_loader(&java_group_id),

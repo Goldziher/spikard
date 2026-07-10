@@ -40,10 +40,8 @@ impl RubyGenerator {
 
         rbs.push_str("module Types\n");
 
-        // Create type mapper for Ruby
         let mapper = TypeMapper::new(TargetLanguage::Ruby, Some(schema));
 
-        // Generate RBS for each type (skip built-in scalars)
         for (type_name, type_def) in &schema.types {
             if matches!(
                 type_name.as_str(),
@@ -145,7 +143,6 @@ impl RubyGenerator {
             }
         }
 
-        // Add resolver type signatures
         rbs.push_str("  # Query resolver\n");
         rbs.push_str("  class QueryType\n");
         rbs.push_str("    < GraphQL::Schema::Object\n\n");
@@ -184,7 +181,6 @@ impl RubyGenerator {
 
         rbs.push_str("  end\n\n");
 
-        // Add Mutation resolver if present
         if !schema.mutations.is_empty() {
             rbs.push_str("  # Mutation resolver\n");
             rbs.push_str("  class MutationType\n");
@@ -225,7 +221,6 @@ impl RubyGenerator {
             rbs.push_str("  end\n\n");
         }
 
-        // Add Subscription resolver if present
         if !schema.subscriptions.is_empty() {
             rbs.push_str("  # Subscription resolver\n");
             rbs.push_str("  class SubscriptionType\n");
@@ -377,7 +372,6 @@ impl GraphQLGenerator for RubyGenerator {
         code.push_str(self.file_header());
         code.push_str("module Types\n");
 
-        // Generate all type definitions (skip built-in scalars)
         for (type_name, type_def) in &schema.types {
             if matches!(
                 type_name.as_str(),
@@ -386,7 +380,6 @@ impl GraphQLGenerator for RubyGenerator {
                 continue;
             }
 
-            // Generate type based on kind
             match type_def.kind {
                 TypeKind::Object => {
                     code.push_str(
@@ -402,7 +395,7 @@ impl GraphQLGenerator for RubyGenerator {
 
                     for field in &type_def.fields {
                         if field.name.is_empty() {
-                            continue; // Skip invalid field names
+                            continue;
                         }
 
                         if let Some(field_desc) = &field.description {
@@ -426,7 +419,7 @@ impl GraphQLGenerator for RubyGenerator {
 
                             for arg in &field.arguments {
                                 if arg.name.is_empty() {
-                                    continue; // Skip invalid argument names
+                                    continue;
                                 }
 
                                 let arg_type =
@@ -459,7 +452,7 @@ impl GraphQLGenerator for RubyGenerator {
 
                     for field in &type_def.input_fields {
                         if field.name.is_empty() {
-                            continue; // Skip invalid field names
+                            continue;
                         }
 
                         if let Some(field_desc) = &field.description {
@@ -559,7 +552,7 @@ impl GraphQLGenerator for RubyGenerator {
 
                     for field in &type_def.fields {
                         if field.name.is_empty() {
-                            continue; // Skip invalid field names
+                            continue;
                         }
 
                         if let Some(field_desc) = &field.description {
@@ -589,7 +582,6 @@ impl GraphQLGenerator for RubyGenerator {
 
         code.push_str(self.file_header());
 
-        // Generate QueryType
         code.push_str("# Resolves GraphQL query fields.\n");
         code.push_str("class QueryType < GraphQL::Schema::Object\n");
         if schema.queries.is_empty() {
@@ -610,7 +602,6 @@ impl GraphQLGenerator for RubyGenerator {
         }
         code.push_str("end\n\n");
 
-        // Generate MutationType
         if !schema.mutations.is_empty() {
             code.push_str("# Resolves GraphQL mutation fields.\n");
             code.push_str("class MutationType < GraphQL::Schema::Object\n");
@@ -629,7 +620,6 @@ impl GraphQLGenerator for RubyGenerator {
             code.push_str("end\n\n");
         }
 
-        // Generate SubscriptionType if needed
         if !schema.subscriptions.is_empty() {
             code.push_str("# Resolves GraphQL subscription fields.\n");
             code.push_str("class SubscriptionType < GraphQL::Schema::Object\n");
@@ -657,11 +647,9 @@ impl GraphQLGenerator for RubyGenerator {
 
         code.push_str(self.file_header());
 
-        // Use shared SDL builder
         let builder = SdlBuilder::new(schema);
         let sdl = builder.build();
 
-        // Add schema class
         code.push_str("# Root GraphQL schema for the generated application.\n");
         code.push_str("class AppSchema < GraphQL::Schema\n");
         code.push_str("  query QueryType\n");
@@ -673,7 +661,6 @@ impl GraphQLGenerator for RubyGenerator {
         }
         code.push_str("end\n\n");
 
-        // Add SDL as constant for reference/debugging
         code.push_str("# GraphQL Schema Definition Language (SDL)\n");
         code.push_str("SCHEMA_SDL = <<~SDL\n");
         for line in sdl.lines() {
@@ -705,7 +692,6 @@ mod tests {
 
     #[test]
     fn test_to_snake_case_via_shared_utility() {
-        // Tests that shared to_snake_case function works correctly
         assert_eq!(to_snake_case("getUser"), "get_user");
         assert_eq!(to_snake_case("createUserProfile"), "create_user_profile");
         assert_eq!(to_snake_case("user"), "user");
@@ -760,7 +746,6 @@ mod tests {
 
         let builder = SdlBuilder::new(&schema);
         let sdl = builder.build();
-        // Just verify it doesn't panic and returns empty/minimal SDL
         assert_eq!(sdl.trim(), "");
     }
 
@@ -1059,7 +1044,6 @@ mod tests {
             description: None,
         };
 
-        // Test that the trait method delegates to generate_rbs_signatures
         let result = generator.generate_type_signatures(&schema).unwrap();
         assert!(result.contains("# RBS type signatures"));
         assert!(result.contains("def hello: () -> String | nil"));

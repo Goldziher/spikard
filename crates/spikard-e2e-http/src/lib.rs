@@ -13,8 +13,6 @@
 //! deny. Rather than rewrite the ports (which must stay byte-faithful to alef),
 //! pedantic/nursery are allowed crate-wide here.
 #![allow(clippy::pedantic, clippy::nursery)]
-// `if_same_then_else` fires on a faithful port of alef's ruby SUT-body renderer
-// where two branches legitimately produce the same tuple; keep it port-faithful.
 #![allow(clippy::if_same_then_else)]
 
 use alef::{E2eConfig, EnumDef, Extension, FixtureGroup, GeneratedFile, ResolvedCrateConfig, TypeDef};
@@ -53,10 +51,6 @@ impl Extension for E2eHttpExtension {
         _type_defs: &[TypeDef],
         _enums: &[EnumDef],
     ) -> Result<Vec<GeneratedFile>> {
-        // The extension owns spikard's *server-pattern* e2e generation (the
-        // `app_harness` that spins up the SUT as an HTTP server, plus the
-        // harness-spawn test setup). The shared client-pattern driver, per-test
-        // bodies, mock-server, and project scaffolding stay generic in alef.
         match language {
             "dart" => lang::dart::emit(groups, e2e_config, config),
             "go" => lang::go::emit(groups, e2e_config, config),
@@ -68,8 +62,6 @@ impl Extension for E2eHttpExtension {
             "elixir" => lang::elixir::emit(groups, e2e_config, config),
             "swift" => lang::swift::emit(groups, e2e_config, config),
             "wasm" => lang::wasm::emit(groups, e2e_config, config),
-            // Remaining languages are migrated incrementally; until then alef's
-            // built-in server-pattern emission still produces them.
             _ => Ok(vec![]),
         }
     }

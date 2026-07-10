@@ -190,41 +190,33 @@ impl InitEngine {
     /// # Ok::<(), anyhow::Error>(())
     /// ```
     pub fn execute(request: InitRequest) -> Result<InitResponse> {
-        // Validate request inputs
         Self::validate_request(&request).context("Project initialization request validation failed")?;
 
-        // Get the appropriate scaffolder for the language
         let scaffolder = Self::get_scaffolder(request.language);
 
-        // Generate files via scaffolder
         let files = scaffolder
             .scaffold(&request.project_dir, &request.project_name)
             .context("Failed to scaffold project files")?;
 
-        // Create project directory
         std::fs::create_dir_all(&request.project_dir).context(format!(
             "Failed to create project directory: {}",
             request.project_dir.display()
         ))?;
 
-        // Write files to disk and collect paths
         let mut files_created = Vec::new();
         for file in files {
             let full_path = request.project_dir.join(&file.path);
 
-            // Create parent directories if needed
             if let Some(parent) = full_path.parent() {
                 std::fs::create_dir_all(parent).context(format!("Failed to create directory: {}", parent.display()))?;
             }
 
-            // Write file content
             std::fs::write(&full_path, &file.content)
                 .context(format!("Failed to write file: {}", full_path.display()))?;
 
             files_created.push(full_path);
         }
 
-        // Get next steps from scaffolder
         let next_steps = scaffolder.next_steps(&request.project_name);
 
         Ok(InitResponse {
@@ -265,18 +257,15 @@ impl InitEngine {
     ///
     /// Returns validation errors with context about what failed.
     fn validate_request(request: &InitRequest) -> Result<()> {
-        // Validate project name format
         Self::validate_project_name(&request.project_name, request.language)
             .context("Project name validation failed")?;
 
-        // Validate project directory doesn't already exist
         if request.project_dir.exists() {
             bail!(InitError::DirectoryAlreadyExists {
                 path: request.project_dir.clone(),
             });
         }
 
-        // Validate schema path if provided
         if let Some(schema_path) = &request.schema_path
             && !schema_path.exists()
         {
@@ -316,7 +305,6 @@ impl InitEngine {
 
         match language {
             TargetLanguage::Python => {
-                // Python: lowercase letters, digits, underscores; no leading digit
                 if !project_name
                     .chars()
                     .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_')
@@ -335,7 +323,6 @@ impl InitEngine {
                 }
             }
             TargetLanguage::TypeScript => {
-                // npm package name rules (simplified): lowercase, alphanumeric, hyphens
                 if !project_name
                     .chars()
                     .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
@@ -348,7 +335,6 @@ impl InitEngine {
                 }
             }
             TargetLanguage::Rust => {
-                // Rust: snake_case, alphanumeric + underscores, no leading digit
                 if !project_name
                     .chars()
                     .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_')
@@ -367,7 +353,6 @@ impl InitEngine {
                 }
             }
             TargetLanguage::Ruby => {
-                // Ruby: snake_case, alphanumeric + underscores, no leading digit
                 if !project_name
                     .chars()
                     .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_')
@@ -386,7 +371,6 @@ impl InitEngine {
                 }
             }
             TargetLanguage::Php => {
-                // PHP: alphanumeric + underscores, no leading digit
                 if !project_name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
                     bail!(InitError::InvalidProjectName {
                         name: project_name.to_string(),
@@ -450,14 +434,12 @@ impl InitEngine {
         for file in files {
             let full_path = project_dir.join(&file.path);
 
-            // Create parent directories if needed
             if let Some(parent) = full_path.parent()
                 && !parent.exists()
             {
                 std::fs::create_dir_all(parent).context(format!("Failed to create directory: {}", parent.display()))?;
             }
 
-            // Write file
             std::fs::write(&full_path, &file.content)
                 .context(format!("Failed to write file: {}", full_path.display()))?;
 
@@ -481,13 +463,9 @@ mod tests {
 
     #[test]
     fn test_validate_python_project_name_invalid() {
-        // Uppercase not allowed
         assert!(InitEngine::validate_project_name("MyApi", TargetLanguage::Python).is_err());
-        // Cannot start with digit
         assert!(InitEngine::validate_project_name("2api", TargetLanguage::Python).is_err());
-        // Hyphens not allowed in Python
         assert!(InitEngine::validate_project_name("my-api", TargetLanguage::Python).is_err());
-        // Empty name
         assert!(InitEngine::validate_project_name("", TargetLanguage::Python).is_err());
     }
 
@@ -499,9 +477,7 @@ mod tests {
 
     #[test]
     fn test_validate_typescript_project_name_invalid() {
-        // Uppercase not allowed
         assert!(InitEngine::validate_project_name("MyApi", TargetLanguage::TypeScript).is_err());
-        // Underscores not allowed in npm package names
         assert!(InitEngine::validate_project_name("my_api", TargetLanguage::TypeScript).is_err());
     }
 
@@ -513,11 +489,8 @@ mod tests {
 
     #[test]
     fn test_validate_rust_project_name_invalid() {
-        // Uppercase not allowed
         assert!(InitEngine::validate_project_name("MyApi", TargetLanguage::Rust).is_err());
-        // Cannot start with digit
         assert!(InitEngine::validate_project_name("2api", TargetLanguage::Rust).is_err());
-        // Hyphens not allowed in Rust
         assert!(InitEngine::validate_project_name("my-api", TargetLanguage::Rust).is_err());
     }
 

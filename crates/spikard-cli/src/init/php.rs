@@ -15,49 +15,41 @@ impl ProjectScaffolder for PhpScaffolder {
     fn scaffold(&self, _project_dir: &Path, project_name: &str) -> Result<Vec<ScaffoldedFile>> {
         let mut files = Vec::new();
 
-        // Create composer.json
         files.push(ScaffoldedFile::new(
             PathBuf::from("composer.json"),
             self.generate_composer_json(project_name),
         ));
 
-        // Create phpstan.neon
         files.push(ScaffoldedFile::new(
             PathBuf::from("phpstan.neon"),
             self.generate_phpstan_neon(),
         ));
 
-        // Create phpunit.xml
         files.push(ScaffoldedFile::new(
             PathBuf::from("phpunit.xml"),
             self.generate_phpunit_xml(),
         ));
 
-        // Create src/AppController.php
         files.push(ScaffoldedFile::new(
             PathBuf::from("src/AppController.php"),
             self.generate_app_php(),
         ));
 
-        // Create bin/server.php
         files.push(ScaffoldedFile::new(
             PathBuf::from("bin/server.php"),
             self.generate_server_php(),
         ));
 
-        // Create tests/AppTest.php
         files.push(ScaffoldedFile::new(
             PathBuf::from("tests/AppTest.php"),
             self.generate_app_test_php(),
         ));
 
-        // Create .gitignore
         files.push(ScaffoldedFile::new(
             PathBuf::from(".gitignore"),
             self.generate_gitignore(),
         ));
 
-        // Create README.md
         files.push(ScaffoldedFile::new(
             PathBuf::from("README.md"),
             self.generate_readme(project_name),

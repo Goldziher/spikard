@@ -156,16 +156,13 @@ where
     ///
     /// Returns `GraphQLError` if the request body cannot be parsed or execution fails.
     pub async fn handle_graphql(&self, request_data: &RequestData) -> Result<Value, GraphQLError> {
-        // Extract raw body
         let body_bytes = request_data.raw_body.as_ref().map_or_else(
             || serde_json::to_vec(&request_data.body).unwrap_or_default(),
             |raw_body| raw_body.to_vec(),
         );
 
-        // Parse the request payload
         let payload = parse_graphql_request(&body_bytes)?;
 
-        // Execute the GraphQL query
         self.executor
             .execute(
                 &payload.query,
@@ -426,7 +423,6 @@ mod tests {
         let handler1 = make_test_handler();
         let handler2 = handler1.clone();
 
-        // Verify Arc is shared
         assert!(Arc::ptr_eq(&handler1.executor, &handler2.executor));
     }
 }

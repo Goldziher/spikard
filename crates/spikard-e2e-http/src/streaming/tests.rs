@@ -20,10 +20,6 @@ fn is_streaming_virtual_field_rejects_real_fields() {
 
 #[test]
 fn is_streaming_virtual_field_rejects_non_root_paths_with_matching_tail() {
-    // Regression: prior impl matched any field whose chars-after-root-len started
-    // with `[` or `.` — without checking that the field actually starts with the
-    // root token. `choices[0].finish_reason` therefore falsely matched root
-    // `tool_calls` because byte 10 onward is `.finish_reason`.
     assert!(!is_streaming_virtual_field("choices[0].finish_reason"));
     assert!(!is_streaming_virtual_field("choices[0].message.content"));
     assert!(!is_streaming_virtual_field("data[0].embedding"));
@@ -31,9 +27,6 @@ fn is_streaming_virtual_field_rejects_non_root_paths_with_matching_tail() {
 
 #[test]
 fn is_streaming_virtual_field_does_not_match_usage() {
-    // `usage` is intentionally NOT a streaming-virtual root: chat/embed
-    // responses carry `usage.total_tokens` at the response root, so treating
-    // it as virtual would drag non-streaming tests into the chunks accessor.
     assert!(!is_streaming_virtual_field("usage"));
     assert!(!is_streaming_virtual_field("usage.total_tokens"));
     assert!(!is_streaming_virtual_field("usage.prompt_tokens"));
@@ -170,7 +163,6 @@ fn accessor_elixir_stream_content_uses_pipe() {
     let expr = StreamingFieldResolver::accessor("stream_content", "elixir", "chunks").unwrap();
     assert!(expr.contains("|> Enum.join"), "elixir stream_content: {expr}");
     assert!(expr.contains("|> Enum.map"), "elixir stream_content: {expr}");
-    // Elixir lists do not support bracket access — must use Enum.at, never choices[0]
     assert!(
         !expr.contains("choices[0]"),
         "elixir stream_content must not use bracket access on list: {expr}"
@@ -186,7 +178,6 @@ fn accessor_elixir_stream_complete_uses_list_last() {
     let expr = StreamingFieldResolver::accessor("stream_complete", "elixir", "chunks").unwrap();
     assert!(expr.contains("List.last(chunks)"), "elixir stream_complete: {expr}");
     assert!(expr.contains("finish_reason != nil"), "elixir stream_complete: {expr}");
-    // Elixir lists do not support bracket access — must use Enum.at, never choices[0]
     assert!(
         !expr.contains("choices[0]"),
         "elixir stream_complete must not use bracket access on list: {expr}"
@@ -202,7 +193,6 @@ fn accessor_elixir_finish_reason_uses_list_last() {
     let expr = StreamingFieldResolver::accessor("finish_reason", "elixir", "chunks").unwrap();
     assert!(expr.contains("List.last(chunks)"), "elixir finish_reason: {expr}");
     assert!(expr.contains("finish_reason"), "elixir finish_reason: {expr}");
-    // Elixir lists do not support bracket access — must use Enum.at, never choices[0]
     assert!(
         !expr.contains("choices[0]"),
         "elixir finish_reason must not use bracket access on list: {expr}"
@@ -225,7 +215,6 @@ fn collect_snippet_rust_uses_tokio_stream() {
     let snip = StreamingFieldResolver::collect_snippet("rust", "result", "chunks").unwrap();
     assert!(snip.contains("tokio_stream::StreamExt::collect"), "rust: {snip}");
     assert!(snip.contains("let chunks"), "rust: {snip}");
-    // Items are Result<stream item, _> — unwrap so chunks is Vec<stream item>.
     assert!(snip.contains(".expect("), "rust must unwrap Result items: {snip}");
 }
 
@@ -247,8 +236,6 @@ fn collect_snippet_java_uses_iterator() {
         "typed Java collect must require an item type"
     );
     let snip = StreamingFieldResolver::collect_snippet_typed("java", "result", "chunks", Some("StreamEvent")).unwrap();
-    // Must call .iterator() on the Stream<T> before using hasNext()/next() —
-    // Stream does not implement those methods directly.
     assert!(
         snip.contains(".iterator()"),
         "java snippet must call .iterator() on stream: {snip}"
@@ -261,10 +248,6 @@ fn collect_snippet_java_uses_iterator() {
 #[test]
 fn collect_snippet_php_decodes_json_or_iterates() {
     let snip = StreamingFieldResolver::collect_snippet("php", "result", "chunks").unwrap();
-    // PHP binding's chat_stream_async returns a JSON string today; collect-snippet
-    // decodes it.  iterator_to_array is retained as the fallback branch so a
-    // future binding that exposes a real iterator continues to work without
-    // regenerating the e2e tests.
     assert!(snip.contains("json_decode"), "php must decode JSON: {snip}");
     assert!(
         snip.contains("iterator_to_array"),
@@ -306,7 +289,6 @@ fn accessor_stream_complete_python_uses_finish_reason() {
 fn accessor_finish_reason_python_uses_last_chunk() {
     let expr = StreamingFieldResolver::accessor("finish_reason", "python", "chunks").unwrap();
     assert!(expr.contains("chunks[-1]"), "python finish_reason: {expr}");
-    // Must wrap in str() so FinishReason enum objects support .strip() comparisons
     assert!(
         expr.starts_with("(str(") || expr.contains("str(chunks"),
         "python finish_reason must wrap in str(): {expr}"
@@ -331,9 +313,6 @@ fn accessor_usage_python_uses_last_chunk() {
 
 #[test]
 fn accessor_usage_total_tokens_does_not_route_via_chunks() {
-    // `usage` is intentionally NOT a streaming-virtual root (it overlaps the
-    // non-streaming response shape). The accessor must return None so the
-    // assertion falls through to the normal field-path codegen.
     assert!(StreamingFieldResolver::accessor("usage.total_tokens", "python", "chunks").is_none());
 }
 
@@ -344,10 +323,6 @@ fn accessor_unknown_field_returns_none() {
         None
     );
 }
-
-// -----------------------------------------------------------------------
-// Deep-path tests: tool_calls[0].function.name and tool_calls[0].id
-// -----------------------------------------------------------------------
 
 #[test]
 fn is_streaming_virtual_field_recognizes_deep_tool_calls_paths() {
@@ -363,9 +338,7 @@ fn is_streaming_virtual_field_recognizes_deep_tool_calls_paths() {
         is_streaming_virtual_field("tool_calls[1].function.arguments"),
         "tool_calls[1].function.arguments should be recognized"
     );
-    // bare root still recognized
     assert!(is_streaming_virtual_field("tool_calls"));
-    // unrelated deep path must NOT be recognized
     assert!(!is_streaming_virtual_field("tool_calls_extra.name"));
     assert!(!is_streaming_virtual_field("nonexistent[0].field"));
 }
@@ -381,9 +354,6 @@ fn deep_tool_calls_function_name_snapshot_rust_kotlin_ts() {
     let field = "tool_calls[0].function.name";
 
     let rust = StreamingFieldResolver::accessor(field, "rust", "chunks").unwrap();
-    // Rust: Option-aware chain over the iterator — `.nth(0)` then `.and_then`
-    // on each Option-wrapped field (function is Option<StreamFunctionCall>,
-    // name is Option<String>). Final `.unwrap_or("")` yields `&str`.
     assert!(
         rust.contains(".nth(0)"),
         "rust deep tool_calls: expected .nth(0) iterator index, got: {rust}"
@@ -402,7 +372,6 @@ fn deep_tool_calls_function_name_snapshot_rust_kotlin_ts() {
     );
 
     let kotlin = StreamingFieldResolver::accessor(field, "kotlin", "chunks").unwrap();
-    // Kotlin: uses .first() for index 0, then .function().name()
     assert!(
         kotlin.contains(".first()"),
         "kotlin deep tool_calls: expected .first() for index 0, got: {kotlin}"
@@ -417,7 +386,6 @@ fn deep_tool_calls_function_name_snapshot_rust_kotlin_ts() {
     );
 
     let ts = StreamingFieldResolver::accessor(field, "node", "chunks").unwrap();
-    // TypeScript/Node: uses [0] then .function.name (camelCase)
     assert!(
         ts.contains("[0]"),
         "ts/node deep tool_calls: expected [0] index, got: {ts}"
@@ -442,7 +410,6 @@ fn deep_tool_calls_id_snapshot_all_langs() {
 
     let go = StreamingFieldResolver::accessor(field, "go", "chunks").unwrap();
     assert!(go.contains("[0]"), "go: {go}");
-    // Go: ID is a well-known initialism → uppercase
     assert!(go.contains(".ID"), "go: expected .ID initialism, got: {go}");
 
     let python = StreamingFieldResolver::accessor(field, "python", "chunks").unwrap();
@@ -479,14 +446,10 @@ fn deep_tool_calls_function_name_snapshot_python_elixir_zig() {
     assert!(python.contains(".name"), "python: {python}");
 
     let elixir = StreamingFieldResolver::accessor(field, "elixir", "chunks").unwrap();
-    // Elixir: Enum.at(…, 0).function.name
     assert!(elixir.contains("Enum.at("), "elixir: {elixir}");
     assert!(elixir.contains(".function"), "elixir: {elixir}");
     assert!(elixir.contains(".name"), "elixir: {elixir}");
 
-    // Zig stores chunks as JSON strings, not typed records — deep
-    // tool_calls paths are unsupported and resolve to None so the
-    // assertion site can skip them.
     assert!(
         StreamingFieldResolver::accessor(field, "zig", "chunks").is_none(),
         "zig: expected None for deep tool_calls path"
@@ -518,10 +481,6 @@ fn parse_tail_handles_nonzero_index() {
     assert_eq!(segs[2], TailSeg::Field("arguments".to_string()));
 }
 
-// -----------------------------------------------------------------------
-// Swift-specific accessor tests
-// -----------------------------------------------------------------------
-
 #[test]
 fn accessor_chunks_length_swift_uses_count() {
     let swift = StreamingFieldResolver::accessor("chunks.length", "swift", "chunks").unwrap();
@@ -531,7 +490,6 @@ fn accessor_chunks_length_swift_uses_count() {
 #[test]
 fn accessor_stream_content_swift_uses_swift_closures() {
     let expr = StreamingFieldResolver::accessor("stream_content", "swift", "chunks").unwrap();
-    // Must use Swift closure syntax (`{ ... }`) not JS arrow (`=>`)
     assert!(
         expr.contains("{ c in"),
         "swift stream_content must use Swift closure syntax, got: {expr}"
@@ -540,7 +498,6 @@ fn accessor_stream_content_swift_uses_swift_closures() {
         !expr.contains("=>"),
         "swift stream_content must not contain JS arrow `=>`, got: {expr}"
     );
-    // Fields are accessed as first-class Codable struct properties (no parens).
     assert!(
         expr.contains("c.choices"),
         "swift stream_content must use property access for choices, got: {expr}"
@@ -553,7 +510,6 @@ fn accessor_stream_content_swift_uses_swift_closures() {
         expr.contains("ch.delta.content"),
         "swift stream_content must use property access for content, got: {expr}"
     );
-    // First-class Codable struct fields are native Swift strings — no .toString() wrap.
     assert!(
         !expr.contains(".toString()"),
         "swift stream_content must NOT wrap first-class String fields with .toString(), got: {expr}"
@@ -562,7 +518,6 @@ fn accessor_stream_content_swift_uses_swift_closures() {
         expr.contains(".joined()"),
         "swift stream_content must join with .joined(), got: {expr}"
     );
-    // Must not use JS .length or .join('')
     assert!(
         !expr.contains(".length"),
         "swift stream_content must not use JS .length, got: {expr}"
@@ -576,7 +531,6 @@ fn accessor_stream_content_swift_uses_swift_closures() {
 #[test]
 fn accessor_stream_complete_swift_uses_swift_syntax() {
     let expr = StreamingFieldResolver::accessor("stream_complete", "swift", "chunks").unwrap();
-    // Must use Swift isEmpty / last! syntax, not JS .length
     assert!(
         expr.contains("isEmpty"),
         "swift stream_complete must use .isEmpty, got: {expr}"
@@ -585,7 +539,6 @@ fn accessor_stream_complete_swift_uses_swift_syntax() {
         expr.contains(".last!"),
         "swift stream_complete must use .last!, got: {expr}"
     );
-    // Property access for first-class fields (no parens, camelCase).
     assert!(
         expr.contains(".choices.first"),
         "swift stream_complete must use property access on choices, got: {expr}"
@@ -607,7 +560,6 @@ fn accessor_stream_complete_swift_uses_swift_syntax() {
 #[test]
 fn accessor_tool_calls_swift_uses_swift_flatmap() {
     let expr = StreamingFieldResolver::accessor("tool_calls", "swift", "chunks").unwrap();
-    // Must use Swift closure syntax, not JS arrow
     assert!(
         !expr.contains("=>"),
         "swift tool_calls must not contain JS arrow `=>`, got: {expr}"
@@ -616,7 +568,6 @@ fn accessor_tool_calls_swift_uses_swift_flatmap() {
         expr.contains("flatMap"),
         "swift tool_calls must use flatMap, got: {expr}"
     );
-    // First-class struct property access (no parens, lowerCamelCase).
     assert!(
         expr.contains("c.choices.first"),
         "swift tool_calls must use property access on choices, got: {expr}"
@@ -629,11 +580,6 @@ fn accessor_tool_calls_swift_uses_swift_flatmap() {
 
 #[test]
 fn accessor_tool_calls_deep_path_swift_uses_method_calls_with_optional_chain() {
-    // `tool_calls[0].function.name`: StreamToolCall is a first-class Codable
-    // struct, so deep fields use lowerCamelCase property access. The first
-    // field segment after `[N]` is non-optional (array index yields a value),
-    // so `.function` uses plain `.`; subsequent segments chain with `?.`
-    // because `function` itself is `Optional<StreamFunctionCall>`.
     let expr = StreamingFieldResolver::accessor("tool_calls[0].function.name", "swift", "chunks").unwrap();
     assert!(
         expr.contains("[0].function"),
@@ -656,7 +602,6 @@ fn accessor_tool_calls_deep_path_swift_uses_method_calls_with_optional_chain() {
 #[test]
 fn accessor_finish_reason_swift_uses_swift_syntax() {
     let expr = StreamingFieldResolver::accessor("finish_reason", "swift", "chunks").unwrap();
-    // Must use Swift isEmpty / last! syntax, not JS .length / undefined
     assert!(
         expr.contains("isEmpty"),
         "swift finish_reason must use .isEmpty, got: {expr}"
@@ -669,7 +614,6 @@ fn accessor_finish_reason_swift_uses_swift_syntax() {
         expr.contains("finishReason"),
         "swift finish_reason must use lowerCamelCase finishReason property, got: {expr}"
     );
-    // First-class Swift enum: use .rawValue for the serde wire string, not .toString().
     assert!(
         expr.contains(".rawValue"),
         "swift finish_reason must read enum .rawValue, got: {expr}"
@@ -687,10 +631,8 @@ fn accessor_finish_reason_swift_uses_swift_syntax() {
 #[test]
 fn accessor_usage_swift_uses_swift_syntax() {
     let expr = StreamingFieldResolver::accessor("usage", "swift", "chunks").unwrap();
-    // Must use Swift isEmpty / last! syntax, not JS .length / undefined
     assert!(expr.contains("isEmpty"), "swift usage must use .isEmpty, got: {expr}");
     assert!(expr.contains(".last!"), "swift usage must use .last!, got: {expr}");
-    // First-class Codable property access (no parens).
     assert!(
         expr.contains(".usage"),
         "swift usage must reference .usage property, got: {expr}"
@@ -709,14 +651,9 @@ fn accessor_usage_swift_uses_swift_syntax() {
     );
 }
 
-// ---------------------------------------------------------------------------
-// Bug regression: kotlin_android streaming assertions use property access
-// ---------------------------------------------------------------------------
-
 #[test]
 fn kotlin_android_collect_snippet_uses_flow_to_list() {
     let snip = StreamingFieldResolver::collect_snippet("kotlin_android", "result", "chunks").unwrap();
-    // Flow.toList() — not Iterator.asSequence().toList()
     assert!(
         snip.contains("result.toList()"),
         "kotlin_android collect must use Flow.toList(), got: {snip}"
@@ -815,14 +752,9 @@ fn kotlin_android_deep_tool_calls_uses_property_access() {
     );
 }
 
-// ---------------------------------------------------------------------------
-// Ruby-specific accessor tests
-// ---------------------------------------------------------------------------
-
 #[test]
 fn ruby_stream_content_uses_ruby_block_syntax() {
     let expr = StreamingFieldResolver::accessor("stream_content", "ruby", "chunks").unwrap();
-    // Must use Ruby block syntax, not JS arrow function
     assert!(
         !expr.contains("=>"),
         "ruby stream_content must not contain JS arrow `=>`, got: {expr}"
@@ -847,7 +779,6 @@ fn ruby_stream_content_uses_ruby_block_syntax() {
         expr.contains(".content"),
         "ruby stream_content must access .content, got: {expr}"
     );
-    // Must not use TypeScript optional-chaining syntax
     assert!(
         !expr.contains("?.["),
         "ruby stream_content must not use TS optional chaining `?.[`, got: {expr}"
@@ -857,7 +788,6 @@ fn ruby_stream_content_uses_ruby_block_syntax() {
 #[test]
 fn ruby_stream_complete_uses_ruby_nil_predicate() {
     let expr = StreamingFieldResolver::accessor("stream_complete", "ruby", "chunks").unwrap();
-    // Must use Ruby nil? not JS != null
     assert!(
         !expr.contains("!= null"),
         "ruby stream_complete must not use JS `!= null`, got: {expr}"
@@ -874,7 +804,6 @@ fn ruby_stream_complete_uses_ruby_nil_predicate() {
         expr.contains("finish_reason"),
         "ruby stream_complete must reference finish_reason, got: {expr}"
     );
-    // Must not use TypeScript optional-chaining syntax
     assert!(
         !expr.contains("?.["),
         "ruby stream_complete must not use TS optional chaining `?.[`, got: {expr}"
@@ -884,7 +813,6 @@ fn ruby_stream_complete_uses_ruby_nil_predicate() {
 #[test]
 fn ruby_tool_calls_uses_ruby_flat_map_block() {
     let expr = StreamingFieldResolver::accessor("tool_calls", "ruby", "chunks").unwrap();
-    // Must use Ruby flat_map with block syntax, not JS flatMap with arrow
     assert!(
         !expr.contains("=>"),
         "ruby tool_calls must not contain JS arrow `=>`, got: {expr}"
@@ -901,7 +829,6 @@ fn ruby_tool_calls_uses_ruby_flat_map_block() {
         expr.contains("tool_calls"),
         "ruby tool_calls must reference tool_calls, got: {expr}"
     );
-    // Must not use TypeScript optional-chaining syntax
     assert!(
         !expr.contains("?.["),
         "ruby tool_calls must not use TS optional chaining `?.[`, got: {expr}"
@@ -911,7 +838,6 @@ fn ruby_tool_calls_uses_ruby_flat_map_block() {
 #[test]
 fn ruby_finish_reason_uses_to_s_not_get_value() {
     let expr = StreamingFieldResolver::accessor("finish_reason", "ruby", "chunks").unwrap();
-    // Must use Ruby .to_s, not JS undefined or TS syntax
     assert!(
         !expr.contains("undefined"),
         "ruby finish_reason must not use JS `undefined`, got: {expr}"

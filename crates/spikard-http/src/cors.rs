@@ -133,11 +133,10 @@ pub fn handle_preflight(headers: &HeaderMap, cors_config: &CorsConfig) -> Result
         .get("access-control-request-headers")
         .and_then(|v| v.to_str().ok());
 
-    if let Some(req_headers) = requested_headers_str {
-        // Pass iterator directly without collecting into Vec
-        if !are_headers_allowed(req_headers.split(',').map(|h| h.trim()), &cors_config.allowed_headers) {
-            return Err(Box::new((StatusCode::FORBIDDEN).into_response()));
-        }
+    if let Some(req_headers) = requested_headers_str
+        && !are_headers_allowed(req_headers.split(',').map(|h| h.trim()), &cors_config.allowed_headers)
+    {
+        return Err(Box::new((StatusCode::FORBIDDEN).into_response()));
     }
 
     let mut response = Response::builder().status(StatusCode::NO_CONTENT);
@@ -228,12 +227,8 @@ pub fn add_cors_headers(response: &mut Response<Body>, origin: &str, cors_config
         headers.insert("access-control-allow-origin", origin_value);
     }
 
-    // RFC 6454 §7.2: when the server echoes the request Origin, it MUST send Vary: Origin
-    // so that caches know the response varies by origin.
     headers.insert("vary", HeaderValue::from_static("Origin"));
 
-    // Include allowed methods in simple (non-preflight) responses so clients know
-    // which methods are permitted without an extra preflight round-trip.
     if !cors_config.allowed_methods.is_empty() {
         let methods = cors_config.allowed_methods.join(",");
         if let Ok(methods_value) = HeaderValue::from_str(&methods) {
@@ -1037,10 +1032,6 @@ mod tests {
         assert!(is_origin_allowed("*.example.com", &config.allowed_origins));
     }
 
-    // -----------------------------------------------------------------------
-    // Fixture-mirroring tests — one per failing e2e fixture
-    // -----------------------------------------------------------------------
-
     /// Fixture 08_cors_max_age: OPTIONS preflight with max_age=3600.
     /// Expects 204 with Access-Control-Max-Age: 3600, correct origin/methods/headers echo.
     #[test]
@@ -1113,7 +1104,6 @@ mod tests {
         let mut headers = HeaderMap::new();
         headers.insert("origin", HeaderValue::from_static("null"));
 
-        // "null" is not in the allowlist, so validate_cors_request must return Err(403)
         let result = validate_cors_request(&headers, &config);
         assert!(result.is_err(), "null origin should be rejected by the middleware");
 
@@ -1174,7 +1164,6 @@ mod tests {
             .get("access-control-allow-methods")
             .and_then(|v| v.to_str().ok())
             .unwrap_or("");
-        // Fixture expects "GET,POST" (comma, no space)
         assert_eq!(
             methods_header, "GET,POST",
             "Access-Control-Allow-Methods should be GET,POST (no spaces)"

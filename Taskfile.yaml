@@ -1,29 +1,6 @@
 version: "3"
 
 # ============================================================================
-# spikard — Root Taskfile
-# ============================================================================
-# Primary development interface. Rust core tasks delegate to .task/languages/rust.yml.
-# Most binding language operations (setup, build, test, lint, format, clean,
-# update, upgrade, publish) are handled by alef.
-#
-# Common entry points:
-#   task setup          -> install all dependencies (rust + alef setup + poly hooks)
-#   task build          -> build Rust core only (debug)
-#   task build:all      -> build core + bindings (debug)
-#   task build:release  -> build Rust core only (release)
-#   task test           -> run Rust core tests
-#   task e2e:all        -> generate + build + run e2e tests for all bindings
-#   task test:cov       -> tests with coverage
-#   task format         -> format all code via poly
-#   task alef:format    -> format Alef-managed generated output
-#   task lint           -> lint all code via poly
-#   task update         -> compatible dependency updates everywhere
-#   task upgrade        -> aggressive upgrades
-#   task clean          -> remove all build artifacts
-#   task publish:*      -> alef publish validate/prepare/build/package
-#   task rust:*         -> Rust-specific tasks (.task/languages/rust.yml)
-#   task version:*      -> version sync via alef (.task/tools/version-sync.yml)
 # ============================================================================
 
 includes:
@@ -47,7 +24,6 @@ tasks:
     cmds:
       - task --list
 
-  # === Setup ===
   setup:
     desc: "Install all dependencies and setup development environment"
     cmds:
@@ -55,7 +31,6 @@ tasks:
       - alef setup
       - task: pre-commit:install
 
-  # === Build ===
   build:
     desc: "Build Rust core library only (debug)"
     cmds:
@@ -97,7 +72,6 @@ tasks:
     cmds:
       - cargo build --locked --release --package spikard-http
 
-  # === Test ===
   test:
     desc: "Run Rust core tests"
     cmds:
@@ -125,7 +99,6 @@ tasks:
     cmds:
       - task: test:cov
 
-  # === Lint & Format ===
   lint:
     desc: "Lint all code via poly"
     cmds:
@@ -152,7 +125,6 @@ tasks:
       - task: format:check
       - task: lint:check
 
-  # === Update / Upgrade ===
   update:
     desc: "Update all dependencies within major versions (minor patches only)"
     cmds:
@@ -199,7 +171,6 @@ tasks:
             done
           done
 
-  # === Coverage ===
   cov:rust:
     desc: "Generate Rust coverage report"
     cmds:
@@ -211,13 +182,11 @@ tasks:
       - task: rust:test:ci
       - alef test --coverage
 
-  # === Version ===
   versions:sync:
     desc: "Synchronize version from Cargo.toml to all package manifests"
     cmds:
       - task: version:sync
 
-  # === Alef lifecycle ===
   alef:generate:
     desc: "Regenerate all Alef-managed outputs without formatting or building"
     cmds:
@@ -269,7 +238,6 @@ tasks:
     cmds:
       - alef scaffold
 
-  # === E2E tests ===
   e2e:generate:
     desc: "Generate E2E tests for all languages from fixtures"
     cmds:
@@ -389,7 +357,6 @@ tasks:
       - cargo run -p spikard-alef --release -- e2e generate
       - git diff --exit-code e2e/
 
-  # === Publish ===
   publish:validate:
     desc: "Validate publish manifests are consistent"
     cmds:
@@ -410,7 +377,6 @@ tasks:
     cmds:
       - alef publish package -o dist/
 
-  # === Per-language lint/format/test (delegate to alef where possible) ===
   go:lint:
     desc: "Lint Go binding with golangci-lint"
     cmds:
@@ -560,9 +526,6 @@ tasks:
 
   docs:build:
     desc: "Build documentation site"
-    # Snippet validation is a separate quality gate (docs:snippets:validate) run in
-    # CI with the language toolchains — it must NOT block the site build/deploy,
-    # which only needs the snippet files to exist (enforced by pymdownx check_paths).
     cmds:
       - uv run zensical build --clean
 
@@ -609,7 +572,6 @@ tasks:
         Path("README.md").write_text(rendered)
         PY
 
-  # === OpenAPI client codegen (spikard framework feature) ===
   codegen:python:
     desc: "Generate Python server code from OpenAPI schema"
     deps:
@@ -695,7 +657,6 @@ tasks:
     vars:
       COLON: ":"
 
-  # === Local dev runners ===
   run:cli:
     desc: "Run the CLI tool"
     cmds:
@@ -706,7 +667,6 @@ tasks:
     cmds:
       - cargo run --package spikard-http
 
-  # === Published-package smoke tests ===
   test-apps:mock-server:
     desc: "Build the e2e mock-server that published-package test app harnesses spawn"
     cmds:
@@ -737,10 +697,6 @@ tasks:
     desc: "Run PHP published package test app"
     dir: test_apps/php
     cmds:
-      # The PHP harness bootstrap spawns `mock-server` from
-      # test_apps/rust/target/release/. Make sure that binary exists before
-      # PHPUnit runs; otherwise every HTTP fixture test fails with
-      # `cURL error 7: Failed to connect to localhost port 8080`.
       - cd ../rust && cargo build --release --bin mock-server
       - composer install --no-interaction
       - composer test
@@ -749,11 +705,6 @@ tasks:
     desc: "Run Rust published package test app"
     dir: test_apps/rust
     cmds:
-      # The generated `test_apps/rust/Cargo.toml` is version-bumped by
-      # `task version:set`, but the lock file is not — `cargo test --locked`
-      # then fails with `cannot update the lock file because --locked was
-      # passed`. Drop `--locked` so the lock follows the manifest; the
-      # crates.io index is the source of truth either way.
       - cargo test
 
   test-apps:elixir:
@@ -847,7 +798,6 @@ tasks:
     vars:
       VERSION: '{{.VERSION | default "0.6.0"}}'
 
-  # === Clean ===
   clean:
     desc: "Remove build artifacts across all languages"
     cmds:

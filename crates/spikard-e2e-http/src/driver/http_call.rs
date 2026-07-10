@@ -46,18 +46,11 @@ pub fn render_http_test<R: TestClientRenderer + ?Sized>(out: &mut String, render
     renderer.render_test_open(out, &fn_name, &fixture.description, skip_reason);
 
     if skip_reason.is_some() {
-        // For some languages, render_test_open already emitted a stub body; in
-        // those cases render_test_close is still required for symmetry. Calls
-        // below are gated on the renderer's expectations.
         renderer.render_test_close(out);
         return true;
     }
 
     let response_var = DEFAULT_RESPONSE_VAR;
-    // For server-pattern e2e tests: build the full path to the fixture handler.
-    // Path combines the fixture ID namespace with the actual fixture request path:
-    // `/fixtures/{fixture.id}{request.path}` (e.g., `/fixtures/put_create_if_not_exists/items/999`)
-    // Using request.path ensures parameterized routes are replaced with actual values.
     let request_path = &http.request.path;
     let namespaced_path = format!("/fixtures/{}{}", fixture.id, request_path);
     let req = &http.request;
@@ -75,15 +68,11 @@ pub fn render_http_test<R: TestClientRenderer + ?Sized>(out: &mut String, render
 
     renderer.render_assert_status(out, response_var, http.expected_response.status_code);
 
-    // Emit header assertions in deterministic (sorted) order so generated
-    // output is stable across cargo invocations.
     let mut header_names: Vec<&String> = http.expected_response.headers.keys().collect();
     header_names.sort();
     for name in header_names {
         let value = &http.expected_response.headers[name];
         if name.eq_ignore_ascii_case("content-encoding") {
-            // Mock layer strips Content-Encoding before delivering the body;
-            // asserting on it is a known false-positive source.
             continue;
         }
         renderer.render_assert_header(out, response_var, name, value);
@@ -307,7 +296,6 @@ mod tests {
         render_http_test(&mut out, &TagRenderer, &fixture);
         assert!(out.contains("VALIDATION(1)"));
 
-        // Empty vec → no assertion
         let mut expected = empty_expected(422);
         expected.validation_errors = Some(vec![]);
         let fixture = http_fixture("ve_empty", expected);

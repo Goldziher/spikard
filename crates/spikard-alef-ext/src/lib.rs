@@ -89,7 +89,6 @@ impl Extension for HttpExtension {
     ///
     /// Never fails; always returns `Ok(())`.
     fn augment_surface(&self, _api: &mut ApiSurface, _cfg: &ExtensionConfig) -> Result<()> {
-        // Pre-load config so it's available when emit_for_language is called.
         let _ = self.loaded_config();
         Ok(())
     }
@@ -174,14 +173,9 @@ impl Extension for HttpExtension {
 /// backend-generated `__all__` with the ergonomic names (`App` is already listed by the backend).
 const PYTHON_INIT_ADDITIONS: &[&str] = &[
     // `# noqa: F811`: the re-import deliberately shadows the low-level
-    // `from .service import App` the backend already emitted, so the public
-    // `App` is the ergonomic one. The shadow is intentional, not a mistake.
     "from .app import App  # noqa: F811",
     "from .params import Body, Cookie, Header, Path, Query",
     "from ._internal.converters import register_decoder",
-    // `+=` (not `[*__all__, ...]`): a starred unpack inside an `__all__` list
-    // literal trips ruff PLE0604 ("must contain only strings"); in-place extend
-    // with string literals keeps the export list valid.
     "__all__ += [\"Body\", \"Cookie\", \"Header\", \"Path\", \"Query\", \"register_decoder\"]",
 ];
 
@@ -221,8 +215,6 @@ mod tests {
             lines, PYTHON_INIT_ADDITIONS,
             "python additions must match the canonical set"
         );
-        // `from .app import App` (ergonomic) is present and comes after any `.service` import in
-        // the additions (there is none), so on append it shadows the backend's low-level import.
         assert!(lines.iter().any(|l| l == "from .app import App  # noqa: F811"));
         assert!(
             lines
@@ -248,7 +240,6 @@ mod tests {
             lines, NODE_INIT_ADDITIONS,
             "node additions must match the canonical set"
         );
-        // `export * from './app'` shadows the backend's low-level App re-exports
         assert!(lines.iter().any(|l| l == "export * from './app';"));
     }
 
@@ -263,7 +254,6 @@ mod tests {
             lines, RUBY_INIT_ADDITIONS,
             "ruby additions must match the canonical set"
         );
-        // Ergonomic app.rb is required after backend's low-level service.rb so it shadows
         assert!(lines.iter().any(|l| l == "require_relative 'spikard/app'"));
         assert!(lines.iter().any(|l| l == "require_relative 'spikard/params'"));
         assert!(lines.iter().any(|l| l == "require_relative 'spikard/introspection'"));

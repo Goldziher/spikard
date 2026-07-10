@@ -35,7 +35,6 @@ fn is_json_like_token(token: &[u8]) -> bool {
     if token.eq_ignore_ascii_case(b"application/json") {
         return true;
     }
-    // vendor JSON: application/vnd.foo+json
     token.len() >= 5 && token[token.len() - 5..].eq_ignore_ascii_case(b"+json")
 }
 
@@ -67,15 +66,10 @@ fn is_grpc_token(token: &[u8]) -> bool {
     if !token[..PREFIX.len()].eq_ignore_ascii_case(PREFIX) {
         return false;
     }
-    // Bare "application/grpc" or starts with "application/grpc+" or "application/grpc-"
     token.len() == PREFIX.len() || token[PREFIX.len()] == b'+' || token[PREFIX.len()] == b'-'
 }
 
 fn is_valid_content_type_token(token: &[u8]) -> bool {
-    // Minimal fast validation:
-    // - exactly one '/' separating type and subtype
-    // - no whitespace
-    // - type and subtype are non-empty
     if token.is_empty() {
         return false;
     }
@@ -165,7 +159,6 @@ fn json_charset_value(content_type: &HeaderValue) -> Option<&[u8]> {
         return None;
     }
 
-    // Extract first charset token after "charset=" up to ';' or whitespace.
     let mut i = 0usize;
     while i + 8 <= bytes.len() {
         if bytes[i..i + 8].eq_ignore_ascii_case(b"charset=") {
@@ -206,8 +199,6 @@ pub fn validate_json_content_type(headers: &HeaderMap) -> Result<(), Response> {
         let token = token_before_semicolon(content_type_header.as_bytes());
         let is_json = is_json_like_token(token);
         let is_form = is_form_urlencoded_token(token) || is_multipart_form_data_token(token);
-        // gRPC requests use binary framing — they are not subject to JSON content-type
-        // requirements even when a route declares expects_json_body.
         let is_grpc = is_grpc_token(token);
 
         if !is_json && !is_form && !is_grpc {
@@ -288,7 +279,6 @@ pub fn validate_content_type_headers_and_classify(
     };
 
     if !content_type.as_bytes().is_ascii() && content_type.to_str().is_err() {
-        // Keep legacy behavior: invalid bytes should fail fast.
         let error_body = json!({
             "error": "Invalid Content-Type header"
         });
@@ -776,8 +766,6 @@ mod tests {
         assert!(result.is_ok(), "Content-Type type/subtype should be case-insensitive");
     }
 
-    // --- is_grpc_str / is_grpc_token tests ---
-
     #[test]
     fn test_is_grpc_str_bare() {
         assert!(is_grpc_str("application/grpc"), "bare application/grpc must match");
@@ -844,8 +832,6 @@ mod tests {
     fn test_is_grpc_str_rejects_application_prefix_only() {
         assert!(!is_grpc_str("application/"), "bare application/ must not match");
     }
-
-    // --- validate_json_content_type: grpc exemption ---
 
     #[test]
     fn test_validate_json_content_type_accepts_grpc() {

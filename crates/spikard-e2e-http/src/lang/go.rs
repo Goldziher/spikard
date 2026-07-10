@@ -17,10 +17,6 @@ use anyhow::Result;
 use minijinja::{Environment, context};
 use std::path::PathBuf;
 
-// ---------------------------------------------------------------------------
-// Template environment
-// ---------------------------------------------------------------------------
-
 /// Build the private template environment holding the Go HTTP templates.
 fn make_env() -> Environment<'static> {
     let mut env = Environment::new();
@@ -43,16 +39,11 @@ fn render(env: &Environment<'static>, name: &str, ctx: minijinja::Value) -> Stri
         .unwrap_or_default()
 }
 
-// ---------------------------------------------------------------------------
-// App harness renderer (ported from alef `go.rs::render_harness_main`).
-// ---------------------------------------------------------------------------
-
 /// Render the server-pattern `cmd/harness/main.go` that spawns the SUT HTTP server.
 ///
 /// Ported verbatim from alef's `go.rs::render_harness_main`.
 #[must_use]
 fn render_harness_main(_e2e_config: &E2eConfig, groups: &[FixtureGroup], go_module_path: &str) -> String {
-    // Collect all HTTP fixtures into a fixtures map JSON.
     let mut fixtures_map = serde_json::Map::new();
     for group in groups {
         for fixture in &group.fixtures {
@@ -79,16 +70,12 @@ fn render_harness_main(_e2e_config: &E2eConfig, groups: &[FixtureGroup], go_modu
     }
     let fixtures_json_obj = serde_json::Value::Object(fixtures_map);
     let fixtures_json_str = serde_json::to_string(&fixtures_json_obj).unwrap_or_default();
-    // Escape the JSON string for use in a Go quoted string.
-    // Must escape backslashes first, then double quotes.
     let fixtures_json = fixtures_json_str.replace('\\', "\\\\").replace('"', "\\\"");
 
-    // Render via Jinja template.
     let mut env = Environment::new();
     let harness_template = include_str!("../../templates/go/harness_main.go.jinja");
     env.add_template("harness", harness_template).ok();
 
-    // Derive a short import alias from the module path (e.g., the last path segment).
     let import_alias = go_module_path.rsplit('/').next().unwrap_or("pkg").to_string();
 
     let template = env.get_template("harness").unwrap();
@@ -104,15 +91,10 @@ fn render_harness_main(_e2e_config: &E2eConfig, groups: &[FixtureGroup], go_modu
         })
         .unwrap_or_default();
 
-    // Prepend the generated-file header.
     let mut out = hash::header(CommentStyle::DoubleSlash);
     out.push_str(&output);
     out
 }
-
-// ---------------------------------------------------------------------------
-// Public emit entrypoint (called by the orchestrator).
-// ---------------------------------------------------------------------------
 
 /// Emit the Go server-pattern `GeneratedFile`s.
 ///
@@ -132,7 +114,6 @@ pub fn emit(
         return Ok(vec![]);
     }
 
-    // Resolve module path: prefer override, then config, then call default.
     let call = &e2e_config.call;
     let overrides = call.overrides.get("go");
     let configured_go_module_path = config.go.as_ref().and_then(|go| go.module.as_ref()).cloned();

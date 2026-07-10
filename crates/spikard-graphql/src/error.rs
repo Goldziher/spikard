@@ -147,7 +147,7 @@ impl GraphQLError {
             Self::AuthorizationError(_) => 403,
             Self::NotFound(_) => 404,
             Self::RateLimitExceeded(_) => 429,
-            Self::ExecutionError(_) => 200, // GraphQL execution errors return 200 with errors in body
+            Self::ExecutionError(_) => 200,
             Self::SchemaBuildError(_) | Self::SerializationError(_) | Self::InternalError(_) => 500,
         }
     }
@@ -371,7 +371,7 @@ mod tests {
     #[test]
     fn test_status_code_execution_error() {
         let error = GraphQLError::ExecutionError("Query execution failed".to_string());
-        assert_eq!(error.status_code(), 200); // GraphQL spec
+        assert_eq!(error.status_code(), 200);
     }
 
     #[test]

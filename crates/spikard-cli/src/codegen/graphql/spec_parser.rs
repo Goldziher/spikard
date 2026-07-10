@@ -275,7 +275,6 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
         description: None,
     };
 
-    // Extract directives
     for directive_def in &doc.definitions {
         if let graphql_parser::schema::Definition::DirectiveDefinition(dir_def) = directive_def {
             let args = dir_def
@@ -301,7 +300,6 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
         }
     }
 
-    // Extract type definitions
     for definition in &doc.definitions {
         if let graphql_parser::schema::Definition::TypeDefinition(type_def) = definition {
             match type_def {
@@ -317,7 +315,6 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
                         input_fields: Vec::new(),
                     };
 
-                    // Check if this is the Query type
                     if obj.name == "Query" {
                         schema.queries = fields;
                     } else if obj.name == "Mutation" {
@@ -325,7 +322,6 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
                     } else if obj.name == "Subscription" {
                         schema.subscriptions = fields;
                     } else {
-                        // Detect duplicate type definitions
                         if schema.types.contains_key(&obj.name) {
                             return Err(anyhow!(
                                 "Duplicate type definition: '{}' is defined more than once in the schema",
@@ -336,7 +332,6 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
                     }
                 }
                 TypeDefinition::Interface(interface) => {
-                    // Detect duplicate type definitions
                     if schema.types.contains_key(&interface.name) {
                         return Err(anyhow!(
                             "Duplicate type definition: '{}' is defined more than once in the schema",
@@ -358,7 +353,6 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
                     );
                 }
                 TypeDefinition::Union(union) => {
-                    // Detect duplicate type definitions
                     if schema.types.contains_key(&union.name) {
                         return Err(anyhow!(
                             "Duplicate type definition: '{}' is defined more than once in the schema",
@@ -380,7 +374,6 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
                     );
                 }
                 TypeDefinition::Enum(enum_type) => {
-                    // Detect duplicate type definitions
                     if schema.types.contains_key(&enum_type.name) {
                         return Err(anyhow!(
                             "Duplicate type definition: '{}' is defined more than once in the schema",
@@ -412,7 +405,6 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
                     );
                 }
                 TypeDefinition::InputObject(input_obj) => {
-                    // Detect duplicate type definitions
                     if schema.types.contains_key(&input_obj.name) {
                         return Err(anyhow!(
                             "Duplicate type definition: '{}' is defined more than once in the schema",
@@ -447,7 +439,6 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
                     );
                 }
                 TypeDefinition::Scalar(scalar) => {
-                    // Detect duplicate type definitions
                     if schema.types.contains_key(&scalar.name) {
                         return Err(anyhow!(
                             "Duplicate type definition: '{}' is defined more than once in the schema",
@@ -484,12 +475,10 @@ pub fn parse_graphql_sdl_string(content: &str) -> Result<GraphQLSchema> {
         }
     }
 
-    // Validate that schema is not empty
     if schema.types.is_empty() && schema.queries.is_empty() {
         return Err(anyhow!("Empty GraphQL schema - no types or queries defined"));
     }
 
-    // Validate that Query type exists (required by GraphQL spec)
     if schema.queries.is_empty() {
         return Err(anyhow!(
             "Invalid GraphQL schema - Query type is required by the GraphQL specification.\n\
@@ -513,29 +502,24 @@ pub fn parse_graphql_schema(path: &Path) -> Result<GraphQLSchema> {
 
     match ext.as_deref() {
         Some("json") => {
-            // Try to parse as introspection, fall back to SDL
             let content = fs::read_to_string(path)?;
             if let Ok(value) = serde_json::from_str::<Value>(&content)
                 && (value.get("__schema").is_some() || value.get("data").is_some())
             {
                 return parse_graphql_introspection_value(&value);
             }
-            // Fall back to treating as SDL
             parse_graphql_sdl_string(&content)
         }
         Some("graphql" | "gql") => parse_graphql_sdl(path),
         _ => {
-            // Try to detect by content
             let content =
                 fs::read_to_string(path).with_context(|| format!("Failed to read file: {}", path.display()))?;
 
             if content.trim().starts_with('{') {
-                // Likely JSON
                 let value: Value = serde_json::from_str(&content)
                     .with_context(|| format!("Failed to parse as JSON: {}", path.display()))?;
                 parse_graphql_introspection_value(&value)
             } else {
-                // Likely SDL
                 parse_graphql_sdl_string(&content)
             }
         }
@@ -760,8 +744,6 @@ fn introspection_list_item_nullable(type_ref: &IntrospectionTypeRef) -> bool {
     }
 }
 
-// Helper functions
-
 /// Format a GraphQL default value as a proper GraphQL literal
 /// Converts `graphql_parser` Value types to their GraphQL string representation
 /// Examples:
@@ -774,32 +756,25 @@ fn format_default_value(value: &graphql_parser::schema::Value<String>) -> String
     use graphql_parser::schema::Value;
 
     match value {
-        Value::Int(i) => {
-            // Extract the integer value from IntValue
-            i.as_i64().map_or_else(|| format!("{i:?}"), |num| format!("{num}"))
-        }
+        Value::Int(i) => i.as_i64().map_or_else(|| format!("{i:?}"), |num| format!("{num}")),
         Value::Float(f) => format!("{f}"),
         Value::String(s) => {
-            // Escape quotes in string values
             format!("\"{}\"", s.replace('"', "\\\""))
         }
         Value::Boolean(b) => format!("{b}"),
         Value::Null => "null".to_string(),
         Value::Enum(e) => e.clone(),
         Value::List(items) => {
-            // Recursively format list items
             let formatted: Vec<String> = items.iter().map(|v| format_default_value(v)).collect();
             format!("[{}]", formatted.join(", "))
         }
         Value::Object(fields) => {
-            // Recursively format object fields
             let formatted: Vec<String> = fields
                 .iter()
                 .map(|(k, v)| format!("{}: {}", k, format_default_value(v)))
                 .collect();
             format!("{{{}}}", formatted.join(", "))
         }
-        // Fallback for any other variants (variables not typically used in defaults)
         _ => format!("{value:?}"),
     }
 }
@@ -1127,19 +1102,16 @@ mod tests {
         let status_enum = &schema.types["Status"];
         assert_eq!(status_enum.enum_values.len(), 3);
 
-        // Check ACTIVE (not deprecated)
         let active = &status_enum.enum_values[0];
         assert_eq!(active.name, "ACTIVE");
         assert!(!active.is_deprecated);
         assert!(active.deprecation_reason.is_none());
 
-        // Check INACTIVE (deprecated with custom reason)
         let inactive = &status_enum.enum_values[1];
         assert_eq!(inactive.name, "INACTIVE");
         assert!(inactive.is_deprecated);
         assert_eq!(inactive.deprecation_reason, Some("Use ARCHIVED instead".to_string()));
 
-        // Check PENDING (deprecated with default reason)
         let pending = &status_enum.enum_values[2];
         assert_eq!(pending.name, "PENDING");
         assert!(pending.is_deprecated);
@@ -1165,17 +1137,14 @@ mod tests {
         let user_type = &schema.types["User"];
         assert_eq!(user_type.fields.len(), 4);
 
-        // Check id (not deprecated)
         let id_field = &user_type.fields[0];
         assert_eq!(id_field.name, "id");
         assert!(id_field.deprecation_reason.is_none());
 
-        // Check name (not deprecated)
         let name_field = &user_type.fields[1];
         assert_eq!(name_field.name, "name");
         assert!(name_field.deprecation_reason.is_none());
 
-        // Check email (deprecated with custom reason)
         let email_field = &user_type.fields[2];
         assert_eq!(email_field.name, "email");
         assert_eq!(
@@ -1183,7 +1152,6 @@ mod tests {
             Some("Use emailAddress instead".to_string())
         );
 
-        // Check oldField (deprecated with default reason)
         let old_field = &user_type.fields[3];
         assert_eq!(old_field.name, "oldField");
         assert_eq!(old_field.deprecation_reason, Some("Deprecated".to_string()));
@@ -1206,12 +1174,10 @@ mod tests {
         let node_interface = &schema.types["Node"];
         assert_eq!(node_interface.fields.len(), 2);
 
-        // Check id (not deprecated)
         let id_field = &node_interface.fields[0];
         assert_eq!(id_field.name, "id");
         assert!(id_field.deprecation_reason.is_none());
 
-        // Check createdAt (deprecated with custom reason)
         let created_at_field = &node_interface.fields[1];
         assert_eq!(created_at_field.name, "createdAt");
         assert_eq!(
@@ -1233,7 +1199,6 @@ mod tests {
 
         let schema = parse_graphql_sdl_string(sdl).expect("Failed to parse SDL");
 
-        // [String] → Option<Vec<Option<String>>>
         let list_nullable = schema
             .queries
             .iter()
@@ -1243,7 +1208,6 @@ mod tests {
         assert!(list_nullable.is_list);
         assert!(list_nullable.list_item_nullable);
 
-        // [String!] → Vec<Option<String>>
         let list_non_null = schema
             .queries
             .iter()
@@ -1253,7 +1217,6 @@ mod tests {
         assert!(list_non_null.is_list);
         assert!(!list_non_null.list_item_nullable);
 
-        // [String]! → Option<Vec<String>>
         let non_null_list_nullable = schema
             .queries
             .iter()
@@ -1263,7 +1226,6 @@ mod tests {
         assert!(non_null_list_nullable.is_list);
         assert!(non_null_list_nullable.list_item_nullable);
 
-        // [String!]! → Vec<String>
         let non_null_list_non_null = schema
             .queries
             .iter()

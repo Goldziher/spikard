@@ -6,7 +6,6 @@
 use serde::{Deserialize, Serialize};
 
 // ---------------------------------------------------------------------------
-// Lifecycle hooks
 // ---------------------------------------------------------------------------
 
 /// A lifecycle hook contract — a named callback slot registered on the service owner.
@@ -23,10 +22,6 @@ pub struct LifecycleHookDef {
     #[serde(default)]
     pub is_async: bool,
 }
-
-// ---------------------------------------------------------------------------
-// WebSocket / SSE first-class contracts
-// ---------------------------------------------------------------------------
 
 /// A WebSocket route registration contract.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -51,10 +46,6 @@ pub struct SseRouteDef {
     #[serde(default)]
     pub doc: String,
 }
-
-// ---------------------------------------------------------------------------
-// HTTP status codes and cross-binding error types
-// ---------------------------------------------------------------------------
 
 /// HTTP status code classification for an [`ErrorTypeDef`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

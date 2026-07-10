@@ -19,7 +19,6 @@ fn typescript_schema_generation_handles_complex_nested_with_correct_ordering() {
 
     println!("Generated TypeScript code:\n{output}");
 
-    // Verify that all expected schemas were generated
     assert!(
         output.contains("export const SubtaskSchema"),
         "Should generate Subtask schema"
@@ -41,8 +40,6 @@ fn typescript_schema_generation_handles_complex_nested_with_correct_ordering() {
         "Should generate Project schema"
     );
 
-    // Verify no TypeScript errors in ordering - dependencies should come before their usage
-    // Member is referenced by Organization, Task, and Project
     let member_pos = output
         .find("export const MemberSchema")
         .expect("Member schema not found");
@@ -67,7 +64,6 @@ fn typescript_schema_generation_handles_complex_nested_with_correct_ordering() {
         "Member should be defined before Project (Member is referenced by Project)"
     );
 
-    // TaskTimeline should come before Task (Task references it)
     let task_timeline_pos = output
         .find("export const TaskTimelineSchema")
         .expect("TaskTimeline schema not found");
@@ -79,7 +75,6 @@ fn typescript_schema_generation_handles_complex_nested_with_correct_ordering() {
         "TaskTimeline should be defined before Task (Task references TaskTimeline)"
     );
 
-    // Subtask should come before Task (Task references it in array)
     let subtask_pos = output
         .find("export const SubtaskSchema")
         .expect("Subtask schema not found");
@@ -88,7 +83,6 @@ fn typescript_schema_generation_handles_complex_nested_with_correct_ordering() {
         "Subtask should be defined before Task (Task references Subtask in array)"
     );
 
-    // Milestone should come before Timeline (Timeline references it in array)
     let milestone_pos = output
         .find("export const MilestoneSchema")
         .expect("Milestone schema not found");
@@ -100,7 +94,6 @@ fn typescript_schema_generation_handles_complex_nested_with_correct_ordering() {
         "Milestone should be defined before Timeline (Timeline references Milestone)"
     );
 
-    // Timeline should come before Project (Project references Timeline)
     let project_def_pos = output
         .find("export const ProjectSchema")
         .expect("Project definition not found");
@@ -109,15 +102,10 @@ fn typescript_schema_generation_handles_complex_nested_with_correct_ordering() {
         "Timeline should be defined before Project (Project references Timeline)"
     );
 
-    // Verify schema definitions use correct Zod syntax
     assert!(output.contains("z.object"), "Should generate Zod objects");
     assert!(output.contains("z.array"), "Should generate Zod arrays");
     assert!(output.contains("z.string"), "Should generate Zod strings");
     assert!(output.contains("export type"), "Should generate type exports");
-
-    // Note: Forward reference check is complex due to line number tracking
-    // The topological sort implementation ensures dependencies come before their usage
-    // as verified by the assertions above
 }
 
 #[test]

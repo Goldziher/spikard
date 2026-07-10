@@ -1,7 +1,6 @@
 public class test_native_load {
     public static void main(String[] args) {
         try {
-            // Trigger the static initializer in NativeLib
             Class.forName("dev.spikard.NativeLib");
             System.out.println("SUCCESS: NativeLib loaded without UnsatisfiedLinkError");
         } catch (ClassNotFoundException e) {

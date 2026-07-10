@@ -194,7 +194,6 @@ fn generate_typescript_handler(
         code.push_str("  void parsedParams;\n\n");
     }
 
-    // TODO comment
     code.push_str("  // TODO: Implement business logic\n");
     code.push_str("  // This handler receives parsed parameters and should:\n");
     code.push_str("  // 1. Validate inputs\n");

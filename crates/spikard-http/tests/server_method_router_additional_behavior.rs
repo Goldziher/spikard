@@ -247,9 +247,6 @@ async fn request_timeout_returns_408() {
 
 #[tokio::test]
 async fn trailing_slash_on_registered_route_returns_200() {
-    // A handler registered at /app must also respond to GET /app/ so that
-    // directory-style URLs (e.g. for SPA routing) work without an explicit
-    // trailing-slash route declaration.
     struct OkHandler;
     impl Handler for OkHandler {
         fn call(

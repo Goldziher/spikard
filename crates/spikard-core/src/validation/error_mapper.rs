@@ -165,10 +165,6 @@ impl ErrorMapper {
     /// # Panics
     /// Panics if accessing `.last()` on an empty vector for enum values extraction.
     #[must_use]
-    // reason: too_many_lines — exhaustive match over all error variants is inherently long;
-    // option_if_let_else — chained if-let reads clearer than map_or_else for complex arms;
-    // redundant_closure_for_method_calls — some closures wrap methods with extra args;
-    // uninlined_format_args — several format strings kept separate for readability.
     #[allow(
         clippy::too_many_lines,
         clippy::option_if_let_else,

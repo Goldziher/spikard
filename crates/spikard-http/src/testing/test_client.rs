@@ -652,8 +652,6 @@ mod tests {
             "operationName": null
         });
 
-        // This test validates the method signature and return type
-        // Actual HTTP status testing will happen in integration tests
         let expected_fields = vec!["query", "variables", "operationName"];
         for field in expected_fields {
             assert!(body.get(field).is_some(), "Missing field: {}", field);

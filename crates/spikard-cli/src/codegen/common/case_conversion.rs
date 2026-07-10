@@ -37,18 +37,11 @@ pub fn to_snake_case(s: &str) -> String {
 
     for (i, &ch) in chars.iter().enumerate() {
         if ch.is_uppercase() {
-            // Check if we should add an underscore before this uppercase letter
             let should_add_underscore = if i == 0 {
-                // Never add underscore at start, unless original starts with it
                 false
             } else if result.ends_with('_') {
-                // Already have underscore, don't duplicate
                 false
             } else {
-                // Add underscore if:
-                // 1. Previous char is lowercase (transition from lower to upper)
-                // 2. Previous char is digit (transition from digit to upper)
-                // 3. OR this is end of acronym (current is upper, next is lower)
                 let prev_is_lower = chars[i - 1].is_lowercase();
                 let prev_is_digit = chars[i - 1].is_numeric();
                 let next_is_lower = (i + 1 < chars.len()) && chars[i + 1].is_lowercase();
@@ -99,7 +92,6 @@ pub fn to_camel_case(s: &str) -> String {
         return String::new();
     }
 
-    // Preserve leading and trailing underscores
     let has_leading_underscore = s.starts_with('_');
     let has_trailing_underscore = s.ends_with('_');
 
@@ -109,21 +101,17 @@ pub fn to_camel_case(s: &str) -> String {
         String::new()
     };
 
-    // Collect non-empty parts
     let non_empty_parts: Vec<&str> = parts.iter().filter(|p| !p.is_empty()).copied().collect();
 
     if non_empty_parts.is_empty() {
-        // If all parts were empty (e.g., "___"), preserve underscores
         if has_trailing_underscore {
             result.push('_');
         }
         return result;
     }
 
-    // Add first part as-is (lowercase)
     result.push_str(non_empty_parts[0]);
 
-    // Capitalize subsequent parts
     for part in &non_empty_parts[1..] {
         if let Some(first_char) = part.chars().next() {
             result.push_str(&first_char.to_uppercase().to_string());
@@ -164,7 +152,6 @@ pub fn to_pascal_case(s: &str) -> String {
         return String::new();
     }
 
-    // Split on non-alphanumeric characters
     let parts: Vec<&str> = s.split(|c: char| !c.is_alphanumeric()).collect();
 
     parts
@@ -215,7 +202,6 @@ pub fn to_kebab_case(s: &str) -> String {
 
     for (i, &ch) in chars.iter().enumerate() {
         if ch.is_uppercase() {
-            // Check if we should add a hyphen before this uppercase letter
             let should_add_hyphen = if i == 0 || result.ends_with('-') {
                 false
             } else {
@@ -231,7 +217,6 @@ pub fn to_kebab_case(s: &str) -> String {
             }
             result.push_str(&ch.to_lowercase().to_string());
         } else if ch == '_' {
-            // Convert underscores to hyphens
             if !result.ends_with('-') {
                 result.push('-');
             }
@@ -246,10 +231,6 @@ pub fn to_kebab_case(s: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    // ============================================================================
-    // to_snake_case tests
-    // ============================================================================
 
     #[test]
     fn test_to_snake_case_simple() {
@@ -275,7 +256,7 @@ mod tests {
     #[test]
     fn test_to_snake_case_acronyms() {
         assert_eq!(to_snake_case("HTTPServer"), "http_server");
-        assert_eq!(to_snake_case("GraphQLType"), "graph_ql_type"); // QL is separate acronym
+        assert_eq!(to_snake_case("GraphQLType"), "graph_ql_type");
         assert_eq!(to_snake_case("XMLHttpRequest"), "xml_http_request");
         assert_eq!(to_snake_case("IOError"), "io_error");
         assert_eq!(to_snake_case("URLPath"), "url_path");
@@ -334,10 +315,6 @@ mod tests {
         assert_eq!(to_snake_case("_"), "_");
     }
 
-    // ============================================================================
-    // to_camel_case tests
-    // ============================================================================
-
     #[test]
     fn test_to_camel_case_simple() {
         assert_eq!(to_camel_case("user"), "user");
@@ -361,7 +338,7 @@ mod tests {
 
     #[test]
     fn test_to_camel_case_pascal_case_input() {
-        assert_eq!(to_camel_case("GetUser"), "GetUser"); // First word not lowercase
+        assert_eq!(to_camel_case("GetUser"), "GetUser");
         assert_eq!(to_camel_case("UserName"), "UserName");
     }
 
@@ -398,12 +375,8 @@ mod tests {
     #[test]
     fn test_to_camel_case_single_char() {
         assert_eq!(to_camel_case("a"), "a");
-        assert_eq!(to_camel_case("_"), "__"); // Underscore alone treated as lead+trail underscore
+        assert_eq!(to_camel_case("_"), "__");
     }
-
-    // ============================================================================
-    // to_pascal_case tests
-    // ============================================================================
 
     #[test]
     fn test_to_pascal_case_simple() {
@@ -448,8 +421,8 @@ mod tests {
 
     #[test]
     fn test_to_pascal_case_leading_trailing_separators() {
-        assert_eq!(to_pascal_case("_user"), "User"); // Leading separator removed
-        assert_eq!(to_pascal_case("user_"), "User"); // Trailing separator removed
+        assert_eq!(to_pascal_case("_user"), "User");
+        assert_eq!(to_pascal_case("user_"), "User");
         assert_eq!(to_pascal_case("_user_"), "User");
     }
 
@@ -470,10 +443,6 @@ mod tests {
         assert_eq!(to_pascal_case("UserName"), "UserName");
         assert_eq!(to_pascal_case("CreateUserProfile"), "CreateUserProfile");
     }
-
-    // ============================================================================
-    // to_kebab_case tests
-    // ============================================================================
 
     #[test]
     fn test_to_kebab_case_simple() {
@@ -506,7 +475,7 @@ mod tests {
     #[test]
     fn test_to_kebab_case_acronyms() {
         assert_eq!(to_kebab_case("HTTPServer"), "http-server");
-        assert_eq!(to_kebab_case("GraphQLType"), "graph-ql-type"); // QL is separate acronym
+        assert_eq!(to_kebab_case("GraphQLType"), "graph-ql-type");
         assert_eq!(to_kebab_case("XMLHttpRequest"), "xml-http-request");
     }
 
@@ -526,7 +495,6 @@ mod tests {
 
     #[test]
     fn test_to_kebab_case_leading_trailing_hyphens() {
-        // Leading/trailing hyphens should be trimmed
         assert_eq!(to_kebab_case("getUser-"), "get-user");
         assert_eq!(to_kebab_case("-getUser"), "get-user");
         assert_eq!(to_kebab_case("-getUser-"), "get-user");
@@ -542,10 +510,6 @@ mod tests {
         assert_eq!(to_kebab_case("a"), "a");
         assert_eq!(to_kebab_case("A"), "a");
     }
-
-    // ============================================================================
-    // Cross-function consistency tests
-    // ============================================================================
 
     #[test]
     fn test_round_trip_snake_to_camel_to_snake() {
@@ -565,7 +529,6 @@ mod tests {
 
     #[test]
     fn test_acronym_consistency() {
-        // All converters should handle acronyms consistently
         assert_eq!(to_snake_case("HTTPServer"), "http_server");
         assert_eq!(to_camel_case("http_server"), "httpServer");
         assert_eq!(to_pascal_case("http_server"), "HttpServer");
@@ -575,7 +538,7 @@ mod tests {
     #[test]
     fn test_graphql_type_consistency() {
         let graphql = "GraphQLType";
-        assert_eq!(to_snake_case(graphql), "graph_ql_type"); // QL is separate acronym
+        assert_eq!(to_snake_case(graphql), "graph_ql_type");
         assert_eq!(to_camel_case("graph_ql_type"), "graphQlType");
         assert_eq!(to_pascal_case("graph_ql_type"), "GraphQlType");
         assert_eq!(to_kebab_case(graphql), "graph-ql-type");
@@ -583,7 +546,6 @@ mod tests {
 
     #[test]
     fn test_real_world_field_names() {
-        // Common field names from APIs
         assert_eq!(to_snake_case("userId"), "user_id");
         assert_eq!(to_snake_case("firstName"), "first_name");
         assert_eq!(to_snake_case("lastName"), "last_name");
@@ -597,7 +559,6 @@ mod tests {
 
     #[test]
     fn test_edge_case_empty_parts() {
-        // These shouldn't panic
         assert_eq!(to_camel_case("__"), "__");
         assert_eq!(to_pascal_case("__"), "");
         assert_eq!(to_snake_case("__"), "__");
