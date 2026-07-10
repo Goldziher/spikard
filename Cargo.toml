@@ -101,6 +101,9 @@ nursery = { level = "deny", priority = 0 }
 [workspace.metadata.cargo-llvm-cov]
 exclude = []
 
+[patch."https://github.com/xberg-io/alef"]
+alef = { path = "/Users/naamanhirschfeld/workspace/xberg-io/alef" }
+
 [profile.release]
 lto = "fat"
 codegen-units = 1
