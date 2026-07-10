@@ -68,7 +68,7 @@ fn test_init_python_pyproject_toml_content() -> anyhow::Result<()> {
     assert!(content.contains("requires-python = \">=3.10\""));
     assert!(content.contains("spikard"));
     assert!(content.contains("pytest"));
-    assert!(content.contains("mypy"));
+    assert!(content.contains("pyrefly"));
     assert!(content.contains("ruff"));
 
     Ok(())

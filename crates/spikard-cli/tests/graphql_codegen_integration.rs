@@ -745,7 +745,7 @@ fn test_python_generate_union_type() -> Result<()> {
     );
     assert!(
         !result.contains("| Any"),
-        "SearchResult should not include | Any for mypy compliance"
+        "SearchResult should not include | Any for pyrefly compliance"
     );
 
     Ok(())

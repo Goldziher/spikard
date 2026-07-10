@@ -262,7 +262,7 @@ impl QualityValidator {
     /// Not all languages support this check; unsupported languages return `Ok(())`.
     ///
     /// Tools used:
-    /// - Python: `mypy --strict`
+    /// - Python: `pyrefly check` (strict preset)
     /// - TypeScript: `tsc --noEmit`
     /// - Ruby: `steep check`
     /// - PHP: Not supported (lint validation covers this)
@@ -289,11 +289,17 @@ impl QualityValidator {
         match self.language {
             TargetLanguage::Python => {
                 let project = self.write_temp_python_project(code)?;
-                self.run_tool_in_dir_with_env(
+                let root = workspace_root();
+                let root_str = root
+                    .to_str()
+                    .ok_or_else(|| QualityError::IoError("workspace root path is not valid UTF-8".to_string()))?;
+                // Run `pyrefly check` in project mode from the temp dir so it picks up the
+                // generated `pyrefly.toml` (strict preset + stub search-path). `--project`
+                // pins the workspace venv regardless of the working directory.
+                self.run_tool_in_dir(
                     "uv",
-                    &["run", "mypy", "--strict", project.entry_path.to_str().unwrap()],
-                    workspace_root(),
-                    &[("MYPYPATH", project.stub_path.as_os_str())],
+                    &["run", "--project", root_str, "pyrefly", "check"],
+                    project.workdir.path(),
                     code,
                 )
                 .map(|_| ())
@@ -562,16 +568,22 @@ impl QualityValidator {
         let workdir = tempdir().map_err(|e| QualityError::IoError(e.to_string()))?;
         let entry_path = workdir.path().join("generated.py");
         let stub_path = workdir.path().join("stubs");
+        let config_path = workdir.path().join("pyrefly.toml");
 
         fs::write(&entry_path, code).map_err(|e| QualityError::IoError(e.to_string()))?;
         fs::create_dir_all(&stub_path).map_err(|e| QualityError::IoError(e.to_string()))?;
         write_python_validation_stubs(&stub_path)?;
 
-        Ok(PythonTempProject {
-            workdir,
-            entry_path,
-            stub_path,
-        })
+        // `pyrefly check` runs in project mode from this directory. `search-path`
+        // resolves imports (e.g. `msgspec`) against the generated stubs the same way
+        // `MYPYPATH` did; `preset = "strict"` mirrors the previous `mypy --strict` bar.
+        fs::write(
+            &config_path,
+            "python-version = \"3.10\"\npreset = \"strict\"\nproject-includes = [\"generated.py\"]\nsearch-path = [\"stubs\"]\n",
+        )
+        .map_err(|e| QualityError::IoError(e.to_string()))?;
+
+        Ok(PythonTempProject { workdir, entry_path })
     }
 
     fn write_temp_typescript_project(&self, code: &str) -> Result<TypeScriptTempProject, QualityError> {
@@ -1108,9 +1120,9 @@ class Schema
             } else {
                 stderr.to_string()
             };
-            let is_mypy_internal_error = message.contains("INTERNAL ERROR");
+            let is_transient_internal_error = message.contains("INTERNAL ERROR");
             last_err = Some(QualityError::ValidationFailed(message));
-            if !is_mypy_internal_error {
+            if !is_transient_internal_error {
                 break;
             }
         }
@@ -1131,7 +1143,6 @@ struct TypeScriptTempProject {
 struct PythonTempProject {
     workdir: TempDir,
     entry_path: PathBuf,
-    stub_path: PathBuf,
 }
 
 struct ElixirTempProject {
@@ -1361,8 +1372,8 @@ mod tests {
 
     #[test]
     fn test_quality_error_display() {
-        let err = QualityError::ToolNotFound("mypy".to_string());
-        assert_eq!(err.to_string(), "Required validation tool not found: mypy");
+        let err = QualityError::ToolNotFound("pyrefly".to_string());
+        assert_eq!(err.to_string(), "Required validation tool not found: pyrefly");
 
         let err = QualityError::ValidationFailed("syntax error".to_string());
         assert!(err.to_string().contains("Validation failed"));

@@ -673,7 +673,7 @@ functions = [
 precondition = "command -v ruff >/dev/null 2>&1"
 format = "ruff format packages/python/"
 check = "ruff check packages/python/"
-typecheck = "mypy packages/python/"
+typecheck = "pyrefly check packages/python"
 
 [crates.lint.node]
 precondition = "command -v pnpm >/dev/null 2>&1"

@@ -455,7 +455,7 @@ from gen import user_pb2, user_pb2_grpc
 
 ## Quality Validation Failures
 
-### Problem 9: Python - mypy Type Error
+### Problem 9: Python - pyrefly Type Error
 
 **Error Message:**
 
@@ -464,7 +464,7 @@ error: Incompatible return value type (got "dict[str, Any]", expected "UserRespo
 ```
 
 **Root Cause:**
-The handler returns a plain dictionary instead of the typed response model, causing mypy strict mode to fail.
+The handler returns a plain dictionary instead of the typed response model, causing pyrefly strict mode to fail.
 
 **Solution:**
 
@@ -488,8 +488,8 @@ def get_user(user_id: str) -> UserResponse:
 
 **Prevention Tips:**
 
-- Enable mypy in pre-commit hooks
-- Use `--strict` mode during development
+- Enable pyrefly in pre-commit hooks
+- Use `preset = "strict"` in `[tool.pyrefly]` during development
 - Generate type stubs from OpenAPI schemas
 - Run type checking in CI/CD
 
@@ -1445,7 +1445,7 @@ protoc --descriptor_set_out=/dev/null user.proto
 
 ```bash
 # Python
-mypy --strict gen/
+pyrefly check gen/
 
 # TypeScript
 tsc --noEmit

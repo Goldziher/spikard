@@ -589,10 +589,10 @@ tasks:
       - uv run ruff check --fix {{.FILE}}
 
   codegen:python:lint:
-    desc: "Lint generated Python code with ruff and mypy"
+    desc: "Lint generated Python code with ruff and pyrefly"
     cmds:
       - uv run ruff check {{.FILE}}
-      - uv run mypy {{.FILE}} --strict --allow-untyped-calls --allow-incomplete-defs
+      - uv run pyrefly check {{.FILE}}
 
   codegen:python:verify:
     desc: "Generate, format, and validate Python code from OpenAPI schema"
@@ -804,7 +804,7 @@ tasks:
       - cargo clean
       - alef clean
       - rm -rf coverage.lcov dist/ .alef/
-      - rm -rf .pytest_cache/ .mypy_cache/ .ruff_cache/
+      - rm -rf .pytest_cache/ .ruff_cache/
       - find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
       - find . -type f -name "*.pyc" -delete 2>/dev/null || true
 

@@ -62,7 +62,7 @@ Run these before opening a PR. The CI pipeline enforces them.
 | Language   | Linter / Type Checker        | Coverage Threshold |
 | ---------- | ---------------------------- | ------------------ |
 | Rust       | `clippy -D warnings`         | 95%+               |
-| Python     | `mypy --strict`, `ruff`      | 80%+               |
+| Python     | `pyrefly check`, `ruff`      | 80%+               |
 | TypeScript | Strict mode, `biome`         | 80%+               |
 | Ruby       | `rubocop`, `steep`           | 80%+               |
 | PHP        | `phpstan` level max          | 80%+               |

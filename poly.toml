@@ -311,6 +311,10 @@ fmt = { exclude = [
     "packages/go/include/spikard.h",
 ] }
 file_safety = { exclude = [
+    # Rust source files legitimately begin with `#![...]` inner attributes,
+    # which the shebang-executable check misreads as a `#!` script header.
+    # Rust files are compiled, never executable scripts, so skip file-safety.
+    "**/*.rs",
     "**/*.freezed.dart",
     "**/*.g.dart",
     "**/*.jinja",

@@ -1,7 +1,7 @@
 //! Python-specific code formatter
 //!
 //! Implements the `Formatter` trait for Python code generation, ensuring output
-//! adheres to PEP 8 style guidelines, integrates with standard tools (ruff, mypy),
+//! adheres to PEP 8 style guidelines, integrates with standard tools (ruff, pyrefly),
 //! and follows spikard's async-friendly patterns.
 //!
 //! # Features
@@ -19,7 +19,7 @@ use std::collections::BTreeMap;
 /// Formats generated Python code to comply with:
 /// - PEP 8 style guide
 /// - ruff linting rules
-/// - mypy type checking
+/// - pyrefly type checking
 /// - `NumPy` docstring conventions
 ///
 /// # Example

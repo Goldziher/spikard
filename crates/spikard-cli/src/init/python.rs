@@ -42,7 +42,7 @@ build-backend = "hatchling.build"
 [dependency-groups]
 dev = [
     "pytest>=8.0.0",
-    "mypy>=1.8.0",
+    "pyrefly>=1.1.1",
     "ruff>=0.3.0",
 ]
 "#
@@ -121,7 +121,6 @@ wheels/
 .installed.cfg
 *.egg
 .pytest_cache/
-.mypy_cache/
 .ruff_cache/
 .venv/
 venv/
@@ -170,10 +169,10 @@ uv run pytest
 
 ## Type checking
 
-Run mypy to check types:
+Run pyrefly to check types:
 
 ```bash
-uv run mypy src/{package_name}/
+uv run pyrefly check src/{package_name}/
 ```
 
 ## Linting
@@ -281,7 +280,7 @@ mod tests {
         let content = PythonScaffolder::generate_pyproject_toml("test-app", "test_app");
         assert!(content.contains("spikard>="));
         assert!(content.contains("pytest"));
-        assert!(content.contains("mypy"));
+        assert!(content.contains("pyrefly"));
         assert!(!content.contains("[tool.uv.sources]"));
     }
 

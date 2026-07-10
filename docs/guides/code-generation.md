@@ -1,6 +1,6 @@
 # Code Generation Guide
 
-Spikard's code generator transforms API schemas into type-safe, production-ready handlers and DTOs for Python, TypeScript, Rust, Ruby, PHP, and Elixir. Generated code integrates with Spikard's runtime and passes strict quality tools (ruff/mypy, tsc, clippy, steep/rubocop, phpstan, mix format).
+Spikard's code generator transforms API schemas into type-safe, production-ready handlers and DTOs for Python, TypeScript, Rust, Ruby, PHP, and Elixir. Generated code integrates with Spikard's runtime and passes strict quality tools (ruff/pyrefly, tsc, clippy, steep/rubocop, phpstan, mix format).
 
 This guide covers the complete workflow: schema to generated code to integration and validation.
 
@@ -38,7 +38,7 @@ Generate Handlers/Resolvers
     ↓
 Format Code (language-specific)
     ↓
-Validate Quality (mypy/tsc/steep/phpstan/clippy)
+Validate Quality (pyrefly/tsc/steep/phpstan/clippy)
     ↓
 Output Files
 ```
@@ -55,7 +55,7 @@ Output Files
 
 All generators support these six target languages:
 
-- **Python**: Type hints (3.10+), dataclasses, mypy --strict compatible
+- **Python**: Type hints (3.10+), dataclasses, pyrefly strict compatible
 - **TypeScript**: Strict mode, interfaces, biome/eslint compatible
 - **Rust**: Strongly-typed structs, cargo clippy clean
 - **Ruby**: RBS signatures, steep type checking
@@ -1273,7 +1273,7 @@ All generated code must pass strict quality tools. Spikard runs these automatica
 
 ```bash
 # Type checking (strictest mode)
-mypy --strict generated/
+pyrefly check generated/
 
 # Linting
 ruff check generated/
@@ -1663,7 +1663,7 @@ vim schemas/api.yaml
 spikard generate openapi schemas/api.yaml --lang python --output generated/
 
 # 3. Run quality checks
-mypy --strict generated/
+pyrefly check generated/
 pytest tests/
 
 # 4. Implement custom logic
@@ -1681,7 +1681,7 @@ git commit -m "feat: add user endpoints"
 
 Spikard's code generator transforms schemas into production-ready, type-safe code across six languages. Generated code:
 
-- Passes strict quality tools (mypy --strict, tsc, steep, phpstan level max, clippy)
+- Passes strict quality tools (pyrefly, tsc, steep, phpstan level max, clippy)
 - Integrates with Spikard runtime
 - Follows language-specific conventions
 - Provides clear extension points for custom logic
