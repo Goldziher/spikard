@@ -161,9 +161,7 @@ fn build_message_definition(
     let mut examples: Vec<Value> = Vec::new();
     for example in &message.examples {
         if !example.payload.is_empty() {
-            let value = serde_json::to_value(&example.payload)
-                .context("Failed to serialize AsyncAPI message example payload")?;
-            examples.push(value);
+            examples.push(sorted_payload_to_value(&example.payload)?);
         }
     }
 
@@ -172,6 +170,28 @@ fn build_message_definition(
     }
 
     Ok(Some(MessageDefinition { schema, examples }))
+}
+
+/// Convert an `AsyncAPI` message example payload to a JSON object with deterministic key order.
+///
+/// `asyncapiv3::spec::message::MessageExample::payload` is a `HashMap<String, serde_json::Value>`,
+/// so its iteration order is randomized per process and does not reflect the source document's
+/// key order. Sorting keys before building the JSON object keeps generated fixtures byte-identical
+/// across runs regardless of the upstream `HashMap`'s iteration order.
+fn sorted_payload_to_value(payload: &HashMap<String, Value>) -> Result<Value> {
+    let mut keys: Vec<&String> = payload.keys().collect();
+    keys.sort();
+
+    let mut object = serde_json::Map::with_capacity(payload.len());
+    for key in keys {
+        let value = payload
+            .get(key)
+            .cloned()
+            .context("AsyncAPI message example payload key vanished during sort")?;
+        object.insert(key.clone(), value);
+    }
+
+    Ok(Value::Object(object))
 }
 
 /// Extract JSON Schema from an `AsyncAPI` Message object
