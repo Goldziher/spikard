@@ -3144,7 +3144,7 @@ dependencies = [
 
 [[package]]
 name = "spikard"
-version = "0.16.1"
+version = "0.17.0-rc.1"
 dependencies = [
  "anyhow",
  "async-graphql",
@@ -3163,7 +3163,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-core"
-version = "0.16.1"
+version = "0.17.0-rc.1"
 dependencies = [
  "anyhow",
  "base64",
@@ -3187,7 +3187,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-dart"
-version = "0.16.1"
+version = "0.17.0-rc.1"
 dependencies = [
  "axum",
  "flutter_rust_bridge",
@@ -3201,9 +3201,10 @@ dependencies = [
 
 [[package]]
 name = "spikard-graphql"
-version = "0.16.1"
+version = "0.17.0-rc.1"
 dependencies = [
  "async-graphql",
+ "async-graphql-parser",
  "axum",
  "bytes",
  "futures",
@@ -3220,7 +3221,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-http"
-version = "0.16.1"
+version = "0.17.0-rc.1"
 dependencies = [
  "ahash",
  "anyhow",
