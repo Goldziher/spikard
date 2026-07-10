@@ -49,7 +49,9 @@ jobs:
   e2e:
     name: ${{ matrix.language }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
+    # Most legs finish well under 60m; the elixir leg cold-compiles the Rust NIF
+    # plus the BEAM toolchain and needs more headroom (it hit the 1h cap before).
+    timeout-minutes: ${{ matrix.timeout-minutes || 60 }}
     strategy:
       fail-fast: false
       matrix:
@@ -66,6 +68,7 @@ jobs:
             os: ubuntu-latest
           - language: elixir
             os: ubuntu-latest
+            timeout-minutes: 90
           - language: go
             os: ubuntu-latest
           - language: java
