@@ -73,6 +73,8 @@ fn route(method: Method, path: &str, handler_name: &str) -> Route {
         parameter_validator: None,
         jsonrpc_method: None,
         compression: None,
+        body_limit: None,
+        request_timeout_secs: None,
         #[cfg(feature = "di")]
         handler_dependencies: Vec::new(),
     }

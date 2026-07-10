@@ -421,6 +421,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -459,6 +461,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -528,6 +532,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -576,6 +582,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -637,6 +645,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -679,6 +689,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(PanicHandlerImpl);
@@ -731,6 +743,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -782,6 +796,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -838,6 +854,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -890,6 +908,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -928,6 +948,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -973,6 +995,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1022,6 +1046,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(PanicHandlerImpl);
@@ -1065,6 +1091,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1114,6 +1142,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1175,6 +1205,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1216,6 +1248,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1254,6 +1288,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1293,6 +1329,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(PanicHandlerImpl);
@@ -1345,6 +1383,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1385,6 +1425,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1423,6 +1465,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1474,6 +1518,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(PanicHandlerImpl);
@@ -1522,6 +1568,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1566,6 +1614,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1607,6 +1657,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1665,6 +1717,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1719,6 +1773,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1768,6 +1824,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1806,6 +1864,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(PanicHandlerImpl);
@@ -1875,6 +1935,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let boundary = "TestBoundary1234";
@@ -1954,6 +2016,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let boundary = "TestBoundary1234";
@@ -2024,6 +2088,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let body = "--alef-boundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"optional.txt\"\r\nContent-Type: text/plain\r\n\r\noptional file content here\r\n--alef-boundary--\r\n";
@@ -2087,6 +2153,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let mut headers = HashMap::new();
@@ -2152,6 +2220,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let mut headers = HashMap::new();
@@ -2217,6 +2287,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -2287,6 +2359,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -2348,6 +2422,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -2417,6 +2493,8 @@ mod tests {
             handler_dependencies: vec![],
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let inner = Arc::new(SuccessEchoHandler);

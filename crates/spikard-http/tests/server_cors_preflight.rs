@@ -48,6 +48,8 @@ async fn router_generates_cors_preflight_when_missing_options_handler() {
         parameter_validator: None,
         jsonrpc_method: None,
         compression: None,
+        body_limit: None,
+        request_timeout_secs: None,
         #[cfg(feature = "di")]
         handler_dependencies: vec![],
     };

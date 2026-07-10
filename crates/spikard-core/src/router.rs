@@ -96,6 +96,10 @@ pub struct Route {
     pub jsonrpc_method: Option<JsonRpcMethodInfo>,
     /// Optional per-route compression configuration
     pub compression: Option<crate::http::CompressionConfig>,
+    /// Optional per-route maximum request body size in bytes, overriding the server-global default
+    pub body_limit: Option<usize>,
+    /// Optional per-route request timeout in seconds, overriding the server-global default
+    pub request_timeout_secs: Option<u64>,
 }
 
 impl Default for Route {
@@ -115,6 +119,8 @@ impl Default for Route {
             handler_dependencies: Vec::new(),
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         }
     }
 }
@@ -195,6 +201,8 @@ impl Route {
             handler_dependencies: metadata.handler_dependencies.unwrap_or_default(),
             jsonrpc_method,
             compression: metadata.compression,
+            body_limit: metadata.body_limit,
+            request_timeout_secs: metadata.request_timeout_secs,
         })
     }
 
@@ -291,6 +299,8 @@ mod tests {
             jsonrpc_method: None,
             static_response: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
             #[cfg(feature = "di")]
             handler_dependencies: None,
         };
@@ -327,6 +337,8 @@ mod tests {
             jsonrpc_method: None,
             static_response: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
             #[cfg(feature = "di")]
             handler_dependencies: None,
         };
@@ -361,6 +373,8 @@ mod tests {
             jsonrpc_method: None,
             static_response: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
             #[cfg(feature = "di")]
             handler_dependencies: None,
         };
@@ -379,6 +393,8 @@ mod tests {
             jsonrpc_method: None,
             static_response: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
             #[cfg(feature = "di")]
             handler_dependencies: None,
         };
@@ -459,6 +475,8 @@ mod tests {
             jsonrpc_method: None,
             static_response: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
             #[cfg(feature = "di")]
             handler_dependencies: None,
         };
@@ -534,6 +552,8 @@ mod tests {
             jsonrpc_method: None,
             static_response: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
             #[cfg(feature = "di")]
             handler_dependencies: None,
         };

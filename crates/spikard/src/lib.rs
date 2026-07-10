@@ -379,6 +379,8 @@ pub struct RouteBuilder {
     file_params: Option<serde_json::Value>,
     cors: Option<CorsConfig>,
     compression: Option<CompressionConfig>,
+    body_limit: Option<usize>,
+    request_timeout_secs: Option<u64>,
     is_async: bool,
     #[cfg(feature = "di")]
     handler_dependencies: Option<Vec<String>>,
@@ -400,6 +402,8 @@ impl RouteBuilder {
             file_params: None,
             cors: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
             is_async: true,
             #[cfg(feature = "di")]
             handler_dependencies: None,
@@ -476,6 +480,20 @@ impl RouteBuilder {
         self
     }
 
+    /// Attach a per-route maximum request body size in bytes, overriding the server-global default.
+    #[must_use]
+    pub const fn body_limit(mut self, max_bytes: usize) -> Self {
+        self.body_limit = Some(max_bytes);
+        self
+    }
+
+    /// Attach a per-route request timeout in seconds, overriding the server-global default.
+    #[must_use]
+    pub const fn request_timeout(mut self, seconds: u64) -> Self {
+        self.request_timeout_secs = Some(seconds);
+        self
+    }
+
     /// Mark the route as synchronous.
     #[must_use]
     pub const fn sync(mut self) -> Self {
@@ -505,6 +523,8 @@ impl RouteBuilder {
                 is_async: self.is_async,
                 cors: self.cors,
                 compression: self.compression,
+                body_limit: self.body_limit,
+                request_timeout_secs: self.request_timeout_secs,
                 body_param_name: None,
                 handler_dependencies: self.handler_dependencies,
                 jsonrpc_method: None,
@@ -524,6 +544,8 @@ impl RouteBuilder {
                 is_async: self.is_async,
                 cors: self.cors,
                 compression: self.compression,
+                body_limit: self.body_limit,
+                request_timeout_secs: self.request_timeout_secs,
                 body_param_name: None,
                 jsonrpc_method: None,
                 static_response: None,

@@ -92,6 +92,8 @@ fn route_to_metadata(route: &crate::Route) -> crate::RouteMetadata {
                 .map(|info| serde_json::to_value(info).unwrap_or(serde_json::json!(null))),
             static_response: None,
             compression: route.compression.clone(),
+            body_limit: route.body_limit,
+            request_timeout_secs: route.request_timeout_secs,
         }
     }
     #[cfg(not(feature = "di"))]
@@ -122,6 +124,8 @@ fn route_to_metadata(route: &crate::Route) -> crate::RouteMetadata {
                 .map(|info| serde_json::to_value(info).unwrap_or(serde_json::json!(null))),
             static_response: None,
             compression: route.compression.clone(),
+            body_limit: route.body_limit,
+            request_timeout_secs: route.request_timeout_secs,
         }
     }
 }
@@ -738,6 +742,29 @@ fn build_router_with_handlers_inner(
                 method_router
             };
 
+            // Per-route body limit overrides the server-global `DefaultBodyLimit`. Applied
+            // as an outer `.layer()` call (relative to the content-type validation layer
+            // above) so it runs first and rejects oversized payloads before the
+            // content-type middleware attempts to buffer the body itself.
+            let method_router = if let Some(max_bytes) = route.body_limit {
+                method_router.layer(axum::middleware::from_fn_with_state(
+                    crate::middleware::BodyLimitState { max_bytes },
+                    crate::middleware::body_limit_middleware,
+                ))
+            } else {
+                method_router
+            };
+
+            // Per-route request timeout overrides the server-global `TimeoutLayer`.
+            let method_router = if let Some(timeout_secs) = route.request_timeout_secs {
+                method_router.layer(TimeoutLayer::with_status_code(
+                    StatusCode::REQUEST_TIMEOUT,
+                    Duration::from_secs(timeout_secs),
+                ))
+            } else {
+                method_router
+            };
+
             combined_router = Some(match combined_router {
                 None => method_router,
                 Some(existing) => existing.merge(method_router),
@@ -1201,6 +1228,8 @@ mod tests {
             parameter_validator: None,
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
         }
@@ -1227,6 +1256,8 @@ mod tests {
             parameter_validator: None,
             jsonrpc_method: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
         }

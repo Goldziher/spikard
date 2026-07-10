@@ -190,6 +190,8 @@ mod tests {
             jsonrpc_method: None,
             compression: None,
             static_response: None,
+            body_limit: None,
+            request_timeout_secs: None,
         }
     }
 
@@ -658,6 +660,8 @@ mod tests {
             jsonrpc_method: None,
             compression: None,
             static_response: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
 
         let result = route_to_operation(&route);

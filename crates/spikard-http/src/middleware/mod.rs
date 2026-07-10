@@ -426,6 +426,80 @@ pub async fn validate_content_type_middleware(
     }
 }
 
+/// Per-route state carrying the configured maximum request body size in bytes.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct BodyLimitState {
+    pub max_bytes: usize,
+}
+
+/// Build the RFC 9457 Problem Details response used when a request body exceeds
+/// the configured per-route limit.
+fn payload_too_large_response() -> Response {
+    let problem = ProblemDetails::new(
+        "https://spikard.dev/errors/payload-too-large",
+        "Payload Too Large",
+        StatusCode::PAYLOAD_TOO_LARGE,
+    )
+    .with_detail("The request body exceeds the maximum size allowed for this route");
+    let body = serde_json::to_string(&problem).unwrap_or_else(|_| "{}".to_string());
+    (
+        StatusCode::PAYLOAD_TOO_LARGE,
+        [(axum::http::header::CONTENT_TYPE, "application/problem+json")],
+        body,
+    )
+        .into_response()
+}
+
+/// Middleware enforcing a per-route maximum request body size.
+///
+/// This overrides the server-global body limit for routes that opt into a tighter
+/// (or looser) bound. It runs before body-consuming middleware such as
+/// [`validate_content_type_middleware`] so an oversized payload is rejected with a
+/// `413 Payload Too Large` [`ProblemDetails`] response before the rest of the
+/// middleware chain attempts to buffer it.
+///
+/// # Behavior
+///
+/// 1. If the request declares a `Content-Length` header larger than the configured
+///    limit, the request is rejected immediately without reading the body.
+/// 2. Otherwise (e.g. chunked transfer-encoding with no `Content-Length`), the body
+///    is buffered up to `max_bytes + 1`. If the actual body exceeds `max_bytes`, the
+///    same `413` response is returned; otherwise the request is reconstructed with
+///    the buffered body and forwarded to `next`.
+///
+/// # Errors
+///
+/// Returns a `413 Payload Too Large` `ProblemDetails` response (as `Err`) when the
+/// request body exceeds the configured limit.
+#[cfg(not(tarpaulin_include))]
+pub(crate) async fn body_limit_middleware(
+    State(state): State<BodyLimitState>,
+    request: Request,
+    next: Next,
+) -> Result<Response, Response> {
+    let (parts, body) = request.into_parts();
+
+    if let Some(content_length) = parts.headers.get(axum::http::header::CONTENT_LENGTH)
+        && let Ok(content_length_str) = content_length.to_str()
+        && let Ok(declared_len) = content_length_str.parse::<usize>()
+        && declared_len > state.max_bytes
+    {
+        return Err(payload_too_large_response());
+    }
+
+    let body_bytes = match axum::body::to_bytes(body, state.max_bytes + 1).await {
+        Ok(bytes) => bytes,
+        Err(_) => return Err(payload_too_large_response()),
+    };
+
+    if body_bytes.len() > state.max_bytes {
+        return Err(payload_too_large_response());
+    }
+
+    let request = Request::from_parts(parts, Body::from(body_bytes));
+    Ok(next.run(request).await)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

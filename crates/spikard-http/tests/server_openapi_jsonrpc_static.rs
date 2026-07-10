@@ -68,6 +68,8 @@ fn build_routes(path: &str) -> Vec<(Route, Arc<dyn Handler>)> {
                     tags: vec!["test".to_string()],
                 }),
                 compression: None,
+                body_limit: None,
+                request_timeout_secs: None,
                 #[cfg(feature = "di")]
                 handler_dependencies: Vec::new(),
             },
@@ -87,6 +89,8 @@ fn build_routes(path: &str) -> Vec<(Route, Arc<dyn Handler>)> {
                 parameter_validator: None,
                 jsonrpc_method: None,
                 compression: None,
+                body_limit: None,
+                request_timeout_secs: None,
                 #[cfg(feature = "di")]
                 handler_dependencies: Vec::new(),
             },
@@ -139,6 +143,8 @@ fn build_route_metadata(path: &str) -> Vec<RouteMetadata> {
             ),
             static_response: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         },
         RouteMetadata {
             method: "POST".to_string(),
@@ -156,6 +162,8 @@ fn build_route_metadata(path: &str) -> Vec<RouteMetadata> {
             jsonrpc_method: None,
             compression: None,
             static_response: None,
+            body_limit: None,
+            request_timeout_secs: None,
         },
     ]
 }
@@ -339,6 +347,8 @@ async fn static_response_route_serves_pre_built_response() {
         jsonrpc_method: None,
         compression: None,
         static_response: None,
+        body_limit: None,
+        request_timeout_secs: None,
     };
 
     let route = spikard_http::Route::from_metadata(route_meta.clone(), &spikard_http::SchemaRegistry::new())
@@ -386,6 +396,8 @@ async fn static_and_dynamic_routes_coexist() {
         jsonrpc_method: None,
         compression: None,
         static_response: None,
+        body_limit: None,
+        request_timeout_secs: None,
     };
 
     let dynamic_meta = RouteMetadata {
@@ -404,6 +416,8 @@ async fn static_and_dynamic_routes_coexist() {
         jsonrpc_method: None,
         compression: None,
         static_response: None,
+        body_limit: None,
+        request_timeout_secs: None,
     };
 
     let registry = spikard_http::SchemaRegistry::new();

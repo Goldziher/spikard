@@ -188,6 +188,12 @@ pub struct RouteMetadata {
     pub cors: Option<CorsConfig>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub compression: Option<CompressionConfig>,
+    /// Optional per-route maximum request body size in bytes, overriding the server-global default
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub body_limit: Option<usize>,
+    /// Optional per-route request timeout in seconds, overriding the server-global default
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub request_timeout_secs: Option<u64>,
     /// Name of the body parameter (defaults to "body" if not specified)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub body_param_name: Option<String>,
@@ -223,6 +229,8 @@ impl Default for RouteMetadata {
             jsonrpc_method: None,
             static_response: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         }
     }
 }
@@ -543,6 +551,8 @@ mod tests {
             jsonrpc_method: None,
             static_response: None,
             compression: None,
+            body_limit: None,
+            request_timeout_secs: None,
         };
         assert_eq!(metadata.method, "GET");
         assert_eq!(metadata.path, "/api/users");
