@@ -194,13 +194,13 @@ fn generate_typescript_handler(
         code.push_str("  void parsedParams;\n\n");
     }
 
-    code.push_str("  // TODO: Implement business logic\n");
+    code.push_str("  // Implement business logic\n");
     code.push_str("  // This handler receives parsed parameters and should:\n");
     code.push_str("  // 1. Validate inputs\n");
     code.push_str("  // 2. Execute business logic\n");
     code.push_str("  // 3. Return result matching schema\n");
     code.push_str("  // 4. Throw appropriate JSON-RPC errors on failure\n\n");
-    code.push_str("  throw new Error(\"TODO: Implement JSON-RPC method logic\");\n");
+    code.push_str("  throw new Error(\"Implement JSON-RPC method logic\");\n");
     code.push_str("}\n\n");
 
     Ok(())

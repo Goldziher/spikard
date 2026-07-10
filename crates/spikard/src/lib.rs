@@ -24,7 +24,10 @@ use schemars::JsonSchema;
 use serde::de::DeserializeOwned;
 #[cfg(feature = "di")]
 use spikard_core::di;
-pub use spikard_graphql::{FullSchemaConfig, GraphQLRouteConfig, QueryMutationConfig, QueryOnlyConfig, SchemaConfig};
+pub use spikard_graphql::{
+    DynamicSchemaConfig, FieldErrorSpec, FullSchemaConfig, GraphQLRouteConfig, QueryMutationConfig, QueryOnlyConfig,
+    SchemaConfig,
+};
 #[cfg(not(target_arch = "wasm32"))]
 use spikard_http::server::Server;
 pub use spikard_http::{
@@ -279,6 +282,60 @@ impl App {
             }
         };
 
+        let route_builder = RouteBuilder::new(method, path).request_schema_json(request_schema);
+        self.route(route_builder, handler)
+    }
+
+    /// Register a `/graphql`-style route backed by an arbitrary SDL schema string, with field
+    /// resolution driven by a static `response_data` JSON tree instead of hand-written Rust
+    /// resolvers.
+    ///
+    /// This is the dynamic-schema counterpart to [`App::register_graphql_route`]: instead of
+    /// selecting one of Spikard's built-in test schemas by name, callers supply their own SDL
+    /// and a JSON tree shaped like the successful `data` payload each query should produce. Every
+    /// field resolver is generic — it navigates `response_data` by field name — so
+    /// argument-dependent results (e.g. `user(id: "user-42")`) must already be baked into
+    /// `response_data` at the correct path. See [`spikard_graphql::dynamic`] for the full
+    /// resolver-data encoding and field-level-error support via `config.field_errors`.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The HTTP path to serve GraphQL requests on (e.g. `/graphql`).
+    /// * `method` - The HTTP method to accept (fixtures always use `POST`).
+    /// * `sdl` - The GraphQL SDL schema string (object and input-object types only).
+    /// * `response_data` - JSON tree resolvers navigate by field name to produce query results.
+    /// * `config` - Introspection/complexity/depth limits and field-level error injection.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`AppError::GraphQL`] if the SDL cannot be parsed or fails dynamic-schema
+    /// validation (e.g. an unsupported type kind, duplicate field names), and
+    /// [`AppError::Route`] if route construction fails.
+    pub fn register_graphql_sdl_route(
+        &mut self,
+        path: impl Into<String>,
+        method: Method,
+        sdl: &str,
+        response_data: serde_json::Value,
+        config: &spikard_graphql::DynamicSchemaConfig,
+    ) -> std::result::Result<&mut Self, AppError> {
+        use spikard_graphql::{DynamicGraphQLHandler, build_dynamic_schema};
+
+        let path = path.into();
+
+        let schema = build_dynamic_schema(sdl, response_data, config).map_err(|e| AppError::GraphQL(e.to_string()))?;
+
+        let request_schema = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "query": {"type": "string"},
+                "variables": {"type": "object"},
+                "operationName": {"type": "string"}
+            },
+            "required": ["query"]
+        });
+
+        let handler: Arc<dyn Handler> = Arc::new(DynamicGraphQLHandler::new(schema));
         let route_builder = RouteBuilder::new(method, path).request_schema_json(request_schema);
         self.route(route_builder, handler)
     }

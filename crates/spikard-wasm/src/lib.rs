@@ -2611,7 +2611,6 @@ impl From<spikard_http::SecuritySchemeInfo> for WasmSecuritySchemeInfo {
                 name: Some(name),
                 scheme: None,
             },
-            _ => ::std::todo!("unmapped SecuritySchemeInfo variant"),
         }
     }
 }

@@ -58,7 +58,7 @@ impl AsyncApiGenerator for PhpAsyncApiGenerator {
                     ));
                     code.push_str("echo \"Connecting to {$wsUri}...\\n\";\n\n");
 
-                    code.push_str("// TODO: Add WebSocket client library (e.g., ratchet/pawl)\n");
+                    code.push_str("// Add WebSocket client library (e.g., ratchet/pawl)\n");
                     code.push_str("// \\Ratchet\\Client\\connect($wsUri)->then(\n");
                     code.push_str("//     function($conn) {\n");
                     code.push_str(&format!("//         $fixture = loadFixture('{fixture_name}');\n"));
@@ -176,7 +176,7 @@ impl AsyncApiGenerator for PhpAsyncApiGenerator {
                     code.push_str("     */\n");
                     code.push_str("    public function onConnect(): void\n");
                     code.push_str("    {\n");
-                    code.push_str("        // TODO: Initialize connection state\n");
+                    code.push_str("        // Initialize connection state\n");
                     code.push_str("        error_log(\"WebSocket connection established\");\n");
                     code.push_str("    }\n\n");
 
@@ -187,7 +187,7 @@ impl AsyncApiGenerator for PhpAsyncApiGenerator {
                     code.push_str("    {\n");
                     code.push_str("        $payload = $this->parseMessage($message);\n");
                     code.push_str(&format!(
-                        "        // TODO: Handle {} received on {}\n",
+                        "        // Handle {} received on {}\n",
                         message_description, channel.path
                     ));
                     code.push_str("        unset($payload);\n");
@@ -198,7 +198,7 @@ impl AsyncApiGenerator for PhpAsyncApiGenerator {
                     code.push_str("     */\n");
                     code.push_str("    public function onClose(int $code, ?string $reason = null): void\n");
                     code.push_str("    {\n");
-                    code.push_str("        // TODO: Clean up connection resources\n");
+                    code.push_str("        // Clean up connection resources\n");
                     code.push_str("        unset($code, $reason);\n");
                     code.push_str("        error_log(\"WebSocket connection closed\");\n");
                     code.push_str("    }\n\n");
@@ -269,7 +269,7 @@ impl AsyncApiGenerator for PhpAsyncApiGenerator {
                     code.push_str("    public function __invoke(): Generator\n");
                     code.push_str("    {\n");
                     code.push_str(&format!(
-                        "        // TODO: Implement event generation logic for {}\n",
+                        "        // Implement event generation logic for {}\n",
                         channel.path
                     ));
                     if let Some(message) = channel

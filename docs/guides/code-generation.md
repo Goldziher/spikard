@@ -184,7 +184,7 @@ async def list_todos_handler(ctx) -> dict:
     # Extract query parameters
     status: Optional[str] = ctx.query_value().get("status") if ctx.query_value() else None
 
-    # TODO: Implement handler logic
+    # Implement handler logic
     todos: List[Todo] = []
 
     return {"todos": [{"id": str(t.id), "title": t.title, "status": t.status} for t in todos]}
@@ -196,7 +196,7 @@ async def create_todo_handler(ctx) -> dict:
     body_dict = json.loads(ctx.body_value())
     body = CreateTodoRequest(**body_dict)
 
-    # TODO: Implement handler logic
+    # Implement handler logic
     todo = Todo(
         id=UUID("550e8400-e29b-41d4-a716-446655440000"),
         title=body.title,
@@ -253,7 +253,7 @@ export interface ListTodosQueryParams {
 export async function listTodosHandler(request: Request): Promise<Response> {
   const params = request.query as ListTodosQueryParams;
 
-  // TODO: Implement handler logic
+  // Implement handler logic
   const todos: Todo[] = [];
 
   return Response.json({ todos }, { status: 200 });
@@ -262,7 +262,7 @@ export async function listTodosHandler(request: Request): Promise<Response> {
 export async function createTodoHandler(request: Request): Promise<Response> {
   const body = (await request.json()) as CreateTodoRequest;
 
-  // TODO: Implement handler logic
+  // Implement handler logic
   const todo: Todo = {
     id: crypto.randomUUID(),
     title: body.title,
@@ -355,13 +355,13 @@ class ChatHandler(WebSocketHandler):
     async def on_connect(self, connection: WebSocketConnection) -> None:
         """Called when client connects."""
         room_id = connection.path_params["roomId"]
-        # TODO: Add connection to room
+        # Add connection to room
 
     async def on_message(self, connection: WebSocketConnection, data: dict) -> None:
         """Called when client sends a message."""
         message = ChatMessage(**data)
 
-        # TODO: Validate, persist, and broadcast message
+        # Validate, persist, and broadcast message
         broadcast = ChatMessageBroadcast(
             message_id=UUID("550e8400-e29b-41d4-a716-446655440000"),
             user_id=connection.user_id,
@@ -374,7 +374,7 @@ class ChatHandler(WebSocketHandler):
 
     async def on_disconnect(self, connection: WebSocketConnection) -> None:
         """Called when client disconnects."""
-        # TODO: Remove connection from room
+        # Remove connection from room
 ```
 
 ### Server-Sent Events Example
@@ -399,7 +399,7 @@ export async function* eventsStreamHandler(request: Request): AsyncGenerator<Ser
   // Extract query parameters
   const filter = new URL(request.url).searchParams.get("filter");
 
-  // TODO: Subscribe to event source
+  // Subscribe to event source
   while (true) {
     const event: SystemAlert = {
       severity: "info",
@@ -543,13 +543,13 @@ class QueryResolvers:
     @staticmethod
     async def user(id: str) -> Optional[User]:
         """Resolve user by ID."""
-        # TODO: Implement resolver logic
+        # Implement resolver logic
         return None
 
     @staticmethod
     async def users(limit: int = 20, offset: int = 0) -> List[User]:
         """Resolve list of users."""
-        # TODO: Implement resolver logic
+        # Implement resolver logic
         return []
 
 class MutationResolvers:
@@ -558,7 +558,7 @@ class MutationResolvers:
     @staticmethod
     async def create_user(input: CreateUserInput) -> User:
         """Resolve createUser mutation."""
-        # TODO: Implement resolver logic
+        # Implement resolver logic
         from datetime import datetime
         return User(
             id="new-user-id",
@@ -571,7 +571,7 @@ class MutationResolvers:
     @staticmethod
     async def update_user(id: str, input: UpdateUserInput) -> Optional[User]:
         """Resolve updateUser mutation."""
-        # TODO: Implement resolver logic
+        # Implement resolver logic
         return None
 ```
 
@@ -680,7 +680,7 @@ export interface JsonRpcError {
 }
 
 export async function userGetByIdHandler(userId: string): Promise<User> {
-  // TODO: Implement RPC method
+  // Implement RPC method
   return {
     id: userId,
     name: "Example User",
@@ -919,7 +919,7 @@ class UserServiceHandler:
 
     async def GetUser(self, request: GetUserRequest) -> User:
         """Unary RPC: Get a single user by ID."""
-        # TODO: Implement handler logic
+        # Implement handler logic
         return User(
             id=request.user_id,
             name="Example User",
@@ -932,7 +932,7 @@ class UserServiceHandler:
         self, request: ListUsersRequest
     ) -> AsyncIterator[User]:
         """Server streaming RPC: Stream users with pagination."""
-        # TODO: Implement handler logic
+        # Implement handler logic
         for i in range(request.page_size):
             yield User(
                 id=f"user-{i}",
@@ -948,7 +948,7 @@ class UserServiceHandler:
         """Client streaming RPC: Create multiple users from stream."""
         created_users: List[User] = []
 
-        # TODO: Implement handler logic
+        # Implement handler logic
         async for req in request_iterator:
             user = User(
                 id=f"new-user-{len(created_users)}",
@@ -968,7 +968,7 @@ class UserServiceHandler:
         self, request_iterator: AsyncIterator[ChatMessage]
     ) -> AsyncIterator[ChatMessage]:
         """Bidirectional streaming RPC: Real-time chat."""
-        # TODO: Implement handler logic
+        # Implement handler logic
         async for msg in request_iterator:
             # Echo back with response
             yield ChatMessage(
@@ -1047,7 +1047,7 @@ export function deserializeUser(msg: Message): User {
 }
 
 export function serializeUser(user: User): Message {
-  // TODO: Implement serialization
+  // Implement serialization
   return {} as Message;
 }
 ```

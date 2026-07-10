@@ -1476,7 +1476,7 @@ fn test_typescript_schema_definition_no_broken_imports() -> Result<()> {
     );
 
     assert!(
-        result.contains("TODO") && result.contains("{ resolvers } from './resolvers'"),
+        result.contains("Import your resolvers module") && result.contains("{ resolvers } from './resolvers'"),
         "ERROR: Missing resolver instructions"
     );
 

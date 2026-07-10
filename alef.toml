@@ -57,9 +57,6 @@ exclude = [
     "crates/spikard-node/service_http_additions.ts",
     "packages/go/include/spikard.h",
 ]
-# Rust `#![...]` inner attributes are misread as `#!` shebangs; skip Rust in file-safety only.
-# Generated harness scripts carry a shebang but are run via their interpreter (mode 644), so
-# skip them in the shebang-executable check too.
 file-safety-exclude = ["**/*.rs", "**/app_harness.*", "**/run_tests.*"]
 
 [workspace.poly.uncomment]
@@ -97,13 +94,10 @@ Userr = "Userr"
 wre = "wre"
 
 [workspace.poly.per-file-ignores]
-# noqa is redundant under the poly ruff config.
 "scripts/**/*.py" = ["RUF100"]
 "templates/readme/**" = ["MD057"]
 "docs/reference/feature-parity.md" = ["MD057"]
 "CHANGELOG.md" = ["MD057"]
-# Generated binding/e2e/test-app trees carry alef-authored comments and docs that
-# the uncomment lint would otherwise flag; exempt them from comment/doc-comment.
 "crates/spikard-elixir/**" = ["comment", "doc-comment"]
 "crates/spikard-ffi/**" = ["comment", "doc-comment"]
 "crates/spikard-node/**" = ["comment", "doc-comment", "no-unused-vars"]

@@ -669,13 +669,13 @@ end
 
         if let Some(bt) = body_type {
             output.push_str("    # Parse and validate request body\n");
-            output.push_str("    # TODO: body_data = JSON.parse(request.body.read)\n");
-            output.push_str("    # TODO: body = ");
+            output.push_str("    # body_data = JSON.parse(request.body.read)\n");
+            output.push_str("    # body = ");
             output.push_str(&bt);
             output.push_str(".new(body_data)\n\n");
         }
 
-        output.push_str("    # TODO: Implement this endpoint\n");
+        output.push_str("    # Implement this endpoint\n");
 
         match method {
             "get" => {

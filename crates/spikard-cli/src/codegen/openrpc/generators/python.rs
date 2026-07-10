@@ -361,7 +361,7 @@ fn generate_python_handler(code: &mut String, spec: &OpenRpcSpec, method: &OpenR
     if !method.params.is_empty() {
         code.push_str("    _ = params\n");
     }
-    code.push_str("    # TODO: Implement business logic.\n");
+    code.push_str("    # Implement business logic.\n");
     code.push_str(
         "    # This handler receives validated parameters and should return a typed JSON-RPC result object.\n\n",
     );

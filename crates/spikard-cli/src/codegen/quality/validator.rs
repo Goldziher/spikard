@@ -293,9 +293,6 @@ impl QualityValidator {
                 let root_str = root
                     .to_str()
                     .ok_or_else(|| QualityError::IoError("workspace root path is not valid UTF-8".to_string()))?;
-                // Run `pyrefly check` in project mode from the temp dir so it picks up the
-                // generated `pyrefly.toml` (strict preset + stub search-path). `--project`
-                // pins the workspace venv regardless of the working directory.
                 self.run_tool_in_dir(
                     "uv",
                     &["run", "--project", root_str, "pyrefly", "check"],
@@ -574,9 +571,6 @@ impl QualityValidator {
         fs::create_dir_all(&stub_path).map_err(|e| QualityError::IoError(e.to_string()))?;
         write_python_validation_stubs(&stub_path)?;
 
-        // `pyrefly check` runs in project mode from this directory. `search-path`
-        // resolves imports (e.g. `msgspec`) against the generated stubs the same way
-        // `MYPYPATH` did; `preset = "strict"` mirrors the previous `mypy --strict` bar.
         fs::write(
             &config_path,
             "python-version = \"3.10\"\npreset = \"strict\"\nproject-includes = [\"generated.py\"]\nsearch-path = [\"stubs\"]\n",

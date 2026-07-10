@@ -150,10 +150,6 @@ impl GraphQLError {
             Self::RequestHandlingError(_) => 400,
             Self::AuthenticationError(_) => 401,
             Self::AuthorizationError(_) => 403,
-            // Per the GraphQL spec, errors arising from processing a GraphQL document
-            // (parse errors, validation failures, complexity/depth-limit rejections,
-            // execution errors, invalid input, and not-found results) are reported as
-            // `errors` in a 200 OK response body, not as HTTP error statuses.
             Self::ParseError(_)
             | Self::JsonError(_)
             | Self::ValidationError(_)
@@ -201,9 +197,6 @@ impl GraphQLError {
     /// ```
     #[must_use]
     pub fn to_graphql_response(&self) -> Value {
-        // Complexity/depth-limit rejections and introspection-disabled rejections
-        // are reported as bare GraphQL errors (message only, no extensions),
-        // matching the response shape asserted by `fixtures/graphql_schema.json`.
         if matches!(
             self,
             Self::ComplexityLimitExceeded | Self::DepthLimitExceeded | Self::IntrospectionDisabled
@@ -514,8 +507,6 @@ mod tests {
 
     #[test]
     fn test_complexity_limit_exceeded_response() {
-        // Complexity-limit rejections use a bare GraphQL error (message only, no
-        // `extensions`), matching `fixtures/graphql_schema.json`.
         let error = GraphQLError::ComplexityLimitExceeded;
         let response = error.to_graphql_response();
         assert_eq!(
@@ -526,8 +517,6 @@ mod tests {
 
     #[test]
     fn test_depth_limit_exceeded_response() {
-        // Depth-limit rejections use a bare GraphQL error (message only, no
-        // `extensions`), matching `fixtures/graphql_schema.json`.
         let error = GraphQLError::DepthLimitExceeded;
         let response = error.to_graphql_response();
         assert_eq!(

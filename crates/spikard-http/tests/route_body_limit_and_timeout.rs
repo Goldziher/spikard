@@ -174,7 +174,6 @@ async fn slow_handler_exceeds_route_timeout_returns_408() {
 
 #[tokio::test]
 async fn route_level_body_limit_overrides_looser_server_global_limit() {
-    // Server-global limit is generous (10 MiB); the route-level override is tight (64 bytes).
     let route = body_limit_route(64);
     let config = ServerConfig {
         max_body_size: Some(10 * 1024 * 1024),
@@ -185,7 +184,6 @@ async fn route_level_body_limit_overrides_looser_server_global_limit() {
 
     let server = axum_test::TestServer::new(router);
 
-    // Body is well under the server-global limit but exceeds the route-level limit.
     let oversized_note = "x".repeat(200);
     let response = server
         .post("/body-limit")
@@ -198,7 +196,6 @@ async fn route_level_body_limit_overrides_looser_server_global_limit() {
 
 #[tokio::test]
 async fn route_level_timeout_overrides_unset_server_global_timeout() {
-    // Server-global timeout is unset (no timeout); the route-level override is tight (1 second).
     let route = timeout_route(1);
     let handler = SleepingHandler {
         sleep: Duration::from_millis(1500),

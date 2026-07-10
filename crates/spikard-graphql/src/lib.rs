@@ -23,12 +23,14 @@
     clippy::all
 )]
 
+pub mod dynamic;
 pub mod error;
 pub mod executor;
 pub mod handler;
 pub mod routes;
 pub mod schema;
 
+pub use dynamic::{DynamicGraphQLHandler, DynamicSchemaConfig, FieldErrorSpec, build_dynamic_schema, execute_dynamic};
 pub use error::{GraphQLError, Result as GraphQLResult};
 pub use executor::GraphQLExecutor;
 pub use handler::GraphQLHandler;

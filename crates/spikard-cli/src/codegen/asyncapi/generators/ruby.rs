@@ -65,7 +65,7 @@ impl AsyncApiGenerator for RubyAsyncApiGenerator {
         }
         code.push_str("'\n");
         code.push_str("  puts \"Connecting to #{uri}...\"\n");
-        code.push_str("  # TODO: Implement connection logic\n");
+        code.push_str("  # Implement connection logic\n");
         code.push_str("end\n\n");
         code.push_str("main if __FILE__ == $PROGRAM_NAME\n");
 
@@ -124,7 +124,7 @@ impl AsyncApiGenerator for RubyAsyncApiGenerator {
                     }
                     code.push_str("  def handle_message(message)\n");
                     code.push_str("    payload = parse_message(message)\n");
-                    code.push_str(&format!("    # TODO: Handle messages for {}\n", channel.path));
+                    code.push_str(&format!("    # Handle messages for {}\n", channel.path));
                     code.push_str("    payload.respond_to?(:to_h) ? payload.to_h : payload\n");
                     code.push_str("  end\n\n");
                     code.push_str("  private\n\n");
@@ -162,7 +162,7 @@ impl AsyncApiGenerator for RubyAsyncApiGenerator {
                     code.push_str(&format!("# Server-Sent Events producer for {}\n", channel.path));
                     code.push_str(&format!("class {handler_name}Producer < Spikard::SseEventProducer\n"));
                     code.push_str("  def next_event\n");
-                    code.push_str(&format!("    # TODO: Stream events for {}\n", channel.path));
+                    code.push_str(&format!("    # Stream events for {}\n", channel.path));
                     if let Some(message) = channel
                         .message_definitions
                         .iter()

@@ -515,7 +515,7 @@ import {{ z }} from "zod";
             output.push_str(&format!("\t/**\n\t * {desc}\n\t */\n"));
         }
 
-        output.push_str("\tthrow new Error(\"TODO: Implement this endpoint\");\n");
+        output.push_str("\tthrow new Error(\"Implement this endpoint\");\n");
         output.push_str("}\n");
 
         output.push_str(&format!(

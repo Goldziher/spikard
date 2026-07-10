@@ -631,7 +631,7 @@ fn test_typescript_generator_uses_unimplemented_stub_instead_of_any_result() {
     let generator = TypeScriptOpenRpcGenerator;
     let output = generator.generate_handler_app(&spec).unwrap();
 
-    assert!(output.contains("throw new Error(\"TODO: Implement JSON-RPC method logic\");"));
+    assert!(output.contains("throw new Error(\"Implement JSON-RPC method logic\");"));
     assert!(!output.contains("return result as any"));
 }
 

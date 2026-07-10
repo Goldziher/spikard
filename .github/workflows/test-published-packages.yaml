@@ -270,8 +270,6 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        # 1.95 is the project's committed toolchain floor (rust-toolchain.toml);
-        # the crate is edition 2024, which requires Rust >= 1.85 at minimum.
         rust-version: ["stable", "1.95"]
     runs-on: ${{ matrix.os }}
     steps:

@@ -1393,7 +1393,7 @@ impl PhpGenerator {
 
     /// Append placeholder function body.
     fn append_function_body(&self, output: &mut String) {
-        output.push_str("        // TODO: Implement this endpoint\n");
+        output.push_str("        // Implement this endpoint\n");
         output.push_str("        throw new \\RuntimeException('Not implemented');\n");
         output.push_str("    }\n\n");
     }

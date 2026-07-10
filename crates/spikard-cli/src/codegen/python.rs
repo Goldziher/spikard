@@ -1109,7 +1109,7 @@ import msgspec
             summarize_operation_doc(operation).unwrap_or_else(|| format!("Handle {} {}.", method.to_uppercase(), path));
         output.push_str(&format!("    \"\"\"{docstring}\"\"\"\n"));
 
-        output.push_str("    raise NotImplementedError(\"TODO: Implement this endpoint\")\n\n");
+        output.push_str("    raise NotImplementedError(\"Implement this endpoint\")\n\n");
 
         Ok(output)
     }

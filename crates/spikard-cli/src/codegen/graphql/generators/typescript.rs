@@ -447,7 +447,7 @@ impl GraphQLGenerator for TypeScriptGenerator {
 
         let sdl = self.reconstruct_sdl(schema);
 
-        body.push_str("// TODO: Import your resolvers module:\n");
+        body.push_str("// Import your resolvers module:\n");
         body.push_str("// import { resolvers } from './resolvers';\n\n");
         body.push_str("export type Resolvers = Record<string, unknown>;\n");
         body.push_str("const resolvers: Resolvers = {};\n\n");

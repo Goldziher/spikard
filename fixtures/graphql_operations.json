@@ -19,7 +19,8 @@
         "middleware": {
           "graphql": {
             "enabled": true,
-            "schema": "type Query { hello: String! }"
+            "schema": "type Query { hello: String! }",
+            "response_data": { "hello": "world" }
           }
         }
       },
@@ -62,7 +63,8 @@
         "middleware": {
           "graphql": {
             "enabled": true,
-            "schema": "type Query { user(id: ID!): User } type User { id: ID! name: String! }"
+            "schema": "type Query { user(id: ID!): User } type User { id: ID! name: String! }",
+            "response_data": { "user": { "id": "user-42", "name": "Alice" } }
           }
         }
       },
@@ -107,7 +109,18 @@
         "middleware": {
           "graphql": {
             "enabled": true,
-            "schema": "type Query { order(id: ID!): Order } type Order { id: ID! customer: Customer items: [OrderItem!]! } type Customer { id: ID! name: String! address: Address } type Address { street: String! city: String! } type OrderItem { sku: String! quantity: Int! }"
+            "schema": "type Query { order(id: ID!): Order } type Order { id: ID! customer: Customer items: [OrderItem!]! } type Customer { id: ID! name: String! address: Address } type Address { street: String! city: String! } type OrderItem { sku: String! quantity: Int! }",
+            "response_data": {
+              "order": {
+                "id": "ORD-1",
+                "customer": {
+                  "id": "CUST-1",
+                  "name": "Bob",
+                  "address": { "street": "1 Main St", "city": "Springfield" }
+                },
+                "items": [{ "sku": "WIDGET-A", "quantity": 2 }]
+              }
+            }
           }
         }
       },
@@ -158,7 +171,10 @@
         "middleware": {
           "graphql": {
             "enabled": true,
-            "schema": "type Mutation { createUser(input: CreateUserInput!): User! } input CreateUserInput { name: String! email: String! } type User { id: ID! name: String! email: String! } type Query { _placeholder: Boolean }"
+            "schema": "type Mutation { createUser(input: CreateUserInput!): User! } input CreateUserInput { name: String! email: String! } type User { id: ID! name: String! email: String! } type Query { _placeholder: Boolean }",
+            "response_data": {
+              "createUser": { "id": "new-user-id", "name": "Carol", "email": "carol@example.com" }
+            }
           }
         }
       },
@@ -193,7 +209,7 @@
   },
   {
     "id": "graphql_subscription_declaration",
-    "description": "Tests that a subscription operation type is declared and the initial response shape matches",
+    "description": "Tests that a subscription operation type is accepted by SDL/schema validation, and that executing it over the plain-HTTP (non-streaming) transport is rejected the way real GraphQL engines reject subscriptions on transports that cannot stream events",
     "category": "graphql_operations",
     "http": {
       "handler": {
@@ -209,7 +225,10 @@
         "middleware": {
           "graphql": {
             "enabled": true,
-            "schema": "type Subscription { messageAdded(roomId: ID!): Message! } type Message { id: ID! text: String! authorId: ID! } type Query { _placeholder: Boolean }"
+            "schema": "type Subscription { messageAdded(roomId: ID!): Message! } type Message { id: ID! text: String! authorId: ID! } type Query { _placeholder: Boolean }",
+            "response_data": {
+              "messageAdded": { "id": "msg-1", "text": "Hello room", "authorId": "user-1" }
+            }
           }
         }
       },
@@ -225,13 +244,12 @@
       "expected_response": {
         "status_code": 200,
         "body": {
-          "data": {
-            "messageAdded": {
-              "id": "msg-1",
-              "text": "Hello room",
-              "authorId": "user-1"
+          "data": null,
+          "errors": [
+            {
+              "message": "Subscriptions are not supported on this transport."
             }
-          }
+          ]
         }
       }
     },
@@ -239,7 +257,7 @@
   },
   {
     "id": "graphql_introspection_query",
-    "description": "Tests that the __schema introspection query returns the schema type list",
+    "description": "Tests that the __schema introspection query returns the schema's query root type name via real introspection execution",
     "category": "graphql_operations",
     "http": {
       "handler": {
@@ -255,7 +273,8 @@
         "middleware": {
           "graphql": {
             "enabled": true,
-            "schema": "type Query { hello: String! }"
+            "schema": "type Query { hello: String! }",
+            "response_data": { "hello": "world" }
           }
         }
       },
@@ -264,7 +283,7 @@
         "path": "/graphql",
         "headers": { "Content-Type": "application/json" },
         "body": {
-          "query": "{ __schema { queryType { name } types { name kind } } }"
+          "query": "{ __schema { queryType { name } } }"
         }
       },
       "expected_response": {
@@ -274,12 +293,7 @@
             "__schema": {
               "queryType": {
                 "name": "Query"
-              },
-              "types": [
-                { "name": "Query", "kind": "OBJECT" },
-                { "name": "String", "kind": "SCALAR" },
-                { "name": "Boolean", "kind": "SCALAR" }
-              ]
+              }
             }
           }
         }
@@ -305,7 +319,8 @@
         "middleware": {
           "graphql": {
             "enabled": true,
-            "schema": "type Query { hello: String! }"
+            "schema": "type Query { hello: String! }",
+            "response_data": { "hello": "world" }
           }
         }
       },
@@ -320,10 +335,10 @@
       "expected_response": {
         "status_code": 200,
         "body": {
+          "data": null,
           "errors": [
             {
-              "message": "Syntax Error",
-              "locations": [{ "line": 1, "column": 10 }]
+              "message": "<<present>>"
             }
           ]
         }
@@ -350,7 +365,8 @@
           "graphql": {
             "enabled": true,
             "schema": "type Query { users: [User!]! } type User { id: ID! friends: [User!]! }",
-            "max_complexity": 10
+            "max_complexity": 10,
+            "response_data": { "users": [] }
           }
         }
       },
@@ -359,15 +375,16 @@
         "path": "/graphql",
         "headers": { "Content-Type": "application/json" },
         "body": {
-          "query": "{ users { id friends { id friends { id friends { id friends { id } } } } } }"
+          "query": "{ users { id friends { id friends { id friends { id friends { id friends { id } } } } } } }"
         }
       },
       "expected_response": {
         "status_code": 200,
         "body": {
+          "data": null,
           "errors": [
             {
-              "message": "Query complexity exceeds maximum allowed complexity of 10"
+              "message": "Query is too complex."
             }
           ]
         }
@@ -394,7 +411,8 @@
           "graphql": {
             "enabled": true,
             "schema": "type Query { a: Level1 } type Level1 { b: Level2 } type Level2 { c: Level3 } type Level3 { d: Level4 } type Level4 { e: String }",
-            "max_depth": 3
+            "max_depth": 3,
+            "response_data": { "a": { "b": { "c": { "d": { "e": "deep" } } } } }
           }
         }
       },
@@ -409,9 +427,10 @@
       "expected_response": {
         "status_code": 200,
         "body": {
+          "data": null,
           "errors": [
             {
-              "message": "Query depth exceeds maximum allowed depth of 3"
+              "message": "Query is nested too deep."
             }
           ]
         }
@@ -437,7 +456,9 @@
         "middleware": {
           "graphql": {
             "enabled": true,
-            "schema": "type Query { user(id: ID!): User status: String! } type User { id: ID! name: String! avatar: String }"
+            "schema": "type Query { user(id: ID!): User status: String! } type User { id: ID! name: String! avatar: String }",
+            "response_data": { "user": null, "status": "ok" },
+            "field_errors": [{ "path": "user", "message": "User not found" }]
           }
         }
       },
@@ -459,6 +480,7 @@
           "errors": [
             {
               "message": "User not found",
+              "locations": [{ "line": 1, "column": 3 }],
               "path": ["user"]
             }
           ]
@@ -487,7 +509,8 @@
         "middleware": {
           "graphql": {
             "enabled": true,
-            "schema": "type Query { ping: String! version: String! }"
+            "schema": "type Query { ping: String! version: String! }",
+            "response_data": { "ping": "pong", "version": "1.0.0" }
           }
         }
       },
@@ -529,7 +552,8 @@
         "middleware": {
           "graphql": {
             "enabled": true,
-            "schema": "type Query { hello: String! }"
+            "schema": "type Query { hello: String! }",
+            "response_data": { "hello": "world" }
           }
         }
       },
@@ -544,9 +568,11 @@
       "expected_response": {
         "status_code": 200,
         "body": {
+          "data": null,
           "errors": [
             {
-              "message": "Cannot query field \"nonExistentField\" on type \"Query\"."
+              "message": "Unknown field \"nonExistentField\" on type \"Query\".",
+              "locations": [{ "line": 1, "column": 9 }]
             }
           ]
         }

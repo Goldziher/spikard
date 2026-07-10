@@ -334,7 +334,7 @@ impl RubyGenerator {
 
     fn resolver_stub(&self, owner: &str, field: &GraphQLField) -> String {
         format!(
-            "    raise NotImplementedError, 'TODO: Implement {}#{}'\n",
+            "    raise NotImplementedError, 'Implement {}#{}'\n",
             owner,
             self.escape_single_quoted(&to_snake_case(&field.name))
         )
@@ -792,7 +792,7 @@ mod tests {
         assert!(result.contains("class QueryType"));
         assert!(result.contains("def hello"));
         assert!(result.contains("NotImplementedError"));
-        assert!(result.contains("TODO"));
+        assert!(result.contains("Implement"));
     }
 
     #[test]
