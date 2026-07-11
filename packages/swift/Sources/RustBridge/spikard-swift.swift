@@ -133,6 +133,9 @@ public func run(_ client: AppRefMut) -> RustString {
 public func routeBuilderNew<GenericIntoRustString: IntoRustString>(_ method: MethodRef, _ path: GenericIntoRustString) -> RouteBuilder {
     RouteBuilder(ptr: __swift_bridge__$route_builder_new(method.ptr, { let rustString = path.intoRustString(); rustString.isOwned = false; return rustString.ptr }()))
 }
+public func dynamicSchemaConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> DynamicSchemaConfig {
+    try { let val = __swift_bridge__$dynamic_schema_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return DynamicSchemaConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
 public func schemaConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> SchemaConfig {
     try { let val = __swift_bridge__$schema_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return SchemaConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
@@ -144,6 +147,9 @@ public func compressionConfigFromJson<GenericIntoRustString: IntoRustString>(_ j
 }
 public func uploadFileFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> UploadFile {
     try { let val = __swift_bridge__$upload_file_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return UploadFile(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func fieldErrorSpecFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> FieldErrorSpec {
+    try { let val = __swift_bridge__$field_error_spec_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return FieldErrorSpec(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
 public func queryOnlyConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> QueryOnlyConfig {
     try { let val = __swift_bridge__$query_only_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return QueryOnlyConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
@@ -574,6 +580,10 @@ extension DynamicSchemaConfigRef {
 
     public func maxDepth() -> Optional<UInt> {
         __swift_bridge__$DynamicSchemaConfig$max_depth(ptr).intoSwiftRepr()
+    }
+
+    public func fieldErrors() -> RustVec<RustString> {
+        RustVec(ptr: __swift_bridge__$DynamicSchemaConfig$field_errors(ptr))
     }
 }
 extension DynamicSchemaConfig: Vectorizable {

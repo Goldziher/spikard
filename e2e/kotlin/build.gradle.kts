@@ -24,7 +24,7 @@ repositories {
 }
 
 dependencies {
-    testImplementation(files("../../packages/kotlin/build/libs/spikard-0.17.0-rc.1.jar"))
+    testImplementation(files("../../packages/kotlin/build/libs/spikard-0.17.0-rc.2.jar"))
     testImplementation("net.java.dev.jna:jna:5.18.1")
     testImplementation("com.fasterxml.jackson.core:jackson-annotations:2.19.0")
     testImplementation("com.fasterxml.jackson.core:jackson-databind:2.19.0")

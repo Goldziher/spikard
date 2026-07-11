@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@spikard/node':
-        specifier: ^0.16.0-rc.3
-        version: 0.16.0-rc.3
+        specifier: ^0.17.0-rc.1
+        version: 0.17.0-rc.1
       '@types/node':
         specifier: ^22.10.2
         version: 22.19.20
@@ -139,41 +139,41 @@ packages:
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
 
-  '@spikard/node-darwin-arm64@0.16.0-rc.3':
-    resolution: {integrity: sha512-DHjImsQnhlbeoToFJBddBX2zT16MRbhfQVIoJa1U7x+MlJOS+NgrrOZ25RTrCAbEa39zl1owyapHIWEY8Onz+A==}
-    engines: {node: '>= 18'}
+  '@spikard/node-darwin-arm64@0.17.0-rc.1':
+    resolution: {integrity: sha512-5EQ1zevUPz2Sfn0Lq0aJA5lXs6HqvLW0rXn+rjbb94OtECsVrh6uAT00VEUEDqb7vynpVOK9cZabewGMUwSIDw==}
+    engines: {node: '>= 22'}
     cpu: [arm64]
     os: [darwin]
 
-  '@spikard/node-linux-arm64-gnu@0.16.0-rc.3':
-    resolution: {integrity: sha512-Y9F9E+W6T0gTBs3k5+bYcRo00ynE4RO/kMYits/iLP6YL1Yp1rUJZJ9Jzl30Agu5v+0n4CvJg0+UVB4Hiiw1qw==}
-    engines: {node: '>= 18'}
+  '@spikard/node-linux-arm64-gnu@0.17.0-rc.1':
+    resolution: {integrity: sha512-eX7ztUMKivHIHGFkzYVbnqaQ6zPjYdf4JQ/xH+Wviy1fF67HeAwF8xdj3e5P6lnx3YkeoxBCG1joXBI5Wj8V6g==}
+    engines: {node: '>= 22'}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@spikard/node-linux-x64-gnu@0.16.0-rc.3':
-    resolution: {integrity: sha512-y2XJzHiOmgEP6Ox7r31Zi+ie4Tj8oSSSFpw40EnAlnWQhvUsEVV/YuJIUeCqkV9C7q6bKCMbP1tA14sVFpImaQ==}
-    engines: {node: '>= 18'}
+  '@spikard/node-linux-x64-gnu@0.17.0-rc.1':
+    resolution: {integrity: sha512-xQM4kBYnVGTPQ7i4/w/qqU9BaXtRXBA1VGnQctDUaYYOLyUET6UgNovFQOzbAJGvQiy6sE8PsntRwaHTn7a+PA==}
+    engines: {node: '>= 22'}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@spikard/node-win32-arm64-msvc@0.16.0-rc.3':
-    resolution: {integrity: sha512-lQyr6wkxjaqm3tdd883AOfVGkCXCSC2xBUwSJ+u9ACmCBEC9aORhR2vMFDAwzso254wssPXXLboSJOvDkL8mpA==}
-    engines: {node: '>= 18'}
+  '@spikard/node-win32-arm64-msvc@0.17.0-rc.1':
+    resolution: {integrity: sha512-WO4AuryNLiTnnNU3Zxcchq9lBTLUTL6xQnP6h13Slsw60k1YikL2/H/eIt7fgM9keBYYqrGO+iyA3NW1xSXzHg==}
+    engines: {node: '>= 22'}
     cpu: [arm64]
     os: [win32]
 
-  '@spikard/node-win32-x64-msvc@0.16.0-rc.3':
-    resolution: {integrity: sha512-Fdvl4VVp4IB/8+2GFwHVZdpHz61L3clBZWxPOJ3TNMgGOx/tBl2nn2AWaHsGk0ogmaIP3qPTn1AuJXxbDqtRhg==}
-    engines: {node: '>= 18'}
+  '@spikard/node-win32-x64-msvc@0.17.0-rc.1':
+    resolution: {integrity: sha512-BkaPGhAFoPaZPDGOVi0r4DmlcXP2+dRR58PqIlipQHTkePY23vyVOVAJCV90Ssh96e4YJVFbPMzSpbaRI+1gqg==}
+    engines: {node: '>= 22'}
     cpu: [x64]
     os: [win32]
 
-  '@spikard/node@0.16.0-rc.3':
-    resolution: {integrity: sha512-Ci2pkc5SECu/bcxhLjjXK4PCEicGJuVOiUsiGSQ/yfuCHun5V8cTsmzDJ+eAInWri0LbHLbCikLOLiIK2uDSmg==}
-    engines: {node: '>= 18'}
+  '@spikard/node@0.17.0-rc.1':
+    resolution: {integrity: sha512-sQMORnssjvLw+iWa+EGucoZ89WpOvZfE1wHX2fJBH62XDG5mjdVjceSc67BUN3pPsqkzcK0yTMkgIVCZqK2kwA==}
+    engines: {node: '>= 22'}
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
@@ -488,6 +488,9 @@ packages:
     engines: {node: '>=8'}
     hasBin: true
 
+  zod@4.4.3:
+    resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
+
 snapshots:
 
   '@emnapi/core@1.10.0':
@@ -568,28 +571,30 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.1': {}
 
-  '@spikard/node-darwin-arm64@0.16.0-rc.3':
+  '@spikard/node-darwin-arm64@0.17.0-rc.1':
     optional: true
 
-  '@spikard/node-linux-arm64-gnu@0.16.0-rc.3':
+  '@spikard/node-linux-arm64-gnu@0.17.0-rc.1':
     optional: true
 
-  '@spikard/node-linux-x64-gnu@0.16.0-rc.3':
+  '@spikard/node-linux-x64-gnu@0.17.0-rc.1':
     optional: true
 
-  '@spikard/node-win32-arm64-msvc@0.16.0-rc.3':
+  '@spikard/node-win32-arm64-msvc@0.17.0-rc.1':
     optional: true
 
-  '@spikard/node-win32-x64-msvc@0.16.0-rc.3':
+  '@spikard/node-win32-x64-msvc@0.17.0-rc.1':
     optional: true
 
-  '@spikard/node@0.16.0-rc.3':
+  '@spikard/node@0.17.0-rc.1':
+    dependencies:
+      zod: 4.4.3
     optionalDependencies:
-      '@spikard/node-darwin-arm64': 0.16.0-rc.3
-      '@spikard/node-linux-arm64-gnu': 0.16.0-rc.3
-      '@spikard/node-linux-x64-gnu': 0.16.0-rc.3
-      '@spikard/node-win32-arm64-msvc': 0.16.0-rc.3
-      '@spikard/node-win32-x64-msvc': 0.16.0-rc.3
+      '@spikard/node-darwin-arm64': 0.17.0-rc.1
+      '@spikard/node-linux-arm64-gnu': 0.17.0-rc.1
+      '@spikard/node-linux-x64-gnu': 0.17.0-rc.1
+      '@spikard/node-win32-arm64-msvc': 0.17.0-rc.1
+      '@spikard/node-win32-x64-msvc': 0.17.0-rc.1
 
   '@standard-schema/spec@1.1.0': {}
 
@@ -831,3 +836,5 @@ snapshots:
     dependencies:
       siginfo: 2.0.0
       stackback: 0.0.2
+
+  zod@4.4.3: {}

@@ -18,6 +18,10 @@ tasks:
       - "{{.ALEF}} scaffold"
       - "{{.ALEF}} stubs"
       - "{{.ALEF}} e2e generate"
+      # test_apps/ are inputs-hash verified by `alef verify` but are NOT part of
+      # `alef all`, so without this step every version bump left them stale and
+      # reddened CI Validate. Regenerate them here so a release stays fresh.
+      - "{{.ALEF}} test-apps generate"
 
   check:
     desc: "Check if versions are synchronized (dry-run)"
