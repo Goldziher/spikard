@@ -119,7 +119,7 @@ def build_category_section(category: str, fixtures: list[dict[str, Any]]) -> lis
         lines.append(f"    async def {func_name}(request):")
         lines.append(f'        """Handler for {method} {path}"""')
         lines.append("        # For now, return a placeholder response")
-        lines.append("        # ~keep TODO: Match request to fixture and return expected response")
+        lines.append("        # TODO: Match request to fixture and return expected response")
         lines.append('        return {"status": "mock"}')
         lines.append("")
 

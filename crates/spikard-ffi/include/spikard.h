@@ -456,22 +456,6 @@ char *spikard_upload_file_read_to_string(const SPIKARDUploadFile *this_);
 char *spikard_upload_file_content_type_or_default(const SPIKARDUploadFile *this_);
 
 /**
- * Create a `FieldErrorSpec` from a JSON string. Returns null on failure.
- * # Safety
- * JSON string must be valid UTF-8 and null-terminated.
- * Returned handle must be freed with `spikard_field_error_spec_free`.
- */
-SPIKARDFieldErrorSpec *spikard_field_error_spec_from_json(const char *json);
-
-/**
- * Serialize a `FieldErrorSpec` to a JSON string. Returns null on failure.
- * # Safety
- * `ptr` must be a valid, non-null pointer returned by a `spikard` function.
- * The returned string must be freed with `spikard_free_string`.
- */
-char *spikard_field_error_spec_to_json(const SPIKARDFieldErrorSpec *ptr);
-
-/**
  * Free a `FieldErrorSpec` handle.
  * # Safety
  * Pointer must have been returned by this library, or be null.
@@ -491,22 +475,6 @@ char *spikard_field_error_spec_path(const SPIKARDFieldErrorSpec *ptr);
  * Pointer must be a valid handle returned by this library.
  */
 char *spikard_field_error_spec_message(const SPIKARDFieldErrorSpec *ptr);
-
-/**
- * Create a `DynamicSchemaConfig` from a JSON string. Returns null on failure.
- * # Safety
- * JSON string must be valid UTF-8 and null-terminated.
- * Returned handle must be freed with `spikard_dynamic_schema_config_free`.
- */
-SPIKARDDynamicSchemaConfig *spikard_dynamic_schema_config_from_json(const char *json);
-
-/**
- * Serialize a `DynamicSchemaConfig` to a JSON string. Returns null on failure.
- * # Safety
- * `ptr` must be a valid, non-null pointer returned by a `spikard` function.
- * The returned string must be freed with `spikard_free_string`.
- */
-char *spikard_dynamic_schema_config_to_json(const SPIKARDDynamicSchemaConfig *ptr);
 
 /**
  * Free a `DynamicSchemaConfig` handle.

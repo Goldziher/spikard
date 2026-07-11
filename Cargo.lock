@@ -39,7 +39,8 @@ dependencies = [
 
 [[package]]
 name = "alef"
-version = "0.34.9"
+version = "0.34.8"
+source = "git+https://github.com/xberg-io/alef?tag=v0.34.8#7507aed70b9d448a201d89a3101dbdded623eeef"
 dependencies = [
  "ahash",
  "anyhow",
