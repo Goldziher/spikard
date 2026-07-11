@@ -1236,13 +1236,20 @@ jobs:
 
   publish-homebrew-formula:
     name: Update Homebrew formula
-    needs: [prepare, check-homebrew, publish-crates]
+    # ~keep Depends on update-swift-package-manifest: that job force-moves the release
+    # ~keep tag to the Package.swift-checksum commit. The formula must be written AFTER
+    # ~keep the tag settles, pinned to the tag's FINAL commit, or the bottle builder
+    # ~keep rejects it ("<tag> should be <sha> but is actually <other>"). A skipped or
+    # ~keep failed swift job (release_swift false, non-tag) leaves the tag unmoved, which
+    # ~keep the live-revision resolution below handles correctly.
+    needs: [prepare, check-homebrew, publish-crates, update-swift-package-manifest]
     if: |
       always() &&
       needs.prepare.outputs.release_homebrew == 'true' &&
       needs.prepare.outputs.dry_run != 'true' &&
       (needs.check-homebrew.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') &&
-      needs.publish-crates.result != 'failure'
+      needs.publish-crates.result != 'failure' &&
+      needs.update-swift-package-manifest.result != 'failure'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -1260,16 +1267,30 @@ jobs:
           token: ${{ secrets.HOMEBREW_TOKEN }}
           path: homebrew-tap
 
+      - name: Resolve final tag revision
+        id: resolve_revision
+        env:
+          TAG: ${{ needs.prepare.outputs.tag }}
+        # ~keep Pin the formula to the tag's FINAL commit, not prepare.target_sha: the
+        # ~keep update-swift-package-manifest job (a dependency of this one) force-moves
+        # ~keep the release tag to the Package.swift-checksum commit. Resolving the live
+        # ~keep tag here keeps the formula revision equal to what the bottle builder sees.
+        run: |
+          git fetch --force origin "refs/tags/${TAG}:refs/tags/${TAG}"
+          SHA=$(git rev-parse "refs/tags/${TAG}^{commit}")
+          if [ -z "$SHA" ]; then
+            echo "Failed to resolve commit for tag ${TAG}" >&2
+            exit 1
+          fi
+          echo "sha=${SHA}" >> "$GITHUB_OUTPUT"
+          echo "Resolved ${TAG} -> ${SHA}"
+
       - name: Update formula files
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ needs.prepare.outputs.tag }}
           VERSION: ${{ needs.prepare.outputs.version }}
-          # ~keep Pin the formula to the release target commit resolved at run start,
-          # ~keep not github.sha: an earlier publish step (Swift Package.swift checksum
-          # ~keep commit) can advance the branch mid-run, and a moved revision makes
-          # ~keep brew reject the bottle ("<tag> should be <sha>").
-          REVISION: ${{ needs.prepare.outputs.target_sha }}
+          REVISION: ${{ steps.resolve_revision.outputs.sha }}
           TAP_DIR: ${{ github.workspace }}/homebrew-tap
         run: scripts/publish/update-homebrew-formula.sh
 
