@@ -300,10 +300,39 @@ checksum = "43c6a2f1d97ee33c39f13dacc0f84ae781a9c2ed373a75bad1129094f5a7c4bd"
 dependencies = [
  "anyhow",
  "axum",
+ "bytes",
+ "bytesize",
+ "cookie",
+ "expect-json",
+ "http",
+ "http-body-util",
+ "hyper",
+ "hyper-util",
+ "mime",
+ "pretty_assertions",
+ "reserve-port",
+ "rust-multipart-rfc7578_2",
+ "serde",
+ "serde_json",
+ "serde_urlencoded",
+ "tokio",
+ "tower",
+ "url",
+]
+
+[[package]]
+name = "axum-test"
+version = "21.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3ce104337e4cced59ded9c61f9f18dab0a4670fd339e84f334312686440a9958"
+dependencies = [
+ "anyhow",
+ "axum",
  "base64",
  "bytes",
  "bytesize",
  "cookie",
+ "educe",
  "expect-json",
  "futures-util",
  "http",
@@ -819,6 +848,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "educe"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1d7bc049e1bd8cdeb31b68bbd586a9464ecf9f3944af3958a7a9d0f8b9799417"
+dependencies = [
+ "enum-ordinalize",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "either"
 version = "1.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -861,6 +902,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "75030f3c4f45dafd7586dd6780965a8c7e8e285a5ecb86713e63a79c5b2766f3"
 dependencies = [
  "cfg-if",
+]
+
+[[package]]
+name = "enum-ordinalize"
+version = "4.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "07f808d588c10e464ea6f7d3eaed500049eff30aaac103460f61828c2d65b3eb"
+dependencies = [
+ "enum-ordinalize-derive",
+]
+
+[[package]]
+name = "enum-ordinalize-derive"
+version = "4.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "42e528e2d34ba8a67a1a650b86beae8ef69fc5fdb638016f386b973226590432"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -2465,9 +2526,9 @@ checksum = "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4"
 
 [[package]]
 name = "reserve-port"
-version = "2.4.0"
+version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94070964579245eb2f76e62a7668fe87bd9969ed6c41256f3bf614e3323dd3cc"
+checksum = "71ea98a177596a4579881992bd2bd4af27772fc95d0e5f5668a8f9535eca6380"
 dependencies = [
  "thiserror 2.0.18",
 ]
@@ -2839,13 +2900,14 @@ dependencies = [
 
 [[package]]
 name = "spikard"
-version = "0.16.0-rc.3"
+version = "0.17.0-rc.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb487eab26c3b52911ccee24022a07370ea82913b36b61b77ced03a67590aab6"
+checksum = "a5d3112b6ba2fdfcaa4ebec8e8e0ee243c4ff4edcb89c60b5e4ba043f9c1158b"
 dependencies = [
  "anyhow",
+ "async-graphql",
  "axum",
- "axum-test",
+ "axum-test 21.0.0",
  "base64",
  "bytes",
  "schemars",
@@ -2859,9 +2921,9 @@ dependencies = [
 
 [[package]]
 name = "spikard-core"
-version = "0.16.0-rc.3"
+version = "0.17.0-rc.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a7732590fce30f9c4db14bb99c21b642329de9075402ba8e4c119814aed86d04"
+checksum = "311b3627e69041be36b10b18bb1f914b61c2832ab3ecc72c53c97b5a0f2d6a5a"
 dependencies = [
  "anyhow",
  "base64",
@@ -2885,10 +2947,10 @@ dependencies = [
 
 [[package]]
 name = "spikard-e2e-rust"
-version = "0.16.0-rc.3"
+version = "0.17.0-rc.2"
 dependencies = [
  "axum",
- "axum-test",
+ "axum-test 20.1.0",
  "bytes",
  "serde",
  "serde_json",
@@ -2902,11 +2964,12 @@ dependencies = [
 
 [[package]]
 name = "spikard-graphql"
-version = "0.16.0-rc.3"
+version = "0.17.0-rc.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f317f88da7336e1aabb88b1f070ccec7a9670bd1c776b4c56a92b984b394bb8"
+checksum = "48bc638d2129085ac4406b4caf610edb9a4f97519a3f8735322ca230f5d78835"
 dependencies = [
  "async-graphql",
+ "async-graphql-parser",
  "axum",
  "bytes",
  "futures",
@@ -2923,15 +2986,15 @@ dependencies = [
 
 [[package]]
 name = "spikard-http"
-version = "0.16.0-rc.3"
+version = "0.17.0-rc.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e5170da38930651806f2b572d385f1e2b104eb00e7339f1b65dac2e9e99b7e95"
+checksum = "2ad059d465f703f3f806522de851523e3a1ce91b6ac2294a44954e2d2c859007"
 dependencies = [
  "ahash",
  "anyhow",
  "asyncapiv3",
  "axum",
- "axum-test",
+ "axum-test 21.0.0",
  "base64",
  "brotli",
  "bytes",
@@ -3633,9 +3696,9 @@ checksum = "e2eebbbfe4093922c2b6734d7c679ebfebd704a0d7e56dfcb0d05818ce28977d"
 
 [[package]]
 name = "uuid"
-version = "1.23.3"
+version = "1.23.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "144d6b123cef80b301b8f72a9e2ca4370ddec21950d0a103dd22c437006d2db7"
+checksum = "bf80a72845275afea99e7f2b434723d3bc7e38470fcd1c7ed39a599c73319a53"
 dependencies = [
  "getrandom 0.4.3",
  "js-sys",

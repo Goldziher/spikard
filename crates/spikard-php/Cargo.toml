@@ -1,6 +1,6 @@
 [package]
 name = "spikard-php"
-version = "0.17.0-rc.2"
+version = "0.17.0-rc.3"
 edition = "2024"
 license = "MIT"
 description = "Rust-centric multi-language HTTP framework with polyglot bindings"
@@ -21,11 +21,12 @@ default = ["di"]
 di = ["spikard/di"]
 
 [dependencies]
+axum = { default-features = false, version = "0.8" }
 ext-php-rs = "0.15.15"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-spikard = { version = "0.17.0-rc.2", path = "../spikard", features = ["di"] }
-spikard-core = { path = "../spikard-core", version = "0.17.0-rc.2" }
-spikard-graphql = { path = "../spikard-graphql", version = "0.17.0-rc.2" }
-spikard-http = { path = "../spikard-http", version = "0.17.0-rc.2" }
+spikard = { version = "0.17.0-rc.3", path = "../spikard", features = ["di"] }
+spikard-core = { path = "../spikard-core", version = "0.17.0-rc.3" }
+spikard-graphql = { path = "../spikard-graphql", version = "0.17.0-rc.3" }
+spikard-http = { path = "../spikard-http", version = "0.17.0-rc.3" }
 tokio = { version = "1", features = ["full"] }

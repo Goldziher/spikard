@@ -39,8 +39,8 @@ dependencies = [
 
 [[package]]
 name = "alef"
-version = "0.34.8"
-source = "git+https://github.com/xberg-io/alef?tag=v0.34.8#7507aed70b9d448a201d89a3101dbdded623eeef"
+version = "0.34.10"
+source = "git+https://github.com/xberg-io/alef?tag=v0.34.10#d618b173924ecc9a55a5ce05117112668e2e5945"
 dependencies = [
  "ahash",
  "anyhow",
@@ -3984,7 +3984,7 @@ dependencies = [
 
 [[package]]
 name = "spikard"
-version = "0.17.0-rc.2"
+version = "0.17.0-rc.3"
 dependencies = [
  "anyhow",
  "async-graphql",
@@ -4005,7 +4005,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-alef"
-version = "0.17.0-rc.2"
+version = "0.17.0-rc.3"
 dependencies = [
  "alef",
  "spikard-alef-ext",
@@ -4014,7 +4014,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-alef-ext"
-version = "0.17.0-rc.2"
+version = "0.17.0-rc.3"
 dependencies = [
  "alef",
  "anyhow",
@@ -4027,7 +4027,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-cli"
-version = "0.17.0-rc.2"
+version = "0.17.0-rc.3"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -4060,7 +4060,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-codegen"
-version = "0.17.0-rc.2"
+version = "0.17.0-rc.3"
 dependencies = [
  "indexmap",
  "scythe-core",
@@ -4071,7 +4071,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-core"
-version = "0.17.0-rc.2"
+version = "0.17.0-rc.3"
 dependencies = [
  "anyhow",
  "base64",
@@ -4096,7 +4096,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-e2e-http"
-version = "0.17.0-rc.2"
+version = "0.17.0-rc.3"
 dependencies = [
  "alef",
  "anyhow",
@@ -4108,7 +4108,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-ffi"
-version = "0.17.0-rc.2"
+version = "0.17.0-rc.3"
 dependencies = [
  "ahash",
  "cbindgen",
@@ -4123,7 +4123,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-graphql"
-version = "0.17.0-rc.2"
+version = "0.17.0-rc.3"
 dependencies = [
  "async-graphql",
  "async-graphql-parser",
@@ -4145,7 +4145,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-http"
-version = "0.17.0-rc.2"
+version = "0.17.0-rc.3"
 dependencies = [
  "ahash",
  "anyhow",
@@ -4201,7 +4201,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-node"
-version = "0.17.0-rc.2"
+version = "0.17.0-rc.3"
 dependencies = [
  "axum",
  "napi",
@@ -4218,7 +4218,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-py"
-version = "0.17.0-rc.2"
+version = "0.17.0-rc.3"
 dependencies = [
  "axum",
  "pyo3",
@@ -4234,7 +4234,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-swift"
-version = "0.17.0-rc.2"
+version = "0.17.0-rc.3"
 dependencies = [
  "ahash",
  "async-trait",
@@ -4253,7 +4253,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-wasm"
-version = "0.17.0-rc.2"
+version = "0.17.0-rc.3"
 dependencies = [
  "axum",
  "futures",

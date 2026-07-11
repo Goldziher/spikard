@@ -352,7 +352,7 @@ dependencies = [
  "bitflags 2.13.0",
  "cexpr",
  "clang-sys",
- "itertools 0.13.0",
+ "itertools",
  "proc-macro2",
  "quote",
  "regex",
@@ -1696,15 +1696,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "itertools"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
-dependencies = [
- "either",
-]
-
-[[package]]
 name = "itoa"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2448,7 +2439,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b570b25f7617e43d59005d0990ccb79e950a423952cea19671b7a876da390adf"
 dependencies = [
  "anyhow",
- "itertools 0.14.0",
+ "itertools",
  "proc-macro2",
  "quote",
  "syn",
@@ -3084,7 +3075,7 @@ dependencies = [
 
 [[package]]
 name = "spikard"
-version = "0.17.0-rc.1"
+version = "0.17.0-rc.3"
 dependencies = [
  "anyhow",
  "async-graphql",
@@ -3103,7 +3094,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-core"
-version = "0.17.0-rc.1"
+version = "0.17.0-rc.3"
 dependencies = [
  "anyhow",
  "base64",
@@ -3127,7 +3118,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-graphql"
-version = "0.17.0-rc.1"
+version = "0.17.0-rc.3"
 dependencies = [
  "async-graphql",
  "async-graphql-parser",
@@ -3147,7 +3138,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-http"
-version = "0.17.0-rc.1"
+version = "0.17.0-rc.3"
 dependencies = [
  "ahash",
  "anyhow",
@@ -3200,7 +3191,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-rb"
-version = "0.17.0-rc.1"
+version = "0.17.0-rc.3"
 dependencies = [
  "magnus",
  "rb-sys",

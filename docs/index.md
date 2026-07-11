@@ -30,7 +30,7 @@ Spikard is a polyglot web toolkit with a Rust core and language bindings for 14 
 - **[Installation](getting-started/installation.md)** – Binding install commands and repo setup.
 - **[Guides](guides/routing.md)** – Routing, requests/responses, middleware, validation, dependency injection, deployment.
 - **[Concepts](concepts/architecture.md)** – Architecture, runtime model, validation, middleware, streaming internals.
-- **[Reference](reference/types.md)** – Types, error semantics, and configuration surface.
+- **[Reference](reference/feature-parity.md)** – Cross-language feature parity, types, and configuration surface.
 - **[CLI](cli/usage.md)** – Running the HTTP server and invoking generators from `spikard-cli`.
 - **[ADRs](adr/README.md)** – Design history and rationale behind the runtime.
 

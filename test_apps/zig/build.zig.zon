@@ -5,8 +5,8 @@
     .minimum_zig_version = "0.16.0",
     .dependencies = .{
         .spikard = .{
-            .url = "https://github.com/Goldziher/spikard/releases/download/v0.17.0-rc.2/spikard-zig-v0.17.0-rc.2.tar.gz",
-            .hash = "spikard-0.17.0-rc.2-PLACEHOLDER1234567890abcdefABCDEF0987654321",
+            .url = "https://github.com/Goldziher/spikard/releases/download/v0.17.0-rc.3/spikard-zig-v0.17.0-rc.3.tar.gz",
+            .hash = "spikard-0.17.0-rc.3-PLACEHOLDER1234567890abcdefABCDEF0987654321",
         },
     },
     .paths = .{

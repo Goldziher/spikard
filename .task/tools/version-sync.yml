@@ -15,13 +15,17 @@ tasks:
       - "{{.ALEF}} readme"
       - "{{.ALEF}} docs"
       - "{{.ALEF}} generate --clean"
+      - "cargo build -p spikard-ffi"
       - "{{.ALEF}} scaffold"
       - "{{.ALEF}} stubs"
       - "{{.ALEF}} e2e generate"
-      # test_apps/ are inputs-hash verified by `alef verify` but are NOT part of
-      # `alef all`, so without this step every version bump left them stale and
-      # reddened CI Validate. Regenerate them here so a release stays fresh.
       - "{{.ALEF}} test-apps generate"
+      - cmd: |
+          set -e
+          version=$(grep -m1 '^version = ' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
+          for manifest in packages/dart/rust packages/ruby/ext/spikard_rb/native test_apps/rust; do
+            cargo update --manifest-path "$manifest/Cargo.toml" -p spikard --precise "$version" >/dev/null 2>&1 || true
+          done
 
   check:
     desc: "Check if versions are synchronized (dry-run)"
