@@ -36,6 +36,10 @@ pub fn mock_server_url() -> &'static str {
             let fixtures_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures");
 
             // Spawn the mock-server binary with fixtures directory as argument.
+            // The mock server is a per-test-process singleton: it is kept alive by the leaked
+            // stdin below and reaped by the OS when the test binary exits, so it is deliberately
+            // never wait()ed on.
+            #[allow(clippy::zombie_processes)]
             let mut child = std::process::Command::new(mock_server_bin)
                 .arg(fixtures_dir)
                 .stdout(std::process::Stdio::piped())

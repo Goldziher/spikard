@@ -39,8 +39,8 @@ dependencies = [
 
 [[package]]
 name = "alef"
-version = "0.37.1"
-source = "git+https://github.com/xberg-io/alef?tag=v0.37.1#85bd492c225cb9bab44bcf10630df914a596dd83"
+version = "0.38.0"
+source = "git+https://github.com/xberg-io/alef?tag=v0.38.0#4e9e289d1860ffbbb280a041fb70598e5d9599e2"
 dependencies = [
  "ahash",
  "anyhow",
@@ -50,7 +50,7 @@ dependencies = [
  "clap",
  "glob",
  "heck",
- "jsonschema 0.46.8",
+ "jsonschema",
  "minijinja",
  "quote",
  "rayon",
@@ -62,7 +62,7 @@ dependencies = [
  "serde_yaml",
  "sha2 0.11.0",
  "similar",
- "syn 2.0.118",
+ "syn 3.0.0",
  "tempfile",
  "thiserror 2.0.18",
  "toml 1.1.2+spec-1.1.0",
@@ -2155,33 +2155,6 @@ dependencies = [
 
 [[package]]
 name = "jsonschema"
-version = "0.46.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "24fc8535da347b994f6d2fab0a84b74e3b31ad08ebe4204d95f3e755db7af49b"
-dependencies = [
- "ahash",
- "bytecount",
- "data-encoding",
- "email_address",
- "fancy-regex",
- "fraction",
- "getrandom 0.3.4",
- "idna",
- "itoa",
- "num-cmp",
- "num-traits",
- "percent-encoding",
- "referencing 0.46.8",
- "regex",
- "regex-syntax",
- "serde",
- "serde_json",
- "unicode-general-category",
- "uuid-simd",
-]
-
-[[package]]
-name = "jsonschema"
 version = "0.48.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9baf521a926fd1e6f94af6922be9686b61c8a89a5fb7e14d6a1e21b79738d4cc"
@@ -2199,7 +2172,7 @@ dependencies = [
  "num-cmp",
  "num-traits",
  "percent-encoding",
- "referencing 0.48.1",
+ "referencing",
  "regex",
  "serde",
  "serde_json",
@@ -3406,23 +3379,6 @@ dependencies = [
 
 [[package]]
 name = "referencing"
-version = "0.46.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1c8dceb372b46fecd006be48ca335468b49ad887a7f0150cabd6098fa4fc500f"
-dependencies = [
- "ahash",
- "fluent-uri",
- "getrandom 0.3.4",
- "hashbrown 0.16.1",
- "itoa",
- "micromap",
- "parking_lot",
- "percent-encoding",
- "serde_json",
-]
-
-[[package]]
-name = "referencing"
 version = "0.48.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "df843f41f0cb459649f64a8b6b10579cf454f7a7420dc702767c81a26f23d780"
@@ -4134,7 +4090,7 @@ dependencies = [
  "http",
  "indexmap",
  "jiff",
- "jsonschema 0.48.1",
+ "jsonschema",
  "regex",
  "serde",
  "serde_json",
@@ -4219,7 +4175,7 @@ dependencies = [
  "http-body",
  "http-body-util",
  "jiff",
- "jsonschema 0.48.1",
+ "jsonschema",
  "jsonwebtoken",
  "lazy_static",
  "lru",
@@ -4505,6 +4461,17 @@ name = "syn"
 version = "2.0.118"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1b9ae57f904213ebb649ce6895b8a66c66f0203b9319718f69a5612a065b1422"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "unicode-ident",
+]
+
+[[package]]
+name = "syn"
+version = "3.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f2fac314a64dc9a36e61a9eb4261a5e9bbfbc922b27e518af97bc32b926cf967"
 dependencies = [
  "proc-macro2",
  "quote",

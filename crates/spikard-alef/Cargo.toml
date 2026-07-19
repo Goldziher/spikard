@@ -13,7 +13,7 @@ name = "spikard-alef"
 path = "src/main.rs"
 
 [dependencies]
-alef = { git = "https://github.com/xberg-io/alef", tag = "v0.37.1" }
+alef = { git = "https://github.com/xberg-io/alef", tag = "v0.38.0" }
 spikard-alef-ext = { path = "../spikard-alef-ext" }
 spikard-e2e-http = { path = "../spikard-e2e-http" }
 

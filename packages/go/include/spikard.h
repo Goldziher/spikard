@@ -326,7 +326,7 @@ typedef struct SPIKARDValidationResponse SPIKARDValidationResponse;
  * shell; the shell drops trivially when `inner` is `None`.
  */
 typedef struct SPIKARDAppOpaque {
-    SPIKARDApp *inner;
+  SPIKARDApp *inner;
 } SPIKARDAppOpaque;
 
 /**
@@ -361,8 +361,8 @@ void spikard_free_string(char *ptr);
  * out-params), or be null. The len and cap values must be unchanged since the call.
  */
 void spikard_free_bytes(uint8_t *ptr,
-    uintptr_t len,
-    uintptr_t cap);
+                        uintptr_t len,
+                        uintptr_t cap);
 
 /**
  * Return the library version string. The pointer is static and must NOT be freed.
@@ -422,7 +422,7 @@ uintptr_t spikard_upload_file_size(const SPIKARDUploadFile *ptr);
  * Pointer must be a valid handle returned by this library.
  */
 uint8_t *spikard_upload_file_content(const SPIKARDUploadFile *ptr,
-    uintptr_t *out_len);
+                                     uintptr_t *out_len);
 
 /**
  * Get the `content_encoding` field from a `UploadFile`.
@@ -559,7 +559,7 @@ SPIKARDGraphQLRouteConfig *spikard_graph_ql_route_config_new(void);
  * freed with the appropriate free function.
  */
 SPIKARDGraphQLRouteConfig *spikard_graph_ql_route_config_path(SPIKARDGraphQLRouteConfig *this_,
-    const char *path);
+                                                              const char *path);
 
 /**
  * Set the HTTP method for the GraphQL endpoint
@@ -568,7 +568,7 @@ SPIKARDGraphQLRouteConfig *spikard_graph_ql_route_config_path(SPIKARDGraphQLRout
  * freed with the appropriate free function.
  */
 SPIKARDGraphQLRouteConfig *spikard_graph_ql_route_config_method(SPIKARDGraphQLRouteConfig *this_,
-    const char *method);
+                                                                const char *method);
 
 /**
  * Enable or disable the GraphQL Playground UI
@@ -577,7 +577,7 @@ SPIKARDGraphQLRouteConfig *spikard_graph_ql_route_config_method(SPIKARDGraphQLRo
  * freed with the appropriate free function.
  */
 SPIKARDGraphQLRouteConfig *spikard_graph_ql_route_config_enable_playground(SPIKARDGraphQLRouteConfig *this_,
-    int32_t enable);
+                                                                           int32_t enable);
 
 /**
  * Set a custom description for documentation
@@ -586,7 +586,7 @@ SPIKARDGraphQLRouteConfig *spikard_graph_ql_route_config_enable_playground(SPIKA
  * freed with the appropriate free function.
  */
 SPIKARDGraphQLRouteConfig *spikard_graph_ql_route_config_description(SPIKARDGraphQLRouteConfig *this_,
-    const char *description);
+                                                                     const char *description);
 
 /**
  * Get the configured path
@@ -1037,7 +1037,7 @@ char *spikard_cors_config_allowed_headers_joined(const SPIKARDCorsConfig *this_)
  * freed with the appropriate free function.
  */
 int32_t spikard_cors_config_is_origin_allowed(const SPIKARDCorsConfig *this_,
-    const char *origin);
+                                              const char *origin);
 
 /**
  * Check if a method is allowed (O(1) with wildcard, O(n) for exact match)
@@ -1045,7 +1045,7 @@ int32_t spikard_cors_config_is_origin_allowed(const SPIKARDCorsConfig *this_,
  * freed with the appropriate free function.
  */
 int32_t spikard_cors_config_is_method_allowed(const SPIKARDCorsConfig *this_,
-    const char *method);
+                                              const char *method);
 
 /**
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
@@ -1465,8 +1465,8 @@ char *spikard_response_headers(const SPIKARDResponse *ptr);
  * freed with the appropriate free function.
  */
 void spikard_response_set_header(SPIKARDResponse *this_,
-    const char *key,
-    const char *value);
+                                 const char *key,
+                                 const char *value);
 
 /**
  * Set a cookie in the response
@@ -1474,14 +1474,14 @@ void spikard_response_set_header(SPIKARDResponse *this_,
  * freed with the appropriate free function.
  */
 void spikard_response_set_cookie(SPIKARDResponse *this_,
-    const char *key,
-    const char *value,
-    int32_t secure,
-    int32_t http_only,
-    int64_t max_age,
-    const char *domain,
-    const char *path,
-    const char *same_site);
+                                 const char *key,
+                                 const char *value,
+                                 int32_t secure,
+                                 int32_t http_only,
+                                 int64_t max_age,
+                                 const char *domain,
+                                 const char *path,
+                                 const char *same_site);
 
 /**
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
@@ -1557,7 +1557,7 @@ uint64_t spikard_sse_event_retry(const SPIKARDSseEvent *ptr);
  * \endcode
  */
 SPIKARDSseEvent *spikard_sse_event_with_id(SPIKARDSseEvent *this_,
-    const char *id);
+                                           const char *id);
 
 /**
  * Set the retry timeout for client reconnection
@@ -1576,7 +1576,7 @@ SPIKARDSseEvent *spikard_sse_event_with_id(SPIKARDSseEvent *this_,
  * \endcode
  */
 SPIKARDSseEvent *spikard_sse_event_with_retry(SPIKARDSseEvent *this_,
-    uint64_t retry_ms);
+                                              uint64_t retry_ms);
 
 /**
  * Create a `JwtConfig` from a JSON string. Returns null on failure.
@@ -1894,7 +1894,7 @@ SPIKARDServerConfig *spikard_server_config_default(void);
 void spikard_route_builder_free(SPIKARDRouteBuilder *ptr);
 
 SPIKARDRouteBuilder *spikard_route_builder_new(int32_t method,
-    const char *path);
+                                               const char *path);
 
 /**
  * Assign an explicit handler name.
@@ -1902,7 +1902,7 @@ SPIKARDRouteBuilder *spikard_route_builder_new(int32_t method,
  * freed with the appropriate free function.
  */
 SPIKARDRouteBuilder *spikard_route_builder_handler_name(SPIKARDRouteBuilder *this_,
-    const char *name);
+                                                        const char *name);
 
 /**
  * Provide a raw JSON schema for the request body.
@@ -1910,7 +1910,7 @@ SPIKARDRouteBuilder *spikard_route_builder_handler_name(SPIKARDRouteBuilder *thi
  * freed with the appropriate free function.
  */
 SPIKARDRouteBuilder *spikard_route_builder_request_schema_json(SPIKARDRouteBuilder *this_,
-    const char *schema);
+                                                               const char *schema);
 
 /**
  * Provide a raw JSON schema for the response body.
@@ -1918,7 +1918,7 @@ SPIKARDRouteBuilder *spikard_route_builder_request_schema_json(SPIKARDRouteBuild
  * freed with the appropriate free function.
  */
 SPIKARDRouteBuilder *spikard_route_builder_response_schema_json(SPIKARDRouteBuilder *this_,
-    const char *schema);
+                                                                const char *schema);
 
 /**
  * Provide a raw JSON schema for request parameters.
@@ -1926,7 +1926,7 @@ SPIKARDRouteBuilder *spikard_route_builder_response_schema_json(SPIKARDRouteBuil
  * freed with the appropriate free function.
  */
 SPIKARDRouteBuilder *spikard_route_builder_params_schema_json(SPIKARDRouteBuilder *this_,
-    const char *schema);
+                                                              const char *schema);
 
 /**
  * Provide multipart file parameter configuration.
@@ -1934,7 +1934,7 @@ SPIKARDRouteBuilder *spikard_route_builder_params_schema_json(SPIKARDRouteBuilde
  * freed with the appropriate free function.
  */
 SPIKARDRouteBuilder *spikard_route_builder_file_params_json(SPIKARDRouteBuilder *this_,
-    const char *schema);
+                                                            const char *schema);
 
 /**
  * Attach a CORS configuration for this route.
@@ -1942,7 +1942,7 @@ SPIKARDRouteBuilder *spikard_route_builder_file_params_json(SPIKARDRouteBuilder 
  * freed with the appropriate free function.
  */
 SPIKARDRouteBuilder *spikard_route_builder_cors(SPIKARDRouteBuilder *this_,
-    const SPIKARDCorsConfig *cors);
+                                                const SPIKARDCorsConfig *cors);
 
 /**
  * Attach a compression configuration for this route.
@@ -1950,7 +1950,7 @@ SPIKARDRouteBuilder *spikard_route_builder_cors(SPIKARDRouteBuilder *this_,
  * freed with the appropriate free function.
  */
 SPIKARDRouteBuilder *spikard_route_builder_compression(SPIKARDRouteBuilder *this_,
-    const SPIKARDCompressionConfig *compression);
+                                                       const SPIKARDCompressionConfig *compression);
 
 /**
  * Attach a per-route maximum request body size in bytes, overriding the server-global default.
@@ -1958,7 +1958,7 @@ SPIKARDRouteBuilder *spikard_route_builder_compression(SPIKARDRouteBuilder *this
  * freed with the appropriate free function.
  */
 SPIKARDRouteBuilder *spikard_route_builder_body_limit(SPIKARDRouteBuilder *this_,
-    uintptr_t max_bytes);
+                                                      uintptr_t max_bytes);
 
 /**
  * Attach a per-route request timeout in seconds, overriding the server-global default.
@@ -1966,7 +1966,7 @@ SPIKARDRouteBuilder *spikard_route_builder_body_limit(SPIKARDRouteBuilder *this_
  * freed with the appropriate free function.
  */
 SPIKARDRouteBuilder *spikard_route_builder_request_timeout(SPIKARDRouteBuilder *this_,
-    uint64_t seconds);
+                                                           uint64_t seconds);
 
 /**
  * Mark the route as synchronous.
@@ -1981,7 +1981,7 @@ SPIKARDRouteBuilder *spikard_route_builder_sync(SPIKARDRouteBuilder *this_);
  * freed with the appropriate free function.
  */
 SPIKARDRouteBuilder *spikard_route_builder_handler_dependencies(SPIKARDRouteBuilder *this_,
-    const char *dependencies);
+                                                                const char *dependencies);
 
 /**
  * Create a `JsonRpcMethodInfo` from a JSON string. Returns null on failure.
@@ -2111,7 +2111,7 @@ char *spikard_problem_details_extensions(const SPIKARDProblemDetails *ptr);
  * freed with the appropriate free function.
  */
 SPIKARDProblemDetails *spikard_problem_details_with_detail(SPIKARDProblemDetails *this_,
-    const char *detail);
+                                                           const char *detail);
 
 /**
  * Set the instance field
@@ -2119,7 +2119,7 @@ SPIKARDProblemDetails *spikard_problem_details_with_detail(SPIKARDProblemDetails
  * freed with the appropriate free function.
  */
 SPIKARDProblemDetails *spikard_problem_details_with_instance(SPIKARDProblemDetails *this_,
-    const char *instance);
+                                                             const char *instance);
 
 /**
  * Create a not found error
@@ -2726,10 +2726,10 @@ void spikard_app_free(struct SPIKARDAppOpaque *ptr);
  * Returns 0 on success, non-zero error code on failure.
  */
 int32_t spikard_app_register_route(struct SPIKARDAppOpaque *owner,
-    char *(*callback)(void*,
-        const char*),
-    void *context,
-    SPIKARDRouteBuilder *builder);
+                                   char *(*callback)(void*,
+                                                     const char*),
+                                   void *context,
+                                   SPIKARDRouteBuilder *builder);
 
 /**
  * Register a GET route at the given path.
@@ -2743,10 +2743,10 @@ int32_t spikard_app_register_route(struct SPIKARDAppOpaque *owner,
  * Returns 0 on success, non-zero error code on failure.
  */
 int32_t spikard_app_get(struct SPIKARDAppOpaque *owner,
-    char *(*callback)(void*,
-        const char*),
-    void *context,
-    const char *path);
+                        char *(*callback)(void*,
+                                          const char*),
+                        void *context,
+                        const char *path);
 
 /**
  * Register a POST route at the given path.
@@ -2760,10 +2760,10 @@ int32_t spikard_app_get(struct SPIKARDAppOpaque *owner,
  * Returns 0 on success, non-zero error code on failure.
  */
 int32_t spikard_app_post(struct SPIKARDAppOpaque *owner,
-    char *(*callback)(void*,
-        const char*),
-    void *context,
-    const char *path);
+                         char *(*callback)(void*,
+                                           const char*),
+                         void *context,
+                         const char *path);
 
 /**
  * Register a PUT route at the given path.
@@ -2777,10 +2777,10 @@ int32_t spikard_app_post(struct SPIKARDAppOpaque *owner,
  * Returns 0 on success, non-zero error code on failure.
  */
 int32_t spikard_app_put(struct SPIKARDAppOpaque *owner,
-    char *(*callback)(void*,
-        const char*),
-    void *context,
-    const char *path);
+                        char *(*callback)(void*,
+                                          const char*),
+                        void *context,
+                        const char *path);
 
 /**
  * Register a PATCH route at the given path.
@@ -2794,10 +2794,10 @@ int32_t spikard_app_put(struct SPIKARDAppOpaque *owner,
  * Returns 0 on success, non-zero error code on failure.
  */
 int32_t spikard_app_patch(struct SPIKARDAppOpaque *owner,
-    char *(*callback)(void*,
-        const char*),
-    void *context,
-    const char *path);
+                          char *(*callback)(void*,
+                                            const char*),
+                          void *context,
+                          const char *path);
 
 /**
  * Register a DELETE route at the given path.
@@ -2811,10 +2811,10 @@ int32_t spikard_app_patch(struct SPIKARDAppOpaque *owner,
  * Returns 0 on success, non-zero error code on failure.
  */
 int32_t spikard_app_delete(struct SPIKARDAppOpaque *owner,
-    char *(*callback)(void*,
-        const char*),
-    void *context,
-    const char *path);
+                           char *(*callback)(void*,
+                                             const char*),
+                           void *context,
+                           const char *path);
 
 /**
  * Register a HEAD route at the given path.
@@ -2828,10 +2828,10 @@ int32_t spikard_app_delete(struct SPIKARDAppOpaque *owner,
  * Returns 0 on success, non-zero error code on failure.
  */
 int32_t spikard_app_head(struct SPIKARDAppOpaque *owner,
-    char *(*callback)(void*,
-        const char*),
-    void *context,
-    const char *path);
+                         char *(*callback)(void*,
+                                           const char*),
+                         void *context,
+                         const char *path);
 
 /**
  * Register an OPTIONS route at the given path.
@@ -2845,10 +2845,10 @@ int32_t spikard_app_head(struct SPIKARDAppOpaque *owner,
  * Returns 0 on success, non-zero error code on failure.
  */
 int32_t spikard_app_options(struct SPIKARDAppOpaque *owner,
-    char *(*callback)(void*,
-        const char*),
-    void *context,
-    const char *path);
+                            char *(*callback)(void*,
+                                              const char*),
+                            void *context,
+                            const char *path);
 
 /**
  * Register a CONNECT route at the given path.
@@ -2862,10 +2862,10 @@ int32_t spikard_app_options(struct SPIKARDAppOpaque *owner,
  * Returns 0 on success, non-zero error code on failure.
  */
 int32_t spikard_app_connect(struct SPIKARDAppOpaque *owner,
-    char *(*callback)(void*,
-        const char*),
-    void *context,
-    const char *path);
+                            char *(*callback)(void*,
+                                              const char*),
+                            void *context,
+                            const char *path);
 
 /**
  * Register a TRACE route at the given path.
@@ -2879,10 +2879,10 @@ int32_t spikard_app_connect(struct SPIKARDAppOpaque *owner,
  * Returns 0 on success, non-zero error code on failure.
  */
 int32_t spikard_app_trace(struct SPIKARDAppOpaque *owner,
-    char *(*callback)(void*,
-        const char*),
-    void *context,
-    const char *path);
+                          char *(*callback)(void*,
+                                            const char*),
+                          void *context,
+                          const char *path);
 
 /**
  * Configure the service via 'config'.
@@ -2894,7 +2894,7 @@ int32_t spikard_app_trace(struct SPIKARDAppOpaque *owner,
  *   handle is still valid in that case but should be inspected for usability).
  */
 struct SPIKARDAppOpaque *spikard_app_config(struct SPIKARDAppOpaque *owner,
-    SPIKARDServerConfig *config);
+                                            SPIKARDServerConfig *config);
 
 /**
  * Run the service entrypoint 'run'.
