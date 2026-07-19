@@ -64,10 +64,10 @@ const host = "127.0.0.1"
 
 // resolvePort reads SPIKARD_SERVER_PORT, set by the spawner when it allocates
 // a free ephemeral port, falling back to the configured default port.
-func resolvePort() int {
+func resolvePort() uint16 {
 	if v := os.Getenv("SPIKARD_SERVER_PORT"); v != "" {
-		if p, err := strconv.Atoi(v); err == nil {
-			return p
+		if p, err := strconv.ParseUint(v, 10, 16); err == nil {
+			return uint16(p)
 		}
 	}
 	return defaultPort
