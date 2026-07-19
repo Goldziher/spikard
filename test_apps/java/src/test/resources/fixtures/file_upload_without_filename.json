@@ -1,1 +1,16 @@
-{"http":{"expected_response":{"body":{"test1":"<file1 content>"},"headers":{},"status_code":200},"handler":{"body_schema":{"additionalProperties":false,"properties":{"test1":{"format":"binary","type":"string"}},"required":["test1"],"type":"object"},"method":"POST","route":"/"},"request":{"path":"/"}}}
+{
+  "http": {
+    "expected_response": { "body": { "test1": "<file1 content>" }, "headers": {}, "status_code": 200 },
+    "handler": {
+      "body_schema": {
+        "additionalProperties": false,
+        "properties": { "test1": { "format": "binary", "type": "string" } },
+        "required": ["test1"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/"
+    },
+    "request": { "path": "/" }
+  }
+}

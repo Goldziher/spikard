@@ -1,1 +1,11 @@
-{"http":{"expected_response":{"body":{"has_request_id":true},"headers":{"x-request-id":"<<present>>"},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/request"},"request":{"path":"/request"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "has_request_id": true },
+      "headers": { "x-request-id": "<<present>>" },
+      "status_code": 200
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/request" },
+    "request": { "path": "/request" }
+  }
+}

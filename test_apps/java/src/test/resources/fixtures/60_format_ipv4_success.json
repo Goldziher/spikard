@@ -1,1 +1,7 @@
-{"http":{"expected_response":{"body":{"ip":"192.168.1.1"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/network"},"request":{"path":"/network"}}}
+{
+  "http": {
+    "expected_response": { "body": { "ip": "192.168.1.1" }, "headers": {}, "status_code": 200 },
+    "handler": { "body_schema": null, "method": "GET", "route": "/network" },
+    "request": { "path": "/network" }
+  }
+}

@@ -1,1 +1,15 @@
-{"http":{"expected_response":{"body":{"received_size":19},"headers":{"content-type":"application/grpc","grpc-status":"0"},"status_code":200},"handler":{"body_schema":{"properties":{"data":{"type":"string"}},"required":["data"],"type":"object"},"method":"POST","route":"/api.Service/SendLargeMessage"},"request":{"path":"/api.Service/SendLargeMessage"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "received_size": 19 },
+      "headers": { "content-type": "application/grpc", "grpc-status": "0" },
+      "status_code": 200
+    },
+    "handler": {
+      "body_schema": { "properties": { "data": { "type": "string" } }, "required": ["data"], "type": "object" },
+      "method": "POST",
+      "route": "/api.Service/SendLargeMessage"
+    },
+    "request": { "path": "/api.Service/SendLargeMessage" }
+  }
+}

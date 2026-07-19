@@ -1,1 +1,11 @@
-{"http":{"expected_response":{"body":{"description":"Important document","filename":"document.pdf","tags_count":2},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"POST","route":"/upload/with-fields"},"request":{"path":"/upload/with-fields"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "description": "Important document", "filename": "document.pdf", "tags_count": 2 },
+      "headers": {},
+      "status_code": 200
+    },
+    "handler": { "body_schema": null, "method": "POST", "route": "/upload/with-fields" },
+    "request": { "path": "/upload/with-fields" }
+  }
+}

@@ -1,1 +1,7 @@
-{"http":{"expected_response":{"body":null,"headers":{"Content-Type":"text/html"},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/html"},"request":{"path":"/html"}}}
+{
+  "http": {
+    "expected_response": { "body": null, "headers": { "Content-Type": "text/html" }, "status_code": 200 },
+    "handler": { "body_schema": null, "method": "GET", "route": "/html" },
+    "request": { "path": "/html" }
+  }
+}

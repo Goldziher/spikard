@@ -1,1 +1,11 @@
-{"http":{"expected_response":{"body":"{\"index\":0,\"payload\":\"alpha\"}\\n{\"index\":1,\"payload\":\"beta\"}\\n{\"index\":2,\"payload\":\"gamma\"}\\n","headers":{"content-type":"application/x-ndjson"},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/stream/json-lines"},"request":{"path":"/stream/json-lines"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": "{\"index\":0,\"payload\":\"alpha\"}\\n{\"index\":1,\"payload\":\"beta\"}\\n{\"index\":2,\"payload\":\"gamma\"}\\n",
+      "headers": { "content-type": "application/x-ndjson" },
+      "status_code": 200
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/stream/json-lines" },
+    "request": { "path": "/stream/json-lines" }
+  }
+}

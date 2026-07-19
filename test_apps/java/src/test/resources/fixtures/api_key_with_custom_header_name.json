@@ -1,1 +1,11 @@
-{"http":{"expected_response":{"body":{"data":"sensitive information","message":"Access granted"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/api/data"},"request":{"path":"/api/data"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "data": "sensitive information", "message": "Access granted" },
+      "headers": {},
+      "status_code": 200
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/api/data" },
+    "request": { "path": "/api/data" }
+  }
+}

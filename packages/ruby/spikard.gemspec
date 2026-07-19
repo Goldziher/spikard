@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name = "spikard"
-  spec.version = "0.17.0.pre.rc.3"
+  spec.version = "0.17.0.pre.rc.4"
   spec.authors       = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
   spec.summary       = "Rust-centric multi-language HTTP framework with polyglot bindings"
   spec.description   = "Rust-centric multi-language HTTP framework with polyglot bindings"
@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.license       = "MIT"
 
-  spec.required_ruby_version = [">= 3.2.0", "< 4.0"]
+  spec.required_ruby_version = ">= 3.2.0"
   spec.metadata["keywords"] = %w[framework http polyglot rust web].join(",")
   spec.metadata["rubygems_mfa_required"] = "true"
 

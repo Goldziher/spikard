@@ -1,1 +1,15 @@
-{"http":{"expected_response":{"body":{"message":"Request accepted","rate_limit_checked":true},"headers":{},"status_code":200},"handler":{"body_schema":{"properties":{"data":{"type":"string"}},"required":["data"],"type":"object"},"method":"POST","route":"/api/test-rate-limit"},"request":{"path":"/api/test-rate-limit"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "message": "Request accepted", "rate_limit_checked": true },
+      "headers": {},
+      "status_code": 200
+    },
+    "handler": {
+      "body_schema": { "properties": { "data": { "type": "string" } }, "required": ["data"], "type": "object" },
+      "method": "POST",
+      "route": "/api/test-rate-limit"
+    },
+    "request": { "path": "/api/test-rate-limit" }
+  }
+}

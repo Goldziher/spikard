@@ -1,1 +1,15 @@
-{"http":{"expected_response":{"body":{"code":"NOT_FOUND","message":"Item not found"},"headers":{"content-type":"application/grpc","grpc-status":"5"},"status_code":200},"handler":{"body_schema":{"properties":{"item_id":{"type":"string"}},"required":["item_id"],"type":"object"},"method":"POST","route":"/api.Service/GetItem"},"request":{"path":"/api.Service/GetItem"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "code": "NOT_FOUND", "message": "Item not found" },
+      "headers": { "content-type": "application/grpc", "grpc-status": "5" },
+      "status_code": 200
+    },
+    "handler": {
+      "body_schema": { "properties": { "item_id": { "type": "string" } }, "required": ["item_id"], "type": "object" },
+      "method": "POST",
+      "route": "/api.Service/GetItem"
+    },
+    "request": { "path": "/api.Service/GetItem" }
+  }
+}

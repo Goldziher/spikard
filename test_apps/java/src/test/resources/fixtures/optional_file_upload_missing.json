@@ -1,1 +1,11 @@
-{"http":{"expected_response":{"body":{"file":null},"headers":{},"status_code":200},"handler":{"body_schema":{"additionalProperties":false,"properties":{},"type":"object"},"method":"POST","route":"/files/optional"},"request":{"path":"/files/optional"}}}
+{
+  "http": {
+    "expected_response": { "body": { "file": null }, "headers": {}, "status_code": 200 },
+    "handler": {
+      "body_schema": { "additionalProperties": false, "properties": {}, "type": "object" },
+      "method": "POST",
+      "route": "/files/optional"
+    },
+    "request": { "path": "/files/optional" }
+  }
+}

@@ -1,1 +1,11 @@
-{"http":{"expected_response":{"body":{"item_id":"ec38df32-ceda-4cfa-9b4a-1aeb94ad551a"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/items/{item_id}"},"request":{"path":"/items/ec38df32-ceda-4cfa-9b4a-1aeb94ad551a"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "item_id": "ec38df32-ceda-4cfa-9b4a-1aeb94ad551a" },
+      "headers": {},
+      "status_code": 200
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/items/{item_id}" },
+    "request": { "path": "/items/ec38df32-ceda-4cfa-9b4a-1aeb94ad551a" }
+  }
+}

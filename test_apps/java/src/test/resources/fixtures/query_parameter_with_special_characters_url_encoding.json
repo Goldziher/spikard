@@ -1,1 +1,7 @@
-{"http":{"expected_response":{"body":{"email":"x@test.com","special":"&@A.ac"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/test"},"request":{"path":"/test"}}}
+{
+  "http": {
+    "expected_response": { "body": { "email": "x@test.com", "special": "&@A.ac" }, "headers": {}, "status_code": 200 },
+    "handler": { "body_schema": null, "method": "GET", "route": "/test" },
+    "request": { "path": "/test" }
+  }
+}

@@ -1,1 +1,45 @@
-{"http":{"expected_response":{"body":{"detail":"1 validation error in request","errors":[{"ctx":{"pattern":"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"},"input":"invalid","loc":["body","profile","contact","email"],"msg":"String should match pattern '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'","type":"string_pattern_mismatch"}],"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"},"headers":{},"status_code":422},"handler":{"body_schema":{"properties":{"profile":{"properties":{"contact":{"properties":{"email":{"format":"email","type":"string"}},"required":["email"],"type":"object"}},"required":["contact"],"type":"object"}},"required":["profile"],"type":"object"},"method":"POST","route":"/profiles"},"request":{"path":"/profiles"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "detail": "1 validation error in request",
+        "errors": [
+          {
+            "ctx": { "pattern": "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$" },
+            "input": "invalid",
+            "loc": ["body", "profile", "contact", "email"],
+            "msg": "String should match pattern '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'",
+            "type": "string_pattern_mismatch"
+          }
+        ],
+        "status": 422,
+        "title": "Request Validation Failed",
+        "type": "https://spikard.dev/errors/validation-error"
+      },
+      "headers": {},
+      "status_code": 422
+    },
+    "handler": {
+      "body_schema": {
+        "properties": {
+          "profile": {
+            "properties": {
+              "contact": {
+                "properties": { "email": { "format": "email", "type": "string" } },
+                "required": ["email"],
+                "type": "object"
+              }
+            },
+            "required": ["contact"],
+            "type": "object"
+          }
+        },
+        "required": ["profile"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/profiles"
+    },
+    "request": { "path": "/profiles" }
+  }
+}

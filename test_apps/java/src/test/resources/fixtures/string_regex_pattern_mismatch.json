@@ -1,1 +1,25 @@
-{"http":{"expected_response":{"body":{"detail":"1 validation error in request","errors":[{"ctx":{"pattern":"^[a-zA-Z0-9_-]+$"},"input":"invalid!","loc":["query","q"],"msg":"String should match pattern '^[a-zA-Z0-9_-]+$'","type":"string_pattern_mismatch"}],"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"},"headers":{},"status_code":422},"handler":{"body_schema":null,"method":"GET","route":"/items/"},"request":{"path":"/items/?q=invalid!"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "detail": "1 validation error in request",
+        "errors": [
+          {
+            "ctx": { "pattern": "^[a-zA-Z0-9_-]+$" },
+            "input": "invalid!",
+            "loc": ["query", "q"],
+            "msg": "String should match pattern '^[a-zA-Z0-9_-]+$'",
+            "type": "string_pattern_mismatch"
+          }
+        ],
+        "status": 422,
+        "title": "Request Validation Failed",
+        "type": "https://spikard.dev/errors/validation-error"
+      },
+      "headers": {},
+      "status_code": 422
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/items/" },
+    "request": { "path": "/items/?q=invalid!" }
+  }
+}

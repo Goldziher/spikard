@@ -1,1 +1,33 @@
-{"http":{"expected_response":{"body":{"image":{"name":"Product Image","url":"https://example.com/image.jpg"},"name":"Foo","price":42.0},"headers":{},"status_code":200},"handler":{"body_schema":{"additionalProperties":false,"properties":{"image":{"additionalProperties":false,"properties":{"name":{"type":"string"},"url":{"type":"string"}},"required":["url","name"],"type":"object"},"name":{"type":"string"},"price":{"type":"number"}},"required":["name","price","image"],"type":"object"},"method":"POST","route":"/items/nested"},"request":{"path":"/items/nested"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "image": { "name": "Product Image", "url": "https://example.com/image.jpg" },
+        "name": "Foo",
+        "price": 42.0
+      },
+      "headers": {},
+      "status_code": 200
+    },
+    "handler": {
+      "body_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "image": {
+            "additionalProperties": false,
+            "properties": { "name": { "type": "string" }, "url": { "type": "string" } },
+            "required": ["url", "name"],
+            "type": "object"
+          },
+          "name": { "type": "string" },
+          "price": { "type": "number" }
+        },
+        "required": ["name", "price", "image"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/items/nested"
+    },
+    "request": { "path": "/items/nested" }
+  }
+}

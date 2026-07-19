@@ -1,1 +1,15 @@
-{"http":{"expected_response":{"body":{"message":"Hello World"},"headers":{"content-type":"application/grpc","grpc-status":"0"},"status_code":200},"handler":{"body_schema":{"properties":{"name":{"type":"string"}},"required":["name"],"type":"object"},"method":"POST","route":"/helloworld.Greeter/SayHello"},"request":{"path":"/helloworld.Greeter/SayHello"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "message": "Hello World" },
+      "headers": { "content-type": "application/grpc", "grpc-status": "0" },
+      "status_code": 200
+    },
+    "handler": {
+      "body_schema": { "properties": { "name": { "type": "string" } }, "required": ["name"], "type": "object" },
+      "method": "POST",
+      "route": "/helloworld.Greeter/SayHello"
+    },
+    "request": { "path": "/helloworld.Greeter/SayHello" }
+  }
+}

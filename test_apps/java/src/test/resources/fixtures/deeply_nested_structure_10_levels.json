@@ -1,1 +1,93 @@
-{"http":{"expected_response":{"body":{"max_depth":10,"message":"Processed deeply nested structure","value_found":"deep"},"headers":{},"status_code":200},"handler":{"body_schema":{"additionalProperties":false,"properties":{"level1":{"additionalProperties":false,"properties":{"level2":{"additionalProperties":false,"properties":{"level3":{"additionalProperties":false,"properties":{"level4":{"additionalProperties":false,"properties":{"level5":{"additionalProperties":false,"properties":{"level6":{"additionalProperties":false,"properties":{"level7":{"additionalProperties":false,"properties":{"level8":{"additionalProperties":false,"properties":{"level9":{"additionalProperties":false,"properties":{"level10":{"additionalProperties":false,"properties":{"depth":{"type":"integer"},"value":{"type":"string"}},"required":["value","depth"],"type":"object"}},"required":["level10"],"type":"object"}},"required":["level9"],"type":"object"}},"required":["level8"],"type":"object"}},"required":["level7"],"type":"object"}},"required":["level6"],"type":"object"}},"required":["level5"],"type":"object"}},"required":["level4"],"type":"object"}},"required":["level3"],"type":"object"}},"required":["level2"],"type":"object"}},"required":["level1"],"type":"object"},"method":"POST","route":"/nested/"},"request":{"path":"/nested/"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "max_depth": 10, "message": "Processed deeply nested structure", "value_found": "deep" },
+      "headers": {},
+      "status_code": 200
+    },
+    "handler": {
+      "body_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "level1": {
+            "additionalProperties": false,
+            "properties": {
+              "level2": {
+                "additionalProperties": false,
+                "properties": {
+                  "level3": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "level4": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "level5": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "level6": {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "level7": {
+                                    "additionalProperties": false,
+                                    "properties": {
+                                      "level8": {
+                                        "additionalProperties": false,
+                                        "properties": {
+                                          "level9": {
+                                            "additionalProperties": false,
+                                            "properties": {
+                                              "level10": {
+                                                "additionalProperties": false,
+                                                "properties": {
+                                                  "depth": { "type": "integer" },
+                                                  "value": { "type": "string" }
+                                                },
+                                                "required": ["value", "depth"],
+                                                "type": "object"
+                                              }
+                                            },
+                                            "required": ["level10"],
+                                            "type": "object"
+                                          }
+                                        },
+                                        "required": ["level9"],
+                                        "type": "object"
+                                      }
+                                    },
+                                    "required": ["level8"],
+                                    "type": "object"
+                                  }
+                                },
+                                "required": ["level7"],
+                                "type": "object"
+                              }
+                            },
+                            "required": ["level6"],
+                            "type": "object"
+                          }
+                        },
+                        "required": ["level5"],
+                        "type": "object"
+                      }
+                    },
+                    "required": ["level4"],
+                    "type": "object"
+                  }
+                },
+                "required": ["level3"],
+                "type": "object"
+              }
+            },
+            "required": ["level2"],
+            "type": "object"
+          }
+        },
+        "required": ["level1"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/nested/"
+    },
+    "request": { "path": "/nested/" }
+  }
+}

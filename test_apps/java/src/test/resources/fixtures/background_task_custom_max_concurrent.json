@@ -1,1 +1,16 @@
-{"http":{"expected_response":{"body":{"status":"queued","task_id":"task-001"},"headers":{},"status_code":202},"handler":{"body_schema":{"additionalProperties":false,"properties":{"data":{"type":"string"},"task_id":{"type":"string"}},"required":["task_id","data"],"type":"object"},"method":"POST","route":"/background/process"},"request":{"path":"/background/process"}}}
+{
+  "http": {
+    "expected_response": { "body": { "status": "queued", "task_id": "task-001" }, "headers": {}, "status_code": 202 },
+    "handler": {
+      "body_schema": {
+        "additionalProperties": false,
+        "properties": { "data": { "type": "string" }, "task_id": { "type": "string" } },
+        "required": ["task_id", "data"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/background/process"
+    },
+    "request": { "path": "/background/process" }
+  }
+}

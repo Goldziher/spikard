@@ -1,1 +1,20 @@
-{"http":{"expected_response":{"body":{"id":1,"jsonrpc":"2.0","result":15},"headers":{},"status_code":200},"handler":{"body_schema":{"properties":{"id":{"type":["integer","string"]},"jsonrpc":{"type":"string"},"method":{"type":"string"},"params":{"type":"object"}},"required":["jsonrpc","method","id"],"type":"object"},"method":"POST","route":"/rpc"},"request":{"path":"/rpc"}}}
+{
+  "http": {
+    "expected_response": { "body": { "id": 1, "jsonrpc": "2.0", "result": 15 }, "headers": {}, "status_code": 200 },
+    "handler": {
+      "body_schema": {
+        "properties": {
+          "id": { "type": ["integer", "string"] },
+          "jsonrpc": { "type": "string" },
+          "method": { "type": "string" },
+          "params": { "type": "object" }
+        },
+        "required": ["jsonrpc", "method", "id"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/rpc"
+    },
+    "request": { "path": "/rpc" }
+  }
+}

@@ -1,1 +1,7 @@
-{"http":{"expected_response":{"body":{"host":"api.example.com"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/dns"},"request":{"path":"/dns"}}}
+{
+  "http": {
+    "expected_response": { "body": { "host": "api.example.com" }, "headers": {}, "status_code": 200 },
+    "handler": { "body_schema": null, "method": "GET", "route": "/dns" },
+    "request": { "path": "/dns" }
+  }
+}

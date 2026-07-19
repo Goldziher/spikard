@@ -1,1 +1,7 @@
-{"http":{"expected_response":{"body":{"error":"Origin 'null' is not allowed"},"headers":{},"status_code":403},"handler":{"body_schema":null,"method":"GET","route":"/api/data"},"request":{"path":"/api/data"}}}
+{
+  "http": {
+    "expected_response": { "body": { "error": "Origin 'null' is not allowed" }, "headers": {}, "status_code": 403 },
+    "handler": { "body_schema": null, "method": "GET", "route": "/api/data" },
+    "request": { "path": "/api/data" }
+  }
+}

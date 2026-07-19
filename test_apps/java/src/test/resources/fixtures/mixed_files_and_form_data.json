@@ -1,1 +1,30 @@
-{"http":{"expected_response":{"body":{"active":"true","age":"25","file":{"content":"file data here","content_type":"text/plain","filename":"upload.txt","size":14},"username":"testuser"},"headers":{},"status_code":200},"handler":{"body_schema":{"additionalProperties":false,"properties":{"active":{"type":"string"},"age":{"type":"string"},"file":{"format":"binary","type":"string"},"username":{"type":"string"}},"required":["file"],"type":"object"},"method":"POST","route":"/"},"request":{"path":"/"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "active": "true",
+        "age": "25",
+        "file": { "content": "file data here", "content_type": "text/plain", "filename": "upload.txt", "size": 14 },
+        "username": "testuser"
+      },
+      "headers": {},
+      "status_code": 200
+    },
+    "handler": {
+      "body_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "active": { "type": "string" },
+          "age": { "type": "string" },
+          "file": { "format": "binary", "type": "string" },
+          "username": { "type": "string" }
+        },
+        "required": ["file"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/"
+    },
+    "request": { "path": "/" }
+  }
+}

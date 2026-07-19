@@ -1,1 +1,19 @@
-{"http":{"expected_response":{"body":{"email":null,"username":"johndoe"},"headers":{},"status_code":200},"handler":{"body_schema":{"properties":{"email":{"format":"email","type":["string","null"]},"password":{"type":"string"},"username":{"type":"string"}},"required":["username","password"],"type":"object"},"method":"POST","route":"/register/"},"request":{"path":"/register/"}}}
+{
+  "http": {
+    "expected_response": { "body": { "email": null, "username": "johndoe" }, "headers": {}, "status_code": 200 },
+    "handler": {
+      "body_schema": {
+        "properties": {
+          "email": { "format": "email", "type": ["string", "null"] },
+          "password": { "type": "string" },
+          "username": { "type": "string" }
+        },
+        "required": ["username", "password"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/register/"
+    },
+    "request": { "path": "/register/" }
+  }
+}

@@ -1,1 +1,11 @@
-{"http":{"expected_response":{"body":{"id":"550e8400-e29b-41d4-a716-446655440000"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/type-syntax/items/{id:uuid}"},"request":{"path":"/type-syntax/items/550e8400-e29b-41d4-a716-446655440000"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "id": "550e8400-e29b-41d4-a716-446655440000" },
+      "headers": {},
+      "status_code": 200
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/type-syntax/items/{id:uuid}" },
+    "request": { "path": "/type-syntax/items/550e8400-e29b-41d4-a716-446655440000" }
+  }
+}

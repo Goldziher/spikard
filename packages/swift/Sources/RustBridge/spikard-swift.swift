@@ -4292,6 +4292,3 @@ extension App: Vectorizable {
         __swift_bridge__$Vec_App$len(vecPtr)
     }
 }
-
-
-

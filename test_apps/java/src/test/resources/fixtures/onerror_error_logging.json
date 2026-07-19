@@ -1,1 +1,11 @@
-{"http":{"expected_response":{"body":{"error":"Internal Server Error","error_id":".*","message":"An unexpected error occurred"},"headers":{"Content-Type":"application/json"},"status_code":500},"handler":{"body_schema":null,"method":"GET","route":"/api/test-error"},"request":{"path":"/api/test-error"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "error": "Internal Server Error", "error_id": ".*", "message": "An unexpected error occurred" },
+      "headers": { "Content-Type": "application/json" },
+      "status_code": 500
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/api/test-error" },
+    "request": { "path": "/api/test-error" }
+  }
+}

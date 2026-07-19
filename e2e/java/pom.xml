@@ -33,9 +33,9 @@
     <dependency>
       <groupId>dev.spikard</groupId>
       <artifactId>spikard</artifactId>
-      <version>0.17.0-rc.3</version>
+      <version>0.17.0-rc.4</version>
       <scope>system</scope>
-      <systemPath>${project.basedir}/../../packages/java/target/spikard-0.17.0-rc.3.jar</systemPath>
+      <systemPath>${project.basedir}/../../packages/java/target/spikard-0.17.0-rc.4.jar</systemPath>
     </dependency>
 
     <dependency>

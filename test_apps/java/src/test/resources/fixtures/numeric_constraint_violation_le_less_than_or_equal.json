@@ -1,1 +1,25 @@
-{"http":{"expected_response":{"body":{"detail":"1 validation error in request","errors":[{"ctx":{"le":100},"input":"101","loc":["query","limit"],"msg":"Input should be less than or equal to 100","type":"less_than_equal"}],"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"},"headers":{},"status_code":422},"handler":{"body_schema":null,"method":"GET","route":"/items/"},"request":{"path":"/items/?q=test&limit=101"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "detail": "1 validation error in request",
+        "errors": [
+          {
+            "ctx": { "le": 100 },
+            "input": "101",
+            "loc": ["query", "limit"],
+            "msg": "Input should be less than or equal to 100",
+            "type": "less_than_equal"
+          }
+        ],
+        "status": 422,
+        "title": "Request Validation Failed",
+        "type": "https://spikard.dev/errors/validation-error"
+      },
+      "headers": {},
+      "status_code": 422
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/items/" },
+    "request": { "path": "/items/?q=test&limit=101" }
+  }
+}

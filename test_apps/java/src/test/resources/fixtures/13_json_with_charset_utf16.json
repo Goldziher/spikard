@@ -1,1 +1,20 @@
-{"http":{"expected_response":{"body":{"detail":"Unsupported charset 'utf-16' for JSON. Only UTF-8 is supported.","status":415,"title":"Unsupported Charset","type":"https://spikard.dev/errors/unsupported-charset"},"headers":{},"status_code":415},"handler":{"body_schema":{"properties":{"value":{"type":"string"}},"type":"object"},"method":"POST","route":"/data"},"request":{"path":"/data"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "detail": "Unsupported charset 'utf-16' for JSON. Only UTF-8 is supported.",
+        "status": 415,
+        "title": "Unsupported Charset",
+        "type": "https://spikard.dev/errors/unsupported-charset"
+      },
+      "headers": {},
+      "status_code": 415
+    },
+    "handler": {
+      "body_schema": { "properties": { "value": { "type": "string" } }, "type": "object" },
+      "method": "POST",
+      "route": "/data"
+    },
+    "request": { "path": "/data" }
+  }
+}

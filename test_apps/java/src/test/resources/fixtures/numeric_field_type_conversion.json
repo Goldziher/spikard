@@ -1,1 +1,15 @@
-{"http":{"expected_response":{"body":{"age":30,"username":"johndoe"},"headers":{},"status_code":200},"handler":{"body_schema":{"properties":{"age":{"type":"integer"},"username":{"type":"string"}},"required":["username"],"type":"object"},"method":"POST","route":"/form/"},"request":{"path":"/form/"}}}
+{
+  "http": {
+    "expected_response": { "body": { "age": 30, "username": "johndoe" }, "headers": {}, "status_code": 200 },
+    "handler": {
+      "body_schema": {
+        "properties": { "age": { "type": "integer" }, "username": { "type": "string" } },
+        "required": ["username"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/form/"
+    },
+    "request": { "path": "/form/" }
+  }
+}

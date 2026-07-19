@@ -1,1 +1,11 @@
-{"http":{"expected_response":{"body":{"has_request_id":true,"message":"onRequest hooks executed","request_logged":true},"headers":{"X-Request-ID":".*"},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/api/test-on-request"},"request":{"path":"/api/test-on-request"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "has_request_id": true, "message": "onRequest hooks executed", "request_logged": true },
+      "headers": { "X-Request-ID": ".*" },
+      "status_code": 200
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/api/test-on-request" },
+    "request": { "path": "/api/test-on-request" }
+  }
+}

@@ -1,1 +1,38 @@
-{"http":{"expected_response":{"body":{"detail":"1 validation error in request","errors":[{"ctx":{"min_length":1},"input":[],"loc":["body","tags"],"msg":"List should have at least 1 item after validation","type":"too_short"}],"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"},"headers":{},"status_code":422},"handler":{"body_schema":{"additionalProperties":false,"properties":{"name":{"type":"string"},"price":{"type":"number"},"tags":{"items":{},"minItems":1,"type":"array"}},"required":["name","price","tags"],"type":"object"},"method":"POST","route":"/items/"},"request":{"path":"/items/"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "detail": "1 validation error in request",
+        "errors": [
+          {
+            "ctx": { "min_length": 1 },
+            "input": [],
+            "loc": ["body", "tags"],
+            "msg": "List should have at least 1 item after validation",
+            "type": "too_short"
+          }
+        ],
+        "status": 422,
+        "title": "Request Validation Failed",
+        "type": "https://spikard.dev/errors/validation-error"
+      },
+      "headers": {},
+      "status_code": 422
+    },
+    "handler": {
+      "body_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "price": { "type": "number" },
+          "tags": { "items": {}, "minItems": 1, "type": "array" }
+        },
+        "required": ["name", "price", "tags"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/items/"
+    },
+    "request": { "path": "/items/" }
+  }
+}

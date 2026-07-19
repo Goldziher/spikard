@@ -1,1 +1,16 @@
-{"http":{"expected_response":{"body":{"detail":"Authorization header must use Bearer scheme: 'Bearer <token>'","status":401,"title":"Invalid Authorization header format","type":"https://spikard.dev/errors/unauthorized"},"headers":{},"status_code":401},"handler":{"body_schema":null,"method":"GET","route":"/api/protected"},"request":{"path":"/api/protected"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "detail": "Authorization header must use Bearer scheme: 'Bearer <token>'",
+        "status": 401,
+        "title": "Invalid Authorization header format",
+        "type": "https://spikard.dev/errors/unauthorized"
+      },
+      "headers": {},
+      "status_code": 401
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/api/protected" },
+    "request": { "path": "/api/protected" }
+  }
+}

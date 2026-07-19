@@ -1438,9 +1438,9 @@ dependencies = [
 
 [[package]]
 name = "http-body"
-version = "1.0.1"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1efedce1fb8e6913f23e0c92de8e62cd5b772a67e7b3946df930a62566c93184"
+checksum = "ca2a8f2913ee65f60facd6a5905613afaa448497a0230cc41ce022d93290bc2c"
 dependencies = [
  "bytes",
  "http",
@@ -1756,9 +1756,9 @@ dependencies = [
 
 [[package]]
 name = "jsonschema"
-version = "0.46.8"
+version = "0.48.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "24fc8535da347b994f6d2fab0a84b74e3b31ad08ebe4204d95f3e755db7af49b"
+checksum = "9baf521a926fd1e6f94af6922be9686b61c8a89a5fb7e14d6a1e21b79738d4cc"
 dependencies = [
  "ahash",
  "bytecount",
@@ -1769,16 +1769,25 @@ dependencies = [
  "getrandom 0.3.4",
  "idna",
  "itoa",
+ "jsonschema-regex",
  "num-cmp",
  "num-traits",
  "percent-encoding",
  "referencing",
  "regex",
- "regex-syntax",
  "serde",
  "serde_json",
  "unicode-general-category",
  "uuid-simd",
+]
+
+[[package]]
+name = "jsonschema-regex"
+version = "0.48.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d668f4775619127513d9a4f190704d20a66d20ccf0efc258f8ed42548e5fd7cd"
+dependencies = [
+ "regex-syntax",
 ]
 
 [[package]]
@@ -2636,14 +2645,14 @@ dependencies = [
 
 [[package]]
 name = "referencing"
-version = "0.46.8"
+version = "0.48.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1c8dceb372b46fecd006be48ca335468b49ad887a7f0150cabd6098fa4fc500f"
+checksum = "df843f41f0cb459649f64a8b6b10579cf454f7a7420dc702767c81a26f23d780"
 dependencies = [
  "ahash",
  "fluent-uri",
  "getrandom 0.3.4",
- "hashbrown 0.16.1",
+ "hashbrown 0.17.1",
  "itoa",
  "micromap",
  "parking_lot",
@@ -3075,7 +3084,7 @@ dependencies = [
 
 [[package]]
 name = "spikard"
-version = "0.17.0-rc.3"
+version = "0.17.0-rc.4"
 dependencies = [
  "anyhow",
  "async-graphql",
@@ -3094,7 +3103,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-core"
-version = "0.17.0-rc.3"
+version = "0.17.0-rc.4"
 dependencies = [
  "anyhow",
  "base64",
@@ -3118,7 +3127,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-graphql"
-version = "0.17.0-rc.3"
+version = "0.17.0-rc.4"
 dependencies = [
  "async-graphql",
  "async-graphql-parser",
@@ -3138,7 +3147,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-http"
-version = "0.17.0-rc.3"
+version = "0.17.0-rc.4"
 dependencies = [
  "ahash",
  "anyhow",
@@ -3191,7 +3200,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-rb"
-version = "0.17.0-rc.3"
+version = "0.17.0-rc.4"
 dependencies = [
  "magnus",
  "rb-sys",
@@ -3836,9 +3845,9 @@ checksum = "e2eebbbfe4093922c2b6734d7c679ebfebd704a0d7e56dfcb0d05818ce28977d"
 
 [[package]]
 name = "uuid"
-version = "1.23.4"
+version = "1.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf80a72845275afea99e7f2b434723d3bc7e38470fcd1c7ed39a599c73319a53"
+checksum = "bf3923a6f5c4c6382e0b653c4117f48d631ea17f38ed86e2a828e6f7412f5239"
 dependencies = [
  "getrandom 0.4.3",
  "js-sys",

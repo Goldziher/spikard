@@ -1,1 +1,7 @@
-{"http":{"expected_response":{"body":{"file_path":"home/johndoe/myfile.txt"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/files/{file_path:path}"},"request":{"path":"/files/home/johndoe/myfile.txt"}}}
+{
+  "http": {
+    "expected_response": { "body": { "file_path": "home/johndoe/myfile.txt" }, "headers": {}, "status_code": 200 },
+    "handler": { "body_schema": null, "method": "GET", "route": "/files/{file_path:path}" },
+    "request": { "path": "/files/home/johndoe/myfile.txt" }
+  }
+}

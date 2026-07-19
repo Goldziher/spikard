@@ -1,1 +1,18 @@
-{"http":{"expected_response":{"body":{"contact.email":"john@example.com","user-name":"JohnDoe"},"headers":{},"status_code":201},"handler":{"body_schema":{"properties":{"contact.email":{"format":"email","type":"string"},"user-name":{"type":"string"}},"type":"object"},"method":"POST","route":"/data"},"request":{"path":"/data"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "contact.email": "john@example.com", "user-name": "JohnDoe" },
+      "headers": {},
+      "status_code": 201
+    },
+    "handler": {
+      "body_schema": {
+        "properties": { "contact.email": { "format": "email", "type": "string" }, "user-name": { "type": "string" } },
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/data"
+    },
+    "request": { "path": "/data" }
+  }
+}

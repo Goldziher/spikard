@@ -1,1 +1,11 @@
-{"http":{"expected_response":{"body":{"info":{"contact":{"name":"API Support","url":"https://example.com/support"}}},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/openapi.json"},"request":{"path":"/openapi.json"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": { "info": { "contact": { "name": "API Support", "url": "https://example.com/support" } } },
+      "headers": {},
+      "status_code": 200
+    },
+    "handler": { "body_schema": null, "method": "GET", "route": "/openapi.json" },
+    "request": { "path": "/openapi.json" }
+  }
+}

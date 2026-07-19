@@ -1,1 +1,51 @@
-{"http":{"expected_response":{"body":{"detail":"3 validation errors in request","errors":[{"ctx":{"min_length":3},"input":"X","loc":["body","name"],"msg":"String should have at least 3 characters","type":"string_too_short"},{"ctx":{"gt":0},"input":-10,"loc":["body","price"],"msg":"Input should be greater than 0","type":"greater_than"},{"input":"not_a_number","loc":["body","quantity"],"msg":"Input should be a valid integer, unable to parse string as an integer","type":"int_parsing"}],"status":422,"title":"Request Validation Failed","type":"https://spikard.dev/errors/validation-error"},"headers":{},"status_code":422},"handler":{"body_schema":{"additionalProperties":false,"properties":{"name":{"minLength":3,"type":"string"},"price":{"exclusiveMinimum":0,"type":"integer"},"quantity":{"type":"integer"}},"required":["name","price","quantity"],"type":"object"},"method":"POST","route":"/items/"},"request":{"path":"/items/"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "detail": "3 validation errors in request",
+        "errors": [
+          {
+            "ctx": { "min_length": 3 },
+            "input": "X",
+            "loc": ["body", "name"],
+            "msg": "String should have at least 3 characters",
+            "type": "string_too_short"
+          },
+          {
+            "ctx": { "gt": 0 },
+            "input": -10,
+            "loc": ["body", "price"],
+            "msg": "Input should be greater than 0",
+            "type": "greater_than"
+          },
+          {
+            "input": "not_a_number",
+            "loc": ["body", "quantity"],
+            "msg": "Input should be a valid integer, unable to parse string as an integer",
+            "type": "int_parsing"
+          }
+        ],
+        "status": 422,
+        "title": "Request Validation Failed",
+        "type": "https://spikard.dev/errors/validation-error"
+      },
+      "headers": {},
+      "status_code": 422
+    },
+    "handler": {
+      "body_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "name": { "minLength": 3, "type": "string" },
+          "price": { "exclusiveMinimum": 0, "type": "integer" },
+          "quantity": { "type": "integer" }
+        },
+        "required": ["name", "price", "quantity"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/items/"
+    },
+    "request": { "path": "/items/" }
+  }
+}

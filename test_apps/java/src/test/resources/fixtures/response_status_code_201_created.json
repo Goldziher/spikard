@@ -1,1 +1,11 @@
-{"http":{"expected_response":{"body":{"id":"1","name":"New Item"},"headers":{},"status_code":201},"handler":{"body_schema":{"properties":{"name":{"type":"string"}},"required":["name"],"type":"object"},"method":"POST","route":"/items"},"request":{"path":"/items"}}}
+{
+  "http": {
+    "expected_response": { "body": { "id": "1", "name": "New Item" }, "headers": {}, "status_code": 201 },
+    "handler": {
+      "body_schema": { "properties": { "name": { "type": "string" } }, "required": ["name"], "type": "object" },
+      "method": "POST",
+      "route": "/items"
+    },
+    "request": { "path": "/items" }
+  }
+}

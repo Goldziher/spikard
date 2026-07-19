@@ -1,1 +1,34 @@
-{"http":{"expected_response":{"body":{"empty_array_length":0,"empty_object_keys":0,"empty_string_length":0,"explicit_null_is_null":true,"false_is_false":true,"zero_is_falsy":true},"headers":{},"status_code":200},"handler":{"body_schema":{"additionalProperties":false,"properties":{"empty_array":{"items":{},"type":"array"},"empty_object":{"additionalProperties":false,"properties":{},"type":"object"},"empty_string":{"type":"string"},"explicit_null":{"type":"null"},"false_boolean":{"type":"boolean"},"zero_number":{"type":"integer"}},"required":["explicit_null","empty_string","empty_array","empty_object","zero_number","false_boolean"],"type":"object"},"method":"POST","route":"/nulls/"},"request":{"path":"/nulls/"}}}
+{
+  "http": {
+    "expected_response": {
+      "body": {
+        "empty_array_length": 0,
+        "empty_object_keys": 0,
+        "empty_string_length": 0,
+        "explicit_null_is_null": true,
+        "false_is_false": true,
+        "zero_is_falsy": true
+      },
+      "headers": {},
+      "status_code": 200
+    },
+    "handler": {
+      "body_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "empty_array": { "items": {}, "type": "array" },
+          "empty_object": { "additionalProperties": false, "properties": {}, "type": "object" },
+          "empty_string": { "type": "string" },
+          "explicit_null": { "type": "null" },
+          "false_boolean": { "type": "boolean" },
+          "zero_number": { "type": "integer" }
+        },
+        "required": ["explicit_null", "empty_string", "empty_array", "empty_object", "zero_number", "false_boolean"],
+        "type": "object"
+      },
+      "method": "POST",
+      "route": "/nulls/"
+    },
+    "request": { "path": "/nulls/" }
+  }
+}

@@ -1,1 +1,7 @@
-{"http":{"expected_response":{"body":null,"headers":{},"status_code":201},"handler":{"body_schema":{"minProperties":2,"type":"object"},"method":"POST","route":"/config"},"request":{"path":"/config"}}}
+{
+  "http": {
+    "expected_response": { "body": null, "headers": {}, "status_code": 201 },
+    "handler": { "body_schema": { "minProperties": 2, "type": "object" }, "method": "POST", "route": "/config" },
+    "request": { "path": "/config" }
+  }
+}
