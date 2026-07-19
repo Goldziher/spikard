@@ -6,7 +6,6 @@
 
 require "socket"
 require "open3"
-require "timeout"
 
 # Spawn the app harness for server-pattern e2e tests.
 # If SUT_URL is already set, a parent process started a shared harness.
@@ -18,51 +17,42 @@ RSpec.configure do |config|
     unless File.exist?(harness_bin)
       raise "app_harness.rb not found at #{harness_bin}"
     end
-    # Spawn the harness and read its stdout to extract the dynamic port.
-    @_harness_stdin, @_harness_stdout, @_harness_stderr, @_harness_thread = Open3.popen3("ruby", harness_bin)
+
+    # Allocate a free ephemeral port and hand it to the harness via
+    # SPIKARD_SERVER_PORT (honored by the core server) so parallel suites and
+    # leftover processes never collide on a fixed port.
+    probe = TCPServer.new("127.0.0.1", 0)
+    harness_port = probe.addr[1]
+    probe.close
+
+    # Spawn the harness bound to the allocated port.
+    env = {"SPIKARD_SERVER_PORT" => harness_port.to_s}
+    @_harness_stdin, @_harness_stdout, @_harness_stderr, @_harness_thread = Open3.popen3(env, "ruby", harness_bin)
     @_harness_pid = @_harness_thread.pid
-    harness_port = nil
+
+    # Poll until the harness actually accepts TCP connections. The harness
+    # may print a listening banner before the runtime has finished binding,
+    # so port availability is the authoritative readiness signal.
     deadline = Time.now + 15.0
-    # Read stdout, collecting all HARNESS_PORT lines. The harness retries on bind
-    # failure, so we may see multiple ports. Keep the latest one and verify it's reachable.
-    latest_port = nil
+    ready = false
     while Time.now < deadline
       if @_harness_thread.status.nil?
-        # Process died; use the latest port if available
-        harness_port = latest_port if latest_port
+        # Process died early
         break
       end
 
       begin
-        Timeout.timeout(0.1) do
-          line = @_harness_stdout.readline
-          if line =~ /^HARNESS_PORT=(\d+)/
-            latest_port = $1.to_i
-          end
-        end
-
-      rescue Timeout::Error, EOFError, Errno::EAGAIN
-        # Try to verify the latest port if we have one
-        if latest_port
-          begin
-            TCPSocket.new("127.0.0.1", latest_port).close
-            harness_port = latest_port
-            # Success: port is reachable
-            break
-          rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH
-            # Port not yet listening; keep polling
-            sleep(0.05)
-          end
-        else
-          sleep(0.05)
-        end
+        TCPSocket.new("127.0.0.1", harness_port).close
+        ready = true
+        break
+      rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH
+        sleep(0.1)
       end
     end
 
-    unless harness_port
+    unless ready
       Process.kill("TERM", @_harness_pid) rescue nil
-      msg = latest_port ? "App harness did not become reachable on 127.0.0.1:#{latest_port} within 15s" : "App harness did not report port within 15s"
-      raise msg
+      raise "App harness did not become reachable on 127.0.0.1:#{harness_port} within 15s"
     end
 
     url = "http://127.0.0.1:#{harness_port}"

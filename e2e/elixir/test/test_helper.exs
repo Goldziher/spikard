@@ -29,14 +29,23 @@ unless System.get_env("SUT_URL") do
     []
   end
 
-  # Use `elixir` to execute the harness script with proper code paths
+  # Allocate a free ephemeral port and hand it to the harness via
+  # SPIKARD_SERVER_PORT (honored by the core server) so parallel suites and
+  # leftover processes never collide on a fixed port.
+  {:ok, probe} = :gen_tcp.listen(0, [:binary])
+  {:ok, harness_port} = :inet.port(probe)
+  :gen_tcp.close(probe)
+
+  # Use `elixir` to execute the harness script with proper code paths, bound
+  # to the allocated port via SPIKARD_SERVER_PORT.
   port = Port.open({:spawn_executable, System.find_executable("elixir")}, [
   :binary,
   {:line, 65_536},
-  args: lib_paths ++ [app_harness_bin]
+  args: lib_paths ++ [app_harness_bin],
+  env: [{~c"SPIKARD_SERVER_PORT", String.to_charlist(Integer.to_string(harness_port))}]
   ])
 
-  url = "http://127.0.0.1:8000"
+  url = "http://127.0.0.1:#{harness_port}"
 
   # Poll until the harness accepts TCP connections
   deadline = :erlang.monotonic_time(:millisecond) + 15_000
@@ -48,7 +57,7 @@ unless System.get_env("SUT_URL") do
     if now > deadline do
       {:halt, {false, url_acc}}
     else
-      case :gen_tcp.connect(String.to_charlist("127.0.0.1"), 8000, [], 500) do
+      case :gen_tcp.connect(String.to_charlist("127.0.0.1"), harness_port, [], 500) do
         {:ok, socket} ->
         :gen_tcp.close(socket)
         {:halt, {true, url_acc}}
@@ -61,7 +70,7 @@ unless System.get_env("SUT_URL") do
 
   unless ready do
     Port.close(port)
-    raise "App harness did not become reachable on 127.0.0.1:8000 within 15s"
+    raise "App harness did not become reachable on 127.0.0.1:#{harness_port} within 15s"
   end
 
   System.put_env("SUT_URL", url)

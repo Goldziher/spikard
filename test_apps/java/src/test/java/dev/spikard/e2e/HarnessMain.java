@@ -11,13 +11,25 @@ public class HarnessMain {
 
     public static void main(String[] args) {
         try {
-            // Resolve the port: read SUT_URL env var (e.g., http://127.0.0.1:8000)
-            // or discover an available port dynamically
+            // Resolve the port: SPIKARD_SERVER_PORT (set by the spawner when it
+            // allocates a free ephemeral port, honored by the core server) takes
+            // priority, then SUT_URL (e.g., http://127.0.0.1:8000), then the
+            // configured default.
+            String spikardServerPort = System.getenv("SPIKARD_SERVER_PORT");
             String sutUrl = System.getenv("SUT_URL");
             int effectivePort;
             String effectiveHost = "127.0.0.1";
 
-            if (sutUrl != null && !sutUrl.isEmpty()) {
+            if (spikardServerPort != null && !spikardServerPort.isEmpty()) {
+                int parsedPort;
+                try {
+                    parsedPort = Integer.parseInt(spikardServerPort);
+                } catch (NumberFormatException e) {
+                    System.err.println("Warning: failed to parse SPIKARD_SERVER_PORT: " + e.getMessage());
+                    parsedPort = 8000;
+                }
+                effectivePort = parsedPort;
+            } else if (sutUrl != null && !sutUrl.isEmpty()) {
                 try {
                     URI uri = new URI(sutUrl);
                     effectiveHost = uri.getHost() != null ? uri.getHost() : effectiveHost;

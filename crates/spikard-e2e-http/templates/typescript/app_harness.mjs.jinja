@@ -236,11 +236,14 @@ for (const [fixtureId, fixture] of Object.entries(_FIXTURES)) {
   }
 }
 
-// Configure and start the server
+// Configure and start the server.
+// SPIKARD_SERVER_PORT is set by the spawner when it allocates a free
+// ephemeral port; fall back to the configured default port otherwise.
+const _port = process.env.SPIKARD_SERVER_PORT ? Number(process.env.SPIKARD_SERVER_PORT) : {{ port }};
 const config = {{ server_config_factory }};
 config.host = '{{ host }}';
-config.port = {{ port }};
+config.port = _port;
 app.config(config);
 
-console.log(`Harness listening on {{ host }}:{{ port }}`);
+console.log(`Harness listening on {{ host }}:${_port}`);
 await app.{{ run_method }}();

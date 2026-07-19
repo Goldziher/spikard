@@ -92,25 +92,13 @@ module AppHarness
     APP.{{ register_route_method }}(builder, &handler_fn)
   end
 
-  # Start the server.
-  # The harness reports its listening port via HARNESS_PORT so the parent
-  # test orchestrator can verify connectivity. Port binding is handled by
-  # the application's ServerConfig (which may be environment-configured or
-  # set via bindings that expose a config method).
-  port = Integer(ENV.fetch("HARNESS_PORT", "{{ port }}"))
-  attempts = 0
-
-  begin
-    ENV["PORT"] = port.to_s
-    ENV["HARNESS_PORT"] = port.to_s
-    puts "HARNESS_PORT=#{port}"
-    STDOUT.flush
-    APP.{{ run_method }}
-  rescue Errno::EADDRINUSE
-    attempts += 1
-    raise if attempts >= 10
-
-    port = rand(40000..60000)
-    retry
-  end
+  # Start the server. SPIKARD_SERVER_PORT is set by the spawner when it
+  # allocates a free ephemeral port; the core server honors it via
+  # ServerConfig::default(), falling back to "{{ port }}" otherwise. The
+  # spawner polls TCP connectivity directly, so no stdout port round-trip
+  # is needed here.
+  port = Integer(ENV.fetch("SPIKARD_SERVER_PORT", "{{ port }}"))
+  puts "Harness listening on {{ host }}:#{port}"
+  STDOUT.flush
+  APP.{{ run_method }}
 end

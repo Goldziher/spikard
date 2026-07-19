@@ -2439,7 +2439,7 @@ pub struct Request(pub axum::http::Request<axum::body::Body>);
 
 pub struct RequestData(pub spikard_http::handler_trait::RequestData);
 
-pub fn handler_result_noop(client: &HandlerResult) {
+pub fn request_data_noop(client: &RequestData) {
     // No-op method for swift-bridge destructor synthesis
 }
 
@@ -2447,7 +2447,7 @@ pub fn request_noop(client: &Request) {
     // No-op method for swift-bridge destructor synthesis
 }
 
-pub fn request_data_noop(client: &RequestData) {
+pub fn handler_result_noop(client: &HandlerResult) {
     // No-op method for swift-bridge destructor synthesis
 }
 

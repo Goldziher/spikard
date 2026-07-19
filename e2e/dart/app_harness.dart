@@ -73,9 +73,11 @@ Future<void> main() async {
     );
   }
 
-  // Bind and start the server on port 8008.
+  // Bind and start the server. SPIKARD_SERVER_PORT is set by the spawner
+  // when it allocates a free ephemeral port (honored by the core server via
+  // ServerConfig::default()); fall back to the configured default otherwise.
   const host = '127.0.0.1';
-  const port = 8008;
+  final port = int.tryParse(Platform.environment['SPIKARD_SERVER_PORT'] ?? '') ?? 8000;
 
   // Print the SUT_URL so the test harness knows we're listening.
   print('SUT_URL=http://$host:$port');

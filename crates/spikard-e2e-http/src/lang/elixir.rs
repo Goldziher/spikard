@@ -199,7 +199,6 @@ pub fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup], confi
 pub fn render_test_helper_server(e2e_config: &E2eConfig) -> String {
     let env_setup = render_env_setup_block(e2e_config);
     let host = &e2e_config.harness.host;
-    let port = e2e_config.harness.port;
     format!(
         r#"{env_setup}# Start a named Finch pool before ExUnit configured to use HTTP/1 only.
 # Tests pass `finch: AlefE2EFinch` on every Req call; the pool's protocol
@@ -232,14 +231,23 @@ unless System.get_env("SUT_URL") do
     []
   end
 
-  # Use `elixir` to execute the harness script with proper code paths
+  # Allocate a free ephemeral port and hand it to the harness via
+  # SPIKARD_SERVER_PORT (honored by the core server) so parallel suites and
+  # leftover processes never collide on a fixed port.
+  {{:ok, probe}} = :gen_tcp.listen(0, [:binary])
+  {{:ok, harness_port}} = :inet.port(probe)
+  :gen_tcp.close(probe)
+
+  # Use `elixir` to execute the harness script with proper code paths, bound
+  # to the allocated port via SPIKARD_SERVER_PORT.
   port = Port.open({{:spawn_executable, System.find_executable("elixir")}}, [
     :binary,
     {{:line, 65_536}},
-    args: lib_paths ++ [app_harness_bin]
+    args: lib_paths ++ [app_harness_bin],
+    env: [{{~c"SPIKARD_SERVER_PORT", String.to_charlist(Integer.to_string(harness_port))}}]
   ])
 
-  url = "http://{host}:{port}"
+  url = "http://{host}:#{{harness_port}}"
 
   # Poll until the harness accepts TCP connections
   deadline = :erlang.monotonic_time(:millisecond) + 15_000
@@ -251,7 +259,7 @@ unless System.get_env("SUT_URL") do
       if now > deadline do
         {{:halt, {{false, url_acc}}}}
       else
-        case :gen_tcp.connect(String.to_charlist("{host}"), {port}, [], 500) do
+        case :gen_tcp.connect(String.to_charlist("{host}"), harness_port, [], 500) do
           {{:ok, socket}} ->
             :gen_tcp.close(socket)
             {{:halt, {{true, url_acc}}}}
@@ -264,7 +272,7 @@ unless System.get_env("SUT_URL") do
 
   unless ready do
     Port.close(port)
-    raise "App harness did not become reachable on {host}:{port} within 15s"
+    raise "App harness did not become reachable on {host}:#{{harness_port}} within 15s"
   end
 
   System.put_env("SUT_URL", url)

@@ -96,12 +96,16 @@ foreach ($_FIXTURES as $fixture_id => $fixture) {
 }
 
 // Configure and start the server.
+// SPIKARD_SERVER_PORT is set by the spawner when it allocates a free
+// ephemeral port; fall back to the configured default port otherwise.
+$_envPort = getenv('SPIKARD_SERVER_PORT');
+$_port = $_envPort !== false ? (int) $_envPort : 8000;
 $_config = new ServerConfig();
 $_config->host = '127.0.0.1';
-$_config->port = 8000;
+$_config->port = $_port;
 $app = $app->config($_config);
 
-echo "Harness listening on 127.0.0.1:8000\n";
+echo "Harness listening on 127.0.0.1:{$_port}\n";
 fflush(STDOUT);
 
 $app->run();

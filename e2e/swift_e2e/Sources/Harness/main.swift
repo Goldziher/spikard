@@ -78,7 +78,10 @@ for (fixtureId, fixtureDict) in _fixtures {
 }
 
 // Configure and start the server.
-try app.config(host: "127.0.0.1", port: 8000)
-print("Harness listening on 127.0.0.1:8000")
+// SPIKARD_SERVER_PORT is set by the spawner when it allocates a free
+// ephemeral port; fall back to the configured default port otherwise.
+let effectivePort = ProcessInfo.processInfo.environment["SPIKARD_SERVER_PORT"].flatMap { Int($0) } ?? 8000
+try app.config(host: "127.0.0.1", port: effectivePort)
+print("Harness listening on 127.0.0.1:\(effectivePort)")
 fflush(stdout)
 try app.run()

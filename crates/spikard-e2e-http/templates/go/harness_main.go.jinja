@@ -24,6 +24,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 
@@ -58,14 +59,27 @@ type ResponseDetails struct {
 	Headers    map[string]string `json:"headers"`
 }
 
-const port = {{ port }}
+const defaultPort = {{ port }}
 const host = "127.0.0.1"
+
+// resolvePort reads SPIKARD_SERVER_PORT, set by the spawner when it allocates
+// a free ephemeral port, falling back to the configured default port.
+func resolvePort() int {
+	if v := os.Getenv("SPIKARD_SERVER_PORT"); v != "" {
+		if p, err := strconv.Atoi(v); err == nil {
+			return p
+		}
+	}
+	return defaultPort
+}
 
 // Load fixtures from the JSON payload embedded at codegen time.
 // Use a quoted string with escaped newlines to avoid backtick conflicts.
 var fixturesJSON = "{{ fixtures_json }}"
 
 func main() {
+	port := resolvePort()
+
 	var fixtures map[string]Fixture
 	if err := json.Unmarshal([]byte(fixturesJSON), &fixtures); err != nil {
 		log.Fatalf("unmarshal fixtures: %v", err)

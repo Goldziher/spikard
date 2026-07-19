@@ -4,9 +4,24 @@
 // To verify freshness: alef verify --exit-code
 import { spawn } from "child_process";
 import { resolve } from "path";
-import { createConnection } from "net";
+import { createConnection, createServer } from "net";
 
 let serverProcess: any;
+
+// Allocate a free ephemeral port by binding to port 0 and reading back the
+// OS-assigned port, then immediately releasing it for the harness to reuse.
+async function getFreePort(host: string): Promise<number> {
+  return new Promise((res, reject) => {
+    const probe = createServer();
+    probe.unref();
+    probe.on("error", reject);
+    probe.listen(0, host, () => {
+      const address = probe.address();
+      const port = typeof address === "object" && address !== null ? address.port : 0;
+      probe.close(() => res(port));
+    });
+  });
+}
 
 export async function setup() {
   // Honor a pre-set SUT_URL: when a parent test runner has already
@@ -21,15 +36,19 @@ export async function setup() {
     return;
   }
 
-  // Spawn the app harness as a subprocess.
+  const host = "127.0.0.1";
+  // Allocate a free ephemeral port and hand it to the harness via
+  // SPIKARD_SERVER_PORT (honored by the core server) so parallel suites and
+  // leftover processes never collide on a fixed port.
+  const port = await getFreePort(host);
+  const url = `http://${host}:${port}`;
+
+  // Spawn the app harness as a subprocess bound to the allocated port.
   // The harness script loads fixtures and registers handlers for the SUT.
   serverProcess = spawn(process.execPath, [resolve(__dirname, "./app_harness.mjs")], {
     stdio: ["pipe", "pipe", "inherit"],
+    env: { ...process.env, SPIKARD_SERVER_PORT: String(port) },
   });
-
-  const host = "127.0.0.1";
-  const port = 8000;
-  const url = `http://${host}:${port}`;
 
   // Poll until the harness actually accepts TCP connections.
   // The harness may print a listening banner before the runtime finishes binding,

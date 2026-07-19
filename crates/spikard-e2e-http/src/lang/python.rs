@@ -225,7 +225,6 @@ fn resolve_module(e2e_config: &E2eConfig) -> String {
 pub fn render_conftest_server(e2e_config: &E2eConfig) -> String {
     let module = resolve_module(e2e_config);
     let host = &e2e_config.harness.host;
-    let port = e2e_config.harness.port;
     let header = hash::header(CommentStyle::Hash);
     let env_setup = render_env_setup_block(e2e_config);
 
@@ -263,15 +262,24 @@ def sut_server() -> Generator[str, None, None]:
         yield existing
         return
 
-    # Spawn the harness script as a subprocess.
+    # Allocate a free ephemeral port and hand it to the harness via
+    # SPIKARD_SERVER_PORT (honored by the core server) so parallel suites and
+    # leftover processes never collide on a fixed port.
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as _probe:
+        _probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        _probe.bind(("{host}", 0))
+        port = _probe.getsockname()[1]
+
+    # Spawn the harness script as a subprocess bound to the allocated port.
     proc = subprocess.Popen(
         [sys.executable, str(_APP_HARNESS)],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         stdin=subprocess.PIPE,
+        env={{**os.environ, "SPIKARD_SERVER_PORT": str(port)}},
     )
 
-    url = f"http://{host}:{port}"
+    url = f"http://{host}:{{port}}"
     # Poll until the harness actually accepts TCP connections. The harness
     # may print a listening banner before the runtime has finished binding,
     # so port availability is the authoritative readiness signal.
@@ -282,7 +290,7 @@ def sut_server() -> Generator[str, None, None]:
             # Process died early; surface stderr in the failure path.
             break
         try:
-            with socket.create_connection(("{host}", {port}), timeout=0.5):
+            with socket.create_connection(("{host}", port), timeout=0.5):
                 ready = True
                 break
         except OSError:
@@ -292,7 +300,7 @@ def sut_server() -> Generator[str, None, None]:
         stderr_bytes = proc.stderr.read() if proc.stderr else b""
         proc.terminate()
         raise RuntimeError(
-            f"App harness did not become reachable on {host}:{port} within 15s; "
+            f"App harness did not become reachable on {host}:{{port}} within 15s; "
             f"stderr={{stderr_bytes[:1000]!r}}"
         )
 

@@ -98,17 +98,23 @@ app = Enum.reduce(fixtures, app, fn {fixture_id, fixture}, app_acc ->
   end
 end)
 
+
+# Resolve the port: SPIKARD_SERVER_PORT is set by the spawner when it
+# allocates a free ephemeral port; fall back to the configured default.
+effective_port =
+  System.get_env("SPIKARD_SERVER_PORT", "{{ port }}") |> String.to_integer()
+
 {% if not skip_app_config %}
 # Configure and start the server
 config = struct({{ server_config_class }}, %{
   host: "{{ host }}",
-  port: {{ port }}
+  port: effective_port
 })
 
 app = {{ app_class }}.config(app, config)
 {%- endif %}
 
-IO.puts("Harness listening on {{ host }}:{{ port }}")
+IO.puts("Harness listening on {{ host }}:#{effective_port}")
 
 # Run the app
 {{ app_class }}.{{ run_method }}(app)
