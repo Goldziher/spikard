@@ -1156,9 +1156,9 @@ impl Server {
     /// Coverage: Production-only, tested via integration tests
     #[cfg(not(tarpaulin_include))]
     pub async fn run_with_config(app: AxumRouter, config: ServerConfig) -> Result<(), Box<dyn std::error::Error>> {
-        // Honor SPIKARD_SERVER_PORT when set so e2e harnesses (and any deployment
-        // that injects a port) can bind a runtime-chosen port without an explicit
-        // config call. Falls back to the configured port (default 8000).
+        // ~keep Honor SPIKARD_SERVER_PORT when set so e2e harnesses (and any deployment
+        // ~keep that injects a port) can bind a runtime-chosen port without an explicit
+        // ~keep config call. Falls back to the configured port (default 8000).
         let port = std::env::var("SPIKARD_SERVER_PORT")
             .ok()
             .and_then(|value| value.parse().ok())

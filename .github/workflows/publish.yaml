@@ -1809,8 +1809,8 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: dart-package
-          # Exclude the 8 GB Rust build tree (only needed to run FRB codegen, never
-          # published) and keep hidden files so .pubignore survives into the artifact.
+          # ~keep Exclude the 8 GB Rust build tree (only needed to run FRB codegen, never
+          # ~keep published) and keep hidden files so .pubignore survives into the artifact.
           path: |
             packages/dart
             !packages/dart/rust/target
@@ -1870,8 +1870,8 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: dart-package-assembled
-          # Exclude the 8 GB Rust build tree and keep hidden files so .pubignore
-          # (which excludes rust/) reaches the publish-pubdev workflow.
+          # ~keep Exclude the 8 GB Rust build tree and keep hidden files so .pubignore
+          # ~keep (which excludes rust/) reaches the publish-pubdev workflow.
           path: |
             packages/dart
             !packages/dart/rust/target

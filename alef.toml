@@ -34,9 +34,6 @@ dart = "class"
 swift = "struct"
 zig = "struct"
 
-[workspace.format]
-enabled = false
-
 [workspace.sync]
 extra_paths = []
 
@@ -724,25 +721,21 @@ functions = [
 
 [crates.lint.python]
 precondition = "command -v ruff >/dev/null 2>&1"
-format = "ruff format packages/python/"
 check = "ruff check packages/python/"
 typecheck = "pyrefly check packages/python"
 
 [crates.lint.node]
 precondition = "command -v pnpm >/dev/null 2>&1"
-format = "pnpm dlx oxfmt crates/spikard-node '!**/service_http_additions.ts'"
 check = "pnpm dlx oxlint --fix crates/spikard-node"
 typecheck = "pnpm tsc --noEmit -p crates/spikard-node/tsconfig.json"
 
 [crates.lint.ruby]
 precondition = "command -v bundle >/dev/null 2>&1"
-format = "cd packages/ruby && bundle exec rubocop -A"
 check = "cd packages/ruby && bundle exec rubocop"
 typecheck = "cd packages/ruby && bundle exec steep check"
 
 [crates.lint.php]
 precondition = "command -v php >/dev/null 2>&1"
-format = "cd packages/php && composer run format"
 check = "cd packages/php && composer run lint"
 
 [crates.lint.elixir]
@@ -760,37 +753,30 @@ check = "mvn -f packages/java/pom.xml -B -DskipTests verify"
 
 [crates.lint.csharp]
 precondition = "command -v dotnet >/dev/null 2>&1"
-format = "dotnet format packages/csharp/Spikard/Spikard.csproj"
 check = "dotnet format packages/csharp/Spikard/Spikard.csproj --verify-no-changes"
 
 [crates.lint.kotlin]
 precondition = "command -v gradle >/dev/null 2>&1"
-format = "cd packages/kotlin && gradle ktlintFormat --no-daemon"
 check = "cd packages/kotlin && gradle ktlintCheck --no-daemon"
 
 [crates.lint.kotlin_android]
 precondition = "command -v gradle >/dev/null 2>&1"
-format = ":"
 check = ":"
 
 [crates.lint.dart]
 precondition = "command -v dart >/dev/null 2>&1"
-format = "cd packages/dart && dart format ."
 check = "cd packages/dart && dart analyze"
 
 [crates.lint.swift]
 precondition = "command -v swift >/dev/null 2>&1"
-format = "swift format --in-place --recursive packages/swift/Sources"
 check = "swift format lint --recursive packages/swift/Sources"
 
 [crates.lint.zig]
 precondition = "command -v zig >/dev/null 2>&1"
-format = "cd packages/zig && zig fmt src"
 check = "cd packages/zig && zig fmt --check src"
 
 [crates.lint.wasm]
 precondition = "command -v pnpm >/dev/null 2>&1"
-format = "pnpm dlx oxfmt crates/spikard-wasm"
 check = "pnpm dlx oxlint --fix crates/spikard-wasm"
 
 [crates.lint.ffi]
