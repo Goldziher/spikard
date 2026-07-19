@@ -274,7 +274,7 @@
       "request": {
         "method": "POST",
         "path": "/",
-        "content_type": "multipart/form-data",
+        "content_type": "multipart/form-data; boundary=alef-boundary",
         "body": "--alef-boundary\r\nContent-Disposition: form-data; name=\"files\"; filename=\"file1.txt\"\r\nContent-Type: text/plain\r\n\r\nfirst file\r\n--alef-boundary\r\nContent-Disposition: form-data; name=\"files\"; filename=\"file2.txt\"\r\nContent-Type: text/plain\r\n\r\nsecond file\r\n--alef-boundary\r\nContent-Disposition: form-data; name=\"tags\"\r\n\r\npython\r\n--alef-boundary\r\nContent-Disposition: form-data; name=\"tags\"\r\n\r\nrust\r\n--alef-boundary\r\nContent-Disposition: form-data; name=\"tags\"\r\n\r\nweb\r\n--alef-boundary--\r\n"
       },
       "expected_response": {

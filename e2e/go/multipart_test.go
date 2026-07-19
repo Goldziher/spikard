@@ -432,11 +432,12 @@ func Test_FileUploadWithCustomHeaders(t *testing.T) {
 	if baseURL == "" {
 		baseURL = "http://127.0.0.1:8012"
 	}
-	body := strings.NewReader("")
+	body := strings.NewReader("--alef-boundary\r\nContent-Disposition: form-data; name=\"test2\"; filename=\"test2.txt\"\r\nContent-Type: text/plain\r\n\r\nplaceholder content\r\n--alef-boundary--\r\n")
 	req, err := http.NewRequest("POST", baseURL+"/fixtures/file_upload_with_custom_headers/", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
+	req.Header.Set("Content-Type", "multipart/form-data; boundary=alef-boundary")
 	noRedirectClient := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
@@ -474,11 +475,12 @@ func Test_FileUploadWithoutFilename(t *testing.T) {
 	if baseURL == "" {
 		baseURL = "http://127.0.0.1:8012"
 	}
-	body := strings.NewReader("")
+	body := strings.NewReader("--alef-boundary\r\nContent-Disposition: form-data; name=\"test1\"; filename=\"test1.txt\"\r\nContent-Type: text/plain\r\n\r\nplaceholder content\r\n--alef-boundary--\r\n")
 	req, err := http.NewRequest("POST", baseURL+"/fixtures/file_upload_without_filename/", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
+	req.Header.Set("Content-Type", "multipart/form-data; boundary=alef-boundary")
 	noRedirectClient := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
@@ -516,11 +518,12 @@ func Test_FormDataWithoutFiles(t *testing.T) {
 	if baseURL == "" {
 		baseURL = "http://127.0.0.1:8012"
 	}
-	body := strings.NewReader("")
+	body := strings.NewReader("--alef-boundary\r\nContent-Disposition: form-data; name=\"some\"\r\n\r\nsample\r\n--alef-boundary--\r\n")
 	req, err := http.NewRequest("POST", baseURL+"/fixtures/form_data_without_files/", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
+	req.Header.Set("Content-Type", "multipart/form-data; boundary=alef-boundary")
 	noRedirectClient := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
@@ -601,11 +604,12 @@ func Test_MixedFilesAndFormData(t *testing.T) {
 	if baseURL == "" {
 		baseURL = "http://127.0.0.1:8012"
 	}
-	body := strings.NewReader("")
+	body := strings.NewReader("--alef-boundary\r\nContent-Disposition: form-data; name=\"active\"\r\n\r\nsample\r\n--alef-boundary\r\nContent-Disposition: form-data; name=\"age\"\r\n\r\nsample\r\n--alef-boundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"file.txt\"\r\nContent-Type: text/plain\r\n\r\nplaceholder content\r\n--alef-boundary\r\nContent-Disposition: form-data; name=\"username\"\r\n\r\nsample\r\n--alef-boundary--\r\n")
 	req, err := http.NewRequest("POST", baseURL+"/fixtures/mixed_files_and_form_data/", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
+	req.Header.Set("Content-Type", "multipart/form-data; boundary=alef-boundary")
 	noRedirectClient := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
@@ -643,11 +647,12 @@ func Test_MultipleFileUploads(t *testing.T) {
 	if baseURL == "" {
 		baseURL = "http://127.0.0.1:8012"
 	}
-	body := strings.NewReader("")
+	body := strings.NewReader("--alef-boundary\r\nContent-Disposition: form-data; name=\"test1\"; filename=\"test1.txt\"\r\nContent-Type: text/plain\r\n\r\nplaceholder content\r\n--alef-boundary\r\nContent-Disposition: form-data; name=\"test2\"; filename=\"test2.txt\"\r\nContent-Type: text/plain\r\n\r\nplaceholder content\r\n--alef-boundary--\r\n")
 	req, err := http.NewRequest("POST", baseURL+"/fixtures/multiple_file_uploads/", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
+	req.Header.Set("Content-Type", "multipart/form-data; boundary=alef-boundary")
 	noRedirectClient := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
@@ -690,7 +695,7 @@ func Test_MultipleValuesForSameFieldName(t *testing.T) {
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
-	req.Header.Set("Content-Type", "multipart/form-data")
+	req.Header.Set("Content-Type", "multipart/form-data; boundary=alef-boundary")
 	noRedirectClient := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
@@ -900,11 +905,12 @@ func Test_SimpleFileUpload(t *testing.T) {
 	if baseURL == "" {
 		baseURL = "http://127.0.0.1:8012"
 	}
-	body := strings.NewReader("")
+	body := strings.NewReader("--alef-boundary\r\nContent-Disposition: form-data; name=\"test\"; filename=\"test.txt\"\r\nContent-Type: text/plain\r\n\r\nplaceholder content\r\n--alef-boundary--\r\n")
 	req, err := http.NewRequest("POST", baseURL+"/fixtures/simple_file_upload/", body)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
+	req.Header.Set("Content-Type", "multipart/form-data; boundary=alef-boundary")
 	noRedirectClient := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
