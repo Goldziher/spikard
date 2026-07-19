@@ -33,12 +33,12 @@ module AppHarness
     # Build the handler closure that returns the expected response.
     handler_fn = lambda do |*_args, **_kwargs|
       # Return the expected response wrapped in the framework's response shape.
-      # The body field name (body) is configurable via
+      # The body field name (content) is configurable via
       # `[crates.e2e.harness].response_body_field` so the wrapper matches the
       # SUT's Response deserialization layout.
       {
         status_code: expected_status,
-        "body": expected_body,
+        "content": expected_body,
         headers: expected_headers
       }
     end

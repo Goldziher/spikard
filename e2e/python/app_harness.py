@@ -44,11 +44,11 @@ for fixture_id, fixture in _FIXTURES.items():
     def make_handler(status, body, headers):
         def handler_fn(*args, **kwargs):
             # Return the expected response wrapped in the framework's response shape.
-            # The body field name (body) is configurable via
+            # The body field name (content) is configurable via
             # `[crates.e2e.harness].response_body_field` so the wrapper matches the
             # SUT's Response deserialization layout. Args are path parameters
             # (e.g., id={id}), which we ignore.
-            return {"status_code": status, "body": body, "headers": dict(headers)}
+            return {"status_code": status, "content": body, "headers": dict(headers)}
 
         return handler_fn
 
@@ -129,7 +129,7 @@ for fixture_id, fixture in _FIXTURES.items():
                 are_headers_allowed = all(h in [ah.upper() for ah in allowed_headers] for h in headers_array)
 
                 if not is_origin_allowed or not is_method_allowed or not are_headers_allowed:
-                    return {"status_code": 403, "body": None, "headers": {}}
+                    return {"status_code": 403, "content": None, "headers": {}}
 
                 cors_headers = {
                     "Access-Control-Allow-Origin": origin,
@@ -140,7 +140,7 @@ for fixture_id, fixture in _FIXTURES.items():
                 if cors_cfg.get("max_age"):
                     cors_headers["Access-Control-Max-Age"] = str(cors_cfg["max_age"])
 
-                return {"status_code": 204, "body": None, "headers": cors_headers}
+                return {"status_code": 204, "content": None, "headers": cors_headers}
 
             return cors_handler_fn
 

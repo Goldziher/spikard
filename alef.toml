@@ -949,7 +949,7 @@ imports = ["spikard"]
 app_class = "App"
 register_method = "route"
 run_method = "run"
-response_body_field = "body"
+response_body_field = "content"
 host = "127.0.0.1"
 port = 8000
 
