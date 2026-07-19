@@ -1,29 +1,29 @@
 [build-system]
 build-backend = "maturin"
-requires = [ "maturin>=1,<2" ]
+requires = ["maturin>=1,<2"]
 
 [project]
 name = "spikard"
 version = "0.17.0rc3"
 description = "Rust-centric multi-language HTTP framework with polyglot bindings"
-keywords = [ "framework", "http", "polyglot", "rust", "web" ]
+keywords = ["framework", "http", "polyglot", "rust", "web"]
 license = "MIT"
-license-files = [ "LICENSE" ]
-authors = [ { name = "Na'aman Hirschfeld <nhirschfeld@gmail.com>" } ]
+license-files = ["LICENSE"]
+authors = [{ name = "Na'aman Hirschfeld <nhirschfeld@gmail.com>" }]
 requires-python = ">=3.10"
 classifiers = [
-  "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: 3.13",
-  "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 urls.repository = "https://github.com/Goldziher/spikard"
 homepage = "https://github.com/Goldziher/spikard"
 
 [dependency-groups]
-dev = [ "pyrefly>=1.1.1", "ruff>=0.14.8" ]
+dev = ["pyrefly>=1.1.1", "ruff>=0.14.8"]
 
 [tool.maturin]
 profile = "release"
@@ -31,8 +31,8 @@ module-name = "spikard._spikard"
 manifest-path = "../../crates/spikard-py/Cargo.toml"
 # abi3-py310 produces a single wheel per platform that loads on Python 3.10+,
 # avoiding a per-Python-version build matrix.
-features = [ "pyo3/extension-module", "pyo3/abi3-py310" ]
-python-packages = [ "spikard" ]
+features = ["pyo3/extension-module", "pyo3/abi3-py310"]
+python-packages = ["spikard"]
 
 [tool.pyrefly]
 python-version = "3.10"

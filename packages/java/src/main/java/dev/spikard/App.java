@@ -40,10 +40,10 @@ public class App implements AutoCloseable {
 
     // Adapter for handler upcalls: marshals C pointers <-> Java strings
     private static MemorySegment invokeHandlerWithMarshal(
-            MemorySegment contextPtr,
-            MemorySegment requestPtr,
-            Callable handler,
-            Arena arena) throws Throwable {
+        MemorySegment contextPtr,
+        MemorySegment requestPtr,
+        Callable handler,
+        Arena arena) throws Throwable {
         // Upcall pointer args arrive as zero-length native segments (the linker has
         // no length for a raw `*const c_char`). Reinterpret to an unbounded segment
         // before reading, otherwise getString() throws and the uncaught exception
@@ -61,8 +61,8 @@ public class App implements AutoCloseable {
             long responseLen = responseSegment.byteSize();
             // Call malloc to allocate memory that persists beyond this upcall.
             MethodHandle mallocHandle = LINKER.downcallHandle(
-                    LOOKUP.find("malloc").orElseThrow(),
-                    FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG)
+                LOOKUP.find("malloc").orElseThrow(),
+                FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_LONG)
             );
             MemorySegment mallocAddr = (MemorySegment) mallocHandle.invoke(responseLen);
             // Reinterpret the malloc'd segment to its actual size before copying.
@@ -81,8 +81,8 @@ public class App implements AutoCloseable {
     public App() {
         try {
             MemorySegment addr = LOOKUP.find("spikard_app_new")
-                .or(() -> LOOKUP.find("_spikard_app_new"))
-                .orElseThrow();
+            .or(() -> LOOKUP.find("_spikard_app_new"))
+            .orElseThrow();
             FunctionDescriptor desc = FunctionDescriptor.of(ValueLayout.ADDRESS);
             MethodHandle handle = LINKER.downcallHandle(addr, desc);
             this.ownerHandle = (MemorySegment) handle.invoke();
@@ -127,8 +127,8 @@ public class App implements AutoCloseable {
 
             // Get register downcall handle
             MemorySegment regAddr = LOOKUP.find("spikard_app_register_route")
-                .or(() -> LOOKUP.find("_spikard_app_register_route"))
-                .orElseThrow();
+            .or(() -> LOOKUP.find("_spikard_app_register_route"))
+            .orElseThrow();
             FunctionDescriptor regDesc = FunctionDescriptor.of(
                 ValueLayout.JAVA_INT,  // return: int
                 ValueLayout.ADDRESS,   // owner: *mut opaque
@@ -184,8 +184,8 @@ public class App implements AutoCloseable {
 
             // Get variant registration downcall handle
             MemorySegment varAddr = LOOKUP.find("spikard_app_register_route_get")
-                .or(() -> LOOKUP.find("_spikard_app_register_route_get"))
-                .orElseThrow();
+            .or(() -> LOOKUP.find("_spikard_app_register_route_get"))
+            .orElseThrow();
 
             FunctionDescriptor varDesc = FunctionDescriptor.of(
                 ValueLayout.JAVA_INT,  // return: int
@@ -243,8 +243,8 @@ public class App implements AutoCloseable {
 
             // Get variant registration downcall handle
             MemorySegment varAddr = LOOKUP.find("spikard_app_register_route_post")
-                .or(() -> LOOKUP.find("_spikard_app_register_route_post"))
-                .orElseThrow();
+            .or(() -> LOOKUP.find("_spikard_app_register_route_post"))
+            .orElseThrow();
 
             FunctionDescriptor varDesc = FunctionDescriptor.of(
                 ValueLayout.JAVA_INT,  // return: int
@@ -302,8 +302,8 @@ public class App implements AutoCloseable {
 
             // Get variant registration downcall handle
             MemorySegment varAddr = LOOKUP.find("spikard_app_register_route_put")
-                .or(() -> LOOKUP.find("_spikard_app_register_route_put"))
-                .orElseThrow();
+            .or(() -> LOOKUP.find("_spikard_app_register_route_put"))
+            .orElseThrow();
 
             FunctionDescriptor varDesc = FunctionDescriptor.of(
                 ValueLayout.JAVA_INT,  // return: int
@@ -361,8 +361,8 @@ public class App implements AutoCloseable {
 
             // Get variant registration downcall handle
             MemorySegment varAddr = LOOKUP.find("spikard_app_register_route_patch")
-                .or(() -> LOOKUP.find("_spikard_app_register_route_patch"))
-                .orElseThrow();
+            .or(() -> LOOKUP.find("_spikard_app_register_route_patch"))
+            .orElseThrow();
 
             FunctionDescriptor varDesc = FunctionDescriptor.of(
                 ValueLayout.JAVA_INT,  // return: int
@@ -420,8 +420,8 @@ public class App implements AutoCloseable {
 
             // Get variant registration downcall handle
             MemorySegment varAddr = LOOKUP.find("spikard_app_register_route_delete")
-                .or(() -> LOOKUP.find("_spikard_app_register_route_delete"))
-                .orElseThrow();
+            .or(() -> LOOKUP.find("_spikard_app_register_route_delete"))
+            .orElseThrow();
 
             FunctionDescriptor varDesc = FunctionDescriptor.of(
                 ValueLayout.JAVA_INT,  // return: int
@@ -479,8 +479,8 @@ public class App implements AutoCloseable {
 
             // Get variant registration downcall handle
             MemorySegment varAddr = LOOKUP.find("spikard_app_register_route_head")
-                .or(() -> LOOKUP.find("_spikard_app_register_route_head"))
-                .orElseThrow();
+            .or(() -> LOOKUP.find("_spikard_app_register_route_head"))
+            .orElseThrow();
 
             FunctionDescriptor varDesc = FunctionDescriptor.of(
                 ValueLayout.JAVA_INT,  // return: int
@@ -538,8 +538,8 @@ public class App implements AutoCloseable {
 
             // Get variant registration downcall handle
             MemorySegment varAddr = LOOKUP.find("spikard_app_register_route_options")
-                .or(() -> LOOKUP.find("_spikard_app_register_route_options"))
-                .orElseThrow();
+            .or(() -> LOOKUP.find("_spikard_app_register_route_options"))
+            .orElseThrow();
 
             FunctionDescriptor varDesc = FunctionDescriptor.of(
                 ValueLayout.JAVA_INT,  // return: int
@@ -597,8 +597,8 @@ public class App implements AutoCloseable {
 
             // Get variant registration downcall handle
             MemorySegment varAddr = LOOKUP.find("spikard_app_register_route_connect")
-                .or(() -> LOOKUP.find("_spikard_app_register_route_connect"))
-                .orElseThrow();
+            .or(() -> LOOKUP.find("_spikard_app_register_route_connect"))
+            .orElseThrow();
 
             FunctionDescriptor varDesc = FunctionDescriptor.of(
                 ValueLayout.JAVA_INT,  // return: int
@@ -656,8 +656,8 @@ public class App implements AutoCloseable {
 
             // Get variant registration downcall handle
             MemorySegment varAddr = LOOKUP.find("spikard_app_register_route_trace")
-                .or(() -> LOOKUP.find("_spikard_app_register_route_trace"))
-                .orElseThrow();
+            .or(() -> LOOKUP.find("_spikard_app_register_route_trace"))
+            .orElseThrow();
 
             FunctionDescriptor varDesc = FunctionDescriptor.of(
                 ValueLayout.JAVA_INT,  // return: int
@@ -687,14 +687,14 @@ public class App implements AutoCloseable {
     public void run() {
         try {
             MemorySegment epAddr = LOOKUP.find("spikard_app_ep_run")
-                .or(() -> LOOKUP.find("_spikard_app_ep_run"))
-                .orElseThrow();
+            .or(() -> LOOKUP.find("_spikard_app_ep_run"))
+            .orElseThrow();
             FunctionDescriptor epDesc = FunctionDescriptor.of(
                 ValueLayout.JAVA_INT,    // return int (status)
                 ValueLayout.ADDRESS       // owner: *mut opaque
             );
             MethodHandle epHandle = LINKER.downcallHandle(epAddr, epDesc);
-epHandle.invoke(ownerHandle            );
+            epHandle.invoke(ownerHandle            );
 
         } catch (Throwable e) {
             throw new RuntimeException("Failed to invoke entrypoint", e);
@@ -707,14 +707,14 @@ epHandle.invoke(ownerHandle            );
     public long into_router() {
         try {
             MemorySegment epAddr = LOOKUP.find("spikard_app_ep_into_router")
-                .or(() -> LOOKUP.find("_spikard_app_ep_into_router"))
-                .orElseThrow();
+            .or(() -> LOOKUP.find("_spikard_app_ep_into_router"))
+            .orElseThrow();
             FunctionDescriptor epDesc = FunctionDescriptor.of(
                 ValueLayout.ADDRESS,     // return *mut opaque or int status
                 ValueLayout.ADDRESS       // owner: *mut opaque
             );
             MethodHandle epHandle = LINKER.downcallHandle(epAddr, epDesc);
-return (long) epHandle.invoke(ownerHandle            );
+            return (long) epHandle.invoke(ownerHandle            );
 
         } catch (Throwable e) {
             throw new RuntimeException("Failed to invoke entrypoint", e);
@@ -738,8 +738,8 @@ return (long) epHandle.invoke(ownerHandle            );
 
             // Look up the C function to create ServerConfig from JSON
             MemorySegment createAddr = LOOKUP.find("spikard_server_config_from_json")
-                .or(() -> LOOKUP.find("_spikard_server_config_from_json"))
-                .orElseThrow();
+            .or(() -> LOOKUP.find("_spikard_server_config_from_json"))
+            .orElseThrow();
             FunctionDescriptor createDesc = FunctionDescriptor.of(
                 ValueLayout.ADDRESS   // return: ServerConfig*
                 , ValueLayout.ADDRESS  // param: config JSON string
@@ -753,8 +753,8 @@ return (long) epHandle.invoke(ownerHandle            );
 
             // Look up the C function to apply config to the service
             MemorySegment applyAddr = LOOKUP.find("spikard_app_config")
-                .or(() -> LOOKUP.find("_spikard_app_config"))
-                .orElseThrow();
+            .or(() -> LOOKUP.find("_spikard_app_config"))
+            .orElseThrow();
             FunctionDescriptor applyDesc = FunctionDescriptor.of(
                 ValueLayout.ADDRESS,   // return: *mut opaque (updated owner)
                 ValueLayout.ADDRESS,   // owner: *mut opaque
@@ -765,8 +765,8 @@ return (long) epHandle.invoke(ownerHandle            );
 
             // Free the ServerConfig handle
             MemorySegment freeAddr = LOOKUP.find("spikard_server_config_free")
-                .or(() -> LOOKUP.find("_spikard_server_config_free"))
-                .orElseThrow();
+            .or(() -> LOOKUP.find("_spikard_server_config_free"))
+            .orElseThrow();
             FunctionDescriptor freeDesc = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS);
             MethodHandle freeHandle = LINKER.downcallHandle(freeAddr, freeDesc);
             freeHandle.invoke(configHandle);
@@ -779,8 +779,8 @@ return (long) epHandle.invoke(ownerHandle            );
     public void close() {
         try {
             MemorySegment freeAddr = LOOKUP.find("spikard_app_free")
-                .or(() -> LOOKUP.find("_spikard_app_free"))
-                .orElseThrow();
+            .or(() -> LOOKUP.find("_spikard_app_free"))
+            .orElseThrow();
             FunctionDescriptor freeDesc = FunctionDescriptor.ofVoid(ValueLayout.ADDRESS);
             MethodHandle freeHandle = LINKER.downcallHandle(freeAddr, freeDesc);
             if (ownerHandle != null) {

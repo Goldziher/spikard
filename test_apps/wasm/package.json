@@ -12,6 +12,6 @@
   "devDependencies": {
     "@spikard/node-wasm": "^0.17.0-rc.3",
     "rollup": "^4.53.3",
-    "vitest": "^4.1.5"
+    "vitest": "^4.1.10"
   }
 }
