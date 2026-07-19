@@ -28,13 +28,33 @@ exclude = [
 ]
 
 [lint.markdown.rumdl]
-disable = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051", "MD076"]
+disable = [
+    "MD012",
+    "MD013",
+    "MD024",
+    "MD033",
+    "MD036",
+    "MD041",
+    "MD046",
+    "MD051",
+    "MD076",
+]
 
 [fmt.markdown.rumdl]
-disable = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051", "MD076"]
+disable = [
+    "MD012",
+    "MD013",
+    "MD024",
+    "MD033",
+    "MD036",
+    "MD041",
+    "MD046",
+    "MD051",
+    "MD076",
+]
 
 [lint.python.ruff]
-select = ["ALL"]
+select = [ "ALL" ]
 ignore = [
     "ANN401",
     "ASYNC109",
@@ -67,8 +87,13 @@ pylint_max_branches = 15
 pylint_max_returns = 10
 
 [lint.php.mago]
-select = ["correctness", "security"]
-ignore = ["strict-assertions", "use-specific-assertions", "no-redundant-variable", "sensitive-parameter"]
+select = [ "correctness", "security" ]
+ignore = [
+    "strict-assertions",
+    "use-specific-assertions",
+    "no-redundant-variable",
+    "sensitive-parameter",
+]
 php_version = "8.2"
 
 [lint.typos.extend_words]
@@ -103,13 +128,18 @@ remove_todos = false
 remove_fixme = false
 remove_docs = false
 use_default_ignores = true
-preserve_patterns = ["SAFETY", "HACK", "WORKAROUND", "NOTE"]
+preserve_patterns = [
+    "SAFETY",
+    "HACK",
+    "WORKAROUND",
+    "NOTE",
+]
 
 [per-file-ignores]
-"**/api.py" = ["F401", "I001", "TC006", "UP035"]
-"**/*.pyi" = ["A002", "F401", "I001", "PYI033", "TC006", "UP035"]
-"**/options.py" = ["F401", "I001", "RUF100"]
-"**/__init__.py" = ["I001"]
+"**/api.py" = [ "F401", "I001", "TC006", "UP035" ]
+"**/*.pyi" = [ "A002", "F401", "I001", "PYI033", "TC006", "UP035" ]
+"**/options.py" = [ "F401", "I001", "RUF100" ]
+"**/__init__.py" = [ "I001" ]
 "**/tests/**" = [
     "ANN",
     "D103",
@@ -233,23 +263,70 @@ preserve_patterns = ["SAFETY", "HACK", "WORKAROUND", "NOTE"]
     "A001",
     "N801",
 ]
-"CHANGELOG.md" = ["MD057"]
-"Package.swift" = ["comment", "doc-comment"]
-"crates/spikard-elixir/**" = ["comment", "doc-comment"]
-"crates/spikard-ffi/**" = ["comment", "doc-comment"]
-"crates/spikard-node/**" = ["comment", "doc-comment", "no-unused-vars"]
-"crates/spikard-php/**" = ["comment", "doc-comment"]
-"crates/spikard-py/**" = ["comment", "doc-comment"]
-"crates/spikard-wasm/**" = ["comment", "doc-comment"]
-"docs/reference/feature-parity.md" = ["MD057"]
-"e2e/**" = ["comment", "doc-comment", "D101", "D415", "no-loss-of-precision", "PTH100", "PTH118", "PTH120"]
-"packages/**" = ["comment", "doc-comment", "no-unused-vars"]
-"scripts/**/*.py" = ["RUF100"]
-"templates/readme/**" = ["MD057"]
-"test_apps/**" = ["comment", "doc-comment", "no-loss-of-precision"]
+"CHANGELOG.md" = [
+    "MD057",
+]
+"Package.swift" = [
+    "comment",
+    "doc-comment",
+]
+"crates/spikard-elixir/**" = [
+    "comment",
+    "doc-comment",
+]
+"crates/spikard-ffi/**" = [
+    "comment",
+    "doc-comment",
+]
+"crates/spikard-node/**" = [
+    "comment",
+    "doc-comment",
+    "no-unused-vars",
+]
+"crates/spikard-php/**" = [
+    "comment",
+    "doc-comment",
+]
+"crates/spikard-py/**" = [
+    "comment",
+    "doc-comment",
+]
+"crates/spikard-wasm/**" = [
+    "comment",
+    "doc-comment",
+]
+"docs/reference/feature-parity.md" = [
+    "MD057",
+]
+"e2e/**" = [
+    "comment",
+    "doc-comment",
+    "D101",
+    "D415",
+    "no-loss-of-precision",
+    "PTH100",
+    "PTH118",
+    "PTH120",
+]
+"packages/**" = [
+    "comment",
+    "doc-comment",
+    "no-unused-vars",
+]
+"scripts/**/*.py" = [
+    "RUF100",
+]
+"templates/readme/**" = [
+    "MD057",
+]
+"test_apps/**" = [
+    "comment",
+    "doc-comment",
+    "no-loss-of-precision",
+]
 
 [hooks]
-stages = ["pre-commit"]
+stages = [ "pre-commit" ]
 
 [hooks.builtin]
 lint = { exclude = [
@@ -337,13 +414,8 @@ file_safety = { exclude = [
     "**/run_tests.*",
 ] }
 cargo = true
-commit = { stages = ["commit-msg"] }
+commit = { stages = [ "commit-msg" ] }
 
 [hooks.pre-commit.commands.pyrefly]
 run = "pyrefly check packages/python"
 files = "packages/python/**/*.py"
-[[hooks.sources]]
-id = "ai-rulez"
-git = "https://github.com/Goldziher/ai-rulez.git"
-revision = "v4.9.3"
-hooks = ["ai-rulez-validate"]

@@ -9,14 +9,14 @@ defmodule Spikard.Conn do
   """
 
   defstruct [
-  :path_params,
-  :query_params,
-  :headers,
-  :cookies,
-  :body,
-  :raw_body,
-  :method,
-  :path
+    :path_params,
+    :query_params,
+    :headers,
+    :cookies,
+    :body,
+    :raw_body,
+    :method,
+    :path
   ]
 
   @typedoc """
@@ -33,14 +33,14 @@ defmodule Spikard.Conn do
   - path: Request path
   """
   @type t :: %__MODULE__{
-  path_params: map(),
-  query_params: map(),
-  headers: map(),
-  cookies: map(),
-  body: any(),
-  raw_body: binary() | nil,
-  method: String.t(),
-  path: String.t()
+    path_params: map(),
+    query_params: map(),
+    headers: map(),
+    cookies: map(),
+    body: any(),
+    raw_body: binary() | nil,
+    method: String.t(),
+    path: String.t()
   }
 
   @doc """
@@ -79,8 +79,8 @@ defmodule Spikard.App do
   alias Spikard.Native
 
   defstruct [
-  :registrations,
-  :config
+    :registrations,
+    :config
   ]
 
   @doc """
@@ -88,7 +88,7 @@ defmodule Spikard.App do
   """
   def new(_options \\ []) do
     %__MODULE__{
-    registrations: []
+      registrations: []
     }
   end
 
@@ -110,14 +110,14 @@ defmodule Spikard.App do
   def route(%__MODULE__{} = self, builder, handler) do
     # Wrap handler closure in a process if it's not already one
     handler_pid =
-    case handler do
-      pid when is_pid(pid) ->
-      pid
+      case handler do
+        pid when is_pid(pid) ->
+          pid
 
-      fun when is_function(fun) ->
-      {:ok, pid} = GenServer.start_link(__MODULE__.HandlerWrapper, fun)
-      pid
-    end
+        fun when is_function(fun) ->
+          {:ok, pid} = GenServer.start_link(__MODULE__.HandlerWrapper, fun)
+          pid
+      end
 
     entry = {"route", {builder}, handler_pid}
     %__MODULE__{self | registrations: [entry | self.registrations]}
@@ -137,18 +137,18 @@ defmodule Spikard.App do
     def handle_cast({:trait_call, _method, args_json, reply_id}, handler_fn) do
       case Jason.decode(args_json) do
         {:ok, args} ->
-        # Build request context from RequestData fields in args
-        try do
-          conn = build_conn(args)
-          response = handler_fn.(conn)
-          response_json = Jason.encode!(response)
-          Native.complete_trait_call(reply_id, response_json)
-        rescue
-          _e -> Native.complete_trait_call(reply_id, "{\"error\": \"handler error\"}")
-        end
+          # Build request context from RequestData fields in args
+          try do
+            conn = build_conn(args)
+            response = handler_fn.(conn)
+            response_json = Jason.encode!(response)
+            Native.complete_trait_call(reply_id, response_json)
+          rescue
+            _e -> Native.complete_trait_call(reply_id, "{\"error\": \"handler error\"}")
+          end
 
         {:error, _} ->
-        Native.complete_trait_call(reply_id, "{\"error\": \"json decode error\"}")
+          Native.complete_trait_call(reply_id, "{\"error\": \"json decode error\"}")
       end
 
       {:noreply, handler_fn}
@@ -157,14 +157,14 @@ defmodule Spikard.App do
     # Convert RequestData JSON to request context struct
     defp build_conn(args) do
       %Spikard.Conn{
-      path_params: args["path_params"] || %{},
-      query_params: args["query_params"] || %{},
-      headers: args["headers"] || %{},
-      cookies: args["cookies"] || %{},
-      body: args["body"],
-      raw_body: args["raw_body"],
-      method: args["method"] || "GET",
-      path: args["path"] || "/"
+        path_params: args["path_params"] || %{},
+        query_params: args["query_params"] || %{},
+        headers: args["headers"] || %{},
+        cookies: args["cookies"] || %{},
+        body: args["body"],
+        raw_body: args["raw_body"],
+        method: args["method"] || "GET",
+        path: args["path"] || "/"
       }
     end
   end
@@ -337,11 +337,11 @@ defmodule Spikard.App do
       # args arrives as a native Erlang map (no JSON decode); dispatch to the registered handler.
       case decode_args_and_dispatch(method, args, registrations) do
         {:ok, response} ->
-        Native.complete_trait_call(reply_id, response)
+          Native.complete_trait_call(reply_id, response)
 
         {:error, reason} ->
-        error_response = %{"error" => reason}
-        Native.complete_trait_call(reply_id, error_response)
+          error_response = %{"error" => reason}
+          Native.complete_trait_call(reply_id, error_response)
       end
 
       {:noreply, registrations}
@@ -352,24 +352,24 @@ defmodule Spikard.App do
       # Find handler entry for the method
       case find_handler(method, registrations) do
         nil ->
-        {:error, "Handler not registered for method: #{method}"}
+          {:error, "Handler not registered for method: #{method}"}
 
         {^method, _metadata, handler} ->
-        # Call the registered handler with the native args map (assumes handler accepts a single arg)
-        try do
-          response = handler.(args)
-          # Encode response to JSON (the reply path stays JSON)
-          case Jason.encode(response) do
-            {:ok, response_json} ->
-            {:ok, response_json}
+          # Call the registered handler with the native args map (assumes handler accepts a single arg)
+          try do
+            response = handler.(args)
+            # Encode response to JSON (the reply path stays JSON)
+            case Jason.encode(response) do
+              {:ok, response_json} ->
+                {:ok, response_json}
 
-            {:error, reason} ->
-            {:error, "Failed to encode response: #{reason}"}
+              {:error, reason} ->
+                {:error, "Failed to encode response: #{reason}"}
+            end
+          rescue
+            e ->
+              {:error, "Handler raised exception: #{inspect(e)}"}
           end
-        rescue
-          e ->
-          {:error, "Handler raised exception: #{inspect(e)}"}
-        end
       end
     end
 

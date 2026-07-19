@@ -37,7 +37,7 @@ thiserror = { workspace = true }
 tokio = { version = "1", optional = true, default-features = false, features = ["rt", "macros", "sync", "time"] }
 tracing.workspace = true
 url = "2.5"
-uuid = "1.23"
+uuid = "1.24"
 
 [dev-dependencies]
 tokio-test = "0.4"

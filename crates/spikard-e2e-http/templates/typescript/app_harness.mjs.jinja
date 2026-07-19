@@ -79,7 +79,15 @@ for (const [fixtureId, fixture] of Object.entries(_FIXTURES)) {
   const handlerHeaders = Object.fromEntries(
     Object.entries(expectedHeaders).filter(([name]) => !_middlewareManagedHeaders.has(name.toLowerCase()))
   );
-  const handlerFn = (request) => {
+  // request_timeout fixtures carry a `sleep_ms` directive: the handler must
+  // actually sleep so the server timeout layer either fires (slow) or does not
+  // (fast), matching the fixture expectation. Everything else resolves promptly.
+  const _rtConfig = (handler.middleware && handler.middleware.request_timeout) || null;
+  const _sleepMs = _rtConfig && typeof _rtConfig.sleep_ms === 'number' ? _rtConfig.sleep_ms : 0;
+  const handlerFn = async (request) => {
+    if (_sleepMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, _sleepMs));
+    }
     return {
       status_code: expectedStatus,
       {{ response_body_field }}: expectedBody,
@@ -89,6 +97,20 @@ for (const [fixtureId, fixture] of Object.entries(_FIXTURES)) {
 
   // Register the handler at /fixtures/<fixture_id>{route}
   const fullRoute = `/fixtures/${fixtureId}${route}`;
+
+  // GraphQL fixtures register a real SDL-backed endpoint that executes the query
+  // against the fixture schema, rather than the generic static-response handler.
+  const _graphqlConfig = (handler.middleware && handler.middleware.graphql) || null;
+  if (_graphqlConfig && _graphqlConfig.enabled && typeof app.registerGraphqlSdlRoute === 'function') {
+    app.registerGraphqlSdlRoute(
+      fullRoute,
+      methodEnum,
+      _graphqlConfig.schema,
+      _graphqlConfig.response_data ?? {},
+      undefined,
+    );
+    continue;
+  }
 
   // Build RouteBuilder and register the route
   {% if route_builder_constructor_method == ".new" -%}
@@ -111,6 +133,23 @@ for (const [fixtureId, fixture] of Object.entries(_FIXTURES)) {
     };
     for (const [mwName, mwConfig] of Object.entries(handler.middleware)) {
       if (mwConfig === null || mwConfig === undefined) {
+        continue;
+      }
+      // Route-limit middlewares take a scalar argument extracted from their
+      // config object, not the whole object. graphql is handled above.
+      if (mwName === 'body_limit') {
+        if (typeof mwConfig.max_bytes === 'number' && typeof builder.bodyLimit === 'function') {
+          builder = builder.bodyLimit(mwConfig.max_bytes);
+        }
+        continue;
+      }
+      if (mwName === 'request_timeout') {
+        if (typeof mwConfig.seconds === 'number' && typeof builder.requestTimeout === 'function') {
+          builder = builder.requestTimeout(mwConfig.seconds);
+        }
+        continue;
+      }
+      if (mwName === 'graphql') {
         continue;
       }
       const builderMethod = middlewareDispatch[mwName];

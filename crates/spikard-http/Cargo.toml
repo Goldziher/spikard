@@ -48,7 +48,7 @@ tonic = { version = "0.14", features = ["transport", "codegen", "gzip"] }
 tower-http = { workspace = true }
 tower_governor = { workspace = true }
 tracing-subscriber.workspace = true
-tungstenite = "0.29"
+tungstenite = "0.30"
 
 # wasm: narrow axum (no `tokio` feature → no tokio/net → no mio)
 # Explicitly list every axum feature we need on wasm; skip `tokio` which enables tokio/net.
@@ -82,7 +82,7 @@ cookie = "0.18"
 flate2.workspace = true
 futures = "0.3"
 futures-util = "0.3"
-http-body = "1.0"
+http-body = "1.1"
 http-body-util = "0.1"
 jsonschema.workspace = true
 jsonwebtoken.workspace = true
@@ -103,7 +103,7 @@ urlencoding = "2.1"
 utoipa.workspace = true
 utoipa-redoc.workspace = true
 utoipa-swagger-ui.workspace = true
-uuid = "1.23"
+uuid = "1.24"
 
 [dev-dependencies]
 chrono = "0.4"

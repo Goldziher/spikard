@@ -47,7 +47,7 @@ clap_complete = "4.6"
 clap_mangen = "0.3"
 flate2 = { version = "1.1", default-features = false, features = ["rust_backend"] }
 http = "1.4"
-jsonschema = { version = "0.46", default-features = false }
+jsonschema = { version = "0.48", default-features = false }
 jsonwebtoken = { version = "10.4", features = ["use_pem", "rust_crypto"] }
 multer = "3"
 prost = "0.14"

@@ -1,15 +1,1 @@
-{
-  "http": {
-    "expected_response": {
-      "body": { "data": null, "errors": [{ "message": "Query is nested too deep." }] },
-      "headers": {},
-      "status_code": 200
-    },
-    "handler": {
-      "body_schema": { "properties": { "query": { "type": "string" } }, "required": ["query"], "type": "object" },
-      "method": "POST",
-      "route": "/graphql"
-    },
-    "request": { "path": "/graphql" }
-  }
-}
+{"http":{"expected_response":{"body":{"data":null,"errors":[{"message":"Query is nested too deep."}]},"headers":{},"status_code":200},"handler":{"body_schema":{"properties":{"query":{"type":"string"}},"required":["query"],"type":"object"},"method":"POST","route":"/graphql"},"request":{"path":"/graphql"}}}
