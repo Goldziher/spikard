@@ -12,10 +12,37 @@
 use alef::GeneratedFile;
 use alef::core::hash::{self, CommentStyle};
 use alef::e2e::config::E2eConfig;
-use alef::e2e::fixture::FixtureGroup;
+use alef::e2e::fixture::{FixtureGroup, HttpMiddleware};
 use anyhow::Result;
 use minijinja::{Environment, context};
+use serde_json::json;
 use std::path::PathBuf;
+
+/// Build the `middleware` value embedded in each harness fixture.
+///
+/// The Go harness only consumes `cors` (to register an OPTIONS preflight
+/// handler); it reads the raw `allow_origins`/`allow_methods`/`allow_headers`/
+/// `max_age` keys directly, so — unlike the Python harness — the keys are NOT
+/// renamed to the `allowed_*` `CorsConfig.from_json()` form.
+fn build_middleware_value(middleware: Option<&HttpMiddleware>) -> serde_json::Value {
+    let Some(mw) = middleware else {
+        return serde_json::Value::Null;
+    };
+    let Some(cors) = &mw.cors else {
+        return serde_json::Value::Null;
+    };
+    let mut cors_map = serde_json::Map::new();
+    cors_map.insert("allow_origins".to_string(), json!(cors.allow_origins));
+    cors_map.insert("allow_methods".to_string(), json!(cors.allow_methods));
+    cors_map.insert("allow_headers".to_string(), json!(cors.allow_headers));
+    if !cors.expose_headers.is_empty() {
+        cors_map.insert("expose_headers".to_string(), json!(cors.expose_headers));
+    }
+    if let Some(max_age) = cors.max_age {
+        cors_map.insert("max_age".to_string(), json!(max_age));
+    }
+    json!({ "cors": cors_map })
+}
 
 /// Build the private template environment holding the Go HTTP templates.
 fn make_env() -> Environment<'static> {
@@ -57,6 +84,7 @@ fn render_harness_main(_e2e_config: &E2eConfig, groups: &[FixtureGroup], go_modu
                         "route": &http_data.handler.route,
                         "method": &http_data.handler.method,
                         "body_schema": http_data.handler.body_schema.clone(),
+                        "middleware": build_middleware_value(http_data.handler.middleware.as_ref()),
                     },
                     "expected_response": {
                         "status_code": http_data.expected_response.status_code,
