@@ -11,6 +11,9 @@ node_modules/
 .venv/
 .venv-codex/
 e2e/go/cmd/harness/harness
+# Dart FRB native-library downloader must be tracked so pub publishes it.
+!packages/dart/bin/
+!packages/dart/bin/download_libs.dart
 
 # --- Compiled binaries and modules ---
 *.so
