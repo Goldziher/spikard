@@ -42,14 +42,21 @@ permissions:
   contents: read
 
 jobs:
+  # NOTE: clippy and test each cold-compile the full core workspace
+  # (async-graphql, tonic, tower-http, utoipa, …) with --all-features. Running
+  # them sequentially in one job exceeded the 90-minute cap on a cold sccache,
+  # and a cancelled job never saves its cache — so every run restarted cold.
+  # Splitting into parallel per-suite jobs halves each job's work so it finishes
+  # and populates the cache; only the `test` suite needs the language toolchains.
   rust:
-    name: Rust (${{ matrix.os }})
+    name: Rust ${{ matrix.suite }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
+        suite: [lint, test]
     steps:
       - uses: actions/checkout@v6
 
@@ -69,27 +76,34 @@ jobs:
         uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
-          cache-key-prefix: rust-${{ matrix.os }}
+          cache-key-prefix: rust-${{ matrix.os }}-${{ matrix.suite }}
           use-sccache: "true"
 
+      # NOTE: Language toolchains are only needed by the test suite (some
+      # core-crate tests exercise binding-adjacent codegen); clippy/fmt/check
+      # are pure Rust and skip them for a faster lint job.
       - name: Setup Node
+        if: matrix.suite == 'test'
         uses: xberg-io/actions/setup-node-workspace@v1
         with:
           node-version: "24"
 
       - name: Setup PHP
+        if: matrix.suite == 'test'
         uses: xberg-io/actions/setup-php@v1
         with:
           php-version: "8.4"
           tools: phpstan
 
       - name: Setup Elixir
+        if: matrix.suite == 'test'
         uses: xberg-io/actions/setup-elixir@v1
         with:
           elixir-version: "1.18"
           otp-version: "27"
 
       - name: Setup Ruby
+        if: matrix.suite == 'test'
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.4"
@@ -99,11 +113,14 @@ jobs:
       - name: Install Task
         uses: xberg-io/actions/install-task@v1
 
-      - name: Run clippy
+      - name: Run clippy and format check
+        if: matrix.suite == 'lint'
         run: task rust:lint:check
 
-      - name: Run Rust tests
-        run: task rust:test:ci
-
       - name: Check no-default-features
+        if: matrix.suite == 'lint'
         run: cargo check -p spikard --no-default-features
+
+      - name: Run Rust tests
+        if: matrix.suite == 'test'
+        run: task rust:test:ci
