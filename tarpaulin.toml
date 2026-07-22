@@ -13,28 +13,28 @@ timeout = "300s"
 verbose = false
 
 exclude-files = [
-    "**/tests/**",
-    "**/*_test.rs",
-    "**/benches/**",
-    "**/*_bench.rs",
-    "**/src/main.rs",
-    "**/src/bin/**",
+  "**/tests/**",
+  "**/*_test.rs",
+  "**/benches/**",
+  "**/*_bench.rs",
+  "**/src/main.rs",
+  "**/src/bin/**",
 
-    "**/generated/**",
+  "**/generated/**",
 
-    "**/crates/spikard-cli/src/**",
-    "**/crates/spikard-codegen/src/**",
-    "**/crates/spikard-graphql/src/**",
-    "**/crates/spikard-py/src/**",
-    "**/crates/spikard-node/src/**",
-    "**/crates/spikard-rb/src/**",
-    "**/crates/spikard-php/src/**",
-    "**/crates/spikard-elixir/src/**",
+  "**/crates/spikard-cli/src/**",
+  "**/crates/spikard-codegen/src/**",
+  "**/crates/spikard-graphql/src/**",
+  "**/crates/spikard-py/src/**",
+  "**/crates/spikard-node/src/**",
+  "**/crates/spikard-rb/src/**",
+  "**/crates/spikard-php/src/**",
+  "**/crates/spikard-elixir/src/**",
 
-    "**/examples/**",
-    "**/tools/**",
+  "**/examples/**",
+  "**/tools/**",
 
-    "**/packages/**",
+  "**/packages/**",
 ]
 
 exclude-crates = ["spikard-php", "spikard-elixir"]

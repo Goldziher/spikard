@@ -1,23 +1,23 @@
 [dependency-groups]
 dev = [
-    "annotated-types>=0.7.0",
-    "fastapi>=0.136.1",
-    "httpx-sse>=0.4.3",
-    "jsonschema>=4.26.0",
-    "maturin>=1.13.1",
-    "msgspec>=0.21.1",
-    "orjson>=3.11.8",
-    "pydantic>=2.13.3",
-    "pyjwt>=2.12.1",
-    "pyrefly>=1.1.1",
-    "pytest>=9.0.3",
-    "pytest-asyncio>=1.3.0",
-    "pytest-cov>=7.1.0",
-    "pytest-mock>=3.15.1",
-    "pytest-timeout>=2.4.0",
-    "uv-bump",
-    "uvicorn>=0.46.0",
-    "websockets>=16.0",
+  "annotated-types>=0.7.0",
+  "fastapi>=0.136.1",
+  "httpx-sse>=0.4.3",
+  "jsonschema>=4.26.0",
+  "maturin>=1.13.1",
+  "msgspec>=0.21.1",
+  "orjson>=3.11.8",
+  "pydantic>=2.13.3",
+  "pyjwt>=2.12.1",
+  "pyrefly>=1.1.1",
+  "pytest>=9.0.3",
+  "pytest-asyncio>=1.3.0",
+  "pytest-cov>=7.1.0",
+  "pytest-mock>=3.15.1",
+  "pytest-timeout>=2.4.0",
+  "uv-bump",
+  "uvicorn>=0.46.0",
+  "websockets>=16.0",
 ]
 docs = ["zensical"]
 doc = ["zensical"]
@@ -29,11 +29,11 @@ packages = []
 sources.uv-bump = { git = "https://github.com/Goldziher/uv-bump" }
 workspace.members = ["packages/python"]
 cache-keys = [
-    { file = "pyproject.toml" },
-    { file = "Cargo.toml" },
-    { file = "Cargo.lock" },
-    { file = "crates/**/*.rs" },
-    { file = "crates/**/Cargo.toml" },
+  { file = "pyproject.toml" },
+  { file = "Cargo.toml" },
+  { file = "Cargo.lock" },
+  { file = "crates/**/*.rs" },
+  { file = "crates/**/Cargo.toml" },
 ]
 
 [tool.pytest]
@@ -47,35 +47,35 @@ ini_options.asyncio_default_fixture_loop_scope = "function"
 [tool.coverage]
 run.branch = true
 run.omit = [
-    "*/__pycache__/*",
-    "*/site-packages/*",
-    "packages/python/spikard/_internal.py",
-    "packages/python/spikard/_internal/*",
-    "packages/python/spikard/background.py",
-    "packages/python/spikard/routing.py",
-    "packages/python/spikard/schema.py",
-    "packages/python/spikard/sse.py",
-    "packages/python/spikard/testing.py",
-    "packages/python/spikard/tests/*",
-    "packages/python/spikard/websocket.py",
-    "packages/python/tests/*",
-    "scripts/*",
+  "*/__pycache__/*",
+  "*/site-packages/*",
+  "packages/python/spikard/_internal.py",
+  "packages/python/spikard/_internal/*",
+  "packages/python/spikard/background.py",
+  "packages/python/spikard/routing.py",
+  "packages/python/spikard/schema.py",
+  "packages/python/spikard/sse.py",
+  "packages/python/spikard/testing.py",
+  "packages/python/spikard/tests/*",
+  "packages/python/spikard/websocket.py",
+  "packages/python/tests/*",
+  "scripts/*",
 ]
 run.relative_files = true
 run.source = ["packages/python/spikard"]
 report.exclude_lines = [
-    "@(abc\\.)?abstractmethod",
-    "class .*\\bProtocol\\):",
-    "def __repr__",
-    "def __str__",
-    "except ImportError:",
-    "if __name__ == .__main__.:",
-    "if sys.version_info",
-    "if TYPE_CHECKING:",
-    "pragma: no cover",
-    "raise AssertionError",
-    "raise NotImplementedError",
-    "raise NotImplementedError",
+  "@(abc\\.)?abstractmethod",
+  "class .*\\bProtocol\\):",
+  "def __repr__",
+  "def __str__",
+  "except ImportError:",
+  "if __name__ == .__main__.:",
+  "if sys.version_info",
+  "if TYPE_CHECKING:",
+  "pragma: no cover",
+  "raise AssertionError",
+  "raise NotImplementedError",
+  "raise NotImplementedError",
 ]
 report.precision = 2
 report.skip_covered = false

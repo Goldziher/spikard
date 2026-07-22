@@ -11,53 +11,53 @@ feature-depth = 1
 
 [advisories]
 ignore = [
-    { id = "RUSTSEC-2024-0436", reason = "paste is a transitive dep via statrs->nalgebra->simba; no update path available yet" },
-    { id = "RUSTSEC-2023-0071", reason = "rsa is a transitive dep via jsonwebtoken; no safe upgrade available yet" },
-    { id = "RUSTSEC-2026-0176", reason = "pyo3 0.28.3 nth/nth_back OOB read; pending alef PYO3 template_versions bump to 0.29" },
-    { id = "RUSTSEC-2026-0177", reason = "pyo3 0.28.3 PyCFunction::new_closure missing Sync bound; pending alef PYO3 template_versions bump to 0.29" },
+  { id = "RUSTSEC-2024-0436", reason = "paste is a transitive dep via statrs->nalgebra->simba; no update path available yet" },
+  { id = "RUSTSEC-2023-0071", reason = "rsa is a transitive dep via jsonwebtoken; no safe upgrade available yet" },
+  { id = "RUSTSEC-2026-0176", reason = "pyo3 0.28.3 nth/nth_back OOB read; pending alef PYO3 template_versions bump to 0.29" },
+  { id = "RUSTSEC-2026-0177", reason = "pyo3 0.28.3 PyCFunction::new_closure missing Sync bound; pending alef PYO3 template_versions bump to 0.29" },
 ]
 
 [licenses]
 allow = [
-    "MIT",
-    "MIT-0",
-    "Apache-2.0",
-    "Apache-2.0 WITH LLVM-exception",
-    "BSD-2-Clause",
-    "BSD-3-Clause",
-    "ISC",
-    "Zlib",
-    "BSL-1.0",
-    "Unicode-3.0",
-    "0BSD",
-    "Unlicense",
+  "MIT",
+  "MIT-0",
+  "Apache-2.0",
+  "Apache-2.0 WITH LLVM-exception",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "ISC",
+  "Zlib",
+  "BSL-1.0",
+  "Unicode-3.0",
+  "0BSD",
+  "Unlicense",
 ]
 confidence-threshold = 0.8
 exceptions = [
-    { allow = [
-        "CDDL-1.0",
-    ], crate = "inferno" },
-    { allow = [
-        "OpenSSL",
-    ], crate = "aws-lc-sys" },
-    { allow = [
-        "CDLA-Permissive-2.0",
-    ], crate = "webpki-root-certs" },
-    { allow = [
-        "CDLA-Permissive-2.0",
-    ], crate = "webpki-roots" },
-    { allow = [
-        "MPL-2.0",
-    ], crate = "ascii_utils" },
-    { allow = [
-        "MPL-2.0",
-    ], crate = "fast_chemail" },
-    { allow = [
-        "MPL-2.0",
-    ], crate = "cbindgen" },
-    { allow = [
-        "bzip2-1.0.6",
-    ], crate = "libbz2-rs-sys" },
+  { allow = [
+    "CDDL-1.0",
+  ], crate = "inferno" },
+  { allow = [
+    "OpenSSL",
+  ], crate = "aws-lc-sys" },
+  { allow = [
+    "CDLA-Permissive-2.0",
+  ], crate = "webpki-root-certs" },
+  { allow = [
+    "CDLA-Permissive-2.0",
+  ], crate = "webpki-roots" },
+  { allow = [
+    "MPL-2.0",
+  ], crate = "ascii_utils" },
+  { allow = [
+    "MPL-2.0",
+  ], crate = "fast_chemail" },
+  { allow = [
+    "MPL-2.0",
+  ], crate = "cbindgen" },
+  { allow = [
+    "bzip2-1.0.6",
+  ], crate = "libbz2-rs-sys" },
 ]
 
 #[[licenses.clarify]]

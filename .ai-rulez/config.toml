@@ -5,18 +5,18 @@ description = 'Rust-centric multi-language HTTP framework providing core library
 gitignore = true
 presets = ["claude", "codex"]
 builtins = [
-    'rust',
-    'python',
-    'typescript',
-    'ruby',
-    'php',
-    'elixir',
-    'pyo3',
-    'napi-rs',
-    'magnus',
-    'ext-php-rs',
-    'rustler',
-    'default-commands',
+  'rust',
+  'python',
+  'typescript',
+  'ruby',
+  'php',
+  'elixir',
+  'pyo3',
+  'napi-rs',
+  'magnus',
+  'ext-php-rs',
+  'rustler',
+  'default-commands',
 ]
 
 [header]

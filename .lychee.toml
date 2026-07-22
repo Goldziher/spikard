@@ -2,38 +2,38 @@
 root_dir = "site"
 
 exclude = [
-    "localhost",
-    "127\\.0\\.0\\.1",
-    "0\\.0\\.0\\.0",
+  "localhost",
+  "127\\.0\\.0\\.1",
+  "0\\.0\\.0\\.0",
 
-    "example\\.com",
-    "example\\.org",
-    "api\\.example\\.com",
+  "example\\.com",
+  "example\\.org",
+  "api\\.example\\.com",
 
-    "\\$\\{",
-    "\\{\\{",
+  "\\$\\{",
+  "\\{\\{",
 
-    "github\\.com/.*/edit/",
+  "github\\.com/.*/edit/",
 
-    "github\\.com/.*/raw/",
+  "github\\.com/.*/raw/",
 
-    "spikard\\.dev",
-    "docs\\.spikard\\.kreuzberg\\.dev",
+  "spikard\\.dev",
+  "docs\\.spikard\\.kreuzberg\\.dev",
 
-    "pypi\\.org/project/",
-    "crates\\.io/crates/",
-    "npmjs\\.com/package/",
-    "rubygems\\.org/gems/",
-    "packagist\\.org/packages/",
-    "hex\\.pm/packages/",
-    "nuget\\.org/packages/",
-    "central\\.sonatype\\.com/artifact/",
-    "search\\.maven\\.org/artifact/",
-    "pub\\.dev/packages/",
+  "pypi\\.org/project/",
+  "crates\\.io/crates/",
+  "npmjs\\.com/package/",
+  "rubygems\\.org/gems/",
+  "packagist\\.org/packages/",
+  "hex\\.pm/packages/",
+  "nuget\\.org/packages/",
+  "central\\.sonatype\\.com/artifact/",
+  "search\\.maven\\.org/artifact/",
+  "pub\\.dev/packages/",
 
-    "discord\\.gg/",
+  "discord\\.gg/",
 
-    "taskfile\\.dev/installation",
+  "taskfile\\.dev/installation",
 ]
 
 accept = [200, 204, 301, 302, 429]
