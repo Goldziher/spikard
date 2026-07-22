@@ -1,16 +1,1 @@
-{
-  "http": {
-    "expected_response": { "body": { "category": "electronics", "name": "Item" }, "headers": {}, "status_code": 200 },
-    "handler": {
-      "body_schema": {
-        "additionalProperties": false,
-        "properties": { "category": { "type": "string" }, "name": { "type": "string" } },
-        "required": ["name", "category"],
-        "type": "object"
-      },
-      "method": "POST",
-      "route": "/items/"
-    },
-    "request": { "path": "/items/" }
-  }
-}
+{"http":{"expected_response":{"body":{"category":"electronics","name":"Item"},"headers":{},"status_code":200},"handler":{"body_schema":{"additionalProperties":false,"properties":{"category":{"type":"string"},"name":{"type":"string"}},"required":["name","category"],"type":"object"},"method":"POST","route":"/items/"},"request":{"path":"/items/"}}}

@@ -1,7 +1,1 @@
-{
-  "http": {
-    "expected_response": { "body": { "background_tasks_enabled": true }, "headers": {}, "status_code": 200 },
-    "handler": { "body_schema": null, "method": "GET", "route": "/task" },
-    "request": { "path": "/task" }
-  }
-}
+{"http":{"expected_response":{"body":{"background_tasks_enabled":true},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/task"},"request":{"path":"/task"}}}

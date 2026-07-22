@@ -1,7 +1,1 @@
-{
-  "http": {
-    "expected_response": { "body": { "tracking_id": "ABC12345" }, "headers": {}, "status_code": 200 },
-    "handler": { "body_schema": null, "method": "GET", "route": "/cookies/pattern" },
-    "request": { "path": "/cookies/pattern" }
-  }
-}
+{"http":{"expected_response":{"body":{"tracking_id":"ABC12345"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/cookies/pattern"},"request":{"path":"/cookies/pattern"}}}

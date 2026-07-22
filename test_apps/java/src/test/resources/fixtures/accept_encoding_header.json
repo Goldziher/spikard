@@ -1,7 +1,1 @@
-{
-  "http": {
-    "expected_response": { "body": { "accept_encoding": "gzip, deflate, br" }, "headers": {}, "status_code": 200 },
-    "handler": { "body_schema": null, "method": "GET", "route": "/headers/accept-encoding" },
-    "request": { "path": "/headers/accept-encoding" }
-  }
-}
+{"http":{"expected_response":{"body":{"accept_encoding":"gzip, deflate, br"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/headers/accept-encoding"},"request":{"path":"/headers/accept-encoding"}}}

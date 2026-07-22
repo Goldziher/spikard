@@ -1,15 +1,1 @@
-{
-  "http": {
-    "expected_response": { "body": null, "headers": {}, "status_code": 201 },
-    "handler": {
-      "body_schema": {
-        "properties": { "data": { "type": "string" }, "version": { "const": "1.0", "type": "string" } },
-        "required": ["version", "data"],
-        "type": "object"
-      },
-      "method": "POST",
-      "route": "/api/v1/data"
-    },
-    "request": { "path": "/api/v1/data" }
-  }
-}
+{"http":{"expected_response":{"body":null,"headers":{},"status_code":201},"handler":{"body_schema":{"properties":{"data":{"type":"string"},"version":{"const":"1.0","type":"string"}},"required":["version","data"],"type":"object"},"method":"POST","route":"/api/v1/data"},"request":{"path":"/api/v1/data"}}}

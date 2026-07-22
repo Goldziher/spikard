@@ -1,7 +1,1 @@
-{
-  "http": {
-    "expected_response": { "body": { "detail": "Invalid request format" }, "headers": {}, "status_code": 400 },
-    "handler": { "body_schema": { "type": "string" }, "method": "POST", "route": "/items/" },
-    "request": { "path": "/items/" }
-  }
-}
+{"http":{"expected_response":{"body":{"detail":"Invalid request format"},"headers":{},"status_code":400},"handler":{"body_schema":{"type":"string"},"method":"POST","route":"/items/"},"request":{"path":"/items/"}}}

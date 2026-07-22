@@ -1,7 +1,1 @@
-{
-  "http": {
-    "expected_response": { "body": { "model_name": "alexnet" }, "headers": {}, "status_code": 200 },
-    "handler": { "body_schema": null, "method": "GET", "route": "/models/{model_name}" },
-    "request": { "path": "/models/alexnet" }
-  }
-}
+{"http":{"expected_response":{"body":{"model_name":"alexnet"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/models/{model_name}"},"request":{"path":"/models/alexnet"}}}

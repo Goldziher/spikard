@@ -244,4 +244,4 @@ export class App {
   }
 }
 
-export { App };
+export { App, Method, RouteBuilder };

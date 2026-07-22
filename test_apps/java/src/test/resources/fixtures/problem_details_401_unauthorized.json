@@ -1,16 +1,1 @@
-{
-  "http": {
-    "expected_response": {
-      "body": {
-        "detail": "Authentication required",
-        "status": 401,
-        "title": "Unauthorized",
-        "type": "https://spikard.dev/errors/unauthorized"
-      },
-      "headers": {},
-      "status_code": 401
-    },
-    "handler": { "body_schema": null, "method": "GET", "route": "/protected" },
-    "request": { "path": "/protected" }
-  }
-}
+{"http":{"expected_response":{"body":{"detail":"Authentication required","status":401,"title":"Unauthorized","type":"https://spikard.dev/errors/unauthorized"},"headers":{},"status_code":401},"handler":{"body_schema":null,"method":"GET","route":"/protected"},"request":{"path":"/protected"}}}

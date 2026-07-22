@@ -76,7 +76,11 @@ public class HarnessMain {
                 String route = handlerNode.get("route").asText();
                 String method = handlerNode.get("method").asText();
                 int statusCode = responseNode.get("status_code").asInt();
-                JsonNode responseBody = responseNode.get("content");
+                // Fixtures store the expected body under the canonical "body" field
+                // (language-agnostic fixture schema); `response_body_field` names the
+                // field of the *handler-return envelope* the runtime parses, which is
+                // a separate contract used on the write side below.
+                JsonNode responseBody = responseNode.get("body");
                 JsonNode responseHeaders = responseNode.get("headers");
 
                 // Build the full fixture-namespaced route: /fixtures/<fixture_id>{route}

@@ -1,15 +1,1 @@
-{
-  "http": {
-    "expected_response": {
-      "body": { "error": "Rate limit exceeded", "message": "Too many requests, please try again later" },
-      "headers": { "Retry-After": "60" },
-      "status_code": 429
-    },
-    "handler": {
-      "body_schema": { "properties": { "data": { "type": "string" } }, "required": ["data"], "type": "object" },
-      "method": "POST",
-      "route": "/api/test-rate-limit-exceeded"
-    },
-    "request": { "path": "/api/test-rate-limit-exceeded" }
-  }
-}
+{"http":{"expected_response":{"body":{"error":"Rate limit exceeded","message":"Too many requests, please try again later"},"headers":{"Retry-After":"60"},"status_code":429},"handler":{"body_schema":{"properties":{"data":{"type":"string"}},"required":["data"],"type":"object"},"method":"POST","route":"/api/test-rate-limit-exceeded"},"request":{"path":"/api/test-rate-limit-exceeded"}}}

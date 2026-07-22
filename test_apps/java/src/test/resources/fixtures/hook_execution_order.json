@@ -1,11 +1,1 @@
-{
-  "http": {
-    "expected_response": {
-      "body": { "execution_order": ["first_hook", "second_hook", "third_hook"], "message": "Hooks executed in order" },
-      "headers": {},
-      "status_code": 200
-    },
-    "handler": { "body_schema": null, "method": "GET", "route": "/api/test-hook-order" },
-    "request": { "path": "/api/test-hook-order" }
-  }
-}
+{"http":{"expected_response":{"body":{"execution_order":["first_hook","second_hook","third_hook"],"message":"Hooks executed in order"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/api/test-hook-order"},"request":{"path":"/api/test-hook-order"}}}

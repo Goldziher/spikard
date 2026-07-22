@@ -14,7 +14,7 @@ publish = false
 ignored = ["serde"]
 
 [dependencies]
-alef = { git = "https://github.com/xberg-io/alef", tag = "v0.38.2" }
+alef = { git = "https://github.com/xberg-io/alef", tag = "v0.42.1" }
 anyhow = "1"
 heck = "0.5"
 minijinja = "2"

@@ -71,9 +71,11 @@ module AppHarness
       builder = applicator.call(mw_cfg)
     end
 
-    # Register the route with the handler.
-    # Ruby uses block form for route registration
-    APP.route(builder, &handler_fn)
+    # Register the route with the handler using the low-level, RouteBuilder-based
+    # entry point. `register_route` takes the handler as a positional argument and
+    # is NOT shadowed by the ergonomic typed-handler `route(path, method:)` defined
+    # in the top-level App layer, so it accepts the harness's raw response proc.
+    APP.register_route(builder, handler_fn)
   end
 
   # Start the server. SPIKARD_SERVER_PORT is set by the spawner when it

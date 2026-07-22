@@ -1,7 +1,1 @@
-{
-  "http": {
-    "expected_response": { "body": { "graceful_shutdown": true }, "headers": {}, "status_code": 200 },
-    "handler": { "body_schema": null, "method": "GET", "route": "/shutdown" },
-    "request": { "path": "/shutdown" }
-  }
-}
+{"http":{"expected_response":{"body":{"graceful_shutdown":true},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/shutdown"},"request":{"path":"/shutdown"}}}

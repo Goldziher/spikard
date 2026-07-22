@@ -317,6 +317,26 @@ impl JsApp {
             .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
         Ok(())
     }
+    /// Apply a server configuration to the inner app.
+    ///
+    /// Accepts the JSON-serialized `ServerConfig` produced by the TypeScript
+    /// service wrapper (`App.config`) and applies it to the inner core `App`
+    /// via its consuming `config` builder, taking and replacing the value under
+    /// the mutex (mirroring the `nativeRun`/`nativeIntoRouter` ownership dance).
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the configuration JSON cannot be deserialized into a
+    /// `ServerConfig`.
+    #[napi(js_name = "config")]
+    pub fn config(&self, config_json: String) -> napi::Result<()> {
+        let cfg: spikard::ServerConfig = serde_json::from_str(&config_json)
+            .map_err(|e| napi::Error::new(napi::Status::GenericFailure, e.to_string()))?;
+        let mut inner = self.inner.lock().expect("app mutex poisoned");
+        let owner = std::mem::take(&mut *inner);
+        *inner = owner.config(cfg);
+        Ok(())
+    }
     /// Call the `run` entrypoint on the inner service.
     ///
     /// Run the HTTP server using the configured routes.

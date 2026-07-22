@@ -1,7 +1,1 @@
-{
-  "http": {
-    "expected_response": { "body": { "flag": true }, "headers": {}, "status_code": 200 },
-    "handler": { "body_schema": null, "method": "GET", "route": "/query/bool" },
-    "request": { "path": "/query/bool" }
-  }
-}
+{"http":{"expected_response":{"body":{"flag":true},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/query/bool"},"request":{"path":"/query/bool"}}}

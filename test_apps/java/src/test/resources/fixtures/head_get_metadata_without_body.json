@@ -1,11 +1,1 @@
-{
-  "http": {
-    "expected_response": {
-      "body": null,
-      "headers": { "Content-Length": "85", "Content-Type": "application/json" },
-      "status_code": 200
-    },
-    "handler": { "body_schema": null, "method": "HEAD", "route": "/items/{id}" },
-    "request": { "path": "/items/1" }
-  }
-}
+{"http":{"expected_response":{"body":null,"headers":{"Content-Length":"85","Content-Type":"application/json"},"status_code":200},"handler":{"body_schema":null,"method":"HEAD","route":"/items/{id}"},"request":{"path":"/items/1"}}}

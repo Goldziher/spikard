@@ -1,15 +1,1 @@
-{
-  "http": {
-    "expected_response": {
-      "body": null,
-      "headers": { "content-type": "application/grpc", "grpc-status": "0" },
-      "status_code": 200
-    },
-    "handler": {
-      "body_schema": { "properties": { "task": { "type": "string" } }, "required": ["task"], "type": "object" },
-      "method": "POST",
-      "route": "/api.Service/LongRunning"
-    },
-    "request": { "path": "/api.Service/LongRunning" }
-  }
-}
+{"http":{"expected_response":{"body":null,"headers":{"content-type":"application/grpc","grpc-status":"0"},"status_code":200},"handler":{"body_schema":{"properties":{"task":{"type":"string"}},"required":["task"],"type":"object"},"method":"POST","route":"/api.Service/LongRunning"},"request":{"path":"/api.Service/LongRunning"}}}

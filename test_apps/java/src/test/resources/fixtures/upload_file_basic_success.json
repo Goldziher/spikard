@@ -1,7 +1,1 @@
-{
-  "http": {
-    "expected_response": { "body": { "filename": "test.txt", "size": 13 }, "headers": {}, "status_code": 200 },
-    "handler": { "body_schema": null, "method": "POST", "route": "/upload" },
-    "request": { "path": "/upload" }
-  }
-}
+{"http":{"expected_response":{"body":{"filename":"test.txt","size":13},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"POST","route":"/upload"},"request":{"path":"/upload"}}}

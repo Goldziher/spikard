@@ -1,11 +1,1 @@
-{
-  "http": {
-    "expected_response": {
-      "body": { "message": "Exact size payload that is exactly 100 bytes or more to test boundary" },
-      "headers": { "content-encoding": "gzip" },
-      "status_code": 200
-    },
-    "handler": { "body_schema": null, "method": "GET", "route": "/compression/boundary" },
-    "request": { "path": "/compression/boundary" }
-  }
-}
+{"http":{"expected_response":{"body":{"message":"Exact size payload that is exactly 100 bytes or more to test boundary"},"headers":{"content-encoding":"gzip"},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/compression/boundary"},"request":{"path":"/compression/boundary"}}}

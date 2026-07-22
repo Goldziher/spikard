@@ -1,7 +1,1 @@
-{
-  "http": {
-    "expected_response": { "body": { "message": "Authenticated with staging key" }, "headers": {}, "status_code": 200 },
-    "handler": { "body_schema": null, "method": "GET", "route": "/api/endpoint" },
-    "request": { "path": "/api/endpoint" }
-  }
-}
+{"http":{"expected_response":{"body":{"message":"Authenticated with staging key"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/api/endpoint"},"request":{"path":"/api/endpoint"}}}

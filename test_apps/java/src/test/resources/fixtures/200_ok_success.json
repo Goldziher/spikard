@@ -1,7 +1,1 @@
-{
-  "http": {
-    "expected_response": { "body": { "id": 1, "name": "Item 1" }, "headers": {}, "status_code": 200 },
-    "handler": { "body_schema": null, "method": "GET", "route": "/status-test/{code}" },
-    "request": { "path": "/status-test/200" }
-  }
-}
+{"http":{"expected_response":{"body":{"id":1,"name":"Item 1"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/status-test/{code}"},"request":{"path":"/status-test/200"}}}

@@ -1,7 +1,1 @@
-{
-  "http": {
-    "expected_response": { "body": { "shutdown_timeout_secs": 30 }, "headers": {}, "status_code": 200 },
-    "handler": { "body_schema": null, "method": "GET", "route": "/shutdown-timeout" },
-    "request": { "path": "/shutdown-timeout" }
-  }
-}
+{"http":{"expected_response":{"body":{"shutdown_timeout_secs":30},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/shutdown-timeout"},"request":{"path":"/shutdown-timeout"}}}

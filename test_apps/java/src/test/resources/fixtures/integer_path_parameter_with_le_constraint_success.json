@@ -1,7 +1,1 @@
-{
-  "http": {
-    "expected_response": { "body": { "item_id": 3 }, "headers": {}, "status_code": 200 },
-    "handler": { "body_schema": null, "method": "GET", "route": "/path/param-le/{item_id}" },
-    "request": { "path": "/path/param-le/3" }
-  }
-}
+{"http":{"expected_response":{"body":{"item_id":3},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/path/param-le/{item_id}"},"request":{"path":"/path/param-le/3"}}}

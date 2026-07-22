@@ -1,7 +1,1 @@
-{
-  "http": {
-    "expected_response": { "body": "foo bar 50", "headers": {}, "status_code": 200 },
-    "handler": { "body_schema": null, "method": "GET", "route": "/query/int/default" },
-    "request": { "path": "/query/int/default" }
-  }
-}
+{"http":{"expected_response":{"body":"foo bar 50","headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/query/int/default"},"request":{"path":"/query/int/default"}}}

@@ -1,11 +1,1 @@
-{
-  "http": {
-    "expected_response": {
-      "body": { "fatebook_tracker": "tracker456", "googall_tracker": "ga789", "session_id": "session123" },
-      "headers": {},
-      "status_code": 200
-    },
-    "handler": { "body_schema": null, "method": "GET", "route": "/items/" },
-    "request": { "path": "/items/" }
-  }
-}
+{"http":{"expected_response":{"body":{"fatebook_tracker":"tracker456","googall_tracker":"ga789","session_id":"session123"},"headers":{},"status_code":200},"handler":{"body_schema":null,"method":"GET","route":"/items/"},"request":{"path":"/items/"}}}

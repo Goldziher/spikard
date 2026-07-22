@@ -974,4 +974,5 @@ void* __swift_bridge__$__alef_phantom_vec_security_scheme_info(void);
 void* __swift_bridge__$__alef_phantom_vec_testing_sse_event(void);
 
 
+
 #endif /* RUST_BRIDGE_C_H */

@@ -1,15 +1,1 @@
-{
-  "http": {
-    "expected_response": { "body": { "status": "queued", "will_retry": true }, "headers": {}, "status_code": 202 },
-    "handler": {
-      "body_schema": {
-        "properties": { "should_fail": { "type": "boolean" } },
-        "required": ["should_fail"],
-        "type": "object"
-      },
-      "method": "POST",
-      "route": "/background/may-fail"
-    },
-    "request": { "path": "/background/may-fail" }
-  }
-}
+{"http":{"expected_response":{"body":{"status":"queued","will_retry":true},"headers":{},"status_code":202},"handler":{"body_schema":{"properties":{"should_fail":{"type":"boolean"}},"required":["should_fail"],"type":"object"},"method":"POST","route":"/background/may-fail"},"request":{"path":"/background/may-fail"}}}
