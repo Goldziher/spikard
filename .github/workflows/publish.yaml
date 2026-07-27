@@ -1140,6 +1140,11 @@ jobs:
           # ~keep build-csharp-natives@v1 artifacts already carry runtimes/<rid>/native/ layout.
           cp -R dist/csharp-natives/runtimes/. "$dest/"
           find "$dest" -type f
+      - name: Render runtime.json from template
+        uses: xberg-io/actions/render-runtime-json@v1
+        with:
+          template-path: packages/csharp/Spikard/runtime.json.template
+          version: ${{ needs.prepare.outputs.version }}
       - name: Pack NuGet
         run: dotnet pack packages/csharp/Spikard --configuration Release --output dist/nuget
       - uses: xberg-io/actions/publish-nuget@v1
