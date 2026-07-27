@@ -20,7 +20,10 @@
         }
       },
       "additionalProperties": false,
-      "required": ["name", "event_date"]
+      "required": [
+        "name",
+        "event_date"
+      ]
     }
   },
   "request": {

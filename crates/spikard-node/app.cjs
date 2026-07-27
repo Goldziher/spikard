@@ -2,22 +2,26 @@
  * Ergonomic typed-handler App wrapper for spikard (CommonJS).
  *
  * This module provides a high-level `App` interface with verb decorators
- * (app.post, app.get, etc.) that support typed request/response handling via zod schemas.
+ * (app.post, app.get, etc.) that support typed request/response handling via
+ * zod schemas.
  *
- * Request validation happens in the Rust core and returns 422 ProblemDetails on validation
- * failure. Zod schemas are converted to JSON Schema and attached to routes. Handlers receive
- * validated, typed request data.
+ * Request validation happens in the Rust core and returns 422 ProblemDetails on
+ * validation failure. Zod schemas are converted to JSON Schema and attached to
+ * routes. Handlers receive validated, typed request data.
  *
- * The low-level service App (supporting raw handler registration) is available via
- * `const { App } = require('@spikard/node/service.cjs')` for advanced use cases.
+ * The low-level service App (supporting raw handler registration) is available
+ * via `const { App } = require('@spikard/node/service.cjs')` for advanced use
+ * cases.
  */
 
 // Pull the low-level primitives straight from their source modules — NOT from
 // `index-wrapper.cjs`. The wrapper is the package `main` and re-exports this
-// ergonomic `App` last (so `require('@spikard/node').App` is ergonomic); reading
-// `App` back from the wrapper here would resolve to this class and recurse
-// infinitely. `service.cjs` owns the low-level service `App`; the native addon
-// (`./index`) owns `Method`/`RouteBuilder`. Loaded lazily to avoid load-time cycles.
+// ergonomic `App` last (so `require('@spikard/node').App` is ergonomic);
+// reading `App` back from the wrapper here would resolve to this class and
+// recurse infinitely. `service.cjs` owns the low-level service `App`; the
+// native addon
+// (`./index`) owns `Method`/`RouteBuilder`. Loaded lazily to avoid load-time
+// cycles.
 let _cachedService = null;
 
 function getServiceAndBindings() {
@@ -28,9 +32,9 @@ function getServiceAndBindings() {
   const service = require("./service.cjs");
   const native = require("./index");
   _cachedService = {
-    App: service.App,
-    Method: native.Method,
-    RouteBuilder: native.RouteBuilder,
+    App : service.App,
+    Method : native.Method,
+    RouteBuilder : native.RouteBuilder,
   };
   return _cachedService;
 }
@@ -40,14 +44,17 @@ function getServiceAndBindings() {
 // `zod/v4` subpath. Resolve whichever is present.
 function resolveZodToJsonSchema() {
   const zod = require("zod");
-  if (typeof zod.toJSONSchema === "function") return zod.toJSONSchema;
+  if (typeof zod.toJSONSchema === "function")
+    return zod.toJSONSchema;
   try {
     const v4 = require("zod/v4");
-    if (typeof v4.toJSONSchema === "function") return v4.toJSONSchema;
+    if (typeof v4.toJSONSchema === "function")
+      return v4.toJSONSchema;
   } catch (_e) {
     // no zod/v4 subpath — fall through to the error below
   }
-  throw new Error("spikard: the ergonomic App requires zod >= 3.25 (with toJSONSchema)");
+  throw new Error(
+      "spikard: the ergonomic App requires zod >= 3.25 (with toJSONSchema)");
 }
 const zodToJsonSchema = resolveZodToJsonSchema();
 
@@ -55,9 +62,9 @@ const zodToJsonSchema = resolveZodToJsonSchema();
  * Ergonomic, typed-handler App wrapper.
  *
  * Provides a clean interface for defining routes with type-safe handlers.
- * Automatically converts zod schemas to JSON Schema and attaches them to routes.
- * The Rust core validates all inputs and returns 422 ProblemDetails on validation failure.
- * Handlers receive typed, validated request data.
+ * Automatically converts zod schemas to JSON Schema and attaches them to
+ * routes. The Rust core validates all inputs and returns 422 ProblemDetails on
+ * validation failure. Handlers receive typed, validated request data.
  */
 class App {
   constructor() {
@@ -141,7 +148,8 @@ class App {
    * Register an OPTIONS route with optional typed request validation.
    */
   options(path, config = {}, handler) {
-    // Handle overloads: options(path, handler) or options(path, config, handler)
+    // Handle overloads: options(path, handler) or options(path, config,
+    // handler)
     if (typeof config === "function") {
       handler = config;
       config = {};
@@ -153,8 +161,8 @@ class App {
    * Register a generic route with the given method.
    *
    * Zod schemas are converted to JSON Schema and attached to the RouteBuilder.
-   * The Rust core validates the request and returns 422 ProblemDetails on validation failure.
-   * Handlers receive already-validated request data.
+   * The Rust core validates the request and returns 422 ProblemDetails on
+   * validation failure. Handlers receive already-validated request data.
    */
   registerRoute(method, path, config, handler) {
     // Get the method enum value
@@ -172,32 +180,33 @@ class App {
     // and return 422 ProblemDetails if validation fails
     if (config.body) {
       // The core validates the request body against this schema and returns 422
-      // ProblemDetails before dispatch. The napi `requestSchemaJson(schema: any)`
-      // param is converted straight into a serde_json::Value, so pass the derived
-      // schema OBJECT (not a JSON string — a string would deserialize to a
-      // Value::String and fail schema compilation).
+      // ProblemDetails before dispatch. The napi `requestSchemaJson(schema:
+      // any)` param is converted straight into a serde_json::Value, so pass the
+      // derived schema OBJECT (not a JSON string — a string would deserialize
+      // to a Value::String and fail schema compilation).
       const jsonSchema = zodToJsonSchema(config.body);
       builder = builder.requestSchemaJson(jsonSchema);
     }
 
     // Map a user handler return value onto the low-level wire envelope. The
-    // native contract deserializes into `spikard::Response { content, status_code,
-    // headers }` (snake_case `status_code`; the payload field is `content`).
+    // native contract deserializes into `spikard::Response { content,
+    // status_code, headers }` (snake_case `status_code`; the payload field is
+    // `content`).
     const toEnvelope = (response) => ({
-      status_code: response.statusCode ?? 200,
-      content: response.content,
-      headers: response.headers ?? {},
+      status_code : response.statusCode ?? 200,
+      content : response.content,
+      headers : response.headers ?? {},
     });
 
     const toErrorEnvelope = (error) => {
       console.error("Handler error:", error);
       return {
-        status_code: 500,
-        content: {
-          error: "Internal server error",
-          details: error instanceof Error ? error.message : String(error),
+        status_code : 500,
+        content : {
+          error : "Internal server error",
+          details : error instanceof Error ? error.message : String(error),
         },
-        headers: { "content-type": "application/json" },
+        headers : {"content-type" : "application/json"},
       };
     };
 
@@ -206,11 +215,11 @@ class App {
     // reach here — they return 422 ProblemDetails before dispatch).
     //
     // This is intentionally NOT declared `async`: the native ThreadsafeFunction
-    // consumes the return value synchronously. For a synchronous user handler we
-    // must return the envelope object directly; for an async handler we return
-    // the pending Promise so the native side can await it.
-    // The native ThreadsafeFunction is callee-handled: the JS callback is invoked
-    // as `(err, requestData)`, so the request payload is the SECOND argument.
+    // consumes the return value synchronously. For a synchronous user handler
+    // we must return the envelope object directly; for an async handler we
+    // return the pending Promise so the native side can await it. The native
+    // ThreadsafeFunction is callee-handled: the JS callback is invoked as
+    // `(err, requestData)`, so the request payload is the SECOND argument.
     const bridgeHandler = (_err, requestData) => {
       try {
         let body = requestData.body;
@@ -224,13 +233,13 @@ class App {
 
         const typedRequest = {
           body,
-          params: requestData.path_params || {},
-          query: requestData.query_params || {},
-          headers: requestData.headers || {},
-          cookies: requestData.cookies || {},
-          method: requestData.method || "GET",
-          path: requestData.path || "/",
-          contentType: requestData.content_type,
+          params : requestData.path_params || {},
+          query : requestData.query_params || {},
+          headers : requestData.headers || {},
+          cookies : requestData.cookies || {},
+          method : requestData.method || "GET",
+          path : requestData.path || "/",
+          contentType : requestData.content_type,
         };
 
         const response = handler(typedRequest);
@@ -253,15 +262,15 @@ class App {
   getMethodEnum(method) {
     const service = getServiceAndBindings();
     const methodMap = {
-      GET: service.Method.Get,
-      POST: service.Method.Post,
-      PUT: service.Method.Put,
-      PATCH: service.Method.Patch,
-      DELETE: service.Method.Delete,
-      HEAD: service.Method.Head,
-      OPTIONS: service.Method.Options,
-      CONNECT: service.Method.Connect,
-      TRACE: service.Method.Trace,
+      GET : service.Method.Get,
+      POST : service.Method.Post,
+      PUT : service.Method.Put,
+      PATCH : service.Method.Patch,
+      DELETE : service.Method.Delete,
+      HEAD : service.Method.Head,
+      OPTIONS : service.Method.Options,
+      CONNECT : service.Method.Connect,
+      TRACE : service.Method.Trace,
     };
     return methodMap[method.toUpperCase()];
   }
@@ -269,30 +278,22 @@ class App {
   /**
    * Configure the server (host, port, etc.).
    */
-  config(config) {
-    this.serviceApp.config(config);
-  }
+  config(config) { this.serviceApp.config(config); }
 
   /**
    * Start the HTTP server.
    */
-  async run() {
-    await this.serviceApp.run();
-  }
+  async run() { await this.serviceApp.run(); }
 
   /**
    * Build a router (returns the underlying router, advanced use case).
    */
-  async intoRouter() {
-    await this.serviceApp.intoRouter();
-  }
+  async intoRouter() { await this.serviceApp.intoRouter(); }
 
   /**
    * Get the underlying low-level service App (for advanced use cases).
    */
-  getServiceApp() {
-    return this.serviceApp;
-  }
+  getServiceApp() { return this.serviceApp; }
 }
 
-module.exports = { App };
+module.exports = {App};

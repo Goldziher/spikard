@@ -7,25 +7,57 @@
     "messages": [
       {
         "name": "UnknownRequest",
-        "fields": [{ "name": "id", "type": "string", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       },
       {
         "name": "UnknownResponse",
-        "fields": [{ "name": "error", "type": "string", "number": 1, "label": "optional" }]
+        "fields": [
+          {
+            "name": "error",
+            "type": "string",
+            "number": 1,
+            "label": "optional"
+          }
+        ]
       }
     ],
     "services": [
       {
         "name": "UnknownService",
-        "methods": [{ "name": "Fail", "input_type": "UnknownRequest", "output_type": "UnknownResponse" }]
+        "methods": [
+          {
+            "name": "Fail",
+            "input_type": "UnknownRequest",
+            "output_type": "UnknownResponse"
+          }
+        ]
       }
     ]
   },
-  "handler": { "service": "example.v1.UnknownService", "method": "Fail" },
-  "request": {
-    "metadata": { "content-type": "application/grpc" },
-    "message": { "id": "unknown-001" }
+  "handler": {
+    "service": "example.v1.UnknownService",
+    "method": "Fail"
   },
-  "expected_response": { "status_code": "UNKNOWN" },
-  "tags": ["grpc_status", "error"]
+  "request": {
+    "metadata": {
+      "content-type": "application/grpc"
+    },
+    "message": {
+      "id": "unknown-001"
+    }
+  },
+  "expected_response": {
+    "status_code": "UNKNOWN"
+  },
+  "tags": [
+    "grpc_status",
+    "error"
+  ]
 }

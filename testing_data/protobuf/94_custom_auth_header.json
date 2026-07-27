@@ -7,11 +7,25 @@
     "messages": [
       {
         "name": "CustomAuthRequest",
-        "fields": [{ "name": "action", "type": "string", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "action",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       },
       {
         "name": "CustomAuthResponse",
-        "fields": [{ "name": "success", "type": "bool", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "success",
+            "type": "bool",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       }
     ],
     "services": [
@@ -32,7 +46,9 @@
     "method": "Execute",
     "protobuf": {
       "metadata": {
-        "required_headers": ["x-custom-auth"]
+        "required_headers": [
+          "x-custom-auth"
+        ]
       }
     }
   },
@@ -41,11 +57,19 @@
       "content-type": "application/grpc",
       "x-custom-auth": "CustomScheme token_value_123"
     },
-    "message": { "action": "execute" }
+    "message": {
+      "action": "execute"
+    }
   },
   "expected_response": {
     "status_code": "OK",
-    "message": { "success": true }
+    "message": {
+      "success": true
+    }
   },
-  "tags": ["auth", "custom_auth", "security"]
+  "tags": [
+    "auth",
+    "custom_auth",
+    "security"
+  ]
 }

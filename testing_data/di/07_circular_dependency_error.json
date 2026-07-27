@@ -13,19 +13,25 @@
       "service_a": {
         "type": "factory",
         "factory": "create_service_a",
-        "depends_on": ["service_b"],
+        "depends_on": [
+          "service_b"
+        ],
         "singleton": false,
         "cacheable": false
       },
       "service_b": {
         "type": "factory",
         "factory": "create_service_b",
-        "depends_on": ["service_a"],
+        "depends_on": [
+          "service_a"
+        ],
         "singleton": false,
         "cacheable": false
       }
     },
-    "handler_dependencies": ["service_a"]
+    "handler_dependencies": [
+      "service_a"
+    ]
   },
   "request": {
     "method": "GET",
@@ -42,11 +48,20 @@
         {
           "type": "circular_dependency",
           "msg": "Circular dependency detected in dependency graph",
-          "cycle": ["service_a", "service_b", "service_a"]
+          "cycle": [
+            "service_a",
+            "service_b",
+            "service_a"
+          ]
         }
       ]
     }
   },
   "notes": "Circular dependencies should be detected at registration time (during app setup) and result in an error response. The cycle field shows the circular path.",
-  "tags": ["dependency_injection", "error", "circular", "validation"]
+  "tags": [
+    "dependency_injection",
+    "error",
+    "circular",
+    "validation"
+  ]
 }

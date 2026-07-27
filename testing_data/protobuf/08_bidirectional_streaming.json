@@ -7,21 +7,71 @@
       {
         "name": "ChatMessage",
         "fields": [
-          { "name": "user_id", "type": "int32", "number": 1, "label": "required" },
-          { "name": "username", "type": "string", "number": 2, "label": "required" },
-          { "name": "message", "type": "string", "number": 3, "label": "required" },
-          { "name": "timestamp", "type": "int64", "number": 4, "label": "required" }
+          {
+            "name": "user_id",
+            "type": "int32",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "username",
+            "type": "string",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "message",
+            "type": "string",
+            "number": 3,
+            "label": "required"
+          },
+          {
+            "name": "timestamp",
+            "type": "int64",
+            "number": 4,
+            "label": "required"
+          }
         ]
       },
       {
         "name": "ChatResponse",
         "fields": [
-          { "name": "message_id", "type": "int32", "number": 1, "label": "required" },
-          { "name": "user_id", "type": "int32", "number": 2, "label": "required" },
-          { "name": "username", "type": "string", "number": 3, "label": "required" },
-          { "name": "message", "type": "string", "number": 4, "label": "required" },
-          { "name": "timestamp", "type": "int64", "number": 5, "label": "required" },
-          { "name": "acknowledged", "type": "bool", "number": 6, "label": "optional" }
+          {
+            "name": "message_id",
+            "type": "int32",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "user_id",
+            "type": "int32",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "username",
+            "type": "string",
+            "number": 3,
+            "label": "required"
+          },
+          {
+            "name": "message",
+            "type": "string",
+            "number": 4,
+            "label": "required"
+          },
+          {
+            "name": "timestamp",
+            "type": "int64",
+            "number": 5,
+            "label": "required"
+          },
+          {
+            "name": "acknowledged",
+            "type": "bool",
+            "number": 6,
+            "label": "optional"
+          }
         ]
       }
     ],

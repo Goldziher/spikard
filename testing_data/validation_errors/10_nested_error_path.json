@@ -12,15 +12,21 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": ["profile"],
+      "required": [
+        "profile"
+      ],
       "properties": {
         "profile": {
           "type": "object",
-          "required": ["contact"],
+          "required": [
+            "contact"
+          ],
           "properties": {
             "contact": {
               "type": "object",
-              "required": ["email"],
+              "required": [
+                "email"
+              ],
               "properties": {
                 "email": {
                   "type": "string",
@@ -54,7 +60,12 @@
       "errors": [
         {
           "type": "string_pattern_mismatch",
-          "loc": ["body", "profile", "contact", "email"],
+          "loc": [
+            "body",
+            "profile",
+            "contact",
+            "email"
+          ],
           "msg": "String should match pattern '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'",
           "input": "invalid",
           "ctx": {
@@ -64,5 +75,10 @@
       ]
     }
   },
-  "tags": ["validation_errors", "nested", "path", "error_reporting"]
+  "tags": [
+    "validation_errors",
+    "nested",
+    "path",
+    "error_reporting"
+  ]
 }

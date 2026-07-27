@@ -9,7 +9,9 @@
     "forceConsistentCasingInFileNames": true,
     "incremental": true,
     "isolatedModules": false,
-    "lib": ["ESNext"],
+    "lib": [
+      "ESNext"
+    ],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "noEmit": true,

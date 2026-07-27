@@ -58,5 +58,9 @@
       "error_message": "Rate limit exceeded for expensiveQuery (10 requests per 60 seconds)"
     }
   ],
-  "tags": ["directives", "rate-limiting", "performance"]
+  "tags": [
+    "directives",
+    "rate-limiting",
+    "performance"
+  ]
 }

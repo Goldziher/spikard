@@ -38,7 +38,10 @@
       "errors": [
         {
           "type": "missing",
-          "loc": ["cookie", "session_id"],
+          "loc": [
+            "cookie",
+            "session_id"
+          ],
           "msg": "Field required",
           "input": ""
         }

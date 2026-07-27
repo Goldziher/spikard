@@ -37,7 +37,10 @@
       "errors": [
         {
           "type": "missing",
-          "loc": ["headers", "x-token"],
+          "loc": [
+            "headers",
+            "x-token"
+          ],
           "msg": "Field required",
           "input": null
         }

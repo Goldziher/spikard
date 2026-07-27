@@ -61,7 +61,11 @@
       "factory_fn": "resolve_user_orders"
     }
   },
-  "tags": ["federation", "cross-subgraph", "entity-references"],
+  "tags": [
+    "federation",
+    "cross-subgraph",
+    "entity-references"
+  ],
   "complexity_limit": 200,
   "depth_limit": 5
 }

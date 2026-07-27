@@ -43,7 +43,10 @@
       "factory_fn": "resolve_user_entity"
     }
   },
-  "tags": ["federation", "entity-resolution"],
+  "tags": [
+    "federation",
+    "entity-resolution"
+  ],
   "complexity_limit": 50,
   "depth_limit": 5
 }

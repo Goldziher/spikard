@@ -6,16 +6,48 @@
     "messages": [
       {
         "name": "MetadataCheckRequest",
-        "fields": [{ "name": "request_id", "type": "string", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "request_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       },
       {
         "name": "MetadataCheckResponse",
         "fields": [
-          { "name": "request_id", "type": "string", "number": 1, "label": "required" },
-          { "name": "received_auth_header", "type": "string", "number": 2, "label": "optional" },
-          { "name": "received_trace_id", "type": "string", "number": 3, "label": "optional" },
-          { "name": "received_custom_header", "type": "string", "number": 4, "label": "optional" },
-          { "name": "response_time_ms", "type": "int32", "number": 5, "label": "required" }
+          {
+            "name": "request_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "received_auth_header",
+            "type": "string",
+            "number": 2,
+            "label": "optional"
+          },
+          {
+            "name": "received_trace_id",
+            "type": "string",
+            "number": 3,
+            "label": "optional"
+          },
+          {
+            "name": "received_custom_header",
+            "type": "string",
+            "number": 4,
+            "label": "optional"
+          },
+          {
+            "name": "response_time_ms",
+            "type": "int32",
+            "number": 5,
+            "label": "required"
+          }
         ]
       }
     ],

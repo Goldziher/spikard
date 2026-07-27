@@ -22,16 +22,46 @@
         "method": "batch.process",
         "params": {
           "items": [
-            { "id": 1, "value": "item_1" },
-            { "id": 2, "value": "item_2" },
-            { "id": 3, "value": "item_3" },
-            { "id": 4, "value": "item_4" },
-            { "id": 5, "value": "item_5" },
-            { "id": 6, "value": "item_6" },
-            { "id": 7, "value": "item_7" },
-            { "id": 8, "value": "item_8" },
-            { "id": 9, "value": "item_9" },
-            { "id": 10, "value": "item_10" }
+            {
+              "id": 1,
+              "value": "item_1"
+            },
+            {
+              "id": 2,
+              "value": "item_2"
+            },
+            {
+              "id": 3,
+              "value": "item_3"
+            },
+            {
+              "id": 4,
+              "value": "item_4"
+            },
+            {
+              "id": 5,
+              "value": "item_5"
+            },
+            {
+              "id": 6,
+              "value": "item_6"
+            },
+            {
+              "id": 7,
+              "value": "item_7"
+            },
+            {
+              "id": 8,
+              "value": "item_8"
+            },
+            {
+              "id": 9,
+              "value": "item_9"
+            },
+            {
+              "id": 10,
+              "value": "item_10"
+            }
           ]
         },
         "id": 1
@@ -143,18 +173,47 @@
         "method": "analytics.batch",
         "params": {
           "events": [
-            { "id": 1, "type": "click", "timestamp": "2024-01-15T14:00:00Z" },
-            { "id": 2, "type": "view", "timestamp": "2024-01-15T14:01:00Z" },
-            { "id": 3, "type": "purchase", "timestamp": "2024-01-15T14:02:00Z" }
+            {
+              "id": 1,
+              "type": "click",
+              "timestamp": "2024-01-15T14:00:00Z"
+            },
+            {
+              "id": 2,
+              "type": "view",
+              "timestamp": "2024-01-15T14:01:00Z"
+            },
+            {
+              "id": 3,
+              "type": "purchase",
+              "timestamp": "2024-01-15T14:02:00Z"
+            }
           ],
           "metrics": [
-            { "name": "cpu", "value": 45.2 },
-            { "name": "memory", "value": 62.8 },
-            { "name": "disk", "value": 78.1 }
+            {
+              "name": "cpu",
+              "value": 45.2
+            },
+            {
+              "name": "memory",
+              "value": 62.8
+            },
+            {
+              "name": "disk",
+              "value": 78.1
+            }
           ],
           "sessions": [
-            { "sessionId": "sess-1", "userId": "user-1", "duration": 3600 },
-            { "sessionId": "sess-2", "userId": "user-2", "duration": 1800 }
+            {
+              "sessionId": "sess-1",
+              "userId": "user-1",
+              "duration": 3600
+            },
+            {
+              "sessionId": "sess-2",
+              "userId": "user-2",
+              "duration": 1800
+            }
           ]
         },
         "id": 5
@@ -168,5 +227,9 @@
     }
   ],
   "error_cases": [],
-  "tags": ["large-payloads", "performance", "edge-cases"]
+  "tags": [
+    "large-payloads",
+    "performance",
+    "edge-cases"
+  ]
 }

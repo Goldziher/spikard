@@ -44,11 +44,17 @@
             "title": "My Post",
             "content": "This is a post"
           },
-          "missing_fields": ["tags"]
+          "missing_fields": [
+            "tags"
+          ]
         }
       }
     ]
   },
   "resolvers": {},
-  "tags": ["errors", "validation", "input-types"]
+  "tags": [
+    "errors",
+    "validation",
+    "input-types"
+  ]
 }

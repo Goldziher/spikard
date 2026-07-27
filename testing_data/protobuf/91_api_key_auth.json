@@ -7,13 +7,30 @@
     "messages": [
       {
         "name": "ApiRequest",
-        "fields": [{ "name": "resource", "type": "string", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "resource",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       },
       {
         "name": "ApiResponse",
         "fields": [
-          { "name": "data", "type": "string", "number": 1, "label": "required" },
-          { "name": "client_id", "type": "string", "number": 2, "label": "optional" }
+          {
+            "name": "data",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "client_id",
+            "type": "string",
+            "number": 2,
+            "label": "optional"
+          }
         ]
       }
     ],
@@ -35,7 +52,9 @@
     "method": "FetchResource",
     "protobuf": {
       "metadata": {
-        "required_headers": ["x-api-key"]
+        "required_headers": [
+          "x-api-key"
+        ]
       }
     }
   },
@@ -44,7 +63,9 @@
       "content-type": "application/grpc",
       "x-api-key": "sk_live_abc123def456"
     },
-    "message": { "resource": "users" }
+    "message": {
+      "resource": "users"
+    }
   },
   "expected_response": {
     "status_code": "OK",
@@ -53,5 +74,9 @@
       "client_id": "client-api-001"
     }
   },
-  "tags": ["auth", "api_key", "security"]
+  "tags": [
+    "auth",
+    "api_key",
+    "security"
+  ]
 }

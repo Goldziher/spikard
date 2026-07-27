@@ -50,5 +50,9 @@
       }
     }
   },
-  "tags": ["queries", "nested-objects", "object-selection"]
+  "tags": [
+    "queries",
+    "nested-objects",
+    "object-selection"
+  ]
 }

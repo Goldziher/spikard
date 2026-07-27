@@ -6,7 +6,10 @@
       "name": "Alice Johnson",
       "age": 28,
       "email": "alice@example.com",
-      "tags": ["developer", "python"]
+      "tags": [
+        "developer",
+        "python"
+      ]
     },
     "expectedSuccess": true
   },
@@ -161,7 +164,11 @@
     "params": {
       "name": "Henry Davis",
       "email": "henry@example.com",
-      "tags": ["rust", 42, "golang"]
+      "tags": [
+        "rust",
+        42,
+        "golang"
+      ]
     },
     "expectedSuccess": false,
     "expectedError": {

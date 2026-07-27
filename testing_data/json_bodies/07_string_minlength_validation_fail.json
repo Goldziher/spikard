@@ -21,7 +21,10 @@
         }
       },
       "additionalProperties": false,
-      "required": ["name", "price"]
+      "required": [
+        "name",
+        "price"
+      ]
     }
   },
   "request": {
@@ -45,7 +48,10 @@
       "errors": [
         {
           "type": "string_too_short",
-          "loc": ["body", "name"],
+          "loc": [
+            "body",
+            "name"
+          ],
           "msg": "String should have at least 3 characters",
           "input": "ab",
           "ctx": {

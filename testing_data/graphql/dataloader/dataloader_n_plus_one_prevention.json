@@ -91,5 +91,10 @@
     "deduplication": "user-1 loaded once for posts 1 and 3",
     "db_queries_expected": 2
   },
-  "tags": ["dataloader", "n-plus-one", "nested-queries", "performance-optimization"]
+  "tags": [
+    "dataloader",
+    "n-plus-one",
+    "nested-queries",
+    "performance-optimization"
+  ]
 }

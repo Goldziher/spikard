@@ -146,7 +146,12 @@
         "message": "Method not found",
         "data": {
           "method": "nonExistentMethod",
-          "available_methods": ["createUser", "getUser", "updateUser", "deleteUser"]
+          "available_methods": [
+            "createUser",
+            "getUser",
+            "updateUser",
+            "deleteUser"
+          ]
         }
       },
       "id": 5
@@ -169,7 +174,9 @@
         "data": {
           "method": "createUserr",
           "suggestion": "Did you mean 'createUser'?",
-          "similar_methods": ["createUser"]
+          "similar_methods": [
+            "createUser"
+          ]
         }
       },
       "id": 6

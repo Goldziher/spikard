@@ -31,5 +31,10 @@
       "filter": ""
     }
   },
-  "tags": ["edge_cases", "empty_string", "query_params", "success"]
+  "tags": [
+    "edge_cases",
+    "empty_string",
+    "query_params",
+    "success"
+  ]
 }

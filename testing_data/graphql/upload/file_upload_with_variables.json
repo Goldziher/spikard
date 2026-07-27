@@ -68,5 +68,10 @@
       }
     }
   },
-  "tags": ["mutations", "file-upload", "multipart", "variables"]
+  "tags": [
+    "mutations",
+    "file-upload",
+    "multipart",
+    "variables"
+  ]
 }

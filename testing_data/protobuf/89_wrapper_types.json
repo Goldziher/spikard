@@ -8,20 +8,65 @@
       {
         "name": "WrapperRequest",
         "fields": [
-          { "name": "id", "type": "string", "number": 1, "label": "required" },
-          { "name": "optional_name", "type": "string", "number": 2, "label": "optional" },
-          { "name": "optional_count", "type": "int32", "number": 3, "label": "optional" },
-          { "name": "optional_enabled", "type": "bool", "number": 4, "label": "optional" }
+          {
+            "name": "id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "optional_name",
+            "type": "string",
+            "number": 2,
+            "label": "optional"
+          },
+          {
+            "name": "optional_count",
+            "type": "int32",
+            "number": 3,
+            "label": "optional"
+          },
+          {
+            "name": "optional_enabled",
+            "type": "bool",
+            "number": 4,
+            "label": "optional"
+          }
         ]
       },
       {
         "name": "WrapperResponse",
         "fields": [
-          { "name": "id", "type": "string", "number": 1, "label": "required" },
-          { "name": "name_present", "type": "bool", "number": 2, "label": "required" },
-          { "name": "name_value", "type": "string", "number": 3, "label": "optional" },
-          { "name": "count_present", "type": "bool", "number": 4, "label": "required" },
-          { "name": "count_value", "type": "int32", "number": 5, "label": "optional" }
+          {
+            "name": "id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "name_present",
+            "type": "bool",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "name_value",
+            "type": "string",
+            "number": 3,
+            "label": "optional"
+          },
+          {
+            "name": "count_present",
+            "type": "bool",
+            "number": 4,
+            "label": "required"
+          },
+          {
+            "name": "count_value",
+            "type": "int32",
+            "number": 5,
+            "label": "optional"
+          }
         ]
       }
     ],
@@ -62,5 +107,10 @@
       "count_value": 42
     }
   },
-  "tags": ["edge_cases", "well_known_types", "wrapper_types", "nullable"]
+  "tags": [
+    "edge_cases",
+    "well_known_types",
+    "wrapper_types",
+    "nullable"
+  ]
 }

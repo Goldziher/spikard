@@ -47,5 +47,10 @@
       }
     }
   },
-  "tags": ["subscriptions", "websocket", "variables", "required-args"]
+  "tags": [
+    "subscriptions",
+    "websocket",
+    "variables",
+    "required-args"
+  ]
 }

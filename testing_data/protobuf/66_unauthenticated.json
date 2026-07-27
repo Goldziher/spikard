@@ -7,25 +7,58 @@
     "messages": [
       {
         "name": "AuthRequest",
-        "fields": [{ "name": "action", "type": "string", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "action",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       },
       {
         "name": "AuthResponse",
-        "fields": [{ "name": "result", "type": "string", "number": 1, "label": "optional" }]
+        "fields": [
+          {
+            "name": "result",
+            "type": "string",
+            "number": 1,
+            "label": "optional"
+          }
+        ]
       }
     ],
     "services": [
       {
         "name": "AuthService",
-        "methods": [{ "name": "SecureOp", "input_type": "AuthRequest", "output_type": "AuthResponse" }]
+        "methods": [
+          {
+            "name": "SecureOp",
+            "input_type": "AuthRequest",
+            "output_type": "AuthResponse"
+          }
+        ]
       }
     ]
   },
-  "handler": { "service": "example.v1.AuthService", "method": "SecureOp" },
-  "request": {
-    "metadata": { "content-type": "application/grpc" },
-    "message": { "action": "sensitive" }
+  "handler": {
+    "service": "example.v1.AuthService",
+    "method": "SecureOp"
   },
-  "expected_response": { "status_code": "UNAUTHENTICATED" },
-  "tags": ["grpc_status", "auth", "error"]
+  "request": {
+    "metadata": {
+      "content-type": "application/grpc"
+    },
+    "message": {
+      "action": "sensitive"
+    }
+  },
+  "expected_response": {
+    "status_code": "UNAUTHENTICATED"
+  },
+  "tags": [
+    "grpc_status",
+    "auth",
+    "error"
+  ]
 }

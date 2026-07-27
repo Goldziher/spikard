@@ -29,11 +29,17 @@
     "errors": [
       {
         "message": "Insufficient permissions to access privateMetrics",
-        "path": ["dashboard", "privateMetrics"]
+        "path": [
+          "dashboard",
+          "privateMetrics"
+        ]
       },
       {
         "message": "Insufficient permissions to access adminSettings",
-        "path": ["dashboard", "adminSettings"]
+        "path": [
+          "dashboard",
+          "adminSettings"
+        ]
       }
     ]
   },
@@ -59,5 +65,11 @@
       "error_message": "Insufficient permissions to access adminSettings"
     }
   },
-  "tags": ["authorization", "nested-fields", "permission-chain", "partial-errors", "mixed-response"]
+  "tags": [
+    "authorization",
+    "nested-fields",
+    "permission-chain",
+    "partial-errors",
+    "mixed-response"
+  ]
 }

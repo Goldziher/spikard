@@ -12,7 +12,10 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": ["version", "data"],
+      "required": [
+        "version",
+        "data"
+      ],
       "properties": {
         "version": {
           "type": "string",
@@ -35,5 +38,10 @@
   "expected_response": {
     "status_code": 201
   },
-  "tags": ["json_bodies", "const", "validation", "success"]
+  "tags": [
+    "json_bodies",
+    "const",
+    "validation",
+    "success"
+  ]
 }

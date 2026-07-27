@@ -46,7 +46,11 @@
       "factory_fn": "resolve_product_by_sku_category"
     }
   },
-  "tags": ["federation", "compound-keys", "entity-resolution"],
+  "tags": [
+    "federation",
+    "compound-keys",
+    "entity-resolution"
+  ],
   "complexity_limit": 80,
   "depth_limit": 3
 }

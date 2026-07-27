@@ -24,7 +24,11 @@
         }
       },
       "additionalProperties": false,
-      "required": ["name", "price", "created_at"]
+      "required": [
+        "name",
+        "price",
+        "created_at"
+      ]
     }
   },
   "request": {
@@ -49,7 +53,10 @@
       "errors": [
         {
           "type": "datetime_parsing",
-          "loc": ["body", "created_at"],
+          "loc": [
+            "body",
+            "created_at"
+          ],
           "msg": "Input should be a valid datetime",
           "input": "not-a-datetime"
         }

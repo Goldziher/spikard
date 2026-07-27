@@ -49,7 +49,9 @@
       "email": "diana@example.com",
       "age": 28,
       "phone": "+1-555-0100",
-      "tags": ["admin"]
+      "tags": [
+        "admin"
+      ]
     },
     "expectedSuccess": false,
     "schemaConfig": "additionalPropertiesFalse",
@@ -111,7 +113,10 @@
     "params": {
       "name": "Frank Martin",
       "email": "frank@example.com",
-      "metadata": { "created": "2024-01-01", "updated": "2024-12-10" }
+      "metadata": {
+        "created": "2024-01-01",
+        "updated": "2024-12-10"
+      }
     },
     "expectedSuccess": false,
     "schemaConfig": "additionalPropertiesFalse",
@@ -121,7 +126,10 @@
       "data": {
         "fieldPath": "metadata",
         "constraint": "additionalProperties",
-        "value": { "created": "2024-01-01", "updated": "2024-12-10" },
+        "value": {
+          "created": "2024-01-01",
+          "updated": "2024-12-10"
+        },
         "details": "Additional property not allowed: metadata"
       }
     }

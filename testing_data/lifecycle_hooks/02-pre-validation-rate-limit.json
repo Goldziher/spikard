@@ -12,7 +12,9 @@
           "type": "string"
         }
       },
-      "required": ["data"]
+      "required": [
+        "data"
+      ]
     },
     "middleware": {
       "lifecycle_hooks": {

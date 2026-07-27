@@ -32,5 +32,11 @@
       "ip": "192.168.1.1"
     }
   },
-  "tags": ["query_params", "format", "ipv4", "validation", "success"]
+  "tags": [
+    "query_params",
+    "format",
+    "ipv4",
+    "validation",
+    "success"
+  ]
 }

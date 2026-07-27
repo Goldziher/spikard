@@ -26,14 +26,23 @@
           },
           "role": {
             "type": "string",
-            "enum": ["user", "admin"],
+            "enum": [
+              "user",
+              "admin"
+            ],
             "default": "user"
           }
         },
-        "required": ["name", "email", "password"]
+        "required": [
+          "name",
+          "email",
+          "password"
+        ]
       }
     },
-    "required": ["userData"]
+    "required": [
+      "userData"
+    ]
   },
   "result_schema": {
     "type": "object",
@@ -51,14 +60,24 @@
       },
       "role": {
         "type": "string",
-        "enum": ["admin", "user", "guest"]
+        "enum": [
+          "admin",
+          "user",
+          "guest"
+        ]
       },
       "createdAt": {
         "type": "string",
         "format": "date-time"
       }
     },
-    "required": ["id", "name", "email", "role", "createdAt"]
+    "required": [
+      "id",
+      "name",
+      "email",
+      "role",
+      "createdAt"
+    ]
   },
   "examples": [
     {

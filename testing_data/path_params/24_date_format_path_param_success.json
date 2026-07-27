@@ -29,5 +29,12 @@
       "date": "2025-10-30"
     }
   },
-  "tags": ["path_params", "date", "format", "iso8601", "validation", "success"]
+  "tags": [
+    "path_params",
+    "date",
+    "format",
+    "iso8601",
+    "validation",
+    "success"
+  ]
 }

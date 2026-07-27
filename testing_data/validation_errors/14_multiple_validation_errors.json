@@ -25,7 +25,11 @@
         }
       },
       "additionalProperties": false,
-      "required": ["name", "price", "quantity"]
+      "required": [
+        "name",
+        "price",
+        "quantity"
+      ]
     }
   },
   "request": {
@@ -50,7 +54,10 @@
       "errors": [
         {
           "type": "string_too_short",
-          "loc": ["body", "name"],
+          "loc": [
+            "body",
+            "name"
+          ],
           "msg": "String should have at least 3 characters",
           "input": "X",
           "ctx": {
@@ -59,7 +66,10 @@
         },
         {
           "type": "greater_than",
-          "loc": ["body", "price"],
+          "loc": [
+            "body",
+            "price"
+          ],
           "msg": "Input should be greater than 0",
           "input": -10,
           "ctx": {
@@ -68,7 +78,10 @@
         },
         {
           "type": "int_parsing",
-          "loc": ["body", "quantity"],
+          "loc": [
+            "body",
+            "quantity"
+          ],
           "msg": "Input should be a valid integer, unable to parse string as an integer",
           "input": "not_a_number"
         }

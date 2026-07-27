@@ -7,14 +7,36 @@
     "messages": [
       {
         "name": "UnicodeStreamRequest",
-        "fields": [{ "name": "filter", "type": "string", "number": 1, "label": "optional" }]
+        "fields": [
+          {
+            "name": "filter",
+            "type": "string",
+            "number": 1,
+            "label": "optional"
+          }
+        ]
       },
       {
         "name": "UnicodeStreamMessage",
         "fields": [
-          { "name": "id", "type": "int32", "number": 1, "label": "required" },
-          { "name": "text", "type": "string", "number": 2, "label": "required" },
-          { "name": "description", "type": "string", "number": 3, "label": "optional" }
+          {
+            "name": "id",
+            "type": "int32",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "text",
+            "type": "string",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "number": 3,
+            "label": "optional"
+          }
         ]
       }
     ],
@@ -77,5 +99,10 @@
     ],
     "message": "Unicode stream completed successfully"
   },
-  "tags": ["server_streaming", "unicode", "internationalization", "special_characters"]
+  "tags": [
+    "server_streaming",
+    "unicode",
+    "internationalization",
+    "special_characters"
+  ]
 }

@@ -42,7 +42,11 @@
       }
     }
   },
-  "tags": ["federation", "error-handling", "validation"],
+  "tags": [
+    "federation",
+    "error-handling",
+    "validation"
+  ],
   "complexity_limit": 50,
   "depth_limit": 3
 }

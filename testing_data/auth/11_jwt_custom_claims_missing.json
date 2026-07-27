@@ -24,7 +24,9 @@
         "enabled": true,
         "algorithm": "HS256",
         "secret": "test-secret-key-do-not-use-in-production",
-        "audience": ["https://api.example.com"],
+        "audience": [
+          "https://api.example.com"
+        ],
         "issuer": "https://auth.example.com"
       }
     }
@@ -45,6 +47,14 @@
       "detail": "Required claims 'role' and 'permissions' missing from JWT"
     }
   },
-  "tags": ["auth", "jwt", "custom_claims", "role", "permissions", "403", "security"],
+  "tags": [
+    "auth",
+    "jwt",
+    "custom_claims",
+    "role",
+    "permissions",
+    "403",
+    "security"
+  ],
   "notes": "Tests custom claim validation for authorization. Token is valid but missing required custom claims for admin access."
 }

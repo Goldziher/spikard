@@ -73,5 +73,10 @@
       }
     }
   },
-  "tags": ["edge-cases", "deep-nesting", "resolver-chains", "performance"]
+  "tags": [
+    "edge-cases",
+    "deep-nesting",
+    "resolver-chains",
+    "performance"
+  ]
 }

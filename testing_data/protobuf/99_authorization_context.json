@@ -8,23 +8,58 @@
       {
         "name": "AuthContext",
         "fields": [
-          { "name": "user_id", "type": "string", "number": 1, "label": "required" },
-          { "name": "roles", "type": "string", "number": 2, "label": "repeated" },
-          { "name": "permissions", "type": "string", "number": 3, "label": "repeated" }
+          {
+            "name": "user_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "roles",
+            "type": "string",
+            "number": 2,
+            "label": "repeated"
+          },
+          {
+            "name": "permissions",
+            "type": "string",
+            "number": 3,
+            "label": "repeated"
+          }
         ]
       },
       {
         "name": "PrivilegedRequest",
         "fields": [
-          { "name": "resource_id", "type": "string", "number": 1, "label": "required" },
-          { "name": "operation", "type": "string", "number": 2, "label": "required" }
+          {
+            "name": "resource_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "operation",
+            "type": "string",
+            "number": 2,
+            "label": "required"
+          }
         ]
       },
       {
         "name": "PrivilegedResponse",
         "fields": [
-          { "name": "authorized", "type": "bool", "number": 1, "label": "required" },
-          { "name": "message", "type": "string", "number": 2, "label": "optional" }
+          {
+            "name": "authorized",
+            "type": "bool",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "message",
+            "type": "string",
+            "number": 2,
+            "label": "optional"
+          }
         ]
       }
     ],
@@ -65,5 +100,10 @@
       "message": "Access granted with admin privileges"
     }
   },
-  "tags": ["auth", "authorization", "rbac", "security"]
+  "tags": [
+    "auth",
+    "authorization",
+    "rbac",
+    "security"
+  ]
 }

@@ -21,7 +21,9 @@
         }
       },
       "additionalProperties": false,
-      "required": ["files"]
+      "required": [
+        "files"
+      ]
     }
   },
   "request": {
@@ -45,7 +47,10 @@
   "expected_response": {
     "status_code": 200,
     "body": {
-      "filenames": ["file1.txt", "file2.txt"],
+      "filenames": [
+        "file1.txt",
+        "file2.txt"
+      ],
       "total_size": 35
     }
   },

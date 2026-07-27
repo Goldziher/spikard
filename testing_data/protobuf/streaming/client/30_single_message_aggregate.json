@@ -8,18 +8,53 @@
       {
         "name": "DataPoint",
         "fields": [
-          { "name": "id", "type": "string", "number": 1, "label": "required" },
-          { "name": "value", "type": "int32", "number": 2, "label": "required" },
-          { "name": "timestamp", "type": "int64", "number": 3, "label": "optional" }
+          {
+            "name": "id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "value",
+            "type": "int32",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "timestamp",
+            "type": "int64",
+            "number": 3,
+            "label": "optional"
+          }
         ]
       },
       {
         "name": "AggregateResponse",
         "fields": [
-          { "name": "count", "type": "int32", "number": 1, "label": "required" },
-          { "name": "total", "type": "int64", "number": 2, "label": "required" },
-          { "name": "average", "type": "double", "number": 3, "label": "required" },
-          { "name": "status", "type": "string", "number": 4, "label": "required" }
+          {
+            "name": "count",
+            "type": "int32",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "total",
+            "type": "int64",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "average",
+            "type": "double",
+            "number": 3,
+            "label": "required"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "number": 4,
+            "label": "required"
+          }
         ]
       }
     ],
@@ -63,5 +98,9 @@
       "status": "AGGREGATED"
     }
   },
-  "tags": ["client_streaming", "single_message", "aggregation"]
+  "tags": [
+    "client_streaming",
+    "single_message",
+    "aggregation"
+  ]
 }

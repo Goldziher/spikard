@@ -3,7 +3,12 @@
   "title": "JSON Bodies Test Fixture",
   "description": "Schema for JSON request/response body test fixtures",
   "type": "object",
-  "required": ["name", "description", "request", "expected_response"],
+  "required": [
+    "name",
+    "description",
+    "request",
+    "expected_response"
+  ],
   "properties": {
     "name": {
       "type": "string",
@@ -18,7 +23,12 @@
       "properties": {
         "framework": {
           "type": "string",
-          "enum": ["fastapi", "starlette", "litestar", "spikard"]
+          "enum": [
+            "fastapi",
+            "starlette",
+            "litestar",
+            "spikard"
+          ]
         },
         "test_file": {
           "type": "string"
@@ -31,11 +41,20 @@
     },
     "request": {
       "type": "object",
-      "required": ["method", "path"],
+      "required": [
+        "method",
+        "path"
+      ],
       "properties": {
         "method": {
           "type": "string",
-          "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"]
+          "enum": [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE"
+          ]
         },
         "path": {
           "type": "string"
@@ -53,7 +72,9 @@
     },
     "expected_response": {
       "type": "object",
-      "required": ["status_code"],
+      "required": [
+        "status_code"
+      ],
       "properties": {
         "status_code": {
           "type": "integer"

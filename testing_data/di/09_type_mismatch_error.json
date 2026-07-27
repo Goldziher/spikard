@@ -16,7 +16,9 @@
         "value_type": "string"
       }
     },
-    "handler_dependencies": ["config"],
+    "handler_dependencies": [
+      "config"
+    ],
     "expected_types": {
       "config": "object"
     }
@@ -44,5 +46,9 @@
     }
   },
   "notes": "Handler expects config to be an object but it's registered as a string. Type checking happens during resolution.",
-  "tags": ["dependency_injection", "error", "type_mismatch"]
+  "tags": [
+    "dependency_injection",
+    "error",
+    "type_mismatch"
+  ]
 }

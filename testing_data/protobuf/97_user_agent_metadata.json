@@ -7,13 +7,30 @@
     "messages": [
       {
         "name": "ClientRequest",
-        "fields": [{ "name": "action", "type": "string", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "action",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       },
       {
         "name": "ClientResponse",
         "fields": [
-          { "name": "client_type", "type": "string", "number": 1, "label": "optional" },
-          { "name": "client_version", "type": "string", "number": 2, "label": "optional" }
+          {
+            "name": "client_type",
+            "type": "string",
+            "number": 1,
+            "label": "optional"
+          },
+          {
+            "name": "client_version",
+            "type": "string",
+            "number": 2,
+            "label": "optional"
+          }
         ]
       }
     ],
@@ -39,7 +56,9 @@
       "content-type": "application/grpc",
       "user-agent": "grpc-client/1.2.3 (linux; amd64)"
     },
-    "message": { "action": "identify" }
+    "message": {
+      "action": "identify"
+    }
   },
   "expected_response": {
     "status_code": "OK",
@@ -48,5 +67,9 @@
       "client_version": "1.2.3"
     }
   },
-  "tags": ["metadata", "client_info", "observability"]
+  "tags": [
+    "metadata",
+    "client_info",
+    "observability"
+  ]
 }

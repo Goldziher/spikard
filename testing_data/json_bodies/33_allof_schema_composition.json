@@ -14,7 +14,9 @@
       "allOf": [
         {
           "type": "object",
-          "required": ["name"],
+          "required": [
+            "name"
+          ],
           "properties": {
             "name": {
               "type": "string"
@@ -23,7 +25,9 @@
         },
         {
           "type": "object",
-          "required": ["price"],
+          "required": [
+            "price"
+          ],
           "properties": {
             "price": {
               "type": "number",
@@ -45,5 +49,11 @@
   "expected_response": {
     "status_code": 201
   },
-  "tags": ["json_bodies", "allOf", "composition", "validation", "success"]
+  "tags": [
+    "json_bodies",
+    "allOf",
+    "composition",
+    "validation",
+    "success"
+  ]
 }

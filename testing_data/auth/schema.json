@@ -3,7 +3,12 @@
   "title": "Authentication Test Fixture",
   "description": "Schema for JWT and API key authentication test fixtures covering token validation, expiration, signatures, and API key validation",
   "type": "object",
-  "required": ["name", "description", "request", "expected_response"],
+  "required": [
+    "name",
+    "description",
+    "request",
+    "expected_response"
+  ],
   "properties": {
     "name": {
       "type": "string",
@@ -17,13 +22,17 @@
     },
     "category": {
       "type": "string",
-      "enum": ["auth"],
+      "enum": [
+        "auth"
+      ],
       "description": "Test category"
     },
     "source": {
       "type": "object",
       "description": "Source framework and test location",
-      "required": ["framework"],
+      "required": [
+        "framework"
+      ],
       "properties": {
         "framework": {
           "type": "string",
@@ -42,7 +51,10 @@
     "handler": {
       "type": "object",
       "description": "Handler configuration including middleware",
-      "required": ["route", "method"],
+      "required": [
+        "route",
+        "method"
+      ],
       "properties": {
         "route": {
           "type": "string",
@@ -50,7 +62,13 @@
         },
         "method": {
           "type": "string",
-          "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"],
+          "enum": [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE"
+          ],
           "description": "HTTP method"
         },
         "parameters": {
@@ -119,11 +137,22 @@
     "request": {
       "type": "object",
       "description": "HTTP request details",
-      "required": ["method", "path"],
+      "required": [
+        "method",
+        "path"
+      ],
       "properties": {
         "method": {
           "type": "string",
-          "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
+          "enum": [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "HEAD",
+            "OPTIONS"
+          ],
           "description": "HTTP method"
         },
         "path": {
@@ -146,7 +175,9 @@
     "expected_response": {
       "type": "object",
       "description": "Expected HTTP response",
-      "required": ["status_code"],
+      "required": [
+        "status_code"
+      ],
       "properties": {
         "status_code": {
           "type": "integer",

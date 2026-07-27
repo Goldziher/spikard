@@ -32,5 +32,12 @@
       "email": "user@example.com"
     }
   },
-  "tags": ["query_params", "string", "pattern", "email", "validation", "success"]
+  "tags": [
+    "query_params",
+    "string",
+    "pattern",
+    "email",
+    "validation",
+    "success"
+  ]
 }

@@ -487,11 +487,20 @@
             "minItems": 1,
             "items": {
               "type": "object",
-              "required": ["op", "a", "b"],
+              "required": [
+                "op",
+                "a",
+                "b"
+              ],
               "properties": {
                 "op": {
                   "type": "string",
-                  "enum": ["add", "subtract", "multiply", "divide"]
+                  "enum": [
+                    "add",
+                    "subtract",
+                    "multiply",
+                    "divide"
+                  ]
                 },
                 "a": {
                   "type": "number"
@@ -536,7 +545,10 @@
           ],
           "result": {
             "name": "results",
-            "value": [8, 8]
+            "value": [
+              8,
+              8
+            ]
           }
         }
       ]

@@ -27,13 +27,20 @@
           },
           "role": {
             "type": "string",
-            "enum": ["user", "admin", "guest"]
+            "enum": [
+              "user",
+              "admin",
+              "guest"
+            ]
           }
         },
         "minProperties": 1
       }
     },
-    "required": ["userId", "updates"]
+    "required": [
+      "userId",
+      "updates"
+    ]
   },
   "result_schema": {
     "type": "object",

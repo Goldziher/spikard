@@ -29,5 +29,10 @@
       "message": "The service is temporarily unavailable. Please try again later."
     }
   },
-  "tags": ["status_codes", "503", "service_unavailable", "error"]
+  "tags": [
+    "status_codes",
+    "503",
+    "service_unavailable",
+    "error"
+  ]
 }

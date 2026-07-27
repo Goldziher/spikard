@@ -29,5 +29,10 @@
       "error_message": "Invalid API key"
     }
   },
-  "tags": ["authentication", "api-key", "invalid-key", "error"]
+  "tags": [
+    "authentication",
+    "api-key",
+    "invalid-key",
+    "error"
+  ]
 }

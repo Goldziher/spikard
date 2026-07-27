@@ -19,12 +19,31 @@
   "streaming": {
     "content_type": "application/octet-stream",
     "chunks": [
-      { "type": "text", "value": "LOG:" },
-      { "type": "bytes", "base64": "AAECAw==" },
-      { "type": "text", "value": "|TAIL|" },
-      { "type": "bytes", "base64": "Bw==" },
-      { "type": "text", "value": "\\n" }
+      {
+        "type": "text",
+        "value": "LOG:"
+      },
+      {
+        "type": "bytes",
+        "base64": "AAECAw=="
+      },
+      {
+        "type": "text",
+        "value": "|TAIL|"
+      },
+      {
+        "type": "bytes",
+        "base64": "Bw=="
+      },
+      {
+        "type": "text",
+        "value": "\\n"
+      }
     ]
   },
-  "tags": ["streaming", "binary", "chunked"]
+  "tags": [
+    "streaming",
+    "binary",
+    "chunked"
+  ]
 }

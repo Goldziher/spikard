@@ -40,5 +40,10 @@
       }
     }
   },
-  "tags": ["authorization", "role-based", "admin-role", "allowed"]
+  "tags": [
+    "authorization",
+    "role-based",
+    "admin-role",
+    "allowed"
+  ]
 }

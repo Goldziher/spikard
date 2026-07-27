@@ -29,12 +29,17 @@
         "enabled": true,
         "algorithm": "HS256",
         "secret": "test-secret-key-do-not-use-in-production",
-        "audience": ["https://api.example.com"],
+        "audience": [
+          "https://api.example.com"
+        ],
         "issuer": "https://auth.example.com"
       },
       "api_key_auth": {
         "enabled": true,
-        "keys": ["sk_test_123456", "sk_test_789012"],
+        "keys": [
+          "sk_test_123456",
+          "sk_test_789012"
+        ],
         "header_name": "X-API-Key"
       }
     }
@@ -55,6 +60,15 @@
       "auth_method": "jwt"
     }
   },
-  "tags": ["auth", "jwt", "api_key", "multiple_schemes", "precedence", "security", "middleware", "success"],
+  "tags": [
+    "auth",
+    "jwt",
+    "api_key",
+    "multiple_schemes",
+    "precedence",
+    "security",
+    "middleware",
+    "success"
+  ],
   "notes": "When both auth schemes are configured and both credentials provided, JWT takes precedence. This allows for flexible authentication while maintaining clear precedence rules."
 }

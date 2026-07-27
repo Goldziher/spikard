@@ -6,26 +6,26 @@
  * validation delegated to the Rust core (invalid bodies -> 422 ProblemDetails).
  */
 
-import { z } from "zod";
-import { createRequire } from "module";
+import {createRequire} from "module";
+import {z} from "zod";
 
 const require = createRequire(import.meta.url);
-const { App } = require("../../../crates/spikard-node/app.cjs");
+const {App} = require("../../../crates/spikard-node/app.cjs");
 
 const CreateUser = z.object({
-  name: z.string(),
-  age: z.number(),
+  name : z.string(),
+  age : z.number(),
 });
 
 const app = new App();
 
-app.post("/users", { body: CreateUser }, async (req) => {
+app.post("/users", {body : CreateUser}, async (req) => {
   // The ergonomic layer must hand us the validated, typed request.
   // req.body is already a validated { name: string, age: number }
   console.log("Handler received:", req.body);
   return {
-    statusCode: 200,
-    content: req.body,
+    statusCode : 200,
+    content : req.body,
   };
 });
 

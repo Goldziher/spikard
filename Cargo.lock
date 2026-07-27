@@ -39,18 +39,18 @@ dependencies = [
 
 [[package]]
 name = "alef"
-version = "0.42.1"
-source = "git+https://github.com/xberg-io/alef?tag=v0.42.1#32da57e85e1d289109b23e13fc1e82f007d7f4c5"
+version = "0.48.4"
+source = "git+https://github.com/xberg-io/alef?tag=v0.48.4#ccb5c6c8640c89e359bddcd1c8b9d2ae612a40bd"
 dependencies = [
  "ahash",
  "anyhow",
- "base64 0.22.1",
+ "base64 0.23.0",
  "blake3",
  "chrono",
  "clap",
  "glob",
  "heck",
- "jsonschema 0.48.5",
+ "jsonschema",
  "minijinja",
  "quote",
  "rayon",
@@ -404,7 +404,7 @@ dependencies = [
  "serde_json",
  "serde_path_to_error",
  "serde_urlencoded",
- "sha1 0.10.7",
+ "sha1",
  "sync_wrapper",
  "tokio",
  "tokio-tungstenite",
@@ -2161,35 +2161,6 @@ dependencies = [
 
 [[package]]
 name = "jsonschema"
-version = "0.48.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f05a6cff806294a7699d48761d4ae2bdebab7fa2eef05e4a0b83320f0ff46901"
-dependencies = [
- "ahash",
- "bytecount",
- "data-encoding",
- "email_address",
- "fancy-regex",
- "fraction",
- "getrandom 0.3.4",
- "idna",
- "itoa",
- "jsonschema-regex 0.48.5",
- "jsonschema-value 0.48.5",
- "num-cmp",
- "num-traits",
- "percent-encoding",
- "referencing 0.48.5",
- "regex",
- "serde",
- "serde_json",
- "strum 0.28.0",
- "unicode-general-category",
- "uuid-simd",
-]
-
-[[package]]
-name = "jsonschema"
 version = "0.49.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9cc9116a0f75b7336e55eb2a2a0ddef86c37cadf02924a571751aa123d5a0290"
@@ -2203,12 +2174,12 @@ dependencies = [
  "getrandom 0.3.4",
  "idna",
  "itoa",
- "jsonschema-regex 0.49.1",
- "jsonschema-value 0.49.1",
+ "jsonschema-regex",
+ "jsonschema-value",
  "num-cmp",
  "num-traits",
  "percent-encoding",
- "referencing 0.49.1",
+ "referencing",
  "regex",
  "serde",
  "serde_json",
@@ -2219,34 +2190,11 @@ dependencies = [
 
 [[package]]
 name = "jsonschema-regex"
-version = "0.48.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "84708dd3f6c5327478a96f37378adb27deed6a626cf84d19de780d9e8ae84b17"
-dependencies = [
- "regex-syntax",
-]
-
-[[package]]
-name = "jsonschema-regex"
 version = "0.49.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "628a1f02bda4651d9a6088ee6386a92f0ee96255b0c99e9dfe1be91bf83bd838"
 dependencies = [
  "regex-syntax",
-]
-
-[[package]]
-name = "jsonschema-value"
-version = "0.48.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fd8c04ab4ce60e42c4e302d3bd9d184652bb56f212495d2eea23573bcbf72556"
-dependencies = [
- "ahash",
- "bytecount",
- "fraction",
- "num-cmp",
- "num-traits",
- "serde_json",
 ]
 
 [[package]]
@@ -3452,23 +3400,6 @@ dependencies = [
 
 [[package]]
 name = "referencing"
-version = "0.48.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "980e77f5cfffc592c0e7dfb6d20770a0b96a6ab94d403de7454ed9799505e4ba"
-dependencies = [
- "ahash",
- "fluent-uri",
- "getrandom 0.3.4",
- "hashbrown 0.17.1",
- "itoa",
- "micromap",
- "parking_lot",
- "percent-encoding",
- "serde_json",
-]
-
-[[package]]
-name = "referencing"
 version = "0.49.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "978badf4419c9d0e1bc6e7466e99277f829d768257670c46d88121ca75e34bf7"
@@ -3976,17 +3907,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sha1"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aacc4cc499359472b4abe1bf11d0b12e688af9a805fa5e3016f9a386dc2d0214"
-dependencies = [
- "cfg-if",
- "cpufeatures 0.3.0",
- "digest 0.11.3",
-]
-
-[[package]]
 name = "sha2"
 version = "0.10.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4094,7 +4014,7 @@ dependencies = [
 
 [[package]]
 name = "spikard"
-version = "0.17.0-rc.4"
+version = "0.17.0-rc.5"
 dependencies = [
  "anyhow",
  "async-graphql",
@@ -4115,7 +4035,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-alef"
-version = "0.17.0-rc.4"
+version = "0.17.0-rc.5"
 dependencies = [
  "alef",
  "spikard-alef-ext",
@@ -4124,7 +4044,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-alef-ext"
-version = "0.17.0-rc.4"
+version = "0.17.0-rc.5"
 dependencies = [
  "alef",
  "anyhow",
@@ -4137,7 +4057,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-cli"
-version = "0.17.0-rc.4"
+version = "0.17.0-rc.5"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -4170,7 +4090,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-codegen"
-version = "0.17.0-rc.4"
+version = "0.17.0-rc.5"
 dependencies = [
  "indexmap",
  "scythe-core",
@@ -4181,7 +4101,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-core"
-version = "0.17.0-rc.4"
+version = "0.17.0-rc.5"
 dependencies = [
  "anyhow",
  "base64 0.23.0",
@@ -4191,7 +4111,7 @@ dependencies = [
  "http",
  "indexmap",
  "jiff",
- "jsonschema 0.49.1",
+ "jsonschema",
  "regex",
  "serde",
  "serde_json",
@@ -4206,7 +4126,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-e2e-http"
-version = "0.17.0-rc.4"
+version = "0.17.0-rc.5"
 dependencies = [
  "alef",
  "anyhow",
@@ -4218,7 +4138,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-ffi"
-version = "0.17.0-rc.4"
+version = "0.17.0-rc.5"
 dependencies = [
  "ahash",
  "cbindgen",
@@ -4233,7 +4153,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-graphql"
-version = "0.17.0-rc.4"
+version = "0.17.0-rc.5"
 dependencies = [
  "async-graphql",
  "async-graphql-parser",
@@ -4255,7 +4175,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-http"
-version = "0.17.0-rc.4"
+version = "0.17.0-rc.5"
 dependencies = [
  "ahash",
  "anyhow",
@@ -4276,7 +4196,7 @@ dependencies = [
  "http-body",
  "http-body-util",
  "jiff",
- "jsonschema 0.49.1",
+ "jsonschema",
  "jsonwebtoken",
  "lazy_static",
  "lru",
@@ -4300,7 +4220,7 @@ dependencies = [
  "tower_governor",
  "tracing",
  "tracing-subscriber",
- "tungstenite 0.30.0",
+ "tungstenite",
  "url",
  "urlencoding",
  "utoipa",
@@ -4311,7 +4231,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-node"
-version = "0.17.0-rc.4"
+version = "0.17.0-rc.5"
 dependencies = [
  "axum",
  "napi",
@@ -4328,7 +4248,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-py"
-version = "0.17.0-rc.4"
+version = "0.17.0-rc.5"
 dependencies = [
  "axum",
  "pyo3",
@@ -4344,7 +4264,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-swift"
-version = "0.17.0-rc.4"
+version = "0.17.0-rc.5"
 dependencies = [
  "ahash",
  "async-trait",
@@ -4363,7 +4283,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-wasm"
-version = "0.17.0-rc.4"
+version = "0.17.0-rc.5"
 dependencies = [
  "axum",
  "futures",
@@ -4790,7 +4710,7 @@ dependencies = [
  "futures-util",
  "log",
  "tokio",
- "tungstenite 0.29.0",
+ "tungstenite",
 ]
 
 [[package]]
@@ -5068,23 +4988,7 @@ dependencies = [
  "httparse",
  "log",
  "rand 0.9.5",
- "sha1 0.10.7",
- "thiserror 2.0.19",
-]
-
-[[package]]
-name = "tungstenite"
-version = "0.30.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e48ac77174b19c110a50ab2128b24215ac9cb40e0e12e093fb602d175c569d22"
-dependencies = [
- "bytes",
- "data-encoding",
- "http",
- "httparse",
- "log",
- "rand 0.10.2",
- "sha1 0.11.0",
+ "sha1",
  "thiserror 2.0.19",
 ]
 

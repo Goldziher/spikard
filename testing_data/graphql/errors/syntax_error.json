@@ -31,5 +31,9 @@
     ]
   },
   "resolvers": {},
-  "tags": ["errors", "syntax", "validation"]
+  "tags": [
+    "errors",
+    "syntax",
+    "validation"
+  ]
 }

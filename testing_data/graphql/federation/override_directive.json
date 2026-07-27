@@ -68,7 +68,13 @@
     "phase_3": "Monitor metrics and verify correctness",
     "phase_4": "Remove @override and legacy implementation once safe"
   },
-  "tags": ["federation", "directives", "v2", "override", "migration"],
+  "tags": [
+    "federation",
+    "directives",
+    "v2",
+    "override",
+    "migration"
+  ],
   "complexity_limit": 150,
   "depth_limit": 4
 }

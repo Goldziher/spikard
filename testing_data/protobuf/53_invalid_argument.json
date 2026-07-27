@@ -7,22 +7,58 @@
     "messages": [
       {
         "name": "ArgRequest",
-        "fields": [{ "name": "value", "type": "int32", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "value",
+            "type": "int32",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       },
       {
         "name": "ArgResponse",
-        "fields": [{ "name": "message", "type": "string", "number": 1, "label": "optional" }]
+        "fields": [
+          {
+            "name": "message",
+            "type": "string",
+            "number": 1,
+            "label": "optional"
+          }
+        ]
       }
     ],
     "services": [
       {
         "name": "ArgService",
-        "methods": [{ "name": "Validate", "input_type": "ArgRequest", "output_type": "ArgResponse" }]
+        "methods": [
+          {
+            "name": "Validate",
+            "input_type": "ArgRequest",
+            "output_type": "ArgResponse"
+          }
+        ]
       }
     ]
   },
-  "handler": { "service": "example.v1.ArgService", "method": "Validate" },
-  "request": { "metadata": { "content-type": "application/grpc" }, "message": { "value": -999 } },
-  "expected_response": { "status_code": "INVALID_ARGUMENT" },
-  "tags": ["grpc_status", "validation", "error"]
+  "handler": {
+    "service": "example.v1.ArgService",
+    "method": "Validate"
+  },
+  "request": {
+    "metadata": {
+      "content-type": "application/grpc"
+    },
+    "message": {
+      "value": -999
+    }
+  },
+  "expected_response": {
+    "status_code": "INVALID_ARGUMENT"
+  },
+  "tags": [
+    "grpc_status",
+    "validation",
+    "error"
+  ]
 }

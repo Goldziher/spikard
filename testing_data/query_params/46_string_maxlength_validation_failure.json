@@ -37,7 +37,10 @@
       "errors": [
         {
           "type": "validation_error",
-          "loc": ["query", "term"],
+          "loc": [
+            "query",
+            "term"
+          ],
           "msg": "String length must not exceed 10",
           "ctx": {
             "max_length": 10,
@@ -47,5 +50,11 @@
       ]
     }
   },
-  "tags": ["query_params", "string", "maxLength", "validation", "error"]
+  "tags": [
+    "query_params",
+    "string",
+    "maxLength",
+    "validation",
+    "error"
+  ]
 }

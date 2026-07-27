@@ -42,7 +42,12 @@
         "message": "Invalid file type",
         "extensions": {
           "code": "INVALID_FILE_TYPE",
-          "expected": ["image/jpeg", "image/png", "image/gif", "image/webp"],
+          "expected": [
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp"
+          ],
           "received": "text/plain"
         }
       }
@@ -54,10 +59,20 @@
       "error_message": "Invalid file type",
       "error_extensions": {
         "code": "INVALID_FILE_TYPE",
-        "expected": ["image/jpeg", "image/png", "image/gif", "image/webp"],
+        "expected": [
+          "image/jpeg",
+          "image/png",
+          "image/gif",
+          "image/webp"
+        ],
         "received": "text/plain"
       }
     }
   },
-  "tags": ["mutations", "file-upload", "validation", "type-check"]
+  "tags": [
+    "mutations",
+    "file-upload",
+    "validation",
+    "type-check"
+  ]
 }

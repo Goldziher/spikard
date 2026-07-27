@@ -25,7 +25,10 @@
         "value_type": "object"
       }
     },
-    "handler_dependencies": ["db_pool", "cache"],
+    "handler_dependencies": [
+      "db_pool",
+      "cache"
+    ],
     "injection_strategy": "name"
   },
   "request": {
@@ -40,5 +43,10 @@
     }
   },
   "notes": "Python handler parameters (def handler(db_pool, cache)) are matched to dependency keys by name. No type hints required.",
-  "tags": ["dependency_injection", "python", "name_based", "language_specific"]
+  "tags": [
+    "dependency_injection",
+    "python",
+    "name_based",
+    "language_specific"
+  ]
 }

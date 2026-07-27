@@ -26,7 +26,11 @@
         }
       },
       "additionalProperties": false,
-      "required": ["name", "price", "tags"]
+      "required": [
+        "name",
+        "price",
+        "tags"
+      ]
     }
   },
   "request": {
@@ -38,7 +42,11 @@
     "body": {
       "name": "Item",
       "price": 10.0,
-      "tags": ["tag1", "tag2", 123]
+      "tags": [
+        "tag1",
+        "tag2",
+        123
+      ]
     }
   },
   "expected_response": {
@@ -51,7 +59,11 @@
       "errors": [
         {
           "type": "type_error",
-          "loc": ["body", "tags", "2"],
+          "loc": [
+            "body",
+            "tags",
+            "2"
+          ],
           "msg": "Input should be a valid unknown",
           "input": 123
         }

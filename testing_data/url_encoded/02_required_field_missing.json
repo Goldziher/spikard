@@ -11,7 +11,10 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": ["username", "password"],
+      "required": [
+        "username",
+        "password"
+      ],
       "properties": {
         "username": {
           "type": "string"
@@ -42,7 +45,10 @@
       "errors": [
         {
           "type": "missing",
-          "loc": ["body", "username"],
+          "loc": [
+            "body",
+            "username"
+          ],
           "msg": "Field required",
           "input": {
             "password": "secret"

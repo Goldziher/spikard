@@ -38,15 +38,25 @@
                 }
               },
               "additionalProperties": false,
-              "required": ["city", "zip_code"]
+              "required": [
+                "city",
+                "zip_code"
+              ]
             }
           },
           "additionalProperties": false,
-          "required": ["name", "address"]
+          "required": [
+            "name",
+            "address"
+          ]
         }
       },
       "additionalProperties": false,
-      "required": ["name", "price", "seller"]
+      "required": [
+        "name",
+        "price",
+        "seller"
+      ]
     }
   },
   "request": {
@@ -77,7 +87,12 @@
       "errors": [
         {
           "type": "string_too_short",
-          "loc": ["body", "seller", "address", "city"],
+          "loc": [
+            "body",
+            "seller",
+            "address",
+            "city"
+          ],
           "msg": "String should have at least 3 characters",
           "input": "SF",
           "ctx": {
@@ -86,7 +101,12 @@
         },
         {
           "type": "string_too_short",
-          "loc": ["body", "seller", "address", "zip_code"],
+          "loc": [
+            "body",
+            "seller",
+            "address",
+            "zip_code"
+          ],
           "msg": "String should have at least 5 characters",
           "input": "123",
           "ctx": {
@@ -95,7 +115,11 @@
         },
         {
           "type": "string_too_short",
-          "loc": ["body", "seller", "name"],
+          "loc": [
+            "body",
+            "seller",
+            "name"
+          ],
           "msg": "String should have at least 3 characters",
           "input": "Jo",
           "ctx": {

@@ -30,5 +30,12 @@
       "id": "e8b5a51d-11c8-3310-a6ab-367563f20686"
     }
   },
-  "tags": ["path_params", "uuid", "v3", "format", "validation", "success"]
+  "tags": [
+    "path_params",
+    "uuid",
+    "v3",
+    "format",
+    "validation",
+    "success"
+  ]
 }

@@ -34,12 +34,19 @@
               }
             },
             "additionalProperties": false,
-            "required": ["url", "name"]
+            "required": [
+              "url",
+              "name"
+            ]
           }
         }
       },
       "additionalProperties": false,
-      "required": ["name", "tags", "images"]
+      "required": [
+        "name",
+        "tags",
+        "images"
+      ]
     }
   },
   "request": {
@@ -50,7 +57,10 @@
     },
     "body": {
       "name": "Product Bundle",
-      "tags": ["electronics", "gadget"],
+      "tags": [
+        "electronics",
+        "gadget"
+      ],
       "images": [
         {
           "url": "https://example.com/img1.jpg",
@@ -67,7 +77,10 @@
     "status_code": 200,
     "body": {
       "name": "Product Bundle",
-      "tags": ["electronics", "gadget"],
+      "tags": [
+        "electronics",
+        "gadget"
+      ],
       "images": [
         {
           "url": "https://example.com/img1.jpg",

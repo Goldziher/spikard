@@ -22,19 +22,27 @@
       "db_pool": {
         "type": "factory",
         "factory": "create_db_pool",
-        "depends_on": ["app_config"],
+        "depends_on": [
+          "app_config"
+        ],
         "singleton": true,
         "cacheable": false
       },
       "request_context": {
         "type": "factory",
         "factory": "create_request_context",
-        "depends_on": ["db_pool"],
+        "depends_on": [
+          "db_pool"
+        ],
         "singleton": false,
         "cacheable": true
       }
     },
-    "handler_dependencies": ["app_config", "db_pool", "request_context"]
+    "handler_dependencies": [
+      "app_config",
+      "db_pool",
+      "request_context"
+    ]
   },
   "request": {
     "method": "GET",
@@ -49,5 +57,11 @@
     }
   },
   "notes": "app_config and db_pool are singletons (same across requests). request_context is per-request (new for each request). Multiple requests should show same pool_id but different context_id.",
-  "tags": ["dependency_injection", "singleton", "per-request", "mixed", "advanced"]
+  "tags": [
+    "dependency_injection",
+    "singleton",
+    "per-request",
+    "mixed",
+    "advanced"
+  ]
 }

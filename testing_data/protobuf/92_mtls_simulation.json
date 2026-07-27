@@ -7,13 +7,30 @@
     "messages": [
       {
         "name": "MtlsRequest",
-        "fields": [{ "name": "operation", "type": "string", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "operation",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       },
       {
         "name": "MtlsResponse",
         "fields": [
-          { "name": "verified", "type": "bool", "number": 1, "label": "required" },
-          { "name": "client_cn", "type": "string", "number": 2, "label": "optional" }
+          {
+            "name": "verified",
+            "type": "bool",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "client_cn",
+            "type": "string",
+            "number": 2,
+            "label": "optional"
+          }
         ]
       }
     ],
@@ -40,7 +57,9 @@
       "x-client-cert-cn": "client.example.com",
       "x-client-cert-fingerprint": "AB:CD:EF:12:34:56:78:90"
     },
-    "message": { "operation": "secure_read" }
+    "message": {
+      "operation": "secure_read"
+    }
   },
   "expected_response": {
     "status_code": "OK",
@@ -49,5 +68,10 @@
       "client_cn": "client.example.com"
     }
   },
-  "tags": ["auth", "mtls", "security", "tls"]
+  "tags": [
+    "auth",
+    "mtls",
+    "security",
+    "tls"
+  ]
 }

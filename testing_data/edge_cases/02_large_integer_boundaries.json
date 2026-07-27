@@ -23,7 +23,11 @@
         }
       },
       "additionalProperties": false,
-      "required": ["max_safe_int", "large_int", "negative_large"]
+      "required": [
+        "max_safe_int",
+        "large_int",
+        "negative_large"
+      ]
     }
   },
   "request": {

@@ -58,5 +58,9 @@
       }
     }
   },
-  "tags": ["validation", "input-types", "required-fields"]
+  "tags": [
+    "validation",
+    "input-types",
+    "required-fields"
+  ]
 }

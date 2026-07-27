@@ -12,11 +12,16 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": ["profile"],
+      "required": [
+        "profile"
+      ],
       "properties": {
         "profile": {
           "type": "object",
-          "required": ["name", "email"],
+          "required": [
+            "name",
+            "email"
+          ],
           "properties": {
             "name": {
               "type": "string",
@@ -44,5 +49,11 @@
   "expected_response": {
     "status_code": 201
   },
-  "tags": ["json_bodies", "nested", "object", "validation", "success"]
+  "tags": [
+    "json_bodies",
+    "nested",
+    "object",
+    "validation",
+    "success"
+  ]
 }

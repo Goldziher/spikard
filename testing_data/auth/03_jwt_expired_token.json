@@ -42,6 +42,15 @@
       "detail": "Token has expired"
     }
   },
-  "tags": ["auth", "jwt", "bearer", "security", "middleware", "error", "unauthorized", "expired"],
+  "tags": [
+    "auth",
+    "jwt",
+    "bearer",
+    "security",
+    "middleware",
+    "error",
+    "unauthorized",
+    "expired"
+  ],
   "notes": "Token expired in September 2020"
 }

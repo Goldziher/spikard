@@ -80,5 +80,11 @@
       ]
     }
   },
-  "tags": ["queries", "persisted-queries", "apq", "automatic", "cache"]
+  "tags": [
+    "queries",
+    "persisted-queries",
+    "apq",
+    "automatic",
+    "cache"
+  ]
 }

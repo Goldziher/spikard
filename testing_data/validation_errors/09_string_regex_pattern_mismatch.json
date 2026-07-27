@@ -35,7 +35,10 @@
       "errors": [
         {
           "type": "string_pattern_mismatch",
-          "loc": ["query", "q"],
+          "loc": [
+            "query",
+            "q"
+          ],
           "msg": "String should match pattern '^[a-zA-Z0-9_-]+$'",
           "input": "invalid!",
           "ctx": {

@@ -26,7 +26,12 @@
         }
       },
       "additionalProperties": false,
-      "required": ["name", "price", "description", "tax"]
+      "required": [
+        "name",
+        "price",
+        "description",
+        "tax"
+      ]
     }
   },
   "request": {

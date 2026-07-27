@@ -8,9 +8,13 @@
     "body_schema": {
       "type": "object",
       "properties": {
-        "note": { "type": "string" }
+        "note": {
+          "type": "string"
+        }
       },
-      "required": ["note"],
+      "required": [
+        "note"
+      ],
       "additionalProperties": false
     },
     "middleware": {
@@ -33,5 +37,8 @@
       "note": "small"
     }
   },
-  "tags": ["body_limit", "middleware"]
+  "tags": [
+    "body_limit",
+    "middleware"
+  ]
 }

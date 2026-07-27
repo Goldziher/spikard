@@ -82,6 +82,9 @@ linters:
     generated: lax
     rules:
       - linters:
+          - revive
+        path: (^|/)service\.go$
+      - linters:
           - goconst
         path: _test\.go
       - linters:

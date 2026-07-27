@@ -32,8 +32,19 @@
   "expected_response": {
     "status_code": 200,
     "body": {
-      "colors": ["red", "green", "blue"]
+      "colors": [
+        "red",
+        "green",
+        "blue"
+      ]
     }
   },
-  "tags": ["query_params", "array", "separator", "semicolon", "parsing", "success"]
+  "tags": [
+    "query_params",
+    "array",
+    "separator",
+    "semicolon",
+    "parsing",
+    "success"
+  ]
 }

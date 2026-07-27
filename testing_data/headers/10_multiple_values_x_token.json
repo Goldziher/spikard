@@ -16,7 +16,10 @@
   "expected_response": {
     "status_code": 200,
     "body": {
-      "X-Token values": ["foo", "bar"]
+      "X-Token values": [
+        "foo",
+        "bar"
+      ]
     }
   },
   "notes": "Multiple values with same header name",

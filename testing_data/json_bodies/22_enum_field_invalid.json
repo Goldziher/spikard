@@ -17,11 +17,18 @@
         },
         "category": {
           "type": "string",
-          "enum": ["electronics", "clothing", "books"]
+          "enum": [
+            "electronics",
+            "clothing",
+            "books"
+          ]
         }
       },
       "additionalProperties": false,
-      "required": ["name", "category"]
+      "required": [
+        "name",
+        "category"
+      ]
     }
   },
   "request": {
@@ -45,7 +52,10 @@
       "errors": [
         {
           "type": "enum",
-          "loc": ["body", "category"],
+          "loc": [
+            "body",
+            "category"
+          ],
           "msg": "Input should be 'electronics', 'clothing' or 'books'",
           "input": "furniture",
           "ctx": {

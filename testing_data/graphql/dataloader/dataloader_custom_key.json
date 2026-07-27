@@ -55,7 +55,11 @@
     "implementation": {
       "key_extraction": "slug parameter from resolver args",
       "cache_key_format": "slug_string",
-      "examples": ["laptop-pro-2025", "gaming-mouse-rgb", "wireless-keyboard"]
+      "examples": [
+        "laptop-pro-2025",
+        "gaming-mouse-rgb",
+        "wireless-keyboard"
+      ]
     }
   },
   "slug_based_scenarios": [
@@ -81,7 +85,11 @@
     },
     {
       "name": "Multiple slug lookups",
-      "slugs": ["laptop-pro-2025", "gaming-mouse-rgb", "wireless-keyboard"],
+      "slugs": [
+        "laptop-pro-2025",
+        "gaming-mouse-rgb",
+        "wireless-keyboard"
+      ],
       "db_queries": 1,
       "batching": true,
       "description": "All three product lookups batched into single query by slug"
@@ -101,5 +109,10 @@
       "description": "Combination of tenant ID and product slug for multi-tenancy"
     }
   ],
-  "tags": ["dataloader", "custom-keys", "slug-based", "non-id-lookups"]
+  "tags": [
+    "dataloader",
+    "custom-keys",
+    "slug-based",
+    "non-id-lookups"
+  ]
 }

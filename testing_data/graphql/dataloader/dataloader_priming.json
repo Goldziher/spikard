@@ -104,7 +104,11 @@
       "name": "Priming with new user not in list",
       "step_1": {
         "db_queries": 1,
-        "primed_users": ["user-1", "user-2", "user-3"]
+        "primed_users": [
+          "user-1",
+          "user-2",
+          "user-3"
+        ]
       },
       "step_2": {
         "operation": "user(id: \"user-999\")",
@@ -133,5 +137,10 @@
     "Works well with UI patterns like 'list then detail' views",
     "Consider memory overhead of keeping all loaded items in cache"
   ],
-  "tags": ["dataloader", "cache-priming", "performance", "bulk-to-individual"]
+  "tags": [
+    "dataloader",
+    "cache-priming",
+    "performance",
+    "bulk-to-individual"
+  ]
 }

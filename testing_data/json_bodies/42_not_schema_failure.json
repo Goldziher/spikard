@@ -12,12 +12,18 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": ["username"],
+      "required": [
+        "username"
+      ],
       "properties": {
         "username": {
           "type": "string",
           "not": {
-            "enum": ["admin", "root", "system"]
+            "enum": [
+              "admin",
+              "root",
+              "system"
+            ]
           }
         }
       }
@@ -40,12 +46,21 @@
       "errors": [
         {
           "type": "validation_error",
-          "loc": ["body", "username"],
+          "loc": [
+            "body",
+            "username"
+          ],
           "msg": "{\"enum\":[\"admin\",\"root\",\"system\"]} is not allowed for \"admin\"",
           "input": "admin"
         }
       ]
     }
   },
-  "tags": ["json_bodies", "not", "composition", "validation", "error"]
+  "tags": [
+    "json_bodies",
+    "not",
+    "composition",
+    "validation",
+    "error"
+  ]
 }

@@ -27,7 +27,9 @@
     "errors": [
       {
         "message": "Unauthorized: User role USER cannot access ADMIN field",
-        "path": ["secretData"],
+        "path": [
+          "secretData"
+        ],
         "extensions": {
           "code": "FORBIDDEN",
           "required_role": "ADMIN",
@@ -36,7 +38,9 @@
       },
       {
         "message": "Unauthorized: User role USER cannot access MODERATOR field",
-        "path": ["moderatorData"],
+        "path": [
+          "moderatorData"
+        ],
         "extensions": {
           "code": "FORBIDDEN",
           "required_role": "MODERATOR",
@@ -63,5 +67,9 @@
     "user_role": "USER",
     "authenticated": true
   },
-  "tags": ["directives", "authorization", "security"]
+  "tags": [
+    "directives",
+    "authorization",
+    "security"
+  ]
 }

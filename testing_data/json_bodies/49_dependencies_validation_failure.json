@@ -24,7 +24,9 @@
         }
       },
       "dependencies": {
-        "credit_card": ["billing_address"]
+        "credit_card": [
+          "billing_address"
+        ]
       }
     }
   },
@@ -46,7 +48,9 @@
       "errors": [
         {
           "type": "validation_error",
-          "loc": ["body"],
+          "loc": [
+            "body"
+          ],
           "msg": "\"billing_address\" is a required property",
           "input": {
             "name": "John Doe",
@@ -56,5 +60,10 @@
       ]
     }
   },
-  "tags": ["json_bodies", "dependencies", "validation", "error"]
+  "tags": [
+    "json_bodies",
+    "dependencies",
+    "validation",
+    "error"
+  ]
 }

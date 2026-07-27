@@ -59,7 +59,13 @@
                         ]
                       }
                     },
-                    "required": ["id", "email", "name", "active", "created_at"],
+                    "required": [
+                      "id",
+                      "email",
+                      "name",
+                      "active",
+                      "created_at"
+                    ],
                     "type": "object"
                   },
                   "type": "array"
@@ -75,7 +81,9 @@
           }
         ],
         "summary": "List users filtered by active status",
-        "tags": ["users"]
+        "tags": [
+          "users"
+        ]
       },
       "post": {
         "operationId": "CreateUser",
@@ -98,7 +106,10 @@
                     ]
                   }
                 },
-                "required": ["email", "name"],
+                "required": [
+                  "email",
+                  "name"
+                ],
                 "type": "object"
               }
             }
@@ -116,7 +127,9 @@
                       "type": "integer"
                     }
                   },
-                  "required": ["rows"],
+                  "required": [
+                    "rows"
+                  ],
                   "type": "object"
                 }
               }
@@ -130,7 +143,9 @@
           }
         ],
         "summary": "Create a new user",
-        "tags": ["users"]
+        "tags": [
+          "users"
+        ]
       }
     },
     "/users/{id}": {
@@ -178,7 +193,13 @@
                       ]
                     }
                   },
-                  "required": ["id", "email", "name", "active", "created_at"],
+                  "required": [
+                    "id",
+                    "email",
+                    "name",
+                    "active",
+                    "created_at"
+                  ],
                   "type": "object"
                 }
               }
@@ -195,7 +216,9 @@
           }
         ],
         "summary": "Fetch one user by id",
-        "tags": ["users"]
+        "tags": [
+          "users"
+        ]
       }
     }
   }

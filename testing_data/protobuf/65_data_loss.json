@@ -7,25 +7,58 @@
     "messages": [
       {
         "name": "DataRequest",
-        "fields": [{ "name": "id", "type": "string", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       },
       {
         "name": "DataResponse",
-        "fields": [{ "name": "status", "type": "string", "number": 1, "label": "optional" }]
+        "fields": [
+          {
+            "name": "status",
+            "type": "string",
+            "number": 1,
+            "label": "optional"
+          }
+        ]
       }
     ],
     "services": [
       {
         "name": "DataService",
-        "methods": [{ "name": "Process", "input_type": "DataRequest", "output_type": "DataResponse" }]
+        "methods": [
+          {
+            "name": "Process",
+            "input_type": "DataRequest",
+            "output_type": "DataResponse"
+          }
+        ]
       }
     ]
   },
-  "handler": { "service": "example.v1.DataService", "method": "Process" },
-  "request": {
-    "metadata": { "content-type": "application/grpc" },
-    "message": { "id": "dataloss-001" }
+  "handler": {
+    "service": "example.v1.DataService",
+    "method": "Process"
   },
-  "expected_response": { "status_code": "DATA_LOSS" },
-  "tags": ["grpc_status", "data_loss", "error"]
+  "request": {
+    "metadata": {
+      "content-type": "application/grpc"
+    },
+    "message": {
+      "id": "dataloss-001"
+    }
+  },
+  "expected_response": {
+    "status_code": "DATA_LOSS"
+  },
+  "tags": [
+    "grpc_status",
+    "data_loss",
+    "error"
+  ]
 }

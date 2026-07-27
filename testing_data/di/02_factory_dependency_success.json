@@ -18,7 +18,9 @@
         "cacheable": false
       }
     },
-    "handler_dependencies": ["timestamp_generator"]
+    "handler_dependencies": [
+      "timestamp_generator"
+    ]
   },
   "request": {
     "method": "GET",
@@ -31,5 +33,9 @@
     }
   },
   "notes": "Factory creates a new timestamp on each request. Response body should contain a timestamp field with any valid ISO-8601 datetime value.",
-  "tags": ["dependency_injection", "factory", "sync"]
+  "tags": [
+    "dependency_injection",
+    "factory",
+    "sync"
+  ]
 }

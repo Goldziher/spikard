@@ -48,5 +48,9 @@
     ]
   },
   "resolvers": {},
-  "tags": ["validation", "type-checking", "variables"]
+  "tags": [
+    "validation",
+    "type-checking",
+    "variables"
+  ]
 }

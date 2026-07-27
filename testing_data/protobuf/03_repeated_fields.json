@@ -7,26 +7,76 @@
       {
         "name": "Tag",
         "fields": [
-          { "name": "id", "type": "int32", "number": 1, "label": "required" },
-          { "name": "name", "type": "string", "number": 2, "label": "required" }
+          {
+            "name": "id",
+            "type": "int32",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "number": 2,
+            "label": "required"
+          }
         ]
       },
       {
         "name": "BlogPost",
         "fields": [
-          { "name": "id", "type": "int32", "number": 1, "label": "required" },
-          { "name": "title", "type": "string", "number": 2, "label": "required" },
-          { "name": "content", "type": "string", "number": 3, "label": "optional" },
-          { "name": "tags", "type": "Tag", "number": 4, "label": "repeated" },
-          { "name": "categories", "type": "string", "number": 5, "label": "repeated" }
+          {
+            "name": "id",
+            "type": "int32",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "content",
+            "type": "string",
+            "number": 3,
+            "label": "optional"
+          },
+          {
+            "name": "tags",
+            "type": "Tag",
+            "number": 4,
+            "label": "repeated"
+          },
+          {
+            "name": "categories",
+            "type": "string",
+            "number": 5,
+            "label": "repeated"
+          }
         ]
       },
       {
         "name": "CreatePostRequest",
         "fields": [
-          { "name": "title", "type": "string", "number": 1, "label": "required" },
-          { "name": "content", "type": "string", "number": 2, "label": "required" },
-          { "name": "tag_ids", "type": "int32", "number": 3, "label": "repeated" }
+          {
+            "name": "title",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "content",
+            "type": "string",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "tag_ids",
+            "type": "int32",
+            "number": 3,
+            "label": "repeated"
+          }
         ]
       }
     ],
@@ -56,7 +106,11 @@
     "message": {
       "title": "Getting Started with gRPC",
       "content": "This is a comprehensive guide to gRPC...",
-      "tag_ids": [1, 2, 3]
+      "tag_ids": [
+        1,
+        2,
+        3
+      ]
     }
   },
   "expected_response": {
@@ -66,11 +120,24 @@
       "title": "Getting Started with gRPC",
       "content": "This is a comprehensive guide to gRPC...",
       "tags": [
-        { "id": 1, "name": "gRPC" },
-        { "id": 2, "name": "Protocol Buffers" },
-        { "id": 3, "name": "RPC" }
+        {
+          "id": 1,
+          "name": "gRPC"
+        },
+        {
+          "id": 2,
+          "name": "Protocol Buffers"
+        },
+        {
+          "id": 3,
+          "name": "RPC"
+        }
       ],
-      "categories": ["tutorial", "programming", "networking"]
+      "categories": [
+        "tutorial",
+        "programming",
+        "networking"
+      ]
     }
   }
 }

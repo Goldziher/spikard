@@ -1,8 +1,8 @@
 // Auto-generated service API class
 
-const { ServerConfig } = require("./index");
-const { App: NativeApp, Method, RouteBuilder } = require("./index");
-const { appIntoRouter, appRun } = require("./index");
+const {ServerConfig} = require("./index");
+const {App : NativeApp, Method, RouteBuilder} = require("./index");
+const {appIntoRouter, appRun} = require("./index");
 /**
  * Spikard application builder.
  */
@@ -13,15 +13,11 @@ class App {
   /**
    * Create a new App instance.
    */
-  static new() {
-    return new App();
-  }
+  static new() { return new App(); }
   /**
    * Create a new application with the default server configuration.
    */
-  constructor() {
-    this._app = new NativeApp();
-  }
+  constructor() { this._app = new NativeApp(); }
   /**
    * Set the server configuration.
    */
@@ -36,7 +32,8 @@ class App {
    *
    * # Errors
    *
-   * Returns an error if route construction fails or if the handler registration fails.
+   * Returns an error if route construction fails or if the handler registration
+   * fails.
    */
   route(builder) {
     return (fn) => {
@@ -184,9 +181,7 @@ class App {
    *
    * Returns an error if server construction or execution fails.
    */
-  async run() {
-    return await this._app.nativeRun();
-  }
+  async run() { return await this._app.nativeRun(); }
   /**
    * Build the underlying Axum router.
    *
@@ -194,9 +189,11 @@ class App {
    *
    * Returns an error if server or router construction fails.
    */
-  into_router() {
-    return this._app.nativeIntoRouter();
-  }
+  into_router() { return this._app.nativeIntoRouter(); }
 }
 
-module.exports = { App, Method, RouteBuilder };
+module.exports = {
+  App,
+  Method,
+  RouteBuilder,
+};

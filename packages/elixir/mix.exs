@@ -4,7 +4,7 @@ defmodule Spikard.MixProject do
   def project do
     [
     app: :spikard,
-    version: "0.17.0-rc.4",
+    version: "0.17.0-rc.5",
     elixir: "~> 1.14",
     rustler_crates: [
     spikard_nif: [
@@ -34,7 +34,7 @@ defmodule Spikard.MixProject do
   defp deps do
     [
     {:jason, "~> 1.4"},
-    {:rustler, "~> 0.37", runtime: false},
+    {:rustler, "~> 0.38", runtime: false},
     {:rustler_precompiled, "~> 0.9"},
     {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
     {:ex_doc, "~> 0.40", only: :dev, runtime: false}

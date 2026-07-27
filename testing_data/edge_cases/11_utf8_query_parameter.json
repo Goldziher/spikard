@@ -31,5 +31,12 @@
       "term": "café"
     }
   },
-  "tags": ["edge_cases", "utf8", "unicode", "query_params", "encoding", "success"]
+  "tags": [
+    "edge_cases",
+    "utf8",
+    "unicode",
+    "query_params",
+    "encoding",
+    "success"
+  ]
 }

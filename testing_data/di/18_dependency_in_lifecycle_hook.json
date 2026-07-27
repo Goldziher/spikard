@@ -33,14 +33,18 @@
           {
             "name": "log_request",
             "handler": "log_incoming_request",
-            "dependencies": ["logger"]
+            "dependencies": [
+              "logger"
+            ]
           }
         ],
         "pre_handler": [
           {
             "name": "auth_check",
             "handler": "check_authentication",
-            "dependencies": ["auth_service"]
+            "dependencies": [
+              "auth_service"
+            ]
           }
         ]
       }
@@ -65,5 +69,10 @@
     }
   },
   "notes": "Lifecycle hooks can access dependencies. onRequest hook uses logger, preHandler uses auth_service. Dependencies are resolved before hooks execute.",
-  "tags": ["dependency_injection", "lifecycle_hooks", "integration", "advanced"]
+  "tags": [
+    "dependency_injection",
+    "lifecycle_hooks",
+    "integration",
+    "advanced"
+  ]
 }

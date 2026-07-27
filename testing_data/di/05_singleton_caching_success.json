@@ -18,7 +18,9 @@
         "cacheable": false
       }
     },
-    "handler_dependencies": ["app_counter"]
+    "handler_dependencies": [
+      "app_counter"
+    ]
   },
   "request": {
     "method": "GET",
@@ -32,5 +34,9 @@
     }
   },
   "notes": "Singleton=true means the same counter instance is used across all requests. The counter_id (UUID) will be the same for subsequent requests, and count will increment. Test should make multiple requests to verify singleton behavior.",
-  "tags": ["dependency_injection", "singleton", "caching"]
+  "tags": [
+    "dependency_injection",
+    "singleton",
+    "caching"
+  ]
 }

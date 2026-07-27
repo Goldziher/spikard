@@ -21,7 +21,10 @@
         }
       },
       "additionalProperties": false,
-      "required": ["name", "item_id"]
+      "required": [
+        "name",
+        "item_id"
+      ]
     }
   },
   "request": {

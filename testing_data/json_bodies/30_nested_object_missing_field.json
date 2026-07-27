@@ -12,11 +12,16 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": ["profile"],
+      "required": [
+        "profile"
+      ],
       "properties": {
         "profile": {
           "type": "object",
-          "required": ["name", "email"],
+          "required": [
+            "name",
+            "email"
+          ],
           "properties": {
             "name": {
               "type": "string",
@@ -50,7 +55,11 @@
       "errors": [
         {
           "type": "missing",
-          "loc": ["body", "profile", "email"],
+          "loc": [
+            "body",
+            "profile",
+            "email"
+          ],
           "msg": "Field required",
           "input": {
             "name": "John Doe"
@@ -59,5 +68,12 @@
       ]
     }
   },
-  "tags": ["json_bodies", "nested", "object", "validation", "error", "required"]
+  "tags": [
+    "json_bodies",
+    "nested",
+    "object",
+    "validation",
+    "error",
+    "required"
+  ]
 }

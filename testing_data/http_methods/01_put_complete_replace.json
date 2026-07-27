@@ -28,7 +28,13 @@
           "type": "boolean"
         }
       },
-      "required": ["description", "id", "in_stock", "name", "price"]
+      "required": [
+        "description",
+        "id",
+        "in_stock",
+        "name",
+        "price"
+      ]
     },
     "parameters": {
       "path": {

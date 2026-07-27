@@ -23,7 +23,10 @@
       "errors": [
         {
           "type": "string_too_short",
-          "loc": ["query", "name"],
+          "loc": [
+            "query",
+            "name"
+          ],
           "msg": "String should have at least 3 characters",
           "input": "ab",
           "ctx": {

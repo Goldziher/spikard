@@ -8,16 +8,41 @@
       {
         "name": "LargeStreamRequest",
         "fields": [
-          { "name": "request_id", "type": "string", "number": 1, "label": "required" },
-          { "name": "message_count", "type": "int32", "number": 2, "label": "required" }
+          {
+            "name": "request_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "message_count",
+            "type": "int32",
+            "number": 2,
+            "label": "required"
+          }
         ]
       },
       {
         "name": "LargeStreamMessage",
         "fields": [
-          { "name": "message_id", "type": "int32", "number": 1, "label": "required" },
-          { "name": "data", "type": "bytes", "number": 2, "label": "required" },
-          { "name": "size", "type": "int64", "number": 3, "label": "required" }
+          {
+            "name": "message_id",
+            "type": "int32",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "size",
+            "type": "int64",
+            "number": 3,
+            "label": "required"
+          }
         ]
       }
     ],
@@ -75,5 +100,9 @@
     ],
     "message": "3 large messages streamed successfully"
   },
-  "tags": ["server_streaming", "large_payloads", "performance"]
+  "tags": [
+    "server_streaming",
+    "large_payloads",
+    "performance"
+  ]
 }

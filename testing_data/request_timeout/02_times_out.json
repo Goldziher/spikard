@@ -19,5 +19,9 @@
   "expected_response": {
     "status_code": 408
   },
-  "tags": ["timeouts", "middleware", "slow"]
+  "tags": [
+    "timeouts",
+    "middleware",
+    "slow"
+  ]
 }

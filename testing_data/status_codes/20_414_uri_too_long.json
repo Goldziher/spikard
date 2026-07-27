@@ -21,5 +21,10 @@
     "status_code": 200,
     "body": {}
   },
-  "tags": ["status_codes", "414", "uri_length", "error"]
+  "tags": [
+    "status_codes",
+    "414",
+    "uri_length",
+    "error"
+  ]
 }

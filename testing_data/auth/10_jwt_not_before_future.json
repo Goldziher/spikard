@@ -44,6 +44,14 @@
       "detail": "JWT not valid yet, not before claim is in the future"
     }
   },
-  "tags": ["auth", "jwt", "nbf", "not_before", "validation", "401", "security"],
+  "tags": [
+    "auth",
+    "jwt",
+    "nbf",
+    "not_before",
+    "validation",
+    "401",
+    "security"
+  ],
   "notes": "Tests JWT nbf (not before) claim validation as specified in RFC 7519 section 4.1.5. Token is valid from year 2050."
 }

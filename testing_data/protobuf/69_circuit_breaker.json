@@ -7,11 +7,25 @@
     "messages": [
       {
         "name": "DownstreamRequest",
-        "fields": [{ "name": "request_id", "type": "string", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "request_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       },
       {
         "name": "DownstreamResponse",
-        "fields": [{ "name": "data", "type": "string", "number": 1, "label": "optional" }]
+        "fields": [
+          {
+            "name": "data",
+            "type": "string",
+            "number": 1,
+            "label": "optional"
+          }
+        ]
       }
     ],
     "services": [
@@ -32,8 +46,12 @@
     "method": "Query"
   },
   "request": {
-    "metadata": { "content-type": "application/grpc" },
-    "message": { "request_id": "circuit-001" }
+    "metadata": {
+      "content-type": "application/grpc"
+    },
+    "message": {
+      "request_id": "circuit-001"
+    }
   },
   "expected_response": {
     "status_code": "UNAVAILABLE",
@@ -45,5 +63,9 @@
       }
     }
   },
-  "tags": ["grpc_status", "unavailable", "circuit_breaker"]
+  "tags": [
+    "grpc_status",
+    "unavailable",
+    "circuit_breaker"
+  ]
 }

@@ -23,7 +23,11 @@
         }
       },
       "additionalProperties": false,
-      "required": ["name", "price", "in_stock"]
+      "required": [
+        "name",
+        "price",
+        "in_stock"
+      ]
     }
   },
   "request": {

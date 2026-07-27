@@ -32,7 +32,10 @@
     "errors": [
       {
         "message": "Field 'privateData' requires elevated permissions",
-        "path": ["user", "privateData"]
+        "path": [
+          "user",
+          "privateData"
+        ]
       }
     ]
   },
@@ -50,5 +53,10 @@
       "error_message": "Field 'privateData' requires elevated permissions"
     }
   },
-  "tags": ["authorization", "field-level", "partial-data", "mixed-response"]
+  "tags": [
+    "authorization",
+    "field-level",
+    "partial-data",
+    "mixed-response"
+  ]
 }

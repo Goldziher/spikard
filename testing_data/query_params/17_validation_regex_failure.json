@@ -23,7 +23,10 @@
       "errors": [
         {
           "type": "string_pattern_mismatch",
-          "loc": ["query", "item_query"],
+          "loc": [
+            "query",
+            "item_query"
+          ],
           "msg": "String should match pattern '^fixedquery$'",
           "input": "nonregexquery",
           "ctx": {

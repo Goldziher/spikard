@@ -33,7 +33,9 @@
     "errors": [
       {
         "message": "Validation error on input field 'name': String length must be between 3 and 50 characters (provided: 1)",
-        "path": ["createUser"],
+        "path": [
+          "createUser"
+        ],
         "extensions": {
           "code": "BAD_USER_INPUT",
           "field": "name",
@@ -91,5 +93,9 @@
       "expected_status": 200
     }
   ],
-  "tags": ["directives", "validation", "input-constraints"]
+  "tags": [
+    "directives",
+    "validation",
+    "input-constraints"
+  ]
 }

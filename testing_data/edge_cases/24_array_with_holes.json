@@ -13,7 +13,9 @@
     "content_type": "application/x-www-form-urlencoded",
     "body_schema": {
       "type": "object",
-      "required": ["items"],
+      "required": [
+        "items"
+      ],
       "properties": {
         "items": {
           "type": "array",
@@ -38,5 +40,11 @@
       "error": "Failed to parse URL-encoded form data: missing index, expected: 1 got 2"
     }
   },
-  "tags": ["edge_cases", "arrays", "sparse", "validation", "error"]
+  "tags": [
+    "edge_cases",
+    "arrays",
+    "sparse",
+    "validation",
+    "error"
+  ]
 }

@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.42.1"
+alef_version = "0.48.4"
 languages = [
   "python",
   "node",
@@ -53,6 +53,16 @@ exclude = [
   "crates/spikard-ffi/include/spikard.h",
   "crates/spikard-node/service_http_additions.ts",
   "packages/go/include/spikard.h",
+  # Generic build-artifact / vendored / generated excludes (aligned with xberg).
+  "**/_generated/**",
+  "**/coverage/**",
+  "**/pkg/**",
+  "**/.next/**",
+  "**/*.min.js",
+  "**/vendored/**",
+  "**/*.diff",
+  "**/*.patch",
+  "**/frb_generated.rs",
 ]
 file-safety-exclude = ["**/*.rs", "**/app_harness.*", "**/run_tests.*"]
 
@@ -62,7 +72,7 @@ remove-todos = false
 remove-fixme = false
 remove-docs = false
 use-default-ignores = true
-preserve-patterns = ["SAFETY", "HACK", "WORKAROUND", "NOTE"]
+preserve-patterns = ["SAFETY", "SPDX", "Copyright", "License", "licensed under", "HACK", "WORKAROUND", "NOTE"]
 
 [workspace.poly.typos.extend-words]
 bre = "bre"
@@ -105,6 +115,13 @@ wre = "wre"
 "e2e/**" = ["comment", "doc-comment", "D101", "D415", "no-loss-of-precision", "PTH100", "PTH118", "PTH120"]
 "test_apps/**" = ["comment", "doc-comment", "no-loss-of-precision"]
 "Package.swift" = ["comment", "doc-comment"]
+# Hand-written Python package modules with intentionally wide constructors/factories.
+"packages/python/spikard/app.py" = ["PLR0917"]
+"packages/python/spikard/datastructures.py" = ["PLR0917"]
+# Generated Python modules carry `# noqa: C901` from the emitter; mccabe (C901) is
+# intentionally absent from the curated ruff select, so the directive reads as unused.
+"packages/python/spikard/schema.py" = ["RUF100"]
+"packages/python/spikard/_internal/converters.py" = ["RUF100"]
 
 [workspace.poly.pyrefly-sub-configs]
 "**/app.py" = ["bad-argument-type"]
@@ -1054,7 +1071,7 @@ name = "Spikard"
 
 [crates.e2e.registry.packages.zig]
 name = "spikard"
-hash = "spikard-0.17.0-rc.4-PLACEHOLDER1234567890abcdefABCDEF0987654321"
+hash = "spikard-0.17.0-rc.5-PLACEHOLDER1234567890abcdefABCDEF0987654321"
 
 [crates.e2e.registry.packages.wasm]
 name = "@spikard/node-wasm"

@@ -7,13 +7,30 @@
     "messages": [
       {
         "name": "EmptyStreamRequest",
-        "fields": [{ "name": "request_id", "type": "string", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "request_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       },
       {
         "name": "EmptyStreamResponse",
         "fields": [
-          { "name": "id", "type": "int32", "number": 1, "label": "required" },
-          { "name": "value", "type": "string", "number": 2, "label": "required" }
+          {
+            "name": "id",
+            "type": "int32",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "value",
+            "type": "string",
+            "number": 2,
+            "label": "required"
+          }
         ]
       }
     ],
@@ -49,5 +66,9 @@
     "stream": [],
     "message": "Stream completed with no messages"
   },
-  "tags": ["server_streaming", "empty", "edge_cases"]
+  "tags": [
+    "server_streaming",
+    "empty",
+    "edge_cases"
+  ]
 }

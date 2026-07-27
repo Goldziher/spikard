@@ -12,7 +12,10 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": ["version", "data"],
+      "required": [
+        "version",
+        "data"
+      ],
       "properties": {
         "version": {
           "type": "string",
@@ -42,12 +45,20 @@
       "errors": [
         {
           "type": "validation_error",
-          "loc": ["body", "version"],
+          "loc": [
+            "body",
+            "version"
+          ],
           "msg": "\"1.0\" was expected",
           "input": "2.0"
         }
       ]
     }
   },
-  "tags": ["json_bodies", "const", "validation", "error"]
+  "tags": [
+    "json_bodies",
+    "const",
+    "validation",
+    "error"
+  ]
 }

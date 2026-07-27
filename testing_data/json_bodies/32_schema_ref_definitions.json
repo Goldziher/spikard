@@ -12,7 +12,9 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": ["product"],
+      "required": [
+        "product"
+      ],
       "properties": {
         "product": {
           "$ref": "#/definitions/Product"
@@ -21,7 +23,10 @@
       "definitions": {
         "Product": {
           "type": "object",
-          "required": ["name", "price"],
+          "required": [
+            "name",
+            "price"
+          ],
           "properties": {
             "name": {
               "type": "string"
@@ -48,5 +53,12 @@
   "expected_response": {
     "status_code": 201
   },
-  "tags": ["json_bodies", "schema_ref", "definitions", "composition", "validation", "success"]
+  "tags": [
+    "json_bodies",
+    "schema_ref",
+    "definitions",
+    "composition",
+    "validation",
+    "success"
+  ]
 }

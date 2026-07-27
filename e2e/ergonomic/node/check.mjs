@@ -9,11 +9,11 @@
  *   node e2e/ergonomic/node/check.mjs
  */
 
-import { spawn } from "child_process";
-import path from "path";
-import { fileURLToPath } from "url";
+import {spawn} from "child_process";
 import fs from "fs";
 import http from "node:http";
+import path from "path";
+import {fileURLToPath} from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const HERE = __dirname;
@@ -23,24 +23,20 @@ async function post(payload) {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify(payload);
     const options = {
-      hostname: "127.0.0.1",
-      port: PORT,
-      path: "/users",
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Content-Length": data.length,
+      hostname : "127.0.0.1",
+      port : PORT,
+      path : "/users",
+      method : "POST",
+      headers : {
+        "Content-Type" : "application/json",
+        "Content-Length" : data.length,
       },
     };
 
     const req = http.request(options, (res) => {
       let body = "";
-      res.on("data", (chunk) => {
-        body += chunk;
-      });
-      res.on("end", () => {
-        resolve([res.statusCode, body]);
-      });
+      res.on("data", (chunk) => { body += chunk; });
+      res.on("end", () => { resolve([ res.statusCode, body ]); });
     });
 
     req.on("error", reject);
@@ -58,12 +54,17 @@ async function main() {
   // The ergonomic App + its zod dependency live in the built node package.
   // Point NODE_PATH at the package's node_modules so the spawned server can
   // resolve `zod` and `@spikard/node/app.cjs`.
-  const packageNodeModules = path.resolve(HERE, "..", "..", "..", "crates", "spikard-node", "node_modules");
+  const packageNodeModules = path.resolve(HERE, "..", "..", "..", "crates",
+                                          "spikard-node", "node_modules");
 
   // Spawn server (stdio: inherit our log fd for both stdout and stderr).
-  const proc = spawn("node", [serverPath], {
-    stdio: ["ignore", log, log],
-    env: { ...process.env, NODE_PATH: `${packageNodeModules}${path.delimiter}${process.env.NODE_PATH || ""}` },
+  const proc = spawn("node", [ serverPath ], {
+    stdio : [ "ignore", log, log ],
+    env : {
+      ...process.env,
+      NODE_PATH : `${packageNodeModules}${path.delimiter}${
+          process.env.NODE_PATH || ""}`,
+    },
   });
 
   try {
@@ -74,7 +75,8 @@ async function main() {
       if (proc.exitCode !== null) {
         try {
           fs.closeSync(log);
-        } catch {}
+        } catch {
+        }
         const logContent = fs.readFileSync(logPath, "utf-8").slice(0, 2500);
         console.log(`FAIL: server exited early rc=${proc.exitCode}`);
         console.log(logContent);
@@ -82,7 +84,7 @@ async function main() {
       }
 
       try {
-        await post({ name: "warmup", age: 1 });
+        await post({name : "warmup", age : 1});
         bound = true;
         break;
       } catch (e) {
@@ -97,7 +99,7 @@ async function main() {
     }
 
     // Test valid request
-    const [status, body] = await post({ name: "Alice", age: 30 });
+    const [status, body] = await post({name : "Alice", age : 30});
     console.log(`VALID   -> ${status} ${body}`);
     if (status < 200 || status >= 300 || !body.includes("Alice")) {
       console.log("FAIL: valid request did not return the typed DTO");
@@ -105,10 +107,11 @@ async function main() {
     }
 
     // Test invalid request (age is string, not integer)
-    const [status2, body2] = await post({ name: "Bob", age: "not-a-number" });
+    const [status2, body2] = await post({name : "Bob", age : "not-a-number"});
     console.log(`INVALID -> ${status2} ${body2}`);
     if (status2 !== 422) {
-      console.log(`FAIL: invalid body expected 422 from the core, got ${status2}`);
+      console.log(
+          `FAIL: invalid body expected 422 from the core, got ${status2}`);
       return 1;
     }
 
@@ -132,13 +135,12 @@ async function main() {
     }
     try {
       fs.closeSync(log);
-    } catch {}
+    } catch {
+    }
   }
 }
 
-main()
-  .then((code) => process.exit(code))
-  .catch((err) => {
-    console.error("Fatal error:", err);
-    process.exit(1);
-  });
+main().then((code) => process.exit(code)).catch((err) => {
+  console.error("Fatal error:", err);
+  process.exit(1);
+});

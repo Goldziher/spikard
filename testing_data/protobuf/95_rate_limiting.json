@@ -7,11 +7,25 @@
     "messages": [
       {
         "name": "RateLimitRequest",
-        "fields": [{ "name": "id", "type": "string", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       },
       {
         "name": "RateLimitResponse",
-        "fields": [{ "name": "result", "type": "string", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "result",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       }
     ],
     "services": [
@@ -42,11 +56,15 @@
     "metadata": {
       "content-type": "application/grpc"
     },
-    "message": { "id": "rl-001" }
+    "message": {
+      "id": "rl-001"
+    }
   },
   "expected_response": {
     "status_code": "OK",
-    "message": { "result": "success" },
+    "message": {
+      "result": "success"
+    },
     "protobuf": {
       "metadata": {
         "x-ratelimit-limit": "10",
@@ -55,5 +73,8 @@
       }
     }
   },
-  "tags": ["security", "rate_limiting"]
+  "tags": [
+    "security",
+    "rate_limiting"
+  ]
 }

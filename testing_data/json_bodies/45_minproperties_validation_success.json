@@ -26,5 +26,10 @@
   "expected_response": {
     "status_code": 201
   },
-  "tags": ["json_bodies", "minProperties", "validation", "success"]
+  "tags": [
+    "json_bodies",
+    "minProperties",
+    "validation",
+    "success"
+  ]
 }

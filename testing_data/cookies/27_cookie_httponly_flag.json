@@ -35,5 +35,12 @@
   "expected_response": {
     "status_code": 200
   },
-  "tags": ["cookies", "httponly", "security", "xss_protection", "validation", "success"]
+  "tags": [
+    "cookies",
+    "httponly",
+    "security",
+    "xss_protection",
+    "validation",
+    "success"
+  ]
 }

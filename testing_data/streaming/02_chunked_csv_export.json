@@ -19,10 +19,22 @@
   "streaming": {
     "content_type": "text/csv",
     "chunks": [
-      { "type": "text", "value": "id,name,value\\n" },
-      { "type": "text", "value": "1,Alice,42\\n" },
-      { "type": "text", "value": "2,Bob,7\\n" }
+      {
+        "type": "text",
+        "value": "id,name,value\\n"
+      },
+      {
+        "type": "text",
+        "value": "1,Alice,42\\n"
+      },
+      {
+        "type": "text",
+        "value": "2,Bob,7\\n"
+      }
     ]
   },
-  "tags": ["streaming", "csv"]
+  "tags": [
+    "streaming",
+    "csv"
+  ]
 }

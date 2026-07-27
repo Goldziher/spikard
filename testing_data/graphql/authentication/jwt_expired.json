@@ -29,5 +29,10 @@
       "error_message": "Token expired"
     }
   },
-  "tags": ["authentication", "jwt", "expired-token", "error"]
+  "tags": [
+    "authentication",
+    "jwt",
+    "expired-token",
+    "error"
+  ]
 }

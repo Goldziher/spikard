@@ -31,5 +31,9 @@
       "content-encoding": "<<absent>>"
     }
   },
-  "tags": ["compression", "gzip", "min_size"]
+  "tags": [
+    "compression",
+    "gzip",
+    "min_size"
+  ]
 }

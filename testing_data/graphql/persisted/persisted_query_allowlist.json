@@ -60,5 +60,10 @@
       }
     }
   },
-  "tags": ["queries", "persisted-queries", "allowlist", "security"]
+  "tags": [
+    "queries",
+    "persisted-queries",
+    "allowlist",
+    "security"
+  ]
 }

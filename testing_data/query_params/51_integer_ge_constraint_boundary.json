@@ -32,5 +32,13 @@
       "offset": 0
     }
   },
-  "tags": ["query_params", "integer", "ge", "minimum", "boundary", "validation", "success"]
+  "tags": [
+    "query_params",
+    "integer",
+    "ge",
+    "minimum",
+    "boundary",
+    "validation",
+    "success"
+  ]
 }

@@ -9,7 +9,11 @@
     "path": "/graphql",
     "query": "query GetPosts($ids: [ID!]!) {\n  posts(ids: $ids) {\n    id\n    title\n    slug\n    publishedAt\n    tags\n  }\n}",
     "variables": {
-      "ids": ["1", "2", "3"]
+      "ids": [
+        "1",
+        "2",
+        "3"
+      ]
     },
     "headers": {
       "Content-Type": "application/json"
@@ -17,7 +21,11 @@
     "body": {
       "query": "query GetPosts($ids: [ID!]!) {\n  posts(ids: $ids) {\n    id\n    title\n    slug\n    publishedAt\n    tags\n  }\n}",
       "variables": {
-        "ids": ["1", "2", "3"]
+        "ids": [
+          "1",
+          "2",
+          "3"
+        ]
       }
     }
   },
@@ -30,21 +38,32 @@
           "title": "Getting Started with GraphQL",
           "slug": "getting-started-graphql",
           "publishedAt": "2025-01-10T08:00:00Z",
-          "tags": ["graphql", "tutorial"]
+          "tags": [
+            "graphql",
+            "tutorial"
+          ]
         },
         {
           "id": "2",
           "title": "Mastering DataLoader",
           "slug": "mastering-dataloader",
           "publishedAt": "2025-01-15T10:30:00Z",
-          "tags": ["dataloader", "performance", "optimization"]
+          "tags": [
+            "dataloader",
+            "performance",
+            "optimization"
+          ]
         },
         {
           "id": "3",
           "title": "GraphQL Best Practices",
           "slug": "graphql-best-practices",
           "publishedAt": "2025-01-20T14:45:00Z",
-          "tags": ["graphql", "best-practices", "patterns"]
+          "tags": [
+            "graphql",
+            "best-practices",
+            "patterns"
+          ]
         }
       ]
     }
@@ -58,7 +77,9 @@
   "dataloader_behavior": {
     "input_source": "query_variables",
     "batching_enabled": true,
-    "variables_passed": ["ids"],
+    "variables_passed": [
+      "ids"
+    ],
     "batch_size": 3,
     "cache_enabled": true,
     "db_queries_expected": 1,
@@ -68,7 +89,11 @@
     {
       "name": "Standard batch request",
       "variables": {
-        "ids": ["1", "2", "3"]
+        "ids": [
+          "1",
+          "2",
+          "3"
+        ]
       },
       "expected_batch_calls": 1,
       "expected_db_queries": 1
@@ -76,7 +101,9 @@
     {
       "name": "Single item request",
       "variables": {
-        "ids": ["1"]
+        "ids": [
+          "1"
+        ]
       },
       "expected_batch_calls": 1,
       "expected_db_queries": 1
@@ -84,11 +111,27 @@
     {
       "name": "Large batch request",
       "variables": {
-        "ids": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+        "ids": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10"
+        ]
       },
       "expected_batch_calls": 1,
       "expected_db_queries": 1
     }
   ],
-  "tags": ["dataloader", "variables", "batching", "parametrized-queries"]
+  "tags": [
+    "dataloader",
+    "variables",
+    "batching",
+    "parametrized-queries"
+  ]
 }

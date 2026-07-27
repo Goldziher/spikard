@@ -8,18 +8,53 @@
       {
         "name": "DefaultValueRequest",
         "fields": [
-          { "name": "id", "type": "int32", "number": 1, "label": "optional" },
-          { "name": "name", "type": "string", "number": 2, "label": "optional" },
-          { "name": "active", "type": "bool", "number": 3, "label": "optional" }
+          {
+            "name": "id",
+            "type": "int32",
+            "number": 1,
+            "label": "optional"
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "number": 2,
+            "label": "optional"
+          },
+          {
+            "name": "active",
+            "type": "bool",
+            "number": 3,
+            "label": "optional"
+          }
         ]
       },
       {
         "name": "DefaultValueResponse",
         "fields": [
-          { "name": "id", "type": "int32", "number": 1, "label": "required" },
-          { "name": "name", "type": "string", "number": 2, "label": "required" },
-          { "name": "active", "type": "bool", "number": 3, "label": "required" },
-          { "name": "has_id", "type": "bool", "number": 4, "label": "optional" }
+          {
+            "name": "id",
+            "type": "int32",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "active",
+            "type": "bool",
+            "number": 3,
+            "label": "required"
+          },
+          {
+            "name": "has_id",
+            "type": "bool",
+            "number": 4,
+            "label": "optional"
+          }
         ]
       }
     ],
@@ -57,5 +92,9 @@
       "has_id": true
     }
   },
-  "tags": ["edge_cases", "default_values", "proto3"]
+  "tags": [
+    "edge_cases",
+    "default_values",
+    "proto3"
+  ]
 }

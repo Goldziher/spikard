@@ -12,13 +12,18 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string"
         },
         "description": {
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     }
@@ -34,5 +39,10 @@
   "expected_response": {
     "status_code": 201
   },
-  "tags": ["json_bodies", "nullable", "validation", "success"]
+  "tags": [
+    "json_bodies",
+    "nullable",
+    "validation",
+    "success"
+  ]
 }

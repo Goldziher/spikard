@@ -131,8 +131,46 @@ impl Extension for HttpExtension {
         files: &mut Vec<GeneratedFile>,
         _env: &TemplateEnv,
     ) -> Result<()> {
-        if language == Language::Node {
-            emit::napi::wire_ergonomic_entry(files);
+        match language {
+            Language::Node => emit::napi::wire_ergonomic_entry(files),
+            // The alef ruby scaffold owns the Steepfile and ignores only the native
+            // module, but Steep also false-positives on the generated impl files
+            // because they reopen the native app class and call runtime-only methods
+            // that RBS cannot see, so we extend the Steepfile with the spikard impl
+            // ignores.
+            Language::Ruby => emit::magnus::wire_steep_ignores(files),
+            // The alef service-api Go file carries no generated header and has no
+            // extension hook, so golangci lints its alef-owned identifiers; we exclude
+            // the revive linter on that file in the scaffolded golangci config.
+            Language::Go => emit::go::wire_golangci_service_exclusion(files),
+            _ => {}
+        }
+        Ok(())
+    }
+
+    /// Inject the standard alef generated header into the Go binding files that
+    /// otherwise lack it (`service.go` from alef core, plus this extension's
+    /// `app.go` and `service_http_additions.go`).
+    ///
+    /// golangci-lint's `generated: lax` exclusion skips files carrying the header,
+    /// matching how `binding.go`/`native_setup.go` are already excluded. This clears
+    /// the `goconst`/`govet`/`revive` findings on those three files — including
+    /// `revive` var-naming on alef-core-owned code this repository does not control —
+    /// without editing alef or duplicating its templates.
+    ///
+    /// # Errors
+    ///
+    /// Never fails; always returns `Ok(())`.
+    fn transform_emitted_files(
+        &self,
+        _api: &ApiSurface,
+        _cfg: &ExtensionConfig,
+        language: Language,
+        files: &mut Vec<GeneratedFile>,
+        _env: &TemplateEnv,
+    ) -> Result<()> {
+        if language == Language::Go {
+            emit::go::add_generated_headers(files);
         }
         Ok(())
     }

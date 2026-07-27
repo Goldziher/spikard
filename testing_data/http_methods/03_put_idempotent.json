@@ -22,7 +22,11 @@
           "type": "number"
         }
       },
-      "required": ["id", "name", "price"]
+      "required": [
+        "id",
+        "name",
+        "price"
+      ]
     },
     "parameters": {
       "path": {

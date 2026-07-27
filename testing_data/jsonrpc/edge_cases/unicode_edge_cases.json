@@ -177,5 +177,9 @@
     }
   ],
   "error_cases": [],
-  "tags": ["unicode", "internationalization", "edge-cases"]
+  "tags": [
+    "unicode",
+    "internationalization",
+    "edge-cases"
+  ]
 }

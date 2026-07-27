@@ -8,17 +8,47 @@
       {
         "name": "OptionalInput",
         "fields": [
-          { "name": "request_id", "type": "string", "number": 1, "label": "optional" },
-          { "name": "data", "type": "string", "number": 2, "label": "optional" }
+          {
+            "name": "request_id",
+            "type": "string",
+            "number": 1,
+            "label": "optional"
+          },
+          {
+            "name": "data",
+            "type": "string",
+            "number": 2,
+            "label": "optional"
+          }
         ]
       },
       {
         "name": "DefaultResponse",
         "fields": [
-          { "name": "request_id", "type": "string", "number": 1, "label": "required" },
-          { "name": "message_count", "type": "int32", "number": 2, "label": "required" },
-          { "name": "result", "type": "string", "number": 3, "label": "required" },
-          { "name": "is_default", "type": "bool", "number": 4, "label": "required" }
+          {
+            "name": "request_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "message_count",
+            "type": "int32",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "number": 3,
+            "label": "required"
+          },
+          {
+            "name": "is_default",
+            "type": "bool",
+            "number": 4,
+            "label": "required"
+          }
         ]
       }
     ],
@@ -57,5 +87,10 @@
       "is_default": true
     }
   },
-  "tags": ["client_streaming", "empty_stream", "default_handling", "edge_cases"]
+  "tags": [
+    "client_streaming",
+    "empty_stream",
+    "default_handling",
+    "edge_cases"
+  ]
 }

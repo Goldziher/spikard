@@ -33,10 +33,17 @@
             "column": 5
           }
         ],
-        "path": ["user", "invalidField"]
+        "path": [
+          "user",
+          "invalidField"
+        ]
       }
     ]
   },
   "resolvers": {},
-  "tags": ["errors", "field-resolution", "validation"]
+  "tags": [
+    "errors",
+    "field-resolution",
+    "validation"
+  ]
 }

@@ -69,10 +69,20 @@
             },
             "role": {
               "type": "string",
-              "enum": ["admin", "user", "guest"]
+              "enum": [
+                "admin",
+                "user",
+                "guest"
+              ]
             }
           },
-          "required": ["id", "name", "email", "createdAt", "role"]
+          "required": [
+            "id",
+            "name",
+            "email",
+            "createdAt",
+            "role"
+          ]
         }
       },
       "errors": [
@@ -151,11 +161,18 @@
               },
               "role": {
                 "type": "string",
-                "enum": ["user", "admin"],
+                "enum": [
+                  "user",
+                  "admin"
+                ],
                 "default": "user"
               }
             },
-            "required": ["name", "email", "password"]
+            "required": [
+              "name",
+              "email",
+              "password"
+            ]
           }
         }
       ],
@@ -178,14 +195,24 @@
             },
             "role": {
               "type": "string",
-              "enum": ["admin", "user", "guest"]
+              "enum": [
+                "admin",
+                "user",
+                "guest"
+              ]
             },
             "createdAt": {
               "type": "string",
               "format": "date-time"
             }
           },
-          "required": ["id", "name", "email", "role", "createdAt"]
+          "required": [
+            "id",
+            "name",
+            "email",
+            "role",
+            "createdAt"
+          ]
         }
       },
       "errors": [
@@ -262,7 +289,11 @@
               },
               "role": {
                 "type": "string",
-                "enum": ["user", "admin", "guest"]
+                "enum": [
+                  "user",
+                  "admin",
+                  "guest"
+                ]
               }
             },
             "minProperties": 1
@@ -371,7 +402,10 @@
               "format": "uuid"
             }
           },
-          "required": ["success", "deletedId"]
+          "required": [
+            "success",
+            "deletedId"
+          ]
         }
       },
       "errors": [
@@ -429,7 +463,11 @@
               },
               "role": {
                 "type": "string",
-                "enum": ["admin", "user", "guest"]
+                "enum": [
+                  "admin",
+                  "user",
+                  "guest"
+                ]
               }
             }
           }
@@ -540,14 +578,24 @@
           },
           "role": {
             "type": "string",
-            "enum": ["admin", "user", "guest"]
+            "enum": [
+              "admin",
+              "user",
+              "guest"
+            ]
           },
           "createdAt": {
             "type": "string",
             "format": "date-time"
           }
         },
-        "required": ["id", "name", "email", "role", "createdAt"]
+        "required": [
+          "id",
+          "name",
+          "email",
+          "role",
+          "createdAt"
+        ]
       },
       "Error": {
         "type": "object",
@@ -562,7 +610,10 @@
             "type": "object"
           }
         },
-        "required": ["code", "message"]
+        "required": [
+          "code",
+          "message"
+        ]
       }
     }
   }

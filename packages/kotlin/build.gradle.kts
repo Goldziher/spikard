@@ -10,31 +10,30 @@ buildscript {
 
 plugins {
     `java-library`
-    kotlin("jvm") version "2.4.0"
+    kotlin("jvm") version "2.4.10"
     id("com.vanniktech.maven.publish") version "0.37.0"
-    id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
 }
 
 group = "dev.spikard"
-version = "0.17.0-rc.4"
+version = "0.17.0-rc.5"
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    api("net.java.dev.jna:jna:5.18.1")
+    api("net.java.dev.jna:jna:5.19.1")
     // Jackson is on the public surface because the alef-emitted Java records
     // include `@JsonProperty` annotations for serialization round-tripping.
-    api("com.fasterxml.jackson.core:jackson-annotations:2.19.0")
-    api("com.fasterxml.jackson.core:jackson-databind:2.19.0")
-    api("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.19.0")
+    api("com.fasterxml.jackson.core:jackson-annotations:2.22")
+    api("com.fasterxml.jackson.core:jackson-databind:2.22.1")
+    api("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.22.1")
     // jspecify ships the `@Nullable` / `@NonNull` annotations referenced by the
     // alef-emitted Java facade; it must be on the api configuration so Kotlin
     // consumers see the annotations on cross-language types.
     api("org.jspecify:jspecify:1.0.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
-    testImplementation("org.jetbrains.kotlin:kotlin-test:2.4.0")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:2.4.10")
     testImplementation("junit:junit:4.13.2")
 }
 
@@ -63,30 +62,6 @@ kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_21)
     }
-}
-
-// ktlint configuration — see .editorconfig for details. We deliberately exclude
-// the Java facade (which lives under `packages/java/`) and any build/generated
-// directories: ktlint cannot lint pure-Java files, and the FFM/Panama bindings
-// are kept in their own module.
-ktlint {
-    version.set("1.8.0")
-    outputToConsole.set(true)
-    ignoreFailures.set(false)
-    filter {
-        exclude { entry -> entry.file.toString().contains("/packages/java/") }
-        exclude { entry -> entry.file.toString().endsWith("/Spikard.kt") }
-        exclude("**/build/**")
-        exclude("**/generated/**")
-    }
-}
-
-// Gradle 9.x flags an output-overlap validation error between
-// :ktlintKotlinScriptCheck / :ktlintMainSourceSetCheck and :compileKotlin.
-// Declare the explicit dependency so Gradle accepts the task graph.
-tasks.matching { it.name == "compileKotlin" }.configureEach {
-    mustRunAfter("ktlintKotlinScriptCheck")
-    mustRunAfter("ktlintMainSourceSetCheck")
 }
 
 // JNA needs the native lib on java.library.path; default to the workspace

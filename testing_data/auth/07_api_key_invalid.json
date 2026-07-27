@@ -21,7 +21,10 @@
     "middleware": {
       "api_key_auth": {
         "enabled": true,
-        "keys": ["sk_test_123456", "sk_test_789012"],
+        "keys": [
+          "sk_test_123456",
+          "sk_test_789012"
+        ],
         "header_name": "X-API-Key"
       }
     }
@@ -42,5 +45,12 @@
       "detail": "The provided API key is not valid"
     }
   },
-  "tags": ["auth", "api_key", "security", "middleware", "error", "unauthorized"]
+  "tags": [
+    "auth",
+    "api_key",
+    "security",
+    "middleware",
+    "error",
+    "unauthorized"
+  ]
 }

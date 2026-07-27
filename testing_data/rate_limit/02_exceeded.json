@@ -22,5 +22,9 @@
   "expected_response": {
     "status_code": 429
   },
-  "tags": ["rate_limit", "too_many_requests", "middleware"]
+  "tags": [
+    "rate_limit",
+    "too_many_requests",
+    "middleware"
+  ]
 }

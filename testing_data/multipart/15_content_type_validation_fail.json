@@ -13,7 +13,11 @@
       "files": {
         "file": {
           "required": true,
-          "content_type": ["image/jpeg", "image/png", "image/gif"]
+          "content_type": [
+            "image/jpeg",
+            "image/png",
+            "image/gif"
+          ]
         }
       }
     },
@@ -45,7 +49,10 @@
     "validation_errors": [
       {
         "type": "validation_error",
-        "loc": ["files", "file"],
+        "loc": [
+          "files",
+          "file"
+        ],
         "msg": "Invalid content type 'application/x-sh'. Allowed types: image/jpeg, image/png, image/gif"
       }
     ]

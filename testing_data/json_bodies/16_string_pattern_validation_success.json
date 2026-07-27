@@ -20,7 +20,10 @@
         }
       },
       "additionalProperties": false,
-      "required": ["name", "sku"]
+      "required": [
+        "name",
+        "sku"
+      ]
     }
   },
   "request": {

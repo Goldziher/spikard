@@ -8,16 +8,41 @@
       {
         "name": "LongStreamRequest",
         "fields": [
-          { "name": "delay_ms", "type": "int32", "number": 1, "label": "required" },
-          { "name": "message_count", "type": "int32", "number": 2, "label": "required" }
+          {
+            "name": "delay_ms",
+            "type": "int32",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "message_count",
+            "type": "int32",
+            "number": 2,
+            "label": "required"
+          }
         ]
       },
       {
         "name": "LongStreamMessage",
         "fields": [
-          { "name": "sequence", "type": "int32", "number": 1, "label": "required" },
-          { "name": "data", "type": "string", "number": 2, "label": "required" },
-          { "name": "elapsed_ms", "type": "int64", "number": 3, "label": "required" }
+          {
+            "name": "sequence",
+            "type": "int32",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "data",
+            "type": "string",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "elapsed_ms",
+            "type": "int64",
+            "number": 3,
+            "label": "required"
+          }
         ]
       }
     ],
@@ -54,8 +79,16 @@
   "expected_response": {
     "status_code": "DEADLINE_EXCEEDED",
     "stream": [
-      { "sequence": 1, "data": "Message 1", "elapsed_ms": 500 },
-      { "sequence": 2, "data": "Message 2", "elapsed_ms": 1000 }
+      {
+        "sequence": 1,
+        "data": "Message 1",
+        "elapsed_ms": 500
+      },
+      {
+        "sequence": 2,
+        "data": "Message 2",
+        "elapsed_ms": 1000
+      }
     ],
     "error": {
       "code": 4,
@@ -64,5 +97,10 @@
     "partial_delivery": true,
     "note": "Stream was cancelled after exceeding the 1000ms timeout"
   },
-  "tags": ["server_streaming", "timeout", "deadline_exceeded", "error_handling"]
+  "tags": [
+    "server_streaming",
+    "timeout",
+    "deadline_exceeded",
+    "error_handling"
+  ]
 }

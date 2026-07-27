@@ -35,5 +35,11 @@
       "error_message": "Missing required permission: DELETE"
     }
   },
-  "tags": ["authorization", "permissions", "mutation", "denied", "error"]
+  "tags": [
+    "authorization",
+    "permissions",
+    "mutation",
+    "denied",
+    "error"
+  ]
 }

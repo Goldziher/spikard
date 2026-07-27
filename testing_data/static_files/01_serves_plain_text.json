@@ -32,5 +32,9 @@
       "cache-control": "public, max-age=60"
     }
   },
-  "tags": ["static_files", "serve_dir", "middleware"]
+  "tags": [
+    "static_files",
+    "serve_dir",
+    "middleware"
+  ]
 }

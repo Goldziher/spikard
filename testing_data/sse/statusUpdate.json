@@ -43,7 +43,12 @@
       },
       "status": {
         "description": "Current service status",
-        "enum": ["operational", "degraded", "outage", "maintenance"],
+        "enum": [
+          "operational",
+          "degraded",
+          "outage",
+          "maintenance"
+        ],
         "type": "string"
       },
       "timestamp": {
@@ -57,7 +62,12 @@
         "type": "string"
       }
     },
-    "required": ["type", "service", "status", "timestamp"],
+    "required": [
+      "type",
+      "service",
+      "status",
+      "timestamp"
+    ],
     "type": "object"
   }
 }

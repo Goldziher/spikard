@@ -79,5 +79,12 @@
       }
     }
   },
-  "tags": ["subscriptions", "websocket", "lifecycle", "unsubscribe", "cleanup", "stream-termination"]
+  "tags": [
+    "subscriptions",
+    "websocket",
+    "lifecycle",
+    "unsubscribe",
+    "cleanup",
+    "stream-termination"
+  ]
 }

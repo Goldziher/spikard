@@ -37,7 +37,10 @@
       "errors": [
         {
           "type": "validation_error",
-          "loc": ["headers", "authorization"],
+          "loc": [
+            "headers",
+            "authorization"
+          ],
           "msg": "Invalid Bearer token format",
           "ctx": {
             "pattern": "^Bearer [A-Za-z0-9-._~+/]+=*$",
@@ -47,5 +50,12 @@
       ]
     }
   },
-  "tags": ["headers", "authorization", "bearer_token", "security", "validation", "error"]
+  "tags": [
+    "headers",
+    "authorization",
+    "bearer_token",
+    "security",
+    "validation",
+    "error"
+  ]
 }

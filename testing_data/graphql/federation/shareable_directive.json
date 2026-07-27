@@ -48,10 +48,19 @@
   "metadata": {
     "federation_v2_feature": "@shareable",
     "subgraph_composition": "multiple_subgraphs",
-    "shared_fields": ["name", "description"],
+    "shared_fields": [
+      "name",
+      "description"
+    ],
     "use_case": "Field ownership across multiple subgraphs allowing independent resolution"
   },
-  "tags": ["federation", "directives", "v2", "shareable", "multi-subgraph"],
+  "tags": [
+    "federation",
+    "directives",
+    "v2",
+    "shareable",
+    "multi-subgraph"
+  ],
   "complexity_limit": 150,
   "depth_limit": 5
 }

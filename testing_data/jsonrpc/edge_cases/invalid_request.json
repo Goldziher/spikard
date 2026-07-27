@@ -129,5 +129,10 @@
       }
     }
   ],
-  "tags": ["invalid-request", "protocol", "edge-cases", "error-handling"]
+  "tags": [
+    "invalid-request",
+    "protocol",
+    "edge-cases",
+    "error-handling"
+  ]
 }

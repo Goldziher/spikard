@@ -8,13 +8,30 @@
       {
         "name": "UploadRequest",
         "fields": [
-          { "name": "data", "type": "string", "number": 1, "label": "required" },
-          { "name": "access_level", "type": "string", "number": 2, "label": "required" }
+          {
+            "name": "data",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "access_level",
+            "type": "string",
+            "number": 2,
+            "label": "required"
+          }
         ]
       },
       {
         "name": "UploadResponse",
-        "fields": [{ "name": "status", "type": "string", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "status",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       }
     ],
     "services": [
@@ -55,5 +72,11 @@
     },
     "note": "Client attempted to upload with admin access level but current caller lacks required permissions"
   },
-  "tags": ["grpc_status", "client_streaming", "auth", "error", "permission_denied"]
+  "tags": [
+    "grpc_status",
+    "client_streaming",
+    "auth",
+    "error",
+    "permission_denied"
+  ]
 }

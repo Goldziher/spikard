@@ -13,7 +13,11 @@
       "path": {
         "model_name": {
           "type": "string",
-          "enum": ["alexnet", "lenet", "resnet"]
+          "enum": [
+            "alexnet",
+            "lenet",
+            "resnet"
+          ]
         }
       }
     }

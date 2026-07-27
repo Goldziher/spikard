@@ -7,13 +7,30 @@
     "messages": [
       {
         "name": "AuthRequest",
-        "fields": [{ "name": "action", "type": "string", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "action",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       },
       {
         "name": "AuthResponse",
         "fields": [
-          { "name": "user_id", "type": "string", "number": 1, "label": "required" },
-          { "name": "action", "type": "string", "number": 2, "label": "required" }
+          {
+            "name": "user_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "action",
+            "type": "string",
+            "number": 2,
+            "label": "required"
+          }
         ]
       }
     ],
@@ -35,7 +52,9 @@
     "method": "SecureAction",
     "protobuf": {
       "metadata": {
-        "required_headers": ["authorization"]
+        "required_headers": [
+          "authorization"
+        ]
       }
     }
   },
@@ -44,7 +63,9 @@
       "content-type": "application/grpc",
       "authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyLTEyMyIsImlhdCI6MTUxNjIzOTAyMn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
     },
-    "message": { "action": "read" }
+    "message": {
+      "action": "read"
+    }
   },
   "expected_response": {
     "status_code": "OK",
@@ -53,5 +74,9 @@
       "action": "read"
     }
   },
-  "tags": ["auth", "jwt", "security"]
+  "tags": [
+    "auth",
+    "jwt",
+    "security"
+  ]
 }

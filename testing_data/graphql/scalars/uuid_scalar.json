@@ -29,7 +29,10 @@
         "parentId": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
         "name": "Primary Resource",
         "ownerId": "6ba7b811-9dad-11d1-80b4-00c04fd430c8",
-        "relatedIds": ["6ba7b812-9dad-11d1-80b4-00c04fd430c8", "6ba7b814-9dad-11d1-80b4-00c04fd430c8"]
+        "relatedIds": [
+          "6ba7b812-9dad-11d1-80b4-00c04fd430c8",
+          "6ba7b814-9dad-11d1-80b4-00c04fd430c8"
+        ]
       }
     }
   },
@@ -41,9 +44,16 @@
         "parentId": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
         "name": "Primary Resource",
         "ownerId": "6ba7b811-9dad-11d1-80b4-00c04fd430c8",
-        "relatedIds": ["6ba7b812-9dad-11d1-80b4-00c04fd430c8", "6ba7b814-9dad-11d1-80b4-00c04fd430c8"]
+        "relatedIds": [
+          "6ba7b812-9dad-11d1-80b4-00c04fd430c8",
+          "6ba7b814-9dad-11d1-80b4-00c04fd430c8"
+        ]
       }
     }
   },
-  "tags": ["scalars", "uuid", "custom-types"]
+  "tags": [
+    "scalars",
+    "uuid",
+    "custom-types"
+  ]
 }

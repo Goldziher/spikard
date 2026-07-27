@@ -43,6 +43,14 @@
       "detail": "Malformed JWT token: expected 3 parts separated by dots, found 2"
     }
   },
-  "tags": ["auth", "jwt", "malformed", "format", "validation", "401", "security"],
+  "tags": [
+    "auth",
+    "jwt",
+    "malformed",
+    "format",
+    "validation",
+    "401",
+    "security"
+  ],
   "notes": "Tests basic JWT format validation. Valid JWTs must have exactly 3 base64url-encoded parts separated by dots."
 }

@@ -22,7 +22,11 @@
           "type": "boolean"
         }
       },
-      "required": ["in_stock", "name", "price"]
+      "required": [
+        "in_stock",
+        "name",
+        "price"
+      ]
     },
     "parameters": {
       "path": {

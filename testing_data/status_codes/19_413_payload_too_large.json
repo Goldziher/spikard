@@ -34,5 +34,10 @@
       "message": "Request body size exceeds maximum allowed size of 1024 bytes"
     }
   },
-  "tags": ["status_codes", "413", "payload_size", "error"]
+  "tags": [
+    "status_codes",
+    "413",
+    "payload_size",
+    "error"
+  ]
 }

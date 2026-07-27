@@ -126,7 +126,10 @@ func (a *TypedApp) registerRoute(method, path string, dtoProto any, handler Type
 		var dto any
 		if dtoType != nil && bodyRaw != nil {
 			dtoVal := reflect.New(dtoType).Interface()
-			bodyJSON, _ := json.Marshal(bodyRaw)
+			bodyJSON, marshalErr := json.Marshal(bodyRaw)
+			if marshalErr != nil {
+				return nil, fmt.Errorf("failed to marshal body: %w", marshalErr)
+			}
 			if err := json.Unmarshal(bodyJSON, dtoVal); err != nil {
 				return nil, fmt.Errorf("failed to unmarshal DTO: %w", err)
 			}
@@ -143,13 +146,19 @@ func (a *TypedApp) registerRoute(method, path string, dtoProto any, handler Type
 				"title":  "InternalError",
 				"detail": err.Error(),
 			}
-			respJSON, _ := json.Marshal(errResp)
+			respJSON, marshalErr := json.Marshal(errResp)
+			if marshalErr != nil {
+				return nil, fmt.Errorf("failed to marshal error response: %w", marshalErr)
+			}
 			return respJSON, nil
 		}
 
 		// Convert result to response envelope
 		resp := toResponseEnvelope(result)
-		respJSON, _ := json.Marshal(resp)
+		respJSON, marshalErr := json.Marshal(resp)
+		if marshalErr != nil {
+			return nil, fmt.Errorf("failed to marshal response: %w", marshalErr)
+		}
 		return respJSON, nil
 	}
 

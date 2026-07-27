@@ -29,7 +29,11 @@
         }
       },
       "additionalProperties": false,
-      "required": ["name", "tags", "ratings"]
+      "required": [
+        "name",
+        "tags",
+        "ratings"
+      ]
     }
   },
   "request": {
@@ -40,16 +44,34 @@
     },
     "body": {
       "name": "Product",
-      "tags": ["electronics", "gadget", "new"],
-      "ratings": [4.5, 4.8, 5.0, 4.2]
+      "tags": [
+        "electronics",
+        "gadget",
+        "new"
+      ],
+      "ratings": [
+        4.5,
+        4.8,
+        5.0,
+        4.2
+      ]
     }
   },
   "expected_response": {
     "status_code": 200,
     "body": {
       "name": "Product",
-      "tags": ["electronics", "gadget", "new"],
-      "ratings": [4.5, 4.8, 5.0, 4.2]
+      "tags": [
+        "electronics",
+        "gadget",
+        "new"
+      ],
+      "ratings": [
+        4.5,
+        4.8,
+        5.0,
+        4.2
+      ]
     }
   },
   "notes": "Array of strings (tags) and array of floats (ratings)"

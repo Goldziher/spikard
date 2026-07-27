@@ -32,5 +32,12 @@
       "threshold": 0.0015
     }
   },
-  "tags": ["query_params", "float", "scientific_notation", "type_coercion", "edge_case", "success"]
+  "tags": [
+    "query_params",
+    "float",
+    "scientific_notation",
+    "type_coercion",
+    "edge_case",
+    "success"
+  ]
 }

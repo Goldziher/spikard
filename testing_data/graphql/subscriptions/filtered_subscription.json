@@ -47,5 +47,11 @@
       }
     }
   },
-  "tags": ["subscriptions", "websocket", "filters", "enums", "arguments"]
+  "tags": [
+    "subscriptions",
+    "websocket",
+    "filters",
+    "enums",
+    "arguments"
+  ]
 }

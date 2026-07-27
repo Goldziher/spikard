@@ -12,23 +12,33 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": ["user"],
+      "required": [
+        "user"
+      ],
       "properties": {
         "user": {
           "type": "object",
-          "required": ["profile"],
+          "required": [
+            "profile"
+          ],
           "properties": {
             "profile": {
               "type": "object",
-              "required": ["contact"],
+              "required": [
+                "contact"
+              ],
               "properties": {
                 "contact": {
                   "type": "object",
-                  "required": ["address"],
+                  "required": [
+                    "address"
+                  ],
                   "properties": {
                     "address": {
                       "type": "object",
-                      "required": ["street"],
+                      "required": [
+                        "street"
+                      ],
                       "properties": {
                         "street": {
                           "type": "string"
@@ -62,5 +72,11 @@
   "expected_response": {
     "status_code": 201
   },
-  "tags": ["json_bodies", "nested", "deep_nesting", "validation", "success"]
+  "tags": [
+    "json_bodies",
+    "nested",
+    "deep_nesting",
+    "validation",
+    "success"
+  ]
 }

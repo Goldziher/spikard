@@ -6,14 +6,36 @@
     "messages": [
       {
         "name": "GetProductRequest",
-        "fields": [{ "name": "product_id", "type": "int32", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "product_id",
+            "type": "int32",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       },
       {
         "name": "Product",
         "fields": [
-          { "name": "id", "type": "int32", "number": 1, "label": "required" },
-          { "name": "name", "type": "string", "number": 2, "label": "required" },
-          { "name": "price", "type": "double", "number": 3, "label": "required" }
+          {
+            "name": "id",
+            "type": "int32",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "price",
+            "type": "double",
+            "number": 3,
+            "label": "required"
+          }
         ]
       }
     ],

@@ -13,7 +13,9 @@
     "content_type": "application/x-www-form-urlencoded",
     "body_schema": {
       "type": "object",
-      "required": ["username"],
+      "required": [
+        "username"
+      ],
       "properties": {
         "username": {
           "type": "string",
@@ -40,7 +42,10 @@
       "errors": [
         {
           "type": "string_too_short",
-          "loc": ["body", "username"],
+          "loc": [
+            "body",
+            "username"
+          ],
           "msg": "String should have at least 3 characters",
           "input": "ab",
           "ctx": {
@@ -50,5 +55,10 @@
       ]
     }
   },
-  "tags": ["url_encoded", "minLength", "validation", "error"]
+  "tags": [
+    "url_encoded",
+    "minLength",
+    "validation",
+    "error"
+  ]
 }

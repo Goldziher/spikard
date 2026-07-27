@@ -44,7 +44,11 @@
       "factory_fn": "generate_parcel_label"
     }
   },
-  "tags": ["federation", "external-field", "field-reference"],
+  "tags": [
+    "federation",
+    "external-field",
+    "field-reference"
+  ],
   "complexity_limit": 60,
   "depth_limit": 3
 }

@@ -24,7 +24,9 @@
         "enabled": true,
         "algorithm": "HS256",
         "secret": "test-secret-key-do-not-use-in-production",
-        "audience": ["https://api.example.com"],
+        "audience": [
+          "https://api.example.com"
+        ],
         "issuer": "https://auth.example.com"
       }
     }
@@ -43,6 +45,13 @@
       "user_id": "user123"
     }
   },
-  "tags": ["auth", "jwt", "bearer", "security", "middleware", "success"],
+  "tags": [
+    "auth",
+    "jwt",
+    "bearer",
+    "security",
+    "middleware",
+    "success"
+  ],
   "notes": "Token expires in year 2050 to avoid expiration issues. Real signature should be computed with the secret."
 }

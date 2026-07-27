@@ -7,13 +7,30 @@
     "messages": [
       {
         "name": "MetadataStreamRequest",
-        "fields": [{ "name": "request_id", "type": "string", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "request_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       },
       {
         "name": "MetadataStreamMessage",
         "fields": [
-          { "name": "id", "type": "int32", "number": 1, "label": "required" },
-          { "name": "value", "type": "string", "number": 2, "label": "required" }
+          {
+            "name": "id",
+            "type": "int32",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "value",
+            "type": "string",
+            "number": 2,
+            "label": "required"
+          }
         ]
       }
     ],
@@ -54,9 +71,18 @@
       "x-message-count": "3"
     },
     "stream": [
-      { "id": 1, "value": "Message 1 with headers" },
-      { "id": 2, "value": "Message 2 with headers" },
-      { "id": 3, "value": "Message 3 with headers" }
+      {
+        "id": 1,
+        "value": "Message 1 with headers"
+      },
+      {
+        "id": 2,
+        "value": "Message 2 with headers"
+      },
+      {
+        "id": 3,
+        "value": "Message 3 with headers"
+      }
     ],
     "trailers": {
       "x-stream-processed": "true",
@@ -66,5 +92,10 @@
     },
     "message": "Stream completed with metadata and trailers"
   },
-  "tags": ["server_streaming", "metadata", "trailers", "headers"]
+  "tags": [
+    "server_streaming",
+    "metadata",
+    "trailers",
+    "headers"
+  ]
 }

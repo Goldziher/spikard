@@ -79,5 +79,10 @@
       }
     }
   ],
-  "tags": ["parse-error", "protocol", "edge-cases", "error-handling"]
+  "tags": [
+    "parse-error",
+    "protocol",
+    "edge-cases",
+    "error-handling"
+  ]
 }

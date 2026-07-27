@@ -38,7 +38,10 @@
       "errors": [
         {
           "type": "less_than_equal",
-          "loc": ["query", "limit"],
+          "loc": [
+            "query",
+            "limit"
+          ],
           "msg": "Input should be less than or equal to 100",
           "input": "101",
           "ctx": {

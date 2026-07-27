@@ -50,7 +50,10 @@
           "incremental": [
             {
               "label": "postsStream",
-              "path": ["user", "posts"],
+              "path": [
+                "user",
+                "posts"
+              ],
               "data": [
                 {
                   "id": "post-1",
@@ -71,7 +74,11 @@
           "incremental": [
             {
               "label": "postsStream",
-              "path": ["user", "posts", 1],
+              "path": [
+                "user",
+                "posts",
+                1
+              ],
               "data": {
                 "id": "post-2",
                 "title": "Advanced GraphQL Patterns",
@@ -90,7 +97,10 @@
           "incremental": [
             {
               "label": "followersStream",
-              "path": ["user", "followers"],
+              "path": [
+                "user",
+                "followers"
+              ],
               "data": [
                 {
                   "id": "user-456",
@@ -114,7 +124,11 @@
           "incremental": [
             {
               "label": "followersStream",
-              "path": ["user", "followers", 2],
+              "path": [
+                "user",
+                "followers",
+                2
+              ],
               "data": {
                 "id": "user-101",
                 "name": "Frank Miller"
@@ -187,9 +201,18 @@
       "time_to_first_byte_ms": 3,
       "total_streaming_time_ms": 17
     },
-    "deferred_fields": ["user.posts", "user.followers"]
+    "deferred_fields": [
+      "user.posts",
+      "user.followers"
+    ]
   },
   "depth_limit": 4,
   "complexity_limit": 15,
-  "tags": ["performance", "streaming", "defer", "incremental", "progressive-rendering"]
+  "tags": [
+    "performance",
+    "streaming",
+    "defer",
+    "incremental",
+    "progressive-rendering"
+  ]
 }

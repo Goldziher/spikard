@@ -29,11 +29,18 @@
             }
           },
           "additionalProperties": false,
-          "required": ["url", "name"]
+          "required": [
+            "url",
+            "name"
+          ]
         }
       },
       "additionalProperties": false,
-      "required": ["name", "price", "image"]
+      "required": [
+        "name",
+        "price",
+        "image"
+      ]
     }
   },
   "request": {

@@ -43,6 +43,14 @@
       "detail": "Authorization header must use Bearer scheme: 'Bearer <token>'"
     }
   },
-  "tags": ["auth", "jwt", "bearer", "format", "validation", "401", "security"],
+  "tags": [
+    "auth",
+    "jwt",
+    "bearer",
+    "format",
+    "validation",
+    "401",
+    "security"
+  ],
   "notes": "Tests Bearer token format validation per RFC 6750 section 2.1. Authorization header must include 'Bearer ' prefix."
 }

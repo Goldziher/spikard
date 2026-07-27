@@ -50,47 +50,70 @@
                                                 }
                                               },
                                               "additionalProperties": false,
-                                              "required": ["value", "depth"]
+                                              "required": [
+                                                "value",
+                                                "depth"
+                                              ]
                                             }
                                           },
                                           "additionalProperties": false,
-                                          "required": ["level10"]
+                                          "required": [
+                                            "level10"
+                                          ]
                                         }
                                       },
                                       "additionalProperties": false,
-                                      "required": ["level9"]
+                                      "required": [
+                                        "level9"
+                                      ]
                                     }
                                   },
                                   "additionalProperties": false,
-                                  "required": ["level8"]
+                                  "required": [
+                                    "level8"
+                                  ]
                                 }
                               },
                               "additionalProperties": false,
-                              "required": ["level7"]
+                              "required": [
+                                "level7"
+                              ]
                             }
                           },
                           "additionalProperties": false,
-                          "required": ["level6"]
+                          "required": [
+                            "level6"
+                          ]
                         }
                       },
                       "additionalProperties": false,
-                      "required": ["level5"]
+                      "required": [
+                        "level5"
+                      ]
                     }
                   },
                   "additionalProperties": false,
-                  "required": ["level4"]
+                  "required": [
+                    "level4"
+                  ]
                 }
               },
               "additionalProperties": false,
-              "required": ["level3"]
+              "required": [
+                "level3"
+              ]
             }
           },
           "additionalProperties": false,
-          "required": ["level2"]
+          "required": [
+            "level2"
+          ]
         }
       },
       "additionalProperties": false,
-      "required": ["level1"]
+      "required": [
+        "level1"
+      ]
     }
   },
   "request": {

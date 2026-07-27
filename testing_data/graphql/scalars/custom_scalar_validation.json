@@ -150,5 +150,12 @@
       }
     }
   },
-  "tags": ["scalars", "validation", "custom-types", "email", "url", "phone"]
+  "tags": [
+    "scalars",
+    "validation",
+    "custom-types",
+    "email",
+    "url",
+    "phone"
+  ]
 }

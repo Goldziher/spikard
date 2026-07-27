@@ -11,4 +11,10 @@ target :lib do
   # for the same surface lives in `sig/types.rbs`, so we steer Steep to the
   # RBS file by ignoring the .rb.
   ignore "lib/spikard/native.rb"
+  ignore "lib/spikard/service.rb"
+  ignore "lib/spikard/app.rb"
+  ignore "lib/spikard/params.rb"
+  ignore "lib/spikard/introspection.rb"
+  ignore "lib/spikard/errors.rb"
+  ignore "lib/spikard/service_http_additions.rb"
 end

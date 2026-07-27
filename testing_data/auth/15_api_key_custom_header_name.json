@@ -22,7 +22,10 @@
     "middleware": {
       "api_key_auth": {
         "enabled": true,
-        "keys": ["sk_test_123456", "sk_test_789012"],
+        "keys": [
+          "sk_test_123456",
+          "sk_test_789012"
+        ],
         "header_name": "X-API-Token"
       }
     }
@@ -41,6 +44,13 @@
       "data": "sensitive information"
     }
   },
-  "tags": ["auth", "api_key", "custom_header", "security", "middleware", "success"],
+  "tags": [
+    "auth",
+    "api_key",
+    "custom_header",
+    "security",
+    "middleware",
+    "success"
+  ],
   "notes": "Tests API key validation from custom header name. Demonstrates flexibility in header naming conventions."
 }

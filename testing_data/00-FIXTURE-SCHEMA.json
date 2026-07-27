@@ -3,19 +3,29 @@
   "title": "Spikard Test Fixture Schema",
   "description": "Unified schema for all Spikard test fixtures across parameter types, bodies, and validation scenarios",
   "type": "object",
-  "required": ["name", "description", "handler", "request", "expected_response"],
+  "required": [
+    "name",
+    "description",
+    "handler",
+    "request",
+    "expected_response"
+  ],
   "properties": {
     "name": {
       "type": "string",
       "description": "Human-readable test case name",
       "minLength": 1,
-      "examples": ["Required string query parameter - success"]
+      "examples": [
+        "Required string query parameter - success"
+      ]
     },
     "description": {
       "type": "string",
       "description": "What this test validates and why it matters",
       "minLength": 1,
-      "examples": ["Validates that required query parameters are properly extracted and validated"]
+      "examples": [
+        "Validates that required query parameters are properly extracted and validated"
+      ]
     },
     "category": {
       "type": "string",
@@ -53,7 +63,15 @@
       "properties": {
         "framework": {
           "type": "string",
-          "enum": ["spikard", "litestar", "fastapi", "fastify", "nestjs", "express", "robyn"],
+          "enum": [
+            "spikard",
+            "litestar",
+            "fastapi",
+            "fastify",
+            "nestjs",
+            "express",
+            "robyn"
+          ],
           "description": "Source framework (spikard = native test)"
         },
         "test_file": {
@@ -80,13 +98,22 @@
           "type": "string",
           "description": "Route pattern with parameter placeholders (e.g., '/users/{user_id:int}'). Used for HTTP handlers.",
           "minLength": 1,
-          "examples": ["/users/{user_id:int}", "/items", "/search"]
+          "examples": [
+            "/users/{user_id:int}",
+            "/items",
+            "/search"
+          ]
         },
         "method": {
           "type": "string",
           "description": "HTTP method (GET, POST, etc.) for HTTP handlers, or gRPC RPC method name (GetUser, CreateUser, etc.) for gRPC handlers",
           "minLength": 1,
-          "examples": ["GET", "POST", "GetUser", "CreateUser"]
+          "examples": [
+            "GET",
+            "POST",
+            "GetUser",
+            "CreateUser"
+          ]
         },
         "parameters": {
           "type": "object",
@@ -143,7 +170,10 @@
                   "format": "email"
                 }
               },
-              "required": ["name", "email"]
+              "required": [
+                "name",
+                "email"
+              ]
             }
           ]
         },
@@ -157,11 +187,17 @@
           "additionalProperties": {
             "type": "object",
             "description": "Dependency definition",
-            "required": ["type"],
+            "required": [
+              "type"
+            ],
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["value", "factory", "async_factory"],
+                "enum": [
+                  "value",
+                  "factory",
+                  "async_factory"
+                ],
                 "description": "Dependency type: value (static), factory (sync creation), async_factory (async creation)"
               },
               "value": {
@@ -169,7 +205,15 @@
               },
               "value_type": {
                 "type": "string",
-                "enum": ["string", "number", "integer", "boolean", "object", "array", "null"],
+                "enum": [
+                  "string",
+                  "number",
+                  "integer",
+                  "boolean",
+                  "object",
+                  "array",
+                  "null"
+                ],
                 "description": "Type of the value for type='value' dependencies"
               },
               "factory": {
@@ -201,7 +245,10 @@
               },
               "scope": {
                 "type": "string",
-                "enum": ["app", "route"],
+                "enum": [
+                  "app",
+                  "route"
+                ],
                 "description": "Scope of the dependency: app-level (default) or route-level override",
                 "default": "app"
               },
@@ -230,7 +277,12 @@
         },
         "injection_strategy": {
           "type": "string",
-          "enum": ["name", "type", "destructure", "keyword_args"],
+          "enum": [
+            "name",
+            "type",
+            "destructure",
+            "keyword_args"
+          ],
           "description": "Language-specific injection strategy: name (Python param names), type (Python type hints), destructure (Node/TS), keyword_args (Ruby)"
         },
         "expected_types": {
@@ -273,7 +325,10 @@
             "rate_limit": {
               "type": "object",
               "description": "Rate limiting configuration using tower-governor. Optional warmup directives instruct the generated tests to issue multiple requests before asserting the final status.",
-              "required": ["per_second", "burst"],
+              "required": [
+                "per_second",
+                "burst"
+              ],
               "properties": {
                 "per_second": {
                   "type": "integer",
@@ -309,7 +364,9 @@
             "request_timeout": {
               "type": "object",
               "description": "Request timeout configuration and simulated handler delay.",
-              "required": ["seconds"],
+              "required": [
+                "seconds"
+              ],
               "properties": {
                 "seconds": {
                   "type": "integer",
@@ -352,7 +409,10 @@
               "description": "Static directories to serve via tower-http ServeDir. The generator will create these files under the e2e apps.",
               "items": {
                 "type": "object",
-                "required": ["route_prefix", "files"],
+                "required": [
+                  "route_prefix",
+                  "files"
+                ],
                 "properties": {
                   "route_prefix": {
                     "type": "string",
@@ -375,7 +435,10 @@
                     "minItems": 1,
                     "items": {
                       "type": "object",
-                      "required": ["path", "content"],
+                      "required": [
+                        "path",
+                        "content"
+                      ],
                       "properties": {
                         "path": {
                           "type": "string",
@@ -438,7 +501,12 @@
                 "properties": {
                   "type": {
                     "type": "string",
-                    "enum": ["mock", "factory", "async_factory", "error"],
+                    "enum": [
+                      "mock",
+                      "factory",
+                      "async_factory",
+                      "error"
+                    ],
                     "description": "Resolver type: mock (static), factory (sync creation), async_factory (async creation), error (throws error)"
                   },
                   "return_value": {
@@ -478,7 +546,10 @@
           "type": "string",
           "description": "gRPC service name (fully qualified, e.g., 'example.v1.UserService'). Used for gRPC handlers.",
           "minLength": 1,
-          "examples": ["example.v1.UserService", "payment.PaymentService"]
+          "examples": [
+            "example.v1.UserService",
+            "payment.PaymentService"
+          ]
         },
         "protobuf": {
           "type": "object",
@@ -488,14 +559,20 @@
               "type": "string",
               "description": "Protobuf package name (e.g., 'example.v1', 'myservice')",
               "minLength": 1,
-              "examples": ["example.v1", "user.service", "payment"]
+              "examples": [
+                "example.v1",
+                "user.service",
+                "payment"
+              ]
             },
             "messages": {
               "type": "array",
               "description": "Protobuf message definitions",
               "items": {
                 "type": "object",
-                "required": ["name"],
+                "required": [
+                  "name"
+                ],
                 "properties": {
                   "name": {
                     "type": "string",
@@ -507,7 +584,11 @@
                     "description": "Field definitions for this message",
                     "items": {
                       "type": "object",
-                      "required": ["name", "type", "number"],
+                      "required": [
+                        "name",
+                        "type",
+                        "number"
+                      ],
                       "properties": {
                         "name": {
                           "type": "string",
@@ -518,7 +599,14 @@
                           "type": "string",
                           "description": "Field type: scalar type (int32, int64, uint32, uint64, sint32, sint64, fixed32, fixed64, sfixed32, sfixed64, float, double, bool, string, bytes) or message type name",
                           "minLength": 1,
-                          "examples": ["int32", "string", "bytes", "bool", "User", "Address"]
+                          "examples": [
+                            "int32",
+                            "string",
+                            "bytes",
+                            "bool",
+                            "User",
+                            "Address"
+                          ]
                         },
                         "number": {
                           "type": "integer",
@@ -528,7 +616,11 @@
                         },
                         "label": {
                           "type": "string",
-                          "enum": ["optional", "required", "repeated"],
+                          "enum": [
+                            "optional",
+                            "required",
+                            "repeated"
+                          ],
                           "description": "Field cardinality/label (proto3 uses optional/repeated, proto2 adds required)"
                         },
                         "oneof": {
@@ -544,7 +636,9 @@
                     "description": "Nested message definitions",
                     "items": {
                       "type": "object",
-                      "required": ["name"],
+                      "required": [
+                        "name"
+                      ],
                       "properties": {
                         "name": {
                           "type": "string",
@@ -565,7 +659,9 @@
                     "description": "Enum definitions within this message",
                     "items": {
                       "type": "object",
-                      "required": ["name"],
+                      "required": [
+                        "name"
+                      ],
                       "properties": {
                         "name": {
                           "type": "string",
@@ -575,7 +671,10 @@
                           "type": "array",
                           "items": {
                             "type": "object",
-                            "required": ["name", "number"],
+                            "required": [
+                              "name",
+                              "number"
+                            ],
                             "properties": {
                               "name": {
                                 "type": "string"
@@ -599,7 +698,10 @@
               "description": "gRPC service definitions",
               "items": {
                 "type": "object",
-                "required": ["name", "methods"],
+                "required": [
+                  "name",
+                  "methods"
+                ],
                 "properties": {
                   "name": {
                     "type": "string",
@@ -611,13 +713,22 @@
                     "description": "RPC method definitions",
                     "items": {
                       "type": "object",
-                      "required": ["name", "input_type", "output_type"],
+                      "required": [
+                        "name",
+                        "input_type",
+                        "output_type"
+                      ],
                       "properties": {
                         "name": {
                           "type": "string",
                           "description": "RPC method name (PascalCase convention)",
                           "minLength": 1,
-                          "examples": ["GetUser", "ListUsers", "CreateUser", "DeleteUser"]
+                          "examples": [
+                            "GetUser",
+                            "ListUsers",
+                            "CreateUser",
+                            "DeleteUser"
+                          ]
                         },
                         "input_type": {
                           "type": "string",
@@ -658,7 +769,12 @@
                   "items": {
                     "type": "string"
                   },
-                  "examples": [["authorization", "x-request-id"]]
+                  "examples": [
+                    [
+                      "authorization",
+                      "x-request-id"
+                    ]
+                  ]
                 },
                 "default_headers": {
                   "type": "object",
@@ -690,14 +806,21 @@
                 },
                 "compression": {
                   "type": "string",
-                  "enum": ["gzip", "deflate", "snappy", "none"],
+                  "enum": [
+                    "gzip",
+                    "deflate",
+                    "snappy",
+                    "none"
+                  ],
                   "description": "Default compression algorithm for requests/responses"
                 }
               },
               "additionalProperties": false
             }
           },
-          "required": ["package"],
+          "required": [
+            "package"
+          ],
           "additionalProperties": false
         }
       },
@@ -711,14 +834,20 @@
           "type": "string",
           "description": "Protobuf package name (e.g., 'example.v1', 'myservice')",
           "minLength": 1,
-          "examples": ["example.v1", "user.service", "payment"]
+          "examples": [
+            "example.v1",
+            "user.service",
+            "payment"
+          ]
         },
         "messages": {
           "type": "array",
           "description": "Protobuf message definitions",
           "items": {
             "type": "object",
-            "required": ["name"],
+            "required": [
+              "name"
+            ],
             "properties": {
               "name": {
                 "type": "string",
@@ -730,7 +859,11 @@
                 "description": "Field definitions for this message",
                 "items": {
                   "type": "object",
-                  "required": ["name", "type", "number"],
+                  "required": [
+                    "name",
+                    "type",
+                    "number"
+                  ],
                   "properties": {
                     "name": {
                       "type": "string",
@@ -741,7 +874,14 @@
                       "type": "string",
                       "description": "Field type: scalar type (int32, int64, uint32, uint64, sint32, sint64, fixed32, fixed64, sfixed32, sfixed64, float, double, bool, string, bytes) or message type name",
                       "minLength": 1,
-                      "examples": ["int32", "string", "bytes", "bool", "User", "Address"]
+                      "examples": [
+                        "int32",
+                        "string",
+                        "bytes",
+                        "bool",
+                        "User",
+                        "Address"
+                      ]
                     },
                     "number": {
                       "type": "integer",
@@ -751,7 +891,11 @@
                     },
                     "label": {
                       "type": "string",
-                      "enum": ["optional", "required", "repeated"],
+                      "enum": [
+                        "optional",
+                        "required",
+                        "repeated"
+                      ],
                       "description": "Field cardinality/label (proto3 uses optional/repeated, proto2 adds required)"
                     },
                     "oneof": {
@@ -767,7 +911,9 @@
                 "description": "Nested message definitions",
                 "items": {
                   "type": "object",
-                  "required": ["name"],
+                  "required": [
+                    "name"
+                  ],
                   "properties": {
                     "name": {
                       "type": "string",
@@ -788,7 +934,9 @@
                 "description": "Enum definitions within this message",
                 "items": {
                   "type": "object",
-                  "required": ["name"],
+                  "required": [
+                    "name"
+                  ],
                   "properties": {
                     "name": {
                       "type": "string",
@@ -798,7 +946,10 @@
                       "type": "array",
                       "items": {
                         "type": "object",
-                        "required": ["name", "number"],
+                        "required": [
+                          "name",
+                          "number"
+                        ],
                         "properties": {
                           "name": {
                             "type": "string"
@@ -822,7 +973,10 @@
           "description": "gRPC service definitions",
           "items": {
             "type": "object",
-            "required": ["name", "methods"],
+            "required": [
+              "name",
+              "methods"
+            ],
             "properties": {
               "name": {
                 "type": "string",
@@ -834,13 +988,22 @@
                 "description": "RPC method definitions",
                 "items": {
                   "type": "object",
-                  "required": ["name", "input_type", "output_type"],
+                  "required": [
+                    "name",
+                    "input_type",
+                    "output_type"
+                  ],
                   "properties": {
                     "name": {
                       "type": "string",
                       "description": "RPC method name (PascalCase convention)",
                       "minLength": 1,
-                      "examples": ["GetUser", "ListUsers", "CreateUser", "DeleteUser"]
+                      "examples": [
+                        "GetUser",
+                        "ListUsers",
+                        "CreateUser",
+                        "DeleteUser"
+                      ]
                     },
                     "input_type": {
                       "type": "string",
@@ -872,13 +1035,17 @@
           }
         }
       },
-      "required": ["package"],
+      "required": [
+        "package"
+      ],
       "additionalProperties": false
     },
     "streaming": {
       "type": "object",
       "description": "Streaming response metadata. When present, handlers should return a streaming response using these chunks.",
-      "required": ["chunks"],
+      "required": [
+        "chunks"
+      ],
       "properties": {
         "content_type": {
           "type": "string",
@@ -890,11 +1057,16 @@
           "description": "Ordered list of chunks yielded by the stream",
           "items": {
             "type": "object",
-            "required": ["type"],
+            "required": [
+              "type"
+            ],
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["text", "bytes"],
+                "enum": [
+                  "text",
+                  "bytes"
+                ],
                 "description": "Chunk payload type"
               },
               "value": {
@@ -917,7 +1089,9 @@
                   }
                 },
                 "then": {
-                  "required": ["value"]
+                  "required": [
+                    "value"
+                  ]
                 }
               },
               {
@@ -929,7 +1103,9 @@
                   }
                 },
                 "then": {
-                  "required": ["base64"]
+                  "required": [
+                    "base64"
+                  ]
                 }
               }
             ]
@@ -940,7 +1116,12 @@
     "background": {
       "type": "object",
       "description": "Background task metadata. When present, handlers enqueue fire-and-forget work and tests assert against a state endpoint.",
-      "required": ["state_path", "state_key", "value_field", "expected_state"],
+      "required": [
+        "state_path",
+        "state_key",
+        "value_field",
+        "expected_state"
+      ],
       "properties": {
         "state_path": {
           "type": "string",
@@ -969,13 +1150,22 @@
           "type": "string",
           "description": "HTTP method (GET, POST, etc.) for HTTP handlers, or gRPC RPC method name (GetUser, CreateUser, etc.) for gRPC handlers",
           "minLength": 1,
-          "examples": ["GET", "POST", "GetUser", "CreateUser"]
+          "examples": [
+            "GET",
+            "POST",
+            "GetUser",
+            "CreateUser"
+          ]
         },
         "path": {
           "type": "string",
           "description": "Request path without query string (required for HTTP requests)",
           "minLength": 1,
-          "examples": ["/users/123", "/items", "/search"]
+          "examples": [
+            "/users/123",
+            "/items",
+            "/search"
+          ]
         },
         "query_params": {
           "type": "object",
@@ -1016,7 +1206,10 @@
             {
               "page": 1,
               "limit": 10,
-              "tags": ["rust", "web"]
+              "tags": [
+                "rust",
+                "web"
+              ]
             }
           ]
         },
@@ -1057,7 +1250,10 @@
               "name": "Alice",
               "email": "alice@example.com"
             },
-            ["item1", "item2"],
+            [
+              "item1",
+              "item2"
+            ],
             "plain string"
           ]
         },
@@ -1068,7 +1264,11 @@
         "content_type": {
           "type": "string",
           "description": "Content-Type header (convenience field, also in headers)",
-          "examples": ["application/json", "multipart/form-data", "application/x-www-form-urlencoded"]
+          "examples": [
+            "application/json",
+            "multipart/form-data",
+            "application/x-www-form-urlencoded"
+          ]
         },
         "graphql": {
           "type": "object",
@@ -1091,7 +1291,9 @@
               "description": "GraphQL extensions object"
             }
           },
-          "required": ["query"],
+          "required": [
+            "query"
+          ],
           "additionalProperties": false
         },
         "metadata": {
@@ -1121,7 +1323,9 @@
     "expected_response": {
       "type": "object",
       "description": "Expected response. For HTTP: includes integer status_code. For gRPC: includes string status_code (gRPC status) and/or protobuf message.",
-      "required": ["status_code"],
+      "required": [
+        "status_code"
+      ],
       "properties": {
         "status_code": {
           "oneOf": [
@@ -1130,7 +1334,13 @@
               "description": "Expected HTTP status code (100-599)",
               "minimum": 100,
               "maximum": 599,
-              "examples": [200, 201, 400, 422, 500]
+              "examples": [
+                200,
+                201,
+                400,
+                422,
+                500
+              ]
             },
             {
               "type": "string",
@@ -1154,7 +1364,11 @@
                 "DATA_LOSS",
                 "UNAUTHENTICATED"
               ],
-              "examples": ["OK", "NOT_FOUND", "INVALID_ARGUMENT"]
+              "examples": [
+                "OK",
+                "NOT_FOUND",
+                "INVALID_ARGUMENT"
+              ]
             }
           ]
         },
@@ -1186,7 +1400,11 @@
           "description": "Expected validation errors for 422 responses (Spikard format)",
           "items": {
             "type": "object",
-            "required": ["loc", "msg", "type"],
+            "required": [
+              "loc",
+              "msg",
+              "type"
+            ],
             "properties": {
               "loc": {
                 "type": "array",
@@ -1228,7 +1446,20 @@
               "type": "string"
             }
           },
-          "examples": [[["config"], ["db_pool", "cache"], ["auth_service"]]]
+          "examples": [
+            [
+              [
+                "config"
+              ],
+              [
+                "db_pool",
+                "cache"
+              ],
+              [
+                "auth_service"
+              ]
+            ]
+          ]
         },
         "graphql": {
           "type": "object",
@@ -1246,7 +1477,9 @@
               "description": "GraphQL errors array (per GraphQL spec October 2021)",
               "items": {
                 "type": "object",
-                "required": ["message"],
+                "required": [
+                  "message"
+                ],
                 "properties": {
                   "message": {
                     "type": "string",
@@ -1257,10 +1490,19 @@
                     "description": "Source locations where error occurred",
                     "items": {
                       "type": "object",
-                      "required": ["line", "column"],
+                      "required": [
+                        "line",
+                        "column"
+                      ],
                       "properties": {
-                        "line": { "type": "integer", "minimum": 1 },
-                        "column": { "type": "integer", "minimum": 1 }
+                        "line": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
+                        "column": {
+                          "type": "integer",
+                          "minimum": 1
+                        }
                       }
                     }
                   },
@@ -1268,7 +1510,14 @@
                     "type": "array",
                     "description": "Path to field that caused error",
                     "items": {
-                      "oneOf": [{ "type": "string" }, { "type": "integer" }]
+                      "oneOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "integer"
+                        }
+                      ]
                     }
                   },
                   "extensions": {
@@ -1311,7 +1560,11 @@
                 "DATA_LOSS",
                 "UNAUTHENTICATED"
               ],
-              "examples": ["OK", "NOT_FOUND", "INVALID_ARGUMENT"]
+              "examples": [
+                "OK",
+                "NOT_FOUND",
+                "INVALID_ARGUMENT"
+              ]
             },
             "message": {
               "type": "object",
@@ -1359,7 +1612,19 @@
       "items": {
         "type": "string"
       },
-      "examples": [["validation", "required"], ["edge-case", "unicode"], ["performance"]]
+      "examples": [
+        [
+          "validation",
+          "required"
+        ],
+        [
+          "edge-case",
+          "unicode"
+        ],
+        [
+          "performance"
+        ]
+      ]
     },
     "skip": {
       "type": "boolean",
@@ -1410,7 +1675,11 @@
           "query": "rust web framework"
         }
       },
-      "tags": ["validation", "required", "string"]
+      "tags": [
+        "validation",
+        "required",
+        "string"
+      ]
     }
   ]
 }

@@ -29,5 +29,12 @@
       "timestamp": "2025-10-30T14:30:00Z"
     }
   },
-  "tags": ["path_params", "datetime", "format", "iso8601", "validation", "success"]
+  "tags": [
+    "path_params",
+    "datetime",
+    "format",
+    "iso8601",
+    "validation",
+    "success"
+  ]
 }

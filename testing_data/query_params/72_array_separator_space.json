@@ -32,8 +32,20 @@
   "expected_response": {
     "status_code": 200,
     "body": {
-      "keywords": ["rust", "web", "framework"]
+      "keywords": [
+        "rust",
+        "web",
+        "framework"
+      ]
     }
   },
-  "tags": ["query_params", "array", "separator", "space", "percent_encoding", "parsing", "success"]
+  "tags": [
+    "query_params",
+    "array",
+    "separator",
+    "space",
+    "percent_encoding",
+    "parsing",
+    "success"
+  ]
 }

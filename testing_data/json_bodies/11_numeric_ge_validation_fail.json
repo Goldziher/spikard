@@ -21,7 +21,10 @@
         }
       },
       "additionalProperties": false,
-      "required": ["name", "price"]
+      "required": [
+        "name",
+        "price"
+      ]
     }
   },
   "request": {
@@ -45,7 +48,10 @@
       "errors": [
         {
           "type": "greater_than_equal",
-          "loc": ["body", "price"],
+          "loc": [
+            "body",
+            "price"
+          ],
           "msg": "Input should be greater than or equal to 1",
           "input": 0.5,
           "ctx": {

@@ -7,7 +7,14 @@
     "messages": [
       {
         "name": "Message",
-        "fields": [{ "name": "data", "type": "string", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "data",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       }
     ],
     "services": [
@@ -39,5 +46,9 @@
     "status_code": "OK",
     "stream": []
   },
-  "tags": ["bidirectional_streaming", "empty", "both_streams"]
+  "tags": [
+    "bidirectional_streaming",
+    "empty",
+    "both_streams"
+  ]
 }

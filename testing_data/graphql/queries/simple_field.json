@@ -27,5 +27,8 @@
       "return_value": "Hello, World!"
     }
   },
-  "tags": ["queries", "scalar-fields"]
+  "tags": [
+    "queries",
+    "scalar-fields"
+  ]
 }

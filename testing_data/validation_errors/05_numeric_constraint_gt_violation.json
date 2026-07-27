@@ -23,7 +23,10 @@
       "errors": [
         {
           "type": "greater_than",
-          "loc": ["query", "price"],
+          "loc": [
+            "query",
+            "price"
+          ],
           "msg": "Input should be greater than 0",
           "input": "0",
           "ctx": {

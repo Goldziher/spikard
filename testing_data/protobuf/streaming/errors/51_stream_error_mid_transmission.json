@@ -7,13 +7,30 @@
     "messages": [
       {
         "name": "StreamRequest",
-        "fields": [{ "name": "count", "type": "int32", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "count",
+            "type": "int32",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       },
       {
         "name": "StreamResponse",
         "fields": [
-          { "name": "index", "type": "int32", "number": 1, "label": "required" },
-          { "name": "data", "type": "string", "number": 2, "label": "required" }
+          {
+            "name": "index",
+            "type": "int32",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "data",
+            "type": "string",
+            "number": 2,
+            "label": "required"
+          }
         ]
       }
     ],
@@ -47,14 +64,28 @@
   "expected_response": {
     "status_code": "INTERNAL",
     "stream": [
-      { "index": 1, "data": "Message 1" },
-      { "index": 2, "data": "Message 2" },
-      { "index": 3, "data": "Message 3" }
+      {
+        "index": 1,
+        "data": "Message 1"
+      },
+      {
+        "index": 2,
+        "data": "Message 2"
+      },
+      {
+        "index": 3,
+        "data": "Message 3"
+      }
     ],
     "error": {
       "code": 13,
       "message": "Stream processing error at index 3"
     }
   },
-  "tags": ["server_streaming", "error_handling", "partial_stream", "mid_transmission"]
+  "tags": [
+    "server_streaming",
+    "error_handling",
+    "partial_stream",
+    "mid_transmission"
+  ]
 }

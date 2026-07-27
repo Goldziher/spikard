@@ -90,7 +90,10 @@ func service_handler_callback(ctx unsafe.Pointer, reqCStr *C.char) *C.char {
 
 	respJSON, err := invokeHandler(ctxID, reqJSON)
 	if err != nil {
-		errJSON, _ := json.Marshal(map[string]string{"error": err.Error()})
+		errJSON, marshalErr := json.Marshal(map[string]string{"error": err.Error()})
+		if marshalErr != nil {
+			errJSON = []byte(`{"error":"failed to marshal error response"}`)
+		}
 		respJSON = errJSON
 	}
 
@@ -480,9 +483,12 @@ func (s *App) StartBackground(host string, port uint16) (*ServerHandle, error) {
 	}
 	s.mu.Unlock()
 
-	// Spawn Run in a goroutine.
+	// Spawn Run in a goroutine. Errors cannot propagate to the caller of
+	// StartBackground, so we deliberately drop them after checking.
 	go func() {
-		_ = s.Run()
+		if err := s.Run(); err != nil {
+			_ = err
+		}
 	}()
 
 	// Poll TCP socket until it's bound or timeout (5 seconds).
@@ -490,7 +496,9 @@ func (s *App) StartBackground(host string, port uint16) (*ServerHandle, error) {
 	for time.Now().Before(deadline) {
 		conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", host, port), 100*time.Millisecond)
 		if err == nil {
-			conn.Close()
+			if cerr := conn.Close(); cerr != nil {
+				_ = cerr
+			}
 			break
 		}
 		time.Sleep(50 * time.Millisecond)

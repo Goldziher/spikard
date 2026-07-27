@@ -12,7 +12,9 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": ["value"],
+      "required": [
+        "value"
+      ],
       "properties": {
         "value": {
           "type": "number",
@@ -34,5 +36,10 @@
       "value": 123000
     }
   },
-  "tags": ["edge_cases", "numeric", "scientific_notation", "success"]
+  "tags": [
+    "edge_cases",
+    "numeric",
+    "scientific_notation",
+    "success"
+  ]
 }

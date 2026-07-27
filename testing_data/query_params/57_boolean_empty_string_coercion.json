@@ -31,5 +31,12 @@
       "active": false
     }
   },
-  "tags": ["query_params", "boolean", "empty_string", "type_coercion", "edge_case", "success"]
+  "tags": [
+    "query_params",
+    "boolean",
+    "empty_string",
+    "type_coercion",
+    "edge_case",
+    "success"
+  ]
 }

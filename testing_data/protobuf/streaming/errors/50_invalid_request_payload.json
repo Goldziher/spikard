@@ -8,15 +8,35 @@
       {
         "name": "ValidationRequest",
         "fields": [
-          { "name": "query", "type": "string", "number": 1, "label": "required" },
-          { "name": "limit", "type": "int32", "number": 2, "label": "optional" }
+          {
+            "name": "query",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "limit",
+            "type": "int32",
+            "number": 2,
+            "label": "optional"
+          }
         ]
       },
       {
         "name": "ValidationResponse",
         "fields": [
-          { "name": "error_code", "type": "string", "number": 1, "label": "optional" },
-          { "name": "message", "type": "string", "number": 2, "label": "optional" }
+          {
+            "name": "error_code",
+            "type": "string",
+            "number": 1,
+            "label": "optional"
+          },
+          {
+            "name": "message",
+            "type": "string",
+            "number": 2,
+            "label": "optional"
+          }
         ]
       }
     ],
@@ -57,5 +77,10 @@
     "stream": [],
     "details": "Request validation failed due to missing required field 'query' in ValidationRequest message. Server streaming was not initiated."
   },
-  "tags": ["server_streaming", "error_handling", "validation", "invalid_argument"]
+  "tags": [
+    "server_streaming",
+    "error_handling",
+    "validation",
+    "invalid_argument"
+  ]
 }

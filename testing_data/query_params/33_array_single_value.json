@@ -15,7 +15,9 @@
   },
   "expected_response": {
     "status_code": 200,
-    "body": ["apple"]
+    "body": [
+      "apple"
+    ]
   },
   "notes": "Single value for array parameter is converted to array with one element",
   "handler": {

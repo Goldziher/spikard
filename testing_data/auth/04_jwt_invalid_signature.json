@@ -42,5 +42,14 @@
       "detail": "Token signature is invalid"
     }
   },
-  "tags": ["auth", "jwt", "bearer", "security", "middleware", "error", "unauthorized", "signature"]
+  "tags": [
+    "auth",
+    "jwt",
+    "bearer",
+    "security",
+    "middleware",
+    "error",
+    "unauthorized",
+    "signature"
+  ]
 }

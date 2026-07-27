@@ -6,7 +6,13 @@
   "allOf": [
     {
       "type": "object",
-      "required": ["name", "description", "handler", "request", "expected_response"],
+      "required": [
+        "name",
+        "description",
+        "handler",
+        "request",
+        "expected_response"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -50,11 +56,16 @@
     },
     {
       "type": "object",
-      "required": ["streaming", "expected_response"],
+      "required": [
+        "streaming",
+        "expected_response"
+      ],
       "properties": {
         "expected_response": {
           "type": "object",
-          "required": ["status_code"],
+          "required": [
+            "status_code"
+          ],
           "properties": {
             "status_code": {
               "type": "integer",
@@ -87,7 +98,9 @@
   "definitions": {
     "streaming": {
       "type": "object",
-      "required": ["chunks"],
+      "required": [
+        "chunks"
+      ],
       "properties": {
         "content_type": {
           "type": "string"
@@ -97,11 +110,16 @@
           "minItems": 1,
           "items": {
             "type": "object",
-            "required": ["type"],
+            "required": [
+              "type"
+            ],
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["text", "bytes"]
+                "enum": [
+                  "text",
+                  "bytes"
+                ]
               },
               "value": {
                 "type": "string"
@@ -120,7 +138,9 @@
                   }
                 },
                 "then": {
-                  "required": ["value"]
+                  "required": [
+                    "value"
+                  ]
                 }
               },
               {
@@ -132,7 +152,9 @@
                   }
                 },
                 "then": {
-                  "required": ["base64"]
+                  "required": [
+                    "base64"
+                  ]
                 }
               }
             ]

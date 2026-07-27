@@ -7,13 +7,30 @@
     "messages": [
       {
         "name": "TracingRequest",
-        "fields": [{ "name": "operation", "type": "string", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "operation",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       },
       {
         "name": "TracingResponse",
         "fields": [
-          { "name": "request_id", "type": "string", "number": 1, "label": "optional" },
-          { "name": "trace_id", "type": "string", "number": 2, "label": "optional" }
+          {
+            "name": "request_id",
+            "type": "string",
+            "number": 1,
+            "label": "optional"
+          },
+          {
+            "name": "trace_id",
+            "type": "string",
+            "number": 2,
+            "label": "optional"
+          }
         ]
       }
     ],
@@ -34,7 +51,9 @@
     "service": "example.v1.TracingService",
     "method": "Trace",
     "middleware": {
-      "request_id": { "enabled": true }
+      "request_id": {
+        "enabled": true
+      }
     }
   },
   "request": {
@@ -42,7 +61,9 @@
       "content-type": "application/grpc",
       "x-request-id": "req-12345-67890"
     },
-    "message": { "operation": "trace_test" }
+    "message": {
+      "operation": "trace_test"
+    }
   },
   "expected_response": {
     "status_code": "OK",
@@ -55,5 +76,9 @@
       }
     }
   },
-  "tags": ["tracing", "observability", "metadata"]
+  "tags": [
+    "tracing",
+    "observability",
+    "metadata"
+  ]
 }

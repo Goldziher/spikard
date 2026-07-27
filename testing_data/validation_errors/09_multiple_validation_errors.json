@@ -12,7 +12,11 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": ["name", "email", "age"],
+      "required": [
+        "name",
+        "email",
+        "age"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -48,7 +52,10 @@
       "errors": [
         {
           "type": "greater_than_equal",
-          "loc": ["body", "age"],
+          "loc": [
+            "body",
+            "age"
+          ],
           "msg": "Input should be greater than or equal to 18",
           "input": 15,
           "ctx": {
@@ -57,7 +64,10 @@
         },
         {
           "type": "string_pattern_mismatch",
-          "loc": ["body", "email"],
+          "loc": [
+            "body",
+            "email"
+          ],
           "msg": "String should match pattern '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'",
           "input": "invalid-email",
           "ctx": {
@@ -66,7 +76,10 @@
         },
         {
           "type": "string_too_short",
-          "loc": ["body", "name"],
+          "loc": [
+            "body",
+            "name"
+          ],
           "msg": "String should have at least 3 characters",
           "input": "ab",
           "ctx": {
@@ -76,5 +89,10 @@
       ]
     }
   },
-  "tags": ["validation_errors", "multiple", "batch", "error_reporting"]
+  "tags": [
+    "validation_errors",
+    "multiple",
+    "batch",
+    "error_reporting"
+  ]
 }

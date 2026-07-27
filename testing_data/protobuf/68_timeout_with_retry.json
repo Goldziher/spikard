@@ -7,11 +7,25 @@
     "messages": [
       {
         "name": "RetryRequest",
-        "fields": [{ "name": "id", "type": "string", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       },
       {
         "name": "RetryResponse",
-        "fields": [{ "name": "status", "type": "string", "number": 1, "label": "optional" }]
+        "fields": [
+          {
+            "name": "status",
+            "type": "string",
+            "number": 1,
+            "label": "optional"
+          }
+        ]
       }
     ],
     "services": [
@@ -32,8 +46,12 @@
     "method": "RetryableOperation"
   },
   "request": {
-    "metadata": { "content-type": "application/grpc" },
-    "message": { "id": "retry-001" }
+    "metadata": {
+      "content-type": "application/grpc"
+    },
+    "message": {
+      "id": "retry-001"
+    }
   },
   "expected_response": {
     "status_code": "DEADLINE_EXCEEDED",
@@ -44,5 +62,9 @@
       }
     }
   },
-  "tags": ["grpc_status", "timeout", "retry"]
+  "tags": [
+    "grpc_status",
+    "timeout",
+    "retry"
+  ]
 }

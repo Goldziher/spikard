@@ -28,5 +28,11 @@
       "value": -100
     }
   },
-  "tags": ["path_params", "integer", "negative", "type_coercion", "success"]
+  "tags": [
+    "path_params",
+    "integer",
+    "negative",
+    "type_coercion",
+    "success"
+  ]
 }

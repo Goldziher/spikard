@@ -7,13 +7,30 @@
     "messages": [
       {
         "name": "StatusRequest",
-        "fields": [{ "name": "request_id", "type": "string", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "request_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       },
       {
         "name": "StatusResponse",
         "fields": [
-          { "name": "request_id", "type": "string", "number": 1, "label": "required" },
-          { "name": "status", "type": "string", "number": 2, "label": "required" }
+          {
+            "name": "request_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "number": 2,
+            "label": "required"
+          }
         ]
       }
     ],
@@ -49,5 +66,8 @@
       "status": "success"
     }
   },
-  "tags": ["grpc_status", "ok"]
+  "tags": [
+    "grpc_status",
+    "ok"
+  ]
 }

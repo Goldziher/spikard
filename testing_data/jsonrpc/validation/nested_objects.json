@@ -191,7 +191,11 @@
     "params": {
       "user": {
         "profile": {
-          "aliases": ["John", "Johnny", "JD"]
+          "aliases": [
+            "John",
+            "Johnny",
+            "JD"
+          ]
         }
       }
     },
@@ -203,7 +207,11 @@
     "params": {
       "user": {
         "profile": {
-          "aliases": ["John", 123, "JD"]
+          "aliases": [
+            "John",
+            123,
+            "JD"
+          ]
         }
       }
     },

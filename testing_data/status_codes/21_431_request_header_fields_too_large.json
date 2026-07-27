@@ -34,5 +34,10 @@
       "message": "Request headers exceed maximum allowed size of 8192 bytes"
     }
   },
-  "tags": ["status_codes", "431", "header_size", "error"]
+  "tags": [
+    "status_codes",
+    "431",
+    "header_size",
+    "error"
+  ]
 }

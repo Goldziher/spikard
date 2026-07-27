@@ -12,7 +12,9 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string"
@@ -27,10 +29,14 @@
       },
       "anyOf": [
         {
-          "required": ["email"]
+          "required": [
+            "email"
+          ]
         },
         {
-          "required": ["phone"]
+          "required": [
+            "phone"
+          ]
         }
       ]
     }
@@ -52,7 +58,9 @@
       "errors": [
         {
           "type": "validation_error",
-          "loc": ["body"],
+          "loc": [
+            "body"
+          ],
           "msg": "{\"name\":\"John Doe\"} is not valid under any of the schemas listed in the 'anyOf' keyword",
           "input": {
             "name": "John Doe"
@@ -61,5 +69,11 @@
       ]
     }
   },
-  "tags": ["json_bodies", "anyOf", "composition", "validation", "error"]
+  "tags": [
+    "json_bodies",
+    "anyOf",
+    "composition",
+    "validation",
+    "error"
+  ]
 }

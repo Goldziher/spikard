@@ -38,5 +38,9 @@
       }
     }
   },
-  "tags": ["queries", "arguments", "variables"]
+  "tags": [
+    "queries",
+    "arguments",
+    "variables"
+  ]
 }

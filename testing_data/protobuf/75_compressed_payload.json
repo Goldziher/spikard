@@ -8,17 +8,47 @@
       {
         "name": "CompressedPayloadRequest",
         "fields": [
-          { "name": "id", "type": "string", "number": 1, "label": "required" },
-          { "name": "data", "type": "bytes", "number": 2, "label": "required" }
+          {
+            "name": "id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "number": 2,
+            "label": "required"
+          }
         ]
       },
       {
         "name": "CompressedPayloadResponse",
         "fields": [
-          { "name": "id", "type": "string", "number": 1, "label": "required" },
-          { "name": "compressed", "type": "bool", "number": 2, "label": "required" },
-          { "name": "original_size", "type": "int64", "number": 3, "label": "optional" },
-          { "name": "compressed_size", "type": "int64", "number": 4, "label": "optional" }
+          {
+            "name": "id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "compressed",
+            "type": "bool",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "original_size",
+            "type": "int64",
+            "number": 3,
+            "label": "optional"
+          },
+          {
+            "name": "compressed_size",
+            "type": "int64",
+            "number": 4,
+            "label": "optional"
+          }
         ]
       }
     ],
@@ -61,5 +91,9 @@
       "compressed": true
     }
   },
-  "tags": ["large_payloads", "compression", "performance"]
+  "tags": [
+    "large_payloads",
+    "compression",
+    "performance"
+  ]
 }

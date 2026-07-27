@@ -37,7 +37,10 @@
       "errors": [
         {
           "type": "validation_error",
-          "loc": ["query", "term"],
+          "loc": [
+            "query",
+            "term"
+          ],
           "msg": "String length must be at least 3",
           "ctx": {
             "min_length": 3,
@@ -47,5 +50,11 @@
       ]
     }
   },
-  "tags": ["query_params", "string", "minLength", "validation", "error"]
+  "tags": [
+    "query_params",
+    "string",
+    "minLength",
+    "validation",
+    "error"
+  ]
 }

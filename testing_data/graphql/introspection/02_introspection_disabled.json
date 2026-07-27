@@ -54,5 +54,9 @@
     }
   },
   "notes": "In production environments, introspection queries can be disabled to prevent schema enumeration and reduce attack surface. This fixture validates that __schema queries are properly rejected.",
-  "tags": ["introspection", "security", "disabled"]
+  "tags": [
+    "introspection",
+    "security",
+    "disabled"
+  ]
 }

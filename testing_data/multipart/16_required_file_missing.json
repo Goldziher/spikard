@@ -17,7 +17,9 @@
           "format": "binary"
         }
       },
-      "required": ["file"],
+      "required": [
+        "file"
+      ],
       "additionalProperties": false
     }
   },
@@ -37,7 +39,10 @@
       "errors": [
         {
           "type": "missing",
-          "loc": ["body", "file"],
+          "loc": [
+            "body",
+            "file"
+          ],
           "msg": "Field required",
           "input": []
         }

@@ -32,5 +32,11 @@
       "ip": "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
     }
   },
-  "tags": ["query_params", "format", "ipv6", "validation", "success"]
+  "tags": [
+    "query_params",
+    "format",
+    "ipv6",
+    "validation",
+    "success"
+  ]
 }

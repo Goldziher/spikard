@@ -13,7 +13,10 @@
     "middleware": {
       "api_key_auth": {
         "enabled": true,
-        "keys": ["sk_test_123456", "sk_test_789012"],
+        "keys": [
+          "sk_test_123456",
+          "sk_test_789012"
+        ],
         "header_name": "X-API-Key"
       }
     }
@@ -29,6 +32,13 @@
       "data": "sensitive information"
     }
   },
-  "tags": ["auth", "api_key", "query_parameter", "security", "middleware", "success"],
+  "tags": [
+    "auth",
+    "api_key",
+    "query_parameter",
+    "security",
+    "middleware",
+    "success"
+  ],
   "notes": "Tests API key validation from query string. While less secure than headers, query parameter auth is common in webhook callbacks and simplified integrations."
 }

@@ -158,5 +158,9 @@
     }
   ],
   "error_cases": [],
-  "tags": ["notifications", "protocol", "edge-cases"]
+  "tags": [
+    "notifications",
+    "protocol",
+    "edge-cases"
+  ]
 }

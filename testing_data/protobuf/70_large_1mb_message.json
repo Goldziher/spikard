@@ -8,16 +8,41 @@
       {
         "name": "LargePayloadRequest",
         "fields": [
-          { "name": "request_id", "type": "string", "number": 1, "label": "required" },
-          { "name": "data", "type": "bytes", "number": 2, "label": "required" }
+          {
+            "name": "request_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "number": 2,
+            "label": "required"
+          }
         ]
       },
       {
         "name": "LargePayloadResponse",
         "fields": [
-          { "name": "request_id", "type": "string", "number": 1, "label": "required" },
-          { "name": "data_size", "type": "int64", "number": 2, "label": "required" },
-          { "name": "checksum", "type": "string", "number": 3, "label": "optional" }
+          {
+            "name": "request_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "data_size",
+            "type": "int64",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "checksum",
+            "type": "string",
+            "number": 3,
+            "label": "optional"
+          }
         ]
       }
     ],
@@ -59,5 +84,9 @@
       "data_size": 1048576
     }
   },
-  "tags": ["large_payloads", "performance", "file_transfer"]
+  "tags": [
+    "large_payloads",
+    "performance",
+    "file_transfer"
+  ]
 }

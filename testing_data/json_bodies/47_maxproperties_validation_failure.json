@@ -35,7 +35,9 @@
       "errors": [
         {
           "type": "validation_error",
-          "loc": ["body"],
+          "loc": [
+            "body"
+          ],
           "msg": "{\"host\":\"localhost\",\"port\":8080,\"ssl\":true,\"debug\":false} has more than 3 properties",
           "input": {
             "host": "localhost",
@@ -47,5 +49,10 @@
       ]
     }
   },
-  "tags": ["json_bodies", "maxProperties", "validation", "error"]
+  "tags": [
+    "json_bodies",
+    "maxProperties",
+    "validation",
+    "error"
+  ]
 }

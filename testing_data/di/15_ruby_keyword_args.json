@@ -27,7 +27,10 @@
         "value_type": "object"
       }
     },
-    "handler_dependencies": ["db_pool", "session"],
+    "handler_dependencies": [
+      "db_pool",
+      "session"
+    ],
     "injection_strategy": "keyword_args"
   },
   "request": {
@@ -42,5 +45,10 @@
     }
   },
   "notes": "Ruby handler uses keyword arguments: def handler(request, db_pool:, session:) ... end. Dependencies injected as keyword arguments.",
-  "tags": ["dependency_injection", "ruby", "keyword_args", "language_specific"]
+  "tags": [
+    "dependency_injection",
+    "ruby",
+    "keyword_args",
+    "language_specific"
+  ]
 }

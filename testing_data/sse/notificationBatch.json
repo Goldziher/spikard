@@ -41,7 +41,11 @@
           "type": "string"
         }
       },
-      "required": ["type", "message", "timestamp"],
+      "required": [
+        "type",
+        "message",
+        "timestamp"
+      ],
       "type": "object"
     },
     "minItems": 2,

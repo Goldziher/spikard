@@ -60,5 +60,10 @@
       }
     }
   },
-  "tags": ["queries", "persisted-queries", "validation", "hash-validation"]
+  "tags": [
+    "queries",
+    "persisted-queries",
+    "validation",
+    "hash-validation"
+  ]
 }

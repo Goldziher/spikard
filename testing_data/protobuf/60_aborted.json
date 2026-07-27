@@ -7,11 +7,25 @@
     "messages": [
       {
         "name": "TransactionRequest",
-        "fields": [{ "name": "id", "type": "string", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       },
       {
         "name": "TransactionResponse",
-        "fields": [{ "name": "status", "type": "string", "number": 1, "label": "optional" }]
+        "fields": [
+          {
+            "name": "status",
+            "type": "string",
+            "number": 1,
+            "label": "optional"
+          }
+        ]
       }
     ],
     "services": [
@@ -27,11 +41,24 @@
       }
     ]
   },
-  "handler": { "service": "example.v1.TransactionService", "method": "Commit" },
-  "request": {
-    "metadata": { "content-type": "application/grpc" },
-    "message": { "id": "txn-conflict" }
+  "handler": {
+    "service": "example.v1.TransactionService",
+    "method": "Commit"
   },
-  "expected_response": { "status_code": "ABORTED" },
-  "tags": ["grpc_status", "transaction", "error"]
+  "request": {
+    "metadata": {
+      "content-type": "application/grpc"
+    },
+    "message": {
+      "id": "txn-conflict"
+    }
+  },
+  "expected_response": {
+    "status_code": "ABORTED"
+  },
+  "tags": [
+    "grpc_status",
+    "transaction",
+    "error"
+  ]
 }

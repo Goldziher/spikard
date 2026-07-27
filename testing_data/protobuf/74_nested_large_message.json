@@ -8,39 +8,104 @@
       {
         "name": "Address",
         "fields": [
-          { "name": "street", "type": "string", "number": 1, "label": "required" },
-          { "name": "city", "type": "string", "number": 2, "label": "required" },
-          { "name": "zip", "type": "string", "number": 3, "label": "optional" }
+          {
+            "name": "street",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "city",
+            "type": "string",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "zip",
+            "type": "string",
+            "number": 3,
+            "label": "optional"
+          }
         ]
       },
       {
         "name": "Company",
         "fields": [
-          { "name": "name", "type": "string", "number": 1, "label": "required" },
-          { "name": "address", "type": "Address", "number": 2, "label": "required" },
-          { "name": "employee_count", "type": "int32", "number": 3, "label": "optional" }
+          {
+            "name": "name",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "address",
+            "type": "Address",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "employee_count",
+            "type": "int32",
+            "number": 3,
+            "label": "optional"
+          }
         ]
       },
       {
         "name": "Person",
         "fields": [
-          { "name": "name", "type": "string", "number": 1, "label": "required" },
-          { "name": "address", "type": "Address", "number": 2, "label": "required" },
-          { "name": "company", "type": "Company", "number": 3, "label": "optional" }
+          {
+            "name": "name",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "address",
+            "type": "Address",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "company",
+            "type": "Company",
+            "number": 3,
+            "label": "optional"
+          }
         ]
       },
       {
         "name": "DeepNestedRequest",
         "fields": [
-          { "name": "person", "type": "Person", "number": 1, "label": "required" },
-          { "name": "metadata", "type": "string", "number": 2, "label": "optional" }
+          {
+            "name": "person",
+            "type": "Person",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "metadata",
+            "type": "string",
+            "number": 2,
+            "label": "optional"
+          }
         ]
       },
       {
         "name": "DeepNestedResponse",
         "fields": [
-          { "name": "success", "type": "bool", "number": 1, "label": "required" },
-          { "name": "person", "type": "Person", "number": 2, "label": "optional" }
+          {
+            "name": "success",
+            "type": "bool",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "person",
+            "type": "Person",
+            "number": 2,
+            "label": "optional"
+          }
         ]
       }
     ],
@@ -98,5 +163,9 @@
       }
     }
   },
-  "tags": ["large_payloads", "nested_messages", "complex_structures"]
+  "tags": [
+    "large_payloads",
+    "nested_messages",
+    "complex_structures"
+  ]
 }

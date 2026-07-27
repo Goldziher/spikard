@@ -39,5 +39,10 @@
       "contact.email": "john@example.com"
     }
   },
-  "tags": ["url_encoded", "special_characters", "validation", "success"]
+  "tags": [
+    "url_encoded",
+    "special_characters",
+    "validation",
+    "success"
+  ]
 }

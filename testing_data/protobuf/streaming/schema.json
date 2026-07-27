@@ -3,7 +3,16 @@
   "title": "gRPC Streaming Fixture Schema",
   "description": "JSON Schema for gRPC streaming test fixtures",
   "type": "object",
-  "required": ["name", "description", "category", "protobuf", "handler", "request", "expected_response", "tags"],
+  "required": [
+    "name",
+    "description",
+    "category",
+    "protobuf",
+    "handler",
+    "request",
+    "expected_response",
+    "tags"
+  ],
   "properties": {
     "name": {
       "type": "string",
@@ -15,12 +24,21 @@
     },
     "category": {
       "type": "string",
-      "enum": ["server_streaming", "client_streaming", "bidirectional_streaming", "error"],
+      "enum": [
+        "server_streaming",
+        "client_streaming",
+        "bidirectional_streaming",
+        "error"
+      ],
       "description": "Category of streaming test"
     },
     "protobuf": {
       "type": "object",
-      "required": ["package", "messages", "services"],
+      "required": [
+        "package",
+        "messages",
+        "services"
+      ],
       "properties": {
         "package": {
           "type": "string",
@@ -31,7 +49,10 @@
           "description": "Protobuf message definitions",
           "items": {
             "type": "object",
-            "required": ["name", "fields"],
+            "required": [
+              "name",
+              "fields"
+            ],
             "properties": {
               "name": {
                 "type": "string"
@@ -40,14 +61,29 @@
                 "type": "array",
                 "items": {
                   "type": "object",
-                  "required": ["name", "type", "number", "label"],
+                  "required": [
+                    "name",
+                    "type",
+                    "number",
+                    "label"
+                  ],
                   "properties": {
-                    "name": { "type": "string" },
-                    "type": { "type": "string" },
-                    "number": { "type": "integer" },
+                    "name": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string"
+                    },
+                    "number": {
+                      "type": "integer"
+                    },
                     "label": {
                       "type": "string",
-                      "enum": ["required", "optional", "repeated"]
+                      "enum": [
+                        "required",
+                        "optional",
+                        "repeated"
+                      ]
                     }
                   }
                 }
@@ -60,7 +96,10 @@
           "description": "Protobuf service definitions",
           "items": {
             "type": "object",
-            "required": ["name", "methods"],
+            "required": [
+              "name",
+              "methods"
+            ],
             "properties": {
               "name": {
                 "type": "string"
@@ -69,13 +108,29 @@
                 "type": "array",
                 "items": {
                   "type": "object",
-                  "required": ["name", "input_type", "output_type", "client_streaming", "server_streaming"],
+                  "required": [
+                    "name",
+                    "input_type",
+                    "output_type",
+                    "client_streaming",
+                    "server_streaming"
+                  ],
                   "properties": {
-                    "name": { "type": "string" },
-                    "input_type": { "type": "string" },
-                    "output_type": { "type": "string" },
-                    "client_streaming": { "type": "boolean" },
-                    "server_streaming": { "type": "boolean" }
+                    "name": {
+                      "type": "string"
+                    },
+                    "input_type": {
+                      "type": "string"
+                    },
+                    "output_type": {
+                      "type": "string"
+                    },
+                    "client_streaming": {
+                      "type": "boolean"
+                    },
+                    "server_streaming": {
+                      "type": "boolean"
+                    }
                   }
                 }
               }
@@ -86,7 +141,10 @@
     },
     "handler": {
       "type": "object",
-      "required": ["service", "method"],
+      "required": [
+        "service",
+        "method"
+      ],
       "properties": {
         "service": {
           "type": "string",
@@ -104,7 +162,9 @@
     },
     "request": {
       "type": "object",
-      "required": ["metadata"],
+      "required": [
+        "metadata"
+      ],
       "properties": {
         "metadata": {
           "type": "object",
@@ -132,21 +192,43 @@
         }
       },
       "oneOf": [
-        { "required": ["message"] },
-        { "required": ["stream"] },
-        { "required": ["stream_generator", "stream_size"] }
+        {
+          "required": [
+            "message"
+          ]
+        },
+        {
+          "required": [
+            "stream"
+          ]
+        },
+        {
+          "required": [
+            "stream_generator",
+            "stream_size"
+          ]
+        }
       ]
     },
     "expected_response": {
       "type": "object",
-      "required": ["status_code"],
+      "required": [
+        "status_code"
+      ],
       "properties": {
         "status_code": {
           "type": "string",
           "description": "Expected gRPC status code"
         },
         "message": {
-          "oneOf": [{ "type": "object" }, { "type": "string" }],
+          "oneOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "string"
+            }
+          ],
           "description": "Single response message (for unary/client streaming) or description"
         },
         "stream": {
@@ -158,10 +240,19 @@
           "description": "Expected error details for error test cases",
           "properties": {
             "code": {
-              "oneOf": [{ "type": "string" }, { "type": "integer" }],
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ],
               "description": "gRPC status code (string name or integer)"
             },
-            "message": { "type": "string" }
+            "message": {
+              "type": "string"
+            }
           }
         },
         "partial_delivery": {

@@ -41,5 +41,8 @@
     "status_code": "OK",
     "message": {}
   },
-  "tags": ["edge_cases", "minimal_payload"]
+  "tags": [
+    "edge_cases",
+    "minimal_payload"
+  ]
 }

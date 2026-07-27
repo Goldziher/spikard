@@ -11,9 +11,15 @@
     "route": "/api/data",
     "method": "POST",
     "cors": {
-      "allowed_origins": ["https://example.com"],
-      "allowed_methods": ["POST"],
-      "allowed_headers": ["Content-Type"]
+      "allowed_origins": [
+        "https://example.com"
+      ],
+      "allowed_methods": [
+        "POST"
+      ],
+      "allowed_headers": [
+        "Content-Type"
+      ]
     },
     "parameters": {
       "headers": {
@@ -44,5 +50,11 @@
   "expected_response": {
     "status_code": 403
   },
-  "tags": ["cors", "preflight", "headers", "validation", "error"]
+  "tags": [
+    "cors",
+    "preflight",
+    "headers",
+    "validation",
+    "error"
+  ]
 }

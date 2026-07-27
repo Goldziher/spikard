@@ -59,12 +59,24 @@
         "jsonrpc": "2.0",
         "method": "array.process",
         "params": {
-          "items": [1, null, 3, null, 5]
+          "items": [
+            1,
+            null,
+            3,
+            null,
+            5
+          ]
         },
         "id": 4
       },
       "result": {
-        "processed": [1, null, 3, null, 5],
+        "processed": [
+          1,
+          null,
+          3,
+          null,
+          5
+        ],
         "null_count": 2
       }
     },
@@ -118,7 +130,11 @@
       },
       "result": {
         "status": "processed",
-        "nullFields": ["user.profile.bio", "user.profile.avatar", "user.profile.preferences.notifications"]
+        "nullFields": [
+          "user.profile.bio",
+          "user.profile.avatar",
+          "user.profile.preferences.notifications"
+        ]
       }
     },
     {
@@ -160,5 +176,9 @@
     }
   ],
   "error_cases": [],
-  "tags": ["null-values", "data-types", "edge-cases"]
+  "tags": [
+    "null-values",
+    "data-types",
+    "edge-cases"
+  ]
 }

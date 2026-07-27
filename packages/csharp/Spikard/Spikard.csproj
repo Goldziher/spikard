@@ -3,10 +3,10 @@
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>Spikard</RootNamespace>
     <PackageId>Spikard</PackageId>
-    <Version>0.17.0-rc.4</Version>
+    <Version>0.17.0-rc.5</Version>
     <AssemblyVersion>0.17.0.0</AssemblyVersion>
     <FileVersion>0.17.0.0</FileVersion>
-    <InformationalVersion>0.17.0-rc.4</InformationalVersion>
+    <InformationalVersion>0.17.0-rc.5</InformationalVersion>
     <Description>Rust-centric multi-language HTTP framework with polyglot bindings</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <RepositoryUrl>https://github.com/Goldziher/spikard</RepositoryUrl>
@@ -27,8 +27,20 @@
 
   <ItemGroup>
     <None Include="../../../LICENSE" Pack="true" PackagePath="/" />
-    <None Include="runtimes/**" Pack="true" PackagePath="runtimes/" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Thin meta-package: no runtimes/** payload here. Native closures ship in the
+         per-RID Spikard.runtime.<rid> packages (see ../Spikard.Runtime); this
+         package only carries the managed assembly plus runtime.json, which tells
+         NuGet's RID-fallback graph which runtime package to pull in for the
+         consumer's RID. runtime.json is rendered
+         from runtime.json.template by CI before pack; RequireRuntimeJson guards
+         against packing without it. -->
+    <None Include="runtime.json" Pack="true" PackagePath="/" Condition="Exists('runtime.json')" />
   </ItemGroup>
+
+  <Target Name="RequireRuntimeJson" BeforeTargets="Pack">
+    <Error Condition="!Exists('runtime.json')"
+           Text="packages/csharp/Spikard/runtime.json is missing. Render it from runtime.json.template (substituting {{VERSION}}) before packing Spikard.csproj." />
+  </Target>
 
   <ItemGroup>
     <Compile Include="../src/**/*.cs" />

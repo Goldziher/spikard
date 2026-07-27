@@ -63,7 +63,11 @@
       "factory_fn": "resolve_post_reviews"
     }
   },
-  "tags": ["federation", "provides-directive", "field-optimization"],
+  "tags": [
+    "federation",
+    "provides-directive",
+    "field-optimization"
+  ],
   "complexity_limit": 150,
   "depth_limit": 5
 }

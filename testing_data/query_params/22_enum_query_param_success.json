@@ -28,7 +28,11 @@
         "model": {
           "type": "string",
           "annotation": "str",
-          "enum": ["alexnet", "resnet", "lenet"]
+          "enum": [
+            "alexnet",
+            "resnet",
+            "lenet"
+          ]
         }
       }
     }

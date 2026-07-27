@@ -23,7 +23,11 @@
         }
       },
       "additionalProperties": false,
-      "required": ["description", "price", "name"]
+      "required": [
+        "description",
+        "price",
+        "name"
+      ]
     }
   },
   "request": {
@@ -47,7 +51,10 @@
       "errors": [
         {
           "type": "missing",
-          "loc": ["body", "name"],
+          "loc": [
+            "body",
+            "name"
+          ],
           "msg": "Field required",
           "input": {
             "description": "A very nice Item",

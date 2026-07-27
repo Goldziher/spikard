@@ -43,5 +43,9 @@
       }
     }
   },
-  "tags": ["mutations", "delete-operations", "destructive"]
+  "tags": [
+    "mutations",
+    "delete-operations",
+    "destructive"
+  ]
 }

@@ -8,15 +8,35 @@
       {
         "name": "MaxFieldRequest",
         "fields": [
-          { "name": "id", "type": "int32", "number": 1, "label": "required" },
-          { "name": "max_field_value", "type": "string", "number": 536870911, "label": "optional" }
+          {
+            "name": "id",
+            "type": "int32",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "max_field_value",
+            "type": "string",
+            "number": 536870911,
+            "label": "optional"
+          }
         ]
       },
       {
         "name": "MaxFieldResponse",
         "fields": [
-          { "name": "id", "type": "int32", "number": 1, "label": "required" },
-          { "name": "received_max", "type": "string", "number": 536870911, "label": "optional" }
+          {
+            "name": "id",
+            "type": "int32",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "received_max",
+            "type": "string",
+            "number": 536870911,
+            "label": "optional"
+          }
         ]
       }
     ],
@@ -53,5 +73,9 @@
       "received_max": "Testing maximum field number"
     }
   },
-  "tags": ["edge_cases", "field_numbers", "protobuf_limits"]
+  "tags": [
+    "edge_cases",
+    "field_numbers",
+    "protobuf_limits"
+  ]
 }

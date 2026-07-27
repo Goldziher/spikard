@@ -23,7 +23,10 @@
       "errors": [
         {
           "type": "enum",
-          "loc": ["query", "model"],
+          "loc": [
+            "query",
+            "model"
+          ],
           "msg": "Input should be 'alexnet', 'resnet' or 'lenet'",
           "input": "vgg16",
           "ctx": {
@@ -42,7 +45,11 @@
         "model": {
           "type": "string",
           "annotation": "str",
-          "enum": ["alexnet", "resnet", "lenet"]
+          "enum": [
+            "alexnet",
+            "resnet",
+            "lenet"
+          ]
         }
       }
     }

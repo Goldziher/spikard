@@ -38,5 +38,9 @@
       }
     }
   },
-  "tags": ["authentication", "session-cookie", "valid-session"]
+  "tags": [
+    "authentication",
+    "session-cookie",
+    "valid-session"
+  ]
 }

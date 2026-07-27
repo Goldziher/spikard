@@ -32,5 +32,9 @@
       "vary": "Accept-Encoding"
     }
   },
-  "tags": ["compression", "gzip", "middleware"]
+  "tags": [
+    "compression",
+    "gzip",
+    "middleware"
+  ]
 }

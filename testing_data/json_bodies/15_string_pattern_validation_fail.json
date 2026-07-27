@@ -21,7 +21,10 @@
         }
       },
       "additionalProperties": false,
-      "required": ["name", "sku"]
+      "required": [
+        "name",
+        "sku"
+      ]
     }
   },
   "request": {
@@ -45,7 +48,10 @@
       "errors": [
         {
           "type": "string_pattern_mismatch",
-          "loc": ["body", "sku"],
+          "loc": [
+            "body",
+            "sku"
+          ],
           "msg": "String should match pattern '^[A-Z]{3}[0-9]{4}$'",
           "input": "ABC-123",
           "ctx": {

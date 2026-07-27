@@ -29,7 +29,12 @@
         }
       },
       "additionalProperties": false,
-      "required": ["name", "description", "tags", "emoji_reactions"]
+      "required": [
+        "name",
+        "description",
+        "tags",
+        "emoji_reactions"
+      ]
     }
   },
   "request": {
@@ -41,7 +46,11 @@
     "body": {
       "name": "Coffee Shop \u2615",
       "description": "Best caf\u00e9 in M\u00fcnchen \ud83c\udde9\ud83c\uddea",
-      "tags": ["\u98df\u3079\u7269", "\u97f3\u697d", "\ud83d\udcb0"],
+      "tags": [
+        "\u98df\u3079\u7269",
+        "\u97f3\u697d",
+        "\ud83d\udcb0"
+      ],
       "emoji_reactions": "\ud83d\udc4d\u2764\ufe0f\ud83d\ude02\ud83c\udf89"
     }
   },
@@ -51,7 +60,11 @@
       "id": 1,
       "name": "Coffee Shop \u2615",
       "description": "Best caf\u00e9 in M\u00fcnchen \ud83c\udde9\ud83c\uddea",
-      "tags": ["\u98df\u3079\u7269", "\u97f3\u697d", "\ud83d\udcb0"],
+      "tags": [
+        "\u98df\u3079\u7269",
+        "\u97f3\u697d",
+        "\ud83d\udcb0"
+      ],
       "emoji_reactions": "\ud83d\udc4d\u2764\ufe0f\ud83d\ude02\ud83c\udf89"
     }
   },

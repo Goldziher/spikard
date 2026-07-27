@@ -76,7 +76,10 @@
       "name": "Diana Prince",
       "age": 29,
       "active": true,
-      "tags": { "0": "tag1", "1": "tag2" }
+      "tags": {
+        "0": "tag1",
+        "1": "tag2"
+      }
     },
     "expectedSuccess": false,
     "expectedError": {
@@ -85,7 +88,10 @@
       "data": {
         "fieldPath": "tags",
         "constraint": "type",
-        "value": { "0": "tag1", "1": "tag2" },
+        "value": {
+          "0": "tag1",
+          "1": "tag2"
+        },
         "details": "Expected type array, got object"
       }
     }
@@ -94,7 +100,12 @@
     "name": "object_as_array_rejected",
     "method": "user.metadata.save",
     "params": {
-      "metadata": [{ "key": "env", "value": "prod" }]
+      "metadata": [
+        {
+          "key": "env",
+          "value": "prod"
+        }
+      ]
     },
     "expectedSuccess": false,
     "expectedError": {
@@ -103,7 +114,12 @@
       "data": {
         "fieldPath": "metadata",
         "constraint": "type",
-        "value": [{ "key": "env", "value": "prod" }],
+        "value": [
+          {
+            "key": "env",
+            "value": "prod"
+          }
+        ],
         "details": "Expected type object, got array"
       }
     }

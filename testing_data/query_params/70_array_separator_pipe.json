@@ -32,8 +32,19 @@
   "expected_response": {
     "status_code": 200,
     "body": {
-      "tags": ["python", "rust", "typescript"]
+      "tags": [
+        "python",
+        "rust",
+        "typescript"
+      ]
     }
   },
-  "tags": ["query_params", "array", "separator", "pipe", "parsing", "success"]
+  "tags": [
+    "query_params",
+    "array",
+    "separator",
+    "pipe",
+    "parsing",
+    "success"
+  ]
 }

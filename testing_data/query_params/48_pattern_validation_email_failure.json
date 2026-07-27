@@ -37,7 +37,10 @@
       "errors": [
         {
           "type": "validation_error",
-          "loc": ["query", "email"],
+          "loc": [
+            "query",
+            "email"
+          ],
           "msg": "String does not match pattern",
           "ctx": {
             "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
@@ -47,5 +50,12 @@
       ]
     }
   },
-  "tags": ["query_params", "string", "pattern", "email", "validation", "error"]
+  "tags": [
+    "query_params",
+    "string",
+    "pattern",
+    "email",
+    "validation",
+    "error"
+  ]
 }

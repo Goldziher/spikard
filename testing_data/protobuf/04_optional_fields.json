@@ -7,21 +7,71 @@
       {
         "name": "UpdateProfileRequest",
         "fields": [
-          { "name": "user_id", "type": "int32", "number": 1, "label": "required" },
-          { "name": "bio", "type": "string", "number": 2, "label": "optional" },
-          { "name": "phone", "type": "string", "number": 3, "label": "optional" },
-          { "name": "avatar_url", "type": "string", "number": 4, "label": "optional" }
+          {
+            "name": "user_id",
+            "type": "int32",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "bio",
+            "type": "string",
+            "number": 2,
+            "label": "optional"
+          },
+          {
+            "name": "phone",
+            "type": "string",
+            "number": 3,
+            "label": "optional"
+          },
+          {
+            "name": "avatar_url",
+            "type": "string",
+            "number": 4,
+            "label": "optional"
+          }
         ]
       },
       {
         "name": "UserProfile",
         "fields": [
-          { "name": "user_id", "type": "int32", "number": 1, "label": "required" },
-          { "name": "username", "type": "string", "number": 2, "label": "required" },
-          { "name": "bio", "type": "string", "number": 3, "label": "optional" },
-          { "name": "phone", "type": "string", "number": 4, "label": "optional" },
-          { "name": "avatar_url", "type": "string", "number": 5, "label": "optional" },
-          { "name": "updated_at", "type": "int64", "number": 6, "label": "optional" }
+          {
+            "name": "user_id",
+            "type": "int32",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "username",
+            "type": "string",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "bio",
+            "type": "string",
+            "number": 3,
+            "label": "optional"
+          },
+          {
+            "name": "phone",
+            "type": "string",
+            "number": 4,
+            "label": "optional"
+          },
+          {
+            "name": "avatar_url",
+            "type": "string",
+            "number": 5,
+            "label": "optional"
+          },
+          {
+            "name": "updated_at",
+            "type": "int64",
+            "number": 6,
+            "label": "optional"
+          }
         ]
       }
     ],

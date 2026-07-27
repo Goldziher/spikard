@@ -37,7 +37,10 @@
       "errors": [
         {
           "type": "validation_error",
-          "loc": ["query", "quantity"],
+          "loc": [
+            "query",
+            "quantity"
+          ],
           "msg": "Value must be a multiple of 5",
           "ctx": {
             "multiple_of": 5,
@@ -47,5 +50,11 @@
       ]
     }
   },
-  "tags": ["query_params", "integer", "multipleOf", "validation", "error"]
+  "tags": [
+    "query_params",
+    "integer",
+    "multipleOf",
+    "validation",
+    "error"
+  ]
 }

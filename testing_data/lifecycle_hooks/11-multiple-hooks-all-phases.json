@@ -15,7 +15,10 @@
           "type": "string"
         }
       },
-      "required": ["user_id", "action"]
+      "required": [
+        "user_id",
+        "action"
+      ]
     },
     "middleware": {
       "lifecycle_hooks": {

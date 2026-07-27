@@ -24,7 +24,9 @@
         }
       },
       "dependencies": {
-        "credit_card": ["billing_address"]
+        "credit_card": [
+          "billing_address"
+        ]
       }
     }
   },
@@ -40,5 +42,10 @@
   "expected_response": {
     "status_code": 201
   },
-  "tags": ["json_bodies", "dependencies", "validation", "success"]
+  "tags": [
+    "json_bodies",
+    "dependencies",
+    "validation",
+    "success"
+  ]
 }

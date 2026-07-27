@@ -55,5 +55,9 @@
       }
     }
   },
-  "tags": ["mutations", "input-types", "creation"]
+  "tags": [
+    "mutations",
+    "input-types",
+    "creation"
+  ]
 }

@@ -28,7 +28,9 @@
         "summary": "List all pets",
         "description": "Retrieve a list of all pets in the store",
         "operationId": "listPets",
-        "tags": ["pets"],
+        "tags": [
+          "pets"
+        ],
         "parameters": [
           {
             "name": "limit",
@@ -50,7 +52,11 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": ["available", "adopted", "reserved"]
+              "enum": [
+                "available",
+                "adopted",
+                "reserved"
+              ]
             }
           }
         ],
@@ -82,7 +88,9 @@
         "summary": "Create a pet",
         "description": "Add a new pet to the store",
         "operationId": "createPet",
-        "tags": ["pets"],
+        "tags": [
+          "pets"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -115,7 +123,9 @@
         "summary": "Get pet by ID",
         "description": "Retrieve details of a specific pet",
         "operationId": "getPetById",
-        "tags": ["pets"],
+        "tags": [
+          "pets"
+        ],
         "parameters": [
           {
             "name": "petId",
@@ -148,7 +158,9 @@
         "summary": "Update pet",
         "description": "Update an existing pet",
         "operationId": "updatePet",
-        "tags": ["pets"],
+        "tags": [
+          "pets"
+        ],
         "parameters": [
           {
             "name": "petId",
@@ -187,7 +199,9 @@
         "summary": "Delete pet",
         "description": "Remove a pet from the store",
         "operationId": "deletePet",
-        "tags": ["pets"],
+        "tags": [
+          "pets"
+        ],
         "parameters": [
           {
             "name": "petId",
@@ -213,7 +227,9 @@
       "get": {
         "summary": "List all users",
         "operationId": "listUsers",
-        "tags": ["users"],
+        "tags": [
+          "users"
+        ],
         "responses": {
           "200": {
             "description": "List of users",
@@ -238,7 +254,9 @@
       "post": {
         "summary": "Create a user",
         "operationId": "createUser",
-        "tags": ["users"],
+        "tags": [
+          "users"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -267,7 +285,9 @@
       "get": {
         "summary": "Get user by ID",
         "operationId": "getUserById",
-        "tags": ["users"],
+        "tags": [
+          "users"
+        ],
         "parameters": [
           {
             "name": "userId",
@@ -298,7 +318,12 @@
     "schemas": {
       "Pet": {
         "type": "object",
-        "required": ["id", "name", "species", "status"],
+        "required": [
+          "id",
+          "name",
+          "species",
+          "status"
+        ],
         "properties": {
           "id": {
             "type": "string",
@@ -313,7 +338,13 @@
           },
           "species": {
             "type": "string",
-            "enum": ["dog", "cat", "bird", "rabbit", "hamster"],
+            "enum": [
+              "dog",
+              "cat",
+              "bird",
+              "rabbit",
+              "hamster"
+            ],
             "description": "Type of pet"
           },
           "breed": {
@@ -330,7 +361,11 @@
           },
           "status": {
             "type": "string",
-            "enum": ["available", "adopted", "reserved"],
+            "enum": [
+              "available",
+              "adopted",
+              "reserved"
+            ],
             "description": "Availability status"
           },
           "owner": {
@@ -359,7 +394,11 @@
       },
       "User": {
         "type": "object",
-        "required": ["id", "name", "email"],
+        "required": [
+          "id",
+          "name",
+          "email"
+        ],
         "properties": {
           "id": {
             "type": "string",
@@ -390,7 +429,11 @@
           },
           "role": {
             "type": "string",
-            "enum": ["admin", "user", "guest"],
+            "enum": [
+              "admin",
+              "user",
+              "guest"
+            ],
             "default": "user",
             "description": "User role"
           },
@@ -402,7 +445,11 @@
       },
       "CreatePetRequest": {
         "type": "object",
-        "required": ["name", "species", "status"],
+        "required": [
+          "name",
+          "species",
+          "status"
+        ],
         "properties": {
           "name": {
             "type": "string",
@@ -411,7 +458,13 @@
           },
           "species": {
             "type": "string",
-            "enum": ["dog", "cat", "bird", "rabbit", "hamster"]
+            "enum": [
+              "dog",
+              "cat",
+              "bird",
+              "rabbit",
+              "hamster"
+            ]
           },
           "breed": {
             "type": "string",
@@ -424,7 +477,11 @@
           },
           "status": {
             "type": "string",
-            "enum": ["available", "adopted", "reserved"]
+            "enum": [
+              "available",
+              "adopted",
+              "reserved"
+            ]
           },
           "tags": {
             "type": "array",
@@ -453,7 +510,11 @@
           },
           "status": {
             "type": "string",
-            "enum": ["available", "adopted", "reserved"]
+            "enum": [
+              "available",
+              "adopted",
+              "reserved"
+            ]
           },
           "tags": {
             "type": "array",
@@ -465,7 +526,10 @@
       },
       "CreateUserRequest": {
         "type": "object",
-        "required": ["name", "email"],
+        "required": [
+          "name",
+          "email"
+        ],
         "properties": {
           "name": {
             "type": "string",
@@ -483,7 +547,11 @@
           },
           "role": {
             "type": "string",
-            "enum": ["admin", "user", "guest"],
+            "enum": [
+              "admin",
+              "user",
+              "guest"
+            ],
             "default": "user"
           }
         }

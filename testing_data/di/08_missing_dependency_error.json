@@ -10,7 +10,9 @@
     "route": "/api/missing-dep",
     "method": "GET",
     "dependencies": {},
-    "handler_dependencies": ["non_existent_service"]
+    "handler_dependencies": [
+      "non_existent_service"
+    ]
   },
   "request": {
     "method": "GET",
@@ -33,5 +35,9 @@
     }
   },
   "notes": "Handler requires 'non_existent_service' but it's not in the registered dependencies map.",
-  "tags": ["dependency_injection", "error", "missing"]
+  "tags": [
+    "dependency_injection",
+    "error",
+    "missing"
+  ]
 }

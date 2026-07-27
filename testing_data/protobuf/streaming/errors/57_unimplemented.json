@@ -7,11 +7,25 @@
     "messages": [
       {
         "name": "FeatureRequest",
-        "fields": [{ "name": "feature_name", "type": "string", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "feature_name",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       },
       {
         "name": "FeatureResponse",
-        "fields": [{ "name": "available", "type": "bool", "number": 1, "label": "optional" }]
+        "fields": [
+          {
+            "name": "available",
+            "type": "bool",
+            "number": 1,
+            "label": "optional"
+          }
+        ]
       }
     ],
     "services": [
@@ -50,5 +64,10 @@
     "error_message": "Method FutureFeature is not implemented",
     "details": "The server does not implement the requested RPC method FutureFeature. This method is planned for a future release and is not currently available in this version of the service."
   },
-  "tags": ["grpc_status", "error_handling", "unimplemented", "rpc_not_supported"]
+  "tags": [
+    "grpc_status",
+    "error_handling",
+    "unimplemented",
+    "rpc_not_supported"
+  ]
 }

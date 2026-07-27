@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    kotlin("jvm") version "2.4.0"
+    kotlin("jvm") version "2.4.10"
     java
 }
 
@@ -24,9 +24,9 @@ repositories {
 }
 
 dependencies {
-    testImplementation("dev.spikard:spikard-kotlin:0.17.0-rc.4")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.0")
-    testImplementation("org.junit.jupiter:junit-jupiter-engine:6.1.0")
+    testImplementation("dev.spikard:spikard-kotlin:0.17.0-rc.5")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:6.1.2")
     testImplementation("com.fasterxml.jackson.core:jackson-databind:2.19.0")
     testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.19.0")
     testImplementation(kotlin("test"))

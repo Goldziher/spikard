@@ -85,14 +85,20 @@
     },
     "level_2_comments": {
       "description": "Batch load comments for all posts",
-      "post_ids": ["post-1", "post-2"],
+      "post_ids": [
+        "post-1",
+        "post-2"
+      ],
       "batch_calls": 1,
       "db_queries": 1,
       "results": 3
     },
     "level_3_authors": {
       "description": "Batch load authors for all comments",
-      "user_ids": ["user-1", "user-2"],
+      "user_ids": [
+        "user-1",
+        "user-2"
+      ],
       "batch_calls": 1,
       "db_queries": 1,
       "unique_users": 2,
@@ -118,5 +124,10 @@
       "optimization": "50% reduction in database queries"
     }
   },
-  "tags": ["dataloader", "nested-batching", "multi-level", "complex-optimization"]
+  "tags": [
+    "dataloader",
+    "nested-batching",
+    "multi-level",
+    "complex-optimization"
+  ]
 }

@@ -22,7 +22,9 @@
           "type": "string"
         }
       },
-      "required": ["price"]
+      "required": [
+        "price"
+      ]
     },
     "parameters": {
       "path": {
@@ -53,7 +55,10 @@
       "errors": [
         {
           "type": "missing",
-          "loc": ["body", "price"],
+          "loc": [
+            "body",
+            "price"
+          ],
           "msg": "Field required",
           "input": {
             "id": 1,

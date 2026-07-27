@@ -7,25 +7,58 @@
     "messages": [
       {
         "name": "SecureRequest",
-        "fields": [{ "name": "action", "type": "string", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "action",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       },
       {
         "name": "SecureResponse",
-        "fields": [{ "name": "result", "type": "string", "number": 1, "label": "optional" }]
+        "fields": [
+          {
+            "name": "result",
+            "type": "string",
+            "number": 1,
+            "label": "optional"
+          }
+        ]
       }
     ],
     "services": [
       {
         "name": "SecureService",
-        "methods": [{ "name": "AdminAction", "input_type": "SecureRequest", "output_type": "SecureResponse" }]
+        "methods": [
+          {
+            "name": "AdminAction",
+            "input_type": "SecureRequest",
+            "output_type": "SecureResponse"
+          }
+        ]
       }
     ]
   },
-  "handler": { "service": "example.v1.SecureService", "method": "AdminAction" },
-  "request": {
-    "metadata": { "content-type": "application/grpc" },
-    "message": { "action": "delete_all" }
+  "handler": {
+    "service": "example.v1.SecureService",
+    "method": "AdminAction"
   },
-  "expected_response": { "status_code": "PERMISSION_DENIED" },
-  "tags": ["grpc_status", "auth", "error"]
+  "request": {
+    "metadata": {
+      "content-type": "application/grpc"
+    },
+    "message": {
+      "action": "delete_all"
+    }
+  },
+  "expected_response": {
+    "status_code": "PERMISSION_DENIED"
+  },
+  "tags": [
+    "grpc_status",
+    "auth",
+    "error"
+  ]
 }

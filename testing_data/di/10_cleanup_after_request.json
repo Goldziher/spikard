@@ -19,13 +19,18 @@
         "cleanup": true
       }
     },
-    "handler_dependencies": ["db_session"]
+    "handler_dependencies": [
+      "db_session"
+    ]
   },
   "background": {
     "state_path": "/api/cleanup-state",
     "state_key": "cleanup_events",
     "value_field": "session_id",
-    "expected_state": ["session_opened", "session_closed"]
+    "expected_state": [
+      "session_opened",
+      "session_closed"
+    ]
   },
   "request": {
     "method": "GET",
@@ -39,5 +44,10 @@
     }
   },
   "notes": "Factory uses generator pattern (yield) for cleanup. After handler completes, cleanup code runs (closes session). Background state endpoint verifies cleanup was called.",
-  "tags": ["dependency_injection", "cleanup", "generator", "async"]
+  "tags": [
+    "dependency_injection",
+    "cleanup",
+    "generator",
+    "async"
+  ]
 }

@@ -7,25 +7,58 @@
     "messages": [
       {
         "name": "CreateRequest",
-        "fields": [{ "name": "id", "type": "string", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       },
       {
         "name": "CreateResponse",
-        "fields": [{ "name": "id", "type": "string", "number": 1, "label": "optional" }]
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "number": 1,
+            "label": "optional"
+          }
+        ]
       }
     ],
     "services": [
       {
         "name": "CreateService",
-        "methods": [{ "name": "Create", "input_type": "CreateRequest", "output_type": "CreateResponse" }]
+        "methods": [
+          {
+            "name": "Create",
+            "input_type": "CreateRequest",
+            "output_type": "CreateResponse"
+          }
+        ]
       }
     ]
   },
-  "handler": { "service": "example.v1.CreateService", "method": "Create" },
-  "request": {
-    "metadata": { "content-type": "application/grpc" },
-    "message": { "id": "duplicate-001" }
+  "handler": {
+    "service": "example.v1.CreateService",
+    "method": "Create"
   },
-  "expected_response": { "status_code": "ALREADY_EXISTS" },
-  "tags": ["grpc_status", "already_exists", "error"]
+  "request": {
+    "metadata": {
+      "content-type": "application/grpc"
+    },
+    "message": {
+      "id": "duplicate-001"
+    }
+  },
+  "expected_response": {
+    "status_code": "ALREADY_EXISTS"
+  },
+  "tags": [
+    "grpc_status",
+    "already_exists",
+    "error"
+  ]
 }

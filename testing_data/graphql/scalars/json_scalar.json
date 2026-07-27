@@ -29,7 +29,10 @@
             "compression": true,
             "tracing": false
           },
-          "endpoints": ["https://api.example.com", "https://api-backup.example.com"]
+          "endpoints": [
+            "https://api.example.com",
+            "https://api-backup.example.com"
+          ]
         },
         "metadata": {
           "version": "1.0.0",
@@ -54,7 +57,10 @@
             "compression": true,
             "tracing": false
           },
-          "endpoints": ["https://api.example.com", "https://api-backup.example.com"]
+          "endpoints": [
+            "https://api.example.com",
+            "https://api-backup.example.com"
+          ]
         },
         "metadata": {
           "version": "1.0.0",
@@ -65,5 +71,9 @@
       }
     }
   },
-  "tags": ["scalars", "json", "custom-types"]
+  "tags": [
+    "scalars",
+    "json",
+    "custom-types"
+  ]
 }

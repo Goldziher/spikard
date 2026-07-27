@@ -12,7 +12,9 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": ["data"],
+      "required": [
+        "data"
+      ],
       "properties": {
         "data": {
           "type": "string"
@@ -37,5 +39,9 @@
       "detail": "Unsupported media type"
     }
   },
-  "tags": ["content_types", "validation", "error"]
+  "tags": [
+    "content_types",
+    "validation",
+    "error"
+  ]
 }

@@ -264,3 +264,56 @@ pub fn emit(api: &ApiSurface, cfg: &HttpExtensionConfig) -> Result<Vec<Generated
 
     Ok(files)
 }
+
+/// Ruby impl files that reopen the native `Spikard::App` class and call
+/// runtime-only native methods. Steep type-checks against RBS and cannot see the
+/// native surface, so every one of them yields false positives; they must be
+/// steered to their RBS coverage via Steep `ignore` directives.
+///
+/// `service.rb` is emitted by alef core's magnus backend; the remaining five are
+/// emitted by this extension (see [`emit`]). Hardcoding spikard's paths here is
+/// intentional — this extension is spikard-specific.
+const STEEP_IGNORED_IMPL_FILES: &[&str] = &[
+    "lib/spikard/service.rb",
+    "lib/spikard/app.rb",
+    "lib/spikard/params.rb",
+    "lib/spikard/introspection.rb",
+    "lib/spikard/errors.rb",
+    "lib/spikard/service_http_additions.rb",
+];
+
+/// Anchor line the alef ruby scaffold already emits in the `Steepfile`. The impl
+/// ignores are inserted immediately after it so they sit inside the `target :lib`
+/// block alongside the scaffold's own `native.rb` ignore.
+const STEEP_NATIVE_IGNORE: &str = "  ignore \"lib/spikard/native.rb\"\n";
+
+/// Extend the alef-scaffolded `packages/ruby/Steepfile` so Steep ignores the six
+/// generated impl files in addition to the scaffold's `native.rb`.
+///
+/// Runs from [`crate::HttpExtension::transform_scaffold_files`]. The alef ruby
+/// scaffold owns the `Steepfile` and only ignores `native.rb`; the scaffold is
+/// project-agnostic and cannot hardcode spikard's impl filenames, so this
+/// spikard-specific extension appends them. Idempotent: a `Steepfile` already
+/// carrying the impl ignores is left untouched.
+pub fn wire_steep_ignores(files: &mut [GeneratedFile]) {
+    for file in files.iter_mut() {
+        if file.path.file_name().and_then(|n| n.to_str()) != Some("Steepfile") {
+            continue;
+        }
+        if file.content.contains(STEEP_IGNORED_IMPL_FILES[0]) {
+            return;
+        }
+        let Some(anchor_end) = file
+            .content
+            .find(STEEP_NATIVE_IGNORE)
+            .map(|pos| pos + STEEP_NATIVE_IGNORE.len())
+        else {
+            continue;
+        };
+        let mut additions = String::new();
+        for path in STEEP_IGNORED_IMPL_FILES {
+            let _ = writeln!(additions, "  ignore \"{path}\"");
+        }
+        file.content.insert_str(anchor_end, &additions);
+    }
+}

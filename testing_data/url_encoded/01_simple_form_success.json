@@ -11,7 +11,10 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": ["username", "password"],
+      "required": [
+        "username",
+        "password"
+      ],
       "properties": {
         "username": {
           "type": "string"

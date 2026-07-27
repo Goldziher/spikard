@@ -29,5 +29,11 @@
       "username": "alice"
     }
   },
-  "tags": ["path_params", "string", "minLength", "validation", "success"]
+  "tags": [
+    "path_params",
+    "string",
+    "minLength",
+    "validation",
+    "success"
+  ]
 }

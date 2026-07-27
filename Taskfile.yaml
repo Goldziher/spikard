@@ -190,7 +190,7 @@ tasks:
   alef:generate:
     desc: "Regenerate all Alef-managed outputs without formatting or building"
     cmds:
-      - cargo run -p spikard-alef --release -- all --clean --format=false
+      - cargo run -p spikard-alef --release -- all --clean
       - cmd: |
           # Invoke cargo build for spikard-dart to trigger FRB codegen and the
           # fix_handler_executor_calls() rewrite. This is necessary because alef's

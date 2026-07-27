@@ -32,5 +32,13 @@
       "detail": "Expected 'Authorization: Bearer <token>'"
     }
   },
-  "tags": ["auth", "jwt", "bearer", "security", "middleware", "error", "unauthorized"]
+  "tags": [
+    "auth",
+    "jwt",
+    "bearer",
+    "security",
+    "middleware",
+    "error",
+    "unauthorized"
+  ]
 }

@@ -237,7 +237,10 @@
         "data": {
           "reason": "Missing or invalid authentication token",
           "hint": "Provide valid API key or JWT token",
-          "auth_schemes": ["Bearer", "ApiKey"]
+          "auth_schemes": [
+            "Bearer",
+            "ApiKey"
+          ]
         }
       },
       "id": 109

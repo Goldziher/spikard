@@ -279,5 +279,12 @@
       }
     }
   },
-  "tags": ["edge-cases", "complex-queries", "aliases", "fragments", "performance", "high-complexity"]
+  "tags": [
+    "edge-cases",
+    "complex-queries",
+    "aliases",
+    "fragments",
+    "performance",
+    "high-complexity"
+  ]
 }

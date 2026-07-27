@@ -27,7 +27,9 @@
     "method": "GET",
     "path": "/items",
     "query_params": {
-      "ids": ["1"]
+      "ids": [
+        "1"
+      ]
     }
   },
   "expected_response": {
@@ -40,7 +42,10 @@
       "errors": [
         {
           "type": "validation_error",
-          "loc": ["query", "ids"],
+          "loc": [
+            "query",
+            "ids"
+          ],
           "msg": "Array must contain at least 2 items",
           "ctx": {
             "min_items": 2,
@@ -50,5 +55,11 @@
       ]
     }
   },
-  "tags": ["query_params", "array", "minItems", "validation", "error"]
+  "tags": [
+    "query_params",
+    "array",
+    "minItems",
+    "validation",
+    "error"
+  ]
 }

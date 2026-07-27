@@ -25,7 +25,11 @@
         }
       },
       "additionalProperties": false,
-      "required": ["name", "price", "tags"]
+      "required": [
+        "name",
+        "price",
+        "tags"
+      ]
     }
   },
   "request": {
@@ -50,7 +54,10 @@
       "errors": [
         {
           "type": "too_short",
-          "loc": ["body", "tags"],
+          "loc": [
+            "body",
+            "tags"
+          ],
           "msg": "List should have at least 1 item after validation",
           "input": [],
           "ctx": {

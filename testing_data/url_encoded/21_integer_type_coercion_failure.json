@@ -13,7 +13,9 @@
     "content_type": "application/x-www-form-urlencoded",
     "body_schema": {
       "type": "object",
-      "required": ["price"],
+      "required": [
+        "price"
+      ],
       "properties": {
         "price": {
           "type": "integer"
@@ -39,12 +41,21 @@
       "errors": [
         {
           "type": "int_parsing",
-          "loc": ["body", "price"],
+          "loc": [
+            "body",
+            "price"
+          ],
           "msg": "Input should be a valid integer, unable to parse string as an integer",
           "input": "not-a-number"
         }
       ]
     }
   },
-  "tags": ["url_encoded", "type", "integer", "validation", "error"]
+  "tags": [
+    "url_encoded",
+    "type",
+    "integer",
+    "validation",
+    "error"
+  ]
 }

@@ -23,7 +23,9 @@
         "enabled": true,
         "algorithm": "HS256",
         "secret": "test-secret-key-do-not-use-in-production",
-        "audience": ["https://api.example.com"]
+        "audience": [
+          "https://api.example.com"
+        ]
       }
     }
   },
@@ -43,5 +45,14 @@
       "detail": "Token audience is invalid"
     }
   },
-  "tags": ["auth", "jwt", "bearer", "security", "middleware", "error", "unauthorized", "audience"]
+  "tags": [
+    "auth",
+    "jwt",
+    "bearer",
+    "security",
+    "middleware",
+    "error",
+    "unauthorized",
+    "audience"
+  ]
 }

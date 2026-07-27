@@ -3,40 +3,38 @@ syntax = "proto3";
 package com.example.userservice;
 
 message User {
-    string id = 1;
-    string name = 2;
-    string email = 3;
-    optional string phone = 4;
-    repeated string tags = 5;
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  optional string phone = 4;
+  repeated string tags = 5;
 }
 
-message GetUserRequest {
-    string user_id = 1;
-}
+message GetUserRequest { string user_id = 1; }
 
 message CreateUserRequest {
-    string name = 1;
-    string email = 2;
-    optional string phone = 3;
+  string name = 1;
+  string email = 2;
+  optional string phone = 3;
 }
 
 message UserResponse {
-    User user = 1;
-    bool success = 2;
-    optional string error_message = 3;
+  User user = 1;
+  bool success = 2;
+  optional string error_message = 3;
 }
 
 service UserService {
-    rpc GetUser(GetUserRequest) returns (UserResponse) {}
+  rpc GetUser(GetUserRequest) returns (UserResponse) {}
 
-    rpc CreateUser(CreateUserRequest) returns (UserResponse) {}
+  rpc CreateUser(CreateUserRequest) returns (UserResponse) {}
 
-    rpc ListUsers(GetUserRequest) returns (stream User) {}
+  rpc ListUsers(GetUserRequest) returns (stream User) {}
 }
 
 enum UserStatus {
-    UNKNOWN = 0;
-    ACTIVE = 1;
-    INACTIVE = 2;
-    SUSPENDED = 3;
+  UNKNOWN = 0;
+  ACTIVE = 1;
+  INACTIVE = 2;
+  SUSPENDED = 3;
 }

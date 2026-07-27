@@ -61,5 +61,9 @@
       ]
     }
   },
-  "tags": ["scalars", "datetime", "custom-types"]
+  "tags": [
+    "scalars",
+    "datetime",
+    "custom-types"
+  ]
 }

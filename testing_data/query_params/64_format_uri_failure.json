@@ -37,7 +37,10 @@
       "errors": [
         {
           "type": "validation_error",
-          "loc": ["query", "url"],
+          "loc": [
+            "query",
+            "url"
+          ],
           "msg": "Invalid URI format",
           "ctx": {
             "format": "uri",
@@ -47,5 +50,11 @@
       ]
     }
   },
-  "tags": ["query_params", "format", "uri", "validation", "error"]
+  "tags": [
+    "query_params",
+    "format",
+    "uri",
+    "validation",
+    "error"
+  ]
 }

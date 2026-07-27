@@ -7,25 +7,58 @@
     "messages": [
       {
         "name": "HeavyRequest",
-        "fields": [{ "name": "size", "type": "int64", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "size",
+            "type": "int64",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       },
       {
         "name": "HeavyResponse",
-        "fields": [{ "name": "allocated", "type": "int64", "number": 1, "label": "optional" }]
+        "fields": [
+          {
+            "name": "allocated",
+            "type": "int64",
+            "number": 1,
+            "label": "optional"
+          }
+        ]
       }
     ],
     "services": [
       {
         "name": "ResourceService",
-        "methods": [{ "name": "AllocateMemory", "input_type": "HeavyRequest", "output_type": "HeavyResponse" }]
+        "methods": [
+          {
+            "name": "AllocateMemory",
+            "input_type": "HeavyRequest",
+            "output_type": "HeavyResponse"
+          }
+        ]
       }
     ]
   },
-  "handler": { "service": "example.v1.ResourceService", "method": "AllocateMemory" },
-  "request": {
-    "metadata": { "content-type": "application/grpc" },
-    "message": { "size": 9999999999 }
+  "handler": {
+    "service": "example.v1.ResourceService",
+    "method": "AllocateMemory"
   },
-  "expected_response": { "status_code": "RESOURCE_EXHAUSTED" },
-  "tags": ["grpc_status", "resource", "error"]
+  "request": {
+    "metadata": {
+      "content-type": "application/grpc"
+    },
+    "message": {
+      "size": 9999999999
+    }
+  },
+  "expected_response": {
+    "status_code": "RESOURCE_EXHAUSTED"
+  },
+  "tags": [
+    "grpc_status",
+    "resource",
+    "error"
+  ]
 }

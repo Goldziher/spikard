@@ -37,7 +37,10 @@
       "errors": [
         {
           "type": "int_parsing",
-          "loc": ["query", "skip"],
+          "loc": [
+            "query",
+            "skip"
+          ],
           "msg": "Input should be a valid integer, unable to parse string as an integer",
           "input": "not_a_number"
         }

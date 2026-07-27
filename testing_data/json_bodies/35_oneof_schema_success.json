@@ -14,7 +14,9 @@
       "oneOf": [
         {
           "type": "object",
-          "required": ["credit_card"],
+          "required": [
+            "credit_card"
+          ],
           "properties": {
             "credit_card": {
               "type": "string",
@@ -24,7 +26,9 @@
         },
         {
           "type": "object",
-          "required": ["paypal_email"],
+          "required": [
+            "paypal_email"
+          ],
           "properties": {
             "paypal_email": {
               "type": "string",
@@ -45,5 +49,11 @@
   "expected_response": {
     "status_code": 201
   },
-  "tags": ["json_bodies", "oneOf", "composition", "validation", "success"]
+  "tags": [
+    "json_bodies",
+    "oneOf",
+    "composition",
+    "validation",
+    "success"
+  ]
 }

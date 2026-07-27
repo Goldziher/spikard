@@ -8,15 +8,35 @@
       {
         "name": "Task",
         "fields": [
-          { "name": "id", "type": "string", "number": 1, "label": "required" },
-          { "name": "name", "type": "string", "number": 2, "label": "required" }
+          {
+            "name": "id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "number": 2,
+            "label": "required"
+          }
         ]
       },
       {
         "name": "Result",
         "fields": [
-          { "name": "id", "type": "string", "number": 1, "label": "required" },
-          { "name": "status", "type": "string", "number": 2, "label": "required" }
+          {
+            "name": "id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "number": 2,
+            "label": "required"
+          }
         ]
       }
     ],
@@ -44,18 +64,40 @@
       "content-type": "application/grpc"
     },
     "stream": [
-      { "id": "task-1", "name": "process_1" },
-      { "id": "task-2", "name": "process_2" },
-      { "id": "task-3", "name": "process_3" }
+      {
+        "id": "task-1",
+        "name": "process_1"
+      },
+      {
+        "id": "task-2",
+        "name": "process_2"
+      },
+      {
+        "id": "task-3",
+        "name": "process_3"
+      }
     ]
   },
   "expected_response": {
     "status_code": "OK",
     "stream": [
-      { "id": "task-1", "status": "processed" },
-      { "id": "task-2", "status": "processed" },
-      { "id": "task-3", "status": "processed" }
+      {
+        "id": "task-1",
+        "status": "processed"
+      },
+      {
+        "id": "task-2",
+        "status": "processed"
+      },
+      {
+        "id": "task-3",
+        "status": "processed"
+      }
     ]
   },
-  "tags": ["bidirectional_streaming", "async", "processing"]
+  "tags": [
+    "bidirectional_streaming",
+    "async",
+    "processing"
+  ]
 }

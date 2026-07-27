@@ -8,13 +8,30 @@
       {
         "name": "ValidateRequest",
         "fields": [
-          { "name": "email", "type": "string", "number": 1, "label": "required" },
-          { "name": "age", "type": "int32", "number": 2, "label": "required" }
+          {
+            "name": "email",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "age",
+            "type": "int32",
+            "number": 2,
+            "label": "required"
+          }
         ]
       },
       {
         "name": "ValidateResponse",
-        "fields": [{ "name": "valid", "type": "bool", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "valid",
+            "type": "bool",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       }
     ],
     "services": [
@@ -35,8 +52,13 @@
     "method": "ValidateInput"
   },
   "request": {
-    "metadata": { "content-type": "application/grpc" },
-    "message": { "email": "invalid-email", "age": -5 }
+    "metadata": {
+      "content-type": "application/grpc"
+    },
+    "message": {
+      "email": "invalid-email",
+      "age": -5
+    }
   },
   "expected_response": {
     "status_code": "INVALID_ARGUMENT",
@@ -48,5 +70,9 @@
       }
     }
   },
-  "tags": ["grpc_status", "validation", "error"]
+  "tags": [
+    "grpc_status",
+    "validation",
+    "error"
+  ]
 }

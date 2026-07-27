@@ -37,7 +37,11 @@
         "type": "string"
       }
     },
-    "required": ["type", "user", "timestamp"],
+    "required": [
+      "type",
+      "user",
+      "timestamp"
+    ],
     "type": "object"
   }
 }

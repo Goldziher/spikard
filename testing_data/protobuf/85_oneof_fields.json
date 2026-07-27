@@ -8,7 +8,12 @@
       {
         "name": "OneofRequest",
         "fields": [
-          { "name": "request_id", "type": "string", "number": 1, "label": "required" },
+          {
+            "name": "request_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
           {
             "name": "text_data",
             "type": "string",
@@ -35,8 +40,18 @@
       {
         "name": "OneofResponse",
         "fields": [
-          { "name": "received_type", "type": "string", "number": 1, "label": "required" },
-          { "name": "data_present", "type": "bool", "number": 2, "label": "required" }
+          {
+            "name": "received_type",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "data_present",
+            "type": "bool",
+            "number": 2,
+            "label": "required"
+          }
         ]
       }
     ],
@@ -73,5 +88,9 @@
       "data_present": true
     }
   },
-  "tags": ["edge_cases", "oneof", "protobuf_syntax"]
+  "tags": [
+    "edge_cases",
+    "oneof",
+    "protobuf_syntax"
+  ]
 }

@@ -8,19 +8,59 @@
       {
         "name": "StringFragment",
         "fields": [
-          { "name": "fragment_id", "type": "string", "number": 1, "label": "required" },
-          { "name": "text", "type": "string", "number": 2, "label": "required" },
-          { "name": "language", "type": "string", "number": 3, "label": "optional" }
+          {
+            "name": "fragment_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "text",
+            "type": "string",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "language",
+            "type": "string",
+            "number": 3,
+            "label": "optional"
+          }
         ]
       },
       {
         "name": "ConcatenatedString",
         "fields": [
-          { "name": "fragment_id", "type": "string", "number": 1, "label": "required" },
-          { "name": "result", "type": "string", "number": 2, "label": "required" },
-          { "name": "fragment_count", "type": "int32", "number": 3, "label": "required" },
-          { "name": "total_length", "type": "int32", "number": 4, "label": "required" },
-          { "name": "status", "type": "string", "number": 5, "label": "required" }
+          {
+            "name": "fragment_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "fragment_count",
+            "type": "int32",
+            "number": 3,
+            "label": "required"
+          },
+          {
+            "name": "total_length",
+            "type": "int32",
+            "number": 4,
+            "label": "required"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "number": 5,
+            "label": "required"
+          }
         ]
       }
     ],
@@ -80,5 +120,10 @@
       "status": "CONCATENATED"
     }
   },
-  "tags": ["client_streaming", "unicode", "utf8", "internationalization"]
+  "tags": [
+    "client_streaming",
+    "unicode",
+    "utf8",
+    "internationalization"
+  ]
 }

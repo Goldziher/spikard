@@ -11,9 +11,16 @@
     "route": "/api/data",
     "method": "GET",
     "cors": {
-      "allowed_origins": ["https://example.com"],
-      "allowed_methods": ["GET"],
-      "expose_headers": ["X-Total-Count", "X-Request-Id"]
+      "allowed_origins": [
+        "https://example.com"
+      ],
+      "allowed_methods": [
+        "GET"
+      ],
+      "expose_headers": [
+        "X-Total-Count",
+        "X-Request-Id"
+      ]
     },
     "parameters": {
       "headers": {
@@ -40,5 +47,9 @@
       "X-Request-Id": "abc123"
     }
   },
-  "tags": ["cors", "expose_headers", "success"]
+  "tags": [
+    "cors",
+    "expose_headers",
+    "success"
+  ]
 }

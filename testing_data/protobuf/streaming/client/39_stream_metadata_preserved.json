@@ -8,20 +8,65 @@
       {
         "name": "MetadataCarryingRequest",
         "fields": [
-          { "name": "request_id", "type": "string", "number": 1, "label": "required" },
-          { "name": "user_id", "type": "string", "number": 2, "label": "required" },
-          { "name": "payload", "type": "string", "number": 3, "label": "required" }
+          {
+            "name": "request_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "user_id",
+            "type": "string",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "payload",
+            "type": "string",
+            "number": 3,
+            "label": "required"
+          }
         ]
       },
       {
         "name": "MetadataResponse",
         "fields": [
-          { "name": "request_id", "type": "string", "number": 1, "label": "required" },
-          { "name": "processed_by", "type": "string", "number": 2, "label": "required" },
-          { "name": "received_user_id", "type": "string", "number": 3, "label": "required" },
-          { "name": "message_count", "type": "int32", "number": 4, "label": "required" },
-          { "name": "trace_id", "type": "string", "number": 5, "label": "optional" },
-          { "name": "status", "type": "string", "number": 6, "label": "required" }
+          {
+            "name": "request_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "processed_by",
+            "type": "string",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "received_user_id",
+            "type": "string",
+            "number": 3,
+            "label": "required"
+          },
+          {
+            "name": "message_count",
+            "type": "int32",
+            "number": 4,
+            "label": "required"
+          },
+          {
+            "name": "trace_id",
+            "type": "string",
+            "number": 5,
+            "label": "optional"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "number": 6,
+            "label": "required"
+          }
         ]
       }
     ],
@@ -86,5 +131,10 @@
       "content-type": "application/grpc"
     }
   },
-  "tags": ["client_streaming", "metadata", "request_headers", "context_propagation"]
+  "tags": [
+    "client_streaming",
+    "metadata",
+    "request_headers",
+    "context_propagation"
+  ]
 }

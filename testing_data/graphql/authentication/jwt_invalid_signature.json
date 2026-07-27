@@ -29,5 +29,10 @@
       "error_message": "Invalid token signature"
     }
   },
-  "tags": ["authentication", "jwt", "invalid-signature", "error"]
+  "tags": [
+    "authentication",
+    "jwt",
+    "invalid-signature",
+    "error"
+  ]
 }

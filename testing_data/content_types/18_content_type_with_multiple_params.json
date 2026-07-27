@@ -35,5 +35,10 @@
       "value": "test"
     }
   },
-  "tags": ["content_types", "parameters", "parsing", "success"]
+  "tags": [
+    "content_types",
+    "parameters",
+    "parsing",
+    "success"
+  ]
 }

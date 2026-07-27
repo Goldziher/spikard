@@ -2,7 +2,10 @@
   "filters": {
     "comments": true,
     "node-types": {
-      "nodeTypes": ["CodeBlock", "Code"]
+      "nodeTypes": [
+        "CodeBlock",
+        "Code"
+      ]
     }
   },
   "rules": {
@@ -15,7 +18,10 @@
     },
     "terminology": {
       "defaultTerms": false,
-      "terms": ["Spikard", "spikard"]
+      "terms": [
+        "Spikard",
+        "spikard"
+      ]
     },
     "no-zero-width-spaces": true,
     "@textlint-rule/no-invalid-control-character": true,

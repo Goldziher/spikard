@@ -3,7 +3,12 @@
   "title": "Edge Cases Test Fixture",
   "description": "Test fixture for edge cases and boundary conditions",
   "type": "object",
-  "required": ["name", "description", "request", "expected_response"],
+  "required": [
+    "name",
+    "description",
+    "request",
+    "expected_response"
+  ],
   "properties": {
     "name": {
       "type": "string"
@@ -16,7 +21,12 @@
       "properties": {
         "framework": {
           "type": "string",
-          "enum": ["fastapi", "starlette", "litestar", "spikard"]
+          "enum": [
+            "fastapi",
+            "starlette",
+            "litestar",
+            "spikard"
+          ]
         },
         "test_file": {
           "type": "string"
@@ -29,7 +39,10 @@
     },
     "request": {
       "type": "object",
-      "required": ["method", "path"],
+      "required": [
+        "method",
+        "path"
+      ],
       "properties": {
         "method": {
           "type": "string"
@@ -48,7 +61,9 @@
     },
     "expected_response": {
       "type": "object",
-      "required": ["status_code"],
+      "required": [
+        "status_code"
+      ],
       "properties": {
         "status_code": {
           "type": "integer"

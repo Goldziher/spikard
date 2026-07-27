@@ -27,5 +27,8 @@
       "x-request-id": "<<absent>>"
     }
   },
-  "tags": ["request_id", "disabled"]
+  "tags": [
+    "request_id",
+    "disabled"
+  ]
 }

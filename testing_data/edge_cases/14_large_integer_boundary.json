@@ -31,5 +31,11 @@
       "id": 9007199254740991
     }
   },
-  "tags": ["edge_cases", "integer", "boundary", "max_safe_integer", "success"]
+  "tags": [
+    "edge_cases",
+    "integer",
+    "boundary",
+    "max_safe_integer",
+    "success"
+  ]
 }

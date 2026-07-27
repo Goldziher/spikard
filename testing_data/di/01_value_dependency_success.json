@@ -26,7 +26,11 @@
         "value_type": "integer"
       }
     },
-    "handler_dependencies": ["app_name", "version", "max_connections"]
+    "handler_dependencies": [
+      "app_name",
+      "version",
+      "max_connections"
+    ]
   },
   "request": {
     "method": "GET",
@@ -40,5 +44,9 @@
       "max_connections": 100
     }
   },
-  "tags": ["dependency_injection", "value", "simple"]
+  "tags": [
+    "dependency_injection",
+    "value",
+    "simple"
+  ]
 }

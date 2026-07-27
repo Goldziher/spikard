@@ -8,18 +8,53 @@
       {
         "name": "ZeroValueRequest",
         "fields": [
-          { "name": "int_field", "type": "int32", "number": 1, "label": "optional" },
-          { "name": "bool_field", "type": "bool", "number": 2, "label": "optional" },
-          { "name": "string_field", "type": "string", "number": 3, "label": "optional" },
-          { "name": "bytes_field", "type": "bytes", "number": 4, "label": "optional" },
-          { "name": "float_field", "type": "float", "number": 5, "label": "optional" }
+          {
+            "name": "int_field",
+            "type": "int32",
+            "number": 1,
+            "label": "optional"
+          },
+          {
+            "name": "bool_field",
+            "type": "bool",
+            "number": 2,
+            "label": "optional"
+          },
+          {
+            "name": "string_field",
+            "type": "string",
+            "number": 3,
+            "label": "optional"
+          },
+          {
+            "name": "bytes_field",
+            "type": "bytes",
+            "number": 4,
+            "label": "optional"
+          },
+          {
+            "name": "float_field",
+            "type": "float",
+            "number": 5,
+            "label": "optional"
+          }
         ]
       },
       {
         "name": "ZeroValueResponse",
         "fields": [
-          { "name": "success", "type": "bool", "number": 1, "label": "required" },
-          { "name": "fields_received", "type": "int32", "number": 2, "label": "required" }
+          {
+            "name": "success",
+            "type": "bool",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "fields_received",
+            "type": "int32",
+            "number": 2,
+            "label": "required"
+          }
         ]
       }
     ],
@@ -59,5 +94,9 @@
       "fields_received": 5
     }
   },
-  "tags": ["edge_cases", "default_values", "proto3"]
+  "tags": [
+    "edge_cases",
+    "default_values",
+    "proto3"
+  ]
 }

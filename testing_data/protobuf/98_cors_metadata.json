@@ -7,11 +7,25 @@
     "messages": [
       {
         "name": "CorsRequest",
-        "fields": [{ "name": "resource", "type": "string", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "resource",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       },
       {
         "name": "CorsResponse",
-        "fields": [{ "name": "allowed", "type": "bool", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "allowed",
+            "type": "bool",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       }
     ],
     "services": [
@@ -37,11 +51,15 @@
       "origin": "https://example.com",
       "access-control-request-method": "POST"
     },
-    "message": { "resource": "data" }
+    "message": {
+      "resource": "data"
+    }
   },
   "expected_response": {
     "status_code": "OK",
-    "message": { "allowed": true },
+    "message": {
+      "allowed": true
+    },
     "protobuf": {
       "metadata": {
         "access-control-allow-origin": "https://example.com",
@@ -49,5 +67,9 @@
       }
     }
   },
-  "tags": ["cors", "security", "metadata"]
+  "tags": [
+    "cors",
+    "security",
+    "metadata"
+  ]
 }

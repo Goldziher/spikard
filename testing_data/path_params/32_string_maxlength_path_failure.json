@@ -34,7 +34,10 @@
       "errors": [
         {
           "type": "validation_error",
-          "loc": ["path", "username"],
+          "loc": [
+            "path",
+            "username"
+          ],
           "msg": "String length must not exceed 20",
           "ctx": {
             "max_length": 20,
@@ -44,5 +47,11 @@
       ]
     }
   },
-  "tags": ["path_params", "string", "maxLength", "validation", "error"]
+  "tags": [
+    "path_params",
+    "string",
+    "maxLength",
+    "validation",
+    "error"
+  ]
 }

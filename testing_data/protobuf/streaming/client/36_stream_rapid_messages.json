@@ -8,21 +8,71 @@
       {
         "name": "Event",
         "fields": [
-          { "name": "event_id", "type": "string", "number": 1, "label": "required" },
-          { "name": "timestamp", "type": "int64", "number": 2, "label": "required" },
-          { "name": "metric_value", "type": "float", "number": 3, "label": "required" }
+          {
+            "name": "event_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "timestamp",
+            "type": "int64",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "metric_value",
+            "type": "float",
+            "number": 3,
+            "label": "required"
+          }
         ]
       },
       {
         "name": "EventMetrics",
         "fields": [
-          { "name": "event_id", "type": "string", "number": 1, "label": "required" },
-          { "name": "event_count", "type": "int32", "number": 2, "label": "required" },
-          { "name": "min_value", "type": "float", "number": 3, "label": "required" },
-          { "name": "max_value", "type": "float", "number": 4, "label": "required" },
-          { "name": "avg_value", "type": "float", "number": 5, "label": "required" },
-          { "name": "throughput_mps", "type": "float", "number": 6, "label": "required" },
-          { "name": "status", "type": "string", "number": 7, "label": "required" }
+          {
+            "name": "event_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "event_count",
+            "type": "int32",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "min_value",
+            "type": "float",
+            "number": 3,
+            "label": "required"
+          },
+          {
+            "name": "max_value",
+            "type": "float",
+            "number": 4,
+            "label": "required"
+          },
+          {
+            "name": "avg_value",
+            "type": "float",
+            "number": 5,
+            "label": "required"
+          },
+          {
+            "name": "throughput_mps",
+            "type": "float",
+            "number": 6,
+            "label": "required"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "number": 7,
+            "label": "required"
+          }
         ]
       }
     ],
@@ -65,5 +115,10 @@
       "status": "PROCESSED"
     }
   },
-  "tags": ["client_streaming", "high_frequency", "performance", "metrics"]
+  "tags": [
+    "client_streaming",
+    "high_frequency",
+    "performance",
+    "metrics"
+  ]
 }

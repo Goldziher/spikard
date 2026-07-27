@@ -263,7 +263,11 @@
           "resource_id": "doc-456",
           "current_state": "archived",
           "requested_action": "publish",
-          "valid_actions_for_state": ["restore", "delete", "view"],
+          "valid_actions_for_state": [
+            "restore",
+            "delete",
+            "view"
+          ],
           "transition_help": "Restore the document first before publishing"
         }
       },

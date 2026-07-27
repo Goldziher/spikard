@@ -21,26 +21,35 @@
       "db_pool": {
         "type": "async_factory",
         "factory": "create_db_pool_from_config",
-        "depends_on": ["config"],
+        "depends_on": [
+          "config"
+        ],
         "singleton": false,
         "cacheable": true
       },
       "cache": {
         "type": "async_factory",
         "factory": "create_cache_from_config",
-        "depends_on": ["config"],
+        "depends_on": [
+          "config"
+        ],
         "singleton": false,
         "cacheable": true
       },
       "auth_service": {
         "type": "factory",
         "factory": "create_auth_service",
-        "depends_on": ["db_pool", "cache"],
+        "depends_on": [
+          "db_pool",
+          "cache"
+        ],
         "singleton": false,
         "cacheable": true
       }
     },
-    "handler_dependencies": ["auth_service"]
+    "handler_dependencies": [
+      "auth_service"
+    ]
   },
   "request": {
     "method": "GET",
@@ -53,8 +62,24 @@
       "has_db": true,
       "has_cache": true
     },
-    "dependency_resolution_order": [["config"], ["db_pool", "cache"], ["auth_service"]]
+    "dependency_resolution_order": [
+      [
+        "config"
+      ],
+      [
+        "db_pool",
+        "cache"
+      ],
+      [
+        "auth_service"
+      ]
+    ]
   },
   "notes": "Demonstrates batched parallel resolution: Batch 1: config; Batch 2: db_pool + cache (parallel); Batch 3: auth_service",
-  "tags": ["dependency_injection", "nested", "batching", "complex"]
+  "tags": [
+    "dependency_injection",
+    "nested",
+    "batching",
+    "complex"
+  ]
 }

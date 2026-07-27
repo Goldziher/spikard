@@ -34,7 +34,10 @@
       "errors": [
         {
           "type": "validation_error",
-          "loc": ["path", "username"],
+          "loc": [
+            "path",
+            "username"
+          ],
           "msg": "String length must be at least 3",
           "ctx": {
             "min_length": 3,
@@ -44,5 +47,11 @@
       ]
     }
   },
-  "tags": ["path_params", "string", "minLength", "validation", "error"]
+  "tags": [
+    "path_params",
+    "string",
+    "minLength",
+    "validation",
+    "error"
+  ]
 }

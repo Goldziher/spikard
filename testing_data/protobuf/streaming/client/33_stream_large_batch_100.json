@@ -8,19 +8,59 @@
       {
         "name": "BatchItem",
         "fields": [
-          { "name": "batch_id", "type": "string", "number": 1, "label": "required" },
-          { "name": "item_number", "type": "int32", "number": 2, "label": "required" },
-          { "name": "value", "type": "int32", "number": 3, "label": "required" }
+          {
+            "name": "batch_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "item_number",
+            "type": "int32",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "value",
+            "type": "int32",
+            "number": 3,
+            "label": "required"
+          }
         ]
       },
       {
         "name": "BatchSummary",
         "fields": [
-          { "name": "batch_id", "type": "string", "number": 1, "label": "required" },
-          { "name": "total_items", "type": "int32", "number": 2, "label": "required" },
-          { "name": "total_value", "type": "int64", "number": 3, "label": "required" },
-          { "name": "average_value", "type": "double", "number": 4, "label": "required" },
-          { "name": "status", "type": "string", "number": 5, "label": "required" }
+          {
+            "name": "batch_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "total_items",
+            "type": "int32",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "total_value",
+            "type": "int64",
+            "number": 3,
+            "label": "required"
+          },
+          {
+            "name": "average_value",
+            "type": "double",
+            "number": 4,
+            "label": "required"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "number": 5,
+            "label": "required"
+          }
         ]
       }
     ],
@@ -61,5 +101,10 @@
       "status": "PROCESSED"
     }
   },
-  "tags": ["client_streaming", "large_batch", "performance", "aggregation"]
+  "tags": [
+    "client_streaming",
+    "large_batch",
+    "performance",
+    "aggregation"
+  ]
 }

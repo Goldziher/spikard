@@ -8,10 +8,30 @@
       {
         "name": "BiMessage",
         "fields": [
-          { "name": "message_id", "type": "string", "number": 1, "label": "required" },
-          { "name": "sequence", "type": "int32", "number": 2, "label": "required" },
-          { "name": "data", "type": "bytes", "number": 3, "label": "required" },
-          { "name": "direction", "type": "string", "number": 4, "label": "optional" }
+          {
+            "name": "message_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "sequence",
+            "type": "int32",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "data",
+            "type": "bytes",
+            "number": 3,
+            "label": "required"
+          },
+          {
+            "name": "direction",
+            "type": "string",
+            "number": 4,
+            "label": "optional"
+          }
         ]
       }
     ],
@@ -53,5 +73,9 @@
       "direction": "server-to-client"
     }
   },
-  "tags": ["large_payloads", "streaming", "bidirectional_streaming"]
+  "tags": [
+    "large_payloads",
+    "streaming",
+    "bidirectional_streaming"
+  ]
 }

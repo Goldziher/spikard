@@ -7,19 +7,59 @@
       {
         "name": "UploadRequest",
         "fields": [
-          { "name": "file_id", "type": "string", "number": 1, "label": "required" },
-          { "name": "chunk_data", "type": "bytes", "number": 2, "label": "required" },
-          { "name": "chunk_index", "type": "int32", "number": 3, "label": "required" },
-          { "name": "total_chunks", "type": "int32", "number": 4, "label": "required" }
+          {
+            "name": "file_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "chunk_data",
+            "type": "bytes",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "chunk_index",
+            "type": "int32",
+            "number": 3,
+            "label": "required"
+          },
+          {
+            "name": "total_chunks",
+            "type": "int32",
+            "number": 4,
+            "label": "required"
+          }
         ]
       },
       {
         "name": "UploadResponse",
         "fields": [
-          { "name": "file_id", "type": "string", "number": 1, "label": "required" },
-          { "name": "total_bytes", "type": "int64", "number": 2, "label": "required" },
-          { "name": "status", "type": "string", "number": 3, "label": "required" },
-          { "name": "checksum", "type": "string", "number": 4, "label": "optional" }
+          {
+            "name": "file_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "total_bytes",
+            "type": "int64",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "number": 3,
+            "label": "required"
+          },
+          {
+            "name": "checksum",
+            "type": "string",
+            "number": 4,
+            "label": "optional"
+          }
         ]
       }
     ],

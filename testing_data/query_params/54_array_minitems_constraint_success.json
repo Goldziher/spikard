@@ -26,14 +26,28 @@
     "method": "GET",
     "path": "/items",
     "query_params": {
-      "ids": ["1", "2", "3"]
+      "ids": [
+        "1",
+        "2",
+        "3"
+      ]
     }
   },
   "expected_response": {
     "status_code": 200,
     "body": {
-      "ids": [1, 2, 3]
+      "ids": [
+        1,
+        2,
+        3
+      ]
     }
   },
-  "tags": ["query_params", "array", "minItems", "validation", "success"]
+  "tags": [
+    "query_params",
+    "array",
+    "minItems",
+    "validation",
+    "success"
+  ]
 }

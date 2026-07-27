@@ -54,10 +54,19 @@
   "metadata": {
     "federation_v2_feature": "@inaccessible",
     "schema_visibility": "public_schema_filtering",
-    "inaccessible_fields": ["internalScore", "internalNotes"],
+    "inaccessible_fields": [
+      "internalScore",
+      "internalNotes"
+    ],
     "use_case": "Hide internal implementation details and sensitive metadata from public API consumers"
   },
-  "tags": ["federation", "directives", "v2", "inaccessible", "schema-visibility"],
+  "tags": [
+    "federation",
+    "directives",
+    "v2",
+    "inaccessible",
+    "schema-visibility"
+  ],
   "complexity_limit": 100,
   "depth_limit": 3
 }

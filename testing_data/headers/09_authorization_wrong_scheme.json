@@ -23,7 +23,10 @@
       "errors": [
         {
           "type": "string_pattern_mismatch",
-          "loc": ["headers", "authorization"],
+          "loc": [
+            "headers",
+            "authorization"
+          ],
           "msg": "String should match pattern '^Digest .+'",
           "input": "Other invalidauthorization"
         }

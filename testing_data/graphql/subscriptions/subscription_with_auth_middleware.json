@@ -43,7 +43,10 @@
       "required": true,
       "location": "connection_init.authorization",
       "token_format": "Bearer <jwt>",
-      "claims_required": ["sub", "iat"],
+      "claims_required": [
+        "sub",
+        "iat"
+      ],
       "algorithm": "HS256"
     }
   },

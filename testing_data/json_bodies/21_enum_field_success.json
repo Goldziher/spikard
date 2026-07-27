@@ -20,7 +20,10 @@
         }
       },
       "additionalProperties": false,
-      "required": ["name", "category"]
+      "required": [
+        "name",
+        "category"
+      ]
     }
   },
   "request": {

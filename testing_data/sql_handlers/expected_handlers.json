@@ -11,7 +11,9 @@
           "type": "integer"
         }
       },
-      "required": ["id"],
+      "required": [
+        "id"
+      ],
       "type": "object"
     },
     "path": "/users/{id}",
@@ -43,7 +45,13 @@
           ]
         }
       },
-      "required": ["id", "email", "name", "active", "created_at"],
+      "required": [
+        "id",
+        "email",
+        "name",
+        "active",
+        "created_at"
+      ],
       "type": "object"
     }
   },
@@ -70,7 +78,10 @@
           ]
         }
       },
-      "required": ["email", "name"],
+      "required": [
+        "email",
+        "name"
+      ],
       "type": "object"
     },
     "response_schema": {
@@ -80,7 +91,9 @@
           "type": "integer"
         }
       },
-      "required": ["rows"],
+      "required": [
+        "rows"
+      ],
       "type": "object"
     }
   },
@@ -95,7 +108,9 @@
           "type": "boolean"
         }
       },
-      "required": ["active"],
+      "required": [
+        "active"
+      ],
       "type": "object"
     },
     "path": "/users",
@@ -128,7 +143,13 @@
             ]
           }
         },
-        "required": ["id", "email", "name", "active", "created_at"],
+        "required": [
+          "id",
+          "email",
+          "name",
+          "active",
+          "created_at"
+        ],
         "type": "object"
       },
       "type": "array"

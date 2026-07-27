@@ -8,23 +8,58 @@
       {
         "name": "MapValue",
         "fields": [
-          { "name": "key", "type": "string", "number": 1, "label": "required" },
-          { "name": "value", "type": "string", "number": 2, "label": "required" }
+          {
+            "name": "key",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "value",
+            "type": "string",
+            "number": 2,
+            "label": "required"
+          }
         ]
       },
       {
         "name": "MapRequest",
         "fields": [
-          { "name": "id", "type": "string", "number": 1, "label": "required" },
-          { "name": "data_map", "type": "MapValue", "number": 2, "label": "repeated" }
+          {
+            "name": "id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "data_map",
+            "type": "MapValue",
+            "number": 2,
+            "label": "repeated"
+          }
         ]
       },
       {
         "name": "MapResponse",
         "fields": [
-          { "name": "id", "type": "string", "number": 1, "label": "required" },
-          { "name": "map_count", "type": "int32", "number": 2, "label": "required" },
-          { "name": "keys", "type": "string", "number": 3, "label": "repeated" }
+          {
+            "name": "id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "map_count",
+            "type": "int32",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "keys",
+            "type": "string",
+            "number": 3,
+            "label": "repeated"
+          }
         ]
       }
     ],
@@ -52,9 +87,18 @@
     "message": {
       "id": "map-test-001",
       "data_map": [
-        { "key": "key1", "value": "value1" },
-        { "key": "key2", "value": "value2" },
-        { "key": "key3", "value": "value3" }
+        {
+          "key": "key1",
+          "value": "value1"
+        },
+        {
+          "key": "key2",
+          "value": "value2"
+        },
+        {
+          "key": "key3",
+          "value": "value3"
+        }
       ]
     }
   },
@@ -63,8 +107,16 @@
     "message": {
       "id": "map-test-001",
       "map_count": 3,
-      "keys": ["key1", "key2", "key3"]
+      "keys": [
+        "key1",
+        "key2",
+        "key3"
+      ]
     }
   },
-  "tags": ["edge_cases", "map_fields", "protobuf_collections"]
+  "tags": [
+    "edge_cases",
+    "map_fields",
+    "protobuf_collections"
+  ]
 }

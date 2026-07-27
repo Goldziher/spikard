@@ -114,5 +114,10 @@
       }
     }
   ],
-  "tags": ["method-not-found", "protocol", "edge-cases", "error-handling"]
+  "tags": [
+    "method-not-found",
+    "protocol",
+    "edge-cases",
+    "error-handling"
+  ]
 }

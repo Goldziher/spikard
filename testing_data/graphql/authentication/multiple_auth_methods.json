@@ -35,5 +35,9 @@
       }
     }
   },
-  "tags": ["authentication", "multiple-methods", "priority"]
+  "tags": [
+    "authentication",
+    "multiple-methods",
+    "priority"
+  ]
 }

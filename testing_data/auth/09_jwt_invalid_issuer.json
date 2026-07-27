@@ -45,6 +45,13 @@
       "detail": "Token issuer is invalid, expected 'https://auth.example.com'"
     }
   },
-  "tags": ["auth", "jwt", "issuer", "validation", "401", "security"],
+  "tags": [
+    "auth",
+    "jwt",
+    "issuer",
+    "validation",
+    "401",
+    "security"
+  ],
   "notes": "Tests JWT issuer claim validation as specified in RFC 7519 section 4.1.1"
 }

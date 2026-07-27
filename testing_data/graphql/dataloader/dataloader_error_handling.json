@@ -9,7 +9,11 @@
     "path": "/graphql",
     "query": "query GetUsers($ids: [ID!]!) {\n  users(ids: $ids) {\n    id\n    name\n    email\n  }\n}",
     "variables": {
-      "ids": ["1", "999", "2"]
+      "ids": [
+        "1",
+        "999",
+        "2"
+      ]
     },
     "headers": {
       "Content-Type": "application/json"
@@ -17,7 +21,11 @@
     "body": {
       "query": "query GetUsers($ids: [ID!]!) {\n  users(ids: $ids) {\n    id\n    name\n    email\n  }\n}",
       "variables": {
-        "ids": ["1", "999", "2"]
+        "ids": [
+          "1",
+          "999",
+          "2"
+        ]
       }
     }
   },
@@ -41,7 +49,10 @@
     "errors": [
       {
         "message": "User not found with id '999'",
-        "path": ["users", 1],
+        "path": [
+          "users",
+          1
+        ],
         "extensions": {
           "code": "NOT_FOUND",
           "id": "999"
@@ -58,21 +69,44 @@
   "error_scenarios": [
     {
       "name": "Missing user in batch",
-      "ids": ["1", "999", "2"],
-      "missing_ids": ["999"],
-      "expected_nulls_at_indices": [1],
+      "ids": [
+        "1",
+        "999",
+        "2"
+      ],
+      "missing_ids": [
+        "999"
+      ],
+      "expected_nulls_at_indices": [
+        1
+      ],
       "expected_error_count": 1
     },
     {
       "name": "Multiple missing users",
-      "ids": ["1", "999", "2", "888"],
-      "missing_ids": ["999", "888"],
-      "expected_nulls_at_indices": [1, 3],
+      "ids": [
+        "1",
+        "999",
+        "2",
+        "888"
+      ],
+      "missing_ids": [
+        "999",
+        "888"
+      ],
+      "expected_nulls_at_indices": [
+        1,
+        3
+      ],
       "expected_error_count": 2
     },
     {
       "name": "All users found",
-      "ids": ["1", "2", "3"],
+      "ids": [
+        "1",
+        "2",
+        "3"
+      ],
       "missing_ids": [],
       "expected_nulls_at_indices": [],
       "expected_error_count": 0
@@ -85,5 +119,10 @@
     "cache_errors": false,
     "description": "Errors don't stop processing of other batch items; partial results returned with error details"
   },
-  "tags": ["dataloader", "error-handling", "partial-failures", "resilience"]
+  "tags": [
+    "dataloader",
+    "error-handling",
+    "partial-failures",
+    "resilience"
+  ]
 }

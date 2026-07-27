@@ -55,5 +55,9 @@
       }
     }
   },
-  "tags": ["mutations", "update-operations", "partial-input"]
+  "tags": [
+    "mutations",
+    "update-operations",
+    "partial-input"
+  ]
 }

@@ -12,7 +12,9 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": ["text"],
+      "required": [
+        "text"
+      ],
       "properties": {
         "text": {
           "type": "string",
@@ -35,5 +37,11 @@
       "text": "Hello 👋 World 🌍"
     }
   },
-  "tags": ["edge_cases", "emoji", "unicode", "strings", "success"]
+  "tags": [
+    "edge_cases",
+    "emoji",
+    "unicode",
+    "strings",
+    "success"
+  ]
 }

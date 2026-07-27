@@ -18,7 +18,10 @@
         "cacheable": true
       }
     },
-    "handler_dependencies": ["request_id_generator", "request_id_generator"]
+    "handler_dependencies": [
+      "request_id_generator",
+      "request_id_generator"
+    ]
   },
   "request": {
     "method": "GET",
@@ -32,5 +35,9 @@
     }
   },
   "notes": "Cacheable=true with singleton=false means the dependency is created once per request. Handler uses the dependency twice; both should return the same instance (same UUID).",
-  "tags": ["dependency_injection", "per-request", "caching"]
+  "tags": [
+    "dependency_injection",
+    "per-request",
+    "caching"
+  ]
 }

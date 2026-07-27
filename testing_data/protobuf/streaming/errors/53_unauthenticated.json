@@ -7,11 +7,25 @@
     "messages": [
       {
         "name": "SecureRequest",
-        "fields": [{ "name": "resource", "type": "string", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "resource",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       },
       {
         "name": "SecureResponse",
-        "fields": [{ "name": "data", "type": "string", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "data",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       }
     ],
     "services": [
@@ -50,5 +64,10 @@
     "error_message": "Missing authorization metadata",
     "stream": []
   },
-  "tags": ["grpc_status", "authentication", "error_handling", "server_streaming"]
+  "tags": [
+    "grpc_status",
+    "authentication",
+    "error_handling",
+    "server_streaming"
+  ]
 }

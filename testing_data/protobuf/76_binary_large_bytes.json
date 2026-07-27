@@ -8,17 +8,47 @@
       {
         "name": "BinaryDataRequest",
         "fields": [
-          { "name": "file_id", "type": "string", "number": 1, "label": "required" },
-          { "name": "content_type", "type": "string", "number": 2, "label": "optional" },
-          { "name": "binary_content", "type": "bytes", "number": 3, "label": "required" }
+          {
+            "name": "file_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "content_type",
+            "type": "string",
+            "number": 2,
+            "label": "optional"
+          },
+          {
+            "name": "binary_content",
+            "type": "bytes",
+            "number": 3,
+            "label": "required"
+          }
         ]
       },
       {
         "name": "BinaryDataResponse",
         "fields": [
-          { "name": "file_id", "type": "string", "number": 1, "label": "required" },
-          { "name": "bytes_received", "type": "int64", "number": 2, "label": "required" },
-          { "name": "hash", "type": "string", "number": 3, "label": "optional" }
+          {
+            "name": "file_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "bytes_received",
+            "type": "int64",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "hash",
+            "type": "string",
+            "number": 3,
+            "label": "optional"
+          }
         ]
       }
     ],
@@ -56,5 +86,9 @@
       "bytes_received": 512000
     }
   },
-  "tags": ["large_payloads", "binary_data", "base64"]
+  "tags": [
+    "large_payloads",
+    "binary_data",
+    "base64"
+  ]
 }

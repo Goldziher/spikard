@@ -3,7 +3,12 @@
   "title": "Validation Error Test Fixture",
   "description": "Test fixture for validation error scenarios (422 responses)",
   "type": "object",
-  "required": ["name", "description", "request", "expected_response"],
+  "required": [
+    "name",
+    "description",
+    "request",
+    "expected_response"
+  ],
   "properties": {
     "name": {
       "type": "string",
@@ -19,7 +24,12 @@
       "properties": {
         "framework": {
           "type": "string",
-          "enum": ["fastapi", "starlette", "litestar", "spikard"]
+          "enum": [
+            "fastapi",
+            "starlette",
+            "litestar",
+            "spikard"
+          ]
         },
         "test_file": {
           "type": "string",
@@ -35,11 +45,22 @@
     "request": {
       "type": "object",
       "description": "HTTP request details",
-      "required": ["method", "path"],
+      "required": [
+        "method",
+        "path"
+      ],
       "properties": {
         "method": {
           "type": "string",
-          "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
+          "enum": [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "HEAD",
+            "OPTIONS"
+          ]
         },
         "path": {
           "type": "string",
@@ -71,12 +92,17 @@
     "expected_response": {
       "type": "object",
       "description": "Expected HTTP response",
-      "required": ["status_code"],
+      "required": [
+        "status_code"
+      ],
       "properties": {
         "status_code": {
           "type": "integer",
           "description": "HTTP status code (typically 422 for validation errors)",
-          "enum": [422, 400]
+          "enum": [
+            422,
+            400
+          ]
         },
         "body": {
           "type": "object",

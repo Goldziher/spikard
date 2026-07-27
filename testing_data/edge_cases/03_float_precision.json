@@ -32,7 +32,14 @@
         }
       },
       "additionalProperties": false,
-      "required": ["value1", "value2", "expected_sum", "precise_value", "very_small", "very_large"]
+      "required": [
+        "value1",
+        "value2",
+        "expected_sum",
+        "precise_value",
+        "very_small",
+        "very_large"
+      ]
     }
   },
   "request": {

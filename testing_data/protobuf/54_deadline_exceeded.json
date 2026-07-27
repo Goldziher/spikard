@@ -7,17 +7,37 @@
     "messages": [
       {
         "name": "TimeoutRequest",
-        "fields": [{ "name": "id", "type": "string", "number": 1, "label": "required" }]
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          }
+        ]
       },
       {
         "name": "TimeoutResponse",
-        "fields": [{ "name": "id", "type": "string", "number": 1, "label": "optional" }]
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "number": 1,
+            "label": "optional"
+          }
+        ]
       }
     ],
     "services": [
       {
         "name": "TimeoutService",
-        "methods": [{ "name": "SlowOp", "input_type": "TimeoutRequest", "output_type": "TimeoutResponse" }]
+        "methods": [
+          {
+            "name": "SlowOp",
+            "input_type": "TimeoutRequest",
+            "output_type": "TimeoutResponse"
+          }
+        ]
       }
     ]
   },
@@ -32,9 +52,19 @@
     }
   },
   "request": {
-    "metadata": { "content-type": "application/grpc" },
-    "message": { "id": "timeout-001" }
+    "metadata": {
+      "content-type": "application/grpc"
+    },
+    "message": {
+      "id": "timeout-001"
+    }
   },
-  "expected_response": { "status_code": "DEADLINE_EXCEEDED" },
-  "tags": ["grpc_status", "timeout", "error"]
+  "expected_response": {
+    "status_code": "DEADLINE_EXCEEDED"
+  },
+  "tags": [
+    "grpc_status",
+    "timeout",
+    "error"
+  ]
 }

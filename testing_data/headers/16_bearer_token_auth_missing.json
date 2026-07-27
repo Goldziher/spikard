@@ -21,7 +21,10 @@
       "errors": [
         {
           "type": "missing",
-          "loc": ["headers", "authorization"],
+          "loc": [
+            "headers",
+            "authorization"
+          ],
           "msg": "Field required",
           "input": null
         }

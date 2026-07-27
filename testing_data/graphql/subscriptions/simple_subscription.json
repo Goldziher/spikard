@@ -35,5 +35,10 @@
       }
     }
   },
-  "tags": ["subscriptions", "websocket", "basic", "streaming"]
+  "tags": [
+    "subscriptions",
+    "websocket",
+    "basic",
+    "streaming"
+  ]
 }

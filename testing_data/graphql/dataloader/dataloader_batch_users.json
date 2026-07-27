@@ -9,7 +9,11 @@
     "path": "/graphql",
     "query": "query GetUsers($ids: [ID!]!) {\n  users(ids: $ids) {\n    id\n    name\n    email\n    age\n  }\n}",
     "variables": {
-      "ids": ["1", "2", "3"]
+      "ids": [
+        "1",
+        "2",
+        "3"
+      ]
     },
     "headers": {
       "Content-Type": "application/json"
@@ -17,7 +21,11 @@
     "body": {
       "query": "query GetUsers($ids: [ID!]!) {\n  users(ids: $ids) {\n    id\n    name\n    email\n    age\n  }\n}",
       "variables": {
-        "ids": ["1", "2", "3"]
+        "ids": [
+          "1",
+          "2",
+          "3"
+        ]
       }
     }
   },
@@ -87,5 +95,10 @@
       "improvement_percent": 60
     }
   },
-  "tags": ["dataloader", "batching", "performance", "query-optimization"]
+  "tags": [
+    "dataloader",
+    "batching",
+    "performance",
+    "query-optimization"
+  ]
 }

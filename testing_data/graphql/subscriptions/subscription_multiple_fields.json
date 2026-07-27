@@ -52,5 +52,11 @@
       }
     }
   },
-  "tags": ["subscriptions", "websocket", "multiplexing", "multiple-fields", "concurrent"]
+  "tags": [
+    "subscriptions",
+    "websocket",
+    "multiplexing",
+    "multiple-fields",
+    "concurrent"
+  ]
 }

@@ -7,16 +7,22 @@
     "body_schema": {
       "type": "object",
       "properties": {
-        "event": { "type": "string" }
+        "event": {
+          "type": "string"
+        }
       },
-      "required": ["event"],
+      "required": [
+        "event"
+      ],
       "additionalProperties": false
     }
   },
   "request": {
     "method": "POST",
     "path": "/background/events",
-    "body": { "event": "alpha" }
+    "body": {
+      "event": "alpha"
+    }
   },
   "expected_response": {
     "status_code": 202,
@@ -28,7 +34,12 @@
     "state_path": "/background/events",
     "state_key": "events",
     "value_field": "event",
-    "expected_state": ["alpha"]
+    "expected_state": [
+      "alpha"
+    ]
   },
-  "tags": ["background", "async"]
+  "tags": [
+    "background",
+    "async"
+  ]
 }

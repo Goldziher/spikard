@@ -26,7 +26,12 @@
         }
       },
       "additionalProperties": false,
-      "required": ["name", "price", "extra_field", "another_extra"]
+      "required": [
+        "name",
+        "price",
+        "extra_field",
+        "another_extra"
+      ]
     }
   },
   "request": {

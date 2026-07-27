@@ -10,7 +10,10 @@
     "query": "mutation UploadDocument($title: String!, $files: [Upload!]!) {\n  uploadDocument(title: $title, files: $files) {\n    id\n    title\n    files {\n      id\n      filename\n      mimetype\n      size\n    }\n    uploadedAt\n  }\n}",
     "variables": {
       "title": "Important Documents",
-      "files": [null, null]
+      "files": [
+        null,
+        null
+      ]
     },
     "operationName": "UploadDocument"
   },
@@ -95,5 +98,11 @@
       }
     }
   },
-  "tags": ["mutations", "file-upload", "multipart", "spec-compliance", "rfc2388"]
+  "tags": [
+    "mutations",
+    "file-upload",
+    "multipart",
+    "spec-compliance",
+    "rfc2388"
+  ]
 }

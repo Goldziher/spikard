@@ -24,7 +24,9 @@
         "enabled": true,
         "algorithm": "HS256",
         "secret": "test-secret-key-do-not-use-in-production",
-        "audience": ["https://api.example.com"],
+        "audience": [
+          "https://api.example.com"
+        ],
         "issuer": "https://auth.example.com"
       }
     }
@@ -43,6 +45,13 @@
       "user_id": "user123"
     }
   },
-  "tags": ["auth", "jwt", "audience", "multiple_audiences", "validation", "success"],
+  "tags": [
+    "auth",
+    "jwt",
+    "audience",
+    "multiple_audiences",
+    "validation",
+    "success"
+  ],
   "notes": "Tests JWT audience claim validation when token contains multiple audiences. As per RFC 7519 section 4.1.3, at least one audience must match."
 }

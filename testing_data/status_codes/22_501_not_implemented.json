@@ -18,5 +18,10 @@
   "expected_response": {
     "status_code": 405
   },
-  "tags": ["status_codes", "501", "unsupported_method", "error"]
+  "tags": [
+    "status_codes",
+    "501",
+    "unsupported_method",
+    "error"
+  ]
 }

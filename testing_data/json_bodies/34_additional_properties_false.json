@@ -12,7 +12,9 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "properties": {
         "name": {
           "type": "string"
@@ -43,7 +45,10 @@
       "errors": [
         {
           "type": "validation_error",
-          "loc": ["body", "extra_field"],
+          "loc": [
+            "body",
+            "extra_field"
+          ],
           "msg": "Additional properties are not allowed",
           "ctx": {
             "additional_properties": false,
@@ -58,5 +63,11 @@
       ]
     }
   },
-  "tags": ["json_bodies", "additionalProperties", "strict", "validation", "error"]
+  "tags": [
+    "json_bodies",
+    "additionalProperties",
+    "strict",
+    "validation",
+    "error"
+  ]
 }

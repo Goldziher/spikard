@@ -32,7 +32,9 @@
       "errors": [
         {
           "type": "validation_error",
-          "loc": ["body"],
+          "loc": [
+            "body"
+          ],
           "msg": "{\"host\":\"localhost\"} has less than 2 properties",
           "input": {
             "host": "localhost"
@@ -41,5 +43,10 @@
       ]
     }
   },
-  "tags": ["json_bodies", "minProperties", "validation", "error"]
+  "tags": [
+    "json_bodies",
+    "minProperties",
+    "validation",
+    "error"
+  ]
 }

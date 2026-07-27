@@ -44,7 +44,11 @@
       "factory_fn": "calculate_shipping_estimate"
     }
   },
-  "tags": ["federation", "requires-directive", "dependent-fields"],
+  "tags": [
+    "federation",
+    "requires-directive",
+    "dependent-fields"
+  ],
   "complexity_limit": 50,
   "depth_limit": 3
 }

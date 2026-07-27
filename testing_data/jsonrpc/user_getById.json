@@ -14,7 +14,9 @@
         "description": "Unique identifier for the user"
       }
     },
-    "required": ["userId"]
+    "required": [
+      "userId"
+    ]
   },
   "result_schema": {
     "type": "object",
@@ -36,10 +38,20 @@
       },
       "role": {
         "type": "string",
-        "enum": ["admin", "user", "guest"]
+        "enum": [
+          "admin",
+          "user",
+          "guest"
+        ]
       }
     },
-    "required": ["id", "name", "email", "createdAt", "role"]
+    "required": [
+      "id",
+      "name",
+      "email",
+      "createdAt",
+      "role"
+    ]
   },
   "examples": [
     {

@@ -8,17 +8,47 @@
       {
         "name": "HugePayloadRequest",
         "fields": [
-          { "name": "id", "type": "string", "number": 1, "label": "required" },
-          { "name": "content", "type": "bytes", "number": 2, "label": "required" },
-          { "name": "chunk_count", "type": "int32", "number": 3, "label": "optional" }
+          {
+            "name": "id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "content",
+            "type": "bytes",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "chunk_count",
+            "type": "int32",
+            "number": 3,
+            "label": "optional"
+          }
         ]
       },
       {
         "name": "HugePayloadResponse",
         "fields": [
-          { "name": "id", "type": "string", "number": 1, "label": "required" },
-          { "name": "received_size", "type": "int64", "number": 2, "label": "required" },
-          { "name": "status", "type": "string", "number": 3, "label": "required" }
+          {
+            "name": "id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "received_size",
+            "type": "int64",
+            "number": 2,
+            "label": "required"
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "number": 3,
+            "label": "required"
+          }
         ]
       }
     ],
@@ -64,5 +94,9 @@
       "status": "received"
     }
   },
-  "tags": ["large_payloads", "performance", "timeout"]
+  "tags": [
+    "large_payloads",
+    "performance",
+    "timeout"
+  ]
 }

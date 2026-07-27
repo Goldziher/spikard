@@ -14,7 +14,10 @@
     "middleware": {
       "api_key_auth": {
         "enabled": true,
-        "keys": ["sk_test_123456", "sk_test_789012"],
+        "keys": [
+          "sk_test_123456",
+          "sk_test_789012"
+        ],
         "header_name": "X-API-Key"
       }
     }
@@ -32,5 +35,13 @@
       "detail": "Expected 'X-API-Key' header or 'api_key' query parameter with valid API key"
     }
   },
-  "tags": ["auth", "api_key", "security", "middleware", "error", "unauthorized", "missing"]
+  "tags": [
+    "auth",
+    "api_key",
+    "security",
+    "middleware",
+    "error",
+    "unauthorized",
+    "missing"
+  ]
 }

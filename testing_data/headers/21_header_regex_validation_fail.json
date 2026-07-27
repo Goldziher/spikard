@@ -23,7 +23,10 @@
       "errors": [
         {
           "type": "string_pattern_mismatch",
-          "loc": ["headers", "x-request-id"],
+          "loc": [
+            "headers",
+            "x-request-id"
+          ],
           "msg": "String should match pattern '^[0-9]{3,}$'",
           "input": "invalid-format",
           "ctx": {

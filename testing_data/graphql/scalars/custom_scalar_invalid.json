@@ -119,23 +119,61 @@
       "input": "not-an-email",
       "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
       "reason": "Missing @ symbol and proper domain format",
-      "valid_examples": ["user@example.com", "alice.johnson@company.co.uk", "bob+tag@domain.org"],
-      "invalid_examples": ["not-an-email", "user@", "@example.com", "user@domain", "user domain@example.com"]
+      "valid_examples": [
+        "user@example.com",
+        "alice.johnson@company.co.uk",
+        "bob+tag@domain.org"
+      ],
+      "invalid_examples": [
+        "not-an-email",
+        "user@",
+        "@example.com",
+        "user@domain",
+        "user domain@example.com"
+      ]
     },
     "url_validation": {
       "input": "not a url",
       "pattern": "^https?://[\\w.-]+\\.[a-zA-Z]{2,}",
       "reason": "Missing http:// or https:// scheme and valid domain",
-      "valid_examples": ["https://example.com", "http://www.domain.org", "https://subdomain.example.co.uk"],
-      "invalid_examples": ["not a url", "example.com", "ftp://example.com", "https://"]
+      "valid_examples": [
+        "https://example.com",
+        "http://www.domain.org",
+        "https://subdomain.example.co.uk"
+      ],
+      "invalid_examples": [
+        "not a url",
+        "example.com",
+        "ftp://example.com",
+        "https://"
+      ]
     },
     "phone_validation": {
       "input": "123",
       "pattern": "^\\+?[1-9]\\d{1,14}$",
       "reason": "Too short - E.164 requires 1-15 digits (optional + prefix, must start with 1-9)",
-      "valid_examples": ["+1-555-123-4567", "+1555123456", "+44-7700-900000", "15551234567"],
-      "invalid_examples": ["123", "0555123456", "+0555123456", "555-123-4567", "(555) 123-4567"]
+      "valid_examples": [
+        "+1-555-123-4567",
+        "+1555123456",
+        "+44-7700-900000",
+        "15551234567"
+      ],
+      "invalid_examples": [
+        "123",
+        "0555123456",
+        "+0555123456",
+        "555-123-4567",
+        "(555) 123-4567"
+      ]
     }
   },
-  "tags": ["scalars", "validation", "errors", "custom-types", "email", "url", "phone"]
+  "tags": [
+    "scalars",
+    "validation",
+    "errors",
+    "custom-types",
+    "email",
+    "url",
+    "phone"
+  ]
 }

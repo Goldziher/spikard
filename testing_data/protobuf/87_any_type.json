@@ -8,23 +8,58 @@
       {
         "name": "Container",
         "fields": [
-          { "name": "id", "type": "string", "number": 1, "label": "required" },
-          { "name": "content", "type": "string", "number": 2, "label": "required" }
+          {
+            "name": "id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "content",
+            "type": "string",
+            "number": 2,
+            "label": "required"
+          }
         ]
       },
       {
         "name": "AnyRequest",
         "fields": [
-          { "name": "request_id", "type": "string", "number": 1, "label": "required" },
-          { "name": "any_content", "type": "string", "number": 2, "label": "optional" }
+          {
+            "name": "request_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "any_content",
+            "type": "string",
+            "number": 2,
+            "label": "optional"
+          }
         ]
       },
       {
         "name": "AnyResponse",
         "fields": [
-          { "name": "request_id", "type": "string", "number": 1, "label": "required" },
-          { "name": "type_name", "type": "string", "number": 2, "label": "optional" },
-          { "name": "success", "type": "bool", "number": 3, "label": "required" }
+          {
+            "name": "request_id",
+            "type": "string",
+            "number": 1,
+            "label": "required"
+          },
+          {
+            "name": "type_name",
+            "type": "string",
+            "number": 2,
+            "label": "optional"
+          },
+          {
+            "name": "success",
+            "type": "bool",
+            "number": 3,
+            "label": "required"
+          }
         ]
       }
     ],
@@ -62,5 +97,9 @@
       "success": true
     }
   },
-  "tags": ["edge_cases", "well_known_types", "any_type"]
+  "tags": [
+    "edge_cases",
+    "well_known_types",
+    "any_type"
+  ]
 }

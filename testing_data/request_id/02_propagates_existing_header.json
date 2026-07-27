@@ -23,5 +23,8 @@
       "x-request-id": "trace-123"
     }
   },
-  "tags": ["request_id", "propagation"]
+  "tags": [
+    "request_id",
+    "propagation"
+  ]
 }

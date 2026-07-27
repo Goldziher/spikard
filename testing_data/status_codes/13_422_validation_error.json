@@ -20,7 +20,10 @@
         }
       },
       "additionalProperties": false,
-      "required": ["price", "name"]
+      "required": [
+        "price",
+        "name"
+      ]
     }
   },
   "request": {
@@ -43,7 +46,10 @@
       "errors": [
         {
           "type": "missing",
-          "loc": ["body", "name"],
+          "loc": [
+            "body",
+            "name"
+          ],
           "msg": "Field required",
           "input": {
             "price": "not a number"

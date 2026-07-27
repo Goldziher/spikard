@@ -22,7 +22,10 @@
         }
       },
       "additionalProperties": false,
-      "required": ["test1", "test2"]
+      "required": [
+        "test1",
+        "test2"
+      ]
     }
   },
   "request": {
