@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0-rc.5] - 2026-07-27
+
+### Fixed
+
+- **java/csharp**: regenerate all bindings on alef 0.48.4, which fixes the Java
+  Maven publish (enforcer minimum-version floor was set too high) and the C#
+  NuGet publish (missing `runtime.json.template`). The `publish-nuget` job now
+  renders `runtime.json` from the template before `dotnet pack`.
+
+### Changed
+
+- **go/ruby**: apply the spikard-alef-ext transform-hook cleanups — inject the
+  alef generated header into headerless Go binding files so golangci-lint skips
+  them, and extend the scaffolded Steepfile with spikard-specific impl ignores
+  so `steep check` stays clean.
+
 ## [0.16.1] - 2026-07-02
 
 ### Fixed
