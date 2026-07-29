@@ -89,12 +89,31 @@ async fn spikard_mcp_stdio_supports_initialize_list_and_call() -> anyhow::Result
     assert!(tool_names.contains(&"get_features"));
     assert!(tool_names.contains(&"generate_openapi"));
     assert!(tool_names.contains(&"generate_asyncapi_bundle"));
+    // `generate_sql` reaches full parity with the `spikard generate sql` CLI command.
+    assert!(tool_names.contains(&"generate_sql"));
+
+    // rmcp 3.0: every tool advertises an output schema (SEP-2106 structured output).
+    let features_tool = tools
+        .iter()
+        .find(|tool| tool.name.as_ref() == "get_features")
+        .expect("get_features tool");
+    assert!(
+        features_tool.output_schema.is_some(),
+        "expected get_features to advertise an output schema"
+    );
 
     let result = client
         .call_tool(
             CallToolRequestParams::new("get_features").with_arguments(json!({}).as_object().expect("object").clone()),
         )
         .await?;
+
+    // rmcp 3.0: results carry typed structured content, not just JSON-as-text.
+    let structured = result
+        .structured_content
+        .as_ref()
+        .expect("expected structured tool output");
+    assert_eq!(structured["rust_core"], serde_json::Value::Bool(true));
 
     let text = result
         .content

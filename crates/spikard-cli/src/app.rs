@@ -12,6 +12,11 @@ use std::path::Path;
 
 /// Result of AsyncAPI validation exposed to both CLI and MCP surfaces.
 #[derive(Debug, Clone, Serialize)]
+#[cfg_attr(
+    feature = "mcp",
+    derive(rmcp::schemars::JsonSchema),
+    schemars(crate = "rmcp::schemars")
+)]
 pub struct AsyncApiValidationSummary {
     pub spec_version: String,
     pub title: String,
@@ -22,6 +27,11 @@ pub struct AsyncApiValidationSummary {
 
 /// Human-readable framework capability summary for agents and CLI users.
 #[derive(Debug, Clone, Serialize)]
+#[cfg_attr(
+    feature = "mcp",
+    derive(rmcp::schemars::JsonSchema),
+    schemars(crate = "rmcp::schemars")
+)]
 pub struct FeatureSummary {
     pub rust_core: bool,
     pub language_bindings: Vec<LanguageBinding>,
@@ -30,6 +40,11 @@ pub struct FeatureSummary {
 
 /// Install and usage hint for a supported binding.
 #[derive(Debug, Clone, Serialize)]
+#[cfg_attr(
+    feature = "mcp",
+    derive(rmcp::schemars::JsonSchema),
+    schemars(crate = "rmcp::schemars")
+)]
 pub struct LanguageBinding {
     pub name: String,
     pub install_hint: String,

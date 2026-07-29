@@ -99,6 +99,11 @@ pub struct CodegenRequest {
 
 /// Represents an asset emitted by the code generation engine
 #[derive(Debug, Clone, serde::Serialize)]
+#[cfg_attr(
+    feature = "mcp",
+    derive(rmcp::schemars::JsonSchema),
+    schemars(crate = "rmcp::schemars")
+)]
 pub struct GeneratedAsset {
     pub path: PathBuf,
     pub description: String,
@@ -106,6 +111,11 @@ pub struct GeneratedAsset {
 
 /// Output of the engine run
 #[derive(Debug, Clone, serde::Serialize)]
+#[cfg_attr(
+    feature = "mcp",
+    derive(rmcp::schemars::JsonSchema),
+    schemars(crate = "rmcp::schemars")
+)]
 pub enum CodegenOutcome {
     /// Generated code that should be printed to stdout (no file requested)
     InMemory(String),

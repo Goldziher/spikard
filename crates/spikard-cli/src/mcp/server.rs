@@ -9,18 +9,23 @@ use crate::{
         params::{
             EmptyParams, GenerateAsyncapiBundleParams, GenerateAsyncapiFixturesParams, GenerateAsyncapiHandlersParams,
             GenerateAsyncapiTestAppParams, GenerateGraphqlParams, GenerateJsonrpcParams, GenerateOpenapiParams,
-            GeneratePhpDtoParams, GenerateProtobufParams, InitProjectParams, ValidateAsyncapiParams,
+            GeneratePhpDtoParams, GenerateProtobufParams, GenerateSqlParams, InitProjectParams, ValidateAsyncapiParams,
         },
     },
 };
 use anyhow::Result;
 use rmcp::{
     ServerHandler, ServiceExt,
-    handler::server::{router::tool::ToolRouter, wrapper::Parameters},
+    handler::server::{
+        router::tool::ToolRouter,
+        wrapper::{Json, Parameters},
+    },
     model::*,
     tool, tool_handler, tool_router,
     transport::stdio,
 };
+use scythe_core::dialect::SqlDialect;
+use spikard_codegen::sql::DecimalMode;
 use std::path::PathBuf;
 
 #[cfg(feature = "mcp-http")]
@@ -43,7 +48,7 @@ impl SpikardMcp {
         }
     }
 
-    fn init_project_impl(&self, params: InitProjectParams) -> Result<crate::init::InitResponse, rmcp::ErrorData> {
+    fn init_project_impl(params: InitProjectParams) -> Result<crate::init::InitResponse, rmcp::ErrorData> {
         let language = parse_target_language_or_default(params.language.as_deref(), TargetLanguage::Python)?;
         let base_dir = params.directory.unwrap_or_else(|| ".".to_string());
         let request = InitRequest {
@@ -56,7 +61,7 @@ impl SpikardMcp {
         app::init_project(request).map_err(map_app_error_to_mcp)
     }
 
-    fn generate_openapi_impl(&self, params: GenerateOpenapiParams) -> Result<CodegenOutcome, rmcp::ErrorData> {
+    fn generate_openapi_impl(params: GenerateOpenapiParams) -> Result<CodegenOutcome, rmcp::ErrorData> {
         let language = parse_target_language_or_default(params.language.as_deref(), TargetLanguage::Python)?;
         let mut dto = DtoConfig::default();
         if let Some(dto_name) = params.dto.as_deref() {
@@ -76,7 +81,6 @@ impl SpikardMcp {
     }
 
     fn generate_asyncapi_handlers_impl(
-        &self,
         params: GenerateAsyncapiHandlersParams,
     ) -> Result<CodegenOutcome, rmcp::ErrorData> {
         let language = parse_target_language(&params.language)?;
@@ -97,7 +101,7 @@ impl SpikardMcp {
         .map_err(map_app_error_to_mcp)
     }
 
-    fn generate_jsonrpc_impl(&self, params: GenerateJsonrpcParams) -> Result<CodegenOutcome, rmcp::ErrorData> {
+    fn generate_jsonrpc_impl(params: GenerateJsonrpcParams) -> Result<CodegenOutcome, rmcp::ErrorData> {
         let language = parse_target_language_or_default(params.language.as_deref(), TargetLanguage::Python)?;
 
         app::execute_codegen(CodegenRequest {
@@ -115,7 +119,7 @@ impl SpikardMcp {
         .map_err(map_app_error_to_mcp)
     }
 
-    fn generate_graphql_impl(&self, params: GenerateGraphqlParams) -> Result<CodegenOutcome, rmcp::ErrorData> {
+    fn generate_graphql_impl(params: GenerateGraphqlParams) -> Result<CodegenOutcome, rmcp::ErrorData> {
         let language = parse_target_language_or_default(params.language.as_deref(), TargetLanguage::Python)?;
         let output = params
             .output
@@ -135,7 +139,7 @@ impl SpikardMcp {
         .map_err(map_app_error_to_mcp)
     }
 
-    fn generate_protobuf_impl(&self, params: GenerateProtobufParams) -> Result<CodegenOutcome, rmcp::ErrorData> {
+    fn generate_protobuf_impl(params: GenerateProtobufParams) -> Result<CodegenOutcome, rmcp::ErrorData> {
         let language = parse_target_language_or_default(params.language.as_deref(), TargetLanguage::Python)?;
 
         app::execute_codegen(CodegenRequest {
@@ -158,7 +162,6 @@ impl SpikardMcp {
     }
 
     fn generate_php_dto_impl(
-        &self,
         params: GeneratePhpDtoParams,
     ) -> Result<Vec<crate::codegen::GeneratedAsset>, rmcp::ErrorData> {
         let output = params.output.unwrap_or_else(|| "src/Generated".to_string());
@@ -166,7 +169,6 @@ impl SpikardMcp {
     }
 
     fn generate_asyncapi_fixtures_impl(
-        &self,
         params: GenerateAsyncapiFixturesParams,
     ) -> Result<CodegenOutcome, rmcp::ErrorData> {
         app::execute_codegen_unvalidated(CodegenRequest {
@@ -181,7 +183,6 @@ impl SpikardMcp {
     }
 
     fn generate_asyncapi_test_app_impl(
-        &self,
         params: GenerateAsyncapiTestAppParams,
     ) -> Result<CodegenOutcome, rmcp::ErrorData> {
         let language = parse_target_language(&params.language)?;
@@ -197,10 +198,7 @@ impl SpikardMcp {
         .map_err(map_app_error_to_mcp)
     }
 
-    fn generate_asyncapi_bundle_impl(
-        &self,
-        params: GenerateAsyncapiBundleParams,
-    ) -> Result<CodegenOutcome, rmcp::ErrorData> {
+    fn generate_asyncapi_bundle_impl(params: GenerateAsyncapiBundleParams) -> Result<CodegenOutcome, rmcp::ErrorData> {
         app::execute_codegen_unvalidated(CodegenRequest {
             schema_path: PathBuf::from(params.schema),
             schema_kind: SchemaKind::AsyncApi,
@@ -213,10 +211,49 @@ impl SpikardMcp {
     }
 
     fn validate_asyncapi_impl(
-        &self,
         params: ValidateAsyncapiParams,
     ) -> Result<app::AsyncApiValidationSummary, rmcp::ErrorData> {
         app::validate_asyncapi_schema(PathBuf::from(params.schema).as_path()).map_err(map_app_error_to_mcp)
+    }
+
+    fn generate_sql_impl(params: GenerateSqlParams) -> Result<CodegenOutcome, rmcp::ErrorData> {
+        if params.schema.is_empty() {
+            return Err(rmcp::ErrorData::invalid_params(
+                "generate_sql requires at least one `schema` DDL path".to_string(),
+                None,
+            ));
+        }
+        if params.lang.is_empty() {
+            return Err(rmcp::ErrorData::invalid_params(
+                "generate_sql requires at least one `lang` target language".to_string(),
+                None,
+            ));
+        }
+        let languages = params
+            .lang
+            .iter()
+            .map(|language| parse_target_language(language))
+            .collect::<Result<Vec<_>, _>>()?;
+        let dialect = parse_sql_dialect(params.dialect.as_deref())?;
+        let decimal_mode = parse_decimal_mode(params.decimal_mode.as_deref())?;
+
+        app::execute_codegen(CodegenRequest {
+            schema_path: PathBuf::from(params.queries),
+            schema_kind: SchemaKind::Sql,
+            target: CodegenTargetKind::SqlHandlers {
+                schema_paths: params.schema.into_iter().map(PathBuf::from).collect(),
+                output: PathBuf::from(params.output.unwrap_or_else(|| "generated".to_string())),
+                dialect,
+                languages,
+                decimal_mode,
+                strict: params.strict.unwrap_or(false),
+                emit_openapi: !params.no_openapi.unwrap_or(false),
+                api_title: params.api_title.unwrap_or_else(|| "Generated API".to_string()),
+                api_version: params.api_version.unwrap_or_else(|| "0.1.0".to_string()),
+            },
+            dto: None,
+        })
+        .map_err(map_app_error_to_mcp)
     }
 }
 
@@ -225,142 +262,233 @@ impl SpikardMcp {
     /// Initialize a new Spikard project scaffold.
     #[tool(
         description = "Initialize a new Spikard project in the requested language and return the created files and next steps.",
-        annotations(title = "Init Project")
+        annotations(
+            title = "Init Project",
+            read_only_hint = false,
+            destructive_hint = false,
+            idempotent_hint = false,
+            open_world_hint = false
+        )
     )]
-    fn init_project(
+    async fn init_project(
         &self,
         Parameters(params): Parameters<InitProjectParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        json_tool_response(&self.init_project_impl(params)?)
+    ) -> Result<Json<crate::init::InitResponse>, rmcp::ErrorData> {
+        run_blocking(move || Self::init_project_impl(params)).await
     }
 
     /// Generate OpenAPI server handlers.
     #[tool(
         description = "Generate Spikard server handlers from an OpenAPI schema.",
-        annotations(title = "Generate OpenAPI", read_only_hint = false, idempotent_hint = true)
+        annotations(
+            title = "Generate OpenAPI",
+            read_only_hint = false,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
-    fn generate_openapi(
+    async fn generate_openapi(
         &self,
         Parameters(params): Parameters<GenerateOpenapiParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        json_tool_response(&self.generate_openapi_impl(params)?)
+    ) -> Result<Json<CodegenOutcome>, rmcp::ErrorData> {
+        run_blocking(move || Self::generate_openapi_impl(params)).await
     }
 
     /// Generate AsyncAPI handler scaffolding.
     #[tool(
         description = "Generate AsyncAPI handler scaffolding for a target language.",
-        annotations(title = "Generate AsyncAPI Handlers", read_only_hint = false, idempotent_hint = true)
+        annotations(
+            title = "Generate AsyncAPI Handlers",
+            read_only_hint = false,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
-    fn generate_asyncapi_handlers(
+    async fn generate_asyncapi_handlers(
         &self,
         Parameters(params): Parameters<GenerateAsyncapiHandlersParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        json_tool_response(&self.generate_asyncapi_handlers_impl(params)?)
+    ) -> Result<Json<CodegenOutcome>, rmcp::ErrorData> {
+        run_blocking(move || Self::generate_asyncapi_handlers_impl(params)).await
     }
 
     /// Generate JSON-RPC handlers from an OpenRPC schema.
     #[tool(
         description = "Generate JSON-RPC handlers from an OpenRPC schema.",
-        annotations(title = "Generate JSON-RPC", read_only_hint = false, idempotent_hint = true)
+        annotations(
+            title = "Generate JSON-RPC",
+            read_only_hint = false,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
-    fn generate_jsonrpc(
+    async fn generate_jsonrpc(
         &self,
         Parameters(params): Parameters<GenerateJsonrpcParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        json_tool_response(&self.generate_jsonrpc_impl(params)?)
+    ) -> Result<Json<CodegenOutcome>, rmcp::ErrorData> {
+        run_blocking(move || Self::generate_jsonrpc_impl(params)).await
     }
 
     /// Generate GraphQL code.
     #[tool(
         description = "Generate GraphQL types, resolvers, or schema definitions for a target language.",
-        annotations(title = "Generate GraphQL", read_only_hint = false, idempotent_hint = true)
+        annotations(
+            title = "Generate GraphQL",
+            read_only_hint = false,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
-    fn generate_graphql(
+    async fn generate_graphql(
         &self,
         Parameters(params): Parameters<GenerateGraphqlParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        json_tool_response(&self.generate_graphql_impl(params)?)
+    ) -> Result<Json<CodegenOutcome>, rmcp::ErrorData> {
+        run_blocking(move || Self::generate_graphql_impl(params)).await
     }
 
     /// Generate Protobuf code.
     #[tool(
         description = "Generate Protobuf messages and gRPC services for a target language.",
-        annotations(title = "Generate Protobuf", read_only_hint = false, idempotent_hint = true)
+        annotations(
+            title = "Generate Protobuf",
+            read_only_hint = false,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
-    fn generate_protobuf(
+    async fn generate_protobuf(
         &self,
         Parameters(params): Parameters<GenerateProtobufParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        json_tool_response(&self.generate_protobuf_impl(params)?)
+    ) -> Result<Json<CodegenOutcome>, rmcp::ErrorData> {
+        run_blocking(move || Self::generate_protobuf_impl(params)).await
     }
 
     /// Generate PHP DTO helper classes.
     #[tool(
         description = "Generate the PHP DTO classes used for Spikard integrations.",
-        annotations(title = "Generate PHP DTO", read_only_hint = false, idempotent_hint = true)
+        annotations(
+            title = "Generate PHP DTO",
+            read_only_hint = false,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
-    fn generate_php_dto(
+    async fn generate_php_dto(
         &self,
         Parameters(params): Parameters<GeneratePhpDtoParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        json_tool_response(&self.generate_php_dto_impl(params)?)
+    ) -> Result<Json<Vec<crate::codegen::GeneratedAsset>>, rmcp::ErrorData> {
+        run_blocking(move || Self::generate_php_dto_impl(params)).await
+    }
+
+    /// Generate routes, an OpenAPI spec, and a language sidecar from annotated SQL.
+    #[tool(
+        description = "Generate routes, an OpenAPI 3.1 spec, and a language sidecar from annotated SQL queries (via scythe).",
+        annotations(
+            title = "Generate SQL Handlers",
+            read_only_hint = false,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
+    )]
+    async fn generate_sql(
+        &self,
+        Parameters(params): Parameters<GenerateSqlParams>,
+    ) -> Result<Json<CodegenOutcome>, rmcp::ErrorData> {
+        run_blocking(move || Self::generate_sql_impl(params)).await
     }
 
     /// Generate AsyncAPI fixtures.
     #[tool(
         description = "Generate AsyncAPI test fixtures used by Spikard's codegen-first testing flows.",
-        annotations(title = "Generate AsyncAPI Fixtures", read_only_hint = false, idempotent_hint = true)
+        annotations(
+            title = "Generate AsyncAPI Fixtures",
+            read_only_hint = false,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
-    fn generate_asyncapi_fixtures(
+    async fn generate_asyncapi_fixtures(
         &self,
         Parameters(params): Parameters<GenerateAsyncapiFixturesParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        json_tool_response(&self.generate_asyncapi_fixtures_impl(params)?)
+    ) -> Result<Json<CodegenOutcome>, rmcp::ErrorData> {
+        run_blocking(move || Self::generate_asyncapi_fixtures_impl(params)).await
     }
 
     /// Generate an AsyncAPI test application.
     #[tool(
         description = "Generate a language-specific AsyncAPI test application.",
-        annotations(title = "Generate AsyncAPI Test App", read_only_hint = false, idempotent_hint = true)
+        annotations(
+            title = "Generate AsyncAPI Test App",
+            read_only_hint = false,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
-    fn generate_asyncapi_test_app(
+    async fn generate_asyncapi_test_app(
         &self,
         Parameters(params): Parameters<GenerateAsyncapiTestAppParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        json_tool_response(&self.generate_asyncapi_test_app_impl(params)?)
+    ) -> Result<Json<CodegenOutcome>, rmcp::ErrorData> {
+        run_blocking(move || Self::generate_asyncapi_test_app_impl(params)).await
     }
 
     /// Generate the full AsyncAPI fixture and app bundle.
     #[tool(
         description = "Generate AsyncAPI fixtures and test apps for all supported languages.",
-        annotations(title = "Generate AsyncAPI Bundle", read_only_hint = false, idempotent_hint = true)
+        annotations(
+            title = "Generate AsyncAPI Bundle",
+            read_only_hint = false,
+            destructive_hint = false,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
-    fn generate_asyncapi_bundle(
+    async fn generate_asyncapi_bundle(
         &self,
         Parameters(params): Parameters<GenerateAsyncapiBundleParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        json_tool_response(&self.generate_asyncapi_bundle_impl(params)?)
+    ) -> Result<Json<CodegenOutcome>, rmcp::ErrorData> {
+        run_blocking(move || Self::generate_asyncapi_bundle_impl(params)).await
     }
 
     /// Validate an AsyncAPI schema and return the summary.
     #[tool(
         description = "Validate an AsyncAPI schema and return its protocol and channel summary.",
-        annotations(title = "Validate AsyncAPI", read_only_hint = true, idempotent_hint = true)
+        annotations(
+            title = "Validate AsyncAPI",
+            read_only_hint = true,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
-    fn validate_asyncapi(
+    async fn validate_asyncapi(
         &self,
         Parameters(params): Parameters<ValidateAsyncapiParams>,
-    ) -> Result<CallToolResult, rmcp::ErrorData> {
-        json_tool_response(&self.validate_asyncapi_impl(params)?)
+    ) -> Result<Json<app::AsyncApiValidationSummary>, rmcp::ErrorData> {
+        run_blocking(move || Self::validate_asyncapi_impl(params)).await
     }
 
     /// Return the current feature summary.
     #[tool(
         description = "Return the current Spikard feature summary and binding installation hints.",
-        annotations(title = "Get Features", read_only_hint = true, idempotent_hint = true)
+        annotations(
+            title = "Get Features",
+            read_only_hint = true,
+            idempotent_hint = true,
+            open_world_hint = false
+        )
     )]
-    fn get_features(&self, Parameters(_): Parameters<EmptyParams>) -> Result<CallToolResult, rmcp::ErrorData> {
-        json_tool_response(&app::feature_summary())
+    async fn get_features(
+        &self,
+        Parameters(_): Parameters<EmptyParams>,
+    ) -> Result<Json<app::FeatureSummary>, rmcp::ErrorData> {
+        Ok(Json(app::feature_summary()))
     }
 }
 
@@ -422,10 +550,44 @@ pub async fn start_mcp_server_http(
     Ok(())
 }
 
-fn json_tool_response<T: serde::Serialize>(value: &T) -> Result<CallToolResult, rmcp::ErrorData> {
-    let json = serde_json::to_string_pretty(value)
-        .map_err(|error| rmcp::ErrorData::internal_error(format!("Failed to serialize result: {}", error), None))?;
-    Ok(CallToolResult::success(vec![ContentBlock::text(json)]))
+/// Run a blocking codegen closure off the async runtime via `spawn_blocking` and
+/// wrap the result in [`Json`] so rmcp emits both `structured_content` and an
+/// advertised `outputSchema` (SEP-2106) for the tool.
+async fn run_blocking<T, F>(work: F) -> Result<Json<T>, rmcp::ErrorData>
+where
+    T: Send + 'static,
+    F: FnOnce() -> Result<T, rmcp::ErrorData> + Send + 'static,
+{
+    let value = tokio::task::spawn_blocking(work)
+        .await
+        .map_err(|error| rmcp::ErrorData::internal_error(format!("codegen task failed: {error}"), None))??;
+    Ok(Json(value))
+}
+
+fn parse_sql_dialect(dialect: Option<&str>) -> Result<SqlDialect, rmcp::ErrorData> {
+    match dialect.unwrap_or("postgresql").to_ascii_lowercase().as_str() {
+        "postgresql" | "postgres" | "redshift" | "cockroachdb" => Ok(SqlDialect::PostgreSQL),
+        "mysql" | "mariadb" => Ok(SqlDialect::MySQL),
+        "sqlite" => Ok(SqlDialect::SQLite),
+        "mssql" | "sqlserver" => Ok(SqlDialect::MsSql),
+        "oracle" => Ok(SqlDialect::Oracle),
+        "snowflake" => Ok(SqlDialect::Snowflake),
+        other => Err(rmcp::ErrorData::invalid_params(
+            format!("Unsupported SQL dialect '{other}'. Use postgresql, mysql, sqlite, mssql, oracle, or snowflake."),
+            None,
+        )),
+    }
+}
+
+fn parse_decimal_mode(mode: Option<&str>) -> Result<DecimalMode, rmcp::ErrorData> {
+    match mode.unwrap_or("string-pattern").to_ascii_lowercase().as_str() {
+        "string-pattern" | "string_pattern" => Ok(DecimalMode::StringPattern),
+        "number" => Ok(DecimalMode::Number),
+        other => Err(rmcp::ErrorData::invalid_params(
+            format!("Unsupported decimal mode '{other}'. Use string-pattern or number."),
+            None,
+        )),
+    }
 }
 
 fn parse_target_language(language: &str) -> Result<TargetLanguage, rmcp::ErrorData> {
@@ -582,6 +744,7 @@ mod tests {
             "generate_graphql",
             "generate_protobuf",
             "generate_php_dto",
+            "generate_sql",
             "generate_asyncapi_fixtures",
             "generate_asyncapi_test_app",
             "generate_asyncapi_bundle",
@@ -597,8 +760,7 @@ mod tests {
 
     #[test]
     fn test_server_info() {
-        let server = SpikardMcp::new();
-        let info = server.get_info();
+        let info = SpikardMcp::new().get_info();
 
         assert_eq!(info.server_info.name, "spikard-mcp");
         assert_eq!(info.server_info.version, env!("CARGO_PKG_VERSION"));
@@ -607,10 +769,9 @@ mod tests {
 
     #[test]
     fn test_generate_openapi_impl_matches_service() -> Result<()> {
-        let server = SpikardMcp::new();
         let schema = repo_root().join("testing_data/schemas/todo-api.openapi.yaml");
 
-        let tool_result = server.generate_openapi_impl(GenerateOpenapiParams {
+        let tool_result = SpikardMcp::generate_openapi_impl(GenerateOpenapiParams {
             schema: schema.display().to_string(),
             language: Some("python".to_string()),
             output: None,
@@ -641,13 +802,12 @@ mod tests {
 
     #[test]
     fn test_generate_jsonrpc_impl_matches_service() -> Result<()> {
-        let server = SpikardMcp::new();
         let schema = repo_root().join("testing_data/schemas/user-api.openrpc.json");
         let tmp = TempDir::new()?;
         let tool_output = tmp.path().join("tool_handlers.py");
         let app_output = tmp.path().join("app_handlers.py");
 
-        let tool_result = server.generate_jsonrpc_impl(GenerateJsonrpcParams {
+        let tool_result = SpikardMcp::generate_jsonrpc_impl(GenerateJsonrpcParams {
             schema: schema.display().to_string(),
             language: Some("python".to_string()),
             output: Some(tool_output.display().to_string()),
@@ -680,13 +840,12 @@ mod tests {
 
     #[test]
     fn test_generate_graphql_impl_matches_service() -> Result<()> {
-        let server = SpikardMcp::new();
         let tmp = TempDir::new()?;
         let schema = write_temp_graphql_schema(&tmp)?;
         let tool_output = tmp.path().join("tool_generated.py");
         let app_output = tmp.path().join("app_generated.py");
 
-        let tool_result = server.generate_graphql_impl(GenerateGraphqlParams {
+        let tool_result = SpikardMcp::generate_graphql_impl(GenerateGraphqlParams {
             schema: schema.display().to_string(),
             language: Some("python".to_string()),
             output: Some(tool_output.display().to_string()),
@@ -721,13 +880,12 @@ mod tests {
 
     #[test]
     fn test_generate_protobuf_impl_matches_service() -> Result<()> {
-        let server = SpikardMcp::new();
         let schema = repo_root().join("testing_data/schemas/user-service.proto");
         let tmp = TempDir::new()?;
         let tool_output = tmp.path().join("tool_generated.ts");
         let app_output = tmp.path().join("app_generated.ts");
 
-        let tool_result = server.generate_protobuf_impl(GenerateProtobufParams {
+        let tool_result = SpikardMcp::generate_protobuf_impl(GenerateProtobufParams {
             schema: schema.display().to_string(),
             language: Some("typescript".to_string()),
             output: tool_output.display().to_string(),
@@ -779,12 +937,11 @@ mod tests {
 
     #[test]
     fn test_generate_asyncapi_bundle_impl_matches_service_asset_count() -> Result<()> {
-        let server = SpikardMcp::new();
         let schema = repo_root().join("testing_data/schemas/chat-service.asyncapi.yaml");
         let tool_tmp = TempDir::new()?;
         let app_tmp = TempDir::new()?;
 
-        let tool_result = server.generate_asyncapi_bundle_impl(GenerateAsyncapiBundleParams {
+        let tool_result = SpikardMcp::generate_asyncapi_bundle_impl(GenerateAsyncapiBundleParams {
             schema: schema.display().to_string(),
             output: Some(tool_tmp.path().display().to_string()),
         })?;
@@ -811,13 +968,12 @@ mod tests {
 
     #[test]
     fn test_generate_asyncapi_handlers_impl_matches_service() -> Result<()> {
-        let server = SpikardMcp::new();
         let schema = repo_root().join("testing_data/schemas/chat-service.asyncapi.yaml");
         let tmp = TempDir::new()?;
         let tool_output = tmp.path().join("tool_handlers.py");
         let app_output = tmp.path().join("app_handlers.py");
 
-        let tool_result = server.generate_asyncapi_handlers_impl(GenerateAsyncapiHandlersParams {
+        let tool_result = SpikardMcp::generate_asyncapi_handlers_impl(GenerateAsyncapiHandlersParams {
             schema: schema.display().to_string(),
             language: "python".to_string(),
             output: tool_output.display().to_string(),
@@ -857,12 +1013,11 @@ mod tests {
 
     #[test]
     fn test_generate_asyncapi_fixtures_impl_matches_service() -> Result<()> {
-        let server = SpikardMcp::new();
         let schema = repo_root().join("testing_data/schemas/chat-service.asyncapi.yaml");
         let tool_tmp = TempDir::new()?;
         let app_tmp = TempDir::new()?;
 
-        let tool_result = server.generate_asyncapi_fixtures_impl(GenerateAsyncapiFixturesParams {
+        let tool_result = SpikardMcp::generate_asyncapi_fixtures_impl(GenerateAsyncapiFixturesParams {
             schema: schema.display().to_string(),
             output: Some(tool_tmp.path().display().to_string()),
         })?;
@@ -889,13 +1044,12 @@ mod tests {
 
     #[test]
     fn test_generate_asyncapi_test_app_impl_matches_service() -> Result<()> {
-        let server = SpikardMcp::new();
         let schema = repo_root().join("testing_data/schemas/chat-service.asyncapi.yaml");
         let tmp = TempDir::new()?;
         let tool_output = tmp.path().join("tool_app.ex");
         let app_output = tmp.path().join("app_app.ex");
 
-        let tool_result = server.generate_asyncapi_test_app_impl(GenerateAsyncapiTestAppParams {
+        let tool_result = SpikardMcp::generate_asyncapi_test_app_impl(GenerateAsyncapiTestAppParams {
             schema: schema.display().to_string(),
             language: "elixir".to_string(),
             output: tool_output.display().to_string(),
@@ -938,10 +1092,9 @@ mod tests {
 
     #[test]
     fn test_validate_asyncapi_impl_matches_service() -> Result<()> {
-        let server = SpikardMcp::new();
         let schema = repo_root().join("testing_data/schemas/chat-service.asyncapi.yaml");
 
-        let tool_result = server.validate_asyncapi_impl(ValidateAsyncapiParams {
+        let tool_result = SpikardMcp::validate_asyncapi_impl(ValidateAsyncapiParams {
             schema: schema.display().to_string(),
         })?;
         let app_result = app::validate_asyncapi_schema(&schema)?;
@@ -954,11 +1107,10 @@ mod tests {
 
     #[test]
     fn test_init_project_impl_defaults_to_python_and_current_dir() -> Result<()> {
-        let server = SpikardMcp::new();
         let tmp = TempDir::new()?;
         let project_name = "mcp_default_init";
 
-        let response = server.init_project_impl(InitProjectParams {
+        let response = SpikardMcp::init_project_impl(InitProjectParams {
             name: project_name.to_string(),
             language: None,
             directory: Some(tmp.path().display().to_string()),
@@ -980,10 +1132,9 @@ mod tests {
 
     #[test]
     fn test_generate_openapi_impl_defaults_to_python() -> Result<()> {
-        let server = SpikardMcp::new();
         let schema = repo_root().join("testing_data/schemas/todo-api.openapi.yaml");
 
-        let tool_result = server.generate_openapi_impl(GenerateOpenapiParams {
+        let tool_result = SpikardMcp::generate_openapi_impl(GenerateOpenapiParams {
             schema: schema.display().to_string(),
             language: None,
             output: None,
@@ -1044,10 +1195,9 @@ mod tests {
 
     #[test]
     fn test_generate_php_dto_impl_writes_files() -> Result<()> {
-        let server = SpikardMcp::new();
         let tmp = TempDir::new()?;
 
-        let assets = server.generate_php_dto_impl(GeneratePhpDtoParams {
+        let assets = SpikardMcp::generate_php_dto_impl(GeneratePhpDtoParams {
             output: Some(tmp.path().display().to_string()),
         })?;
 
@@ -1058,11 +1208,10 @@ mod tests {
 
     #[test]
     fn test_generate_php_dto_impl_matches_service() -> Result<()> {
-        let server = SpikardMcp::new();
         let tool_tmp = TempDir::new()?;
         let app_tmp = TempDir::new()?;
 
-        let tool_result = server.generate_php_dto_impl(GeneratePhpDtoParams {
+        let tool_result = SpikardMcp::generate_php_dto_impl(GeneratePhpDtoParams {
             output: Some(tool_tmp.path().display().to_string()),
         })?;
         let app_result = app::generate_php_dto(app_tmp.path())?;
@@ -1073,26 +1222,77 @@ mod tests {
     }
 
     #[test]
-    fn test_get_features_matches_app_summary() -> Result<()> {
-        let server = SpikardMcp::new();
-        let response = server.get_features(Parameters(EmptyParams {}))?;
-        let text = response
-            .content
-            .first()
-            .and_then(|content| content.as_text())
-            .map(|content| content.text.as_str())
-            .expect("expected text tool response");
-        let summary = app::feature_summary();
-        assert_eq!(text, serde_json::to_string_pretty(&summary)?);
+    fn test_generate_sql_impl_matches_service() -> Result<()> {
+        let tmp = TempDir::new()?;
+        let schema = tmp.path().join("schema.sql");
+        std::fs::write(
+            &schema,
+            "CREATE TABLE users (id BIGSERIAL PRIMARY KEY, email TEXT NOT NULL);",
+        )?;
+        let queries_dir = tmp.path().join("queries");
+        std::fs::create_dir_all(&queries_dir)?;
+        std::fs::write(
+            queries_dir.join("users.sql"),
+            "-- @name GetUser\n-- @returns :one\n-- @http GET /users/{id}\nSELECT id, email FROM users WHERE id = $1;",
+        )?;
+        let tool_out = tmp.path().join("tool_out");
+        let app_out = tmp.path().join("app_out");
+
+        let tool_result = SpikardMcp::generate_sql_impl(GenerateSqlParams {
+            queries: queries_dir.display().to_string(),
+            schema: vec![schema.display().to_string()],
+            lang: vec!["python".to_string()],
+            dialect: Some("postgresql".to_string()),
+            output: Some(tool_out.display().to_string()),
+            decimal_mode: None,
+            strict: None,
+            no_openapi: None,
+            api_title: None,
+            api_version: None,
+        })?;
+
+        let app_result = app::execute_codegen(CodegenRequest {
+            schema_path: queries_dir.clone(),
+            schema_kind: SchemaKind::Sql,
+            target: CodegenTargetKind::SqlHandlers {
+                schema_paths: vec![schema.clone()],
+                output: app_out.clone(),
+                dialect: SqlDialect::PostgreSQL,
+                languages: vec![TargetLanguage::Python],
+                decimal_mode: DecimalMode::StringPattern,
+                strict: false,
+                emit_openapi: true,
+                api_title: "Generated API".to_string(),
+                api_version: "0.1.0".to_string(),
+            },
+            dto: None,
+        })?;
+
+        match (tool_result, app_result) {
+            (CodegenOutcome::Files(tool_files), CodegenOutcome::Files(app_files)) => {
+                assert!(!tool_files.is_empty(), "expected generated SQL handler files");
+                assert_eq!(tool_files.len(), app_files.len());
+            }
+            _ => panic!("expected file generation results for SQL handlers"),
+        }
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_get_features_matches_app_summary() -> Result<()> {
+        let Json(response) = SpikardMcp::new().get_features(Parameters(EmptyParams {})).await?;
+        assert_eq!(
+            serde_json::to_value(&response)?,
+            serde_json::to_value(app::feature_summary())?
+        );
         Ok(())
     }
 
     #[test]
     fn test_init_project_impl_creates_files() -> Result<()> {
-        let server = SpikardMcp::new();
         let tmp = TempDir::new()?;
 
-        let result = server.init_project_impl(InitProjectParams {
+        let result = SpikardMcp::init_project_impl(InitProjectParams {
             name: "agent_demo".to_string(),
             language: Some("python".to_string()),
             directory: Some(tmp.path().display().to_string()),
@@ -1106,7 +1306,6 @@ mod tests {
 
     #[test]
     fn test_init_project_impl_creates_expected_structures_for_each_binding() -> Result<()> {
-        let server = SpikardMcp::new();
         let tmp = TempDir::new()?;
 
         let cases = [
@@ -1195,7 +1394,7 @@ mod tests {
         ];
 
         for (language, name, expected_paths) in cases {
-            let result = server.init_project_impl(InitProjectParams {
+            let result = SpikardMcp::init_project_impl(InitProjectParams {
                 name: name.to_string(),
                 language: Some(language.to_string()),
                 directory: Some(tmp.path().display().to_string()),

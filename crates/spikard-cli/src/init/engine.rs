@@ -90,6 +90,11 @@ pub struct InitRequest {
 /// }
 /// ```
 #[derive(Debug, Clone, serde::Serialize)]
+#[cfg_attr(
+    feature = "mcp",
+    derive(rmcp::schemars::JsonSchema),
+    schemars(crate = "rmcp::schemars")
+)]
 pub struct InitResponse {
     /// Absolute paths to all files that were created
     pub files_created: Vec<PathBuf>,
