@@ -34,7 +34,7 @@ let package = Package(
     .binaryTarget(
       name: "RustBridgeBinary",
       url: "https://github.com/Goldziher/spikard/releases/download/v0.17.0-rc.6/Spikard-rs.artifactbundle.zip",
-      checksum: "__ALEF_SWIFT_CHECKSUM__"
+      checksum: "0b7c95bbd39dc5141d1e8ed9cf98f06385ed73afe49a1211ee05c476d6c3f976"
     ),
     // RustBridge: Swift wrapper module owning the swift-bridge generated
     // sources. Depends on RustBridgeC for C type declarations and on
