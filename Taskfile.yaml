@@ -718,6 +718,8 @@ tasks:
     desc: "Run Go published package test app"
     dir: test_apps/go
     cmds:
+      - go mod download
+      - go build -o cmd/harness/harness ./cmd/harness/
       - go test ./...
 
   test-apps:java:
@@ -757,6 +759,7 @@ tasks:
     desc: "Run WASM published package test app"
     dir: test_apps/wasm
     cmds:
+      - cd ../rust && cargo build --release --bin mock-server
       - pnpm install --ignore-workspace
       - pnpm test
 
