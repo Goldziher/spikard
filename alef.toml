@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.48.7"
+alef_version = "0.48.9"
 languages = [
   "python",
   "node",
@@ -1076,7 +1076,7 @@ name = "Spikard"
 
 [crates.e2e.registry.packages.zig]
 name = "spikard"
-hash = "spikard-0.17.0-rc.7-PLACEHOLDER1234567890abcdefABCDEF0987654321"
+hash = "spikard-0.17.0-rc.8-PLACEHOLDER1234567890abcdefABCDEF0987654321"
 
 [crates.e2e.registry.packages.wasm]
 name = "@spikard/node-wasm"

@@ -3,7 +3,7 @@ module github.com/Goldziher/spikard-e2e
 go 1.26
 
 require (
-	github.com/Goldziher/spikard v0.17.0-rc.7
+	github.com/Goldziher/spikard v0.17.0-rc.8
 	github.com/stretchr/testify v1.11.1
 )
 
