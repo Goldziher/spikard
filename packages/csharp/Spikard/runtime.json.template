@@ -1,0 +1,44 @@
+{
+  "runtimes": {
+    "linux-arm64": {
+      "Spikard": {
+        "Spikard.runtime.linux-arm64": "{{VERSION}}"
+      }
+    },
+    "linux-musl-arm64": {
+      "#import": [
+        "linux-arm64"
+      ]
+    },
+    "linux-musl-x64": {
+      "#import": [
+        "linux-x64"
+      ]
+    },
+    "linux-x64": {
+      "Spikard": {
+        "Spikard.runtime.linux-x64": "{{VERSION}}"
+      }
+    },
+    "osx-arm64": {
+      "Spikard": {
+        "Spikard.runtime.osx-arm64": "{{VERSION}}"
+      }
+    },
+    "osx-x64": {
+      "Spikard": {
+        "Spikard.runtime.osx-x64": "{{VERSION}}"
+      }
+    },
+    "win-arm64": {
+      "Spikard": {
+        "Spikard.runtime.win-arm64": "{{VERSION}}"
+      }
+    },
+    "win-x64": {
+      "Spikard": {
+        "Spikard.runtime.win-x64": "{{VERSION}}"
+      }
+    }
+  }
+}

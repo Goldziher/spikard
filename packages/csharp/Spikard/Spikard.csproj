@@ -27,14 +27,20 @@
 
   <ItemGroup>
     <None Include="../../../LICENSE" Pack="true" PackagePath="/" />
-    <!-- Self-contained package: the per-RID native closures ship inside this package
-         under runtimes/<rid>/native/, which NuGet resolves automatically for the
-         consumer's RID at build/publish time. The natives are staged into
-         runtimes/ by CI (build-csharp-natives) before pack. A previous thin-meta
-         + runtime.json split pointed at Spikard.runtime.<rid> packages that were
-         never produced, so every restore 404'd on Spikard.runtime.<rid>. -->
-    <None Include="runtimes/**" Pack="true" PackagePath="runtimes/" />
+    <!-- Thin meta-package: no runtimes/** payload here. Native closures ship in the
+         per-RID Spikard.runtime.<rid> packages (see ../Spikard.Runtime); this
+         package only carries the managed assembly plus runtime.json, which tells
+         NuGet's RID-fallback graph which runtime package to pull in for the
+         consumer's RID. runtime.json is rendered
+         from runtime.json.template by CI before pack; RequireRuntimeJson guards
+         against packing without it. -->
+    <None Include="runtime.json" Pack="true" PackagePath="/" Condition="Exists('runtime.json')" />
   </ItemGroup>
+
+  <Target Name="RequireRuntimeJson" BeforeTargets="Pack">
+    <Error Condition="!Exists('runtime.json')"
+           Text="packages/csharp/Spikard/runtime.json is missing. Render it from runtime.json.template (substituting {{VERSION}}) before packing Spikard.csproj." />
+  </Target>
 
   <ItemGroup>
     <Compile Include="../src/**/*.cs" />

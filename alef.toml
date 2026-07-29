@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.48.4"
+alef_version = "0.48.6"
 languages = [
   "python",
   "node",
@@ -193,6 +193,11 @@ module_name = "_spikard"
 pip_name = "spikard"
 release_gil = true
 features = ["di"]
+# Runtime PyPI dependencies rendered into the published wheel's
+# [project].dependencies. msgspec is imported unconditionally by the generated
+# package (converters/schema/datastructures); without it the wheel shipped an
+# empty requires_dist and `import spikard` failed with ModuleNotFoundError.
+pip_dependencies = ["msgspec>=0.21.1"]
 
 [crates.python.stubs]
 output = "packages/python/spikard/"
