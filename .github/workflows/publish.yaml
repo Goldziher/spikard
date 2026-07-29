@@ -1073,8 +1073,15 @@ jobs:
           dest=packages/java/src/main/resources/natives
           rm -rf "$dest"
           mkdir -p "$dest"
-          # ~keep build-java-natives@v1 artifacts already carry <classifier>/lib… layout.
           cp -R dist/java-natives/. "$dest/"
+          # build-java-natives@v1 artifacts nest classifiers under an extra `native/`
+          # directory; flatten it so files land at natives/<rid>/lib… which is exactly
+          # where NativeLib loads from (/natives/<rid>/). Without this the jar ships
+          # natives/native/<rid>/… and the loader never finds them (UnsatisfiedLinkError).
+          if [ -d "$dest/native" ]; then
+            cp -R "$dest/native/." "$dest/"
+            rm -rf "$dest/native"
+          fi
           find "$dest" -type f
       - name: Package Java JAR with bundled natives
         run: cd packages/java && mvn -B -DskipTests package
@@ -1140,11 +1147,6 @@ jobs:
           # ~keep build-csharp-natives@v1 artifacts already carry runtimes/<rid>/native/ layout.
           cp -R dist/csharp-natives/runtimes/. "$dest/"
           find "$dest" -type f
-      - name: Render runtime.json from template
-        uses: xberg-io/actions/render-runtime-json@v1
-        with:
-          template-path: packages/csharp/Spikard/runtime.json.template
-          version: ${{ needs.prepare.outputs.version }}
       - name: Pack NuGet
         run: dotnet pack packages/csharp/Spikard --configuration Release --output dist/nuget
       - uses: xberg-io/actions/publish-nuget@v1
@@ -1297,7 +1299,7 @@ jobs:
           VERSION: ${{ needs.prepare.outputs.version }}
           REVISION: ${{ steps.resolve_revision.outputs.sha }}
           TAP_DIR: ${{ github.workspace }}/homebrew-tap
-        run: scripts/publish/update-homebrew-formula.sh
+        run: bash scripts/publish/update-homebrew-formula.sh
 
       - name: Commit and push to tap
         working-directory: homebrew-tap
