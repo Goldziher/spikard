@@ -12,14 +12,22 @@ tasks:
     desc: "Synchronize version across all package manifests and regenerate everything"
     cmds:
       - "{{.ALEF}} sync-versions"
-      - "{{.ALEF}} readme"
-      - "{{.ALEF}} docs"
-      - "{{.ALEF}} generate --clean"
+      # `alef all --clean` regenerates every Alef-managed output (readme, docs,
+      # bindings, scaffold, stubs, e2e, test-apps) in the correct internal order.
+      # Do NOT re-expand this into individual sub-commands: hand-ordering `docs`
+      # before `generate --clean` lets the clean wipe docs/reference/ after it is
+      # written. `all` runs them in dependency order.
+      - "{{.ALEF}} all --clean"
+      # cbindgen header (crates/spikard-ffi/include/spikard.h) is emitted by
+      # spikard-ffi's build.rs, not by `alef all`; build it so the header stays fresh.
       - "cargo build -p spikard-ffi"
-      - "{{.ALEF}} scaffold"
-      - "{{.ALEF}} stubs"
-      - "{{.ALEF}} e2e generate"
-      - "{{.ALEF}} test-apps generate"
+      # ~keep dart FRB codegen + fix_handler_executor_calls() only run during cargo build,
+      # not during `alef all` (which emits Rust source only).
+      - cmd: |
+          if command -v cargo >/dev/null 2>&1; then
+            cargo build --manifest-path packages/dart/rust/Cargo.toml 2>&1 | grep -v "^warning:" || true
+          fi
+        ignore_error: true
       - cmd: |
           set -e
           version=$(grep -m1 '^version = ' Cargo.toml | sed 's/version = "\(.*\)"/\1/')

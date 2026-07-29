@@ -138,7 +138,7 @@ remove_todos = false
 remove_fixme = false
 remove_docs = false
 use_default_ignores = true
-preserve_patterns = ["SAFETY", "SPDX", "Copyright", "License", "licensed under", "HACK", "WORKAROUND", "NOTE"]
+preserve_patterns = ["SAFETY", "SPDX", "Copyright", "License", "licensed under", "HACK", "WORKAROUND", "NOTE", "~keep"]
 
 [tools.clang-format]
 enabled = true

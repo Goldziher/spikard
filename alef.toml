@@ -72,7 +72,7 @@ remove-todos = false
 remove-fixme = false
 remove-docs = false
 use-default-ignores = true
-preserve-patterns = ["SAFETY", "SPDX", "Copyright", "License", "licensed under", "HACK", "WORKAROUND", "NOTE"]
+preserve-patterns = ["SAFETY", "SPDX", "Copyright", "License", "licensed under", "HACK", "WORKAROUND", "NOTE", "~keep"]
 
 [workspace.poly.typos.extend-words]
 bre = "bre"
@@ -193,7 +193,7 @@ module_name = "_spikard"
 pip_name = "spikard"
 release_gil = true
 features = ["di"]
-# Runtime PyPI dependencies rendered into the published wheel's
+# ~keep Runtime PyPI dependencies rendered into the published wheel's
 # [project].dependencies. msgspec is imported unconditionally by the generated
 # package (converters/schema/datastructures); without it the wheel shipped an
 # empty requires_dist and `import spikard` failed with ModuleNotFoundError.
@@ -1076,7 +1076,7 @@ name = "Spikard"
 
 [crates.e2e.registry.packages.zig]
 name = "spikard"
-hash = "spikard-0.17.0-rc.5-PLACEHOLDER1234567890abcdefABCDEF0987654321"
+hash = "spikard-0.17.0-rc.6-PLACEHOLDER1234567890abcdefABCDEF0987654321"
 
 [crates.e2e.registry.packages.wasm]
 name = "@spikard/node-wasm"

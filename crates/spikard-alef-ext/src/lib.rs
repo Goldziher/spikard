@@ -133,7 +133,7 @@ impl Extension for HttpExtension {
     ) -> Result<()> {
         match language {
             Language::Node => emit::napi::wire_ergonomic_entry(files),
-            // The alef ruby scaffold owns the Steepfile and ignores only the native
+            // ~keep The alef ruby scaffold owns the Steepfile and ignores only the native
             // module, but Steep also false-positives on the generated impl files
             // because they reopen the native app class and call runtime-only methods
             // that RBS cannot see, so we extend the Steepfile with the spikard impl
