@@ -39,8 +39,8 @@ dependencies = [
 
 [[package]]
 name = "alef"
-version = "0.48.6"
-source = "git+https://github.com/xberg-io/alef?tag=v0.48.6#287159fdef1b1c4b7bf3781d56247f6ff7098363"
+version = "0.48.7"
+source = "git+https://github.com/xberg-io/alef?tag=v0.48.7#b062b6e67ab802d30defeb22a0359c7c33dd0acb"
 dependencies = [
  "ahash",
  "anyhow",
@@ -1355,7 +1355,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3621,7 +3621,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -4014,7 +4014,7 @@ dependencies = [
 
 [[package]]
 name = "spikard"
-version = "0.17.0-rc.6"
+version = "0.17.0-rc.7"
 dependencies = [
  "anyhow",
  "async-graphql",
@@ -4035,7 +4035,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-alef"
-version = "0.17.0-rc.6"
+version = "0.17.0-rc.7"
 dependencies = [
  "alef",
  "spikard-alef-ext",
@@ -4044,7 +4044,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-alef-ext"
-version = "0.17.0-rc.6"
+version = "0.17.0-rc.7"
 dependencies = [
  "alef",
  "anyhow",
@@ -4057,7 +4057,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-cli"
-version = "0.17.0-rc.6"
+version = "0.17.0-rc.7"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -4090,7 +4090,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-codegen"
-version = "0.17.0-rc.6"
+version = "0.17.0-rc.7"
 dependencies = [
  "indexmap",
  "scythe-core",
@@ -4101,7 +4101,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-core"
-version = "0.17.0-rc.6"
+version = "0.17.0-rc.7"
 dependencies = [
  "anyhow",
  "base64 0.23.0",
@@ -4126,7 +4126,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-e2e-http"
-version = "0.17.0-rc.6"
+version = "0.17.0-rc.7"
 dependencies = [
  "alef",
  "anyhow",
@@ -4138,7 +4138,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-ffi"
-version = "0.17.0-rc.6"
+version = "0.17.0-rc.7"
 dependencies = [
  "ahash",
  "cbindgen",
@@ -4153,7 +4153,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-graphql"
-version = "0.17.0-rc.6"
+version = "0.17.0-rc.7"
 dependencies = [
  "async-graphql",
  "async-graphql-parser",
@@ -4175,7 +4175,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-http"
-version = "0.17.0-rc.6"
+version = "0.17.0-rc.7"
 dependencies = [
  "ahash",
  "anyhow",
@@ -4231,7 +4231,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-node"
-version = "0.17.0-rc.6"
+version = "0.17.0-rc.7"
 dependencies = [
  "axum",
  "napi",
@@ -4248,7 +4248,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-py"
-version = "0.17.0-rc.6"
+version = "0.17.0-rc.7"
 dependencies = [
  "axum",
  "pyo3",
@@ -4264,7 +4264,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-swift"
-version = "0.17.0-rc.6"
+version = "0.17.0-rc.7"
 dependencies = [
  "ahash",
  "async-trait",
@@ -4283,7 +4283,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-wasm"
-version = "0.17.0-rc.6"
+version = "0.17.0-rc.7"
 dependencies = [
  "axum",
  "futures",
@@ -4553,7 +4553,7 @@ dependencies = [
  "getrandom 0.4.3",
  "once_cell",
  "rustix",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5417,7 +5417,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

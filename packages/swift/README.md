@@ -90,7 +90,7 @@ Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC code
 Add to `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/Goldziher/spikard", from: "0.17.0-rc.6")
+.package(url: "https://github.com/Goldziher/spikard", from: "0.17.0-rc.7")
 ```
 
 ### System Requirements

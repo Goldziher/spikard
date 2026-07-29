@@ -1140,15 +1140,42 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # ~keep csproj packs runtimes/** relative to packages/csharp/Spikard/
+          # ~keep The per-RID Spikard.Runtime csproj packs natives from
+          # ~keep ../Spikard/runtimes/<rid>/native/, so stage them under the meta package dir.
           dest=packages/csharp/Spikard/runtimes
           rm -rf "$dest"
           mkdir -p "$dest"
           # ~keep build-csharp-natives@v1 artifacts already carry runtimes/<rid>/native/ layout.
           cp -R dist/csharp-natives/runtimes/. "$dest/"
           find "$dest" -type f
-      - name: Pack NuGet
-        run: dotnet pack packages/csharp/Spikard --configuration Release --output dist/nuget
+      - name: Render runtime.json from template
+        shell: bash
+        run: |
+          set -euo pipefail
+          # ~keep Meta csproj's RequireRuntimeJson target hard-errors without this file.
+          # ~keep runtime.json is the RID-fallback graph pointing at the per-RID packages.
+          version='${{ needs.prepare.outputs.version }}'
+          sed "s/{{VERSION}}/${version}/g" \
+            packages/csharp/Spikard/runtime.json.template \
+            > packages/csharp/Spikard/runtime.json
+          cat packages/csharp/Spikard/runtime.json
+      - name: Pack NuGet (meta + per-RID runtime packages)
+        shell: bash
+        run: |
+          set -euo pipefail
+          version='${{ needs.prepare.outputs.version }}'
+          out=dist/nuget
+          # Meta package: managed assembly + runtime.json RID-fallback graph (no natives).
+          dotnet pack packages/csharp/Spikard --configuration Release \
+            -p:Version="$version" --output "$out"
+          # Native half: one Spikard.runtime.<rid> package per staged RID. The RID set
+          # matches runtime.json (both derive from alef's PUBLISHED_RUNTIME_IDENTIFIERS).
+          for rid_dir in packages/csharp/Spikard/runtimes/*/; do
+            rid="$(basename "$rid_dir")"
+            dotnet pack packages/csharp/Spikard.Runtime --configuration Release \
+              -p:Version="$version" -p:PublishedRID="$rid" --output "$out"
+          done
+          ls -la "$out"
       - uses: xberg-io/actions/publish-nuget@v1
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
@@ -1716,11 +1743,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # RID set must match alef's PUBLISHED_RUNTIME_IDENTIFIERS: runtime.json advertises
+        # a Spikard.runtime.<rid> package for every enabled RID, so each must be built here
+        # or consumers on that RID 404. osx-x64 and win-arm64 are cross-compiled (matching
+        # how build-node-napi cross-builds aarch64-pc-windows-msvc on windows-latest).
         include:
           - { os: ubuntu-latest, rid: linux-x64, target: x86_64-unknown-linux-gnu }
           - { os: ubuntu-24.04-arm, rid: linux-arm64, target: aarch64-unknown-linux-gnu }
           - { os: macos-latest, rid: osx-arm64, target: aarch64-apple-darwin }
+          - { os: macos-latest, rid: osx-x64, target: x86_64-apple-darwin }
           - { os: windows-latest, rid: win-x64, target: x86_64-pc-windows-msvc }
+          - { os: windows-latest, rid: win-arm64, target: aarch64-pc-windows-msvc }
     steps:
       - uses: actions/checkout@v6
         with:
