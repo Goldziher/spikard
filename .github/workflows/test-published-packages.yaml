@@ -26,6 +26,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       registries_ready: ${{ steps.validate.outputs.ready }}
+      release_ready: ${{ steps.validate.outputs.release_ready }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -48,6 +49,8 @@ jobs:
 
       - name: Validate registry availability
         id: validate
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           MISSING=()
@@ -103,6 +106,55 @@ jobs:
             MISSING+=("Hex.pm")
           fi
 
+          # Go module proxy (module path github.com/Goldziher/spikard; the proxy
+          # accepts a lowercased path for the case-insensitive lookup)
+          if curl -s "https://proxy.golang.org/github.com/goldziher/spikard/@v/v$VERSION.info" | jq -e '.Version' > /dev/null 2>&1; then
+            echo "✓ Go proxy: github.com/Goldziher/spikard v$VERSION found"
+          else
+            echo "✗ Go proxy: github.com/Goldziher/spikard v$VERSION not found"
+            MISSING+=("GoProxy")
+          fi
+
+          # npm (@spikard/wasm)
+          if curl -s "https://registry.npmjs.org/@spikard/wasm/$VERSION" | jq -e '.version' > /dev/null 2>&1; then
+            echo "✓ npm: @spikard/wasm $VERSION found"
+          else
+            echo "✗ npm: @spikard/wasm $VERSION not found"
+            MISSING+=("npm:@spikard/wasm")
+          fi
+
+          # Maven Central (java: dev.spikard:spikard, kotlin: dev.spikard:spikard-kotlin)
+          if curl -s "https://search.maven.org/solrsearch/select?q=g:%22dev.spikard%22+AND+a:%22spikard%22+AND+v:%22$VERSION%22&core=gav&wt=json" | jq -e '.response.numFound > 0' > /dev/null 2>&1; then
+            echo "✓ Maven Central: dev.spikard:spikard $VERSION found"
+          else
+            echo "✗ Maven Central: dev.spikard:spikard $VERSION not found"
+            MISSING+=("Maven:java")
+          fi
+
+          if curl -s "https://search.maven.org/solrsearch/select?q=g:%22dev.spikard%22+AND+a:%22spikard-kotlin%22+AND+v:%22$VERSION%22&core=gav&wt=json" | jq -e '.response.numFound > 0' > /dev/null 2>&1; then
+            echo "✓ Maven Central: dev.spikard:spikard-kotlin $VERSION found"
+          else
+            echo "✗ Maven Central: dev.spikard:spikard-kotlin $VERSION not found"
+            MISSING+=("Maven:kotlin")
+          fi
+
+          # NuGet (package id: Spikard)
+          NUGET_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/spikard/$VERSION/spikard.$VERSION.nupkg")
+          if [ "$NUGET_CODE" = "200" ]; then
+            echo "✓ NuGet: Spikard $VERSION found"
+          else
+            echo "✗ NuGet: Spikard $VERSION not found (HTTP $NUGET_CODE)"
+            MISSING+=("NuGet")
+          fi
+
+          # pub.dev (dart)
+          if curl -s "https://pub.dev/api/packages/spikard" | jq -e --arg v "$VERSION" '.versions[] | select(.version == $v)' > /dev/null 2>&1; then
+            echo "✓ pub.dev: spikard $VERSION found"
+          else
+            echo "✗ pub.dev: spikard $VERSION not found"
+            MISSING+=("pub.dev")
+          fi
+
           if [ "${#MISSING[@]}" -eq 0 ]; then
             echo "ready=true" >> "$GITHUB_OUTPUT"
             echo "All registries have version $VERSION available"
@@ -110,6 +162,49 @@ jobs:
             echo "ready=false" >> "$GITHUB_OUTPUT"
             echo "Missing from registries: ${MISSING[*]}"
             echo "::warning::Not all registries have version $VERSION yet. Tests may fail."
+          fi
+
+          # zig, swift, and kotlin_android ship as GitHub release assets/refs rather
+          # than through a package registry, so they are gated separately below on
+          # `release_ready` instead of being folded into the all-or-nothing
+          # `registries_ready` gate above. That keeps a slow package-registry index
+          # from blocking release-asset-based jobs (and vice versa).
+          RELEASE_MISSING=()
+
+          if gh release view "v$VERSION" --repo Goldziher/spikard > /dev/null 2>&1; then
+            echo "✓ GitHub release v$VERSION exists"
+          else
+            echo "✗ GitHub release v$VERSION not found"
+            RELEASE_MISSING+=("GitHubRelease")
+          fi
+
+          # zig: published as a release asset (spikard-zig-v$VERSION.tar.gz)
+          if gh release view "v$VERSION" --repo Goldziher/spikard --json assets \
+            --jq '.assets[].name' 2>/dev/null | grep -qx "spikard-zig-v$VERSION.tar.gz"; then
+            echo "✓ GitHub release asset: spikard-zig-v$VERSION.tar.gz found"
+          else
+            echo "✗ GitHub release asset: spikard-zig-v$VERSION.tar.gz not found"
+            RELEASE_MISSING+=("GitHubRelease:zig")
+          fi
+
+          # swift: consumed directly from the release/swift/$VERSION branch, not a
+          # release asset
+          if gh api "repos/Goldziher/spikard/branches/release%2Fswift%2F$VERSION" > /dev/null 2>&1; then
+            echo "✓ GitHub branch release/swift/$VERSION found"
+          else
+            echo "✗ GitHub branch release/swift/$VERSION not found"
+            RELEASE_MISSING+=("GitHubBranch:swift")
+          fi
+
+          # kotlin_android: no dedicated release artifact exists yet; fall back to
+          # the release tag itself as the readiness signal
+          if [ "${#RELEASE_MISSING[@]}" -eq 0 ]; then
+            echo "release_ready=true" >> "$GITHUB_OUTPUT"
+            echo "GitHub release-based artifacts are ready for $VERSION"
+          else
+            echo "release_ready=false" >> "$GITHUB_OUTPUT"
+            echo "Missing GitHub release artifacts: ${RELEASE_MISSING[*]}"
+            echo "::warning::Not all GitHub release artifacts have version $VERSION yet. zig/swift/kotlin_android tests may fail."
           fi
 
   test-python:
@@ -332,9 +427,355 @@ jobs:
         working-directory: test_apps/elixir
         run: mix test
 
+  test-go:
+    name: Test Go module (${{ matrix.os }})
+    needs: prepare
+    if: needs.prepare.outputs.registries_ready == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: test_apps/go/go.mod
+
+      - name: Install Task
+        uses: xberg-io/actions/install-task@v1
+
+      - name: Update go.mod dependency version
+        working-directory: test_apps/go
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          go get "github.com/Goldziher/spikard@v$VERSION"
+          go mod tidy
+
+      - name: Run tests
+        run: task test-apps:go
+
+  test-wasm:
+    name: Test WASM package (${{ matrix.os }}, Node ${{ matrix.node-version }})
+    needs: prepare
+    if: needs.prepare.outputs.registries_ready == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node-version: ["22", "24"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: xberg-io/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
+          cache-key-prefix: test-published-wasm-${{ matrix.os }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          package_json_file: package.json
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "pnpm"
+
+      - name: Install Task
+        uses: xberg-io/actions/install-task@v1
+
+      - name: Update package.json version
+        working-directory: test_apps/wasm
+        shell: bash
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          jq ".devDependencies[\"@spikard/node-wasm\"] = \"$VERSION\"" package.json > package.json.tmp
+          mv package.json.tmp package.json
+
+      - name: Run tests
+        run: task test-apps:wasm
+
+  test-zig:
+    name: Test Zig package (Ubuntu, Zig 0.16)
+    needs: prepare
+    if: needs.prepare.outputs.release_ready == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: xberg-io/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
+          cache-key-prefix: test-published-zig
+
+      - name: Setup Zig
+        uses: xberg-io/actions/setup-zig@v1
+
+      - name: Install Task
+        uses: xberg-io/actions/install-task@v1
+
+      - name: Update build.zig.zon dependency version
+        working-directory: test_apps/zig
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          NEW_URL="https://github.com/Goldziher/spikard/releases/download/v$VERSION/spikard-zig-v$VERSION.tar.gz"
+          sed -i "s#\.url = \"[^\"]*\"#.url = \"$NEW_URL\"#" build.zig.zon
+          # The placeholder hash is recomputed and injected by `task test-apps:zig`
+          # (scripts/ci/zig-inject-dep-hashes.py), so only the URL is updated here.
+
+      - name: Build mock server
+        run: cd test_apps/rust && cargo build --release --bin mock-server
+
+      - name: Run tests
+        run: task test-apps:zig
+
+  test-java:
+    name: Test Java package (${{ matrix.os }})
+    needs: prepare
+    if: needs.prepare.outputs.registries_ready == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: xberg-io/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
+          cache-key-prefix: test-published-java-${{ matrix.os }}
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Install Task
+        uses: xberg-io/actions/install-task@v1
+
+      - name: Update pom.xml dependency version
+        working-directory: test_apps/java
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          perl -0777 -pi -e "s/(<groupId>dev\.spikard<\/groupId>\s*<artifactId>spikard<\/artifactId>\s*<version>)[^<]+(<\/version>)/\$1$VERSION\$2/" pom.xml
+
+      - name: Run tests
+        run: task test-apps:java
+
+  test-csharp:
+    name: Test C# package (${{ matrix.os }})
+    needs: prepare
+    if: needs.prepare.outputs.registries_ready == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: xberg-io/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
+          cache-key-prefix: test-published-csharp-${{ matrix.os }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Install Task
+        uses: xberg-io/actions/install-task@v1
+
+      - name: Update csproj dependency version
+        working-directory: test_apps/csharp
+        shell: bash
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          sed -i.bak "s#<PackageReference Include=\"Spikard\" Version=\"[^\"]*\" />#<PackageReference Include=\"Spikard\" Version=\"$VERSION\" />#" Spikard.E2eTests.csproj
+          rm -f Spikard.E2eTests.csproj.bak
+
+      - name: Run tests
+        run: task test-apps:csharp
+
+  test-kotlin:
+    name: Test Kotlin package (${{ matrix.os }})
+    needs: prepare
+    if: needs.prepare.outputs.registries_ready == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: xberg-io/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
+          cache-key-prefix: test-published-kotlin-${{ matrix.os }}
+
+      - name: Setup Gradle
+        uses: xberg-io/actions/setup-gradle@v1
+        with:
+          java-version: "25"
+          gradle-version: "9.1.0"
+
+      - name: Install Task
+        uses: xberg-io/actions/install-task@v1
+
+      - name: Update build.gradle.kts dependency version
+        working-directory: test_apps/kotlin
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          sed -i "s#dev\.spikard:spikard-kotlin:[^\"]*#dev.spikard:spikard-kotlin:$VERSION#" build.gradle.kts
+
+      - name: Build mock server
+        run: cd e2e/rust && cargo build --release --bin mock-server
+
+      - name: Run tests
+        run: task test-apps:kotlin
+
+  test-kotlin-android:
+    name: Test Kotlin Android package (Ubuntu)
+    needs: prepare
+    if: needs.prepare.outputs.release_ready == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: xberg-io/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
+          cache-key-prefix: test-published-kotlin-android
+
+      - name: Setup Gradle
+        uses: xberg-io/actions/setup-gradle@v1
+        with:
+          java-version: "25"
+          gradle-version: "9.1.0"
+
+      - name: Install Task
+        uses: xberg-io/actions/install-task@v1
+
+      - name: Update build.gradle.kts dependency version
+        working-directory: test_apps/kotlin_android
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          sed -i "s#dev\.spikard:spikard-android:[^\"]*#dev.spikard:spikard-android:$VERSION#g" build.gradle.kts
+
+      - name: Build mock server
+        run: cd e2e/rust && cargo build --release --bin mock-server
+
+      - name: Run tests
+        run: task test-apps:kotlin_android
+
+  test-dart:
+    name: Test Dart package (${{ matrix.os }})
+    needs: prepare
+    if: needs.prepare.outputs.registries_ready == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: xberg-io/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
+          cache-key-prefix: test-published-dart-${{ matrix.os }}
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+
+      - name: Install Task
+        uses: xberg-io/actions/install-task@v1
+
+      - name: Update pubspec.yaml dependency version
+        working-directory: test_apps/dart
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          sed -i "s/spikard: \^.*/spikard: ^$VERSION/" pubspec.yaml
+
+      - name: Run tests
+        run: task test-apps:dart
+
+  test-swift:
+    name: Test Swift package (macOS)
+    needs: prepare
+    if: needs.prepare.outputs.release_ready == 'true'
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Rust
+        uses: xberg-io/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
+          cache-key-prefix: test-published-swift
+
+      - name: Install Task
+        uses: xberg-io/actions/install-task@v1
+
+      - name: Update Package.swift dependency version
+        working-directory: test_apps/swift_e2e
+        run: |
+          VERSION="${{ needs.prepare.outputs.version }}"
+          sed -i.bak "s#branch: \"release/swift/[^\"]*\"#branch: \"release/swift/$VERSION\"#" Package.swift
+          rm -f Package.swift.bak
+
+      - name: Build mock server
+        run: cd e2e/rust && cargo build --release --bin mock-server
+
+      - name: Run tests
+        run: task test-apps:swift
+
   report:
     name: Report test results
-    needs: [prepare, test-python, test-node, test-ruby, test-php, test-rust, test-elixir]
+    needs:
+      [
+        prepare,
+        test-python,
+        test-node,
+        test-ruby,
+        test-php,
+        test-rust,
+        test-elixir,
+        test-go,
+        test-wasm,
+        test-zig,
+        test-java,
+        test-csharp,
+        test-kotlin,
+        test-kotlin-android,
+        test-dart,
+        test-swift,
+      ]
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -349,9 +790,12 @@ jobs:
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
 
-          # If registries weren't ready, all test jobs were skipped - that's not a failure
-          if [ "${{ needs.prepare.outputs.registries_ready }}" != "true" ]; then
-            echo "Registries were not ready for version $VERSION - test jobs were skipped (not a failure)"
+          # If neither gate was ready, every test job was skipped - that's not a failure.
+          # registries_ready gates the package-registry-backed languages; release_ready
+          # gates zig/swift/kotlin_android, which ship as GitHub release assets/refs
+          # instead of through a package registry (see the `prepare` job).
+          if [ "${{ needs.prepare.outputs.registries_ready }}" != "true" ] && [ "${{ needs.prepare.outputs.release_ready }}" != "true" ]; then
+            echo "Neither registries nor GitHub release artifacts were ready for version $VERSION - test jobs were skipped (not a failure)"
             exit 0
           fi
 
@@ -374,6 +818,33 @@ jobs:
           fi
           if [ "${{ needs.test-elixir.result }}" == "failure" ]; then
             FAILED+=("Elixir")
+          fi
+          if [ "${{ needs.test-go.result }}" == "failure" ]; then
+            FAILED+=("Go")
+          fi
+          if [ "${{ needs.test-wasm.result }}" == "failure" ]; then
+            FAILED+=("WASM")
+          fi
+          if [ "${{ needs.test-zig.result }}" == "failure" ]; then
+            FAILED+=("Zig")
+          fi
+          if [ "${{ needs.test-java.result }}" == "failure" ]; then
+            FAILED+=("Java")
+          fi
+          if [ "${{ needs.test-csharp.result }}" == "failure" ]; then
+            FAILED+=("C#")
+          fi
+          if [ "${{ needs.test-kotlin.result }}" == "failure" ]; then
+            FAILED+=("Kotlin")
+          fi
+          if [ "${{ needs.test-kotlin-android.result }}" == "failure" ]; then
+            FAILED+=("Kotlin Android")
+          fi
+          if [ "${{ needs.test-dart.result }}" == "failure" ]; then
+            FAILED+=("Dart")
+          fi
+          if [ "${{ needs.test-swift.result }}" == "failure" ]; then
+            FAILED+=("Swift")
           fi
 
           if [ ${#FAILED[@]} -gt 0 ]; then
@@ -402,6 +873,13 @@ jobs:
           - [Packagist: goldziher/spikard](https://packagist.org/packages/goldziher/spikard#$VERSION)
           - [crates.io: spikard](https://crates.io/crates/spikard/$VERSION)
           - [Hex.pm: spikard](https://hex.pm/packages/spikard)
+          - [Go proxy: github.com/Goldziher/spikard](https://pkg.go.dev/github.com/Goldziher/spikard@v$VERSION)
+          - [npm: @spikard/wasm](https://www.npmjs.com/package/@spikard/wasm/v/$VERSION)
+          - [Maven Central: dev.spikard:spikard](https://central.sonatype.com/artifact/dev.spikard/spikard/$VERSION)
+          - [Maven Central: dev.spikard:spikard-kotlin](https://central.sonatype.com/artifact/dev.spikard/spikard-kotlin/$VERSION)
+          - [NuGet: Spikard](https://www.nuget.org/packages/Spikard/$VERSION)
+          - [pub.dev: spikard](https://pub.dev/packages/spikard/versions/$VERSION)
+          - [GitHub Release: v$VERSION](https://github.com/Goldziher/spikard/releases/tag/v$VERSION)
           "
 
             gh issue create \
