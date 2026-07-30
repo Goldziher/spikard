@@ -1936,8 +1936,41 @@ jobs:
             --ref ${{ github.ref_name }} \
             -f run_id=${{ github.run_id }}
 
+  tag-go-module:
+    name: Tag Go module for pkg.go.dev resolution
+    # ~keep Owns the Go module tag independently of the Homebrew bottle chain. Homebrew's
+    # ~keep Linux bottle builds are subject to upstream breakage (brew/homebrew-core DSL
+    # ~keep skew); gating the Go tag on them — as the old `finalize` dependency did — stranded
+    # ~keep `go get` on every such failure (rc.8: both Linux bottles red → finalize skipped →
+    # ~keep no Go module tag). This job depends only on the Go archives (upload-release-assets)
+    # ~keep and the Swift manifest job, which force-moves the release tag onto the
+    # ~keep Package.swift-checksum commit — so the Go tag must land AFTER it to tag the released
+    # ~keep tip. `skipped` is accepted so a non-Swift release still tags the Go module.
+    needs: [prepare, upload-release-assets, update-swift-package-manifest]
+    if: >-
+      !cancelled() &&
+      needs.prepare.outputs.is_tag == 'true' &&
+      needs.prepare.outputs.dry_run != 'true' &&
+      needs.upload-release-assets.result == 'success' &&
+      (needs.update-swift-package-manifest.result == 'success' ||
+       needs.update-swift-package-manifest.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: xberg-io/actions/finalize-release@v1
+        with:
+          tag: ${{ needs.prepare.outputs.tag }}
+          is-prerelease: ${{ needs.prepare.outputs.is_prerelease }}
+          go-module-path: github.com/Goldziher/spikard
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
   finalize:
     name: Finalize release
+    # ~keep Owns only the release-edit (draft→published + prerelease flag) and summary. The Go
+    # ~keep module tag moved to the dedicated `tag-go-module` job so an optional-channel failure
+    # ~keep (Homebrew) can no longer strand `go get`. Homebrew is intentionally NOT in `needs`.
     needs:
       - prepare
       - upload-release-assets
@@ -1952,7 +1985,6 @@ jobs:
       - publish-kotlin
       - publish-nuget
       - publish-zig
-      - publish-homebrew-bottles
       - update-swift-package-manifest
       - upload-swift-bundle
       - upload-php-pie-release
@@ -1963,6 +1995,5 @@ jobs:
         with:
           tag: ${{ needs.prepare.outputs.tag }}
           is-prerelease: ${{ needs.prepare.outputs.is_prerelease }}
-          go-module-path: github.com/Goldziher/spikard
           dry-run: ${{ needs.prepare.outputs.dry_run }}
           token: ${{ secrets.GITHUB_TOKEN }}
