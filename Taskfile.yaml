@@ -753,6 +753,11 @@ tasks:
     desc: "Run Zig published package test app"
     dir: test_apps/zig
     cmds:
+      # build.zig.zon ships a placeholder dep hash — the real hash only exists once
+      # the release tarball is published. Recompute + inject it via `zig fetch`
+      # before building (mirrors alef's canonical zig run prelude).
+      - rm -rf zig-pkg .zig-cache
+      - python3 ../../scripts/ci/zig-inject-dep-hashes.py
       - zig build test
 
   test-apps:wasm:
