@@ -70,12 +70,16 @@ for (const [fixtureId, fixture] of Object.entries(_FIXTURES)) {
   }
 
   // Build handler function that returns the expected response.
-  // Transport/middleware-managed headers (content-encoding, content-length,
-  // transfer-encoding, vary) are stripped from the handler response: the server
-  // middleware produces them, and emitting e.g. content-encoding on an
-  // uncompressed handler body makes the compression layer skip compression,
-  // leaving a declared-but-not-applied encoding the client cannot decode.
-  const _middlewareManagedHeaders = new Set(['content-encoding', 'content-length', 'transfer-encoding', 'vary']);
+  // content-encoding and transfer-encoding are stripped from the handler
+  // response: the compression middleware produces them, and emitting e.g.
+  // content-encoding on an uncompressed handler body makes the compression
+  // layer skip compression, leaving a declared-but-not-applied encoding the
+  // client cannot decode. vary and content-length are NOT stripped: some
+  // fixtures (e.g. CORS safelisted-headers, HEAD) assert those headers
+  // verbatim as declared by the fixture with no corresponding middleware
+  // layer to (re)produce them, matching the reference Python harness, which
+  // does not filter any header.
+  const _middlewareManagedHeaders = new Set(['content-encoding', 'transfer-encoding']);
   const handlerHeaders = Object.fromEntries(
     Object.entries(expectedHeaders).filter(([name]) => !_middlewareManagedHeaders.has(name.toLowerCase()))
   );
@@ -119,6 +123,12 @@ for (const [fixtureId, fixture] of Object.entries(_FIXTURES)) {
   let builder = new {{ route_builder_class }}(methodEnum, fullRoute);
   {%- endif %}
 
+  // If there's a body schema, attach it to the builder.
+  const bodySchema = handler.body_schema;
+  if (bodySchema !== null && bodySchema !== undefined && typeof builder.requestSchemaJson === 'function') {
+    builder = builder.requestSchemaJson(bodySchema);
+  }
+
   // Wire handler middleware through to the RouteBuilder.
   // Each entry in `middleware` is a {name: config} pair. The dispatch table
   // maps middleware names to their builder methods so new middlewares can be
@@ -156,84 +166,46 @@ for (const [fixtureId, fixture] of Object.entries(_FIXTURES)) {
       if (builderMethod === undefined) {
         continue;
       }
+      // The napi CorsConfig/CompressionConfig objects require camelCase field
+      // names; the fixture middleware config carries the Rust core's
+      // snake_case serde names. napi silently drops unrecognized keys rather
+      // than erroring, so an un-mapped config becomes an empty object. `null`
+      // is coerced to `undefined` for each field: napi's Option<T> conversion
+      // accepts a missing property but rejects an explicit `null`.
+      let napiConfig = mwConfig;
+      if (mwName === 'cors') {
+        napiConfig = {
+          allowedOrigins: mwConfig.allow_origins ?? undefined,
+          allowedMethods: mwConfig.allow_methods ?? undefined,
+          allowedHeaders: mwConfig.allow_headers ?? undefined,
+          exposeHeaders: mwConfig.expose_headers ?? undefined,
+          maxAge: mwConfig.max_age ?? undefined,
+          allowCredentials: mwConfig.allow_credentials ?? undefined,
+        };
+      } else if (mwName === 'compression') {
+        napiConfig = {
+          gzip: mwConfig.gzip ?? undefined,
+          brotli: mwConfig.brotli ?? undefined,
+          minSize: mwConfig.min_size ?? undefined,
+          quality: mwConfig.quality ?? undefined,
+        };
+      }
       if (typeof builder[builderMethod] === 'function') {
-        builder = builder[builderMethod](mwConfig);
+        builder = builder[builderMethod](napiConfig);
       }
     }
   }
 
   app.{{ register_route_method }}(builder, handlerFn);
 
-  // If the fixture has CORS middleware configured, register an OPTIONS preflight handler
-  if (handler.middleware && handler.middleware.cors) {
-    const corsConfig = handler.middleware.cors;
-    {% if route_builder_constructor_method == ".new" -%}
-    const optionsBuilder = {{ route_builder_class }}.new({{ method_enum }}.Options, fullRoute);
-    {%- else -%}
-    const optionsBuilder = new {{ route_builder_class }}({{ method_enum }}.Options, fullRoute);
-    {%- endif %}
-
-    // Build a CORS preflight handler
-    const corsHandlerFn = (request) => {
-      // Case-insensitive header lookup helper
-      const getHeaderValue = (headers, name) => {
-        if (!headers) return '';
-        if (typeof headers.get === 'function') {
-          return headers.get(name.toLowerCase()) || '';
-        }
-        // Fallback: search keys case-insensitively
-        const lowerName = name.toLowerCase();
-        for (const [key, value] of Object.entries(headers)) {
-          if (key.toLowerCase() === lowerName) {
-            return value || '';
-          }
-        }
-        return '';
-      };
-
-      const origin = getHeaderValue(request.headers, 'origin');
-      const requestMethod = getHeaderValue(request.headers, 'access-control-request-method');
-      const requestHeaders = getHeaderValue(request.headers, 'access-control-request-headers');
-
-      // Simple CORS validation: check origin and method
-      const allowedOrigins = Array.isArray(corsConfig.allow_origins) ? corsConfig.allow_origins : [];
-      const allowedMethods = Array.isArray(corsConfig.allow_methods) ? corsConfig.allow_methods : [];
-      const allowedHeaders = Array.isArray(corsConfig.allow_headers) ? corsConfig.allow_headers : [];
-
-      const isOriginAllowed = allowedOrigins.includes(origin);
-      const isMethodAllowed = !requestMethod || allowedMethods.includes(requestMethod.toUpperCase());
-      const headersArray = requestHeaders ? requestHeaders.split(',').map(h => h.trim().toUpperCase()) : [];
-      const areHeadersAllowed = headersArray.every(h =>
-        allowedHeaders.map(ah => ah.toUpperCase()).includes(h)
-      );
-
-      if (!isOriginAllowed || !isMethodAllowed || !areHeadersAllowed) {
-        return {
-          status_code: 403,
-          body: null,
-          headers: {}
-        };
-      }
-
-      const corsHeaders = {
-        'Access-Control-Allow-Origin': origin,
-        'Access-Control-Allow-Methods': requestMethod || (allowedMethods.join(', ')),
-        'Access-Control-Allow-Headers': requestHeaders || (allowedHeaders.join(', '))
-      };
-
-      if (corsConfig.max_age) {
-        corsHeaders['Access-Control-Max-Age'] = String(corsConfig.max_age);
-      }
-
-      return {
-        status_code: 204,
-        body: null,
-        headers: corsHeaders
-      };
-    };
-
-    app.{{ register_route_method }}(optionsBuilder, corsHandlerFn);
-  }
+  // No manual OPTIONS preflight handler is registered here. The Rust core
+  // (crates/spikard-http/src/cors.rs::handle_preflight) already answers CORS
+  // preflight requests for any route with a correctly-wired CorsConfig (see
+  // the napi field-name mapping above). A hand-rolled JS OPTIONS handler
+  // registered at the same route was a workaround from when the config was
+  // silently dropped by a napi field-name mismatch; with that fixed, the
+  // duplicate registration only shadows the real preflight response with an
+  // incomplete one (it observed a null request object) — so it is removed.
 }
 
 // Configure and start the server.

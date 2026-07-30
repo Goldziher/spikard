@@ -321,11 +321,24 @@ pub fn render_http_test_case(out: &mut String, fixture: &Fixture) {
     let has_content_type = !content_type_lower.is_empty();
     let needs_json_content_type = has_body && !is_form_body && !is_multipart && !has_content_type;
 
-    let has_headers = !http.request.headers.is_empty() || needs_json_content_type || is_multipart && has_body;
+    // True only when the effective body is a raw string: either the fixture
+    // declared a pre-encoded string body, or `synthesize_multipart_body_from_schema`
+    // ran (it always returns `Value::String`). When `body_schema` is absent,
+    // `effective_body` falls back to the fixture's raw JSON body, so this is
+    // false — matching the Python generator, which in that case forwards the
+    // fixture's own Content-Type header verbatim instead of synthesizing a
+    // boundary. A synthesized `multipart/form-data; boundary=...` header on a
+    // body that isn't real multipart-encoded bytes makes the server's
+    // multipart parser reject the request with 400 before the handler runs.
+    let body_is_string = effective_body
+        .as_ref()
+        .is_some_and(|b| matches!(b, serde_json::Value::String(_)));
+    let needs_multipart_boundary = is_multipart && body_is_string;
+
+    let has_headers = !http.request.headers.is_empty() || needs_json_content_type || needs_multipart_boundary;
 
     let body_entry: Option<String> = effective_body.as_ref().map(|body| {
         let js_body = json_to_js(body);
-        let body_is_string = matches!(body, serde_json::Value::String(_));
 
         if (is_form_body || is_multipart) && body_is_string {
             format!("body: Buffer.from({js_body}, 'utf-8')")
@@ -343,7 +356,7 @@ pub fn render_http_test_case(out: &mut String, fixture: &Fixture) {
                 .request
                 .headers
                 .iter()
-                .filter(|(k, _)| !(is_multipart && k.eq_ignore_ascii_case("content-type")))
+                .filter(|(k, _)| !(needs_multipart_boundary && k.eq_ignore_ascii_case("content-type")))
                 .map(|(k, v)| {
                     let expanded_v = expand_fixture_templates(v);
                     format!("        \"{}\": \"{}\",", escape_js(k), escape_js(&expanded_v))
@@ -352,7 +365,7 @@ pub fn render_http_test_case(out: &mut String, fixture: &Fixture) {
             if needs_json_content_type {
                 header_lines.push("        \"Content-Type\": \"application/json\",".to_string());
             }
-            if is_multipart && has_body {
+            if needs_multipart_boundary {
                 header_lines
                     .push("        \"Content-Type\": \"multipart/form-data; boundary=alef-boundary\",".to_string());
             }
