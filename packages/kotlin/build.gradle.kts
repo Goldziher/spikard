@@ -31,7 +31,7 @@ dependencies {
     // jspecify ships the `@Nullable` / `@NonNull` annotations referenced by the
     // alef-emitted Java facade; it must be on the api configuration so Kotlin
     // consumers see the annotations on cross-language types.
-    api("org.jspecify:jspecify:1.0.0")
+    api("org.jspecify:jspecify:1.0.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
     testImplementation("org.jetbrains.kotlin:kotlin-test:2.4.10")
     testImplementation("junit:junit:4.13.2")

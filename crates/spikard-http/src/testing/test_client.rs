@@ -22,7 +22,10 @@ const GRAPHQL_WS_MESSAGE_TIMEOUT: Duration = Duration::from_secs(2);
 const GRAPHQL_WS_MAX_CONTROL_MESSAGES: usize = 32;
 
 /// Snapshot of a GraphQL subscription exchange over WebSocket.
-#[derive(Debug, Clone, PartialEq)]
+///
+/// Derives `Serialize` so language bindings (e.g. the JNI backend) can marshal it
+/// across the FFI boundary via `serde_json` without a hand-written wrapper.
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
 pub struct GraphQLSubscriptionSnapshot {
     /// Operation id used for the subscription request.
     pub operation_id: String,

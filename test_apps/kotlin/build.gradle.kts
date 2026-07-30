@@ -29,6 +29,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-engine:6.1.2")
     testImplementation("com.fasterxml.jackson.core:jackson-databind:2.19.0")
     testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.19.0")
+    testImplementation("org.junit.platform:junit-platform-launcher:6.1.2")
     testImplementation(kotlin("test"))
 }
 

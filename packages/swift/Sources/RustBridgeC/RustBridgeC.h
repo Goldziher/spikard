@@ -1096,6 +1096,7 @@ uintptr_t __swift_bridge__$app_raw_ptr(void *client);
 void __swift_bridge__$config(void *client);
 void *__swift_bridge__$run(void *client);
 void *__swift_bridge__$route_builder_new(void *method, void *path);
+uintptr_t __swift_bridge__$route_builder_raw_ptr(void *client);
 struct __private__ResultPtrAndPtr
 __swift_bridge__$dynamic_schema_config_from_json(void *json);
 struct __private__ResultPtrAndPtr

@@ -11,6 +11,7 @@ members = [
     "crates/spikard-ffi",
     "crates/spikard-graphql",
     "crates/spikard-http",
+    "crates/spikard-jni",
     "crates/spikard-node",
     "crates/spikard-py",
     "crates/spikard-wasm",
@@ -110,3 +111,4 @@ strip = true
 [profile.dev]
 opt-level = 0
 debug = true
+

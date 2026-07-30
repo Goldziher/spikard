@@ -26,7 +26,7 @@ use serde::de::DeserializeOwned;
 use spikard_core::di;
 pub use spikard_graphql::{
     DynamicSchemaConfig, FieldErrorSpec, FullSchemaConfig, GraphQLRouteConfig, QueryMutationConfig, QueryOnlyConfig,
-    SchemaConfig,
+    SchemaConfig, schema_full, schema_query_mutation, schema_query_only,
 };
 #[cfg(not(target_arch = "wasm32"))]
 use spikard_http::server::Server;

@@ -212,6 +212,7 @@ preserve_patterns = ["SAFETY", "SPDX", "Copyright", "License", "licensed under",
 "Package.swift" = ["comment", "doc-comment"]
 "crates/spikard-elixir/**" = ["comment", "doc-comment"]
 "crates/spikard-ffi/**" = ["comment", "doc-comment"]
+"crates/spikard-jni/**" = ["comment", "doc-comment"]
 "crates/spikard-node/**" = ["comment", "doc-comment", "no-unused-vars"]
 "crates/spikard-php/**" = ["comment", "doc-comment"]
 "crates/spikard-py/**" = ["comment", "doc-comment"]

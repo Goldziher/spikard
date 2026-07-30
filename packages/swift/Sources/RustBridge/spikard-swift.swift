@@ -133,6 +133,9 @@ public func run(_ client: AppRefMut) -> RustString {
 public func routeBuilderNew<GenericIntoRustString: IntoRustString>(_ method: MethodRef, _ path: GenericIntoRustString) -> RouteBuilder {
     RouteBuilder(ptr: __swift_bridge__$route_builder_new(method.ptr, { let rustString = path.intoRustString(); rustString.isOwned = false; return rustString.ptr }()))
 }
+public func routeBuilderRawPtr(_ client: RouteBuilderRefMut) -> UInt {
+    __swift_bridge__$route_builder_raw_ptr(client.ptr)
+}
 public func dynamicSchemaConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> DynamicSchemaConfig {
     try { let val = __swift_bridge__$dynamic_schema_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return DynamicSchemaConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
@@ -4292,6 +4295,3 @@ extension App: Vectorizable {
         __swift_bridge__$Vec_App$len(vecPtr)
     }
 }
-
-
-

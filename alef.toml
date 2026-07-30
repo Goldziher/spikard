@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.48.9"
+alef_version = "0.48.12"
 languages = [
   "python",
   "node",
@@ -7,6 +7,7 @@ languages = [
   "php",
   "elixir",
   "ffi",
+  "jni",
   "go",
   "java",
   "csharp",
@@ -107,6 +108,7 @@ wre = "wre"
 "CHANGELOG.md" = ["MD057"]
 "crates/spikard-elixir/**" = ["comment", "doc-comment"]
 "crates/spikard-ffi/**" = ["comment", "doc-comment"]
+"crates/spikard-jni/**" = ["comment", "doc-comment"]
 "crates/spikard-node/**" = ["comment", "doc-comment", "no-unused-vars"]
 "crates/spikard-php/**" = ["comment", "doc-comment"]
 "crates/spikard-py/**" = ["comment", "doc-comment"]
@@ -364,10 +366,14 @@ target = "android"
 [crates.swift]
 module_name = "Spikard"
 package_name = "Spikard"
+# The swift crate reaches graphql types through the `spikard` umbrella facade
+# (never `spikard_graphql::` directly), so the direct spikard-graphql dep is
+# redundant and cargo-machete flags it as unused (swift/rust is a workspace
+# member, unlike the frb dart crate which is workspace-excluded).
+exclude_extra_dependencies = ["spikard-graphql"]
 
 [crates.swift.extra_dependencies]
 spikard-core = { path = "../../../crates/spikard-core" }
-spikard-graphql = { path = "../../../crates/spikard-graphql" }
 spikard-http = { path = "../../../crates/spikard-http" }
 axum = { version = "0.8", default-features = false }
 
@@ -503,6 +509,7 @@ ruby = "packages/ruby/ext/spikard_rb/src/"
 php = "crates/spikard-php/src/"
 elixir = "packages/elixir/lib/"
 ffi = "crates/spikard-ffi/src/"
+jni = "crates/spikard-jni/src/"
 wasm = "crates/spikard-wasm/src/"
 go = "packages/go/"
 java = "packages/java/src/main/java/"

@@ -25,7 +25,7 @@ public enum ServiceError: Error {
 // Swift calls it via this @_silgen_name import at module scope.
 @_silgen_name("app_route_via_callback")
 private func _app_route_via_callback(
-  _ app: OpaquePointer,    _ builder: RustBridge.RouteBuilder,    _ ctx: UnsafeMutableRawPointer?,
+  _ app: OpaquePointer,    _ builder: OpaquePointer,    _ ctx: UnsafeMutableRawPointer?,
   _ callback: @convention(c) (UnsafeMutableRawPointer?, UnsafePointer<UInt8>?, Int) -> UnsafeMutablePointer<UInt8>?
 ) -> Int32
 /// Spikard application builder.
@@ -146,17 +146,23 @@ public final class App {
     // the alef-emitted `RustBridge.appRawPtr` shim which returns
     // the App address as a `usize` we can reconstitute into an OpaquePointer.
     //
-    // NOTE: the Rust side declares `app: *mut App` — a single level of
-    // indirection. Passing `&innerPtr` (the address of this local variable)
-    // instead of `innerPtr` itself would hand Rust a pointer to the stack
-    // slot holding the address, not the address of the `App` instance,
-    // causing it to treat unrelated stack memory as an `App` struct and
-    // crash (EXC_BAD_ACCESS in `_platform_memmove`) on first use.
+    // NOTE: the Rust side declares `app` as a single level of pointer
+    // indirection (`*mut <Service>`). Passing `&innerPtr` (the address of
+    // this local variable) instead of `innerPtr` itself would hand Rust a
+    // pointer to the stack slot holding the address, not the address of
+    // the instance itself, causing it to treat unrelated stack memory as
+    // the struct and crash.
     let rawAddr = RustBridge.appRawPtr(inner)
     let innerPtr = OpaquePointer(bitPattern: rawAddr)!
+    // Same reasoning applies to `builder`: it is a swift-bridge opaque
+    // class, ABI-wise a single pointer. This plain `extern "C"` function is
+    // outside swift-bridge's generated glue, so we must extract and hand over
+    // its raw heap address explicitly rather than passing the class by value.
+    let builderRawAddr = RustBridge.routeBuilderRawPtr(builder)
+    let builderPtr = OpaquePointer(bitPattern: builderRawAddr)!
     let result = _app_route_via_callback(
       innerPtr,
-      builder,
+      builderPtr,
       contextPtr,
       trampolineFunc
     )

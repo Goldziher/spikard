@@ -686,6 +686,9 @@ sealed class GraphQLError with _$GraphQLError {
 }
 
 /// Snapshot of a GraphQL subscription exchange over WebSocket.
+///
+/// Derives `Serialize` so language bindings (e.g. the JNI backend) can marshal it
+/// across the FFI boundary via `serde_json` without a hand-written wrapper.
 class GraphQLSubscriptionSnapshot {
   /// Operation id used for the subscription request.
   final String operationId;
