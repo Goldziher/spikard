@@ -81,6 +81,7 @@ jobs:
       release_swift: ${{ steps.meta.outputs.release_swift }}
       release_zig: ${{ steps.meta.outputs.release_zig }}
       release_kotlin: ${{ steps.meta.outputs.release_kotlin }}
+      release_kotlin_android: ${{ steps.meta.outputs.release_kotlin_android }}
       release_wasm: ${{ steps.meta.outputs.release_wasm }}
     steps:
       - name: Checkout
@@ -100,7 +101,7 @@ jobs:
         id: meta
         uses: xberg-io/actions/prepare-release-metadata@v1
         with:
-          available-targets: "crates,python,node,ruby,php,cli,homebrew,go,c-ffi,java,csharp,elixir,dart,swift,zig,kotlin,wasm"
+          available-targets: "crates,python,node,ruby,php,cli,homebrew,go,c-ffi,java,csharp,elixir,dart,swift,zig,kotlin,kotlin-android,wasm"
 
       - name: Ensure draft GitHub Release exists
         if: ${{ steps.meta.outputs.is_tag == 'true' && steps.meta.outputs.dry_run != 'true' }}
@@ -143,6 +144,7 @@ jobs:
       hex_exists: ${{ steps.hex.outputs.exists }}
       maven_java_exists: ${{ steps.maven.outputs.exists }}
       maven_kotlin_exists: ${{ steps.maven.outputs.kotlin_exists }}
+      maven_android_exists: ${{ steps.maven.outputs.android_exists }}
       nuget_exists: ${{ steps.nuget.outputs.exists }}
       pub_exists: ${{ steps.pub.outputs.exists }}
     steps:
@@ -197,7 +199,7 @@ jobs:
           version: ${{ needs.prepare.outputs.version }}
 
       - id: maven
-        if: ${{ needs.prepare.outputs.release_java == 'true' || needs.prepare.outputs.release_kotlin == 'true' }}
+        if: ${{ needs.prepare.outputs.release_java == 'true' || needs.prepare.outputs.release_kotlin == 'true' || needs.prepare.outputs.release_kotlin_android == 'true' }}
         uses: xberg-io/actions/check-registry@v1
         with:
           registry: maven
@@ -205,6 +207,7 @@ jobs:
           version: ${{ needs.prepare.outputs.version }}
           extra-packages: |
             kotlin_exists=dev.spikard:spikard-kotlin
+            android_exists=dev.spikard:spikard-android
 
       - id: nuget
         if: ${{ needs.prepare.outputs.release_csharp == 'true' }}
@@ -1118,6 +1121,51 @@ jobs:
           # ~keep deployment (no manual staging-close step).
           dry-run: ${{ needs.prepare.outputs.dry_run }}
 
+  publish-android:
+    name: Publish Android AAR
+    needs: [prepare, check-registries, build-android-natives]
+    if: ${{ !cancelled() && needs.prepare.outputs.release_kotlin_android == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.maven_android_exists != 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+      # com.android.library's assembleRelease (pulled in transitively by the
+      # publishAndReleaseToMavenCentral task) needs the Android SDK + accepted licenses.
+      - uses: android-actions/setup-android@v3
+      - name: Download Android natives (all ABIs)
+        uses: actions/download-artifact@v8
+        with:
+          name: android-natives
+          path: dist/android-natives
+      - name: Stage jniLibs into Android package
+        shell: bash
+        run: |
+          set -euo pipefail
+          # build.gradle.kts declares jniLibs.srcDirs("src/main/jniLibs") and its
+          # validateJniLibsForRelease guard hard-fails assembleRelease unless each ABI
+          # dir holds libspikard_jni.so — so stage the pre-built natives here first.
+          dest=packages/kotlin-android/src/main/kotlin/dev/spikard/android/src/main/jniLibs
+          rm -rf "$dest"
+          mkdir -p "$dest"
+          # build-android-natives@v1 lays out {abi}/libspikard_jni.so, which is exactly
+          # the jniLibs/<abi>/ layout com.android.library bundles into the AAR.
+          cp -R dist/android-natives/. "$dest/"
+          find "$dest" -type f
+      - uses: xberg-io/actions/publish-maven-gradle@v1
+        env:
+          MAVEN_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          MAVEN_GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        with:
+          working-directory: packages/kotlin-android/src/main/kotlin/dev/spikard/android
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
+
   publish-nuget:
     name: Publish NuGet
     needs: [prepare, check-registries, build-csharp-natives]
@@ -1735,6 +1783,36 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  build-android-natives:
+    name: Build Android natives
+    needs: prepare
+    if: ${{ needs.prepare.outputs.release_kotlin_android == 'true' }}
+    # Android natives are always NDK cross-compiled on one Linux runner (unlike the
+    # per-OS java matrix), so a single job builds every ABI.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      - uses: xberg-io/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
+      - uses: xberg-io/actions/setup-android-ndk@v1
+        with:
+          targets: aarch64-linux-android,x86_64-linux-android
+      - uses: xberg-io/actions/build-android-natives@v1
+        with:
+          crate-name: spikard-jni
+          lib-name: spikard_jni
+          # ABIs must match the jniLibs/<abi>/ dirs in the generated build.gradle.kts.
+          abis: arm64-v8a,x86_64
+      - uses: actions/upload-artifact@v7
+        with:
+          name: android-natives
+          path: dist/android-natives
+          if-no-files-found: error
+          retention-days: 14
+
   build-csharp-natives:
     name: Build C# natives (${{ matrix.rid }})
     needs: prepare
@@ -1986,6 +2064,7 @@ jobs:
       - publish-hex
       - publish-maven
       - publish-kotlin
+      - publish-android
       - publish-nuget
       - publish-zig
       - update-swift-package-manifest
