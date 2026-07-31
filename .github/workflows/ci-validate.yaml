@@ -93,6 +93,12 @@ jobs:
           reporter: github-check
           fail_level: error
 
+      - name: Setup JDK 25 for checkstyle
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+
       - name: Install poly
         uses: Goldziher/polylint@v0
 

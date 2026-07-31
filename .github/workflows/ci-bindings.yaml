@@ -144,8 +144,8 @@ jobs:
         with:
           go-version-file: packages/go/go.mod
 
-      - name: Setup JDK 25 for Maven
-        if: matrix.language == 'java'
+      - name: Setup JDK 25 for Maven / checkstyle
+        if: contains(fromJSON('["java","php"]'), matrix.language)
         uses: actions/setup-java@v4
         with:
           distribution: temurin

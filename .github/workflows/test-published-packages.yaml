@@ -2,9 +2,11 @@ name: Test Published Packages
 
 on:
   workflow_run:
+    # NOTE: no `branches:` filter — a release-triggered "Publish Release" run has
+    # head_branch = the tag (e.g. v0.17.0-rc.9), not `main`, so `branches: [main]`
+    # silently prevented this gate from ever firing on an rc publish.
     workflows: ["Publish Release"]
     types: [completed]
-    branches: [main]
   workflow_dispatch:
     inputs:
       version:
