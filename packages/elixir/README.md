@@ -92,7 +92,7 @@ Add to `mix.exs`:
 ```elixir
 def deps do
   [
-    {:spikard, "~> 0.17.0-rc.9"}
+    {:spikard, "~> 0.17.0-rc.10"}
   ]
 end
 ```
