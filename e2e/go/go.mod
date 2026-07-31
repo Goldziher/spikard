@@ -2,6 +2,6 @@ module github.com/Goldziher/spikard/e2e
 
 go 1.26
 
-require github.com/Goldziher/spikard v0.17.0-rc.8
+require github.com/Goldziher/spikard v0.17.0-rc.9
 
 replace github.com/Goldziher/spikard => ../../packages/go
