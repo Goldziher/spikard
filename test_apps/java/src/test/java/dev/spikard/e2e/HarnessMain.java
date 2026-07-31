@@ -492,6 +492,21 @@ public class HarnessMain {
         RouteBuilder builder =
             RouteBuilder.create(Method.fromValue(method), fullRoute);
 
+        // Wire per-route CORS from the fixture's middleware block so the Rust
+        // core answers the OPTIONS preflight with 204. Mirrors the node/python
+        // harnesses; no manual OPTIONS handler is registered.
+        JsonNode middlewareNode = handlerNode.get("middleware");
+        if (middlewareNode != null && middlewareNode.hasNonNull("cors")) {
+          try {
+            CorsConfig cors = MAPPER.treeToValue(middlewareNode.get("cors"),
+                                                 CorsConfig.class);
+            builder = builder.cors(cors);
+          } catch (Exception e) {
+            System.err.println("Warning: failed to apply cors for " +
+                               fixtureId + ": " + e.getMessage());
+          }
+        }
+
         // Register the handler with the app
         int regResult = app.registerAppRoute(handler, builder);
 

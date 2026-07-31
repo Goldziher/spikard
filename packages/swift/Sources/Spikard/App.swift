@@ -8,7 +8,7 @@ private func _spikard_server_config_from_json(_ json: UnsafePointer<CChar>) -> U
 private func _spikard_server_config_free(_ ptr: UnsafeMutableRawPointer?)
 
 @_silgen_name("spikard_app_config")
-private func _spikard_app_config(_ app: UnsafeMutablePointer<OpaquePointer>, _ config: UnsafeMutableRawPointer?) -> UnsafeMutableRawPointer?
+private func _spikard_app_config(_ app: OpaquePointer, _ config: UnsafeMutableRawPointer?) -> UnsafeMutableRawPointer?
 
 /// Errors thrown by service wrapper methods.
 public enum ServiceError: Error {
@@ -100,9 +100,13 @@ public final class App {
 
     // Apply the config to the app via the FFI bridge.
     // swift-bridge wraps the opaque `App` type; we need its raw pointer.
+    // Pass the App pointer by value (a single `*mut <Service>`), matching the
+    // route() registration path. Passing `&innerPtr` would hand Rust the address
+    // of this stack slot, so it would treat adjacent stack memory as the struct
+    // and corrupt the heap (SIGABRT before the server binds).
     let rawAddr = RustBridge.appRawPtr(inner)
-    var innerPtr = OpaquePointer(bitPattern: rawAddr)!
-    let _ = _spikard_app_config(&innerPtr, serverConfig)
+    let innerPtr = OpaquePointer(bitPattern: rawAddr)!
+    let _ = _spikard_app_config(innerPtr, serverConfig)
 
     return self
   }

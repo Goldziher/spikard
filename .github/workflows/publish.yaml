@@ -1962,7 +1962,10 @@ jobs:
         with:
           tag: ${{ needs.prepare.outputs.tag }}
           is-prerelease: ${{ needs.prepare.outputs.is_prerelease }}
-          go-module-path: github.com/Goldziher/spikard
+          # Subdirectory of the Go module (its go.mod lives at packages/go/), NOT the
+          # full module path. finalize-release creates the tag `packages/go/{tag}`, which
+          # is how `go get github.com/Goldziher/spikard/packages/go@{tag}` resolves.
+          go-module-path: packages/go
           dry-run: ${{ needs.prepare.outputs.dry_run }}
           token: ${{ secrets.GITHUB_TOKEN }}
 

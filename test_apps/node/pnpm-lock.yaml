@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@spikard/node':
-        specifier: ^0.17.0-rc.8
-        version: 0.17.0-rc.8
+        specifier: ^0.17.0-rc.9
+        version: 0.17.0-rc.9
       '@types/node':
         specifier: ^26.0.0
         version: 26.1.2
@@ -139,40 +139,40 @@ packages:
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
 
-  '@spikard/node-darwin-arm64@0.17.0-rc.8':
-    resolution: {integrity: sha512-q7ShQW0oKfR55XwQ14Im0b9bzKiXzwYYmvhTOm8UG/J/CzvPPlG00RlFd5MViJnKCF0mSafOmNdUKVP+JDP/fg==}
+  '@spikard/node-darwin-arm64@0.17.0-rc.9':
+    resolution: {integrity: sha512-RV284xreVlRgzWXw9oIy/VH54797zUIK0bX3/C1egjEum2wQHxfzc67MeowzaMlPrJllrBGfHfVbqPHP9UWKJA==}
     engines: {node: '>= 22'}
     cpu: [arm64]
     os: [darwin]
 
-  '@spikard/node-linux-arm64-gnu@0.17.0-rc.8':
-    resolution: {integrity: sha512-DCSGNPpfY1mbr5glqsP5AFT6k1L+61Owdn0Z5kYgqK3RxNEI5QIT98+UaJgNrHdEpBzHRyeUxmiM3TnenljExA==}
+  '@spikard/node-linux-arm64-gnu@0.17.0-rc.9':
+    resolution: {integrity: sha512-hfvGBM2Hh/KUuvSQiPfZ6w83XW9R856iYId5nnzXGP/p7U1eg51uWtkUEFl1PmYMdf6A8EQ2BmDm6g6dTZprDw==}
     engines: {node: '>= 22'}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@spikard/node-linux-x64-gnu@0.17.0-rc.8':
-    resolution: {integrity: sha512-CM5Fsg8cBYLSn3g/48lCJVdHotb/WuiO7UA0iKWjJsKiHOjRsbcxdmSocMhVeffwFJURtYaJ10TiXsRc/2L4WQ==}
+  '@spikard/node-linux-x64-gnu@0.17.0-rc.9':
+    resolution: {integrity: sha512-uEnOF64oUKnf9upYdlyIDss+i3rrpE4oHmGcDgaYt5AsAQHeQjygABS6BFm6xuWDxhQSTDG4XnVP7MaVYCcrag==}
     engines: {node: '>= 22'}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@spikard/node-win32-arm64-msvc@0.17.0-rc.8':
-    resolution: {integrity: sha512-UP7QuWXCj6beDRgEToUgQ+rtsn8DaFafbu9IHCKIEoEUruG9rRWV55fGoXImBaI2n4cQlmIuVC8lD37eOE3YwA==}
+  '@spikard/node-win32-arm64-msvc@0.17.0-rc.9':
+    resolution: {integrity: sha512-1t8MDxJBDfvV8m+5O17CEMJEkjV8E11NWXHpYMoqlRhynuALGp21Msp1p+UjimEF+RRmJYZ02c52GfCCGq2z/A==}
     engines: {node: '>= 22'}
     cpu: [arm64]
     os: [win32]
 
-  '@spikard/node-win32-x64-msvc@0.17.0-rc.8':
-    resolution: {integrity: sha512-A9tUkgUXdMZyS5Aau7nJC7e5405EHa4gJZ4gH/ACGVNovL+QuyvdEioi7F4EQTP/QobE66voY6oqD2S6ewCddg==}
+  '@spikard/node-win32-x64-msvc@0.17.0-rc.9':
+    resolution: {integrity: sha512-ir5bSHQs3LILfivyj3cz7MUTmYrwiVbP1XiZW176uNRRphRlbm1I/3J6F20i2l6djNa9fqz+RTffxxiRq2X7Pg==}
     engines: {node: '>= 22'}
     cpu: [x64]
     os: [win32]
 
-  '@spikard/node@0.17.0-rc.8':
-    resolution: {integrity: sha512-1I8lH0Pnff9yFJIBzBTldpM7/hONcuWndLTdgn12hdbhxIlq33NQWKvZlWJddtkW9T7PNL4TCyvbyZp9Mg3GcA==}
+  '@spikard/node@0.17.0-rc.9':
+    resolution: {integrity: sha512-0v67XltWKaRrBoN+DgPOVldwYdVTM9P81RXRDamtvTaQUVIpiUvmypovzHPOOPSdgO4rseM9tJYO2G+25aDAWA==}
     engines: {node: '>= 22'}
 
   '@standard-schema/spec@1.1.0':
@@ -571,30 +571,30 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.1': {}
 
-  '@spikard/node-darwin-arm64@0.17.0-rc.8':
+  '@spikard/node-darwin-arm64@0.17.0-rc.9':
     optional: true
 
-  '@spikard/node-linux-arm64-gnu@0.17.0-rc.8':
+  '@spikard/node-linux-arm64-gnu@0.17.0-rc.9':
     optional: true
 
-  '@spikard/node-linux-x64-gnu@0.17.0-rc.8':
+  '@spikard/node-linux-x64-gnu@0.17.0-rc.9':
     optional: true
 
-  '@spikard/node-win32-arm64-msvc@0.17.0-rc.8':
+  '@spikard/node-win32-arm64-msvc@0.17.0-rc.9':
     optional: true
 
-  '@spikard/node-win32-x64-msvc@0.17.0-rc.8':
+  '@spikard/node-win32-x64-msvc@0.17.0-rc.9':
     optional: true
 
-  '@spikard/node@0.17.0-rc.8':
+  '@spikard/node@0.17.0-rc.9':
     dependencies:
       zod: 4.4.3
     optionalDependencies:
-      '@spikard/node-darwin-arm64': 0.17.0-rc.8
-      '@spikard/node-linux-arm64-gnu': 0.17.0-rc.8
-      '@spikard/node-linux-x64-gnu': 0.17.0-rc.8
-      '@spikard/node-win32-arm64-msvc': 0.17.0-rc.8
-      '@spikard/node-win32-x64-msvc': 0.17.0-rc.8
+      '@spikard/node-darwin-arm64': 0.17.0-rc.9
+      '@spikard/node-linux-arm64-gnu': 0.17.0-rc.9
+      '@spikard/node-linux-x64-gnu': 0.17.0-rc.9
+      '@spikard/node-win32-arm64-msvc': 0.17.0-rc.9
+      '@spikard/node-win32-x64-msvc': 0.17.0-rc.9
 
   '@standard-schema/spec@1.1.0': {}
 

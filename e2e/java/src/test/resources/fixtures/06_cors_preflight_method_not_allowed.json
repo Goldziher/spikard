@@ -1,1 +1,1 @@
-{"http":{"expected_response":{"body":null,"headers":{},"status_code":403},"handler":{"body_schema":null,"method":"GET","route":"/api/data"},"request":{"path":"/api/data"}}}
+{"http":{"expected_response":{"body":null,"headers":{},"status_code":403},"handler":{"body_schema":null,"method":"GET","middleware":{"cors":{"allowed_headers":["Content-Type"],"allowed_methods":["GET"],"allowed_origins":["https://example.com"]}},"route":"/api/data"},"request":{"path":"/api/data"}}}
