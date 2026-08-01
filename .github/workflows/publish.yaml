@@ -749,6 +749,19 @@ jobs:
           clobber: ${{ needs.prepare.outputs.force_republish }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
+  verify-binstall:
+    name: Verify cargo-binstall install
+    needs: [prepare, upload-release-assets]
+    if: ${{ needs.prepare.outputs.release_cli == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && needs.upload-release-assets.result == 'success' }}
+    uses: xberg-io/actions/.github/workflows/reusable-binstall-verify.yml@v1
+    with:
+      package-name: spikard-cli
+      binary-name: spikard
+      manifest-path: crates/spikard-cli
+      checkout-ref: ${{ needs.prepare.outputs.checkout_ref }}
+      smoke-command: |
+        spikard --version
+
   publish-crates:
     name: Publish crates.io packages
     needs: [prepare, validate-versions, check-registries]
@@ -2055,6 +2068,7 @@ jobs:
     needs:
       - prepare
       - upload-release-assets
+      - verify-binstall
       - publish-crates
       - publish-pypi
       - publish-node
