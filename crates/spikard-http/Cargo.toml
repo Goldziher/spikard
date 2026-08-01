@@ -51,7 +51,7 @@ tracing-subscriber.workspace = true
 # ~keep Pinned to match axum-test's transitive tokio-tungstenite; testing.rs passes a
 # CloseFrame into axum_test::WsMessage, so the versions must unify. Do not bump
 # independently of axum/axum-test.
-tungstenite = "0.29"
+tungstenite = "0.30"
 
 # wasm: narrow axum (no `tokio` feature → no tokio/net → no mio)
 # Explicitly list every axum feature we need on wasm; skip `tokio` which enables tokio/net.
