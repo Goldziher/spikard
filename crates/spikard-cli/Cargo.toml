@@ -13,14 +13,15 @@ documentation = "https://docs.rs/spikard-cli"
 readme = "README.md"
 
 [package.metadata.cargo-machete]
-ignored = [
-    "clap_complete",
-    "clap_mangen",
-    "prost",
-    "prost-reflect",
-    "prost-types",
-    "protox",
-]
+ignored = ["clap_complete", "clap_mangen", "prost", "prost-reflect", "prost-types", "protox"]
+
+# ~keep cargo-binstall support: release assets are named spikard-cli-{version}-{target}
+# ~keep with the binary at the archive root, neither of which matches binstall's default
+# ~keep naming, so pin the download URL and bin-dir explicitly.
+# ~keep See https://github.com/cargo-bins/cargo-binstall/blob/main/SUPPORT.md
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/spikard-cli-{ version }-{ target }{ archive-suffix }"
+bin-dir = "{ bin }{ binary-ext }"
 
 [lib]
 name = "spikard_cli"
