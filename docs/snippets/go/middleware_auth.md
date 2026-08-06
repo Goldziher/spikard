@@ -4,7 +4,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	spikard "github.com/xberg-io/spikard/packages/go"
+	spikard "github.com/Goldziher/spikard/packages/go"
 )
 
 type HeaderRequest struct {

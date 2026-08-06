@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"time"
-	spikard "github.com/xberg-io/spikard/packages/go"
+	spikard "github.com/Goldziher/spikard/packages/go"
 )
 
 func observabilityMiddleware(handler spikard.HandlerFunc) spikard.HandlerFunc {

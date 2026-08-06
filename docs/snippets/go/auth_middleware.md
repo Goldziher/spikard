@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	spikard "github.com/xberg-io/spikard/packages/go"
+	spikard "github.com/Goldziher/spikard/packages/go"
 )
 
 type RequestData struct {

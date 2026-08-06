@@ -3,7 +3,7 @@ package main
 
 import (
 	"encoding/json"
-	spikard "github.com/xberg-io/spikard/packages/go"
+	spikard "github.com/Goldziher/spikard/packages/go"
 )
 
 type User struct {

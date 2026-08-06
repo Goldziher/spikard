@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 	"time"
-	spikard "github.com/xberg-io/spikard/packages/go"
+	spikard "github.com/Goldziher/spikard/packages/go"
 )
 
 func processWithRetry(taskID int, maxRetries int) {

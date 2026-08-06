@@ -4,7 +4,7 @@ package main
 import (
 	"encoding/json"
 	"log"
-	spikard "github.com/xberg-io/spikard/packages/go"
+	spikard "github.com/Goldziher/spikard/packages/go"
 )
 
 func loggingMiddleware(handler spikard.HandlerFunc) spikard.HandlerFunc {
