@@ -774,7 +774,7 @@ end
   def get_cookie(_request, _key), do: nil
 
   @spec get_body(t()) :: term()
-  def get_body(_request), do: %{}
+  def get_body(request), do: Map.get(request, :body, %{})
 end
 "#,
         )
