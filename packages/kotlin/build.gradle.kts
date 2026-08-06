@@ -98,7 +98,7 @@ mavenPublishing {
 
     pom {
         name.set("spikard-kotlin")
-        description.set("Rust-centric multi-language HTTP framework with polyglot bindings")
+        description.set("Codegen-first polyglot web toolkit with a Rust core and bindings for 14 languages")
         url.set("https://github.com/Goldziher/spikard")
         licenses {
             license {

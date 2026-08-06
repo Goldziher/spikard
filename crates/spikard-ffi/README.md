@@ -69,11 +69,17 @@ C/C++ FFI bindings for the spikard HTTP framework. Stable ABI shared library for
   </a>
 </div>
 
-[Install](#installation) · [Quick example](#quick-example) · [Features](#features) · [Docs](https://github.com/Goldziher/spikard)
+[Install](#installation) · [Quick example](#quick-example) · [Features](#features) · [Docs](https://spikard.dev)
 
 </div>
 
 ---
+
+> [!IMPORTANT]
+> **spikard is experimental and pre-1.0.** APIs change between releases and not every binding is at the
+> same level of maturity, so it is not yet recommended for production. Feedback is genuinely wanted at
+> this stage — [open an issue](https://github.com/Goldziher/spikard/issues) if something is wrong,
+> awkward, or missing.
 
 ## What this package provides
 

@@ -5,7 +5,7 @@
     unused_mut
 )]
 
-use std::ffi::{c_char, c_void, CStr, CString};
+use std::ffi::{CStr, CString, c_char, c_void};
 use std::panic;
 use std::sync::Arc;
 /// FFI handler bridge for the `Handler` contract.
@@ -65,7 +65,7 @@ impl spikard::Handler for FfiHandlerBridge {
                 // and hands ownership to us; we release it with the C runtime's free.
                 // SAFETY: resp_ptr is null-checked above and was produced by the host callback.
                 unsafe {
-                    extern "C" {
+                    unsafe extern "C" {
                         fn free(ptr: *mut c_void);
                     }
                     free(resp_ptr as *mut c_void);
@@ -96,7 +96,7 @@ pub struct AppOpaque {
 /// # Safety
 /// The returned pointer must be freed via spikard_app_free().
 /// Never access the pointer after freeing it.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn spikard_app_new() -> *mut AppOpaque {
     let owner = spikard::App::new();
     Box::into_raw(Box::new(AppOpaque {
@@ -111,7 +111,7 @@ pub extern "C" fn spikard_app_new() -> *mut AppOpaque {
 /// - After this call, `ptr` is invalid and must not be dereferenced.
 /// - Calling this twice on the same pointer causes undefined behavior.
 /// - Safe to call even after a `Finalize` entrypoint has emptied `inner`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn spikard_app_free(ptr: *mut AppOpaque) {
     if !ptr.is_null() {
         // SAFETY: ptr was allocated by into_raw above;
@@ -130,7 +130,7 @@ pub extern "C" fn spikard_app_free(ptr: *mut AppOpaque) {
 /// - `context` is an opaque pointer passed to the callback on each invocation.
 ///   The caller is responsible for keeping it valid.
 /// Returns 0 on success, non-zero error code on failure.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn spikard_app_register_route(
     owner: *mut AppOpaque,
     callback: extern "C" fn(*mut c_void, *const c_char) -> *mut c_char,
@@ -171,7 +171,7 @@ pub extern "C" fn spikard_app_register_route(
 /// - `context` is an opaque pointer passed to the callback on each invocation.
 ///   The caller is responsible for keeping it valid.
 /// Returns 0 on success, non-zero error code on failure.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn spikard_app_get(
     owner: *mut AppOpaque,
     callback: extern "C" fn(*mut c_void, *const c_char) -> *mut c_char,
@@ -217,7 +217,7 @@ pub extern "C" fn spikard_app_get(
 /// - `context` is an opaque pointer passed to the callback on each invocation.
 ///   The caller is responsible for keeping it valid.
 /// Returns 0 on success, non-zero error code on failure.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn spikard_app_post(
     owner: *mut AppOpaque,
     callback: extern "C" fn(*mut c_void, *const c_char) -> *mut c_char,
@@ -263,7 +263,7 @@ pub extern "C" fn spikard_app_post(
 /// - `context` is an opaque pointer passed to the callback on each invocation.
 ///   The caller is responsible for keeping it valid.
 /// Returns 0 on success, non-zero error code on failure.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn spikard_app_put(
     owner: *mut AppOpaque,
     callback: extern "C" fn(*mut c_void, *const c_char) -> *mut c_char,
@@ -309,7 +309,7 @@ pub extern "C" fn spikard_app_put(
 /// - `context` is an opaque pointer passed to the callback on each invocation.
 ///   The caller is responsible for keeping it valid.
 /// Returns 0 on success, non-zero error code on failure.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn spikard_app_patch(
     owner: *mut AppOpaque,
     callback: extern "C" fn(*mut c_void, *const c_char) -> *mut c_char,
@@ -355,7 +355,7 @@ pub extern "C" fn spikard_app_patch(
 /// - `context` is an opaque pointer passed to the callback on each invocation.
 ///   The caller is responsible for keeping it valid.
 /// Returns 0 on success, non-zero error code on failure.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn spikard_app_delete(
     owner: *mut AppOpaque,
     callback: extern "C" fn(*mut c_void, *const c_char) -> *mut c_char,
@@ -401,7 +401,7 @@ pub extern "C" fn spikard_app_delete(
 /// - `context` is an opaque pointer passed to the callback on each invocation.
 ///   The caller is responsible for keeping it valid.
 /// Returns 0 on success, non-zero error code on failure.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn spikard_app_head(
     owner: *mut AppOpaque,
     callback: extern "C" fn(*mut c_void, *const c_char) -> *mut c_char,
@@ -447,7 +447,7 @@ pub extern "C" fn spikard_app_head(
 /// - `context` is an opaque pointer passed to the callback on each invocation.
 ///   The caller is responsible for keeping it valid.
 /// Returns 0 on success, non-zero error code on failure.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn spikard_app_options(
     owner: *mut AppOpaque,
     callback: extern "C" fn(*mut c_void, *const c_char) -> *mut c_char,
@@ -493,7 +493,7 @@ pub extern "C" fn spikard_app_options(
 /// - `context` is an opaque pointer passed to the callback on each invocation.
 ///   The caller is responsible for keeping it valid.
 /// Returns 0 on success, non-zero error code on failure.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn spikard_app_connect(
     owner: *mut AppOpaque,
     callback: extern "C" fn(*mut c_void, *const c_char) -> *mut c_char,
@@ -539,7 +539,7 @@ pub extern "C" fn spikard_app_connect(
 /// - `context` is an opaque pointer passed to the callback on each invocation.
 ///   The caller is responsible for keeping it valid.
 /// Returns 0 on success, non-zero error code on failure.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn spikard_app_trace(
     owner: *mut AppOpaque,
     callback: extern "C" fn(*mut c_void, *const c_char) -> *mut c_char,
@@ -583,7 +583,7 @@ pub extern "C" fn spikard_app_trace(
 /// - The same `owner` pointer is returned on success — the caller does **not**
 ///   need to swap the handle they hold. Returns `null` on failure (the original
 ///   handle is still valid in that case but should be inspected for usability).
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn spikard_app_config(owner: *mut AppOpaque, config: *mut spikard::ServerConfig) -> *mut AppOpaque {
     if owner.is_null() {
         return std::ptr::null_mut();
@@ -616,7 +616,7 @@ pub extern "C" fn spikard_app_config(owner: *mut AppOpaque, config: *mut spikard
 ///   with `inner = None`. The caller may still invoke `()`
 ///   afterwards to release the shell; subsequent registration/configurator calls
 ///   on the same pointer will fail with the null-return error code.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn spikard_app_ep_run(owner: *mut AppOpaque) -> i32 {
     if owner.is_null() {
         return 1;
@@ -643,7 +643,7 @@ pub extern "C" fn spikard_app_ep_run(owner: *mut AppOpaque) -> i32 {
 ///   with `inner = None`. The caller may still invoke `()`
 ///   afterwards to release the shell; subsequent registration/configurator calls
 ///   on the same pointer will fail with the null-return error code.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn spikard_app_ep_into_router(owner: *mut AppOpaque) -> i32 {
     if owner.is_null() {
         return 1;

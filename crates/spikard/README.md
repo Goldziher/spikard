@@ -5,7 +5,7 @@
 
 **Spikard** — Part of the spikard polyglot web toolkit.
 
-Rust-centric polyglot HTTP framework built on Axum and Tower-HTTP. Type-safe routing, JSON Schema validation, OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, WebSocket/SSE, lifecycle hooks, and a tower-http middleware stack.
+Codegen-first polyglot web toolkit built on Axum and Tower-HTTP. Type-safe routing, JSON Schema validation, OpenAPI/AsyncAPI/GraphQL/JSON-RPC/gRPC codegen, SQL-to-HTTP, WebSocket/SSE, lifecycle hooks, and an MCP server. Experimental, pre-1.0.
 
 <div align="center" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 20px 0;">
   <!-- Built with alef -->
@@ -69,11 +69,17 @@ Rust-centric polyglot HTTP framework built on Axum and Tower-HTTP. Type-safe rou
   </a>
 </div>
 
-[Install](#installation) · [Quick example](#quick-example) · [Features](#features) · [Docs](https://github.com/Goldziher/spikard)
+[Install](#installation) · [Quick example](#quick-example) · [Features](#features) · [Docs](https://spikard.dev)
 
 </div>
 
 ---
+
+> [!IMPORTANT]
+> **spikard is experimental and pre-1.0.** APIs change between releases and not every binding is at the
+> same level of maturity, so it is not yet recommended for production. Feedback is genuinely wanted at
+> this stage — [open an issue](https://github.com/Goldziher/spikard/issues) if something is wrong,
+> awkward, or missing.
 
 ## What this package provides
 

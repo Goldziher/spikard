@@ -69,11 +69,17 @@ Go bindings for the spikard polyglot web toolkit. Backed by the Rust core via CG
   </a>
 </div>
 
-[Install](#installation) · [Quick example](#quick-example) · [Static linking](#static-linking) · [Docs](https://github.com/Goldziher/spikard)
+[Install](#installation) · [Quick example](#quick-example) · [Static linking](#static-linking) · [Docs](https://spikard.dev)
 
 </div>
 
 ---
+
+> [!IMPORTANT]
+> **spikard is experimental and pre-1.0.** APIs change between releases and not every binding is at the
+> same level of maturity, so it is not yet recommended for production. Feedback is genuinely wanted at
+> this stage — [open an issue](https://github.com/Goldziher/spikard/issues) if something is wrong,
+> awkward, or missing.
 
 ## What you get
 

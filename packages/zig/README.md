@@ -5,7 +5,7 @@
 
 **Spikard** — Part of the spikard polyglot web toolkit.
 
-Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Zig bindings via C FFI with comptime-safe wrapper.
+Codegen-first polyglot web toolkit on a Rust core: OpenAPI/AsyncAPI/GraphQL/JSON-RPC/gRPC codegen, SQL-to-HTTP, tower-http middleware, and an MCP server. Experimental, pre-1.0. Zig bindings via C FFI with comptime-safe wrapper.
 
 <div align="center" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 20px 0;">
   <!-- Built with alef -->
@@ -69,11 +69,17 @@ Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC code
   </a>
 </div>
 
-[Install](#installation) · [Quick example](#quick-example) · [Features](#features) · [Docs](https://github.com/Goldziher/spikard)
+[Install](#installation) · [Quick example](#quick-example) · [Features](#features) · [Docs](https://spikard.dev)
 
 </div>
 
 ---
+
+> [!IMPORTANT]
+> **spikard is experimental and pre-1.0.** APIs change between releases and not every binding is at the
+> same level of maturity, so it is not yet recommended for production. Feedback is genuinely wanted at
+> this stage — [open an issue](https://github.com/Goldziher/spikard/issues) if something is wrong,
+> awkward, or missing.
 
 ## What this package provides
 

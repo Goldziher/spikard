@@ -1,5 +1,5 @@
 name: spikard
-description: Rust-centric multi-language HTTP framework with polyglot bindings
+description: Codegen-first polyglot web toolkit with a Rust core and bindings for 14 languages
 version: 0.17.0-rc.10
 repository: https://github.com/Goldziher/spikard
 homepage: https://github.com/Goldziher/spikard

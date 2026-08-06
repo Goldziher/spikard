@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.48.15"
+alef_version = "0.55.3"
 languages = [
   "python",
   "node",
@@ -1089,7 +1089,7 @@ hash = "spikard-0.17.0-rc.10-PLACEHOLDER1234567890abcdefABCDEF0987654321"
 name = "@spikard/node-wasm"
 
 [crates.scaffold]
-description = "Rust-centric multi-language HTTP framework with polyglot bindings"
+description = "Codegen-first polyglot web toolkit with a Rust core and bindings for 14 languages"
 license = "MIT"
 repository = "https://github.com/Goldziher/spikard"
 homepage = "https://github.com/Goldziher/spikard"
@@ -1106,8 +1106,8 @@ template = "python.md"
 name = "Spikard"
 package_name = "spikard"
 badge_url = "https://img.shields.io/pypi/v/spikard?label=Python&color=007ec6"
-docs_url = "https://github.com/Goldziher/spikard"
-description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Native Python bindings with async/await support."
+docs_url = "https://spikard.dev"
+description = "Codegen-first polyglot web toolkit on a Rust core: OpenAPI/AsyncAPI/GraphQL/JSON-RPC/gRPC codegen, SQL-to-HTTP, tower-http middleware, and an MCP server. Experimental, pre-1.0. Native Python bindings with async/await support."
 package_manager = ["pip"]
 snippets = { quickstart = "quickstart_routes.md", hello_route = "hello_route.md", request_data = "request_data.md", validation_basic = "validation_basic.md", middleware_basic = "middleware_basic.md", config_server = "config_server.md", run_app = "run_app.md" }
 
@@ -1117,8 +1117,8 @@ output_path = "crates/spikard-node/README.md"
 name = "Spikard"
 package_name = "@spikard/node"
 badge_url = "https://img.shields.io/npm/v/@spikard/node?label=TypeScript&color=007ec6"
-docs_url = "https://github.com/Goldziher/spikard"
-description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Native NAPI-RS bindings for Node.js with TypeScript type definitions."
+docs_url = "https://spikard.dev"
+description = "Codegen-first polyglot web toolkit on a Rust core: OpenAPI/AsyncAPI/GraphQL/JSON-RPC/gRPC codegen, SQL-to-HTTP, tower-http middleware, and an MCP server. Experimental, pre-1.0. Native NAPI-RS bindings for Node.js with TypeScript type definitions."
 package_manager = ["npm", "pnpm", "yarn"]
 snippets = { quickstart = "quickstart_routes.md", hello_route = "hello_route.md", routing_basic = "routing_basic.md", validation_basic = "validation_basic.md", middleware_basic = "middleware_basic.md" }
 
@@ -1127,8 +1127,8 @@ template = "language_package.md"
 name = "Spikard"
 package_name = "spikard"
 badge_url = "https://img.shields.io/gem/v/spikard?label=Ruby&color=007ec6"
-docs_url = "https://github.com/Goldziher/spikard"
-description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Ruby bindings via Magnus with idiomatic Ruby API."
+docs_url = "https://spikard.dev"
+description = "Codegen-first polyglot web toolkit on a Rust core: OpenAPI/AsyncAPI/GraphQL/JSON-RPC/gRPC codegen, SQL-to-HTTP, tower-http middleware, and an MCP server. Experimental, pre-1.0. Ruby bindings via Magnus with idiomatic Ruby API."
 package_manager = ["rubygems", "bundler"]
 snippets = { quickstart = "quickstart_routes.md", hello_route = "hello_route.md", routing_basic = "routing_basic.md", validation_basic = "validation_basic.md", middleware_basic = "middleware_basic.md" }
 
@@ -1137,8 +1137,8 @@ template = "language_package.md"
 name = "Spikard"
 package_name = "goldziher/spikard"
 badge_url = "https://img.shields.io/packagist/v/goldziher/spikard?label=PHP&color=007ec6"
-docs_url = "https://github.com/Goldziher/spikard"
-description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. PHP 8.2+ bindings via ext-php-rs."
+docs_url = "https://spikard.dev"
+description = "Codegen-first polyglot web toolkit on a Rust core: OpenAPI/AsyncAPI/GraphQL/JSON-RPC/gRPC codegen, SQL-to-HTTP, tower-http middleware, and an MCP server. Experimental, pre-1.0. PHP 8.2+ bindings via ext-php-rs."
 package_manager = ["composer"]
 snippets = { quickstart = "quickstart_routes.md", hello_route = "hello_route.md", routing_basic = "routing_basic.md", validation_basic = "validation_basic.md" }
 
@@ -1147,8 +1147,8 @@ template = "language_package.md"
 name = "Spikard"
 package_name = "spikard"
 badge_url = "https://img.shields.io/hexpm/v/spikard?label=Elixir&color=007ec6"
-docs_url = "https://github.com/Goldziher/spikard"
-description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Elixir bindings via Rustler NIF with OTP integration."
+docs_url = "https://spikard.dev"
+description = "Codegen-first polyglot web toolkit on a Rust core: OpenAPI/AsyncAPI/GraphQL/JSON-RPC/gRPC codegen, SQL-to-HTTP, tower-http middleware, and an MCP server. Experimental, pre-1.0. Elixir bindings via Rustler NIF with OTP integration."
 package_manager = ["mix"]
 snippets = {}
 
@@ -1158,7 +1158,7 @@ output_path = "crates/spikard-ffi/README.md"
 name = "Spikard FFI"
 package_name = "spikard-ffi"
 badge_url = "https://img.shields.io/badge/C%2FC%2B%2B-spikard--ffi-007ec6"
-docs_url = "https://github.com/Goldziher/spikard"
+docs_url = "https://spikard.dev"
 description = "C/C++ FFI bindings for the spikard HTTP framework. Stable ABI shared library for native integration, cross-language bridging (Go, Zig, Kotlin JNI), and embedding the Rust HTTP core into any C-compatible host."
 package_manager = ["cargo"]
 snippets = {}
@@ -1168,8 +1168,8 @@ template = "go.md"
 name = "Spikard"
 package_name = "github.com/Goldziher/spikard"
 badge_url = "https://img.shields.io/github/v/tag/Goldziher/spikard?label=Go&color=007ec6"
-docs_url = "https://github.com/Goldziher/spikard"
-description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Go bindings with CGO static linking and context-aware async support."
+docs_url = "https://spikard.dev"
+description = "Codegen-first polyglot web toolkit on a Rust core: OpenAPI/AsyncAPI/GraphQL/JSON-RPC/gRPC codegen, SQL-to-HTTP, tower-http middleware, and an MCP server. Experimental, pre-1.0. Go bindings with CGO static linking and context-aware async support."
 package_manager = ["go get"]
 snippets = {}
 
@@ -1178,8 +1178,8 @@ template = "language_package.md"
 name = "Spikard"
 package_name = "dev.spikard:spikard"
 badge_url = "https://img.shields.io/maven-central/v/dev.spikard/spikard?label=Java&color=007ec6"
-docs_url = "https://github.com/Goldziher/spikard"
-description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Java bindings via JNI/Panama with type-safe API."
+docs_url = "https://spikard.dev"
+description = "Codegen-first polyglot web toolkit on a Rust core: OpenAPI/AsyncAPI/GraphQL/JSON-RPC/gRPC codegen, SQL-to-HTTP, tower-http middleware, and an MCP server. Experimental, pre-1.0. Java bindings via JNI/Panama with type-safe API."
 package_manager = ["maven", "gradle"]
 snippets = {}
 
@@ -1188,8 +1188,8 @@ template = "language_package.md"
 name = "Spikard"
 package_name = "Spikard"
 badge_url = "https://img.shields.io/nuget/v/Spikard?label=C%23&color=007ec6"
-docs_url = "https://github.com/Goldziher/spikard"
-description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. .NET bindings with full async/await support and .NET 8.0+ compatibility."
+docs_url = "https://spikard.dev"
+description = "Codegen-first polyglot web toolkit on a Rust core: OpenAPI/AsyncAPI/GraphQL/JSON-RPC/gRPC codegen, SQL-to-HTTP, tower-http middleware, and an MCP server. Experimental, pre-1.0. .NET bindings with full async/await support and .NET 8.0+ compatibility."
 package_manager = ["nuget"]
 snippets = {}
 
@@ -1198,8 +1198,8 @@ template = "language_package.md"
 name = "Spikard"
 package_name = "dev.spikard:spikard"
 badge_url = "https://img.shields.io/badge/Kotlin-spikard-007ec6"
-docs_url = "https://github.com/Goldziher/spikard"
-description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Kotlin/JVM bindings with idiomatic data classes and coroutine-based async."
+docs_url = "https://spikard.dev"
+description = "Codegen-first polyglot web toolkit on a Rust core: OpenAPI/AsyncAPI/GraphQL/JSON-RPC/gRPC codegen, SQL-to-HTTP, tower-http middleware, and an MCP server. Experimental, pre-1.0. Kotlin/JVM bindings with idiomatic data classes and coroutine-based async."
 package_manager = ["gradle", "maven"]
 snippets = {}
 
@@ -1208,8 +1208,8 @@ template = "language_package.md"
 name = "Spikard"
 package_name = "spikard"
 badge_url = "https://img.shields.io/pub/v/spikard?label=Dart&color=007ec6"
-docs_url = "https://github.com/Goldziher/spikard"
-description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Dart bindings via flutter_rust_bridge with isolate-safe Future/Stream APIs."
+docs_url = "https://spikard.dev"
+description = "Codegen-first polyglot web toolkit on a Rust core: OpenAPI/AsyncAPI/GraphQL/JSON-RPC/gRPC codegen, SQL-to-HTTP, tower-http middleware, and an MCP server. Experimental, pre-1.0. Dart bindings via flutter_rust_bridge with isolate-safe Future/Stream APIs."
 package_manager = ["pub"]
 snippets = {}
 
@@ -1219,8 +1219,8 @@ output_path = "crates/spikard-wasm/README.md"
 name = "Spikard WASM"
 package_name = "@spikard/node-wasm"
 badge_url = "https://img.shields.io/npm/v/@spikard/node-wasm?label=WASM&color=007ec6"
-docs_url = "https://github.com/Goldziher/spikard"
-description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. WebAssembly bindings for browsers, Deno, and Cloudflare Workers."
+docs_url = "https://spikard.dev"
+description = "Codegen-first polyglot web toolkit on a Rust core: OpenAPI/AsyncAPI/GraphQL/JSON-RPC/gRPC codegen, SQL-to-HTTP, tower-http middleware, and an MCP server. Experimental, pre-1.0. WebAssembly bindings for browsers, Deno, and Cloudflare Workers."
 package_manager = ["npm", "pnpm", "yarn"]
 snippets = {}
 
@@ -1229,8 +1229,8 @@ template = "language_package.md"
 name = "Spikard"
 package_name = "Spikard"
 badge_url = "https://img.shields.io/badge/Swift-spikard-007ec6"
-docs_url = "https://github.com/Goldziher/spikard"
-description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Swift bindings via swift-bridge for macOS and Linux."
+docs_url = "https://spikard.dev"
+description = "Codegen-first polyglot web toolkit on a Rust core: OpenAPI/AsyncAPI/GraphQL/JSON-RPC/gRPC codegen, SQL-to-HTTP, tower-http middleware, and an MCP server. Experimental, pre-1.0. Swift bindings via swift-bridge for macOS and Linux."
 package_manager = ["spm"]
 snippets = {}
 
@@ -1239,8 +1239,8 @@ template = "language_package.md"
 name = "Spikard"
 package_name = "spikard"
 badge_url = "https://img.shields.io/badge/Zig-spikard-007ec6"
-docs_url = "https://github.com/Goldziher/spikard"
-description = "Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Zig bindings via C FFI with comptime-safe wrapper."
+docs_url = "https://spikard.dev"
+description = "Codegen-first polyglot web toolkit on a Rust core: OpenAPI/AsyncAPI/GraphQL/JSON-RPC/gRPC codegen, SQL-to-HTTP, tower-http middleware, and an MCP server. Experimental, pre-1.0. Zig bindings via C FFI with comptime-safe wrapper."
 package_manager = ["zig"]
 snippets = {}
 
@@ -1250,7 +1250,7 @@ output_path = "crates/spikard/README.md"
 name = "Spikard"
 package_name = "spikard"
 badge_url = "https://img.shields.io/crates/v/spikard?label=Rust&color=007ec6"
-docs_url = "https://github.com/Goldziher/spikard"
-description = "Rust-centric polyglot HTTP framework built on Axum and Tower-HTTP. Type-safe routing, JSON Schema validation, OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, WebSocket/SSE, lifecycle hooks, and a tower-http middleware stack."
+docs_url = "https://spikard.dev"
+description = "Codegen-first polyglot web toolkit built on Axum and Tower-HTTP. Type-safe routing, JSON Schema validation, OpenAPI/AsyncAPI/GraphQL/JSON-RPC/gRPC codegen, SQL-to-HTTP, WebSocket/SSE, lifecycle hooks, and an MCP server. Experimental, pre-1.0."
 package_manager = ["cargo"]
 snippets = { quickstart = "quickstart_routes.md", hello_route = "hello_route.md", routing_basic = "routing_basic.md", validation_basic = "validation_basic.md", middleware_basic = "middleware_basic.md" }

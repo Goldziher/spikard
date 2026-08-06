@@ -5,7 +5,7 @@
 
 **Spikard for Python** — Type-safe async HTTP framework backed by Rust.
 
-Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC codegen, tower-http middleware, and fixture-driven cross-language testing. Native Python bindings with async/await support.
+Codegen-first polyglot web toolkit on a Rust core: OpenAPI/AsyncAPI/GraphQL/JSON-RPC/gRPC codegen, SQL-to-HTTP, tower-http middleware, and an MCP server. Experimental, pre-1.0. Native Python bindings with async/await support.
 
 <div align="center" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 20px 0;">
   <!-- Built with alef -->
@@ -69,11 +69,17 @@ Rust-centric polyglot HTTP framework with OpenAPI/AsyncAPI/GraphQL/JSON-RPC code
   </a>
 </div>
 
-[Install](#installation) · [Quick example](#quick-example) · [Async/await](#asyncawait-support) · [Docs](https://github.com/Goldziher/spikard)
+[Install](#installation) · [Quick example](#quick-example) · [Async/await](#asyncawait-support) · [Docs](https://spikard.dev)
 
 </div>
 
 ---
+
+> [!IMPORTANT]
+> **spikard is experimental and pre-1.0.** APIs change between releases and not every binding is at the
+> same level of maturity, so it is not yet recommended for production. Feedback is genuinely wanted at
+> this stage — [open an issue](https://github.com/Goldziher/spikard/issues) if something is wrong,
+> awkward, or missing.
 
 ## What you get
 

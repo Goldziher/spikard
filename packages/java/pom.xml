@@ -12,7 +12,7 @@
   <packaging>jar</packaging>
 
   <name>spikard</name>
-  <description>Rust-centric multi-language HTTP framework with polyglot bindings</description>
+  <description>Codegen-first polyglot web toolkit with a Rust core and bindings for 14 languages</description>
   <url>https://github.com/Goldziher/spikard</url>
 
   <licenses>

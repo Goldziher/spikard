@@ -2,7 +2,7 @@
   "name": "@spikard/node-wasm",
   "version": "0.17.0-rc.10",
   "private": false,
-  "description": "Rust-centric multi-language HTTP framework with polyglot bindings",
+  "description": "Codegen-first polyglot web toolkit with a Rust core and bindings for 14 languages",
   "license": "MIT",
   "repository": {
     "type": "git",

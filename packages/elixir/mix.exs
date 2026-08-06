@@ -17,7 +17,7 @@ defmodule Spikard.MixProject do
     ]
     ]
     ],
-    description: "Rust-centric multi-language HTTP framework with polyglot bindings",
+    description: "Codegen-first polyglot web toolkit with a Rust core and bindings for 14 languages",
     package: package(),
     deps: deps()
     ]

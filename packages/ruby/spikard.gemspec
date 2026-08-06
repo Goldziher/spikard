@@ -4,8 +4,8 @@ Gem::Specification.new do |spec|
   spec.name = "spikard"
   spec.version = "0.17.0.pre.rc.10"
   spec.authors       = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
-  spec.summary       = "Rust-centric multi-language HTTP framework with polyglot bindings"
-  spec.description   = "Rust-centric multi-language HTTP framework with polyglot bindings"
+  spec.summary       = "Codegen-first polyglot web toolkit with a Rust core and bindings for 14 languages"
+  spec.description   = "Codegen-first polyglot web toolkit with a Rust core and bindings for 14 languages"
   spec.homepage      = "https://github.com/Goldziher/spikard"
 
   spec.license       = "MIT"

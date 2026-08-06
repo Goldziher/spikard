@@ -66,7 +66,7 @@ impl spikard::LifecycleHook<axum::http::Request<spikard::Body>, axum::http::Resp
             let resp_str = unsafe { CStr::from_ptr(resp_ptr) }.to_string_lossy().into_owned();
             // SAFETY: resp_ptr is non-null and from the C callback.
             unsafe {
-                extern "C" {
+                unsafe extern "C" {
                     fn free(ptr: *mut std::ffi::c_void);
                 }
                 free(resp_ptr as *mut std::ffi::c_void);
@@ -128,7 +128,7 @@ impl spikard::LifecycleHook<axum::http::Request<spikard::Body>, axum::http::Resp
             let resp_str = unsafe { CStr::from_ptr(resp_ptr) }.to_string_lossy().into_owned();
             // SAFETY: resp_ptr is non-null and from the C callback.
             unsafe {
-                extern "C" {
+                unsafe extern "C" {
                     fn free(ptr: *mut std::ffi::c_void);
                 }
                 free(resp_ptr as *mut std::ffi::c_void);
