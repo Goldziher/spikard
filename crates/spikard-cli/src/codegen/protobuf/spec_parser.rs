@@ -394,6 +394,30 @@ fn parse_top_level_definitions(content: &str, schema: &mut ProtobufSchema) -> Re
     Ok(())
 }
 
+/// Split the inline body of a block header into `;`-terminated statements and report the
+/// net brace depth the header leaves open. A single-line block (`message X { f = 1; }`)
+/// closes on its own line, so it must contribute its statements here and return depth 0 —
+/// otherwise the caller counts only the opening brace, stays "open", and swallows every
+/// following definition until braces happen to net out. Statements are re-terminated with
+/// `;` because the field/value parsers require it. ~keep
+fn header_inline_body(header: &str) -> (Vec<String>, usize) {
+    let depth = header.matches('{').count().saturating_sub(header.matches('}').count());
+    let mut items = Vec::new();
+    if let Some(pos) = header.find('{') {
+        let mut inline = header[pos + 1..].trim();
+        if let Some(stripped) = inline.strip_suffix('}') {
+            inline = stripped.trim();
+        }
+        for part in inline.split(';') {
+            let part = part.trim();
+            if !part.is_empty() {
+                items.push(format!("{part};"));
+            }
+        }
+    }
+    (items, depth)
+}
+
 fn parse_message_block(lines: &[&str], start: usize, description: Option<String>) -> Result<(MessageDef, usize)> {
     let header = strip_inline_comment(lines[start]).trim();
     let name = extract_block_name(header, "message")
@@ -407,8 +431,21 @@ fn parse_message_block(lines: &[&str], start: usize, description: Option<String>
         description,
     };
 
-    let mut index = start + 1;
-    let mut depth = usize::from(header.contains('{'));
+    let index = start + 1;
+    let (inline_fields, depth) = header_inline_body(header);
+    for field_line in &inline_fields {
+        if !field_line.starts_with("message ") && !field_line.starts_with("enum ") {
+            if let Some(field) = parse_field(field_line, None)? {
+                message.fields.push(field);
+            }
+        }
+    }
+    if depth == 0 {
+        return Ok((message, index));
+    }
+
+    let mut index = index;
+    let mut depth = depth;
     let mut pending_comment: Vec<String> = Vec::new();
 
     while index < lines.len() {
@@ -456,8 +493,21 @@ fn parse_enum_block(lines: &[&str], start: usize, description: Option<String>) -
         description,
     };
 
-    let mut index = start + 1;
-    let mut depth = usize::from(header.contains('{'));
+    let index = start + 1;
+    let (inline_values, depth) = header_inline_body(header);
+    for value_line in &inline_values {
+        if value_line.contains('=') {
+            if let Some(value) = parse_enum_value(value_line, None)? {
+                enum_def.values.push(value);
+            }
+        }
+    }
+    if depth == 0 {
+        return Ok((enum_def, index));
+    }
+
+    let mut index = index;
+    let mut depth = depth;
     let mut pending_comment: Vec<String> = Vec::new();
 
     while index < lines.len() {
@@ -506,7 +556,10 @@ fn parse_service_block(lines: &[&str], start: usize, description: Option<String>
     };
 
     let mut index = start + 1;
-    let mut depth = usize::from(header.contains('{'));
+    let mut depth = header.matches('{').count().saturating_sub(header.matches('}').count());
+    if depth == 0 {
+        return Ok((service, index));
+    }
     let mut pending_comment: Vec<String> = Vec::new();
 
     while index < lines.len() {

@@ -134,7 +134,6 @@ impl AsyncApiGenerator for PythonAsyncApiGenerator {
             code.push('\n');
         }
         code.push_str("import msgspec\n");
-        code.push('\n');
         match protocol {
             "websocket" => code.push_str("from spikard import Spikard, websocket\n"),
             "sse" => code.push_str("from spikard import Spikard, sse\n"),

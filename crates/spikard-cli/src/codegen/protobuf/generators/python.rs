@@ -19,15 +19,22 @@ impl ProtobufGenerator for PythonProtobufGenerator {
         let mut code = String::new();
         code.push_str(&self.file_header("Protocol Buffer message and service definitions."));
         code.push_str("from __future__ import annotations\n\n");
-        if self.uses_streaming_services(schema) {
-            code.push_str("from collections.abc import AsyncIterator\n");
+        let streaming = self.uses_streaming_services(schema);
+        let services = self.uses_services(schema);
+        if streaming || services {
+            if streaming {
+                code.push_str("from collections.abc import AsyncIterator\n");
+            }
+            if services {
+                code.push_str("from typing import TYPE_CHECKING\n");
+            }
+            code.push('\n');
         }
-        if self.uses_services(schema) {
-            code.push_str("from typing import TYPE_CHECKING\n\n");
-            code.push_str("if TYPE_CHECKING:\n");
-            code.push_str("    import grpc\n");
+        code.push_str("from google.protobuf import message as _message\n");
+        if services {
+            code.push_str("\nif TYPE_CHECKING:\n    import grpc\n");
         }
-        code.push_str("from google.protobuf import message as _message\n\n");
+        code.push('\n');
 
         if let Some(package) = &schema.package {
             code.push_str(&format!("PROTOBUF_PACKAGE = \"{package}\"\n\n"));
