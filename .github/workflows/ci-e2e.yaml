@@ -171,6 +171,12 @@ jobs:
           package-dir: packages/swift
           crate-name: spikard-swift
 
+      # The generated Swift E2E harness links target/debug/libspikard_ffi.a
+      # (staticlib), which build-swift-package does not produce; build it here.
+      - name: Build spikard-ffi static library (Swift E2E)
+        if: matrix.language == 'swift'
+        run: cargo build -p spikard-ffi
+
       - name: Setup Zig
         if: matrix.language == 'zig'
         uses: xberg-io/actions/setup-zig@v1
