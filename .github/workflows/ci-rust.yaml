@@ -113,6 +113,13 @@ jobs:
       - name: Install Task
         uses: xberg-io/actions/install-task@v1
 
+      # The codegen quality-gate tests (spikard-cli) shell out to `poly lint` to
+      # validate generated Python instead of requiring a standalone `ruff`/`uv`
+      # install in CI. Only needed by the test suite, which runs those tests.
+      - name: Install poly
+        if: matrix.suite == 'test'
+        uses: Goldziher/polylint@v0
+
       - name: Run clippy and format check
         if: matrix.suite == 'lint'
         run: task rust:lint:check

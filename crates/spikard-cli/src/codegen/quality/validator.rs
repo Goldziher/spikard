@@ -348,7 +348,7 @@ impl QualityValidator {
     /// Validates code against linting and style standards
     ///
     /// Each language enforces its community standards:
-    /// - Python: `ruff check`
+    /// - Python: `poly lint` (bundled ruff)
     /// - TypeScript: `biome check`
     /// - Ruby: `rubocop`
     /// - PHP: `phpstan --level=max`
@@ -374,11 +374,16 @@ impl QualityValidator {
     pub fn validate_lint(&self, code: &str) -> Result<(), QualityError> {
         match self.language {
             TargetLanguage::Python => {
+                // `poly lint` is used instead of a standalone `ruff` install: poly bundles
+                // ruff, so no extra CI toolchain is needed beyond the `poly` binary. Run from
+                // the isolated temp project directory (which has no poly.toml of its own) so
+                // poly lints only the generated file instead of discovering and running every
+                // hook configured for the spikard repository.
                 let project = self.write_temp_python_project(code)?;
                 self.run_tool_in_dir(
-                    "uv",
-                    &["run", "ruff", "check", project.entry_path.to_str().unwrap()],
-                    workspace_root(),
+                    "poly",
+                    &["lint", project.entry_path.to_str().unwrap()],
+                    project.workdir.path(),
                     code,
                 )
                 .map(|_| ())

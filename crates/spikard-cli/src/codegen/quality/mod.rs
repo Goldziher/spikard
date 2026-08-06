@@ -16,7 +16,7 @@
 //!
 //! Each language uses appropriate native tools:
 //!
-//! - **Python**: `python3 -m py_compile`, `pyrefly check` (strict), `ruff check`
+//! - **Python**: `python3 -m py_compile`, `pyrefly check` (strict), `poly lint` (bundled ruff)
 //! - **TypeScript**: `tsc --noEmit`, `biome check`
 //! - **Ruby**: `ruby -c`, `steep check`
 //! - **PHP**: `php -l`, `phpstan --level=max`
