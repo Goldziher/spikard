@@ -119,11 +119,24 @@ tasks:
     cmds:
       - poly fmt --check .
 
+  docs:check:
+    desc: "Check that every language manifest matches the Cargo.toml workspace version"
+    cmds:
+      - cargo run -p spikard-alef --release -- validate versions
+
+  docs:gaps:
+    desc: "Report documentation snippet coverage gaps (informational; exits non-zero while gaps exist)"
+    cmds:
+      # Not part of `task check`: gaps are the tracked good-first-issue backlog, so this
+      # is expected to exit 1 until every language reaches snippet parity.
+      - cargo run -p spikard-alef --release -- snippets gaps --snippets docs/snippets
+
   check:
-    desc: "Run all checks (format + lint, no modifications)"
+    desc: "Run all checks (format + lint + docs consistency, no modifications)"
     cmds:
       - task: format:check
       - task: lint:check
+      - task: docs:check
 
   update:
     desc: "Update all dependencies within major versions (minor patches only)"

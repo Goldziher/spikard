@@ -38,8 +38,12 @@ tasks:
   check:
     desc: "Check if versions are synchronized (dry-run)"
     cmds:
+      # Print the workspace version, then actually verify every language manifest
+      # matches it. The previous version of this task only printed and never compared,
+      # so it reported success regardless of drift.
       - cmd: grep -m 1 'version = ' Cargo.toml | sed 's/version = "\(.*\)"/\1/'
         silent: false
+      - "{{.ALEF}} validate versions"
 
   bump:major:
     desc: "Bump major version (X.0.0) and sync"

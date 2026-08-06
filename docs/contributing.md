@@ -2,6 +2,16 @@
 
 Thanks for helping shape Spikard! The fastest way to get started is to follow the existing Taskfile and language-specific READMEs.
 
+## Where to start
+
+Spikard is experimental and pre-1.0, so contributions land quickly and genuinely shape the design.
+
+- **[Good first issues](https://github.com/Goldziher/spikard/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)** — scoped to be finishable in an evening, mostly self-contained documentation snippets for a single binding.
+- **[Help wanted](https://github.com/Goldziher/spikard/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22)** — larger subsystems from the [roadmap](roadmap.md), each backed by an ADR.
+- **Found something wrong?** Opening an issue is a contribution. Rough edges, confusing errors, and docs that do not match reality are all worth reporting.
+
+Before opening a PR, run `task check` (formatting, linting, and docs consistency).
+
 ## Setup
 
 ```bash

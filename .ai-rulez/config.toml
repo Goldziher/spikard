@@ -1,7 +1,7 @@
 
 version = '4.0'
 name = 'spikard'
-description = 'Rust-centric multi-language HTTP framework providing core library, CLI, and tower-http runtime with polyglot bindings (Python/TypeScript/Ruby/PHP/Elixir). Type-safe web service toolkit with fixture-driven testing across all platforms.'
+description = 'Codegen-first polyglot web toolkit: a Rust core plus 14 language bindings (Python, TypeScript/Node, Ruby, PHP, Elixir, Go, Java, C#, Kotlin, Dart, Swift, Zig, C FFI, WebAssembly), providing core library, CLI, MCP server, and tower-http runtime. Spec-driven codegen (OpenAPI, AsyncAPI, GraphQL, JSON-RPC, gRPC, SQL-to-HTTP) with fixture-driven testing across all platforms. Experimental, pre-1.0.'
 gitignore = true
 presets = ["claude", "codex"]
 builtins = [
@@ -23,32 +23,32 @@ builtins = [
 style = 'minimal'
 
 [[includes]]
-name = 'kreuzberg-core'
-source = 'https://github.com/kreuzberg-dev/ai-rulez.git'
+name = 'xberg-core'
+source = 'https://github.com/xberg-io/agent-conventions.git'
 path = 'modules/core'
 merge_strategy = 'local-override'
 
 [[includes]]
-name = 'kreuzberg-languages'
-source = 'https://github.com/kreuzberg-dev/ai-rulez.git'
+name = 'xberg-languages'
+source = 'https://github.com/xberg-io/agent-conventions.git'
 path = 'modules/languages'
 merge_strategy = 'local-override'
 
 [[includes]]
-name = 'kreuzberg-cicd'
-source = 'https://github.com/kreuzberg-dev/ai-rulez.git'
+name = 'xberg-cicd'
+source = 'https://github.com/xberg-io/agent-conventions.git'
 path = 'modules/cicd'
 merge_strategy = 'local-override'
 
 [[includes]]
-name = 'kreuzberg-e2e-generator'
-source = 'https://github.com/kreuzberg-dev/ai-rulez.git'
+name = 'xberg-e2e-generator'
+source = 'https://github.com/xberg-io/agent-conventions.git'
 path = 'modules/e2e-generator'
 merge_strategy = 'local-override'
 
 [[installed_skills]]
 name = 'alef'
-source = 'https://github.com/kreuzberg-dev/alef.git'
+source = 'https://github.com/xberg-io/alef.git'
 
 [[marketplaces]]
 name = "basemind"

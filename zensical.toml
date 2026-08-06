@@ -1,6 +1,6 @@
 [project]
 site_name = "Spikard"
-site_description = "A polyglot web toolkit with a Rust core and first-class bindings for Python, TypeScript, Ruby, PHP, and Rust"
+site_description = "Codegen-first polyglot web toolkit: a Rust core plus 14 language bindings, spec-driven codegen (OpenAPI, AsyncAPI, GraphQL, JSON-RPC, gRPC, SQL-to-HTTP), and an MCP server"
 site_url = "https://spikard.dev"
 site_author = "Spikard Contributors"
 repo_name = "Goldziher/spikard"
@@ -50,6 +50,7 @@ nav = [
   ] },
 
   { "CLI" = "cli/usage.md" },
+  { "MCP Server" = "mcp.md" },
 
   { "Migration" = [
     { "v0.15 → v0.16" = "migration/v0.15-to-v0.16.md" },

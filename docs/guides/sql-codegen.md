@@ -2,7 +2,7 @@
 
 Spikard can turn an annotated SQL schema into a full HTTP layer: typed route metadata, an OpenAPI 3.1 spec, and a per-language sidecar that drives handler-stub generation across every binding.
 
-The feature builds on [scythe](https://github.com/kreuzberg-dev/scythe) — the SQL-to-typed-query compiler used elsewhere in the Kreuzberg ecosystem. Scythe parses your SQL into an analyzed-query IR; Spikard reads scythe's IR and overlays its own HTTP vocabulary on top. The split is deliberate: scythe stays library-agnostic (no HTTP concepts), and Spikard owns the entire HTTP grammar.
+The feature builds on [scythe](https://github.com/Goldziher/scythe) — the SQL-to-typed-code compiler used elsewhere in the xberg ecosystem. Scythe parses your SQL into an analyzed-query IR; Spikard reads scythe's IR and overlays its own HTTP vocabulary on top. The split is deliberate: scythe stays library-agnostic (no HTTP concepts), and Spikard owns the entire HTTP grammar.
 
 ## When to use this
 
@@ -225,5 +225,5 @@ These slot straight into Spikard's runtime alongside any OpenAPI-derived routes.
 ## Further reading
 
 - [Code Generation guide](code-generation.md) — common architecture across all codegen targets.
-- [scythe documentation](https://github.com/kreuzberg-dev/scythe) — annotation reference for native scythe annotations (`@name`, `@returns`, `@param`, `@nullable`, etc.) and the type system.
+- [scythe documentation](https://github.com/Goldziher/scythe) — annotation reference for native scythe annotations (`@name`, `@returns`, `@param`, `@nullable`, etc.) and the type system.
 - `testing_data/sql_handlers/` in the Spikard repo — minimal fixture with reference outputs.

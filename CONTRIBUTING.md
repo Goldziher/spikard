@@ -4,6 +4,16 @@ Thanks for your interest in contributing to Spikard! This guide covers how to se
 
 For full documentation, visit [spikard.dev](https://spikard.dev).
 
+## Where to start
+
+Spikard is experimental and pre-1.0, which means contributions land quickly and genuinely shape the design.
+
+- **[Good first issues](https://github.com/Goldziher/spikard/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)** — scoped to be finishable in an evening. Most are self-contained documentation snippets for a single binding: no architecture knowledge needed, and a good way to learn one binding's surface.
+- **[Help wanted](https://github.com/Goldziher/spikard/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22)** — larger subsystems from the [roadmap](https://spikard.dev/roadmap/), each backed by an ADR describing the intended design. Worth commenting on the issue before starting so effort is not duplicated.
+- **Found something wrong?** Opening an issue is a contribution. Rough edges in the API, confusing errors, and docs that do not match reality are all worth reporting.
+
+Before opening a PR, run `task check` (formatting, linting, and docs consistency).
+
 ## Prerequisites
 
 - Rust 1.85+ (edition 2024)

@@ -1,6 +1,6 @@
 # Installation
 
-Spikard ships a Rust core plus 15 language bindings. Install only what you need; every binding shares the same runtime behavior.
+Spikard ships a Rust core plus 14 language bindings. Install only what you need; every binding shares the same runtime behavior.
 
 ## Install by binding
 
@@ -50,7 +50,7 @@ Spikard ships a Rust core plus 15 language bindings. Install only what you need;
     Add to your `mix.exs` dependencies:
 
     ```elixir
-    {:spikard, "~> 0.16"}
+    {:spikard, "~> 0.17"}
     ```
 
     Requires Elixir ≥ 1.14, OTP ≥ 25. Precompiled NIFs available; source builds require Rust.
@@ -71,7 +71,7 @@ Spikard ships a Rust core plus 15 language bindings. Install only what you need;
     <dependency>
         <groupId>dev.spikard</groupId>
         <artifactId>spikard</artifactId>
-        <version>0.16.0</version>
+        <version>0.17.0</version>
     </dependency>
     ```
 
@@ -90,7 +90,7 @@ Spikard ships a Rust core plus 15 language bindings. Install only what you need;
     Add to `build.gradle.kts`:
 
     ```kotlin
-    implementation("dev.spikard:spikard-kt:0.16.0")
+    implementation("dev.spikard:spikard-kt:0.17.0")
     ```
 
     Requires Kotlin ≥ 1.8.
@@ -101,7 +101,7 @@ Spikard ships a Rust core plus 15 language bindings. Install only what you need;
 
     ```yaml
     dependencies:
-      spikard: ^0.16.0
+      spikard: ^0.17.0
     ```
 
     Requires Dart ≥ 3.0.
@@ -111,7 +111,7 @@ Spikard ships a Rust core plus 15 language bindings. Install only what you need;
     Add to `Package.swift`:
 
     ```swift
-    .package(url: "https://github.com/Goldziher/spikard.git", from: "0.16.0")
+    .package(url: "https://github.com/Goldziher/spikard.git", from: "0.17.0")
     ```
 
     Requires Swift ≥ 5.9.
@@ -122,7 +122,7 @@ Spikard ships a Rust core plus 15 language bindings. Install only what you need;
 
     ```zig
     .spikard = .{
-        .url = "https://github.com/Goldziher/spikard/archive/v0.16.0.tar.gz",
+        .url = "https://github.com/Goldziher/spikard/archive/v0.17.0.tar.gz",
         .hash = "...",
     },
     ```
