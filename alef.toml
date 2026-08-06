@@ -827,13 +827,21 @@ upgrade = "echo 'kotlin: no-op (versions pinned by generated Gradle files)'"
 
 [crates.update.node]
 precondition = "command -v pnpm >/dev/null 2>&1"
-update = "pnpm up -r"
-upgrade = ["rm -rf node_modules", "pnpm install", "pnpm up --latest -r -w"]
+update = "pnpm up -r --config.auto-install-peers=false --config.dedupe-peer-dependents=false"
+upgrade = [
+  "rm -rf node_modules",
+  "pnpm install",
+  "pnpm up --latest -r -w --config.auto-install-peers=false --config.dedupe-peer-dependents=false",
+]
 
 [crates.update.wasm]
 precondition = "command -v pnpm >/dev/null 2>&1"
-update = "pnpm up -r"
-upgrade = ["rm -rf node_modules", "pnpm install", "pnpm up --latest -r -w"]
+update = "pnpm up -r --config.auto-install-peers=false --config.dedupe-peer-dependents=false"
+upgrade = [
+  "rm -rf node_modules",
+  "pnpm install",
+  "pnpm up --latest -r -w --config.auto-install-peers=false --config.dedupe-peer-dependents=false",
+]
 
 [crates.update.dart]
 precondition = "command -v dart >/dev/null 2>&1"
