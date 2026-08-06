@@ -61,7 +61,12 @@ jobs:
             command: cd packages/ruby && bundle exec rspec
           - language: php
             os: ubuntu-latest
-            command: cd packages/php && composer install --no-interaction --no-progress && composer run lint
+            # `composer run lint` -> `poly lint`, which always runs its whole-project phase
+            # (golangci-lint, rubocop, credo, dart-analyze, checkstyle, pyrefly) regardless of
+            # the path scanned, unless told not to — this job only sets up PHP, so those hooks
+            # fail with "not found" (exit 201). `--no-workspace` skips that phase; php's own
+            # coverage (mago, typos, uncomment) is entirely per-file, so nothing is lost. ~keep
+            command: cd packages/php && composer install --no-interaction --no-progress && composer run lint -- --no-workspace
           - language: elixir
             os: ubuntu-latest
             command: cd packages/elixir && mix deps.get && mix compile --warnings-as-errors
