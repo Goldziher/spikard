@@ -39,10 +39,10 @@ unless System.get_env("SUT_URL") do
   # Use `elixir` to execute the harness script with proper code paths, bound
   # to the allocated port via SPIKARD_SERVER_PORT.
   port = Port.open({:spawn_executable, System.find_executable("elixir")}, [
-  :binary,
-  {:line, 65_536},
-  args: lib_paths ++ [app_harness_bin],
-  env: [{~c"SPIKARD_SERVER_PORT", String.to_charlist(Integer.to_string(harness_port))}]
+    :binary,
+    {:line, 65_536},
+    args: lib_paths ++ [app_harness_bin],
+    env: [{~c"SPIKARD_SERVER_PORT", String.to_charlist(Integer.to_string(harness_port))}]
   ])
 
   url = "http://127.0.0.1:#{harness_port}"

@@ -64,6 +64,9 @@ exclude = [
   "**/*.diff",
   "**/*.patch",
   "**/frb_generated.rs",
+  # Fixture trees live at many depths (packages/*/fixtures, e2e/*/fixtures); the
+  # base only excludes the top-level `fixtures/**`. ~keep
+  "**/fixtures/**",
 ]
 file-safety-exclude = ["**/*.rs", "**/app_harness.*", "**/run_tests.*"]
 
@@ -1083,7 +1086,7 @@ name = "Spikard"
 
 [crates.e2e.registry.packages.zig]
 name = "spikard"
-hash = "spikard-0.17.0-rc.10-PLACEHOLDER1234567890abcdefABCDEF0987654321"
+hash = "spikard-0.17.0-rc.11-PLACEHOLDER1234567890abcdefABCDEF0987654321"
 
 [crates.e2e.registry.packages.wasm]
 name = "@spikard/node-wasm"

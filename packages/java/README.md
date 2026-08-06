@@ -99,14 +99,14 @@ Codegen-first polyglot web toolkit on a Rust core: OpenAPI/AsyncAPI/GraphQL/JSON
 <dependency>
     <groupId>dev.spikard</groupId>
     <artifactId>spikard</artifactId>
-    <version>0.17.0-rc.10</version>
+    <version>0.17.0-rc.11</version>
 </dependency>
 ```
 
 **Gradle:**
 
 ```gradle
-implementation 'dev.spikard:spikard:0.17.0-rc.10'
+implementation 'dev.spikard:spikard:0.17.0-rc.11'
 ```
 
 ### System Requirements

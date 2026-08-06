@@ -1,6 +1,6 @@
 {
   "name": "@spikard/node",
-  "version": "0.17.0-rc.10",
+  "version": "0.17.0-rc.11",
   "description": "Codegen-first polyglot web toolkit with a Rust core and bindings for 14 languages",
   "license": "MIT",
   "repository": {
@@ -34,13 +34,13 @@
     "zod": "^3.25.0 || ^4.0.0"
   },
   "optionalDependencies": {
-    "@spikard/node-linux-x64-gnu": "0.17.0-rc.10",
-    "@spikard/node-linux-arm64-gnu": "0.17.0-rc.10",
-    "@spikard/node-linux-x64-musl": "0.17.0-rc.10",
-    "@spikard/node-linux-arm64-musl": "0.17.0-rc.10",
-    "@spikard/node-darwin-arm64": "0.17.0-rc.10",
-    "@spikard/node-win32-x64-msvc": "0.17.0-rc.10",
-    "@spikard/node-win32-arm64-msvc": "0.17.0-rc.10"
+    "@spikard/node-linux-x64-gnu": "0.17.0-rc.11",
+    "@spikard/node-linux-arm64-gnu": "0.17.0-rc.11",
+    "@spikard/node-linux-x64-musl": "0.17.0-rc.11",
+    "@spikard/node-linux-arm64-musl": "0.17.0-rc.11",
+    "@spikard/node-darwin-arm64": "0.17.0-rc.11",
+    "@spikard/node-win32-x64-msvc": "0.17.0-rc.11",
+    "@spikard/node-win32-arm64-msvc": "0.17.0-rc.11"
   },
   "napi": {
     "packageName": "@spikard/node",

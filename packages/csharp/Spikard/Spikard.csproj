@@ -3,10 +3,10 @@
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>Spikard</RootNamespace>
     <PackageId>Spikard</PackageId>
-    <Version>0.17.0-rc.10</Version>
+    <Version>0.17.0-rc.11</Version>
     <AssemblyVersion>0.17.0.0</AssemblyVersion>
     <FileVersion>0.17.0.0</FileVersion>
-    <InformationalVersion>0.17.0-rc.10</InformationalVersion>
+    <InformationalVersion>0.17.0-rc.11</InformationalVersion>
     <Description>Codegen-first polyglot web toolkit with a Rust core and bindings for 14 languages</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <RepositoryUrl>https://github.com/Goldziher/spikard</RepositoryUrl>

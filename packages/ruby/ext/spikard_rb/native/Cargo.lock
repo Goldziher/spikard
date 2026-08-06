@@ -1434,9 +1434,9 @@ dependencies = [
 
 [[package]]
 name = "http"
-version = "1.4.2"
+version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6970f50e31d6fc17d3fa27329444bfa74e196cf62e95052a3f6fee181dba6425"
+checksum = "918d3568bebf352712bc2ef3d46a8bcf1a75b373be6539de198e9105cbbf9ce0"
 dependencies = [
  "bytes",
  "itoa",
@@ -3106,7 +3106,7 @@ dependencies = [
 
 [[package]]
 name = "spikard"
-version = "0.17.0-rc.10"
+version = "0.17.0-rc.11"
 dependencies = [
  "anyhow",
  "async-graphql",
@@ -3125,7 +3125,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-core"
-version = "0.17.0-rc.10"
+version = "0.17.0-rc.11"
 dependencies = [
  "anyhow",
  "base64 0.23.0",
@@ -3149,7 +3149,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-graphql"
-version = "0.17.0-rc.10"
+version = "0.17.0-rc.11"
 dependencies = [
  "async-graphql",
  "async-graphql-parser",
@@ -3169,7 +3169,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-http"
-version = "0.17.0-rc.10"
+version = "0.17.0-rc.11"
 dependencies = [
  "ahash",
  "anyhow",
@@ -3222,7 +3222,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-rb"
-version = "0.17.0-rc.10"
+version = "0.17.0-rc.11"
 dependencies = [
  "magnus",
  "rb-sys",

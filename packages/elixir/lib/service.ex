@@ -9,14 +9,14 @@ defmodule Spikard.Conn do
   """
 
   defstruct [
-  :path_params,
-  :query_params,
-  :headers,
-  :cookies,
-  :body,
-  :raw_body,
-  :method,
-  :path
+    :path_params,
+    :query_params,
+    :headers,
+    :cookies,
+    :body,
+    :raw_body,
+    :method,
+    :path
   ]
 
   @typedoc """
@@ -33,14 +33,14 @@ defmodule Spikard.Conn do
   - path: Request path
   """
   @type t :: %__MODULE__{
-  path_params: map(),
-  query_params: map(),
-  headers: map(),
-  cookies: map(),
-  body: any(),
-  raw_body: binary() | nil,
-  method: String.t(),
-  path: String.t()
+    path_params: map(),
+    query_params: map(),
+    headers: map(),
+    cookies: map(),
+    body: any(),
+    raw_body: binary() | nil,
+    method: String.t(),
+    path: String.t()
   }
 
   @doc """
@@ -79,8 +79,8 @@ defmodule Spikard.App do
   alias Spikard.Native
 
   defstruct [
-  :registrations,
-  :config
+    :registrations,
+    :config
   ]
 
   @doc """
@@ -88,7 +88,7 @@ defmodule Spikard.App do
   """
   def new(_options \\ []) do
     %__MODULE__{
-    registrations: []
+      registrations: []
     }
   end
 
@@ -157,14 +157,14 @@ defmodule Spikard.App do
     # Convert RequestData JSON to request context struct
     defp build_conn(args) do
       %Spikard.Conn{
-      path_params: args["path_params"] || %{},
-      query_params: args["query_params"] || %{},
-      headers: args["headers"] || %{},
-      cookies: args["cookies"] || %{},
-      body: args["body"],
-      raw_body: args["raw_body"],
-      method: args["method"] || "GET",
-      path: args["path"] || "/"
+        path_params: args["path_params"] || %{},
+        query_params: args["query_params"] || %{},
+        headers: args["headers"] || %{},
+        cookies: args["cookies"] || %{},
+        body: args["body"],
+        raw_body: args["raw_body"],
+        method: args["method"] || "GET",
+        path: args["path"] || "/"
       }
     end
   end

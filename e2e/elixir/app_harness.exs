@@ -43,9 +43,9 @@ app = Enum.reduce(fixtures, app, fn {fixture_id, fixture}, app_acc ->
     # Create handler closure that captures the expected values
     handler_fn = fn _request ->
       {
-      expected_status,
-      expected_body,
-      expected_headers
+        expected_status,
+        expected_body,
+        expected_headers
       }
     end
 
@@ -83,8 +83,8 @@ System.get_env("SPIKARD_SERVER_PORT", "8000") |> String.to_integer()
 
 # Configure and start the server
 config = struct(Spikard.ServerConfig, %{
-host: "127.0.0.1",
-port: effective_port
+  host: "127.0.0.1",
+  port: effective_port
 })
 
 app = Spikard.App.config(app, config)

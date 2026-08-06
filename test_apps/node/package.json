@@ -10,7 +10,7 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@spikard/node": "^0.17.0-rc.10",
+    "@spikard/node": "^0.17.0-rc.11",
     "@types/node": "^26.0.0",
     "vitest": "^4.1.10"
   }

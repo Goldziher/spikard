@@ -96,7 +96,7 @@ Codegen-first polyglot web toolkit on a Rust core: OpenAPI/AsyncAPI/GraphQL/JSON
 Add to `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/Goldziher/spikard", from: "0.17.0-rc.10")
+.package(url: "https://github.com/Goldziher/spikard", from: "0.17.0-rc.11")
 ```
 
 ### System Requirements

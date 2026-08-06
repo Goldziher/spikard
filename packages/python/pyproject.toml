@@ -4,7 +4,7 @@ requires = ["maturin>=1,<2"]
 
 [project]
 name = "spikard"
-version = "0.17.0rc10"
+version = "0.17.0rc11"
 description = "Codegen-first polyglot web toolkit with a Rust core and bindings for 14 languages"
 keywords = ["framework", "http", "polyglot", "rust", "web"]
 license = "MIT"

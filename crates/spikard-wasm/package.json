@@ -1,6 +1,6 @@
 {
   "name": "@spikard/node-wasm",
-  "version": "0.17.0-rc.10",
+  "version": "0.17.0-rc.11",
   "private": false,
   "description": "Codegen-first polyglot web toolkit with a Rust core and bindings for 14 languages",
   "license": "MIT",

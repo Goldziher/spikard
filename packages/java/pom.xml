@@ -8,7 +8,7 @@
 
   <groupId>dev.spikard</groupId>
   <artifactId>spikard</artifactId>
-  <version>0.17.0-rc.10</version>
+  <version>0.17.0-rc.11</version>
   <packaging>jar</packaging>
 
   <name>spikard</name>

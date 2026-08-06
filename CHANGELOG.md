@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0-rc.11] - 2026-08-06
+
+### Fixed
+
+- **codegen/protobuf**: the schema parser mishandled single-line message and enum
+  blocks (`message X { field = 1; }`). It seeded brace depth from the opening brace
+  only, ignoring a closing brace on the same line, so the block stayed "open" and
+  swallowed every following definition — dropping later messages and top-level enums,
+  and never parsing the inline field. It now counts both braces on the header and
+  parses inline bodies (message, enum, and service parsers).
+- **codegen/python**: generated Protobuf and AsyncAPI Python failed `ruff` import
+  sorting (`I001`). The Protobuf generator emitted `google.protobuf` after the
+  `TYPE_CHECKING` guard, and the AsyncAPI websocket/sse handler left a blank line
+  between `import msgspec` and `from spikard import ...`. Both import blocks are now
+  isort-clean.
+
+### Changed
+
+- **ci**: the Rust quality gate validates generated Python through `poly` rather than a
+  standalone `ruff`; CI Validate installs the Go, Ruby, Dart, and Elixir toolchains
+  that poly's whole-project hooks require; and the PHP binding lint runs with
+  `--no-workspace`.
+
 ## [0.17.0-rc.5] - 2026-07-27
 
 ### Fixed
