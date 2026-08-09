@@ -49,3 +49,10 @@ tasks:
     silent: false
     cmds:
       - task: validate:config
+
+  fixtures:parity:
+    desc: "Check fixtures/ and testing_data/ fixture trees for drift (not yet part of `task check` -- see script docstring)"
+    silent: false
+    cmds:
+      - cmd: python3 {{.SCRIPTS_DIR}}/ci/python/fixture_parity_check.py
+        ignore_error: false

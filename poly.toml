@@ -292,7 +292,7 @@ root = "packages/elixir"
 "packages/python/spikard/app.py" = ["PLR0917"]
 "packages/python/spikard/datastructures.py" = ["PLR0917"]
 "packages/python/spikard/schema.py" = ["RUF100"]
-"scripts/**/*.py" = ["RUF100"]
+"scripts/**/*.py" = ["RUF100", "T201"]
 "templates/readme/**" = ["MD057"]
 "test_apps/**" = ["comment", "doc-comment", "no-loss-of-precision"]
 
