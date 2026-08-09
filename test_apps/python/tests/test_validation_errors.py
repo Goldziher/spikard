@@ -598,7 +598,12 @@ def test_malformed_json_body() -> None:
     import json as _json  # noqa: PLC0415
 
     data = _json.loads(resp_body)
-    assert data == {"detail": "Invalid request format"}  # noqa: S101
+    assert data == {
+        "detail": "Invalid JSON in request body",
+        "status": 400,
+        "title": "Bad Request",
+        "type": "https://spikard.dev/errors/bad-request",
+    }  # noqa: S101
 
 
 def test_missing_required_body_field() -> None:

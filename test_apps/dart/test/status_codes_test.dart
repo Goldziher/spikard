@@ -345,7 +345,7 @@ void main() {
     final bodyStr = await ioResp.transform(utf8.decoder).join();
     expect(ioResp.statusCode, equals(400), reason: 'status code mismatch');
     final bodyJson = jsonDecode(bodyStr);
-    final expectedJson = jsonDecode('{"detail":"Invalid request format"}');
+    final expectedJson = jsonDecode('{"detail":"Invalid JSON in request body","status":400,"title":"Bad Request","type":"https://spikard.dev/errors/bad-request"}');
     expect(bodyJson, equals(expectedJson), reason: 'body mismatch');
   })));
 

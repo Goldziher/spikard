@@ -1798,7 +1798,12 @@ const _FIXTURES = {
   "400_bad_request_invalid_request" : {
     http : {
       expected_response : {
-        body : {detail : "Invalid request format"},
+        body : {
+          detail : "Invalid JSON in request body",
+          status : 400,
+          title : "Bad Request",
+          type : "https://spikard.dev/errors/bad-request",
+        },
         headers : {},
         status_code : 400,
       },
@@ -8064,7 +8069,12 @@ const _FIXTURES = {
   malformed_json_body : {
     http : {
       expected_response : {
-        body : {detail : "Invalid request format"},
+        body : {
+          detail : "Invalid JSON in request body",
+          status : 400,
+          title : "Bad Request",
+          type : "https://spikard.dev/errors/bad-request",
+        },
         headers : {},
         status_code : 400,
       },

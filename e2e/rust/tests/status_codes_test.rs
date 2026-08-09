@@ -327,7 +327,7 @@ async fn test_temporary_redirect_method_preserved() {
 #[tokio::test]
 async fn test_bad_request_invalid_request() {
     // Tests 400 Bad Request for malformed request
-    let expected_body = r#"{"detail":"Invalid request format"}"#.to_string();
+    let expected_body = r#"{"detail":"Invalid JSON in request body","status":400,"title":"Bad Request","type":"https://spikard.dev/errors/bad-request"}"#.to_string();
     let mut app = spikard::App::new();
     app.route(spikard::post("/items/"), move |_ctx: spikard::RequestContext| {
         let body = expected_body.clone();
@@ -348,8 +348,7 @@ async fn test_bad_request_invalid_request() {
         .bytes(bytes::Bytes::copy_from_slice("not valid json".as_bytes()))
         .await;
     assert_eq!(response.status_code().as_u16(), 400u16);
-    let expected_json: serde_json::Value =
-        serde_json::from_str(r#"{"detail":"Invalid request format"}"#).expect("fixture body is valid JSON");
+    let expected_json: serde_json::Value = serde_json::from_str(r#"{"detail":"Invalid JSON in request body","status":400,"title":"Bad Request","type":"https://spikard.dev/errors/bad-request"}"#).expect("fixture body is valid JSON");
     let actual_json: serde_json::Value = serde_json::from_str(&response.text()).expect("response body is valid JSON");
     assert_eq!(actual_json, expected_json);
 }

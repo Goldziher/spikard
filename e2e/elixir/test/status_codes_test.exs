@@ -183,7 +183,13 @@ defmodule E2e.StatusCodesTest do
 
       assert response.status == 400
       body_decoded = if is_binary(response.body), do: Jason.decode!(response.body), else: response.body
-      assert body_decoded == %{"detail" => "Invalid request format"}
+
+      assert body_decoded == %{
+               "detail" => "Invalid JSON in request body",
+               "status" => 400,
+               "title" => "Bad Request",
+               "type" => "https://spikard.dev/errors/bad-request"
+             }
     end
   end
 

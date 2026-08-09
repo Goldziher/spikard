@@ -527,7 +527,7 @@ func Test_MalformedJsonBody(t *testing.T) {
 	if err := json.Unmarshal(bodyBytes, &got); err != nil {
 		t.Fatalf("json unmarshal got: %v", err)
 	}
-	if err := json.Unmarshal([]byte(`{"detail":"Invalid request format"}`), &want); err != nil {
+	if err := json.Unmarshal([]byte(`{"detail":"Invalid JSON in request body","status":400,"title":"Bad Request","type":"https://spikard.dev/errors/bad-request"}`), &want); err != nil {
 		t.Fatalf("json unmarshal want: %v", err)
 	}
 	if !reflect.DeepEqual(got, want) {

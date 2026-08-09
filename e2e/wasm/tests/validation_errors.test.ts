@@ -382,7 +382,10 @@ describe("validation_errors", () => {
     expect(response.status).toBe(400);
     const data = await _alefE2eDecompressAndParseJson(response);
     expect(data).toEqual({
-      detail: "Invalid request format",
+      detail: "Invalid JSON in request body",
+      status: 400,
+      title: "Bad Request",
+      type: "https://spikard.dev/errors/bad-request",
     });
   });
 

@@ -209,7 +209,7 @@ fun testMalformedJsonBody() {
     .send(builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString())
     assertEquals(400, response.statusCode(), "status code mismatch")
     val bodyJson = MAPPER.readTree(response.body())
-    val expectedJson = MAPPER.readTree("{\"detail\":\"Invalid request format\"}")
+    val expectedJson = MAPPER.readTree("{\"detail\":\"Invalid JSON in request body\",\"status\":400,\"title\":\"Bad Request\",\"type\":\"https://spikard.dev/errors/bad-request\"}")
     assertEquals(expectedJson, bodyJson, "body mismatch")
 }
 

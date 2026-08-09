@@ -444,8 +444,10 @@ public class ValidationErrorsTest {
         builder.build(), java.net.http.HttpResponse.BodyHandlers.ofString());
     assertEquals(400, response.statusCode(), "status code mismatch");
     var bodyJson = MAPPER.readTree(response.body());
-    var expectedJson =
-        MAPPER.readTree("{\"detail\":\"Invalid request format\"}");
+    var expectedJson = MAPPER.readTree(
+        "{\"detail\":\"Invalid JSON in request "
+        + "body\",\"status\":400,\"title\":\"Bad "
+        + "Request\",\"type\":\"https://spikard.dev/errors/bad-request\"}");
     assertEquals(expectedJson, bodyJson, "body mismatch");
   }
 

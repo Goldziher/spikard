@@ -181,7 +181,15 @@ final class StatusCodesTest extends TestCase
         ]);
         $this->assertEquals(400, $response->getStatusCode());
         $body = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
-        $this->assertEquals(['detail' => 'Invalid request format'], $body);
+        $this->assertEquals(
+            [
+                'detail' => 'Invalid JSON in request body',
+                'status' => 400,
+                'title' => 'Bad Request',
+                'type' => 'https://spikard.dev/errors/bad-request',
+            ],
+            $body,
+        );
     }
 
     /** Tests 404 Not Found for non-existent resource */

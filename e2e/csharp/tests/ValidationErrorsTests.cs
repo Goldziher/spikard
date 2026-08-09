@@ -397,9 +397,12 @@ public class ValidationErrorsTests {
     Assert.Equal(400, (int)response.StatusCode);
     var bodyText = await response.Content.ReadAsStringAsync();
     var body = JsonDocument.Parse(bodyText).RootElement;
-    var expectedBody =
-        JsonDocument.Parse("{\"detail\":\"Invalid request format\"}")
-            .RootElement;
+    var expectedBody = JsonDocument
+                           .Parse("{\"detail\":\"Invalid JSON in request " +
+                                  "body\",\"status\":400,\"title\":\"Bad " +
+                                  "Request\",\"type\":\"https://spikard.dev/" +
+                                  "errors/bad-request\"}")
+                           .RootElement;
     Assert.Equal(expectedBody.GetRawText(), body.GetRawText());
   }
 

@@ -431,7 +431,12 @@ def test_bad_request_invalid_request() -> None:
     import json as _json  # noqa: PLC0415
 
     data = _json.loads(resp_body)
-    assert data == {"detail": "Invalid request format"}  # noqa: S101
+    assert data == {
+        "detail": "Invalid JSON in request body",
+        "status": 400,
+        "title": "Bad Request",
+        "type": "https://spikard.dev/errors/bad-request",
+    }  # noqa: S101
 
 
 def test_not_found_resource_not_found() -> None:

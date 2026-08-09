@@ -274,7 +274,16 @@ RSpec.describe "status_codes" do
       response = http.request(_req)
       expect(response.code.to_i).to(eq(400))
       _body = response.body && !response.body.empty? ? JSON.parse(response.body) : nil
-      expect(_body).to(eq({"detail" => "Invalid request format"}))
+      expect(_body).to(
+        eq(
+          {
+            "detail" => "Invalid JSON in request body",
+            "status" => 400,
+            "title" => "Bad Request",
+            "type" => "https://spikard.dev/errors/bad-request"
+          }
+        )
+      )
     end
   end
 
