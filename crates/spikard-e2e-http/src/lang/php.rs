@@ -56,12 +56,22 @@ fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup], pkg_path:
                 continue;
             }
             let http_data = fixture.http.as_ref().unwrap();
+            // Forward the fixture's middleware block (compression/body_limit/
+            // request_timeout/cors) so the template can wire real RouteBuilder calls
+            // instead of only ever returning the fixture's expected response. ~keep
+            let middleware_json = http_data
+                .handler
+                .middleware
+                .as_ref()
+                .and_then(|m| serde_json::to_value(m).ok())
+                .unwrap_or(serde_json::Value::Null);
             let fixture_json = json!({
                 "http": {
                     "handler": {
                         "route": &http_data.handler.route,
                         "method": &http_data.handler.method,
                         "body_schema": http_data.handler.body_schema.clone(),
+                        "middleware": middleware_json,
                     },
                     "request": {
                         "path": &http_data.request.path,
@@ -119,7 +129,12 @@ fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup], pkg_path:
         route_builder_import => route_builder_import,
         route_builder_class => "RouteBuilder",
         register_route_method => register_route_method.as_str(),
-        route_builder_schema_setter => body_schema_setter.as_deref().unwrap_or("request_schema_json"),
+        // ext-php-rs `#[php_impl]` renames methods to camelCase by default
+        // (RenameRule::Camel), so the PHP-visible name of `request_schema_json` is
+        // `requestSchemaJson`. The snake_case spelling never raised an error only
+        // because no PHP e2e test reads SUT_URL — they all hit the mock server, so
+        // the harness's routes are never exercised. ~keep
+        route_builder_schema_setter => body_schema_setter.as_deref().unwrap_or("requestSchemaJson"),
         method_enum_import => method_enum_import,
         method_enum_class => method_enum.as_deref().unwrap_or("Method"),
         run_method => run_method.as_deref().unwrap_or("run"),

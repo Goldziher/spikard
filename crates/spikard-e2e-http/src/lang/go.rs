@@ -104,7 +104,10 @@ fn render_harness_main(_e2e_config: &E2eConfig, groups: &[FixtureGroup], go_modu
     let harness_template = include_str!("../../templates/go/harness_main.go.jinja");
     env.add_template("harness", harness_template).ok();
 
-    let import_alias = go_module_path.rsplit('/').next().unwrap_or("pkg").to_string();
+    // Sanitize the last path segment into a legal Go import alias: a segment that is a
+    // reserved keyword (e.g. `.../packages/go` -> `go`) would fail to compile as
+    // `import go "..."`. `go_ident` escapes it (`go` -> `go_`). ~keep
+    let import_alias = alef::core::keywords::go_ident(go_module_path.rsplit('/').next().unwrap_or("pkg"));
 
     let template = env.get_template("harness").unwrap();
     let output = template

@@ -1601,7 +1601,14 @@ jobs:
           git config user.name "spikard-bot"
           git config user.email "bot@spikard.dev"
           git add Package.swift
-          git commit -m "chore(swift): update Package.swift with checksum for v${{ needs.prepare.outputs.version }}"
+          # ~keep A re-run of an already-published tag checks out a Package.swift whose placeholders
+          # ~keep were already substituted, so `git add` stages nothing and a bare `git commit` exits 1,
+          # ~keep aborting the job before the tag/branch pushes below. Skip the commit instead.
+          if git diff --cached --quiet; then
+            echo "Package.swift already carries this version and checksum; skipping commit"
+          else
+            git commit -m "chore(swift): update Package.swift with checksum for v${{ needs.prepare.outputs.version }}"
+          fi
           git tag -f "${{ needs.prepare.outputs.tag }}"
           git push origin -f "refs/tags/${{ needs.prepare.outputs.tag }}"
           # ~keep Also publish the checksummed commit to a release/swift/<version> branch. The

@@ -60,6 +60,14 @@ fn render_app_harness(groups: &[FixtureGroup], e2e_config: &E2eConfig, pkg_name:
                 } else {
                     handler_obj.insert("body_schema".to_string(), serde_json::Value::Null);
                 }
+                // Forward the fixture's middleware block so the template can wire real
+                // RouteBuilder calls (cors/compression/bodyLimit/requestTimeout) instead
+                // of only ever returning the fixture's expected response. ~keep
+                if let Some(middleware) = &http.handler.middleware
+                    && let Ok(middleware_json) = serde_json::to_value(middleware)
+                {
+                    handler_obj.insert("middleware".to_string(), middleware_json);
+                }
                 http_obj.insert("handler".to_string(), serde_json::Value::Object(handler_obj));
 
                 let mut response_obj = serde_json::Map::new();

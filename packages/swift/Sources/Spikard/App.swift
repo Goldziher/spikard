@@ -172,127 +172,226 @@ public final class App {
     )
     guard result == 0 else { throw ServiceError.registrationFailed }
   }
+  // Per-route CORS/compression apply to the `RouteBuilder` before registration, mirroring
+  // `route_builder.cors(...)`/`.compression(...)` chains in the other bindings; the Rust
+  // core enforces the policy, so this is the single hook all verb methods below share
+  // instead of the e2e harness re-implementing CORS/compression in Swift. ~keep
+  private func applyRouteMiddleware(
+    _ builder: RustBridge.RouteBuilder,
+    cors: CorsConfig?,
+    compression: CompressionConfig?
+  ) throws -> RustBridge.RouteBuilder {
+    var result = builder
+    if let cors = cors {
+      result = RustBridge.routeBuilderCors(result, try cors.intoRust())
+    }
+    if let compression = compression {
+      result = RustBridge.routeBuilderCompression(result, try compression.intoRust())
+    }
+    return result
+  }
   /// Register a GET route at the given path.
-  public func get(_ handler: @escaping (String) -> String, path: String) throws {
+  public func get(
+    _ handler: @escaping (String) -> String,
+    path: String,
+    cors: CorsConfig? = nil,
+    compression: CompressionConfig? = nil
+  ) throws {
     // Construct the wrapper metadata param (e.g. RouteBuilder) from the fixed enum arg
     // and any free args. swift-bridge generates enums as opaque classes — there are no
     // static member constants (e.g. `RustBridge.Method.Get` is invalid). Instead,
     // each opaque enum type has a `<type>FromJson` factory that parses a serde JSON
     // string into an opaque instance. The wrapper constructor factory `routeBuilderNew`
     // is a bridge-declared free function that calls the Rust wrapper's `new` method.
-    let __builder = RustBridge.routeBuilderNew(try methodFromJson("\"Get\""), path)
+    let __builder = try applyRouteMiddleware(
+      RustBridge.routeBuilderNew(try methodFromJson("\"Get\""), path),
+      cors: cors,
+      compression: compression
+    )
     // Delegate to the base registration method, passing the constructed wrapper as the
     // `builder` metadata param. This reuses all the handler boxing and
     // trampoline logic from the base method without duplicating it.
     try route(handler, builder: __builder)
   }
   /// Register a POST route at the given path.
-  public func post(_ handler: @escaping (String) -> String, path: String) throws {
+  public func post(
+    _ handler: @escaping (String) -> String,
+    path: String,
+    cors: CorsConfig? = nil,
+    compression: CompressionConfig? = nil
+  ) throws {
     // Construct the wrapper metadata param (e.g. RouteBuilder) from the fixed enum arg
     // and any free args. swift-bridge generates enums as opaque classes — there are no
     // static member constants (e.g. `RustBridge.Method.Get` is invalid). Instead,
     // each opaque enum type has a `<type>FromJson` factory that parses a serde JSON
     // string into an opaque instance. The wrapper constructor factory `routeBuilderNew`
     // is a bridge-declared free function that calls the Rust wrapper's `new` method.
-    let __builder = RustBridge.routeBuilderNew(try methodFromJson("\"Post\""), path)
+    let __builder = try applyRouteMiddleware(
+      RustBridge.routeBuilderNew(try methodFromJson("\"Post\""), path),
+      cors: cors,
+      compression: compression
+    )
     // Delegate to the base registration method, passing the constructed wrapper as the
     // `builder` metadata param. This reuses all the handler boxing and
     // trampoline logic from the base method without duplicating it.
     try route(handler, builder: __builder)
   }
   /// Register a PUT route at the given path.
-  public func put(_ handler: @escaping (String) -> String, path: String) throws {
+  public func put(
+    _ handler: @escaping (String) -> String,
+    path: String,
+    cors: CorsConfig? = nil,
+    compression: CompressionConfig? = nil
+  ) throws {
     // Construct the wrapper metadata param (e.g. RouteBuilder) from the fixed enum arg
     // and any free args. swift-bridge generates enums as opaque classes — there are no
     // static member constants (e.g. `RustBridge.Method.Get` is invalid). Instead,
     // each opaque enum type has a `<type>FromJson` factory that parses a serde JSON
     // string into an opaque instance. The wrapper constructor factory `routeBuilderNew`
     // is a bridge-declared free function that calls the Rust wrapper's `new` method.
-    let __builder = RustBridge.routeBuilderNew(try methodFromJson("\"Put\""), path)
+    let __builder = try applyRouteMiddleware(
+      RustBridge.routeBuilderNew(try methodFromJson("\"Put\""), path),
+      cors: cors,
+      compression: compression
+    )
     // Delegate to the base registration method, passing the constructed wrapper as the
     // `builder` metadata param. This reuses all the handler boxing and
     // trampoline logic from the base method without duplicating it.
     try route(handler, builder: __builder)
   }
   /// Register a PATCH route at the given path.
-  public func patch(_ handler: @escaping (String) -> String, path: String) throws {
+  public func patch(
+    _ handler: @escaping (String) -> String,
+    path: String,
+    cors: CorsConfig? = nil,
+    compression: CompressionConfig? = nil
+  ) throws {
     // Construct the wrapper metadata param (e.g. RouteBuilder) from the fixed enum arg
     // and any free args. swift-bridge generates enums as opaque classes — there are no
     // static member constants (e.g. `RustBridge.Method.Get` is invalid). Instead,
     // each opaque enum type has a `<type>FromJson` factory that parses a serde JSON
     // string into an opaque instance. The wrapper constructor factory `routeBuilderNew`
     // is a bridge-declared free function that calls the Rust wrapper's `new` method.
-    let __builder = RustBridge.routeBuilderNew(try methodFromJson("\"Patch\""), path)
+    let __builder = try applyRouteMiddleware(
+      RustBridge.routeBuilderNew(try methodFromJson("\"Patch\""), path),
+      cors: cors,
+      compression: compression
+    )
     // Delegate to the base registration method, passing the constructed wrapper as the
     // `builder` metadata param. This reuses all the handler boxing and
     // trampoline logic from the base method without duplicating it.
     try route(handler, builder: __builder)
   }
   /// Register a DELETE route at the given path.
-  public func delete(_ handler: @escaping (String) -> String, path: String) throws {
+  public func delete(
+    _ handler: @escaping (String) -> String,
+    path: String,
+    cors: CorsConfig? = nil,
+    compression: CompressionConfig? = nil
+  ) throws {
     // Construct the wrapper metadata param (e.g. RouteBuilder) from the fixed enum arg
     // and any free args. swift-bridge generates enums as opaque classes — there are no
     // static member constants (e.g. `RustBridge.Method.Get` is invalid). Instead,
     // each opaque enum type has a `<type>FromJson` factory that parses a serde JSON
     // string into an opaque instance. The wrapper constructor factory `routeBuilderNew`
     // is a bridge-declared free function that calls the Rust wrapper's `new` method.
-    let __builder = RustBridge.routeBuilderNew(try methodFromJson("\"Delete\""), path)
+    let __builder = try applyRouteMiddleware(
+      RustBridge.routeBuilderNew(try methodFromJson("\"Delete\""), path),
+      cors: cors,
+      compression: compression
+    )
     // Delegate to the base registration method, passing the constructed wrapper as the
     // `builder` metadata param. This reuses all the handler boxing and
     // trampoline logic from the base method without duplicating it.
     try route(handler, builder: __builder)
   }
   /// Register a HEAD route at the given path.
-  public func head(_ handler: @escaping (String) -> String, path: String) throws {
+  public func head(
+    _ handler: @escaping (String) -> String,
+    path: String,
+    cors: CorsConfig? = nil,
+    compression: CompressionConfig? = nil
+  ) throws {
     // Construct the wrapper metadata param (e.g. RouteBuilder) from the fixed enum arg
     // and any free args. swift-bridge generates enums as opaque classes — there are no
     // static member constants (e.g. `RustBridge.Method.Get` is invalid). Instead,
     // each opaque enum type has a `<type>FromJson` factory that parses a serde JSON
     // string into an opaque instance. The wrapper constructor factory `routeBuilderNew`
     // is a bridge-declared free function that calls the Rust wrapper's `new` method.
-    let __builder = RustBridge.routeBuilderNew(try methodFromJson("\"Head\""), path)
+    let __builder = try applyRouteMiddleware(
+      RustBridge.routeBuilderNew(try methodFromJson("\"Head\""), path),
+      cors: cors,
+      compression: compression
+    )
     // Delegate to the base registration method, passing the constructed wrapper as the
     // `builder` metadata param. This reuses all the handler boxing and
     // trampoline logic from the base method without duplicating it.
     try route(handler, builder: __builder)
   }
   /// Register an OPTIONS route at the given path.
-  public func options(_ handler: @escaping (String) -> String, path: String) throws {
+  public func options(
+    _ handler: @escaping (String) -> String,
+    path: String,
+    cors: CorsConfig? = nil,
+    compression: CompressionConfig? = nil
+  ) throws {
     // Construct the wrapper metadata param (e.g. RouteBuilder) from the fixed enum arg
     // and any free args. swift-bridge generates enums as opaque classes — there are no
     // static member constants (e.g. `RustBridge.Method.Get` is invalid). Instead,
     // each opaque enum type has a `<type>FromJson` factory that parses a serde JSON
     // string into an opaque instance. The wrapper constructor factory `routeBuilderNew`
     // is a bridge-declared free function that calls the Rust wrapper's `new` method.
-    let __builder = RustBridge.routeBuilderNew(try methodFromJson("\"Options\""), path)
+    let __builder = try applyRouteMiddleware(
+      RustBridge.routeBuilderNew(try methodFromJson("\"Options\""), path),
+      cors: cors,
+      compression: compression
+    )
     // Delegate to the base registration method, passing the constructed wrapper as the
     // `builder` metadata param. This reuses all the handler boxing and
     // trampoline logic from the base method without duplicating it.
     try route(handler, builder: __builder)
   }
   /// Register a CONNECT route at the given path.
-  public func connect(_ handler: @escaping (String) -> String, path: String) throws {
+  public func connect(
+    _ handler: @escaping (String) -> String,
+    path: String,
+    cors: CorsConfig? = nil,
+    compression: CompressionConfig? = nil
+  ) throws {
     // Construct the wrapper metadata param (e.g. RouteBuilder) from the fixed enum arg
     // and any free args. swift-bridge generates enums as opaque classes — there are no
     // static member constants (e.g. `RustBridge.Method.Get` is invalid). Instead,
     // each opaque enum type has a `<type>FromJson` factory that parses a serde JSON
     // string into an opaque instance. The wrapper constructor factory `routeBuilderNew`
     // is a bridge-declared free function that calls the Rust wrapper's `new` method.
-    let __builder = RustBridge.routeBuilderNew(try methodFromJson("\"Connect\""), path)
+    let __builder = try applyRouteMiddleware(
+      RustBridge.routeBuilderNew(try methodFromJson("\"Connect\""), path),
+      cors: cors,
+      compression: compression
+    )
     // Delegate to the base registration method, passing the constructed wrapper as the
     // `builder` metadata param. This reuses all the handler boxing and
     // trampoline logic from the base method without duplicating it.
     try route(handler, builder: __builder)
   }
   /// Register a TRACE route at the given path.
-  public func trace(_ handler: @escaping (String) -> String, path: String) throws {
+  public func trace(
+    _ handler: @escaping (String) -> String,
+    path: String,
+    cors: CorsConfig? = nil,
+    compression: CompressionConfig? = nil
+  ) throws {
     // Construct the wrapper metadata param (e.g. RouteBuilder) from the fixed enum arg
     // and any free args. swift-bridge generates enums as opaque classes — there are no
     // static member constants (e.g. `RustBridge.Method.Get` is invalid). Instead,
     // each opaque enum type has a `<type>FromJson` factory that parses a serde JSON
     // string into an opaque instance. The wrapper constructor factory `routeBuilderNew`
     // is a bridge-declared free function that calls the Rust wrapper's `new` method.
-    let __builder = RustBridge.routeBuilderNew(try methodFromJson("\"Trace\""), path)
+    let __builder = try applyRouteMiddleware(
+      RustBridge.routeBuilderNew(try methodFromJson("\"Trace\""), path),
+      cors: cors,
+      compression: compression
+    )
     // Delegate to the base registration method, passing the constructed wrapper as the
     // `builder` metadata param. This reuses all the handler boxing and
     // trampoline logic from the base method without duplicating it.

@@ -27,6 +27,7 @@
 Code.ensure_loaded!({{ app_class }})
 Code.ensure_loaded!({{ route_builder_class }})
 Code.ensure_loaded!({{ method_enum_class }})
+Code.ensure_loaded!({{ cors_config_class }})
 {% if not skip_app_config -%}
 Code.ensure_loaded!({{ server_config_class }})
 {% endif %}
@@ -40,6 +41,7 @@ fixtures_json = {{ fixtures_json }}
 alias {{ app_class }}
 alias {{ route_builder_class }}
 alias {{ method_enum_class }}
+alias {{ cors_config_class }}
 {% if not skip_app_config -%}
 alias {{ server_config_class }}
 {% endif %}
@@ -63,12 +65,17 @@ app = Enum.reduce(fixtures, app, fn {fixture_id, fixture}, app_acc ->
     expected_body = Map.get(expected, "body")
     expected_headers = Map.get(expected, "headers") || %{}
 
-    # Create handler closure that captures the expected values
+    # Create handler closure that captures the expected values.
+    # The response must be a map with the field names the NIF bridge decodes
+    # into `spikard::Response` (status_code/content/headers) — a bare
+    # `{status, body, headers}` tuple round-trips through Jason.encode! without
+    # error (tuples just aren't a JSON type Jason emits meaningfully) and then
+    # fails Rust-side deserialization with "missing field `status_code`".
     handler_fn = fn _request ->
-      {
-        expected_status,
-        expected_body,
-        expected_headers
+      %{
+        "status_code" => expected_status,
+        "content" => expected_body,
+        "headers" => expected_headers
       }
     end
 
@@ -93,8 +100,136 @@ app = Enum.reduce(fixtures, app, fn {fixture_id, fixture}, app_acc ->
         {{ route_builder_class }}.{{ route_builder_schema_setter }}(builder, body_schema_json)
       end
 
+    # Thread handler middleware through to the RouteBuilder.
+    # `middleware` is a {name => config} map; the dispatch table maps
+    # middleware names to their builder function so new middlewares can be
+    # added without changing this loop.
+    middleware = Map.get(handler, "middleware") || %{}
+
+    middleware_dispatch = %{
+      "cors" => &{{ route_builder_class }}.cors/2
+    }
+
+    builder =
+      Enum.reduce(middleware, builder, fn {mw_name, mw_config}, builder_acc ->
+        cond do
+          is_nil(mw_config) ->
+            builder_acc
+
+          Map.has_key?(middleware_dispatch, mw_name) ->
+            builder_fn = Map.fetch!(middleware_dispatch, mw_name)
+
+            case mw_name do
+              "cors" ->
+                cors_config =
+                  struct({{ cors_config_class }}, %{
+                    allowed_origins: Map.get(mw_config, "allowed_origins", []),
+                    allowed_methods: Map.get(mw_config, "allowed_methods", []),
+                    allowed_headers: Map.get(mw_config, "allowed_headers", []),
+                    expose_headers: Map.get(mw_config, "expose_headers"),
+                    max_age: Map.get(mw_config, "max_age"),
+                    allow_credentials: Map.get(mw_config, "allow_credentials")
+                  })
+
+                # The NIF bridge (routebuilder_cors) takes the CORS config as a
+                # JSON-encoded string, not the struct directly.
+                builder_fn.(builder_acc, Jason.encode!(cors_config))
+
+              _ ->
+                builder_acc
+            end
+
+          true ->
+            builder_acc
+        end
+      end)
+
     # Register the route with the handler
-    {{ app_class }}.{{ register_route_method }}(app_acc, builder, handler_fn)
+    app_acc = {{ app_class }}.{{ register_route_method }}(app_acc, builder, handler_fn)
+
+    # If the fixture has CORS middleware configured, register an OPTIONS preflight handler.
+    cors_middleware = Map.get(middleware, "cors")
+
+    if is_nil(cors_middleware) do
+      app_acc
+    else
+      # Case-insensitive header lookup helper (HTTP headers are case-insensitive).
+      get_header_value = fn headers_map, name ->
+        headers_map = headers_map || %{}
+
+        case Map.get(headers_map, name) do
+          nil ->
+            lower_name = String.downcase(name)
+
+            headers_map
+            |> Enum.find(fn {key, _value} -> String.downcase(key) == lower_name end)
+            |> case do
+              {_key, value} -> value || ""
+              nil -> ""
+            end
+
+          value ->
+            value || ""
+        end
+      end
+
+      cors_handler_fn = fn request ->
+        # `request` is a `%Spikard.Conn{}` struct (atom keys), not a plain
+        # string-keyed map, so headers are read via the `headers` field.
+        headers_map = Map.get(request, :headers) || %{}
+        origin = get_header_value.(headers_map, "origin")
+        request_method = get_header_value.(headers_map, "access-control-request-method")
+        request_headers = get_header_value.(headers_map, "access-control-request-headers")
+
+        allowed_origins = Map.get(cors_middleware, "allowed_origins") || []
+        allowed_methods = Map.get(cors_middleware, "allowed_methods") || []
+        allowed_headers = Map.get(cors_middleware, "allowed_headers") || []
+
+        is_origin_allowed = origin in allowed_origins
+
+        is_method_allowed =
+          request_method == "" or
+            String.upcase(request_method) in Enum.map(allowed_methods, &String.upcase/1)
+
+        headers_array =
+          if request_headers == "" do
+            []
+          else
+            request_headers |> String.split(",") |> Enum.map(&(&1 |> String.trim() |> String.upcase()))
+          end
+
+        allowed_headers_upcase = Enum.map(allowed_headers, &String.upcase/1)
+        are_headers_allowed = Enum.all?(headers_array, fn h -> h in allowed_headers_upcase end)
+
+        if not is_origin_allowed or not is_method_allowed or not are_headers_allowed do
+          %{"status_code" => 403, "content" => nil, "headers" => %{}}
+        else
+          cors_headers = %{
+            "Access-Control-Allow-Origin" => origin,
+            "Access-Control-Allow-Methods" =>
+              if(request_method == "", do: Enum.join(allowed_methods, ", "), else: request_method),
+            "Access-Control-Allow-Headers" =>
+              if(request_headers == "", do: Enum.join(allowed_headers, ", "), else: request_headers)
+          }
+
+          max_age = Map.get(cors_middleware, "max_age")
+
+          cors_headers =
+            if is_nil(max_age) do
+              cors_headers
+            else
+              Map.put(cors_headers, "Access-Control-Max-Age", to_string(max_age))
+            end
+
+          %{"status_code" => 204, "content" => nil, "headers" => cors_headers}
+        end
+      end
+
+      options_method = apply({{ method_enum_class }}, :options, [])
+      options_builder = {{ route_builder_class }}.new(options_method, full_route)
+
+      {{ app_class }}.{{ register_route_method }}(app_acc, options_builder, cors_handler_fn)
+    end
   end
 end)
 

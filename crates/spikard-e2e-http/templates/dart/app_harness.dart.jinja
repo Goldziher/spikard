@@ -40,9 +40,18 @@ Future<void> main() async {
     final expectedBody = expected['body'];
     final expectedHeaders = (expected['headers'] as Map<String, dynamic>? ?? {}).cast<String, String>();
 
+    // request_timeout fixtures carry a sleep_ms directive: the handler must actually
+    // sleep so the server's real timeout layer either fires (slow) or does not (fast).
+    final middleware = handler['middleware'] as Map<String, dynamic>?;
+    final requestTimeoutMw = middleware?['request_timeout'] as Map<String, dynamic>?;
+    final sleepMs = (requestTimeoutMw?['sleep_ms'] as num?)?.toInt() ?? 0;
+
     // Build handler function that returns the expected response.
-    String Function(String) makeHandler(int status, dynamic body, Map<String, String> headers) {
-      return (String _requestJson) {
+    Future<String> Function(String) makeHandler(int status, dynamic body, Map<String, String> headers) {
+      return (String _requestJson) async {
+        if (sleepMs > 0) {
+          await Future<void>.delayed(Duration(milliseconds: sleepMs));
+        }
         // Return the expected response as JSON with status_code, body, and headers.
         return jsonEncode({
           'status_code': status,
@@ -64,6 +73,46 @@ Future<void> main() async {
 
     if (bodySchema != null && bodySchema.isNotEmpty) {
       builder = await builder.requestSchemaJson(bodySchema);
+    }
+
+    // Wire compression/body_limit/request_timeout/cors through to the RouteBuilder so
+    // the real Rust-core middleware runs, instead of the handler unconditionally
+    // returning the fixture's expected response regardless of middleware behavior.
+    final compressionMw = middleware?['compression'] as Map<String, dynamic>?;
+    if (compressionMw != null) {
+      builder = await builder.compression(
+        compression: CompressionConfig(
+          gzip: compressionMw['gzip'] as bool? ?? false,
+          brotli: compressionMw['brotli'] as bool? ?? false,
+          minSize: (compressionMw['min_size'] as num?)?.toInt() ?? 0,
+          quality: (compressionMw['quality'] as num?)?.toInt() ?? 0,
+        ),
+      );
+    }
+
+    final bodyLimitMw = middleware?['body_limit'] as Map<String, dynamic>?;
+    final maxBytes = bodyLimitMw?['max_bytes'] as num?;
+    if (maxBytes != null) {
+      builder = await builder.bodyLimit(maxBytes: maxBytes.toInt());
+    }
+
+    final requestTimeoutSeconds = requestTimeoutMw?['seconds'] as num?;
+    if (requestTimeoutSeconds != null) {
+      builder = await builder.requestTimeout(seconds: requestTimeoutSeconds.toInt());
+    }
+
+    final corsMw = middleware?['cors'] as Map<String, dynamic>?;
+    if (corsMw != null) {
+      builder = await builder.cors(
+        cors: CorsConfig(
+          allowedOrigins: ((corsMw['allow_origins'] as List<dynamic>?) ?? const []).cast<String>(),
+          allowedMethods: ((corsMw['allow_methods'] as List<dynamic>?) ?? const []).cast<String>(),
+          allowedHeaders: ((corsMw['allow_headers'] as List<dynamic>?) ?? const []).cast<String>(),
+          exposeHeaders: (corsMw['expose_headers'] as List<dynamic>?)?.cast<String>(),
+          maxAge: (corsMw['max_age'] as num?)?.toInt(),
+          allowCredentials: corsMw['allow_credentials'] as bool?,
+        ),
+      );
     }
 
     // Register the route with the handler.

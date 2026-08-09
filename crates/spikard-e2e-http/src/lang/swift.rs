@@ -13,10 +13,11 @@
 use alef::GeneratedFile;
 use alef::core::hash::{self, CommentStyle};
 use alef::e2e::config::E2eConfig;
-use alef::e2e::fixture::FixtureGroup;
+use alef::e2e::fixture::{FixtureGroup, HttpMiddleware};
 use anyhow::Result;
 use heck::ToUpperCamelCase;
 use minijinja::{Environment, context};
+use serde_json::json;
 use std::path::PathBuf;
 
 /// Build the private template environment holding the Swift HTTP templates.
@@ -39,6 +40,47 @@ fn render(env: &Environment<'static>, name: &str, ctx: minijinja::Value) -> Stri
         .expect("template must exist")
         .render(ctx)
         .unwrap_or_default()
+}
+
+/// Convert the fixture's `HttpMiddleware` into a `serde_json::Value` suitable
+/// for embedding in the harness fixture JSON.
+///
+/// Field names are normalised to match each binding's `from_json()` contract:
+/// CORS `allow_*` → `allowed_*` to match `RustBridge.corsConfigFromJson()`.
+/// Mirrors `python.rs::build_middleware_value`.
+fn build_middleware_value(middleware: Option<&HttpMiddleware>) -> serde_json::Value {
+    let Some(mw) = middleware else {
+        return serde_json::Value::Null;
+    };
+
+    let mut map = serde_json::Map::new();
+
+    if let Some(cors) = &mw.cors {
+        let mut cors_map = serde_json::Map::new();
+        cors_map.insert("allowed_origins".to_string(), json!(cors.allow_origins));
+        cors_map.insert("allowed_methods".to_string(), json!(cors.allow_methods));
+        cors_map.insert("allowed_headers".to_string(), json!(cors.allow_headers));
+        if !cors.expose_headers.is_empty() {
+            cors_map.insert("expose_headers".to_string(), json!(cors.expose_headers));
+        }
+        if let Some(max_age) = cors.max_age {
+            cors_map.insert("max_age".to_string(), json!(max_age));
+        }
+        if cors.allow_credentials {
+            cors_map.insert("allow_credentials".to_string(), json!(true));
+        }
+        map.insert("cors".to_string(), serde_json::Value::Object(cors_map));
+    }
+
+    if let Some(compression) = &mw.compression {
+        map.insert("compression".to_string(), compression.clone());
+    }
+
+    if map.is_empty() {
+        serde_json::Value::Null
+    } else {
+        serde_json::Value::Object(map)
+    }
 }
 
 /// Split a string into UTF-8-safe chunks of max ~30000 bytes.
@@ -91,19 +133,30 @@ fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup], module_na
                 continue;
             }
             let http_data = &fixture.http.as_ref().unwrap();
+            let middleware_value = build_middleware_value(http_data.handler.middleware.as_ref());
+            // Serialize the expected body to its own JSON *string* rather than embedding it as a
+            // nested object. Foundation's `JSONSerialization` collapses whole-number `Double`s
+            // (e.g. `5.0`) to integer literals (`5`) on decode, before the harness ever gets a
+            // chance to re-encode them — round-tripping through `[String: Any]` loses the
+            // distinction permanently. Carrying the body as a pre-formatted string (serde_json
+            // keeps `5.0` as `"5.0"`) lets the template splice it verbatim into the response
+            // envelope instead of reconstructing it from a lossy `Any`. ~keep
+            let body_json =
+                serde_json::to_string(&http_data.expected_response.body).unwrap_or_else(|_| "null".to_string());
             let fixture_json = serde_json::json!({
                 "http": {
                     "handler": {
                         "route": &http_data.handler.route,
                         "method": &http_data.handler.method,
                         "body_schema": http_data.handler.body_schema.clone(),
+                        "middleware": middleware_value,
                     },
                     "request": {
                         "path": &http_data.request.path,
                     },
                     "expected_response": {
                         "status_code": http_data.expected_response.status_code,
-                        "body": &http_data.expected_response.body,
+                        "body_json": body_json,
                         "headers": &http_data.expected_response.headers,
                     }
                 }

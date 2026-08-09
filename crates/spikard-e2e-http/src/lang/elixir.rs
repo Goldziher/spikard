@@ -20,8 +20,59 @@ use alef::GeneratedFile;
 use alef::ResolvedCrateConfig;
 use alef::core::hash::{self, CommentStyle};
 use alef::e2e::config::E2eConfig;
-use alef::e2e::fixture::FixtureGroup;
+use alef::e2e::fixture::{FixtureGroup, HttpMiddleware};
 use minijinja::{Environment, context};
+use serde_json::json;
+
+/// Convert the fixture's `HttpMiddleware` into a `serde_json::Value` suitable
+/// for embedding in the harness fixture JSON.
+///
+/// Field names are normalised to match the Elixir binding's config struct
+/// contract: CORS `allow_*` → `allowed_*` to match `Spikard.CorsConfig`.
+/// Mirrors `python.rs::build_middleware_value`.
+fn build_middleware_value(middleware: Option<&HttpMiddleware>) -> serde_json::Value {
+    let Some(mw) = middleware else {
+        return serde_json::Value::Null;
+    };
+
+    let mut map = serde_json::Map::new();
+
+    if let Some(cors) = &mw.cors {
+        let mut cors_map = serde_json::Map::new();
+        cors_map.insert("allowed_origins".to_string(), json!(cors.allow_origins));
+        cors_map.insert("allowed_methods".to_string(), json!(cors.allow_methods));
+        cors_map.insert("allowed_headers".to_string(), json!(cors.allow_headers));
+        if !cors.expose_headers.is_empty() {
+            cors_map.insert("expose_headers".to_string(), json!(cors.expose_headers));
+        }
+        if let Some(max_age) = cors.max_age {
+            cors_map.insert("max_age".to_string(), json!(max_age));
+        }
+        if cors.allow_credentials {
+            cors_map.insert("allow_credentials".to_string(), json!(true));
+        }
+        map.insert("cors".to_string(), serde_json::Value::Object(cors_map));
+    }
+
+    for (key, value) in [
+        ("jwt_auth", &mw.jwt_auth),
+        ("api_key_auth", &mw.api_key_auth),
+        ("compression", &mw.compression),
+        ("rate_limit", &mw.rate_limit),
+        ("request_timeout", &mw.request_timeout),
+        ("request_id", &mw.request_id),
+    ] {
+        if let Some(v) = value {
+            map.insert(key.to_string(), v.clone());
+        }
+    }
+
+    if map.is_empty() {
+        serde_json::Value::Null
+    } else {
+        serde_json::Value::Object(map)
+    }
+}
 
 /// Build the private template environment holding the Elixir HTTP templates.
 fn make_env() -> Environment<'static> {
@@ -101,12 +152,14 @@ pub fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup], confi
                 continue;
             }
             let http_data = fixture.http.as_ref().unwrap();
+            let middleware_value = build_middleware_value(http_data.handler.middleware.as_ref());
             let fixture_json = serde_json::json!({
                 "http": {
                     "handler": {
                         "route": &http_data.handler.route,
                         "method": &http_data.handler.method,
                         "body_schema": http_data.handler.body_schema.clone(),
+                        "middleware": middleware_value,
                     },
                     "request": {
                         "path": &http_data.request.path,
@@ -160,6 +213,7 @@ pub fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup], confi
     let route_builder_class = format!("{module_prefix}RouteBuilder");
     let method_enum_class = format!("{module_prefix}Method");
     let server_config_class = format!("{module_prefix}ServerConfig");
+    let cors_config_class = format!("{module_prefix}CorsConfig");
     let unqualified_app_class = app_class.unwrap_or("App");
     let app_class_name = format!("{module_prefix}{unqualified_app_class}");
 
@@ -179,6 +233,7 @@ pub fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup], confi
             register_route_method => register_route_method.unwrap_or("route"),
             run_method => run_method.unwrap_or("run"),
             server_config_class => &server_config_class,
+            cors_config_class => &cors_config_class,
             host => host,
             port => port,
             binding_path => binding_path,
@@ -217,8 +272,11 @@ unless System.get_env("SUT_URL") do
   app_harness_bin = Path.expand("../app_harness.exs", __DIR__)
   project_root = Path.expand("..", __DIR__)
 
-  # Build the list of ebin directories from _build/dev/lib so the harness can access compiled dependencies
-  build_lib_dir = Path.join(project_root, "_build/dev/lib")
+  # Build the list of ebin directories from the CURRENT MIX_ENV's _build tree so
+  # the harness can access compiled dependencies. `mix test` compiles deps under
+  # _build/test/lib (not _build/dev/lib), so hardcoding "dev" leaves the harness
+  # without the SUT binding on its code path (Spikard.App -> :nofile).
+  build_lib_dir = Path.join(project_root, "_build/#{{Mix.env()}}/lib")
   lib_paths = if File.dir?(build_lib_dir) do
     File.ls!(build_lib_dir)
     |> Enum.map(&Path.join(build_lib_dir, &1))
@@ -273,6 +331,25 @@ unless System.get_env("SUT_URL") do
   unless ready do
     Port.close(port)
     raise "App harness did not become reachable on {host}:#{{harness_port}} within 15s"
+  end
+
+  # Reap the harness explicitly when the suite ends. Closing a port only closes the
+  # child's stdin, and the harness runs `elixir` with `-noshell`, which never reads
+  # stdin — so it outlives `mix test`, gets reparented to init, and keeps the stdout
+  # pipe it inherited from the task runner open. The runner then blocks forever
+  # waiting for EOF even though every test already passed. ~keep
+  case :erlang.port_info(port, :os_pid) do
+    {{:os_pid, harness_os_pid}} ->
+      ExUnit.after_suite(fn _ ->
+        pid_arg = Integer.to_string(harness_os_pid)
+        System.cmd("kill", [pid_arg], stderr_to_stdout: true)
+        Process.sleep(200)
+        System.cmd("kill", ["-9", pid_arg], stderr_to_stdout: true)
+        :ok
+      end)
+
+    _ ->
+      :ok
   end
 
   System.put_env("SUT_URL", url)

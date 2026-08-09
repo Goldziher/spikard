@@ -24,6 +24,8 @@ use {{ route_builder_import }}\{{ app_class }};
 use {{ route_builder_import }}\ServerConfig;
 use {{ route_builder_import }}\{{ route_builder_class }};
 use {{ method_enum_import }}\{{ method_enum_class }};
+use {{ route_builder_import }}\CorsConfig;
+use {{ route_builder_import }}\CompressionConfig;
 
 // Load fixtures from the JSON payload.
 // The fixtures dict contains per-fixture data with handler route, method, body_schema, etc.
@@ -49,6 +51,7 @@ foreach ($_FIXTURES as $fixture_id => $fixture) {
     $route = $handler['route'] ?? '/';
     $method_str = strtoupper($handler['method'] ?? 'GET');
     $body_schema = $handler['body_schema'] ?? null;
+    $middleware = is_array($handler['middleware'] ?? null) ? $handler['middleware'] : [];
     $expected = $http['expected_response'] ?? [];
 
     // Build handler function that returns the expected response.
@@ -56,12 +59,21 @@ foreach ($_FIXTURES as $fixture_id => $fixture) {
     $expected_body = $expected['body'] ?? null;
     $expected_headers = $expected['headers'] ?? [];
 
+    // request_timeout fixtures carry a sleep_ms directive: the handler must actually
+    // sleep so the server's real timeout layer either fires (slow) or does not (fast).
+    $request_timeout_mw = is_array($middleware['request_timeout'] ?? null) ? $middleware['request_timeout'] : null;
+    $sleep_ms = (int)($request_timeout_mw['sleep_ms'] ?? 0);
+
     // Create closure that captures the expected response data.
     $handler_fn = static function (...$args) use (
         $expected_status,
         $expected_body,
-        $expected_headers
+        $expected_headers,
+        $sleep_ms
     ): array {
+        if ($sleep_ms > 0) {
+            usleep($sleep_ms * 1000);
+        }
         // Return the expected response wrapped in the framework's response shape.
         // The body field name ({{ response_body_field }}) is configurable via
         // `[crates.e2e.harness].response_body_field` so the wrapper matches the
@@ -88,6 +100,32 @@ foreach ($_FIXTURES as $fixture_id => $fixture) {
     // If there's a body schema, attach it to the builder.
     if ($body_schema !== null) {
         $builder = $builder->{{ route_builder_schema_setter }}(json_encode($body_schema));
+    }
+
+    // Wire compression/body_limit/request_timeout/cors through to the RouteBuilder so
+    // the real Rust-core middleware runs, instead of the handler unconditionally
+    // returning the fixture's expected response regardless of middleware behavior.
+    // CorsConfig/CompressionConfig::fromJson() accept the fixture's snake_case field
+    // names directly via serde aliases, so no manual field remapping is needed.
+    // Method names here are camelCase because ext-php-rs `#[php_impl]` applies
+    // RenameRule::Camel by default — the Rust `body_limit` is `bodyLimit` in PHP. ~keep
+    $compression_mw = is_array($middleware['compression'] ?? null) ? $middleware['compression'] : null;
+    if ($compression_mw !== null) {
+        $builder = $builder->compression(CompressionConfig::fromJson((string) json_encode($compression_mw)));
+    }
+
+    $body_limit_mw = is_array($middleware['body_limit'] ?? null) ? $middleware['body_limit'] : null;
+    if ($body_limit_mw !== null && isset($body_limit_mw['max_bytes'])) {
+        $builder = $builder->bodyLimit((int) $body_limit_mw['max_bytes']);
+    }
+
+    if ($request_timeout_mw !== null && isset($request_timeout_mw['seconds'])) {
+        $builder = $builder->requestTimeout((int) $request_timeout_mw['seconds']);
+    }
+
+    $cors_mw = is_array($middleware['cors'] ?? null) ? $middleware['cors'] : null;
+    if ($cors_mw !== null) {
+        $builder = $builder->cors(CorsConfig::fromJson((string) json_encode($cors_mw)));
     }
 
     // Register the route with the handler.
