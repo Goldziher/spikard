@@ -11,6 +11,9 @@ node_modules/
 .venv/
 .venv-codex/
 e2e/go/cmd/harness/harness
+# Local NuGet runtime staging: the .dylib is already covered by *.dylib, but the
+# cbindgen header copied alongside it is not. ~keep
+packages/csharp/src/Spikard/runtimes/
 # Dart FRB native-library downloader must be tracked so pub publishes it.
 !packages/dart/bin/
 !packages/dart/bin/download_libs.dart
