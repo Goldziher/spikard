@@ -309,10 +309,10 @@ packages:
     dependency: "direct main"
     description:
       name: spikard
-      sha256: "3a3c517858bbc1f65d83f6e053f120c5f62233f3141dd95cafd7300d18cc97d0"
+      sha256: "03221026c5e262785c57e3fb0a094435a33bae6cfa8c620df5d9a655a7510c45"
       url: "https://pub.dev"
     source: hosted
-    version: "0.17.0-rc.9"
+    version: "0.17.0-rc.11"
   stack_trace:
     dependency: transitive
     description:

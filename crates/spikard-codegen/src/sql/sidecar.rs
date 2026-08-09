@@ -152,11 +152,13 @@ mod tests {
                     name: "id".to_string(),
                     neutral_type: "int32".to_string(),
                     nullable: false,
+                    ..Default::default()
                 },
                 AnalyzedColumn {
                     name: "name".to_string(),
                     neutral_type: "string".to_string(),
                     nullable: true,
+                    ..Default::default()
                 },
             ],
             params: vec![AnalyzedParam {

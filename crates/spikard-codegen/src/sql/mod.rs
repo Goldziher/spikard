@@ -181,6 +181,7 @@ mod orchestrator_tests {
                 name: "id".into(),
                 neutral_type: "int64".into(),
                 nullable: false,
+                ..Default::default()
             }],
             params: vec![AnalyzedParam {
                 name: "id".into(),

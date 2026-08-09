@@ -278,11 +278,13 @@ mod tests {
                     name: "id".into(),
                     neutral_type: "int64".into(),
                     nullable: false,
+                    ..Default::default()
                 },
                 AnalyzedColumn {
                     name: "email".into(),
                     neutral_type: "string".into(),
                     nullable: false,
+                    ..Default::default()
                 },
             ],
             params: vec![AnalyzedParam {
