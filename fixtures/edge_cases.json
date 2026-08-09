@@ -991,7 +991,10 @@
       "expected_response": {
         "status_code": 400,
         "body": {
-          "error": "Failed to parse URL-encoded form data: missing index, expected: 1 got 2"
+          "type": "https://spikard.dev/errors/bad-request",
+          "title": "Bad Request",
+          "status": 400,
+          "detail": "Invalid form body: missing index, expected: 1 got 2"
         }
       }
     },

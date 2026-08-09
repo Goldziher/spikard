@@ -264,10 +264,14 @@ pub async fn validate_content_type_middleware(
                         match urlencoded::parse_urlencoded_to_json(&body_bytes) {
                             Ok(json_body) => json_body,
                             Err(e) => {
-                                let error_body = json!({
-                                    "error": format!("Failed to parse URL-encoded form data: {}", e)
-                                });
-                                return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
+                                // Must stay byte-identical to the form-urlencoded branch in
+                                // server::handler, which rejects the same malformed body when this
+                                // middleware is not wired. Harnesses enable different middleware per
+                                // language, so a divergent shape here would make one fixture return
+                                // two different error bodies depending on the binding. ~keep
+                                let problem = ProblemDetails::bad_request(format!("Invalid form body: {e}"));
+                                let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
+                                return Err((StatusCode::BAD_REQUEST, body).into_response());
                             }
                         }
                     };
@@ -275,10 +279,11 @@ pub async fn validate_content_type_middleware(
                     let json_bytes = match serde_json::to_vec(&json_body) {
                         Ok(bytes) => bytes,
                         Err(e) => {
-                            let error_body = json!({
-                                "error": format!("Failed to serialize URL-encoded form data to JSON: {}", e)
-                            });
-                            return Err((StatusCode::INTERNAL_SERVER_ERROR, axum::Json(error_body)).into_response());
+                            let problem = ProblemDetails::internal_server_error(format!(
+                                "Failed to serialize URL-encoded form data to JSON: {e}"
+                            ));
+                            let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
+                            return Err((StatusCode::INTERNAL_SERVER_ERROR, body).into_response());
                         }
                     };
 

@@ -253,10 +253,11 @@ impl Handler for ValidatingHandler {
                     };
                     Some(parse_multipart_body(raw_bytes, &ct).await?)
                 } else if is_form_urlencoded {
-                    Some(
-                        serde_qs::from_bytes::<Value>(raw_bytes)
-                            .map_err(|e| (axum::http::StatusCode::BAD_REQUEST, format!("Invalid form body: {}", e)))?,
-                    )
+                    Some(serde_qs::from_bytes::<Value>(raw_bytes).map_err(|e| {
+                        let problem = ProblemDetails::bad_request(format!("Invalid form body: {e}"));
+                        let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
+                        (problem.status_code(), body)
+                    })?)
                 } else if is_json_like && (request_validator.is_some() || !inner.prefers_raw_json_body()) {
                     Some(serde_json::from_slice::<Value>(raw_bytes).map_err(|_| {
                         let problem = ProblemDetails::bad_request("Invalid JSON in request body");
