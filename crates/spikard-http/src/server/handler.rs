@@ -411,19 +411,7 @@ mod tests {
             method: spikard_core::http::Method::Post,
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
-            request_validator: None,
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-            expects_json_body: false,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -451,19 +439,7 @@ mod tests {
             method: spikard_core::http::Method::Post,
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
-            request_validator: None,
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-            expects_json_body: false,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -523,18 +499,8 @@ mod tests {
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
             request_validator: Some(validator),
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
             expects_json_body: true,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -573,18 +539,8 @@ mod tests {
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
             request_validator: Some(validator),
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
             expects_json_body: true,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -636,18 +592,8 @@ mod tests {
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
             request_validator: Some(validator),
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
             expects_json_body: true,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -679,19 +625,7 @@ mod tests {
             method: spikard_core::http::Method::Post,
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
-            request_validator: None,
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-            expects_json_body: false,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(PanicHandlerImpl);
@@ -734,18 +668,8 @@ mod tests {
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
             request_validator: Some(validator),
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
             expects_json_body: true,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -787,18 +711,8 @@ mod tests {
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
             request_validator: Some(validator),
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
             expects_json_body: true,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -845,18 +759,8 @@ mod tests {
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
             request_validator: Some(validator),
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
             expects_json_body: true,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -899,18 +803,8 @@ mod tests {
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
             request_validator: Some(validator),
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
             expects_json_body: true,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -935,22 +829,10 @@ mod tests {
         let param_validator = spikard_core::ParameterValidator::new(json!({})).expect("Valid empty schema");
 
         let route = spikard_core::Route {
-            method: spikard_core::http::Method::Get,
             path: "/search".to_string(),
             handler_name: "search_handler".to_string(),
-            request_validator: None,
-            response_validator: None,
             parameter_validator: Some(param_validator),
-            file_params: None,
-            is_async: true,
-            cors: None,
-            expects_json_body: false,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -986,18 +868,8 @@ mod tests {
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
             request_validator: Some(validator),
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
             expects_json_body: true,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1036,19 +908,7 @@ mod tests {
             method: spikard_core::http::Method::Post,
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
-            request_validator: None,
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-            expects_json_body: false,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(PanicHandlerImpl);
@@ -1081,19 +941,7 @@ mod tests {
             method: spikard_core::http::Method::Post,
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
-            request_validator: None,
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-            expects_json_body: false,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1133,18 +981,8 @@ mod tests {
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
             request_validator: Some(validator),
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
             expects_json_body: true,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1196,18 +1034,8 @@ mod tests {
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
             request_validator: Some(validator),
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
             expects_json_body: true,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1239,18 +1067,8 @@ mod tests {
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
             request_validator: Some(validator),
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
             expects_json_body: true,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1278,19 +1096,7 @@ mod tests {
             method: spikard_core::http::Method::Post,
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
-            request_validator: None,
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-            expects_json_body: false,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1319,19 +1125,7 @@ mod tests {
             method: spikard_core::http::Method::Post,
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
-            request_validator: None,
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-            expects_json_body: false,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(PanicHandlerImpl);
@@ -1374,18 +1168,8 @@ mod tests {
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
             request_validator: Some(validator),
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
             expects_json_body: true,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1415,19 +1199,7 @@ mod tests {
             method: spikard_core::http::Method::Post,
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
-            request_validator: None,
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-            expects_json_body: false,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1452,22 +1224,9 @@ mod tests {
     #[tokio::test]
     async fn test_handler_with_path_headers_cookies() {
         let route = spikard_core::Route {
-            method: spikard_core::http::Method::Get,
             path: "/api/{id}".to_string(),
             handler_name: "handler".to_string(),
-            request_validator: None,
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-            expects_json_body: false,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1508,19 +1267,7 @@ mod tests {
             method: spikard_core::http::Method::Post,
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
-            request_validator: None,
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-            expects_json_body: false,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(PanicHandlerImpl);
@@ -1559,18 +1306,8 @@ mod tests {
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
             request_validator: Some(validator),
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
             expects_json_body: true,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1605,18 +1342,8 @@ mod tests {
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
             request_validator: Some(validator),
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
             expects_json_body: true,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1648,18 +1375,8 @@ mod tests {
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
             request_validator: Some(validator),
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
             expects_json_body: true,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1708,18 +1425,8 @@ mod tests {
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
             request_validator: Some(validator),
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
             expects_json_body: true,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1764,18 +1471,8 @@ mod tests {
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
             request_validator: Some(validator),
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
             expects_json_body: true,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1815,18 +1512,8 @@ mod tests {
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
             request_validator: Some(validator),
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
             expects_json_body: true,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -1854,19 +1541,7 @@ mod tests {
             method: spikard_core::http::Method::Post,
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
-            request_validator: None,
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-            expects_json_body: false,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(PanicHandlerImpl);
@@ -1926,18 +1601,7 @@ mod tests {
             path: "/upload".to_string(),
             handler_name: "upload_handler".to_string(),
             request_validator: Some(validator),
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-            expects_json_body: false,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let boundary = "TestBoundary1234";
@@ -2006,19 +1670,7 @@ mod tests {
             method: spikard_core::http::Method::Post,
             path: "/upload".to_string(),
             handler_name: "upload_handler".to_string(),
-            request_validator: None,
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-            expects_json_body: false,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let boundary = "TestBoundary1234";
@@ -2078,19 +1730,7 @@ mod tests {
             method: spikard_core::http::Method::Post,
             path: "/upload".to_string(),
             handler_name: "upload_handler".to_string(),
-            request_validator: None,
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-            expects_json_body: false,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let body = "--alef-boundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"optional.txt\"\r\nContent-Type: text/plain\r\n\r\noptional file content here\r\n--alef-boundary--\r\n";
@@ -2143,19 +1783,7 @@ mod tests {
             method: spikard_core::http::Method::Post,
             path: "/upload".to_string(),
             handler_name: "upload_handler".to_string(),
-            request_validator: None,
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-            expects_json_body: false,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let mut headers = HashMap::new();
@@ -2211,18 +1839,7 @@ mod tests {
             path: "/upload".to_string(),
             handler_name: "upload_handler".to_string(),
             request_validator: Some(validator),
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-            expects_json_body: false,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let mut headers = HashMap::new();
@@ -2274,22 +1891,10 @@ mod tests {
         let param_validator = ParameterValidator::new(schema).expect("build param validator");
 
         let route = spikard_core::Route {
-            method: spikard_core::http::Method::Get,
             path: path.to_string(),
             handler_name: "handler".to_string(),
-            request_validator: None,
-            response_validator: None,
             parameter_validator: Some(param_validator),
-            file_params: None,
-            is_async: true,
-            cors: None,
-            expects_json_body: false,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -2350,18 +1955,8 @@ mod tests {
             path: "/parse".to_string(),
             handler_name: "handler".to_string(),
             request_validator: Some(validator),
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
             expects_json_body: true,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -2412,19 +2007,7 @@ mod tests {
             method: spikard_core::http::Method::Post,
             path: "/parse".to_string(),
             handler_name: "handler".to_string(),
-            request_validator: None,
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-            expects_json_body: false,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);
@@ -2484,18 +2067,8 @@ mod tests {
             path: "/test".to_string(),
             handler_name: "test_handler".to_string(),
             request_validator: Some(validator),
-            response_validator: None,
-            parameter_validator: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
             expects_json_body: true,
-            #[cfg(feature = "di")]
-            handler_dependencies: vec![],
-            jsonrpc_method: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         };
 
         let inner = Arc::new(SuccessEchoHandler);

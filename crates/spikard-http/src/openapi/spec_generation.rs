@@ -192,6 +192,13 @@ mod tests {
             static_response: None,
             body_limit: None,
             request_timeout_secs: None,
+            rate_limit: None,
+            request_id: None,
+            jwt_auth: None,
+            api_key_auth: None,
+            authorization: None,
+            lifecycle_hooks: None,
+            openrpc_spec: None,
         }
     }
 
@@ -662,6 +669,13 @@ mod tests {
             static_response: None,
             body_limit: None,
             request_timeout_secs: None,
+            rate_limit: None,
+            request_id: None,
+            jwt_auth: None,
+            api_key_auth: None,
+            authorization: None,
+            lifecycle_hooks: None,
+            openrpc_spec: None,
         };
 
         let result = route_to_operation(&route);

@@ -60,6 +60,9 @@ pub use response::Response;
 #[cfg(not(target_arch = "wasm32"))]
 pub use server::Server;
 pub use spikard_core::errors::StructuredError;
+pub use spikard_core::http::{
+    ApiKeyAuthConfig, AuthorizationConfig, JwtAuthConfig, LifecycleHookRef, LifecycleHooksConfig, RequestIdConfig,
+};
 pub use spikard_core::parameters::ParameterSource;
 pub use spikard_core::router::JsonRpcMethodInfo;
 pub use spikard_core::{

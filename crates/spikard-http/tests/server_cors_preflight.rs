@@ -39,19 +39,8 @@ async fn router_generates_cors_preflight_when_missing_options_handler() {
         method: "GET".parse().unwrap(),
         path: "/cors".to_string(),
         handler_name: "ok".to_string(),
-        expects_json_body: false,
         cors: Some(cors.clone()),
-        is_async: true,
-        file_params: None,
-        request_validator: None,
-        response_validator: None,
-        parameter_validator: None,
-        jsonrpc_method: None,
-        compression: None,
-        body_limit: None,
-        request_timeout_secs: None,
-        #[cfg(feature = "di")]
-        handler_dependencies: vec![],
+        ..Default::default()
     };
 
     let config = ServerConfig::default();

@@ -1,9 +1,10 @@
 //! Route management and handler registration
 
+use crate::http::{ApiKeyAuthConfig, AuthorizationConfig, JwtAuthConfig, LifecycleHooksConfig, RequestIdConfig};
 use crate::parameters::ParameterValidator;
 use crate::schema_registry::SchemaRegistry;
 use crate::validation::SchemaValidator;
-use crate::{CorsConfig, Method, RouteMetadata};
+use crate::{CorsConfig, Method, RateLimitConfig, RouteMetadata};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::sync::Arc;
@@ -100,6 +101,20 @@ pub struct Route {
     pub body_limit: Option<usize>,
     /// Optional per-route request timeout in seconds, overriding the server-global default
     pub request_timeout_secs: Option<u64>,
+    /// Optional per-route rate limiting configuration, overriding the server-global default
+    pub rate_limit: Option<RateLimitConfig>,
+    /// Optional per-route request-id generation override, overriding the server-global default
+    pub request_id: Option<RequestIdConfig>,
+    /// Optional per-route JWT authentication requirement, parsed from `RouteMetadata.jwt_auth`
+    pub jwt_auth: Option<JwtAuthConfig>,
+    /// Optional per-route API key authentication requirement, parsed from `RouteMetadata.api_key_auth`
+    pub api_key_auth: Option<ApiKeyAuthConfig>,
+    /// Optional per-route roles/scopes/permissions authorization requirement
+    pub authorization: Option<AuthorizationConfig>,
+    /// Optional per-route lifecycle hook selection, by registered hook name
+    pub lifecycle_hooks: Option<LifecycleHooksConfig>,
+    /// Optional literal `OpenRPC` method spec document, overriding auto-derivation from `jsonrpc_method`
+    pub openrpc_spec: Option<Value>,
 }
 
 impl Default for Route {
@@ -121,6 +136,13 @@ impl Default for Route {
             compression: None,
             body_limit: None,
             request_timeout_secs: None,
+            rate_limit: None,
+            request_id: None,
+            jwt_auth: None,
+            api_key_auth: None,
+            authorization: None,
+            lifecycle_hooks: None,
+            openrpc_spec: None,
         }
     }
 }
@@ -203,6 +225,13 @@ impl Route {
             compression: metadata.compression,
             body_limit: metadata.body_limit,
             request_timeout_secs: metadata.request_timeout_secs,
+            rate_limit: metadata.rate_limit,
+            request_id: metadata.request_id,
+            jwt_auth: metadata.jwt_auth,
+            api_key_auth: metadata.api_key_auth,
+            authorization: metadata.authorization,
+            lifecycle_hooks: metadata.lifecycle_hooks,
+            openrpc_spec: metadata.openrpc_spec,
         })
     }
 
@@ -278,6 +307,7 @@ impl Default for Router {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::http::LifecycleHookRef;
     use serde_json::json;
 
     #[test]
@@ -301,6 +331,13 @@ mod tests {
             compression: None,
             body_limit: None,
             request_timeout_secs: None,
+            rate_limit: None,
+            request_id: None,
+            jwt_auth: None,
+            api_key_auth: None,
+            authorization: None,
+            lifecycle_hooks: None,
+            openrpc_spec: None,
             #[cfg(feature = "di")]
             handler_dependencies: None,
         };
@@ -339,6 +376,13 @@ mod tests {
             compression: None,
             body_limit: None,
             request_timeout_secs: None,
+            rate_limit: None,
+            request_id: None,
+            jwt_auth: None,
+            api_key_auth: None,
+            authorization: None,
+            lifecycle_hooks: None,
+            openrpc_spec: None,
             #[cfg(feature = "di")]
             handler_dependencies: None,
         };
@@ -375,6 +419,13 @@ mod tests {
             compression: None,
             body_limit: None,
             request_timeout_secs: None,
+            rate_limit: None,
+            request_id: None,
+            jwt_auth: None,
+            api_key_auth: None,
+            authorization: None,
+            lifecycle_hooks: None,
+            openrpc_spec: None,
             #[cfg(feature = "di")]
             handler_dependencies: None,
         };
@@ -395,6 +446,13 @@ mod tests {
             compression: None,
             body_limit: None,
             request_timeout_secs: None,
+            rate_limit: None,
+            request_id: None,
+            jwt_auth: None,
+            api_key_auth: None,
+            authorization: None,
+            lifecycle_hooks: None,
+            openrpc_spec: None,
             #[cfg(feature = "di")]
             handler_dependencies: None,
         };
@@ -477,6 +535,13 @@ mod tests {
             compression: None,
             body_limit: None,
             request_timeout_secs: None,
+            rate_limit: None,
+            request_id: None,
+            jwt_auth: None,
+            api_key_auth: None,
+            authorization: None,
+            lifecycle_hooks: None,
+            openrpc_spec: None,
             #[cfg(feature = "di")]
             handler_dependencies: None,
         };
@@ -554,6 +619,13 @@ mod tests {
             compression: None,
             body_limit: None,
             request_timeout_secs: None,
+            rate_limit: None,
+            request_id: None,
+            jwt_auth: None,
+            api_key_auth: None,
+            authorization: None,
+            lifecycle_hooks: None,
+            openrpc_spec: None,
             #[cfg(feature = "di")]
             handler_dependencies: None,
         };
@@ -563,5 +635,139 @@ mod tests {
         assert!(!route.is_jsonrpc_method());
         assert_eq!(route.jsonrpc_method_name(), None);
         assert!(route.jsonrpc_method.is_none());
+    }
+
+    #[test]
+    fn test_route_carries_rate_limit_and_request_id_from_metadata() {
+        let registry = SchemaRegistry::new();
+        let mut metadata = RouteMetadata {
+            path: "/limited".to_string(),
+            handler_name: "get_limited".to_string(),
+            ..Default::default()
+        };
+        metadata.rate_limit = Some(RateLimitConfig {
+            per_second: 5,
+            burst: 10,
+            ip_based: false,
+        });
+        metadata.request_id = Some(RequestIdConfig { enabled: true });
+
+        let route = Route::from_metadata(metadata, &registry).unwrap();
+
+        let rate_limit = route.rate_limit.as_ref().unwrap();
+        assert_eq!(rate_limit.per_second, 5);
+        assert_eq!(rate_limit.burst, 10);
+        assert!(!rate_limit.ip_based);
+        assert_eq!(route.request_id, Some(RequestIdConfig { enabled: true }));
+    }
+
+    #[test]
+    fn should_carry_typed_jwt_auth_and_api_key_auth_through_route_construction() {
+        let registry = SchemaRegistry::new();
+        let mut metadata = RouteMetadata {
+            path: "/secure".to_string(),
+            handler_name: "get_secure".to_string(),
+            ..Default::default()
+        };
+        metadata.jwt_auth = Some(JwtAuthConfig {
+            enabled: true,
+            secret: Some("top-secret".to_string()),
+            public_key: None,
+            algorithm: "HS512".to_string(),
+            audience: None,
+            issuer: None,
+            leeway: 0,
+        });
+        metadata.api_key_auth = Some(ApiKeyAuthConfig {
+            enabled: true,
+            keys: vec!["k1".to_string(), "k2".to_string()],
+            header_name: "X-API-Key".to_string(),
+        });
+
+        let route = Route::from_metadata(metadata, &registry).unwrap();
+
+        let jwt_auth = route.jwt_auth.as_ref().unwrap();
+        assert_eq!(jwt_auth.secret.as_deref(), Some("top-secret"));
+        assert_eq!(jwt_auth.algorithm, "HS512");
+
+        let api_key_auth = route.api_key_auth.as_ref().unwrap();
+        assert_eq!(api_key_auth.keys, vec!["k1".to_string(), "k2".to_string()]);
+        assert_eq!(api_key_auth.header_name, "X-API-Key");
+    }
+
+    /// `RouteMetadata`'s per-route middleware fields are typed structs now, so a malformed
+    /// payload fails at `RouteMetadata` deserialization rather than at `Route::from_metadata`
+    /// (see `spikard-core/src/http.rs`'s `JwtAuthConfig` tests for the field-level cases). This
+    /// proves that failure is still reachable end to end from raw JSON.
+    #[test]
+    fn should_error_when_deserializing_route_metadata_with_malformed_jwt_auth_audience() {
+        let mut json_value = json!(RouteMetadata {
+            path: "/broken".to_string(),
+            handler_name: "get_broken".to_string(),
+            ..Default::default()
+        });
+        json_value["jwt_auth"] = json!({ "secret": "s3cr3t", "audience": "not-an-array" });
+
+        let result: Result<RouteMetadata, _> = serde_json::from_value(json_value);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn should_carry_typed_authorization_and_lifecycle_hooks_through_route_construction() {
+        let registry = SchemaRegistry::new();
+        let mut metadata = RouteMetadata {
+            path: "/admin".to_string(),
+            handler_name: "get_admin".to_string(),
+            ..Default::default()
+        };
+        metadata.authorization = Some(AuthorizationConfig {
+            required_roles: vec!["admin".to_string()],
+            require_all: false,
+            ..Default::default()
+        });
+        metadata.lifecycle_hooks = Some(LifecycleHooksConfig {
+            on_request: vec![LifecycleHookRef {
+                name: "audit_log".to_string(),
+                handler: "run_audit_log".to_string(),
+                dependencies: vec![],
+                config: None,
+                ..Default::default()
+            }],
+            on_error: vec![LifecycleHookRef {
+                name: "alert".to_string(),
+                handler: "run_alert".to_string(),
+                dependencies: vec![],
+                config: None,
+                ..Default::default()
+            }],
+            ..Default::default()
+        });
+
+        let route = Route::from_metadata(metadata, &registry).unwrap();
+
+        let authorization = route.authorization.as_ref().unwrap();
+        assert_eq!(authorization.required_roles, vec!["admin".to_string()]);
+        assert!(!authorization.require_all);
+
+        let lifecycle_hooks = route.lifecycle_hooks.as_ref().unwrap();
+        assert_eq!(lifecycle_hooks.on_request[0].name, "audit_log");
+        assert_eq!(lifecycle_hooks.on_error[0].name, "alert");
+        assert!(lifecycle_hooks.pre_handler.is_empty());
+    }
+
+    #[test]
+    fn test_route_carries_literal_openrpc_spec_from_metadata() {
+        let registry = SchemaRegistry::new();
+        let spec = json!({ "name": "user.create", "params": [], "result": { "name": "user", "schema": {} } });
+        let mut metadata = RouteMetadata {
+            path: "/rpc".to_string(),
+            handler_name: "post_rpc".to_string(),
+            ..Default::default()
+        };
+        metadata.openrpc_spec = Some(spec.clone());
+
+        let route = Route::from_metadata(metadata, &registry).unwrap();
+
+        assert_eq!(route.openrpc_spec, Some(spec));
     }
 }

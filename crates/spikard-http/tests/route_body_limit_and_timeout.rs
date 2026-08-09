@@ -54,19 +54,8 @@ fn body_limit_route(max_bytes: usize) -> Route {
         method: "POST".parse().unwrap(),
         path: "/body-limit".to_string(),
         handler_name: "accept".to_string(),
-        expects_json_body: false,
-        cors: None,
-        is_async: true,
-        file_params: None,
-        request_validator: None,
-        response_validator: None,
-        parameter_validator: None,
-        jsonrpc_method: None,
-        compression: None,
         body_limit: Some(max_bytes),
-        request_timeout_secs: None,
-        #[cfg(feature = "di")]
-        handler_dependencies: vec![],
+        ..Default::default()
     }
 }
 
@@ -75,19 +64,8 @@ fn timeout_route(timeout_secs: u64) -> Route {
         method: "GET".parse().unwrap(),
         path: "/timeout".to_string(),
         handler_name: "sleepy".to_string(),
-        expects_json_body: false,
-        cors: None,
-        is_async: true,
-        file_params: None,
-        request_validator: None,
-        response_validator: None,
-        parameter_validator: None,
-        jsonrpc_method: None,
-        compression: None,
-        body_limit: None,
         request_timeout_secs: Some(timeout_secs),
-        #[cfg(feature = "di")]
-        handler_dependencies: vec![],
+        ..Default::default()
     }
 }
 

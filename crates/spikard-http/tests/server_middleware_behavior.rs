@@ -32,19 +32,7 @@ fn route(path: &str) -> Route {
         path: path.to_string(),
         method: Method::Get,
         handler_name: "large".to_string(),
-        expects_json_body: false,
-        cors: None,
-        is_async: true,
-        file_params: None,
-        request_validator: None,
-        response_validator: None,
-        parameter_validator: None,
-        jsonrpc_method: None,
-        compression: None,
-        body_limit: None,
-        request_timeout_secs: None,
-        #[cfg(feature = "di")]
-        handler_dependencies: vec![],
+        ..Default::default()
     }
 }
 

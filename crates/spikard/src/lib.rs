@@ -31,9 +31,11 @@ pub use spikard_graphql::{
 #[cfg(not(target_arch = "wasm32"))]
 use spikard_http::server::Server;
 pub use spikard_http::{
-    ApiKeyConfig, AsyncApiConfig, BackgroundJobError, BackgroundJobMetadata, BackgroundTaskConfig, CompressionConfig,
-    CorsConfig, GrpcConfig, JsonRpcConfig, JwtConfig, LifecycleHook, LifecycleHooks, LifecycleHooksBuilder, Method,
-    OpenApiConfig, RateLimitConfig, Response, Route, RouteMetadata, ServerConfig, SseEvent, StaticFilesConfig,
+    ApiKeyAuthConfig, ApiKeyConfig, AsyncApiConfig, AuthorizationConfig, BackgroundJobError, BackgroundJobMetadata,
+    BackgroundTaskConfig, CompressionConfig, CorsConfig, GrpcConfig, JsonRpcConfig, JwtAuthConfig, JwtConfig,
+    LifecycleHook, LifecycleHookRef, LifecycleHooks, LifecycleHooksBuilder, LifecycleHooksConfig, Method,
+    OpenApiConfig, RateLimitConfig, RequestIdConfig, Response, Route, RouteMetadata, ServerConfig, SseEvent,
+    StaticFilesConfig,
     cors::{add_cors_headers, handle_preflight, validate_cors_request},
     handler_response::HandlerResponse,
     handler_trait::HandlerResult,
@@ -531,6 +533,14 @@ pub struct RouteBuilder {
     compression: Option<CompressionConfig>,
     body_limit: Option<usize>,
     request_timeout_secs: Option<u64>,
+    rate_limit: Option<RateLimitConfig>,
+    request_id: Option<bool>,
+    jwt_auth: Option<JwtAuthConfig>,
+    api_key_auth: Option<ApiKeyAuthConfig>,
+    authorization: Option<AuthorizationConfig>,
+    lifecycle_hooks: Option<LifecycleHooksConfig>,
+    jsonrpc_method: Option<JsonRpcMethodInfo>,
+    openrpc_spec: Option<serde_json::Value>,
     is_async: bool,
     #[cfg(feature = "di")]
     handler_dependencies: Option<Vec<String>>,
@@ -554,6 +564,14 @@ impl RouteBuilder {
             compression: None,
             body_limit: None,
             request_timeout_secs: None,
+            rate_limit: None,
+            request_id: None,
+            jwt_auth: None,
+            api_key_auth: None,
+            authorization: None,
+            lifecycle_hooks: None,
+            jsonrpc_method: None,
+            openrpc_spec: None,
             is_async: true,
             #[cfg(feature = "di")]
             handler_dependencies: None,
@@ -644,6 +662,68 @@ impl RouteBuilder {
         self
     }
 
+    /// Attach a per-route rate limiting configuration, overriding the server-global default.
+    #[must_use]
+    pub const fn rate_limit(mut self, rate_limit: RateLimitConfig) -> Self {
+        self.rate_limit = Some(rate_limit);
+        self
+    }
+
+    /// Force per-route request-id generation on or off, overriding the server-global default.
+    ///
+    /// Takes a plain `bool` rather than [`RequestIdConfig`] directly: the wire/metadata type had
+    /// to become a struct to represent `{"enabled": false}` (see `RequestIdConfig`'s docs), but
+    /// this builder is the ergonomic call site (`.request_id(true)`), so it keeps accepting a bool
+    /// and wraps it into `RequestIdConfig` internally in [`Self::into_metadata`].
+    #[must_use]
+    pub const fn request_id(mut self, enabled: bool) -> Self {
+        self.request_id = Some(enabled);
+        self
+    }
+
+    /// Require JWT authentication for this route.
+    #[must_use]
+    pub fn jwt_auth(mut self, config: JwtAuthConfig) -> Self {
+        self.jwt_auth = Some(config);
+        self
+    }
+
+    /// Require API key authentication for this route.
+    #[must_use]
+    pub fn api_key_auth(mut self, config: ApiKeyAuthConfig) -> Self {
+        self.api_key_auth = Some(config);
+        self
+    }
+
+    /// Attach a roles/scopes/permissions authorization requirement for this route.
+    #[must_use]
+    pub fn authorization(mut self, config: AuthorizationConfig) -> Self {
+        self.authorization = Some(config);
+        self
+    }
+
+    /// Select registered lifecycle hooks to run for this route.
+    #[must_use]
+    pub fn lifecycle_hooks(mut self, hooks: LifecycleHooksConfig) -> Self {
+        self.lifecycle_hooks = Some(hooks);
+        self
+    }
+
+    /// Expose this route as a JSON-RPC method.
+    #[must_use]
+    pub fn jsonrpc_method(mut self, info: JsonRpcMethodInfo) -> Self {
+        self.jsonrpc_method = Some(info);
+        self
+    }
+
+    /// Attach a literal `OpenRPC` method spec document for this route, overriding
+    /// auto-derivation from the [`Self::jsonrpc_method`] metadata when present.
+    #[must_use]
+    pub fn openrpc_spec(mut self, spec: serde_json::Value) -> Self {
+        self.openrpc_spec = Some(spec);
+        self
+    }
+
     /// Mark the route as synchronous.
     #[must_use]
     pub const fn sync(mut self) -> Self {
@@ -660,6 +740,8 @@ impl RouteBuilder {
     }
 
     fn into_metadata(self) -> RouteMetadata {
+        let jsonrpc_method = self.jsonrpc_method.and_then(|info| serde_json::to_value(info).ok());
+
         #[cfg(feature = "di")]
         {
             RouteMetadata {
@@ -675,9 +757,16 @@ impl RouteBuilder {
                 compression: self.compression,
                 body_limit: self.body_limit,
                 request_timeout_secs: self.request_timeout_secs,
+                rate_limit: self.rate_limit,
+                request_id: self.request_id.map(RequestIdConfig::from),
+                jwt_auth: self.jwt_auth,
+                api_key_auth: self.api_key_auth,
+                authorization: self.authorization,
+                lifecycle_hooks: self.lifecycle_hooks,
                 body_param_name: None,
                 handler_dependencies: self.handler_dependencies,
-                jsonrpc_method: None,
+                jsonrpc_method,
+                openrpc_spec: self.openrpc_spec,
                 static_response: None,
             }
         }
@@ -696,8 +785,15 @@ impl RouteBuilder {
                 compression: self.compression,
                 body_limit: self.body_limit,
                 request_timeout_secs: self.request_timeout_secs,
+                rate_limit: self.rate_limit,
+                request_id: self.request_id.map(RequestIdConfig::from),
+                jwt_auth: self.jwt_auth,
+                api_key_auth: self.api_key_auth,
+                authorization: self.authorization,
+                lifecycle_hooks: self.lifecycle_hooks,
                 body_param_name: None,
-                jsonrpc_method: None,
+                jsonrpc_method,
+                openrpc_spec: self.openrpc_spec,
                 static_response: None,
             }
         }
@@ -1035,6 +1131,110 @@ mod tests {
         assert!(!meta.is_async);
         assert!(meta.request_schema.is_none());
         assert!(meta.response_schema.is_none());
+    }
+
+    #[test]
+    fn route_builder_defaults_new_middleware_fields_to_none() {
+        let meta = get("items").into_metadata();
+        assert!(meta.rate_limit.is_none());
+        assert!(meta.request_id.is_none());
+        assert!(meta.jwt_auth.is_none());
+        assert!(meta.api_key_auth.is_none());
+        assert!(meta.authorization.is_none());
+        assert!(meta.lifecycle_hooks.is_none());
+        assert!(meta.jsonrpc_method.is_none());
+        assert!(meta.openrpc_spec.is_none());
+    }
+
+    #[test]
+    fn route_builder_rate_limit_and_request_id_populate_metadata() {
+        let meta = get("items")
+            .rate_limit(RateLimitConfig {
+                per_second: 42,
+                burst: 7,
+                ip_based: false,
+            })
+            .request_id(true)
+            .into_metadata();
+
+        let rate_limit = meta.rate_limit.as_ref().unwrap();
+        assert_eq!(rate_limit.per_second, 42);
+        assert_eq!(rate_limit.burst, 7);
+        assert!(!rate_limit.ip_based);
+        assert_eq!(meta.request_id, Some(RequestIdConfig { enabled: true }));
+    }
+
+    #[test]
+    fn route_builder_jwt_and_api_key_auth_setters_populate_typed_metadata() {
+        let jwt_auth = JwtAuthConfig {
+            enabled: true,
+            secret: Some("s3cr3t".to_string()),
+            public_key: None,
+            algorithm: "HS512".to_string(),
+            audience: None,
+            issuer: None,
+            leeway: 0,
+        };
+        let api_key_auth = ApiKeyAuthConfig {
+            enabled: true,
+            keys: vec!["k1".to_string()],
+            header_name: "X-API-Key".to_string(),
+        };
+        let meta = get("items")
+            .jwt_auth(jwt_auth.clone())
+            .api_key_auth(api_key_auth.clone())
+            .into_metadata();
+
+        assert_eq!(meta.jwt_auth, Some(jwt_auth));
+        assert_eq!(meta.api_key_auth, Some(api_key_auth));
+    }
+
+    #[test]
+    fn route_builder_authorization_and_lifecycle_hooks_setters_populate_typed_metadata() {
+        let authorization = AuthorizationConfig {
+            required_roles: vec!["admin".to_string()],
+            ..Default::default()
+        };
+        let lifecycle_hooks = LifecycleHooksConfig {
+            on_request: vec![LifecycleHookRef {
+                name: "audit_log".to_string(),
+                handler: "run_audit_log".to_string(),
+                dependencies: vec![],
+                config: None,
+                ..Default::default()
+            }],
+            ..Default::default()
+        };
+        let meta = get("items")
+            .authorization(authorization.clone())
+            .lifecycle_hooks(lifecycle_hooks.clone())
+            .into_metadata();
+
+        assert_eq!(meta.authorization, Some(authorization));
+        assert_eq!(meta.lifecycle_hooks, Some(lifecycle_hooks));
+    }
+
+    #[test]
+    fn route_builder_jsonrpc_method_setter_overrides_none_default() {
+        let info = JsonRpcMethodInfo {
+            method_name: "user.create".to_string(),
+            description: None,
+            params_schema: None,
+            result_schema: None,
+            deprecated: false,
+            tags: vec![],
+        };
+        let meta = post("items").jsonrpc_method(info).into_metadata();
+
+        let stored = meta.jsonrpc_method.as_ref().unwrap();
+        assert_eq!(stored.get("method_name").and_then(|v| v.as_str()), Some("user.create"));
+    }
+
+    #[test]
+    fn route_builder_openrpc_spec_accepts_literal_document() {
+        let spec = json!({ "name": "user.create", "params": [] });
+        let meta = post("items").openrpc_spec(spec.clone()).into_metadata();
+        assert_eq!(meta.openrpc_spec, Some(spec));
     }
 
     #[test]

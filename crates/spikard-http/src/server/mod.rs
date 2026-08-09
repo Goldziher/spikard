@@ -94,6 +94,13 @@ fn route_to_metadata(route: &crate::Route) -> crate::RouteMetadata {
             compression: route.compression.clone(),
             body_limit: route.body_limit,
             request_timeout_secs: route.request_timeout_secs,
+            rate_limit: route.rate_limit.clone(),
+            request_id: route.request_id,
+            jwt_auth: route.jwt_auth.clone(),
+            api_key_auth: route.api_key_auth.clone(),
+            authorization: route.authorization.clone(),
+            lifecycle_hooks: route.lifecycle_hooks.clone(),
+            openrpc_spec: route.openrpc_spec.clone(),
         }
     }
     #[cfg(not(feature = "di"))]
@@ -126,6 +133,13 @@ fn route_to_metadata(route: &crate::Route) -> crate::RouteMetadata {
             compression: route.compression.clone(),
             body_limit: route.body_limit,
             request_timeout_secs: route.request_timeout_secs,
+            rate_limit: route.rate_limit.clone(),
+            request_id: route.request_id,
+            jwt_auth: route.jwt_auth.clone(),
+            api_key_auth: route.api_key_auth.clone(),
+            authorization: route.authorization.clone(),
+            lifecycle_hooks: route.lifecycle_hooks.clone(),
+            openrpc_spec: route.openrpc_spec.clone(),
         }
     }
 }
@@ -1232,6 +1246,13 @@ mod tests {
             compression: None,
             body_limit: None,
             request_timeout_secs: None,
+            rate_limit: None,
+            request_id: None,
+            jwt_auth: None,
+            api_key_auth: None,
+            authorization: None,
+            lifecycle_hooks: None,
+            openrpc_spec: None,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
         }
@@ -1260,9 +1281,89 @@ mod tests {
             compression: None,
             body_limit: None,
             request_timeout_secs: None,
+            rate_limit: None,
+            request_id: None,
+            jwt_auth: None,
+            api_key_auth: None,
+            authorization: None,
+            lifecycle_hooks: None,
+            openrpc_spec: None,
             #[cfg(feature = "di")]
             handler_dependencies: vec![],
         }
+    }
+
+    /// `route_to_metadata()` must carry every per-route middleware field through, not just the
+    /// ones that existed before this field set grew — a dropped field here silently disables
+    /// per-route middleware for anything that rebuilds `RouteMetadata` from a live `Route` (e.g.
+    /// OpenAPI spec generation). This round-trips `Route -> RouteMetadata -> Route` and asserts
+    /// every new field survives both hops.
+    #[test]
+    fn should_round_trip_new_per_route_middleware_fields_through_route_to_metadata() {
+        let mut route = build_test_route("/secure", "GET", "get_secure", false);
+        route.rate_limit = Some(crate::RateLimitConfig {
+            per_second: 5,
+            burst: 10,
+            ip_based: false,
+        });
+        route.request_id = Some(crate::RequestIdConfig { enabled: true });
+        route.jwt_auth = Some(crate::JwtAuthConfig {
+            enabled: true,
+            secret: Some("s3cr3t".to_string()),
+            public_key: None,
+            algorithm: "HS256".to_string(),
+            audience: None,
+            issuer: None,
+            leeway: 0,
+        });
+        route.api_key_auth = Some(crate::ApiKeyAuthConfig {
+            enabled: true,
+            keys: vec!["k1".to_string()],
+            header_name: "X-API-Key".to_string(),
+        });
+        route.authorization = Some(crate::AuthorizationConfig {
+            required_roles: vec!["admin".to_string()],
+            ..Default::default()
+        });
+        route.lifecycle_hooks = Some(crate::LifecycleHooksConfig {
+            on_request: vec![crate::LifecycleHookRef {
+                name: "audit_log".to_string(),
+                handler: "run_audit_log".to_string(),
+                ..Default::default()
+            }],
+            ..Default::default()
+        });
+        route.openrpc_spec = Some(serde_json::json!({ "name": "get.secure" }));
+
+        // `RateLimitConfig` doesn't implement `PartialEq`, so compare its fields directly rather
+        // than adding a derive to an existing shared type just for this assertion.
+        let assert_rate_limit_matches = |rate_limit: &Option<crate::RateLimitConfig>| {
+            let rate_limit = rate_limit.as_ref().expect("rate_limit survives the round trip");
+            assert_eq!(rate_limit.per_second, 5);
+            assert_eq!(rate_limit.burst, 10);
+            assert!(!rate_limit.ip_based);
+        };
+
+        let metadata = route_to_metadata(&route);
+
+        assert_rate_limit_matches(&metadata.rate_limit);
+        assert_eq!(metadata.request_id, route.request_id);
+        assert_eq!(metadata.jwt_auth, route.jwt_auth);
+        assert_eq!(metadata.api_key_auth, route.api_key_auth);
+        assert_eq!(metadata.authorization, route.authorization);
+        assert_eq!(metadata.lifecycle_hooks, route.lifecycle_hooks);
+        assert_eq!(metadata.openrpc_spec, route.openrpc_spec);
+
+        let registry = spikard_core::SchemaRegistry::new();
+        let rebuilt = crate::Route::from_metadata(metadata, &registry).expect("metadata round-trips");
+
+        assert_rate_limit_matches(&rebuilt.rate_limit);
+        assert_eq!(rebuilt.request_id, route.request_id);
+        assert_eq!(rebuilt.jwt_auth, route.jwt_auth);
+        assert_eq!(rebuilt.api_key_auth, route.api_key_auth);
+        assert_eq!(rebuilt.authorization, route.authorization);
+        assert_eq!(rebuilt.lifecycle_hooks, route.lifecycle_hooks);
+        assert_eq!(rebuilt.openrpc_spec, route.openrpc_spec);
     }
 
     #[test]

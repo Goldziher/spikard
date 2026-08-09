@@ -53,12 +53,6 @@ fn build_routes(path: &str) -> Vec<(Route, Arc<dyn Handler>)> {
                 path: path.to_string(),
                 handler_name: "echo_get".to_string(),
                 expects_json_body: false,
-                cors: None,
-                is_async: true,
-                file_params: None,
-                request_validator: None,
-                response_validator: None,
-                parameter_validator: None,
                 jsonrpc_method: Some(JsonRpcMethodInfo {
                     method_name: "spikard.test.echo".to_string(),
                     description: Some("Echo JSON-RPC".to_string()),
@@ -67,11 +61,7 @@ fn build_routes(path: &str) -> Vec<(Route, Arc<dyn Handler>)> {
                     deprecated: false,
                     tags: vec!["test".to_string()],
                 }),
-                compression: None,
-                body_limit: None,
-                request_timeout_secs: None,
-                #[cfg(feature = "di")]
-                handler_dependencies: Vec::new(),
+                ..Default::default()
             },
             Arc::new(EchoHandler) as Arc<dyn Handler>,
         ),
@@ -81,18 +71,7 @@ fn build_routes(path: &str) -> Vec<(Route, Arc<dyn Handler>)> {
                 path: path.to_string(),
                 handler_name: "echo_post".to_string(),
                 expects_json_body: true,
-                cors: None,
-                is_async: true,
-                file_params: None,
-                request_validator: None,
-                response_validator: None,
-                parameter_validator: None,
-                jsonrpc_method: None,
-                compression: None,
-                body_limit: None,
-                request_timeout_secs: None,
-                #[cfg(feature = "di")]
-                handler_dependencies: Vec::new(),
+                ..Default::default()
             },
             Arc::new(EchoHandler) as Arc<dyn Handler>,
         ),
@@ -121,15 +100,6 @@ fn build_route_metadata(path: &str) -> Vec<RouteMetadata> {
             method: "GET".to_string(),
             path: path.to_string(),
             handler_name: "echo_get".to_string(),
-            request_schema: None,
-            response_schema: None,
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
-            body_param_name: None,
-            #[cfg(feature = "di")]
-            handler_dependencies: None,
             jsonrpc_method: Some(
                 serde_json::to_value(JsonRpcMethodInfo {
                     method_name: "spikard.test.echo".to_string(),
@@ -141,10 +111,7 @@ fn build_route_metadata(path: &str) -> Vec<RouteMetadata> {
                 })
                 .expect("jsonrpc method info"),
             ),
-            static_response: None,
-            compression: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         },
         RouteMetadata {
             method: "POST".to_string(),
@@ -152,18 +119,8 @@ fn build_route_metadata(path: &str) -> Vec<RouteMetadata> {
             handler_name: "echo_post".to_string(),
             request_schema: Some(request_schema),
             response_schema: Some(response_schema),
-            parameter_schema: None,
-            file_params: None,
-            is_async: true,
-            cors: None,
             body_param_name: Some("body".to_string()),
-            #[cfg(feature = "di")]
-            handler_dependencies: None,
-            jsonrpc_method: None,
-            compression: None,
-            static_response: None,
-            body_limit: None,
-            request_timeout_secs: None,
+            ..Default::default()
         },
     ]
 }
@@ -335,20 +292,8 @@ async fn static_response_route_serves_pre_built_response() {
         method: "GET".to_string(),
         path: "/health".to_string(),
         handler_name: "health_check".to_string(),
-        request_schema: None,
-        response_schema: None,
-        parameter_schema: None,
-        file_params: None,
         is_async: false,
-        cors: None,
-        body_param_name: None,
-        #[cfg(feature = "di")]
-        handler_dependencies: None,
-        jsonrpc_method: None,
-        compression: None,
-        static_response: None,
-        body_limit: None,
-        request_timeout_secs: None,
+        ..Default::default()
     };
 
     let route = spikard_http::Route::from_metadata(route_meta.clone(), &spikard_http::SchemaRegistry::new())
@@ -384,40 +329,15 @@ async fn static_and_dynamic_routes_coexist() {
         method: "GET".to_string(),
         path: "/health".to_string(),
         handler_name: "health".to_string(),
-        request_schema: None,
-        response_schema: None,
-        parameter_schema: None,
-        file_params: None,
         is_async: false,
-        cors: None,
-        body_param_name: None,
-        #[cfg(feature = "di")]
-        handler_dependencies: None,
-        jsonrpc_method: None,
-        compression: None,
-        static_response: None,
-        body_limit: None,
-        request_timeout_secs: None,
+        ..Default::default()
     };
 
     let dynamic_meta = RouteMetadata {
         method: "GET".to_string(),
         path: api_items_path.clone(),
         handler_name: "echo_get".to_string(),
-        request_schema: None,
-        response_schema: None,
-        parameter_schema: None,
-        file_params: None,
-        is_async: true,
-        cors: None,
-        body_param_name: None,
-        #[cfg(feature = "di")]
-        handler_dependencies: None,
-        jsonrpc_method: None,
-        compression: None,
-        static_response: None,
-        body_limit: None,
-        request_timeout_secs: None,
+        ..Default::default()
     };
 
     let registry = spikard_http::SchemaRegistry::new();

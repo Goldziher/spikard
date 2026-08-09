@@ -51,18 +51,7 @@ fn route(path: &str, method: Method) -> Route {
         method,
         handler_name: "capture".to_string(),
         expects_json_body: true,
-        cors: None,
-        is_async: true,
-        file_params: None,
-        request_validator: None,
-        response_validator: None,
-        parameter_validator: None,
-        jsonrpc_method: None,
-        compression: None,
-        body_limit: None,
-        request_timeout_secs: None,
-        #[cfg(feature = "di")]
-        handler_dependencies: vec![],
+        ..Default::default()
     }
 }
 

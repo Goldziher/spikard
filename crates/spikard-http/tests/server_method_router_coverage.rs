@@ -38,18 +38,7 @@ fn route(method: Method, path: &str, expects_json_body: bool) -> Route {
         path: path.to_string(),
         handler_name: "echo_method".to_string(),
         expects_json_body,
-        cors: None,
-        is_async: true,
-        file_params: None,
-        request_validator: None,
-        response_validator: None,
-        parameter_validator: None,
-        jsonrpc_method: None,
-        compression: None,
-        body_limit: None,
-        request_timeout_secs: None,
-        #[cfg(feature = "di")]
-        handler_dependencies: Vec::new(),
+        ..Default::default()
     }
 }
 

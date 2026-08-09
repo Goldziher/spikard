@@ -38,18 +38,7 @@ fn basic_route(method: Method, path: &str, expects_json_body: bool) -> Route {
         path: path.to_string(),
         handler_name: "plain".to_string(),
         expects_json_body,
-        cors: None,
-        is_async: true,
-        file_params: None,
-        request_validator: None,
-        response_validator: None,
-        parameter_validator: None,
-        jsonrpc_method: None,
-        compression: None,
-        body_limit: None,
-        request_timeout_secs: None,
-        #[cfg(feature = "di")]
-        handler_dependencies: Vec::new(),
+        ..Default::default()
     }
 }
 
@@ -220,18 +209,8 @@ async fn grpc_content_type_is_not_rejected_on_json_route() {
         path: "/grpc/test".to_string(),
         handler_name: "grpc_test".to_string(),
         expects_json_body: true,
-        cors: None,
-        is_async: true,
-        file_params: None,
         request_validator: Some(Arc::new(spikard_core::SchemaValidator::new(schema).unwrap())),
-        response_validator: None,
-        parameter_validator: None,
-        jsonrpc_method: None,
-        compression: None,
-        body_limit: None,
-        request_timeout_secs: None,
-        #[cfg(feature = "di")]
-        handler_dependencies: Vec::new(),
+        ..Default::default()
     };
 
     let handler: Arc<dyn Handler> = Arc::new(PlainTextHandler {
