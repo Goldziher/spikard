@@ -33,15 +33,15 @@ defmodule Spikard.Conn do
   - path: Request path
   """
   @type t :: %__MODULE__{
-    path_params: map(),
-    query_params: map(),
-    headers: map(),
-    cookies: map(),
-    body: any(),
-    raw_body: binary() | nil,
-    method: String.t(),
-    path: String.t()
-  }
+          path_params: map(),
+          query_params: map(),
+          headers: map(),
+          cookies: map(),
+          body: any(),
+          raw_body: binary() | nil,
+          method: String.t(),
+          path: String.t()
+        }
 
   @doc """
   Get a path parameter value.
@@ -71,6 +71,7 @@ defmodule Spikard.Conn do
     Map.get(cookies, name)
   end
 end
+
 defmodule Spikard.App do
   @moduledoc """
   Spikard application builder.
@@ -110,18 +111,19 @@ defmodule Spikard.App do
   def route(%__MODULE__{} = self, builder, handler) do
     # Wrap handler closure in a process if it's not already one
     handler_pid =
-    case handler do
-      pid when is_pid(pid) ->
-      pid
+      case handler do
+        pid when is_pid(pid) ->
+          pid
 
-      fun when is_function(fun) ->
-      {:ok, pid} = GenServer.start_link(__MODULE__.HandlerWrapper, fun)
-      pid
-    end
+        fun when is_function(fun) ->
+          {:ok, pid} = GenServer.start_link(__MODULE__.HandlerWrapper, fun)
+          pid
+      end
 
-    entry = {"route", {builder}, handler_pid}
+    entry = {"route", {builder.ref}, handler_pid}
     %__MODULE__{self | registrations: [entry | self.registrations]}
   end
+
   # HandlerWrapper GenServer: wraps a closure for use as a handler
   defmodule HandlerWrapper do
     use GenServer
@@ -134,21 +136,21 @@ defmodule Spikard.App do
       {:ok, handler_fn}
     end
 
-    def handle_cast({:trait_call, _method, args_json, reply_id}, handler_fn) do
+    def handle_info({:trait_call, _method, args_json, reply_id}, handler_fn) do
       case Jason.decode(args_json) do
         {:ok, args} ->
-        # Build request context from RequestData fields in args
-        try do
-          conn = build_conn(args)
-          response = handler_fn.(conn)
-          response_json = Jason.encode!(response)
-          Native.complete_trait_call(reply_id, response_json)
-        rescue
-          _e -> Native.complete_trait_call(reply_id, "{\"error\": \"handler error\"}")
-        end
+          # Build request context from RequestData fields in args
+          try do
+            conn = build_conn(args)
+            response = handler_fn.(conn)
+            response_json = Jason.encode!(response)
+            Native.complete_trait_call(reply_id, response_json)
+          rescue
+            _e -> Native.complete_trait_call(reply_id, "{\"error\": \"handler error\"}")
+          end
 
         {:error, _} ->
-        Native.complete_trait_call(reply_id, "{\"error\": \"json decode error\"}")
+          Native.complete_trait_call(reply_id, "{\"error\": \"json decode error\"}")
       end
 
       {:noreply, handler_fn}
@@ -321,6 +323,7 @@ defmodule Spikard.App do
       trace(app, path, handler)
     end
   end
+
   # GenServer for dispatching trait_call messages from Rust.
   defmodule App.Handler do
     use GenServer
@@ -333,43 +336,42 @@ defmodule Spikard.App do
       {:ok, state}
     end
 
-    def handle_cast({:trait_call, method, args, reply_id}, registrations) do
+    def handle_info({:trait_call, method, args, reply_id}, registrations) do
       # args arrives as a native Erlang map (no JSON decode); dispatch to the registered handler.
       case decode_args_and_dispatch(method, args, registrations) do
         {:ok, response} ->
-        Native.complete_trait_call(reply_id, response)
+          Native.complete_trait_call(reply_id, response)
 
         {:error, reason} ->
-        error_response = %{"error" => reason}
-        Native.complete_trait_call(reply_id, error_response)
+          error_response = %{"error" => reason}
+          Native.complete_trait_call(reply_id, error_response)
       end
 
       {:noreply, registrations}
     end
 
-
     defp decode_args_and_dispatch(method, args, registrations) do
       # Find handler entry for the method
       case find_handler(method, registrations) do
         nil ->
-        {:error, "Handler not registered for method: #{method}"}
+          {:error, "Handler not registered for method: #{method}"}
 
         {^method, _metadata, handler} ->
-        # Call the registered handler with the native args map (assumes handler accepts a single arg)
-        try do
-          response = handler.(args)
-          # Encode response to JSON (the reply path stays JSON)
-          case Jason.encode(response) do
-            {:ok, response_json} ->
-            {:ok, response_json}
+          # Call the registered handler with the native args map (assumes handler accepts a single arg)
+          try do
+            response = handler.(args)
+            # Encode response to JSON (the reply path stays JSON)
+            case Jason.encode(response) do
+              {:ok, response_json} ->
+                {:ok, response_json}
 
-            {:error, reason} ->
-            {:error, "Failed to encode response: #{reason}"}
+              {:error, reason} ->
+                {:error, "Failed to encode response: #{reason}"}
+            end
+          rescue
+            e ->
+              {:error, "Handler raised exception: #{inspect(e)}"}
           end
-        rescue
-          e ->
-          {:error, "Handler raised exception: #{inspect(e)}"}
-        end
       end
     end
 

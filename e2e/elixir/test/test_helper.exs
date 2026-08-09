@@ -15,19 +15,24 @@ unless System.get_env("SUT_URL") do
   app_harness_bin = Path.expand("../app_harness.exs", __DIR__)
   project_root = Path.expand("..", __DIR__)
 
-  # Build the list of ebin directories from _build/dev/lib so the harness can access compiled dependencies
-  build_lib_dir = Path.join(project_root, "_build/dev/lib")
-  lib_paths = if File.dir?(build_lib_dir) do
-    File.ls!(build_lib_dir)
-    |> Enum.map(&Path.join(build_lib_dir, &1))
-    |> Enum.filter(&File.dir?/1)
-    |> Enum.flat_map(fn lib_path ->
-      ebin_path = Path.join(lib_path, "ebin")
-      if File.dir?(ebin_path), do: ["-pa", ebin_path], else: []
-    end)
-  else
-    []
-  end
+  # Build the list of ebin directories from the CURRENT MIX_ENV's _build tree so
+  # the harness can access compiled dependencies. `mix test` compiles deps under
+  # _build/test/lib (not _build/dev/lib), so hardcoding "dev" leaves the harness
+  # without the SUT binding on its code path (Spikard.App -> :nofile).
+  build_lib_dir = Path.join(project_root, "_build/#{Mix.env()}/lib")
+
+  lib_paths =
+    if File.dir?(build_lib_dir) do
+      File.ls!(build_lib_dir)
+      |> Enum.map(&Path.join(build_lib_dir, &1))
+      |> Enum.filter(&File.dir?/1)
+      |> Enum.flat_map(fn lib_path ->
+        ebin_path = Path.join(lib_path, "ebin")
+        if File.dir?(ebin_path), do: ["-pa", ebin_path], else: []
+      end)
+    else
+      []
+    end
 
   # Allocate a free ephemeral port and hand it to the harness via
   # SPIKARD_SERVER_PORT (honored by the core server) so parallel suites and
@@ -38,12 +43,13 @@ unless System.get_env("SUT_URL") do
 
   # Use `elixir` to execute the harness script with proper code paths, bound
   # to the allocated port via SPIKARD_SERVER_PORT.
-  port = Port.open({:spawn_executable, System.find_executable("elixir")}, [
-    :binary,
-    {:line, 65_536},
-    args: lib_paths ++ [app_harness_bin],
-    env: [{~c"SPIKARD_SERVER_PORT", String.to_charlist(Integer.to_string(harness_port))}]
-  ])
+  port =
+    Port.open({:spawn_executable, System.find_executable("elixir")}, [
+      :binary,
+      {:line, 65_536},
+      args: lib_paths ++ [app_harness_bin],
+      env: [{~c"SPIKARD_SERVER_PORT", String.to_charlist(Integer.to_string(harness_port))}]
+    ])
 
   url = "http://127.0.0.1:#{harness_port}"
 
@@ -52,25 +58,46 @@ unless System.get_env("SUT_URL") do
   ready = false
 
   {ready, url} =
-  Enum.reduce_while(1..150, {false, url}, fn _, {_, url_acc} ->
-    now = :erlang.monotonic_time(:millisecond)
-    if now > deadline do
-      {:halt, {false, url_acc}}
-    else
-      case :gen_tcp.connect(String.to_charlist("127.0.0.1"), harness_port, [], 500) do
-        {:ok, socket} ->
-        :gen_tcp.close(socket)
-        {:halt, {true, url_acc}}
-        {:error, _} ->
-        Process.sleep(100)
-        {:cont, {false, url_acc}}
+    Enum.reduce_while(1..150, {false, url}, fn _, {_, url_acc} ->
+      now = :erlang.monotonic_time(:millisecond)
+
+      if now > deadline do
+        {:halt, {false, url_acc}}
+      else
+        case :gen_tcp.connect(String.to_charlist("127.0.0.1"), harness_port, [], 500) do
+          {:ok, socket} ->
+            :gen_tcp.close(socket)
+            {:halt, {true, url_acc}}
+
+          {:error, _} ->
+            Process.sleep(100)
+            {:cont, {false, url_acc}}
+        end
       end
-    end
-  end)
+    end)
 
   unless ready do
     Port.close(port)
     raise "App harness did not become reachable on 127.0.0.1:#{harness_port} within 15s"
+  end
+
+  # Reap the harness explicitly when the suite ends. Closing a port only closes the
+  # child's stdin, and the harness runs `elixir` with `-noshell`, which never reads
+  # stdin — so it outlives `mix test`, gets reparented to init, and keeps the stdout
+  # pipe it inherited from the task runner open. The runner then blocks forever
+  # waiting for EOF even though every test already passed. ~keep
+  case :erlang.port_info(port, :os_pid) do
+    {:os_pid, harness_os_pid} ->
+      ExUnit.after_suite(fn _ ->
+        pid_arg = Integer.to_string(harness_os_pid)
+        System.cmd("kill", [pid_arg], stderr_to_stdout: true)
+        Process.sleep(200)
+        System.cmd("kill", ["-9", pid_arg], stderr_to_stdout: true)
+        :ok
+      end)
+
+    _ ->
+      :ok
   end
 
   System.put_env("SUT_URL", url)

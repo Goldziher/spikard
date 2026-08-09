@@ -40,6 +40,18 @@ typedef struct SPIKARDContactInfo SPIKARDContactInfo;
  */
 typedef struct SPIKARDCorsConfig SPIKARDCorsConfig;
 /**
+ * Configuration for building and executing a dynamic-SDL schema.
+ */
+typedef struct SPIKARDDynamicSchemaConfig SPIKARDDynamicSchemaConfig;
+/**
+ * A field-level error to inject at a specific response path.
+ *
+ * `path` is the dot-separated sequence of field names from the operation root
+ * to the field that should fail, e.g. `"user"` for a top-level field or
+ * `"order.customer"` for a nested one.
+ */
+typedef struct SPIKARDFieldErrorSpec SPIKARDFieldErrorSpec;
+/**
  * Configuration for fully-featured schemas with Query, Mutation, and
  * Subscription types
  */
@@ -69,11 +81,6 @@ typedef struct SPIKARDGraphQLError SPIKARDGraphQLError;
  * \endcode
  */
 typedef struct SPIKARDGraphQLRouteConfig SPIKARDGraphQLRouteConfig;
-/**
- * Snapshot of a GraphQL subscription exchange over WebSocket.
- */
-typedef struct SPIKARDGraphQLSubscriptionSnapshot
-    SPIKARDGraphQLSubscriptionSnapshot;
 /**
  * Configuration for gRPC support
  *
@@ -108,13 +115,6 @@ typedef struct SPIKARDGraphQLSubscriptionSnapshot
  * \endcode
  */
 typedef struct SPIKARDGrpcConfig SPIKARDGrpcConfig;
-/**
- * Handler trait that all language bindings must implement
- *
- * This trait is completely language-agnostic. Each binding (Python, Node, WASM)
- * implements this trait to bridge their runtime to our HTTP server.
- */
-typedef struct SPIKARDHandler SPIKARDHandler;
 typedef struct SPIKARDHandlerResult SPIKARDHandlerResult;
 /**
  * Convert user-facing handler functions into the low-level `Handler` trait.
@@ -233,10 +233,6 @@ typedef struct SPIKARDRequestData SPIKARDRequestData;
  */
 typedef struct SPIKARDResponse SPIKARDResponse;
 /**
- * Snapshot of an Axum response used by higher-level language bindings.
- */
-typedef struct SPIKARDResponseSnapshot SPIKARDResponseSnapshot;
-/**
  * Builder for defining a route.
  */
 typedef struct SPIKARDRouteBuilder SPIKARDRouteBuilder;
@@ -259,10 +255,6 @@ typedef struct SPIKARDServerConfig SPIKARDServerConfig;
  * Server information
  */
 typedef struct SPIKARDServerInfo SPIKARDServerInfo;
-/**
- * Possible errors while converting an Axum response into a snapshot.
- */
-typedef struct SPIKARDSnapshotError SPIKARDSnapshotError;
 /**
  * An individual SSE event
  *
@@ -294,15 +286,6 @@ typedef struct SPIKARDSseEvent SPIKARDSseEvent;
  * Static file serving configuration
  */
 typedef struct SPIKARDStaticFilesConfig SPIKARDStaticFilesConfig;
-/**
- * Core test client for making HTTP requests to a Spikard application.
- *
- * This struct wraps axum-test's TestServer and provides a language-agnostic
- * interface for making HTTP requests, sending WebSocket connections, and
- * handling Server-Sent Events. Language bindings wrap this to provide
- * native API surfaces.
- */
-typedef struct SPIKARDTestClient SPIKARDTestClient;
 /**
  * A single Server-Sent Event.
  */
@@ -337,10 +320,6 @@ typedef struct SPIKARDValidateRequest SPIKARDValidateRequest;
  * Response body for `POST /asyncapi/validate`
  */
 typedef struct SPIKARDValidationResponse SPIKARDValidationResponse;
-/**
- * A WebSocket message that can be text or binary.
- */
-typedef struct SPIKARDWebSocketMessage SPIKARDWebSocketMessage;
 
 /**
  * Opaque handle to a App service instance.
@@ -481,6 +460,100 @@ char *
 spikard_upload_file_content_type_or_default(const SPIKARDUploadFile *this_);
 
 /**
+ * Create a `FieldErrorSpec` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `spikard_field_error_spec_free`.
+ */
+SPIKARDFieldErrorSpec *spikard_field_error_spec_from_json(const char *json);
+
+/**
+ * Serialize a `FieldErrorSpec` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `spikard` function.
+ * The returned string must be freed with `spikard_free_string`.
+ */
+char *spikard_field_error_spec_to_json(const SPIKARDFieldErrorSpec *ptr);
+
+/**
+ * Free a `FieldErrorSpec` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void spikard_field_error_spec_free(SPIKARDFieldErrorSpec *ptr);
+
+/**
+ * Get the `path` field from a `FieldErrorSpec`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_field_error_spec_path(const SPIKARDFieldErrorSpec *ptr);
+
+/**
+ * Get the `message` field from a `FieldErrorSpec`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_field_error_spec_message(const SPIKARDFieldErrorSpec *ptr);
+
+/**
+ * Create a `DynamicSchemaConfig` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `spikard_dynamic_schema_config_free`.
+ */
+SPIKARDDynamicSchemaConfig *
+spikard_dynamic_schema_config_from_json(const char *json);
+
+/**
+ * Serialize a `DynamicSchemaConfig` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `spikard` function.
+ * The returned string must be freed with `spikard_free_string`.
+ */
+char *
+spikard_dynamic_schema_config_to_json(const SPIKARDDynamicSchemaConfig *ptr);
+
+/**
+ * Free a `DynamicSchemaConfig` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void spikard_dynamic_schema_config_free(SPIKARDDynamicSchemaConfig *ptr);
+
+/**
+ * Get the `introspection_enabled` field from a `DynamicSchemaConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t spikard_dynamic_schema_config_introspection_enabled(
+    const SPIKARDDynamicSchemaConfig *ptr);
+
+/**
+ * Get the `max_complexity` field from a `DynamicSchemaConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uintptr_t spikard_dynamic_schema_config_max_complexity(
+    const SPIKARDDynamicSchemaConfig *ptr);
+
+/**
+ * Get the `max_depth` field from a `DynamicSchemaConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uintptr_t
+spikard_dynamic_schema_config_max_depth(const SPIKARDDynamicSchemaConfig *ptr);
+
+/**
+ * Get the `field_errors` field from a `DynamicSchemaConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_dynamic_schema_config_field_errors(
+    const SPIKARDDynamicSchemaConfig *ptr);
+
+/**
  * Free a `GraphQLRouteConfig` handle.
  * # Safety
  * Pointer must have been returned by this library, or be null.
@@ -559,6 +632,12 @@ int32_t spikard_graph_ql_route_config_is_playground_enabled(
  */
 char *spikard_graph_ql_route_config_get_description(
     const SPIKARDGraphQLRouteConfig *this_);
+
+/**
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+SPIKARDGraphQLRouteConfig *spikard_graph_ql_route_config_default(void);
 
 /**
  * Create a `SchemaConfig` from a JSON string. Returns null on failure.
@@ -772,6 +851,43 @@ spikard_full_schema_config_depth_limit(const SPIKARDFullSchemaConfig *ptr);
  * Returned pointers must be freed with the appropriate free function.
  */
 SPIKARDFullSchemaConfig *spikard_full_schema_config_default(void);
+
+/**
+ * Create a `AsyncApiConfig` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `spikard_async_api_config_free`.
+ */
+SPIKARDAsyncApiConfig *spikard_async_api_config_from_json(const char *json);
+
+/**
+ * Serialize a `AsyncApiConfig` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `spikard` function.
+ * The returned string must be freed with `spikard_free_string`.
+ */
+char *spikard_async_api_config_to_json(const SPIKARDAsyncApiConfig *ptr);
+
+/**
+ * Free a `AsyncApiConfig` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void spikard_async_api_config_free(SPIKARDAsyncApiConfig *ptr);
+
+/**
+ * Get the `enabled` field from a `AsyncApiConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t spikard_async_api_config_enabled(const SPIKARDAsyncApiConfig *ptr);
+
+/**
+ * Get the `spec` field from a `AsyncApiConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_async_api_config_spec(const SPIKARDAsyncApiConfig *ptr);
 
 /**
  * Create a `BackgroundTaskConfig` from a JSON string. Returns null on failure.
@@ -1904,6 +2020,26 @@ spikard_route_builder_compression(SPIKARDRouteBuilder *this_,
                                   const SPIKARDCompressionConfig *compression);
 
 /**
+ * Attach a per-route maximum request body size in bytes, overriding the
+ * server-global default.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+SPIKARDRouteBuilder *
+spikard_route_builder_body_limit(SPIKARDRouteBuilder *this_,
+                                 uintptr_t max_bytes);
+
+/**
+ * Attach a per-route request timeout in seconds, overriding the server-global
+ * default.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+SPIKARDRouteBuilder *
+spikard_route_builder_request_timeout(SPIKARDRouteBuilder *this_,
+                                      uint64_t seconds);
+
+/**
  * Mark the route as synchronous.
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null.
  * Returned pointers must be freed with the appropriate free function.
@@ -2111,43 +2247,6 @@ char *spikard_problem_details_to_json(const SPIKARDProblemDetails *this_);
  */
 char *
 spikard_problem_details_to_json_pretty(const SPIKARDProblemDetails *this_);
-
-/**
- * Create a `AsyncApiConfig` from a JSON string. Returns null on failure.
- * # Safety
- * JSON string must be valid UTF-8 and null-terminated.
- * Returned handle must be freed with `spikard_async_api_config_free`.
- */
-SPIKARDAsyncApiConfig *spikard_async_api_config_from_json(const char *json);
-
-/**
- * Serialize a `AsyncApiConfig` to a JSON string. Returns null on failure.
- * # Safety
- * `ptr` must be a valid, non-null pointer returned by a `spikard` function.
- * The returned string must be freed with `spikard_free_string`.
- */
-char *spikard_async_api_config_to_json(const SPIKARDAsyncApiConfig *ptr);
-
-/**
- * Free a `AsyncApiConfig` handle.
- * # Safety
- * Pointer must have been returned by this library, or be null.
- */
-void spikard_async_api_config_free(SPIKARDAsyncApiConfig *ptr);
-
-/**
- * Get the `enabled` field from a `AsyncApiConfig`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-int32_t spikard_async_api_config_enabled(const SPIKARDAsyncApiConfig *ptr);
-
-/**
- * Get the `spec` field from a `AsyncApiConfig`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *spikard_async_api_config_spec(const SPIKARDAsyncApiConfig *ptr);
 
 /**
  * Create a `ParsedChannel` from a JSON string. Returns null on failure.
@@ -2571,9 +2670,9 @@ void spikard_request_data_free(SPIKARDRequestData *ptr);
 int32_t spikard_method_from_i32(int32_t value);
 
 /**
- * Convert a `Method` variant name (C string) to its integer value. Returns -1
- * on invalid input. # Safety Caller must ensure `ptr` is a valid pointer to a
- * `c_char` or null.
+ * Convert a `Method` serde wire value (C string) to its integer discriminant.
+ * Returns -1 on invalid input. # Safety Caller must ensure `ptr` is a valid
+ * pointer to a `c_char` or null.
  */
 int32_t spikard_method_from_str(const char *name);
 
@@ -2585,9 +2684,9 @@ int32_t spikard_method_from_str(const char *name);
 int32_t spikard_security_scheme_info_from_i32(int32_t value);
 
 /**
- * Convert a `SecuritySchemeInfo` variant name (C string) to its integer value.
- * Returns -1 on invalid input. # Safety Caller must ensure `ptr` is a valid
- * pointer to a `c_char` or null.
+ * Convert a `SecuritySchemeInfo` serde wire value (C string) to its integer
+ * discriminant. Returns -1 on invalid input. # Safety Caller must ensure `ptr`
+ * is a valid pointer to a `c_char` or null.
  */
 int32_t spikard_security_scheme_info_from_str(const char *name);
 
@@ -2600,9 +2699,9 @@ int32_t spikard_security_scheme_info_from_str(const char *name);
 int32_t spikard_snapshot_error_from_i32(int32_t value);
 
 /**
- * Convert a `SnapshotError` variant name (C string) to its integer value.
- * Returns -1 on invalid input. # Safety Caller must ensure `ptr` is a valid
- * pointer to a `c_char` or null.
+ * Convert a `SnapshotError` serde wire value (C string) to its integer
+ * discriminant. Returns -1 on invalid input. # Safety Caller must ensure `ptr`
+ * is a valid pointer to a `c_char` or null.
  */
 int32_t spikard_snapshot_error_from_str(const char *name);
 
@@ -2614,9 +2713,9 @@ int32_t spikard_snapshot_error_from_str(const char *name);
 int32_t spikard_web_socket_message_from_i32(int32_t value);
 
 /**
- * Convert a `WebSocketMessage` variant name (C string) to its integer value.
- * Returns -1 on invalid input. # Safety Caller must ensure `ptr` is a valid
- * pointer to a `c_char` or null.
+ * Convert a `WebSocketMessage` serde wire value (C string) to its integer
+ * discriminant. Returns -1 on invalid input. # Safety Caller must ensure `ptr`
+ * is a valid pointer to a `c_char` or null.
  */
 int32_t spikard_web_socket_message_from_str(const char *name);
 
