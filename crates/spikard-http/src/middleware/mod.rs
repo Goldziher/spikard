@@ -377,10 +377,14 @@ pub async fn validate_content_type_middleware(
                         match serde_json::from_slice::<serde_json::Value>(&body_bytes) {
                             Ok(value) => parsed_json = Some(value),
                             Err(_) => {
-                                let error_body = json!({
-                                    "detail": "Invalid request format"
-                                });
-                                return Err((StatusCode::BAD_REQUEST, axum::Json(error_body)).into_response());
+                                // Must stay byte-identical to the JSON-parse branch in
+                                // server::handler, which rejects the same malformed body when this
+                                // middleware is not wired. Harnesses enable different middleware
+                                // per language, so a divergent shape here would make one fixture
+                                // return two different error bodies depending on the binding. ~keep
+                                let problem = ProblemDetails::bad_request("Invalid JSON in request body");
+                                let body = problem.to_json().unwrap_or_else(|_| "{}".to_string());
+                                return Err((StatusCode::BAD_REQUEST, body).into_response());
                             }
                         }
                     }
@@ -510,6 +514,76 @@ mod tests {
     use super::*;
     use axum::body::Body;
     use axum::http::Request;
+
+    /// This middleware and `server::handler` reject the same malformed bodies
+    /// independently, and only one of them runs for any given request — the middleware is
+    /// wired per harness and language harnesses enable different subsets. A divergence
+    /// would make one fixture return two different error bodies depending on which binding
+    /// served it, which stays invisible until a suite that wires the middleware is compared
+    /// against one that does not.
+    mod error_shape_parity {
+        use super::*;
+        use tower::ServiceExt;
+
+        /// Drive a request through the validating middleware and return its status and body.
+        async fn through_middleware(
+            content_type: &str,
+            body: &str,
+            expects_json_body: bool,
+        ) -> (StatusCode, serde_json::Value) {
+            let app = axum::Router::new()
+                .route(
+                    "/items",
+                    axum::routing::post(|| async { "unreachable: the middleware must reject first" }),
+                )
+                .layer(axum::middleware::from_fn_with_state(
+                    RouteInfo { expects_json_body },
+                    validate_content_type_middleware,
+                ));
+
+            let request = Request::builder()
+                .method("POST")
+                .uri("/items")
+                .header("content-type", content_type)
+                .body(Body::from(body.to_string()))
+                .expect("request builds");
+
+            let response = app.oneshot(request).await.expect("middleware responds");
+            let status = response.status();
+            let bytes = axum::body::to_bytes(response.into_body(), usize::MAX)
+                .await
+                .expect("response body reads");
+            let json = serde_json::from_slice(&bytes).expect("error body is JSON");
+            (status, json)
+        }
+
+        fn assert_is_bad_request_problem_details(body: &serde_json::Value, expected_detail: &str) {
+            assert_eq!(body["type"], "https://spikard.dev/errors/bad-request");
+            assert_eq!(body["title"], "Bad Request");
+            assert_eq!(body["status"], 400);
+            assert_eq!(body["detail"], expected_detail);
+        }
+
+        #[tokio::test]
+        async fn should_return_problem_details_when_rejecting_malformed_json() {
+            let (status, body) = through_middleware("application/json", r#"{"name": "Item", "price": }"#, true).await;
+
+            assert_eq!(status, StatusCode::BAD_REQUEST);
+            assert_is_bad_request_problem_details(&body, "Invalid JSON in request body");
+        }
+
+        /// A bare `{"detail": ...}` is the shape this middleware used to emit. Asserting its
+        /// absence keeps a future edit from silently reintroducing the divergence.
+        #[tokio::test]
+        async fn should_not_emit_a_bare_detail_only_error_body() {
+            let (_, body) = through_middleware("application/json", "not valid json", true).await;
+
+            assert!(
+                body.get("type").is_some() && body.get("title").is_some() && body.get("status").is_some(),
+                "error body must be full ProblemDetails, got: {body}"
+            );
+        }
+    }
 
     #[test]
     fn test_route_info_creation() {

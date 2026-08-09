@@ -24,7 +24,10 @@
   "expected_response": {
     "status_code": 400,
     "body": {
-      "detail": "Invalid request format"
+      "type": "https://spikard.dev/errors/bad-request",
+      "title": "Bad Request",
+      "status": 400,
+      "detail": "Invalid JSON in request body"
     }
   },
   "notes": "Malformed JSON is a syntax error (400 Bad Request), not a validation error (422)"
