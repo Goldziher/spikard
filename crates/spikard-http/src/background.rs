@@ -13,6 +13,15 @@ use tokio_util::sync::CancellationToken;
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 #[serde(default)]
 pub struct BackgroundTaskConfig {
+    /// Whether the server starts a background task executor at router-construction time.
+    ///
+    /// `ServerConfig.background_tasks` is a bare struct rather than an `Option`, so its mere
+    /// presence cannot mean "configured" the way `Option`-shaped middleware config does — every
+    /// server has one. Without this flag every router build would spawn an executor task, which
+    /// also requires an ambient Tokio runtime that a synchronous `build_router_*` caller may not
+    /// have. Defaults to `false` so opting in is explicit, and matches the corpus vocabulary:
+    /// `fixtures/background_tasks.json` spells its per-route payloads `{"enabled": true, ...}`. ~keep
+    pub enabled: bool,
     pub max_queue_size: usize,
     pub max_concurrent_tasks: usize,
     pub drain_timeout_secs: u64,
@@ -21,6 +30,7 @@ pub struct BackgroundTaskConfig {
 impl Default for BackgroundTaskConfig {
     fn default() -> Self {
         Self {
+            enabled: false,
             max_queue_size: 1024,
             max_concurrent_tasks: 128,
             drain_timeout_secs: 30,
@@ -170,6 +180,16 @@ pub struct BackgroundRuntime {
 
 impl BackgroundRuntime {
     pub async fn start(config: BackgroundTaskConfig) -> Self {
+        Self::start_on(&tokio::runtime::Handle::current(), config)
+    }
+
+    /// Start the executor on an explicit runtime handle.
+    ///
+    /// Router construction (`build_router_with_handlers_and_config`) is synchronous, so it cannot
+    /// call [`BackgroundRuntime::start`] and cannot rely on `tokio::spawn`'s ambient runtime
+    /// either. Taking the handle explicitly lets the caller obtain it with
+    /// `Handle::try_current()` and turn "no runtime" into an error instead of a panic. ~keep
+    pub fn start_on(runtime: &tokio::runtime::Handle, config: BackgroundTaskConfig) -> Self {
         let (tx, rx) = mpsc::channel(config.max_queue_size);
         let metrics = Arc::new(BackgroundMetrics::default());
         let handle = BackgroundHandle {
@@ -180,7 +200,7 @@ impl BackgroundRuntime {
         let semaphore = Arc::new(Semaphore::new(config.max_concurrent_tasks));
         let driver_token = shutdown_token.clone();
 
-        let join_handle = tokio::spawn(run_executor(rx, semaphore, metrics.clone(), driver_token));
+        let join_handle = runtime.spawn(run_executor(rx, semaphore, metrics.clone(), driver_token));
 
         Self {
             handle,
@@ -374,6 +394,7 @@ mod tests {
     #[tokio::test]
     async fn test_queue_full_error() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 2,
             max_concurrent_tasks: 10,
             drain_timeout_secs: 5,
@@ -434,6 +455,7 @@ mod tests {
     #[tokio::test(flavor = "multi_thread")]
     async fn test_concurrency_limit_with_proper_synchronization() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 100,
             max_concurrent_tasks: 2,
             drain_timeout_secs: 30,
@@ -484,6 +506,7 @@ mod tests {
     #[tokio::test]
     async fn test_graceful_shutdown() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 10,
             max_concurrent_tasks: 2,
             drain_timeout_secs: 5,
@@ -516,6 +539,7 @@ mod tests {
     #[tokio::test]
     async fn test_shutdown_timeout() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 10,
             max_concurrent_tasks: 2,
             drain_timeout_secs: 1,
@@ -564,6 +588,7 @@ mod tests {
     #[tokio::test]
     async fn test_task_cancellation_on_shutdown() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 10,
             max_concurrent_tasks: 2,
             drain_timeout_secs: 1,
@@ -602,6 +627,7 @@ mod tests {
     #[tokio::test]
     async fn test_queue_overflow_multiple_spawns() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 3,
             max_concurrent_tasks: 10,
             drain_timeout_secs: 5,
@@ -746,6 +772,7 @@ mod tests {
     #[tokio::test]
     async fn test_shutdown_with_only_running_tasks() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 10,
             max_concurrent_tasks: 2,
             drain_timeout_secs: 5,
@@ -786,6 +813,7 @@ mod tests {
     #[tokio::test]
     async fn test_shutdown_drains_queued_tasks() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 100,
             max_concurrent_tasks: 1,
             drain_timeout_secs: 5,
@@ -821,6 +849,7 @@ mod tests {
     #[tokio::test]
     async fn test_shutdown_timeout_force_stops_long_tasks() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 10,
             max_concurrent_tasks: 2,
             drain_timeout_secs: 1,
@@ -884,6 +913,7 @@ mod tests {
     #[tokio::test]
     async fn test_concurrent_spawns_hit_semaphore_limit() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 100,
             max_concurrent_tasks: 3,
             drain_timeout_secs: 10,
@@ -987,6 +1017,7 @@ mod tests {
     #[tokio::test]
     async fn test_queue_overflow_with_immediate_rejection() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 2,
             max_concurrent_tasks: 100,
             drain_timeout_secs: 5,
@@ -1020,6 +1051,7 @@ mod tests {
     #[tokio::test]
     async fn test_metrics_accuracy_under_concurrent_load() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 50,
             max_concurrent_tasks: 5,
             drain_timeout_secs: 10,
@@ -1050,6 +1082,7 @@ mod tests {
     #[tokio::test]
     async fn test_drain_with_slowly_completing_tasks() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 50,
             max_concurrent_tasks: 2,
             drain_timeout_secs: 10,
@@ -1082,6 +1115,7 @@ mod tests {
     #[tokio::test]
     async fn test_semaphore_starvation_doesnt_deadlock() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 100,
             max_concurrent_tasks: 1,
             drain_timeout_secs: 10,
@@ -1116,6 +1150,7 @@ mod tests {
     #[tokio::test]
     async fn test_cancel_task_mid_execution() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 10,
             max_concurrent_tasks: 2,
             drain_timeout_secs: 1,
@@ -1156,6 +1191,7 @@ mod tests {
     #[tokio::test]
     async fn test_rapid_spawn_and_shutdown() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 1000,
             max_concurrent_tasks: 10,
             drain_timeout_secs: 5,
@@ -1270,6 +1306,7 @@ mod tests {
     #[tokio::test]
     async fn test_queue_full_metrics_updated() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 2,
             max_concurrent_tasks: 100,
             drain_timeout_secs: 5,
@@ -1332,6 +1369,7 @@ mod tests {
     #[tokio::test]
     async fn test_shutdown_with_queue_at_capacity() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 5,
             max_concurrent_tasks: 1,
             drain_timeout_secs: 10,
@@ -1389,6 +1427,7 @@ mod tests {
     #[tokio::test]
     async fn test_very_short_drain_timeout_forces_stop() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 10,
             max_concurrent_tasks: 2,
             drain_timeout_secs: 0,
@@ -1412,6 +1451,7 @@ mod tests {
     #[tokio::test]
     async fn test_spawn_many_tasks_sequential_drain() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 200,
             max_concurrent_tasks: 2,
             drain_timeout_secs: 15,
@@ -1443,6 +1483,7 @@ mod tests {
     #[tokio::test]
     async fn test_no_deadlock_with_max_concurrency_barrier() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 100,
             max_concurrent_tasks: 3,
             drain_timeout_secs: 10,
@@ -1489,6 +1530,7 @@ mod tests {
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn test_phase1_semaphore_acquisition_with_concurrent_load() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 50,
             max_concurrent_tasks: 1,
             drain_timeout_secs: 10,
@@ -1539,6 +1581,7 @@ mod tests {
     #[tokio::test(flavor = "multi_thread")]
     async fn test_concurrent_task_completion_race_conditions() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 100,
             max_concurrent_tasks: 8,
             drain_timeout_secs: 10,
@@ -1576,6 +1619,7 @@ mod tests {
     #[tokio::test(flavor = "multi_thread")]
     async fn test_failure_metric_tracking_under_concurrent_errors() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 50,
             max_concurrent_tasks: 5,
             drain_timeout_secs: 10,
@@ -1626,6 +1670,7 @@ mod tests {
     #[tokio::test(flavor = "multi_thread")]
     async fn test_handle_clone_isolation_concurrent_spawns() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 100,
             max_concurrent_tasks: 4,
             drain_timeout_secs: 10,
@@ -1728,6 +1773,7 @@ mod tests {
     #[tokio::test]
     async fn test_drain_phase_execution_with_lingering_senders() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 20,
             max_concurrent_tasks: 2,
             drain_timeout_secs: 10,
@@ -1761,6 +1807,7 @@ mod tests {
     #[tokio::test]
     async fn test_concurrent_queue_status_transitions() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 10,
             max_concurrent_tasks: 2,
             drain_timeout_secs: 10,
@@ -1807,6 +1854,7 @@ mod tests {
     #[tokio::test(flavor = "multi_thread")]
     async fn test_semaphore_no_starvation_with_uneven_task_duration() {
         let config = BackgroundTaskConfig {
+            enabled: true,
             max_queue_size: 100,
             max_concurrent_tasks: 2,
             drain_timeout_secs: 10,

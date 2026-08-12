@@ -702,6 +702,37 @@ fn resolve_route_lifecycle_hooks(
     Ok(resolved)
 }
 
+/// The literal `OpenRPC` document a route supplies via `Route.openrpc_spec`, if any.
+///
+/// `/openrpc.json` is a single server-wide document, but the spec is carried per route (the corpus
+/// puts it at `http.handler.middleware.openrpc.spec`), so two routes could disagree about what the
+/// server publishes. Serving one of them and dropping the other would make the published contract
+/// depend on route iteration order, so a genuine disagreement is a hard build error; routes that
+/// repeat the same document are fine, because there is nothing to choose between. ~keep
+fn route_supplied_openrpc_spec(routes: &[RouteHandlerPair]) -> Result<Option<serde_json::Value>, String> {
+    let mut supplied: Option<(&str, &serde_json::Value)> = None;
+
+    for (route, _) in routes {
+        let Some(spec) = route.openrpc_spec.as_ref() else {
+            continue;
+        };
+
+        match supplied {
+            None => supplied = Some((route.path.as_str(), spec)),
+            Some((first_path, first_spec)) if first_spec != spec => {
+                return Err(format!(
+                    "routes '{first_path}' and '{}' supply different OpenRPC spec documents, but \
+                     only one document can be served at /openrpc.json",
+                    route.path
+                ));
+            }
+            Some(_) => {}
+        }
+    }
+
+    Ok(supplied.map(|(_, spec)| spec.clone()))
+}
+
 /// Build an Axum router from routes and foreign handlers
 #[cfg(not(feature = "di"))]
 pub fn build_router_with_handlers(
@@ -1203,6 +1234,15 @@ pub(crate) fn build_router_with_handlers_and_config_and_grpc(
         None
     };
 
+    let supplied_openrpc_spec = route_supplied_openrpc_spec(&routes)?;
+
+    if supplied_openrpc_spec.is_some() && jsonrpc_registry.is_none() {
+        tracing::warn!(
+            "a route supplies an OpenRPC spec document, but JSON-RPC is not enabled, so no \
+             /openrpc.json endpoint is served and the document is unused"
+        );
+    }
+
     #[cfg(feature = "di")]
     let mut app =
         build_router_with_handlers_inner(routes, hooks, config.di_container.clone(), config.enable_http_trace)?;
@@ -1416,11 +1456,58 @@ pub(crate) fn build_router_with_handlers_and_config_and_grpc(
 
         let endpoint_path = jsonrpc_config.endpoint_path.clone();
         app = app.route(&endpoint_path, post(crate::jsonrpc::handle_jsonrpc).with_state(state));
-        let openrpc_spec = crate::jsonrpc::generate_openrpc_spec(&registry, &config)?;
+
+        let derived_from_routes = supplied_openrpc_spec.is_none();
+        let openrpc_spec = match supplied_openrpc_spec {
+            Some(spec) => spec,
+            None => crate::jsonrpc::generate_openrpc_spec(&registry, &config)?,
+        };
         app = app.route("/openrpc.json", get(move || async move { Json(openrpc_spec) }));
 
         tracing::info!("JSON-RPC endpoint enabled at {}", endpoint_path);
-        tracing::info!("OpenRPC documentation enabled at /openrpc.json");
+        if derived_from_routes {
+            tracing::info!("OpenRPC documentation enabled at /openrpc.json (derived from registered methods)");
+        } else {
+            tracing::info!("OpenRPC documentation enabled at /openrpc.json (route-supplied spec document)");
+        }
+    }
+
+    // Added last so it wraps every route registered above: `Router::layer` only applies to routes
+    // already present, so an earlier call would leave the OpenAPI/JSON-RPC/static routes without a
+    // `BackgroundHandle` extension.
+    //
+    // The runtime is owned by this layer's closure, so it lives exactly as long as the router.
+    // Dropping the router drops the last queue sender, which is what makes the executor finish its
+    // queue and exit — there is no other place to await that drain from:
+    // `Server::run_with_config(app, config)` is the only shutdown path in the crate and it receives
+    // no runtime handle, only the built router and a config clone. ~keep
+    if config.background_tasks.enabled {
+        let runtime = tokio::runtime::Handle::try_current().map_err(|err| {
+            format!(
+                "background tasks are enabled but the router is being built outside a Tokio runtime, \
+                 so no executor can be spawned: {err}"
+            )
+        })?;
+        let background = Arc::new(crate::background::BackgroundRuntime::start_on(
+            &runtime,
+            config.background_tasks.clone(),
+        ));
+
+        app = app.layer(axum::middleware::from_fn(
+            move |mut request: axum::extract::Request, next: axum::middleware::Next| {
+                let background = Arc::clone(&background);
+                async move {
+                    request.extensions_mut().insert(background.handle());
+                    next.run(request).await
+                }
+            },
+        ));
+
+        tracing::info!(
+            max_queue_size = config.background_tasks.max_queue_size,
+            max_concurrent_tasks = config.background_tasks.max_concurrent_tasks,
+            "Background task executor started; handlers receive a BackgroundHandle request extension"
+        );
     }
 
     Ok(app)

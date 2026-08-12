@@ -27,6 +27,7 @@ use std::time::{Duration, Instant};
 #[tokio::test]
 async fn test_graceful_shutdown_drains_all_spawned_tasks() {
     let config = BackgroundTaskConfig {
+        enabled: true,
         max_queue_size: 50,
         max_concurrent_tasks: 5,
         drain_timeout_secs: 10,
@@ -72,6 +73,7 @@ async fn test_graceful_shutdown_drains_all_spawned_tasks() {
 #[tokio::test]
 async fn test_graceful_shutdown_processes_both_inflight_and_queued_tasks() {
     let config = BackgroundTaskConfig {
+        enabled: true,
         max_queue_size: 100,
         max_concurrent_tasks: 2,
         drain_timeout_secs: 10,
@@ -115,6 +117,7 @@ async fn test_graceful_shutdown_processes_both_inflight_and_queued_tasks() {
 #[tokio::test]
 async fn test_shutdown_timeout_with_long_running_task() {
     let config = BackgroundTaskConfig {
+        enabled: true,
         max_queue_size: 10,
         max_concurrent_tasks: 2,
         drain_timeout_secs: 1,
@@ -157,6 +160,7 @@ async fn test_shutdown_timeout_with_long_running_task() {
 async fn test_shutdown_timeout_duration_respected() {
     let drain_timeout_secs = 2;
     let config = BackgroundTaskConfig {
+        enabled: true,
         max_queue_size: 10,
         max_concurrent_tasks: 1,
         drain_timeout_secs,
@@ -281,6 +285,7 @@ async fn test_task_failure_doesnt_crash_runtime() {
 #[tokio::test]
 async fn test_shutdown_drains_mixed_success_and_failure_tasks() {
     let config = BackgroundTaskConfig {
+        enabled: true,
         max_queue_size: 100,
         max_concurrent_tasks: 5,
         drain_timeout_secs: 10,
@@ -340,6 +345,7 @@ async fn test_shutdown_drains_mixed_success_and_failure_tasks() {
 async fn test_high_volume_queue_10k_tasks() {
     let task_count = 10_000;
     let config = BackgroundTaskConfig {
+        enabled: true,
         max_queue_size: 15_000,
         max_concurrent_tasks: 50,
         drain_timeout_secs: 60,
@@ -377,6 +383,7 @@ async fn test_high_volume_queue_10k_tasks() {
 #[tokio::test]
 async fn test_high_volume_queue_overflow_behavior() {
     let config = BackgroundTaskConfig {
+        enabled: true,
         max_queue_size: 10,
         max_concurrent_tasks: 50,
         drain_timeout_secs: 10,
@@ -459,6 +466,7 @@ async fn test_task_execution_order_all_complete() {
 #[tokio::test]
 async fn test_sequential_execution_with_single_concurrency() {
     let config = BackgroundTaskConfig {
+        enabled: true,
         max_queue_size: 100,
         max_concurrent_tasks: 1,
         drain_timeout_secs: 30,
@@ -497,6 +505,7 @@ async fn test_sequential_execution_with_single_concurrency() {
 #[tokio::test]
 async fn test_concurrent_execution_respects_limit() {
     let config = BackgroundTaskConfig {
+        enabled: true,
         max_queue_size: 100,
         max_concurrent_tasks: 5,
         drain_timeout_secs: 10,
@@ -557,6 +566,7 @@ async fn test_concurrent_execution_respects_limit() {
 #[tokio::test]
 async fn test_concurrent_tasks_safe_interaction() {
     let config = BackgroundTaskConfig {
+        enabled: true,
         max_queue_size: 100,
         max_concurrent_tasks: 10,
         drain_timeout_secs: 10,
@@ -615,6 +625,7 @@ async fn test_spawn_fails_after_shutdown_initiated() {
 #[tokio::test]
 async fn test_incomplete_task_cancelled_on_timeout() {
     let config = BackgroundTaskConfig {
+        enabled: true,
         max_queue_size: 10,
         max_concurrent_tasks: 1,
         drain_timeout_secs: 1,
@@ -660,6 +671,7 @@ async fn test_incomplete_task_cancelled_on_timeout() {
 #[tokio::test]
 async fn test_task_cancellation_doesnt_affect_others() {
     let config = BackgroundTaskConfig {
+        enabled: true,
         max_queue_size: 100,
         max_concurrent_tasks: 5,
         drain_timeout_secs: 1,
