@@ -23,6 +23,9 @@ const TYPE_AUTH_ERROR: &str = "https://spikard.dev/errors/unauthorized";
 /// Standard type URI for configuration errors (500)
 const TYPE_CONFIG_ERROR: &str = "https://spikard.dev/errors/configuration-error";
 
+/// Standard type URI for authorization errors (403)
+const TYPE_AUTHZ_ERROR: &str = "https://spikard.dev/errors/forbidden";
+
 /// Internal header key used to expose validated JWT claims to handlers.
 pub const INTERNAL_JWT_CLAIMS_HEADER: &str = "x-spikard-jwt-claims";
 
@@ -39,6 +42,19 @@ pub struct Claims {
     pub aud: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub iss: Option<String>,
+    /// Roles granted to this caller, checked against `AuthorizationConfig::required_roles`.
+    /// Additive field: absent/empty on tokens that don't carry roles, so existing JWT payloads
+    /// keep deserializing unchanged. ~keep
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub roles: Vec<String>,
+    /// OAuth-style scopes granted to this caller, checked against
+    /// `AuthorizationConfig::required_scopes`. ~keep
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub scopes: Vec<String>,
+    /// Fine-grained permissions granted to this caller, checked against
+    /// `AuthorizationConfig::required_permissions`. ~keep
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub permissions: Vec<String>,
 }
 
 /// JWT authentication middleware
@@ -204,6 +220,76 @@ pub async fn api_key_auth_middleware(
     Ok(next.run(request).await)
 }
 
+/// Authorization middleware enforcing per-route role/scope/permission requirements.
+///
+/// Reads the `Claims` request extension populated by [`jwt_auth_middleware`]. A route that
+/// configures `authorization` without JWT auth running first (route-level or global) has no
+/// claims to check against and fails closed with 403 rather than silently allowing the request
+/// through. This is deliberately layered to run *after* `jwt_auth_middleware` (see the per-route
+/// middleware ordering in `server/mod.rs`) so the extension is populated by the time this runs.
+///
+/// Coverage: Tested via integration tests (`route_authorization.rs`)
+///
+/// # Errors
+/// Returns 403 Forbidden with RFC 9457 Problem Details when no `Claims` are present on the
+/// request, or when the authenticated caller does not satisfy the configured
+/// role/scope/permission requirement.
+#[cfg(not(tarpaulin_include))]
+pub async fn authorization_middleware(
+    config: crate::AuthorizationConfig,
+    request: Request<Body>,
+    next: Next,
+) -> Result<Response, Response> {
+    let Some(claims) = request.extensions().get::<Claims>().cloned() else {
+        let problem = ProblemDetails::new(
+            TYPE_AUTHZ_ERROR,
+            "Missing authentication context",
+            StatusCode::FORBIDDEN,
+        )
+        .with_detail("Authorization requires an authenticated caller; no JWT claims were found on this request");
+        return Err((StatusCode::FORBIDDEN, axum::Json(problem)).into_response());
+    };
+
+    if !satisfies_authorization(&config, &claims) {
+        let problem = ProblemDetails::new(TYPE_AUTHZ_ERROR, "Insufficient permissions", StatusCode::FORBIDDEN)
+            .with_detail("The authenticated caller does not satisfy this route's authorization requirement");
+        return Err((StatusCode::FORBIDDEN, axum::Json(problem)).into_response());
+    }
+
+    Ok(next.run(request).await)
+}
+
+/// Check whether `claims` satisfies `config`'s role/scope/permission requirement.
+///
+/// An empty requirement (no roles, scopes, or permissions configured) is trivially satisfied.
+/// Otherwise every configured requirement across all three categories is checked and combined
+/// per `require_all`: AND (every requirement must hold) when `true`, OR (any single requirement
+/// suffices) when `false`.
+fn satisfies_authorization(config: &crate::AuthorizationConfig, claims: &Claims) -> bool {
+    let mut checks = config
+        .required_roles
+        .iter()
+        .map(|role| claims.roles.contains(role))
+        .chain(config.required_scopes.iter().map(|scope| claims.scopes.contains(scope)))
+        .chain(
+            config
+                .required_permissions
+                .iter()
+                .map(|permission| claims.permissions.contains(permission)),
+        )
+        .peekable();
+
+    if checks.peek().is_none() {
+        return true;
+    }
+
+    if config.require_all {
+        checks.all(|ok| ok)
+    } else {
+        checks.any(|ok| ok)
+    }
+}
+
 /// Extract API key from query parameters
 ///
 /// Checks for common API key parameter names: api_key, apiKey, key
@@ -250,6 +336,9 @@ mod tests {
             nbf: None,
             aud: Some(vec!["https://api.example.com".to_string()]),
             iss: Some("https://auth.example.com".to_string()),
+            roles: vec![],
+            scopes: vec![],
+            permissions: vec![],
         };
 
         let json = serde_json::to_string(&claims).unwrap();

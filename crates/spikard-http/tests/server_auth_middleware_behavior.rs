@@ -125,6 +125,9 @@ async fn jwt_auth_layer_accepts_valid_bearer_token() {
         nbf: None,
         aud: None,
         iss: None,
+        roles: vec![],
+        scopes: vec![],
+        permissions: vec![],
     };
     let token = encode(
         &Header::default(),
@@ -179,6 +182,9 @@ async fn jwt_auth_layer_exposes_claims_to_handler() {
         nbf: None,
         aud: None,
         iss: None,
+        roles: vec![],
+        scopes: vec![],
+        permissions: vec![],
     };
     let token = encode(
         &Header::default(),

@@ -4,7 +4,9 @@
 
 use crate::CorsConfig;
 use axum::body::Body;
+use axum::extract::{Request, State};
 use axum::http::{HeaderMap, HeaderValue, Response, StatusCode};
+use axum::middleware::Next;
 use axum::response::IntoResponse;
 
 /// Check if an origin is allowed by the CORS configuration
@@ -285,6 +287,49 @@ pub fn validate_cors_request(headers: &HeaderMap, cors_config: &CorsConfig) -> R
         ));
     }
     Ok(())
+}
+
+/// Per-route middleware state carrying the CORS config for the non-preflight ("simple") request
+/// path.
+#[derive(Clone)]
+pub(crate) struct CorsSimpleRequestState {
+    pub config: CorsConfig,
+}
+
+/// Enforce CORS on the actual request that follows (or substitutes for) a preflight, on a
+/// per-route basis.
+///
+/// `handle_preflight` has always handled the OPTIONS preflight; this middleware is what was
+/// missing for the simple-request path — the GET/POST/etc. request itself, which either follows
+/// a successful preflight or arrives directly for requests simple enough not to trigger one. It
+/// reuses `validate_cors_request` and `add_cors_headers` rather than re-implementing origin
+/// checking, so both paths enforce identical rules. Runs entirely inside a route's own
+/// `MethodRouter` layer stack: there is no server-global `CorsConfig` to interact with (CORS is
+/// per-route by design, see `ServerConfig`), so there is no tighten/loosen precedence question
+/// here the way there is for body_limit/timeout — a route either has CORS enforcement or it
+/// doesn't. ~keep
+pub(crate) async fn cors_simple_request_middleware(
+    State(state): State<CorsSimpleRequestState>,
+    request: Request<Body>,
+    next: Next,
+) -> Response<Body> {
+    let origin = request
+        .headers()
+        .get("origin")
+        .and_then(|v| v.to_str().ok())
+        .map(str::to_string);
+
+    if let Err(rejection) = validate_cors_request(request.headers(), &state.config) {
+        return *rejection;
+    }
+
+    let mut response = next.run(request).await;
+
+    if let Some(origin) = origin.filter(|o| !o.is_empty()) {
+        add_cors_headers(&mut response, &origin, &state.config);
+    }
+
+    response
 }
 
 #[cfg(test)]

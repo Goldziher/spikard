@@ -19,7 +19,9 @@ pub use di::{
     ResolvedDependencies, ValueDependency,
 };
 pub use http::{CompressionConfig, CorsConfig, Method, RateLimitConfig, RouteMetadata};
-pub use lifecycle::{HookResult, LifecycleHook, LifecycleHooks, LifecycleHooksBuilder, request_hook, response_hook};
+pub use lifecycle::{
+    HookResult, LifecycleHook, LifecycleHookPhase, LifecycleHooks, LifecycleHooksBuilder, request_hook, response_hook,
+};
 pub use parameters::ParameterValidator;
 pub use problem::ProblemDetails;
 pub use request_data::RequestData;

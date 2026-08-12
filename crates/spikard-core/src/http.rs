@@ -510,7 +510,7 @@ pub struct LifecycleHookRef {
     pub dependencies: Vec<String>,
     /// Optional free-form configuration passed to the hook (e.g. rate-limit thresholds)
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub config: Option<Value>,
+    pub config: Option<serde_json::Value>,
     /// Explicit execution order within the phase, where the corpus states one
     /// (`fixtures/lifecycle_hooks.json`'s `hook_execution_order`). Array position already implies
     /// an order, so this exists to let a fixture assert ordering rather than rely on it. ~keep

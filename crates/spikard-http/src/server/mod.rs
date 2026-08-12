@@ -578,6 +578,130 @@ async fn shutdown_signal() {
     }
 }
 
+/// Build a per-route JWT middleware config from `Route.jwt_auth`, or `None` when the route's JWT
+/// requirement is explicitly disabled (`enabled: false`).
+///
+/// `spikard_core::http::JwtAuthConfig::secret` is optional because asymmetric algorithms verify
+/// against a `public_key` instead, but `spikard_http::JwtConfig` — the type
+/// `auth::jwt_auth_middleware` actually consumes — only supports a symmetric secret today. A
+/// route configured for an asymmetric algorithm has no working enforcement path yet, so this is
+/// a hard build error rather than a route that silently never checks its token: failing to start
+/// is safer than failing open. ~keep
+fn jwt_config_from_route(route_path: &str, cfg: &crate::JwtAuthConfig) -> Result<Option<crate::JwtConfig>, String> {
+    if !cfg.enabled {
+        return Ok(None);
+    }
+
+    let Some(secret) = cfg.secret.clone() else {
+        return Err(format!(
+            "route '{route_path}': JWT auth with algorithm '{}' has no `secret`; per-route JWT \
+             enforcement only supports symmetric (secret-based) algorithms today, not `public_key`",
+            cfg.algorithm
+        ));
+    };
+
+    Ok(Some(crate::JwtConfig {
+        secret,
+        algorithm: cfg.algorithm.clone(),
+        audience: cfg.audience.clone(),
+        issuer: cfg.issuer.clone(),
+        leeway: cfg.leeway,
+    }))
+}
+
+/// Build a per-route API key middleware config from `Route.api_key_auth`, or `None` when the
+/// route's API key requirement is explicitly disabled.
+///
+/// An empty `keys` list on an *enabled* config is a hard misconfiguration error, never an open
+/// gate — see `ApiKeyAuthConfig::keys`'s doc comment in `spikard-core`. Enforcing it as an error
+/// here (rather than deploying a route that rejects every request with 401) is what that
+/// documented invariant requires of "a later enforcement phase". ~keep
+fn api_key_config_from_route(
+    route_path: &str,
+    cfg: &crate::ApiKeyAuthConfig,
+) -> Result<Option<crate::ApiKeyConfig>, String> {
+    if !cfg.enabled {
+        return Ok(None);
+    }
+
+    if cfg.keys.is_empty() {
+        return Err(format!(
+            "route '{route_path}': API key auth is enabled with an empty `keys` list, which would \
+             accept no key at all; configure at least one valid key or disable the requirement"
+        ));
+    }
+
+    Ok(Some(crate::ApiKeyConfig {
+        keys: cfg.keys.clone(),
+        header_name: cfg.header_name.clone(),
+    }))
+}
+
+/// Resolve a route's named lifecycle hook selection against the server's registered
+/// `LifecycleHooks` container.
+///
+/// Per-route `lifecycle_hooks` is opt-in, not a refinement of a server-wide default: a route with
+/// no `lifecycle_hooks` config runs no hooks at all, even if hooks are registered on
+/// `ServerConfig.lifecycle_hooks`. This replaces the old behavior where the same registered hook
+/// set was threaded into *every* route unconditionally (`hooks.clone()` at every
+/// `create_method_router` call site) — that made "hooks registered on the server" indistinguishable
+/// from "hooks that run for this route," which is exactly the bug this per-route wiring fixes. A
+/// named hook that isn't registered for the phase it's requested in is a hard build-time error,
+/// never a silent skip: silently running fewer hooks than a route's config asks for is a
+/// security-relevant footgun (e.g. a missing auth hook). ~keep
+fn resolve_route_lifecycle_hooks(
+    route_path: &str,
+    config: &crate::LifecycleHooksConfig,
+    registered: Option<&crate::LifecycleHooks>,
+) -> Result<crate::LifecycleHooks, String> {
+    use crate::LifecycleHookPhase;
+
+    let mut resolved = crate::LifecycleHooks::default();
+
+    let phases: [(LifecycleHookPhase, &[crate::LifecycleHookRef]); 5] = [
+        (LifecycleHookPhase::OnRequest, &config.on_request),
+        (LifecycleHookPhase::PreValidation, &config.pre_validation),
+        (LifecycleHookPhase::PreHandler, &config.pre_handler),
+        (LifecycleHookPhase::OnResponse, &config.on_response),
+        (LifecycleHookPhase::OnError, &config.on_error),
+    ];
+
+    for (phase, refs) in phases {
+        if refs.is_empty() {
+            continue;
+        }
+
+        let Some(registered) = registered else {
+            return Err(format!(
+                "route '{route_path}': references lifecycle hook '{}' ({phase:?}), but no lifecycle hooks are registered on the server",
+                refs[0].name
+            ));
+        };
+
+        let mut ordered: Vec<&crate::LifecycleHookRef> = refs.iter().collect();
+        ordered.sort_by_key(|hook_ref| hook_ref.order.unwrap_or(u32::MAX));
+
+        for hook_ref in ordered {
+            let hook = registered.find_in_phase(phase, &hook_ref.name).ok_or_else(|| {
+                format!(
+                    "route '{route_path}': references lifecycle hook '{}' ({phase:?}), but no hook with that name is registered for that phase",
+                    hook_ref.name
+                )
+            })?;
+
+            match phase {
+                LifecycleHookPhase::OnRequest => resolved.add_on_request(hook),
+                LifecycleHookPhase::PreValidation => resolved.add_pre_validation(hook),
+                LifecycleHookPhase::PreHandler => resolved.add_pre_handler(hook),
+                LifecycleHookPhase::OnResponse => resolved.add_on_response(hook),
+                LifecycleHookPhase::OnError => resolved.add_on_error(hook),
+            }
+        }
+    }
+
+    Ok(resolved)
+}
+
 /// Build an Axum router from routes and foreign handlers
 #[cfg(not(feature = "di"))]
 pub fn build_router_with_handlers(
@@ -707,6 +831,29 @@ fn build_router_with_handlers_inner(
                 continue;
             }
 
+            // ~keep Per-route lifecycle hooks are opt-in: only routes that name hooks via
+            // ~keep `route.lifecycle_hooks` get any hook execution, resolved against the
+            // ~keep server's registered `LifecycleHooks` (see `resolve_route_lifecycle_hooks`).
+            // ~keep A route with no `lifecycle_hooks` config runs no hooks, even if hooks are
+            // ~keep registered on `ServerConfig.lifecycle_hooks` — this is a deliberate
+            // ~keep replacement of the old blanket-apply-to-every-route behavior, not an
+            // ~keep oversight.
+            let route_hooks: Option<Arc<crate::LifecycleHooks>> = match route.lifecycle_hooks.as_ref() {
+                Some(config) => Some(Arc::new(resolve_route_lifecycle_hooks(
+                    &path,
+                    config,
+                    hooks.as_deref(),
+                )?)),
+                None => None,
+            };
+
+            // Preflight (OPTIONS + `route.cors`) is a full bypass of the normal handler pipeline
+            // (see `crate::cors::handle_preflight`), so none of the auth/CORS-simple-request
+            // layers below make sense on it: per the CORS spec, preflight must succeed without
+            // credentials, and it already gets complete CORS handling from `handle_preflight`
+            // itself. ~keep
+            let is_preflight_bypass = matches!(method, crate::Method::Options) && route.cors.is_some();
+
             let method_router: MethodRouter = match method {
                 crate::Method::Options => {
                     if let Some(ref cors_cfg) = route.cors {
@@ -721,7 +868,7 @@ fn build_router_with_handlers_inner(
                             method,
                             has_path_params,
                             handler,
-                            hooks.clone(),
+                            route_hooks.clone(),
                             include_raw_query_params,
                             include_query_params_json,
                         )
@@ -734,7 +881,7 @@ fn build_router_with_handlers_inner(
                         method,
                         has_path_params,
                         handler,
-                        hooks.clone(),
+                        route_hooks.clone(),
                         include_raw_query_params,
                         include_query_params_json,
                     )
@@ -761,6 +908,147 @@ fn build_router_with_handlers_inner(
                     crate::middleware::BodyLimitState { max_bytes },
                     crate::middleware::body_limit_middleware,
                 ))
+            } else {
+                method_router
+            };
+
+            // ~keep Compression mirrors the global `CompressionLayer` construction exactly, but
+            // ~keep is nested *inside* any global compression layer (that one wraps the whole
+            // ~keep app, outside this per-route stack). Because tower-http's compression is a
+            // ~keep no-op once a response already carries `Content-Encoding`, a per-route layer
+            // ~keep can add or customize compression when the global layer doesn't apply (or use
+            // ~keep different settings) — but it cannot force compression OFF for a route while a
+            // ~keep global compression layer is active, since that outer layer still runs
+            // ~keep afterwards regardless of what this inner layer did. Same tighten-only
+            // ~keep relationship as body_limit/timeout, just expressed through layer/predicate
+            // ~keep behavior instead of an explicit min() comparison.
+            let method_router: MethodRouter = if let Some(ref compression) = route.compression {
+                let mut compression_layer = CompressionLayer::new();
+                if !compression.gzip {
+                    compression_layer = compression_layer.gzip(false);
+                }
+                if !compression.brotli {
+                    compression_layer = compression_layer.br(false);
+                }
+
+                let min_threshold = compression.min_size.min(u64::MAX as usize) as u64;
+                let predicate = SizeAbove::new(min_threshold)
+                    .and(NotForContentType::GRPC)
+                    .and(NotForContentType::IMAGES)
+                    .and(NotForContentType::SSE);
+                let compression_layer = compression_layer.compress_when(predicate);
+
+                method_router.layer(compression_layer)
+            } else {
+                method_router
+            };
+
+            // ~keep CORS has no server-global equivalent (`ServerConfig` has no `cors` field —
+            // ~keep CORS is per-route by design), so there is no tighten/loosen precedence
+            // ~keep question here: a route either enforces CORS or it doesn't. This covers the
+            // ~keep simple-request path; preflight is handled separately above.
+            let method_router: MethodRouter = if let Some(ref cors_cfg) = route.cors {
+                if is_preflight_bypass {
+                    method_router
+                } else {
+                    method_router.layer(axum::middleware::from_fn_with_state(
+                        crate::cors::CorsSimpleRequestState {
+                            config: cors_cfg.clone(),
+                        },
+                        crate::cors::cors_simple_request_middleware,
+                    ))
+                }
+            } else {
+                method_router
+            };
+
+            // ~keep Per-route rate limiting runs an independent counter from any global
+            // ~keep `GovernorLayer`; when both are present, whichever hits its own limit first
+            // ~keep returns 429 — an AND relationship identical in spirit to body_limit/timeout's
+            // ~keep "tighter wins" nesting, just enforced via two independent buckets rather than
+            // ~keep a single compared value.
+            let method_router: MethodRouter = if let Some(ref rate_limit) = route.rate_limit {
+                if rate_limit.ip_based {
+                    let governor_conf = Arc::new(
+                        GovernorConfigBuilder::default()
+                            .per_second(rate_limit.per_second)
+                            .burst_size(rate_limit.burst)
+                            .finish()
+                            .ok_or_else(|| format!("route '{}': failed to create rate limiter", path))?,
+                    );
+                    method_router.layer(tower_governor::GovernorLayer::new(governor_conf))
+                } else {
+                    let governor_conf = Arc::new(
+                        GovernorConfigBuilder::default()
+                            .per_second(rate_limit.per_second)
+                            .burst_size(rate_limit.burst)
+                            .key_extractor(GlobalKeyExtractor)
+                            .finish()
+                            .ok_or_else(|| format!("route '{}': failed to create rate limiter", path))?,
+                    );
+                    method_router.layer(tower_governor::GovernorLayer::new(governor_conf))
+                }
+            } else {
+                method_router
+            };
+
+            // ~keep Authorization is layered *inside* (added before, i.e. closer to the
+            // ~keep handler than) JWT auth below, so it runs after JWT auth has populated the
+            // ~keep `Claims` request extension it reads. A route with `authorization` but no
+            // ~keep populated claims (no JWT ran) fails closed with 403 rather than silently
+            // ~keep allowing the request.
+            let method_router: MethodRouter = if !is_preflight_bypass && let Some(ref authz_cfg) = route.authorization {
+                let authz_cfg = authz_cfg.clone();
+                method_router.layer(axum::middleware::from_fn(move |req, next| {
+                    crate::auth::authorization_middleware(authz_cfg.clone(), req, next)
+                }))
+            } else {
+                method_router
+            };
+
+            // ~keep Per-route JWT auth only protects routes that opt in; it adds a requirement
+            // ~keep on top of whatever the global `jwt_auth` layer (if any) already enforces
+            // ~keep outside this per-route stack, but a route without `jwt_auth` configured is
+            // ~keep NOT protected by this layer even if other routes in the same router are —
+            // ~keep that per-route independence is the entire point of this wiring pass.
+            let method_router: MethodRouter = if !is_preflight_bypass
+                && let Some(ref jwt_cfg) = route.jwt_auth
+                && let Some(jwt_config) = jwt_config_from_route(&path, jwt_cfg)?
+            {
+                method_router.layer(axum::middleware::from_fn(move |headers, req, next| {
+                    crate::auth::jwt_auth_middleware(jwt_config.clone(), headers, req, next)
+                }))
+            } else {
+                method_router
+            };
+
+            let method_router: MethodRouter = if !is_preflight_bypass
+                && let Some(ref api_key_cfg) = route.api_key_auth
+                && let Some(api_key_config) = api_key_config_from_route(&path, api_key_cfg)?
+            {
+                method_router.layer(axum::middleware::from_fn(move |headers, req, next| {
+                    crate::auth::api_key_auth_middleware(api_key_config.clone(), headers, req, next)
+                }))
+            } else {
+                method_router
+            };
+
+            // ~keep `RequestIdConfig::enabled == Some(true)` lets a route opt into request-id
+            // ~keep generation/propagation even when the server-global default is off — that
+            // ~keep direction works cleanly because this layer sits inside (closer to the
+            // ~keep handler than) any global request-id layer. `Some(false)` is accepted and
+            // ~keep round-trips, but deliberately does NOT try to strip a header the global
+            // ~keep layer would add: the global `PropagateRequestIdLayer` wraps this per-route
+            // ~keep stack from the outside, so it runs *after* this layer on the response path
+            // ~keep and would simply re-add whatever an inner "strip" removed. Forcing
+            // ~keep request-id off in the presence of a global layer is not achievable with
+            // ~keep this layer ordering, so we don't pretend to support it.
+            let method_router: MethodRouter = if let Some(request_id_cfg) = route.request_id
+                && request_id_cfg.enabled
+            {
+                method_router
+                    .layer::<_, std::convert::Infallible>(PropagateRequestIdLayer::x_request_id())
+                    .layer::<_, std::convert::Infallible>(SetRequestIdLayer::x_request_id(MakeRequestUuid))
             } else {
                 method_router
             };

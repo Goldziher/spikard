@@ -61,6 +61,21 @@ type CoreHook<Req, Resp> = dyn LocalLifecycleHook<Req, Resp>;
 /// Target-specific container alias to make downstream imports clearer.
 pub type TargetLifecycleHooks<Req, Resp> = LifecycleHooks<Req, Resp>;
 
+/// The five lifecycle phases a hook can be registered against.
+///
+/// Used to resolve a per-route named hook selection (`LifecycleHooksConfig` in
+/// `spikard-core::http`) against the hooks actually registered on the server: a name is looked
+/// up within one specific phase's registered hooks, not across all five, so a hook registered
+/// for `on_response` can never be silently picked up by a route asking for `on_request`. ~keep
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LifecycleHookPhase {
+    OnRequest,
+    PreValidation,
+    PreHandler,
+    OnResponse,
+    OnError,
+}
+
 /// Container for all lifecycle hooks
 #[derive(Clone)]
 pub struct LifecycleHooks<Req, Resp> {
@@ -136,6 +151,24 @@ impl<Req, Resp> LifecycleHooks<Req, Resp> {
 
     pub fn add_on_error(&mut self, hook: Arc<CoreHook<Req, Resp>>) {
         self.on_error.push(hook);
+    }
+
+    /// Look up a registered hook by name within a single phase.
+    ///
+    /// Returns `None` when no hook with that name is registered for `phase`, even if a
+    /// same-named hook exists in a different phase — phase and name together identify a hook,
+    /// not name alone. Returns the trait object via the public `LifecycleHook` alias rather than
+    /// the crate-private `CoreHook` alias so this method itself can be `pub`. ~keep
+    #[must_use]
+    pub fn find_in_phase(&self, phase: LifecycleHookPhase, name: &str) -> Option<Arc<dyn LifecycleHook<Req, Resp>>> {
+        let hooks = match phase {
+            LifecycleHookPhase::OnRequest => &self.on_request,
+            LifecycleHookPhase::PreValidation => &self.pre_validation,
+            LifecycleHookPhase::PreHandler => &self.pre_handler,
+            LifecycleHookPhase::OnResponse => &self.on_response,
+            LifecycleHookPhase::OnError => &self.on_error,
+        };
+        hooks.iter().find(|hook| hook.name() == name).cloned()
     }
 
     /// # Errors

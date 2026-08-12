@@ -204,6 +204,9 @@ async fn test_jwt_auth_middleware_rejects_wrong_issuer() {
         nbf: None,
         aud: Some(vec!["spikard-clients".to_string()]),
         iss: Some("https://auth.example.com".to_string()),
+        roles: vec![],
+        scopes: vec![],
+        permissions: vec![],
     };
 
     let token = jsonwebtoken::encode(

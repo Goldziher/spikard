@@ -44,7 +44,7 @@ pub use asyncapi::{
     AsyncApiConfig, ParseResult, ParsedChannel, ParsedMessage, ParsedOperation, ValidateRequest, ValidationResponse,
     parse_asyncapi_value, validate_message,
 };
-pub use auth::{Claims, api_key_auth_middleware, jwt_auth_middleware};
+pub use auth::{Claims, api_key_auth_middleware, authorization_middleware, jwt_auth_middleware};
 #[cfg(not(target_arch = "wasm32"))]
 pub use background::{BackgroundHandle, BackgroundJobError, BackgroundJobMetadata, BackgroundTaskConfig};
 #[cfg(feature = "di")]
@@ -54,7 +54,9 @@ pub use grpc::GrpcConfig;
 pub use handler_response::HandlerResponse;
 pub use handler_trait::{Handler, HandlerResult, RequestData, StaticResponse, StaticResponseHandler, ValidatedParams};
 pub use jsonrpc::JsonRpcConfig;
-pub use lifecycle::{HookResult, LifecycleHook, LifecycleHooks, LifecycleHooksBuilder, request_hook, response_hook};
+pub use lifecycle::{
+    HookResult, LifecycleHook, LifecycleHookPhase, LifecycleHooks, LifecycleHooksBuilder, request_hook, response_hook,
+};
 pub use openapi::{ContactInfo, LicenseInfo, OpenApiConfig, SecuritySchemeInfo, ServerInfo};
 pub use response::Response;
 #[cfg(not(target_arch = "wasm32"))]

@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 pub mod adapter;
 
-pub use spikard_core::lifecycle::{HookResult, LifecycleHook};
+pub use spikard_core::lifecycle::{HookResult, LifecycleHook, LifecycleHookPhase};
 
 pub type LifecycleHooks = spikard_core::lifecycle::LifecycleHooks<Request<Body>, Response<Body>>;
 pub type LifecycleHooksBuilder = spikard_core::lifecycle::LifecycleHooksBuilder<Request<Body>, Response<Body>>;
