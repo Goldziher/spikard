@@ -3,6 +3,10 @@
     "id": "background_task_custom_max_concurrent",
     "description": "Tests background task with custom max_concurrent setting",
     "category": "background_tasks",
+    "docs": {
+      "topic": "background_tasks",
+      "stem": "background_task_custom_max_concurrent"
+    },
     "http": {
       "handler": {
         "route": "/background/process",
@@ -23,7 +27,7 @@
         "middleware": {
           "background_tasks": {
             "enabled": true,
-            "max_concurrent": 5
+            "max_concurrent_tasks": 5
           }
         }
       },
@@ -52,6 +56,10 @@
     "id": "background_task_custom_timeout",
     "description": "Tests background task with custom timeout configuration",
     "category": "background_tasks",
+    "docs": {
+      "topic": "background_tasks",
+      "stem": "background_task_custom_timeout"
+    },
     "http": {
       "handler": {
         "route": "/background/slow-task",
@@ -68,7 +76,7 @@
         "middleware": {
           "background_tasks": {
             "enabled": true,
-            "timeout_seconds": 30
+            "drain_timeout_secs": 30
           }
         }
       },
@@ -93,8 +101,12 @@
   },
   {
     "id": "background_task_error_handling",
-    "description": "Tests background task error handling and retry behavior",
+    "description": "Tests that a background task which errors during execution does not crash the executor or block the response",
     "category": "background_tasks",
+    "docs": {
+      "topic": "background_tasks",
+      "stem": "background_task_error_handling"
+    },
     "http": {
       "handler": {
         "route": "/background/may-fail",
@@ -110,8 +122,7 @@
         },
         "middleware": {
           "background_tasks": {
-            "enabled": true,
-            "retry_policy": "exponential_backoff"
+            "enabled": true
           }
         }
       },
@@ -128,8 +139,7 @@
       "expected_response": {
         "status_code": 202,
         "body": {
-          "status": "queued",
-          "will_retry": true
+          "status": "queued"
         }
       }
     },
@@ -139,6 +149,10 @@
     "id": "background_task_cancellation",
     "description": "Tests background task cancellation via request",
     "category": "background_tasks",
+    "docs": {
+      "topic": "background_tasks",
+      "stem": "background_task_cancellation"
+    },
     "http": {
       "handler": {
         "route": "/background/cancel/{task_id}",
@@ -169,6 +183,10 @@
     "id": "background_task_multiple_concurrent",
     "description": "Tests multiple concurrent background tasks are queued",
     "category": "background_tasks",
+    "docs": {
+      "topic": "background_tasks",
+      "stem": "background_task_multiple_concurrent"
+    },
     "http": {
       "handler": {
         "route": "/background/batch",

@@ -3,6 +3,10 @@
     "id": "server_default_configuration",
     "description": "Tests server with default configuration (0.0.0.0:8080)",
     "category": "server_config",
+    "docs": {
+      "topic": "server_config",
+      "stem": "server_default_configuration"
+    },
     "http": {
       "handler": {
         "route": "/status",
@@ -20,12 +24,19 @@
         }
       }
     },
-    "tags": ["server_config", "defaults"]
+    "tags": [
+      "server_config",
+      "defaults"
+    ]
   },
   {
     "id": "server_custom_host_port",
     "description": "Tests server configured with custom host and port",
     "category": "server_config",
+    "docs": {
+      "topic": "server_config",
+      "stem": "server_custom_host_port"
+    },
     "http": {
       "handler": {
         "route": "/config",
@@ -43,12 +54,20 @@
         }
       }
     },
-    "tags": ["server_config", "host", "port"]
+    "tags": [
+      "server_config",
+      "host",
+      "port"
+    ]
   },
   {
     "id": "server_worker_count_configuration",
     "description": "Tests server with custom worker thread count",
     "category": "server_config",
+    "docs": {
+      "topic": "server_config",
+      "stem": "server_worker_count_configuration"
+    },
     "http": {
       "handler": {
         "route": "/workers",
@@ -65,12 +84,19 @@
         }
       }
     },
-    "tags": ["server_config", "workers"]
+    "tags": [
+      "server_config",
+      "workers"
+    ]
   },
   {
     "id": "server_max_body_size_configuration",
     "description": "Tests server respects max body size limit",
     "category": "server_config",
+    "docs": {
+      "topic": "server_config",
+      "stem": "server_max_body_size_configuration"
+    },
     "http": {
       "handler": {
         "route": "/upload",
@@ -82,7 +108,9 @@
               "type": "string"
             }
           },
-          "required": ["data"]
+          "required": [
+            "data"
+          ]
         }
       },
       "request": {
@@ -102,12 +130,19 @@
         }
       }
     },
-    "tags": ["server_config", "max_body_size"]
+    "tags": [
+      "server_config",
+      "max_body_size"
+    ]
   },
   {
     "id": "server_request_id_enabled",
     "description": "Tests server generates request IDs when enabled",
     "category": "server_config",
+    "docs": {
+      "topic": "server_config",
+      "stem": "server_request_id_enabled"
+    },
     "http": {
       "handler": {
         "route": "/request",
@@ -127,12 +162,19 @@
         }
       }
     },
-    "tags": ["server_config", "request_id"]
+    "tags": [
+      "server_config",
+      "request_id"
+    ]
   },
   {
     "id": "server_compression_enabled",
     "description": "Tests server compresses responses when enabled",
     "category": "server_config",
+    "docs": {
+      "topic": "server_config",
+      "stem": "server_compression_enabled"
+    },
     "http": {
       "handler": {
         "route": "/data",
@@ -155,12 +197,19 @@
         }
       }
     },
-    "tags": ["server_config", "compression"]
+    "tags": [
+      "server_config",
+      "compression"
+    ]
   },
   {
     "id": "server_static_files_configuration",
     "description": "Tests server serves static files from configured directory",
     "category": "server_config",
+    "docs": {
+      "topic": "server_config",
+      "stem": "server_static_files_configuration"
+    },
     "http": {
       "handler": {
         "route": "/static/{file}",
@@ -184,12 +233,19 @@
         }
       }
     },
-    "tags": ["server_config", "static_files"]
+    "tags": [
+      "server_config",
+      "static_files"
+    ]
   },
   {
     "id": "server_jwt_and_api_key_auth_combined",
     "description": "Tests server with both JWT and API key authentication configured",
     "category": "server_config",
+    "docs": {
+      "topic": "server_config",
+      "stem": "server_jwt_and_api_key_auth_combined"
+    },
     "http": {
       "handler": {
         "route": "/secure",
@@ -212,7 +268,11 @@
           },
           "api_key_auth": {
             "enabled": true,
-            "header": "X-API-Key"
+            "header_name": "X-API-Key",
+            "keys": [
+              "sk_test_123456",
+              "sk_test_789012"
+            ]
           }
         }
       },
@@ -230,20 +290,29 @@
         }
       }
     },
-    "tags": ["server_config", "auth", "jwt", "api_key"]
+    "tags": [
+      "server_config",
+      "auth",
+      "jwt",
+      "api_key"
+    ]
   },
   {
     "id": "server_rate_limit_configuration",
     "description": "Tests server enforces rate limiting configuration",
     "category": "server_config",
+    "docs": {
+      "topic": "server_config",
+      "stem": "server_rate_limit_configuration"
+    },
     "http": {
       "handler": {
         "route": "/limited",
         "method": "GET",
         "middleware": {
           "rate_limit": {
-            "enabled": true,
-            "requests_per_second": 10
+            "per_second": 10,
+            "burst": 20
           }
         }
       },
@@ -258,12 +327,19 @@
         }
       }
     },
-    "tags": ["server_config", "rate_limit"]
+    "tags": [
+      "server_config",
+      "rate_limit"
+    ]
   },
   {
     "id": "server_request_timeout_setting",
     "description": "Tests server respects request timeout configuration",
     "category": "server_config",
+    "docs": {
+      "topic": "server_config",
+      "stem": "server_request_timeout_setting"
+    },
     "http": {
       "handler": {
         "route": "/timeout",
@@ -280,12 +356,19 @@
         }
       }
     },
-    "tags": ["server_config", "timeout"]
+    "tags": [
+      "server_config",
+      "timeout"
+    ]
   },
   {
     "id": "server_graceful_shutdown_enabled",
     "description": "Tests server graceful shutdown waits for in-flight requests",
     "category": "server_config",
+    "docs": {
+      "topic": "server_config",
+      "stem": "server_graceful_shutdown_enabled"
+    },
     "http": {
       "handler": {
         "route": "/shutdown",
@@ -302,12 +385,19 @@
         }
       }
     },
-    "tags": ["server_config", "graceful_shutdown"]
+    "tags": [
+      "server_config",
+      "graceful_shutdown"
+    ]
   },
   {
     "id": "server_shutdown_timeout_setting",
     "description": "Tests server shutdown timeout configuration",
     "category": "server_config",
+    "docs": {
+      "topic": "server_config",
+      "stem": "server_shutdown_timeout_setting"
+    },
     "http": {
       "handler": {
         "route": "/shutdown-timeout",
@@ -324,12 +414,19 @@
         }
       }
     },
-    "tags": ["server_config", "shutdown_timeout"]
+    "tags": [
+      "server_config",
+      "shutdown_timeout"
+    ]
   },
   {
     "id": "server_enable_http_trace_logging",
     "description": "Tests server with HTTP trace logging enabled",
     "category": "server_config",
+    "docs": {
+      "topic": "server_config",
+      "stem": "server_enable_http_trace_logging"
+    },
     "http": {
       "handler": {
         "route": "/trace",
@@ -346,12 +443,19 @@
         }
       }
     },
-    "tags": ["server_config", "trace_logging"]
+    "tags": [
+      "server_config",
+      "trace_logging"
+    ]
   },
   {
     "id": "server_openapi_integration",
     "description": "Tests server with OpenAPI documentation integration",
     "category": "server_config",
+    "docs": {
+      "topic": "server_config",
+      "stem": "server_openapi_integration"
+    },
     "http": {
       "handler": {
         "route": "/openapi.json",
@@ -371,12 +475,19 @@
         }
       }
     },
-    "tags": ["server_config", "openapi"]
+    "tags": [
+      "server_config",
+      "openapi"
+    ]
   },
   {
     "id": "server_grpc_integration",
     "description": "Tests server with gRPC protocol integration",
     "category": "server_config",
+    "docs": {
+      "topic": "server_config",
+      "stem": "server_grpc_integration"
+    },
     "http": {
       "handler": {
         "route": "/api.Service/Method",
@@ -401,12 +512,19 @@
         }
       }
     },
-    "tags": ["server_config", "grpc"]
+    "tags": [
+      "server_config",
+      "grpc"
+    ]
   },
   {
     "id": "server_background_tasks_configuration",
     "description": "Tests server with background tasks configured",
     "category": "server_config",
+    "docs": {
+      "topic": "server_config",
+      "stem": "server_background_tasks_configuration"
+    },
     "http": {
       "handler": {
         "route": "/task",
@@ -423,6 +541,9 @@
         }
       }
     },
-    "tags": ["server_config", "background_tasks"]
+    "tags": [
+      "server_config",
+      "background_tasks"
+    ]
   }
 ]
