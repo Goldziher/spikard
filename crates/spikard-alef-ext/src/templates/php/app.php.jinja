@@ -35,9 +35,9 @@ final class App
     /**
      * Register a GET route.
      */
-    public function get(string $path, callable $handler): self
+    public function get(string $path, callable $handler, array $options = []): self
     {
-        return $this->addRoute('Get', $path, null, $handler);
+        return $this->addRoute('Get', $path, null, $handler, $options);
     }
 
     /**
@@ -46,9 +46,9 @@ final class App
      * @param class-string|null $dtoClass  PHP 8.2+ readonly class for body hydration.
      *                                     Pass null for routes without a request body.
      */
-    public function post(string $path, ?string $dtoClass, callable $handler): self
+    public function post(string $path, ?string $dtoClass, callable $handler, array $options = []): self
     {
-        return $this->addRoute('Post', $path, $dtoClass, $handler);
+        return $this->addRoute('Post', $path, $dtoClass, $handler, $options);
     }
 
     /**
@@ -56,9 +56,9 @@ final class App
      *
      * @param class-string|null $dtoClass
      */
-    public function put(string $path, ?string $dtoClass, callable $handler): self
+    public function put(string $path, ?string $dtoClass, callable $handler, array $options = []): self
     {
-        return $this->addRoute('Put', $path, $dtoClass, $handler);
+        return $this->addRoute('Put', $path, $dtoClass, $handler, $options);
     }
 
     /**
@@ -66,33 +66,33 @@ final class App
      *
      * @param class-string|null $dtoClass
      */
-    public function patch(string $path, ?string $dtoClass, callable $handler): self
+    public function patch(string $path, ?string $dtoClass, callable $handler, array $options = []): self
     {
-        return $this->addRoute('Patch', $path, $dtoClass, $handler);
+        return $this->addRoute('Patch', $path, $dtoClass, $handler, $options);
     }
 
     /**
      * Register a DELETE route.
      */
-    public function delete(string $path, callable $handler): self
+    public function delete(string $path, callable $handler, array $options = []): self
     {
-        return $this->addRoute('Delete', $path, null, $handler);
+        return $this->addRoute('Delete', $path, null, $handler, $options);
     }
 
     /**
      * Register a HEAD route.
      */
-    public function head(string $path, callable $handler): self
+    public function head(string $path, callable $handler, array $options = []): self
     {
-        return $this->addRoute('Head', $path, null, $handler);
+        return $this->addRoute('Head', $path, null, $handler, $options);
     }
 
     /**
      * Register an OPTIONS route.
      */
-    public function options(string $path, callable $handler): self
+    public function options(string $path, callable $handler, array $options = []): self
     {
-        return $this->addRoute('Options', $path, null, $handler);
+        return $this->addRoute('Options', $path, null, $handler, $options);
     }
 
     /**
@@ -103,7 +103,7 @@ final class App
      *
      * @param class-string|null $dtoClass
      */
-    public function route(RouteBuilder $builder, ?string $dtoClass, callable $handler): self
+    public function route(RouteBuilder $builder, ?string $dtoClass, callable $handler, array $options = []): self
     {
         if ($dtoClass !== null) {
             $schema = self::deriveJsonSchema($dtoClass);
@@ -111,6 +111,7 @@ final class App
                 (string) json_encode($schema, JSON_THROW_ON_ERROR),
             );
         }
+        $builder = self::applyRouteOptions($builder, $options);
         $adapter = self::makeAdapter($dtoClass, $handler);
         $this->registrations[] = ['route', [$builder], $adapter];
         return $this;
@@ -135,7 +136,13 @@ final class App
      *
      * @param class-string|null $dtoClass
      */
-    private function addRoute(string $method, string $path, ?string $dtoClass, callable $handler): self
+    private function addRoute(
+        string $method,
+        string $path,
+        ?string $dtoClass,
+        callable $handler,
+        array $options = [],
+    ): self
     {
         $builder = RouteBuilder::new($method, $path);
 
@@ -146,10 +153,50 @@ final class App
             );
         }
 
+        $builder = self::applyRouteOptions($builder, $options);
+
         $adapter = self::makeAdapter($dtoClass, $handler);
         $this->registrations[] = ['route', [$builder], $adapter];
 
         return $this;
+    }
+
+    /**
+     * Apply per-route middleware options to a RouteBuilder.
+     *
+     * Option keys mirror the RouteBuilder setter names one-for-one, so there is a
+     * single spelling to remember. Values are forwarded untouched — the native
+     * extension type-checks them and the Rust core owns all validation.
+     *
+     * Supported keys:
+     *   cors, compression, bodyLimit, requestTimeout, rateLimit, requestId,
+     *   jwtAuth, apiKeyAuth, authorization, lifecycleHooks, openrpcSpec
+     *
+     * @param array<string, mixed> $options
+     * @throws \InvalidArgumentException  When an option key is not recognised.
+     */
+    private static function applyRouteOptions(RouteBuilder $builder, array $options): RouteBuilder
+    {
+        foreach ($options as $key => $value) {
+            $builder = match ($key) {
+                'cors' => $builder->cors($value),
+                'compression' => $builder->compression($value),
+                'bodyLimit' => $builder->bodyLimit((int) $value),
+                'requestTimeout' => $builder->requestTimeout((int) $value),
+                'rateLimit' => $builder->rateLimit($value),
+                'requestId' => $builder->requestId((bool) $value),
+                'jwtAuth' => $builder->jwtAuth($value),
+                'apiKeyAuth' => $builder->apiKeyAuth($value),
+                'authorization' => $builder->authorization($value),
+                'lifecycleHooks' => $builder->lifecycleHooks($value),
+                'openrpcSpec' => $builder->openrpcSpec(
+                    is_string($value) ? $value : (string) json_encode($value, JSON_THROW_ON_ERROR),
+                ),
+                default => throw new \InvalidArgumentException("Unknown route option: {$key}"),
+            };
+        }
+
+        return $builder;
     }
 
     /**

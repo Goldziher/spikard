@@ -43,6 +43,28 @@ module Spikard
     # Parameter names that are never treated as request-derived kwargs
     SPECIAL_PARAM_NAMES = Set.new(%w[self]).freeze
 
+    # Middleware keys whose value is forwarded as-is to the identically named
+    # +Spikard::RouteBuilder+ setter. +:openrpc_spec+ is handled separately because its
+    # setter takes a JSON string rather than a native config object. ~keep
+    ROUTE_MIDDLEWARE_SETTERS = %i[
+      cors
+      compression
+      body_limit
+      request_timeout
+      rate_limit
+      request_id
+      jwt_auth
+      api_key_auth
+      authorization
+      lifecycle_hooks
+    ]
+      .freeze
+
+    # A silently-ignored typo in a middleware key is the exact failure mode that dropped
+    # per-route middleware from fixtures at parse time elsewhere in this project, so unknown
+    # keys raise rather than being dropped. ~keep
+    ROUTE_MIDDLEWARE_KEYS = (ROUTE_MIDDLEWARE_SETTERS + [:openrpc_spec]).to_set.freeze
+
     def initialize(config = nil)
       # Create a low-level App via the native extension interface
       # The low-level App is already available in the Spikard namespace
@@ -57,7 +79,11 @@ module Spikard
     end
 
     # Register a handler for method and path and return it unchanged.
-    def add_route(method, path, handler, body_type: nil)
+    #
+    # +middleware+ configures the per-route middleware (CORS, compression, rate limiting,
+    # auth, lifecycle hooks, body limit, request timeout, request id, OpenRPC spec) — see
+    # +ROUTE_MIDDLEWARE_KEYS+ for the accepted keys.
+    def add_route(method, path, handler, body_type: nil, middleware: nil)
       method_upper = method.upcase
       raise "Unsupported HTTP method: #{method.inspect}" unless VALID_METHODS.include?(method_upper)
 
@@ -67,6 +93,7 @@ module Spikard
       # The native RouteBuilder.new accepts the lowercase HTTP method string
       # (e.g. "post") and maps it to the core Method internally.
       builder = create_route_builder_with_schemas(method_upper.downcase, path, spec)
+      builder = apply_middleware(builder, middleware) if middleware
 
       # Build the adapter that bridges Rust RequestData → handler kwargs → response
       adapter = make_adapter(spec)
@@ -80,53 +107,53 @@ module Spikard
     end
 
     # Register a GET route.
-    def get(path, &block)
-      add_route("GET", path, block)
+    def get(path, middleware: nil, &block)
+      add_route("GET", path, block, middleware: middleware)
     end
 
     # Register a POST route with optional body DTO class.
-    def post(path, body: nil, &block)
-      add_route("POST", path, block, body_type: body)
+    def post(path, body: nil, middleware: nil, &block)
+      add_route("POST", path, block, body_type: body, middleware: middleware)
     end
 
     # Register a PUT route with optional body DTO class.
-    def put(path, body: nil, &block)
-      add_route("PUT", path, block, body_type: body)
+    def put(path, body: nil, middleware: nil, &block)
+      add_route("PUT", path, block, body_type: body, middleware: middleware)
     end
 
     # Register a PATCH route with optional body DTO class.
-    def patch(path, body: nil, &block)
-      add_route("PATCH", path, block, body_type: body)
+    def patch(path, body: nil, middleware: nil, &block)
+      add_route("PATCH", path, block, body_type: body, middleware: middleware)
     end
 
     # Register a DELETE route with optional body DTO class.
-    def delete(path, body: nil, &block)
-      add_route("DELETE", path, block, body_type: body)
+    def delete(path, body: nil, middleware: nil, &block)
+      add_route("DELETE", path, block, body_type: body, middleware: middleware)
     end
 
     # Register a HEAD route.
-    def head(path, &block)
-      add_route("HEAD", path, block)
+    def head(path, middleware: nil, &block)
+      add_route("HEAD", path, block, middleware: middleware)
     end
 
     # Register an OPTIONS route.
-    def options(path, &block)
-      add_route("OPTIONS", path, block)
+    def options(path, middleware: nil, &block)
+      add_route("OPTIONS", path, block, middleware: middleware)
     end
 
     # Register a TRACE route.
-    def trace(path, &block)
-      add_route("TRACE", path, block)
+    def trace(path, middleware: nil, &block)
+      add_route("TRACE", path, block, middleware: middleware)
     end
 
     # Register a CONNECT route.
-    def connect(path, &block)
-      add_route("CONNECT", path, block)
+    def connect(path, middleware: nil, &block)
+      add_route("CONNECT", path, block, middleware: middleware)
     end
 
     # Register a route with an explicit HTTP method (defaults to GET).
-    def route(path, method: "GET", body: nil, &block)
-      add_route(method, path, block, body_type: body)
+    def route(path, method: "GET", body: nil, middleware: nil, &block)
+      add_route(method, path, block, body_type: body, middleware: middleware)
     end
 
     # Run the HTTP server using the configured routes.
@@ -166,6 +193,45 @@ module Spikard
       end
 
       builder
+    end
+
+    # Chain the per-route middleware entries of +middleware+ onto +builder+.
+    #
+    # +middleware+ is a Hash keyed by symbol (see +ROUTE_MIDDLEWARE_KEYS+); a key present with
+    # a +nil+ value is treated as absent, since every setter (including +request_id+, whose
+    # argument is a plain boolean) rejects a missing value rather than accepting nil. ~keep
+    def apply_middleware(builder, middleware)
+      options = middleware.transform_keys(&:to_sym)
+      raise_on_unknown_middleware_keys(options)
+
+      builder = apply_middleware_setters(builder, options)
+      apply_openrpc_spec(builder, options[:openrpc_spec])
+    end
+
+    def raise_on_unknown_middleware_keys(options)
+      unknown = options.keys - ROUTE_MIDDLEWARE_KEYS.to_a
+      return if unknown.empty?
+
+      raise(
+        ArgumentError,
+        "Unsupported route middleware option(s): #{unknown.sort.join(", ")} " \
+          "(valid: #{ROUTE_MIDDLEWARE_KEYS.to_a.sort.join(", ")})"
+      )
+    end
+
+    def apply_middleware_setters(builder, options)
+      ROUTE_MIDDLEWARE_SETTERS.each do |key|
+        value = options[key]
+        builder = builder.public_send(key, value) unless value.nil?
+      end
+
+      builder
+    end
+
+    def apply_openrpc_spec(builder, spec)
+      return builder if spec.nil?
+
+      builder.openrpc_spec(spec.is_a?(String) ? spec : JSON.dump(spec))
     end
 
     # Create the synchronous Ruby callable registered with the Rust bridge for one route.

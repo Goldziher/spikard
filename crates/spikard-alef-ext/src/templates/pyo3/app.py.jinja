@@ -20,13 +20,15 @@ serialization at request time.
 from __future__ import annotations
 
 import asyncio
+import dataclasses
 import inspect
 import json
 import re
 import threading
 import types
-from typing import TYPE_CHECKING, Any, Union, get_args, get_origin, get_type_hints
+from typing import TYPE_CHECKING, Any, TypedDict, Union, get_args, get_origin, get_type_hints
 
+from spikard import _spikard as _native
 from spikard._internal import (
     FieldDefinition,
     convert_value,
@@ -43,9 +45,58 @@ from spikard.service import App as _LowLevelApp
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from spikard.options import ServerConfig
+    from spikard._spikard import ApiKeyAuthConfig, JwtAuthConfig
+    from spikard.options import (
+        AuthorizationConfig,
+        CompressionConfig,
+        CorsConfig,
+        LifecycleHooksConfig,
+        RateLimitConfig,
+        ServerConfig,
+    )
 
-__all__ = ["App"]
+__all__ = ["App", "RouteMiddleware"]
+
+
+class RouteMiddleware(TypedDict, total=False):
+    """Per-route middleware options, one key per ``RouteBuilder`` setter.
+
+    Every value is forwarded verbatim to the Rust core, which owns the actual middleware
+    behaviour; this layer only converts the public ``spikard.options`` dataclasses into the
+    native configuration objects the builder accepts.
+    """
+
+    cors: CorsConfig
+    compression: CompressionConfig
+    body_limit: int
+    request_timeout: int
+    rate_limit: RateLimitConfig
+    request_id: bool
+    jwt_auth: JwtAuthConfig
+    api_key_auth: ApiKeyAuthConfig
+    authorization: AuthorizationConfig
+    lifecycle_hooks: LifecycleHooksConfig
+    openrpc_spec: str | dict[str, Any]
+
+
+# Middleware keys whose value is forwarded as-is to the identically named ``RouteBuilder``
+# setter. ``openrpc_spec`` is handled separately because it also accepts a mapping.
+_ROUTE_MIDDLEWARE_SETTERS = (
+    "cors",
+    "compression",
+    "body_limit",
+    "request_timeout",
+    "rate_limit",
+    "request_id",
+    "jwt_auth",
+    "api_key_auth",
+    "authorization",
+    "lifecycle_hooks",
+)
+
+# ``TypedDict`` is erased at runtime, so a mistyped key would otherwise be silently dropped and
+# the route would serve without the middleware the user believed they had configured. ~keep
+_ROUTE_MIDDLEWARE_KEYS = frozenset(_ROUTE_MIDDLEWARE_SETTERS) | {"openrpc_spec"}
 
 # HTTP methods that never carry a request body.
 _BODYLESS_METHODS = frozenset({"GET", "HEAD", "OPTIONS", "TRACE", "CONNECT", "DELETE"})
@@ -377,6 +428,29 @@ def _make_adapter(spec: _RouteSpec, *, is_async: bool) -> Callable[[dict[str, An
     return adapter
 
 
+def _native_config(value: Any) -> Any:
+    """Convert a public ``spikard.options`` config dataclass into its native counterpart.
+
+    ``spikard.CorsConfig`` and friends are plain dataclasses, while the ``RouteBuilder`` setters
+    accept only the PyO3 classes of the same name exported by ``spikard._spikard``. Values that
+    are already native (or have no native twin) are returned untouched, so a user may pass
+    either form. ~keep
+    """
+    if isinstance(value, type) or not dataclasses.is_dataclass(value):
+        return value
+    native_type = getattr(_native, type(value).__name__, None)
+    if native_type is None:
+        return value
+    return native_type(**{field.name: _native_field(getattr(value, field.name)) for field in dataclasses.fields(value)})
+
+
+def _native_field(value: Any) -> Any:
+    """Convert one dataclass field value, descending into lists of nested config dataclasses."""
+    if isinstance(value, list):
+        return [_native_config(item) for item in value]
+    return _native_config(value)
+
+
 class App:
     """Ergonomic Spikard application with typed handlers and DTO binding.
 
@@ -420,8 +494,19 @@ class App:
         self._app.config(config)
         return self
 
-    def add_route(self, method: str, path: str, handler: Callable[..., Any]) -> Callable[..., Any]:
-        """Register ``handler`` for ``method`` and ``path`` and return it unchanged."""
+    def add_route(
+        self,
+        method: str,
+        path: str,
+        handler: Callable[..., Any],
+        *,
+        middleware: RouteMiddleware | None = None,
+    ) -> Callable[..., Any]:
+        """Register ``handler`` for ``method`` and ``path`` and return it unchanged.
+
+        ``middleware`` configures the per-route middleware (CORS, compression, rate limiting,
+        auth, lifecycle hooks, body limit, request timeout, request id, OpenRPC spec).
+        """
         method_upper = method.upper()
         method_enum = getattr(_Method, method_upper, None)
         if method_enum is None:
@@ -446,6 +531,9 @@ class App:
         if params_schema is not None:
             builder = builder.params_schema_json(json.dumps(params_schema))
 
+        if middleware:
+            builder = self._apply_middleware(builder, middleware)
+
         # The registered adapter is always synchronous from the Rust bridge's perspective
         # (coroutine handlers are driven on the shared loop inside the adapter), so mark the
         # route sync regardless of whether the user's handler is a coroutine function.
@@ -465,54 +553,96 @@ class App:
         except (TypeError, ValueError):
             return None
 
-    def _method_decorator(self, method: str) -> Callable[[str], Callable[[Callable[..., Any]], Callable[..., Any]]]:
+    @staticmethod
+    def _apply_middleware(builder: _RouteBuilder, middleware: RouteMiddleware) -> _RouteBuilder:
+        """Chain the per-route middleware entries of ``middleware`` onto ``builder``."""
+        unknown = set(middleware) - _ROUTE_MIDDLEWARE_KEYS
+        if unknown:
+            raise ValueError(f"Unsupported route middleware option(s): {', '.join(sorted(unknown))}")
+
+        options: dict[str, Any] = dict(middleware)
+        for key in _ROUTE_MIDDLEWARE_SETTERS:
+            value = options.get(key)
+            if value is None:
+                continue
+            builder = getattr(builder, key)(_native_config(value))
+
+        spec = options.get("openrpc_spec")
+        if spec is not None:
+            builder = builder.openrpc_spec(spec if isinstance(spec, str) else json.dumps(spec))
+
+        return builder
+
+    def _method_decorator(
+        self, method: str, middleware: RouteMiddleware | None = None
+    ) -> Callable[[str], Callable[[Callable[..., Any]], Callable[..., Any]]]:
         def register(path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
             def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-                return self.add_route(method, path, func)
+                return self.add_route(method, path, func, middleware=middleware)
 
             return decorator
 
         return register
 
-    def get(self, path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    def get(
+        self, path: str, *, middleware: RouteMiddleware | None = None
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Register a GET route."""
-        return self._method_decorator("GET")(path)
+        return self._method_decorator("GET", middleware)(path)
 
-    def post(self, path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    def post(
+        self, path: str, *, middleware: RouteMiddleware | None = None
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Register a POST route."""
-        return self._method_decorator("POST")(path)
+        return self._method_decorator("POST", middleware)(path)
 
-    def put(self, path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    def put(
+        self, path: str, *, middleware: RouteMiddleware | None = None
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Register a PUT route."""
-        return self._method_decorator("PUT")(path)
+        return self._method_decorator("PUT", middleware)(path)
 
-    def patch(self, path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    def patch(
+        self, path: str, *, middleware: RouteMiddleware | None = None
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Register a PATCH route."""
-        return self._method_decorator("PATCH")(path)
+        return self._method_decorator("PATCH", middleware)(path)
 
-    def delete(self, path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    def delete(
+        self, path: str, *, middleware: RouteMiddleware | None = None
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Register a DELETE route."""
-        return self._method_decorator("DELETE")(path)
+        return self._method_decorator("DELETE", middleware)(path)
 
-    def head(self, path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    def head(
+        self, path: str, *, middleware: RouteMiddleware | None = None
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Register a HEAD route."""
-        return self._method_decorator("HEAD")(path)
+        return self._method_decorator("HEAD", middleware)(path)
 
-    def options(self, path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    def options(
+        self, path: str, *, middleware: RouteMiddleware | None = None
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Register an OPTIONS route."""
-        return self._method_decorator("OPTIONS")(path)
+        return self._method_decorator("OPTIONS", middleware)(path)
 
-    def connect(self, path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    def connect(
+        self, path: str, *, middleware: RouteMiddleware | None = None
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Register a CONNECT route."""
-        return self._method_decorator("CONNECT")(path)
+        return self._method_decorator("CONNECT", middleware)(path)
 
-    def trace(self, path: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    def trace(
+        self, path: str, *, middleware: RouteMiddleware | None = None
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Register a TRACE route."""
-        return self._method_decorator("TRACE")(path)
+        return self._method_decorator("TRACE", middleware)(path)
 
-    def route(self, path: str, method: str = "GET") -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    def route(
+        self, path: str, method: str = "GET", *, middleware: RouteMiddleware | None = None
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Register a route with an explicit HTTP method (defaults to GET)."""
-        return self._method_decorator(method)(path)
+        return self._method_decorator(method, middleware)(path)
 
     def run(self) -> None:
         """Run the HTTP server using the configured routes."""
