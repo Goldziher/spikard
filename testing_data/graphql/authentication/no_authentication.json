@@ -29,9 +29,5 @@
       "error_message": "Authentication required"
     }
   },
-  "tags": [
-    "authentication",
-    "missing-credentials",
-    "error"
-  ]
+  "tags": ["authentication", "missing-credentials", "error"]
 }

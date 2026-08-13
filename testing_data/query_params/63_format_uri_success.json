@@ -32,11 +32,5 @@
       "url": "https://example.com/path?query=value"
     }
   },
-  "tags": [
-    "query_params",
-    "format",
-    "uri",
-    "validation",
-    "success"
-  ]
+  "tags": ["query_params", "format", "uri", "validation", "success"]
 }

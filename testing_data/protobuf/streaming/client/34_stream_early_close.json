@@ -109,10 +109,5 @@
       "status": "INCOMPLETE"
     }
   },
-  "tags": [
-    "client_streaming",
-    "early_close",
-    "partial_stream",
-    "edge_cases"
-  ]
+  "tags": ["client_streaming", "early_close", "partial_stream", "edge_cases"]
 }

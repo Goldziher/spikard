@@ -11,9 +11,7 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": [
-        "username"
-      ],
+      "required": ["username"],
       "properties": {
         "username": {
           "type": "string"

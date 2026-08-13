@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.59.0"
+alef_version = "0.60.2"
 languages = [
   "python",
   "node",
@@ -105,7 +105,7 @@ Userr = "Userr"
 wre = "wre"
 
 [workspace.poly.per-file-ignores]
-"scripts/**/*.py" = ["RUF100"]
+"scripts/**/*.py" = ["RUF100", "T201"]
 "templates/readme/**" = ["MD057"]
 "docs/reference/feature-parity.md" = ["MD057"]
 "CHANGELOG.md" = ["MD057"]
@@ -125,8 +125,8 @@ wre = "wre"
 "packages/python/spikard/datastructures.py" = ["PLR0917"]
 # Generated Python modules carry `# noqa: C901` from the emitter; mccabe (C901) is
 # intentionally absent from the curated ruff select, so the directive reads as unused.
-"packages/python/spikard/schema.py" = ["RUF100"]
-"packages/python/spikard/_internal/converters.py" = ["RUF100"]
+"packages/python/spikard/schema.py" = ["RUF100", "I001"]
+"packages/python/spikard/_internal/converters.py" = ["RUF100", "I001"]
 
 [workspace.poly.pyrefly-sub-configs]
 "**/app.py" = ["bad-argument-type"]
@@ -141,6 +141,7 @@ version_from = "Cargo.toml"
 workspace_root = "."
 features = ["di"]
 auto_path_mappings = false
+path_mappings = { "spikard_core::http" = "spikard" }
 suppress_validation_codes = [
   "lossy_sanitized_surface",
   "unknown_named_type",
@@ -372,7 +373,7 @@ package_name = "Spikard"
 # The swift crate reaches graphql types through the `spikard` umbrella facade
 # (never `spikard_graphql::` directly), so the direct spikard-graphql dep is
 # redundant and cargo-machete flags it as unused (swift/rust is a workspace
-# member, unlike the frb dart crate which is workspace-excluded).
+# member, unlike the frb dart crate which is workspace-excluded). ~keep
 exclude_extra_dependencies = ["spikard-graphql"]
 
 [crates.swift.extra_dependencies]
@@ -677,6 +678,7 @@ functions = [
   "websocket_handler",
   "add_cors_headers",
   "api_key_auth_middleware",
+  "authorization_middleware",
   "assemble_openapi_spec",
   "auto_generate_parameter_schema",
   "build_graphql_body",
@@ -976,6 +978,10 @@ languages = [
   "wasm",
   "brew",
 ]
+
+[crates.e2e.snippets]
+output = "docs/snippets-generated"
+languages = ["python", "ruby", "php", "elixir", "rust", "go", "java", "csharp", "dart", "swift", "zig"]
 
 [crates.e2e.harness]
 imports = ["spikard"]

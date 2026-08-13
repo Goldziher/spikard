@@ -143,10 +143,5 @@
       "status": "COMPLETE"
     }
   },
-  "tags": [
-    "client_streaming",
-    "multiple_messages",
-    "computation",
-    "sum"
-  ]
+  "tags": ["client_streaming", "multiple_messages", "computation", "sum"]
 }

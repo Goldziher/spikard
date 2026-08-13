@@ -73,8 +73,5 @@
       }
     }
   },
-  "tags": [
-    "security",
-    "rate_limiting"
-  ]
+  "tags": ["security", "rate_limiting"]
 }

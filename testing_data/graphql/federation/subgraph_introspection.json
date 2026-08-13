@@ -31,11 +31,7 @@
       }
     }
   },
-  "tags": [
-    "federation",
-    "introspection",
-    "sdl"
-  ],
+  "tags": ["federation", "introspection", "sdl"],
   "complexity_limit": 10,
   "depth_limit": 2
 }

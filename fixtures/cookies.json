@@ -3,6 +3,10 @@
     "id": "optional_cookie_parameter_success",
     "description": "Tests optional cookie parameter with value provided",
     "category": "cookies",
+    "docs": {
+      "topic": "cookies",
+      "stem": "optional_cookie_parameter_success"
+    },
     "http": {
       "handler": {
         "route": "/items/",
@@ -35,6 +39,10 @@
     "id": "optional_cookie_parameter_missing",
     "description": "Tests optional cookie parameter returns None when not provided",
     "category": "cookies",
+    "docs": {
+      "topic": "cookies",
+      "stem": "optional_cookie_parameter_missing"
+    },
     "http": {
       "handler": {
         "route": "/items/",
@@ -64,6 +72,10 @@
     "id": "multiple_cookies_success",
     "description": "Tests multiple cookie parameters in a single request",
     "category": "cookies",
+    "docs": {
+      "topic": "cookies",
+      "stem": "multiple_cookies_success"
+    },
     "http": {
       "handler": {
         "route": "/items/",
@@ -108,6 +120,10 @@
     "id": "required_cookie_missing",
     "description": "Tests validation error when required cookie is missing",
     "category": "cookies",
+    "docs": {
+      "topic": "cookies",
+      "stem": "required_cookie_missing"
+    },
     "http": {
       "handler": {
         "route": "/items/cookies",
@@ -154,6 +170,10 @@
     "id": "apikey_cookie_authentication_success",
     "description": "Tests APIKeyCookie authentication with valid cookie",
     "category": "cookies",
+    "docs": {
+      "topic": "cookies",
+      "stem": "apikey_cookie_authentication_success"
+    },
     "http": {
       "handler": {
         "route": "/users/me",
@@ -186,6 +206,10 @@
     "id": "apikey_cookie_authentication_missing",
     "description": "Tests APIKeyCookie authentication returns 403 when cookie missing",
     "category": "cookies",
+    "docs": {
+      "topic": "cookies",
+      "stem": "apikey_cookie_authentication_missing"
+    },
     "http": {
       "handler": {
         "route": "/users/me/auth",
@@ -226,6 +250,10 @@
     "id": "optional_apikey_cookie_missing",
     "description": "Tests optional APIKeyCookie (auto_error=False) returns None without 403",
     "category": "cookies",
+    "docs": {
+      "topic": "cookies",
+      "stem": "optional_apikey_cookie_missing"
+    },
     "http": {
       "handler": {
         "route": "/users/me",
@@ -255,6 +283,10 @@
     "id": "cookie_validation_min_length_failure",
     "description": "Tests cookie parameter with min_length constraint returns 422 when too short",
     "category": "cookies",
+    "docs": {
+      "topic": "cookies",
+      "stem": "cookie_validation_min_length_failure"
+    },
     "http": {
       "handler": {
         "route": "/items/",
@@ -298,6 +330,10 @@
     "id": "response_set_cookie_basic",
     "description": "Tests setting a cookie in the response",
     "category": "cookies",
+    "docs": {
+      "topic": "cookies",
+      "stem": "response_set_cookie_basic"
+    },
     "http": {
       "handler": {
         "route": "/cookie/",
@@ -319,6 +355,10 @@
     "id": "cookie_validation_max_length_constraint_fail",
     "description": "Tests cookie validation with max_length constraint failure",
     "category": "cookies",
+    "docs": {
+      "topic": "cookies",
+      "stem": "cookie_validation_max_length_constraint_fail"
+    },
     "http": {
       "handler": {
         "route": "/cookies/validated",
@@ -365,6 +405,10 @@
     "id": "cookie_validation_min_length_constraint_success",
     "description": "Tests cookie validation with min_length constraint at boundary",
     "category": "cookies",
+    "docs": {
+      "topic": "cookies",
+      "stem": "cookie_validation_min_length_constraint_success"
+    },
     "http": {
       "handler": {
         "route": "/cookies/min-length",
@@ -397,6 +441,10 @@
     "id": "cookie_regex_pattern_validation_fail",
     "description": "Tests cookie with regex pattern validation failure",
     "category": "cookies",
+    "docs": {
+      "topic": "cookies",
+      "stem": "cookie_regex_pattern_validation_fail"
+    },
     "http": {
       "handler": {
         "route": "/cookies/pattern",
@@ -443,6 +491,10 @@
     "id": "cookie_regex_pattern_validation_success",
     "description": "Tests cookie with regex pattern validation success",
     "category": "cookies",
+    "docs": {
+      "topic": "cookies",
+      "stem": "cookie_regex_pattern_validation_success"
+    },
     "http": {
       "handler": {
         "route": "/cookies/pattern",
@@ -475,6 +527,10 @@
     "id": "response_delete_cookie",
     "description": "Tests deleting a cookie by setting max_age to 0",
     "category": "cookies",
+    "docs": {
+      "topic": "cookies",
+      "stem": "response_delete_cookie"
+    },
     "http": {
       "handler": {
         "route": "/cookies/delete",
@@ -507,6 +563,10 @@
     "id": "response_cookie_with_domain_attribute",
     "description": "Tests setting cookie with specific domain",
     "category": "cookies",
+    "docs": {
+      "topic": "cookies",
+      "stem": "response_cookie_with_domain_attribute"
+    },
     "http": {
       "handler": {
         "route": "/cookies/set-with-domain",
@@ -541,6 +601,10 @@
     "id": "response_cookie_with_path_attribute",
     "description": "Tests setting cookie with specific path",
     "category": "cookies",
+    "docs": {
+      "topic": "cookies",
+      "stem": "response_cookie_with_path_attribute"
+    },
     "http": {
       "handler": {
         "route": "/cookies/set-with-path",
@@ -575,6 +639,10 @@
     "id": "response_session_cookie_no_max_age",
     "description": "Tests setting session cookie without max_age (expires with browser)",
     "category": "cookies",
+    "docs": {
+      "topic": "cookies",
+      "stem": "response_session_cookie_no_max_age"
+    },
     "http": {
       "handler": {
         "route": "/cookies/session",
@@ -609,6 +677,10 @@
     "id": "response_cookie_with_samesite_strict",
     "description": "Tests setting cookie with SameSite strict attribute",
     "category": "cookies",
+    "docs": {
+      "topic": "cookies",
+      "stem": "response_cookie_with_samesite_strict"
+    },
     "http": {
       "handler": {
         "route": "/cookies/samesite-strict",
@@ -643,6 +715,10 @@
     "id": "response_cookie_with_samesite_lax",
     "description": "Tests setting cookie with SameSite lax attribute",
     "category": "cookies",
+    "docs": {
+      "topic": "cookies",
+      "stem": "response_cookie_with_samesite_lax"
+    },
     "http": {
       "handler": {
         "route": "/cookies/samesite-lax",
@@ -677,6 +753,10 @@
     "id": "response_cookie_with_samesite_none",
     "description": "Tests setting cookie with SameSite none (requires Secure)",
     "category": "cookies",
+    "docs": {
+      "topic": "cookies",
+      "stem": "response_cookie_with_samesite_none"
+    },
     "http": {
       "handler": {
         "route": "/cookies/samesite-none",
@@ -711,6 +791,10 @@
     "id": "response_multiple_cookies",
     "description": "Tests setting multiple cookies in single response",
     "category": "cookies",
+    "docs": {
+      "topic": "cookies",
+      "stem": "response_multiple_cookies"
+    },
     "http": {
       "handler": {
         "route": "/cookies/multiple",
@@ -749,6 +833,10 @@
     "id": "24_cookie_samesite_strict",
     "description": "Cookie with SameSite=Strict attribute should be validated",
     "category": "cookies",
+    "docs": {
+      "topic": "cookies",
+      "stem": "24_cookie_samesite_strict"
+    },
     "http": {
       "handler": {
         "route": "/secure",
@@ -780,6 +868,10 @@
     "id": "25_cookie_samesite_lax",
     "description": "Cookie with SameSite=Lax attribute should be validated",
     "category": "cookies",
+    "docs": {
+      "topic": "cookies",
+      "stem": "25_cookie_samesite_lax"
+    },
     "http": {
       "handler": {
         "route": "/data",
@@ -811,6 +903,10 @@
     "id": "26_cookie_secure_flag",
     "description": "Cookie with Secure flag should be validated for HTTPS",
     "category": "cookies",
+    "docs": {
+      "topic": "cookies",
+      "stem": "26_cookie_secure_flag"
+    },
     "http": {
       "handler": {
         "route": "/secure",
@@ -842,6 +938,10 @@
     "id": "27_cookie_httponly_flag",
     "description": "Cookie with HttpOnly flag should prevent JavaScript access",
     "category": "cookies",
+    "docs": {
+      "topic": "cookies",
+      "stem": "27_cookie_httponly_flag"
+    },
     "http": {
       "handler": {
         "route": "/secure",

@@ -32,11 +32,5 @@
       "host": "api.example.com"
     }
   },
-  "tags": [
-    "query_params",
-    "format",
-    "hostname",
-    "validation",
-    "success"
-  ]
+  "tags": ["query_params", "format", "hostname", "validation", "success"]
 }

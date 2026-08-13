@@ -21,10 +21,7 @@
         }
       },
       "additionalProperties": false,
-      "required": [
-        "name",
-        "created_at"
-      ]
+      "required": ["name", "created_at"]
     }
   },
   "request": {

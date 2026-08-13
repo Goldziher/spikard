@@ -66,9 +66,5 @@
       }
     ]
   },
-  "tags": [
-    "bidirectional_streaming",
-    "transform",
-    "uppercase"
-  ]
+  "tags": ["bidirectional_streaming", "transform", "uppercase"]
 }

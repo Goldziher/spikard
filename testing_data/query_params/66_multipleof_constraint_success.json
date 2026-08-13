@@ -32,11 +32,5 @@
       "quantity": 15
     }
   },
-  "tags": [
-    "query_params",
-    "integer",
-    "multipleOf",
-    "validation",
-    "success"
-  ]
+  "tags": ["query_params", "integer", "multipleOf", "validation", "success"]
 }

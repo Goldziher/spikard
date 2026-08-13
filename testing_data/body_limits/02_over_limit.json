@@ -12,9 +12,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "note"
-      ],
+      "required": ["note"],
       "additionalProperties": false
     },
     "middleware": {
@@ -33,9 +31,5 @@
   "expected_response": {
     "status_code": 413
   },
-  "tags": [
-    "body_limit",
-    "middleware",
-    "payload_too_large"
-  ]
+  "tags": ["body_limit", "middleware", "payload_too_large"]
 }

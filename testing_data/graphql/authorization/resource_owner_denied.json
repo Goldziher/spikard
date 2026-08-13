@@ -35,11 +35,5 @@
       "error_message": "Not authorized to access this resource"
     }
   },
-  "tags": [
-    "authorization",
-    "resource-ownership",
-    "denied",
-    "error",
-    "ownership-check"
-  ]
+  "tags": ["authorization", "resource-ownership", "denied", "error", "ownership-check"]
 }

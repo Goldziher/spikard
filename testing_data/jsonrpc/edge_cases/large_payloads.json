@@ -227,9 +227,5 @@
     }
   ],
   "error_cases": [],
-  "tags": [
-    "large-payloads",
-    "performance",
-    "edge-cases"
-  ]
+  "tags": ["large-payloads", "performance", "edge-cases"]
 }

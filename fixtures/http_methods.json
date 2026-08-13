@@ -3,6 +3,10 @@
     "id": "put_complete_resource_replacement",
     "description": "Tests PUT method for complete resource replacement",
     "category": "http_methods",
+    "docs": {
+      "topic": "http_methods",
+      "stem": "put_complete_resource_replacement"
+    },
     "http": {
       "handler": {
         "route": "/items/{id}",
@@ -66,6 +70,10 @@
     "id": "put_create_resource_if_doesn_t_exist",
     "description": "Tests PUT creating new resource at specific URI",
     "category": "http_methods",
+    "docs": {
+      "topic": "http_methods",
+      "stem": "put_create_resource_if_doesn_t_exist"
+    },
     "http": {
       "handler": {
         "route": "/items/{id}",
@@ -119,6 +127,10 @@
     "id": "put_idempotent_operation",
     "description": "Tests PUT idempotency - repeated calls produce same result",
     "category": "http_methods",
+    "docs": {
+      "topic": "http_methods",
+      "stem": "put_idempotent_operation"
+    },
     "http": {
       "handler": {
         "route": "/items/{id}",
@@ -172,6 +184,10 @@
     "id": "put_validation_error",
     "description": "Tests PUT with invalid data returns 422",
     "category": "http_methods",
+    "docs": {
+      "topic": "http_methods",
+      "stem": "put_validation_error"
+    },
     "http": {
       "handler": {
         "route": "/items/{id}",
@@ -249,6 +265,10 @@
     "id": "put_missing_required_field",
     "description": "Tests PUT with missing required fields returns 422",
     "category": "http_methods",
+    "docs": {
+      "topic": "http_methods",
+      "stem": "put_missing_required_field"
+    },
     "http": {
       "handler": {
         "route": "/items/{id}",
@@ -313,6 +333,10 @@
     "id": "patch_partial_update",
     "description": "Tests PATCH method for partial resource updates",
     "category": "http_methods",
+    "docs": {
+      "topic": "http_methods",
+      "stem": "patch_partial_update"
+    },
     "http": {
       "handler": {
         "route": "/items/{id}",
@@ -359,6 +383,10 @@
     "id": "patch_update_multiple_fields",
     "description": "Tests PATCH updating multiple fields at once",
     "category": "http_methods",
+    "docs": {
+      "topic": "http_methods",
+      "stem": "patch_update_multiple_fields"
+    },
     "http": {
       "handler": {
         "route": "/items/{id}",
@@ -413,6 +441,10 @@
     "id": "delete_remove_resource",
     "description": "Tests DELETE method to remove a resource",
     "category": "http_methods",
+    "docs": {
+      "topic": "http_methods",
+      "stem": "delete_remove_resource"
+    },
     "http": {
       "handler": {
         "route": "/items/{id}",
@@ -439,6 +471,10 @@
     "id": "delete_with_response_body",
     "description": "Tests DELETE returning deleted resource data",
     "category": "http_methods",
+    "docs": {
+      "topic": "http_methods",
+      "stem": "delete_with_response_body"
+    },
     "http": {
       "handler": {
         "route": "/items/{id}",
@@ -469,6 +505,10 @@
     "id": "delete_resource_not_found",
     "description": "Tests DELETE on non-existent resource returns 404",
     "category": "http_methods",
+    "docs": {
+      "topic": "http_methods",
+      "stem": "delete_resource_not_found"
+    },
     "http": {
       "handler": {
         "route": "/items/{id}",
@@ -495,6 +535,10 @@
     "id": "head_get_metadata_without_body",
     "description": "Tests HEAD method returns headers without response body",
     "category": "http_methods",
+    "docs": {
+      "topic": "http_methods",
+      "stem": "head_get_metadata_without_body"
+    },
     "http": {
       "handler": {
         "route": "/items/{id}",

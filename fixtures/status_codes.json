@@ -3,6 +3,10 @@
     "id": "200_ok_success",
     "description": "Tests standard 200 OK response for successful GET request",
     "category": "status_codes",
+    "docs": {
+      "topic": "status_codes",
+      "stem": "200_ok_success"
+    },
     "http": {
       "handler": {
         "route": "/status-test/{code}",
@@ -32,6 +36,10 @@
     "id": "201_created_resource_created",
     "description": "Tests 201 Created response for successful POST request",
     "category": "status_codes",
+    "docs": {
+      "topic": "status_codes",
+      "stem": "201_created_resource_created"
+    },
     "http": {
       "handler": {
         "route": "/items/",
@@ -70,6 +78,10 @@
     "id": "202_accepted_request_accepted_for_processing",
     "description": "Tests 202 Accepted for async processing",
     "category": "status_codes",
+    "docs": {
+      "topic": "status_codes",
+      "stem": "202_accepted_request_accepted_for_processing"
+    },
     "http": {
       "handler": {
         "route": "/tasks/",
@@ -108,6 +120,10 @@
     "id": "204_no_content_success_with_no_body",
     "description": "Tests 204 No Content response for successful DELETE",
     "category": "status_codes",
+    "docs": {
+      "topic": "status_codes",
+      "stem": "204_no_content_success_with_no_body"
+    },
     "http": {
       "handler": {
         "route": "/status-test/{code}",
@@ -133,6 +149,10 @@
     "id": "304_not_modified_cached_content_valid",
     "description": "Tests 304 Not Modified for cached resources",
     "category": "status_codes",
+    "docs": {
+      "topic": "status_codes",
+      "stem": "304_not_modified_cached_content_valid"
+    },
     "http": {
       "handler": {
         "route": "/status-test/{code}",
@@ -167,6 +187,10 @@
     "id": "307_temporary_redirect_method_preserved",
     "description": "Tests 307 temporary redirect with method preservation",
     "category": "status_codes",
+    "docs": {
+      "topic": "status_codes",
+      "stem": "307_temporary_redirect_method_preserved"
+    },
     "http": {
       "handler": {
         "route": "/redirect-post",
@@ -198,6 +222,10 @@
     "id": "400_bad_request_invalid_request",
     "description": "Tests 400 Bad Request for malformed request",
     "category": "status_codes",
+    "docs": {
+      "topic": "status_codes",
+      "stem": "400_bad_request_invalid_request"
+    },
     "http": {
       "handler": {
         "route": "/items/",
@@ -229,6 +257,10 @@
     "id": "404_not_found_resource_not_found",
     "description": "Tests 404 Not Found for non-existent resource",
     "category": "status_codes",
+    "docs": {
+      "topic": "status_codes",
+      "stem": "404_not_found_resource_not_found"
+    },
     "http": {
       "handler": {
         "route": "/status-test/{code}",
@@ -257,6 +289,10 @@
     "id": "422_unprocessable_entity_validation_error",
     "description": "Tests 422 for validation errors (Pydantic)",
     "category": "status_codes",
+    "docs": {
+      "topic": "status_codes",
+      "stem": "422_unprocessable_entity_validation_error"
+    },
     "http": {
       "handler": {
         "route": "/items/",
@@ -310,6 +346,10 @@
     "id": "408_request_timeout",
     "description": "Tests 408 status code when request takes too long",
     "category": "status_codes",
+    "docs": {
+      "topic": "status_codes",
+      "stem": "408_request_timeout"
+    },
     "http": {
       "handler": {
         "route": "/slow-endpoint",
@@ -350,6 +390,10 @@
     "id": "19_413_payload_too_large",
     "description": "Request with body exceeding max size should return 413",
     "category": "status_codes",
+    "docs": {
+      "topic": "status_codes",
+      "stem": "19_413_payload_too_large"
+    },
     "http": {
       "handler": {
         "route": "/upload",
@@ -384,6 +428,10 @@
     "id": "20_414_uri_too_long",
     "description": "Request with excessively long URI should return 414",
     "category": "status_codes",
+    "docs": {
+      "topic": "status_codes",
+      "stem": "20_414_uri_too_long"
+    },
     "http": {
       "handler": {
         "route": "/data",
@@ -404,6 +452,10 @@
     "id": "21_431_request_header_fields_too_large",
     "description": "Request with excessively large headers should return 431",
     "category": "status_codes",
+    "docs": {
+      "topic": "status_codes",
+      "stem": "21_431_request_header_fields_too_large"
+    },
     "http": {
       "handler": {
         "route": "/data",
@@ -438,6 +490,10 @@
     "id": "22_501_not_implemented",
     "description": "Unsupported HTTP method should return 501",
     "category": "status_codes",
+    "docs": {
+      "topic": "status_codes",
+      "stem": "22_501_not_implemented"
+    },
     "skip": {
       "languages": ["node"],
       "reason": "TRACE HTTP method is not supported by the fetch API in Node.js"
@@ -461,6 +517,10 @@
     "id": "23_503_service_unavailable",
     "description": "Service temporarily unavailable should return 503 with Retry-After",
     "category": "status_codes",
+    "docs": {
+      "topic": "status_codes",
+      "stem": "23_503_service_unavailable"
+    },
     "http": {
       "handler": {
         "route": "/data",

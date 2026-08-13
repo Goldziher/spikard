@@ -56,9 +56,5 @@
   "expected_response": {
     "status_code": "INVALID_ARGUMENT"
   },
-  "tags": [
-    "grpc_status",
-    "validation",
-    "error"
-  ]
+  "tags": ["grpc_status", "validation", "error"]
 }

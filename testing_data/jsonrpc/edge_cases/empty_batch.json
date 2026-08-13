@@ -41,10 +41,5 @@
       }
     }
   ],
-  "tags": [
-    "batch",
-    "protocol",
-    "edge-cases",
-    "error-handling"
-  ]
+  "tags": ["batch", "protocol", "edge-cases", "error-handling"]
 }

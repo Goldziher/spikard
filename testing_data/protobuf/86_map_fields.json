@@ -107,16 +107,8 @@
     "message": {
       "id": "map-test-001",
       "map_count": 3,
-      "keys": [
-        "key1",
-        "key2",
-        "key3"
-      ]
+      "keys": ["key1", "key2", "key3"]
     }
   },
-  "tags": [
-    "edge_cases",
-    "map_fields",
-    "protobuf_collections"
-  ]
+  "tags": ["edge_cases", "map_fields", "protobuf_collections"]
 }

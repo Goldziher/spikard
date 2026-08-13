@@ -63,9 +63,5 @@
       }
     }
   },
-  "tags": [
-    "grpc_status",
-    "unavailable",
-    "circuit_breaker"
-  ]
+  "tags": ["grpc_status", "unavailable", "circuit_breaker"]
 }

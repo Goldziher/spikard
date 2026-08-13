@@ -66,9 +66,5 @@
     "stream": [],
     "message": "Stream completed with no messages"
   },
-  "tags": [
-    "server_streaming",
-    "empty",
-    "edge_cases"
-  ]
+  "tags": ["server_streaming", "empty", "edge_cases"]
 }

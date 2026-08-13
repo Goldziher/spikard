@@ -71,11 +71,11 @@ Spikard ships a Rust core plus 14 language bindings. Install only what you need;
     <dependency>
         <groupId>dev.spikard</groupId>
         <artifactId>spikard</artifactId>
-        <version>0.17.0</version>
+        <version>0.17.0-rc.11</version>
     </dependency>
     ```
 
-    Requires Java ≥ 21.
+    Requires Java ≥ 25.
 
 === "C#"
 
@@ -83,14 +83,14 @@ Spikard ships a Rust core plus 14 language bindings. Install only what you need;
     dotnet add package Spikard
     ```
 
-    Requires .NET 9.0 or later (Core + Framework).
+    Requires .NET 10 or later.
 
 === "Kotlin"
 
     Add to `build.gradle.kts`:
 
     ```kotlin
-    implementation("dev.spikard:spikard-kt:0.17.0")
+    implementation("dev.spikard:spikard:0.17.0-rc.11")
     ```
 
     Requires Kotlin ≥ 1.8.
@@ -101,7 +101,7 @@ Spikard ships a Rust core plus 14 language bindings. Install only what you need;
 
     ```yaml
     dependencies:
-      spikard: ^0.17.0
+      spikard: ^0.17.0-rc.11
     ```
 
     Requires Dart ≥ 3.0.
@@ -111,7 +111,7 @@ Spikard ships a Rust core plus 14 language bindings. Install only what you need;
     Add to `Package.swift`:
 
     ```swift
-    .package(url: "https://github.com/Goldziher/spikard.git", from: "0.17.0")
+    .package(url: "https://github.com/Goldziher/spikard.git", from: "0.17.0-rc.11")
     ```
 
     Requires Swift ≥ 5.9.
@@ -122,7 +122,7 @@ Spikard ships a Rust core plus 14 language bindings. Install only what you need;
 
     ```zig
     .spikard = .{
-        .url = "https://github.com/Goldziher/spikard/archive/v0.17.0.tar.gz",
+        .url = "https://github.com/Goldziher/spikard/archive/v0.17.0-rc.11.tar.gz",
         .hash = "...",
     },
     ```
@@ -145,14 +145,6 @@ Spikard ships a Rust core plus 14 language bindings. Install only what you need;
     ```
 
     WASM provides client-side type stubs and serialization helpers for talking to a remote Spikard server. No server-side runtime.
-
-=== "R"
-
-    ```r
-    devtools::install_github("Goldziher/spikard")
-    ```
-
-    Requires R ≥ 4.1.
 
 === "Rust"
 

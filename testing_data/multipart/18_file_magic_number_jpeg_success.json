@@ -14,9 +14,7 @@
       "files": {
         "image": {
           "required": true,
-          "content_type": [
-            "image/jpeg"
-          ],
+          "content_type": ["image/jpeg"],
           "validate_magic_numbers": true
         }
       }
@@ -37,13 +35,5 @@
   "expected_response": {
     "status_code": 201
   },
-  "tags": [
-    "multipart",
-    "file",
-    "magic_number",
-    "jpeg",
-    "security",
-    "validation",
-    "success"
-  ]
+  "tags": ["multipart", "file", "magic_number", "jpeg", "security", "validation", "success"]
 }

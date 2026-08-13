@@ -20,11 +20,7 @@
       },
       "status": {
         "description": "Delivery result",
-        "enum": [
-          "queued",
-          "delivered",
-          "rejected"
-        ],
+        "enum": ["queued", "delivered", "rejected"],
         "type": "string"
       },
       "timestamp": {
@@ -37,12 +33,7 @@
         "type": "string"
       }
     },
-    "required": [
-      "type",
-      "messageId",
-      "status",
-      "timestamp"
-    ],
+    "required": ["type", "messageId", "status", "timestamp"],
     "type": "object"
   }
 }

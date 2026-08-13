@@ -3,6 +3,10 @@
     "id": "asyncapi_channel_extraction",
     "description": "Tests that channels are correctly extracted from an AsyncAPI 3.0.0 spec",
     "category": "asyncapi",
+    "docs": {
+      "topic": "asyncapi",
+      "stem": "asyncapi_channel_extraction"
+    },
     "asyncapi": {
       "spec": {
         "asyncapi": "3.0.0",
@@ -65,6 +69,10 @@
     "id": "asyncapi_operation_extraction",
     "description": "Tests that send/receive operations are correctly extracted from an AsyncAPI 3.0.0 spec",
     "category": "asyncapi",
+    "docs": {
+      "topic": "asyncapi",
+      "stem": "asyncapi_operation_extraction"
+    },
     "asyncapi": {
       "spec": {
         "asyncapi": "3.0.0",
@@ -126,6 +134,10 @@
     "id": "asyncapi_message_schema_validation_pass",
     "description": "Tests that a valid message passes schema validation against its channel definition",
     "category": "asyncapi",
+    "docs": {
+      "topic": "asyncapi",
+      "stem": "asyncapi_message_schema_validation_pass"
+    },
     "asyncapi": {
       "spec": {
         "asyncapi": "3.0.0",
@@ -171,6 +183,10 @@
     "id": "asyncapi_message_schema_validation_fail_missing_required",
     "description": "Tests that a message missing required fields is rejected by schema validation",
     "category": "asyncapi",
+    "docs": {
+      "topic": "asyncapi",
+      "stem": "asyncapi_message_schema_validation_fail_missing_required"
+    },
     "asyncapi": {
       "spec": {
         "asyncapi": "3.0.0",
@@ -214,6 +230,10 @@
     "id": "asyncapi_websocket_binding_extraction",
     "description": "Tests that WebSocket binding is extracted from a channel with ws bindings block",
     "category": "asyncapi",
+    "docs": {
+      "topic": "asyncapi",
+      "stem": "asyncapi_websocket_binding_extraction"
+    },
     "asyncapi": {
       "spec": {
         "asyncapi": "3.0.0",
@@ -259,6 +279,10 @@
     "id": "asyncapi_sse_binding_extraction",
     "description": "Tests that HTTP SSE binding is extracted from a channel with http bindings block",
     "category": "asyncapi",
+    "docs": {
+      "topic": "asyncapi",
+      "stem": "asyncapi_sse_binding_extraction"
+    },
     "asyncapi": {
       "spec": {
         "asyncapi": "3.0.0",
@@ -307,6 +331,10 @@
     "id": "asyncapi_multi_channel_spec",
     "description": "Tests parsing of a spec with multiple channels each targeting different protocols",
     "category": "asyncapi",
+    "docs": {
+      "topic": "asyncapi",
+      "stem": "asyncapi_multi_channel_spec"
+    },
     "asyncapi": {
       "spec": {
         "asyncapi": "3.0.0",
@@ -342,6 +370,10 @@
     "id": "asyncapi_schema_ref_resolution",
     "description": "Tests that $ref references to components/messages are resolved during extraction",
     "category": "asyncapi",
+    "docs": {
+      "topic": "asyncapi",
+      "stem": "asyncapi_schema_ref_resolution"
+    },
     "asyncapi": {
       "spec": {
         "asyncapi": "3.0.0",
@@ -387,6 +419,10 @@
     "id": "asyncapi_invalid_spec_bad_version",
     "description": "Tests that a spec with an invalid asyncapi version field is rejected with an error",
     "category": "asyncapi",
+    "docs": {
+      "topic": "asyncapi",
+      "stem": "asyncapi_invalid_spec_bad_version"
+    },
     "asyncapi": {
       "spec": {
         "asyncapi": "2.0.0",
@@ -404,6 +440,10 @@
     "id": "asyncapi_validate_summary_fields",
     "description": "Tests that validate_asyncapi_schema returns correct spec_version, title, api_version, and channel_count",
     "category": "asyncapi",
+    "docs": {
+      "topic": "asyncapi",
+      "stem": "asyncapi_validate_summary_fields"
+    },
     "asyncapi": {
       "spec": {
         "asyncapi": "3.0.0",

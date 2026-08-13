@@ -12,9 +12,7 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": [
-        "filename"
-      ],
+      "required": ["filename"],
       "properties": {
         "filename": {
           "type": "string",
@@ -40,10 +38,7 @@
       "errors": [
         {
           "type": "string_pattern_mismatch",
-          "loc": [
-            "body",
-            "filename"
-          ],
+          "loc": ["body", "filename"],
           "msg": "String should match pattern '^[^\\x00]+$'",
           "input": "file\u0000.txt",
           "ctx": {
@@ -53,11 +48,5 @@
       ]
     }
   },
-  "tags": [
-    "edge_cases",
-    "security",
-    "null_byte",
-    "validation",
-    "error"
-  ]
+  "tags": ["edge_cases", "security", "null_byte", "validation", "error"]
 }

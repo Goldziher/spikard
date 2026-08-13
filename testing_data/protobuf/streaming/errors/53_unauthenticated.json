@@ -64,10 +64,5 @@
     "error_message": "Missing authorization metadata",
     "stream": []
   },
-  "tags": [
-    "grpc_status",
-    "authentication",
-    "error_handling",
-    "server_streaming"
-  ]
+  "tags": ["grpc_status", "authentication", "error_handling", "server_streaming"]
 }

@@ -16,9 +16,7 @@
           "type": "number"
         }
       },
-      "required": [
-        "price"
-      ]
+      "required": ["price"]
     },
     "parameters": {
       "path": {

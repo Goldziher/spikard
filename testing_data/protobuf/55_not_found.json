@@ -56,9 +56,5 @@
   "expected_response": {
     "status_code": "NOT_FOUND"
   },
-  "tags": [
-    "grpc_status",
-    "not_found",
-    "error"
-  ]
+  "tags": ["grpc_status", "not_found", "error"]
 }

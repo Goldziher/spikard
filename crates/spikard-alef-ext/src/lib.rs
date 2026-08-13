@@ -20,6 +20,7 @@
 pub mod config;
 pub mod emit;
 pub mod ir;
+mod snippets;
 
 use alef::core::backend::GeneratedFile;
 use alef::core::config::Language;
@@ -202,6 +203,18 @@ impl Extension for HttpExtension {
             _ => Ok(Vec::new()),
         }
     }
+
+    fn render_e2e_snippet(
+        &self,
+        fixture: &alef::e2e::fixture::Fixture,
+        e2e_config: &alef::core::config::E2eConfig,
+        config: &alef::core::config::ResolvedCrateConfig,
+        language: &str,
+        type_defs: &[alef::core::ir::TypeDef],
+        enums: &[alef::core::ir::EnumDef],
+    ) -> Result<Option<String>> {
+        snippets::render(fixture, language, e2e_config, config, type_defs, enums)
+    }
 }
 
 /// Raw lines appended to `packages/python/spikard/__init__.py` to expose the ergonomic surface.
@@ -307,6 +320,47 @@ mod tests {
                 ext.public_api_additions(&api, &cfg, lang).unwrap().is_empty(),
                 "{lang:?} must contribute no init additions",
             );
+        }
+    }
+
+    /// The ergonomic `App` layers are the API users actually call, and they are emitted from the
+    /// static templates rather than hand-written in `packages/`. Editing the emitted file instead
+    /// of the template is silently undone by the next regen, so assert the per-route middleware
+    /// surface is present in the template *source* — this fails at `cargo test` time rather than
+    /// after a regeneration nobody re-reads. ~keep
+    #[test]
+    fn every_ergonomic_app_template_exposes_the_per_route_middleware_surface() {
+        const TEMPLATES: &[(&str, &str, &[&str])] = &[
+            (
+                "pyo3/app.py",
+                include_str!("templates/pyo3/app.py.jinja"),
+                &["authorization", "lifecycle_hooks", "openrpc_spec", "RouteMiddleware"],
+            ),
+            (
+                "magnus/app.rb",
+                include_str!("templates/magnus/app.rb.jinja"),
+                &["authorization", "lifecycle_hooks", "openrpc_spec", "ROUTE_MIDDLEWARE_KEYS"],
+            ),
+            (
+                "go/app.go",
+                include_str!("templates/go/app.go.jinja"),
+                &["WithAuthorization", "WithLifecycleHooks", "WithOpenrpcSpec", "RouteOption"],
+            ),
+            (
+                "php/app.php",
+                include_str!("templates/php/app.php.jinja"),
+                &["authorization", "lifecycleHooks", "openrpcSpec", "applyRouteOptions"],
+            ),
+        ];
+
+        for (name, source, required) in TEMPLATES {
+            for needle in *required {
+                assert!(
+                    source.contains(needle),
+                    "{name} template must expose `{needle}`; per-route middleware was likely added \
+                     to the generated output in packages/ instead of to this template",
+                );
+            }
         }
     }
 }

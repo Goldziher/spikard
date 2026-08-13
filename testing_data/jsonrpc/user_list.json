@@ -24,11 +24,7 @@
           },
           "role": {
             "type": "string",
-            "enum": [
-              "admin",
-              "user",
-              "guest"
-            ]
+            "enum": ["admin", "user", "guest"]
           }
         }
       }

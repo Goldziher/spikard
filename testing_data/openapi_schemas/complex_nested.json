@@ -139,13 +139,7 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": [
-                "todo",
-                "in_progress",
-                "review",
-                "done",
-                "archived"
-              ]
+              "enum": ["todo", "in_progress", "review", "done", "archived"]
             }
           },
           {
@@ -153,12 +147,7 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": [
-                "low",
-                "medium",
-                "high",
-                "critical"
-              ]
+              "enum": ["low", "medium", "high", "critical"]
             }
           }
         ],
@@ -221,12 +210,7 @@
     "schemas": {
       "Organization": {
         "type": "object",
-        "required": [
-          "id",
-          "name",
-          "type",
-          "settings"
-        ],
+        "required": ["id", "name", "type", "settings"],
         "properties": {
           "id": {
             "type": "string",
@@ -244,13 +228,7 @@
           },
           "type": {
             "type": "string",
-            "enum": [
-              "startup",
-              "enterprise",
-              "nonprofit",
-              "educational",
-              "personal"
-            ]
+            "enum": ["startup", "enterprise", "nonprofit", "educational", "personal"]
           },
           "website": {
             "type": "string",
@@ -291,11 +269,7 @@
         "properties": {
           "visibility": {
             "type": "string",
-            "enum": [
-              "public",
-              "private",
-              "internal"
-            ]
+            "enum": ["public", "private", "internal"]
           },
           "allowPublicProjects": {
             "type": "boolean",
@@ -307,12 +281,7 @@
           },
           "defaultRole": {
             "type": "string",
-            "enum": [
-              "viewer",
-              "contributor",
-              "maintainer",
-              "admin"
-            ]
+            "enum": ["viewer", "contributor", "maintainer", "admin"]
           },
           "integrations": {
             "type": "object",
@@ -346,9 +315,7 @@
       },
       "SlackIntegration": {
         "type": "object",
-        "required": [
-          "webhookUrl"
-        ],
+        "required": ["webhookUrl"],
         "properties": {
           "webhookUrl": {
             "type": "string",
@@ -365,9 +332,7 @@
       },
       "GitHubIntegration": {
         "type": "object",
-        "required": [
-          "accessToken"
-        ],
+        "required": ["accessToken"],
         "properties": {
           "accessToken": {
             "type": "string"
@@ -383,9 +348,7 @@
       },
       "DatadogIntegration": {
         "type": "object",
-        "required": [
-          "apiKey"
-        ],
+        "required": ["apiKey"],
         "properties": {
           "apiKey": {
             "type": "string"
@@ -421,21 +384,11 @@
         "properties": {
           "plan": {
             "type": "string",
-            "enum": [
-              "free",
-              "starter",
-              "professional",
-              "enterprise"
-            ]
+            "enum": ["free", "starter", "professional", "enterprise"]
           },
           "status": {
             "type": "string",
-            "enum": [
-              "trial",
-              "active",
-              "suspended",
-              "canceled"
-            ]
+            "enum": ["trial", "active", "suspended", "canceled"]
           },
           "currentPeriodStart": {
             "type": "string",
@@ -447,21 +400,13 @@
           },
           "paymentMethod": {
             "type": "string",
-            "enum": [
-              "credit_card",
-              "invoice",
-              "paypal"
-            ]
+            "enum": ["credit_card", "invoice", "paypal"]
           }
         }
       },
       "Member": {
         "type": "object",
-        "required": [
-          "id",
-          "userId",
-          "role"
-        ],
+        "required": ["id", "userId", "role"],
         "properties": {
           "id": {
             "type": "string",
@@ -480,12 +425,7 @@
           },
           "role": {
             "type": "string",
-            "enum": [
-              "viewer",
-              "contributor",
-              "maintainer",
-              "admin"
-            ]
+            "enum": ["viewer", "contributor", "maintainer", "admin"]
           },
           "joinedAt": {
             "type": "string",
@@ -495,11 +435,7 @@
       },
       "Project": {
         "type": "object",
-        "required": [
-          "id",
-          "name",
-          "status"
-        ],
+        "required": ["id", "name", "status"],
         "properties": {
           "id": {
             "type": "string",
@@ -520,19 +456,11 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "planning",
-              "active",
-              "paused",
-              "archived"
-            ]
+            "enum": ["planning", "active", "paused", "archived"]
           },
           "visibility": {
             "type": "string",
-            "enum": [
-              "public",
-              "private"
-            ]
+            "enum": ["public", "private"]
           },
           "owner": {
             "$ref": "#/components/schemas/Member"
@@ -597,11 +525,7 @@
       },
       "Milestone": {
         "type": "object",
-        "required": [
-          "id",
-          "name",
-          "dueDate"
-        ],
+        "required": ["id", "name", "dueDate"],
         "properties": {
           "id": {
             "type": "string",
@@ -620,23 +544,13 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "pending",
-              "active",
-              "completed",
-              "overdue"
-            ]
+            "enum": ["pending", "active", "completed", "overdue"]
           }
         }
       },
       "Task": {
         "type": "object",
-        "required": [
-          "id",
-          "title",
-          "status",
-          "priority"
-        ],
+        "required": ["id", "title", "status", "priority"],
         "properties": {
           "id": {
             "type": "string",
@@ -657,22 +571,11 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "todo",
-              "in_progress",
-              "review",
-              "done",
-              "archived"
-            ]
+            "enum": ["todo", "in_progress", "review", "done", "archived"]
           },
           "priority": {
             "type": "string",
-            "enum": [
-              "low",
-              "medium",
-              "high",
-              "critical"
-            ]
+            "enum": ["low", "medium", "high", "critical"]
           },
           "assignee": {
             "$ref": "#/components/schemas/Member",
@@ -736,11 +639,7 @@
       },
       "Subtask": {
         "type": "object",
-        "required": [
-          "id",
-          "title",
-          "completed"
-        ],
+        "required": ["id", "title", "completed"],
         "properties": {
           "id": {
             "type": "string",
@@ -781,10 +680,7 @@
       },
       "CreateOrganizationInput": {
         "type": "object",
-        "required": [
-          "name",
-          "type"
-        ],
+        "required": ["name", "type"],
         "properties": {
           "name": {
             "type": "string",
@@ -797,13 +693,7 @@
           },
           "type": {
             "type": "string",
-            "enum": [
-              "startup",
-              "enterprise",
-              "nonprofit",
-              "educational",
-              "personal"
-            ]
+            "enum": ["startup", "enterprise", "nonprofit", "educational", "personal"]
           },
           "website": {
             "type": "string",
@@ -814,10 +704,7 @@
       },
       "CreateTaskInput": {
         "type": "object",
-        "required": [
-          "title",
-          "priority"
-        ],
+        "required": ["title", "priority"],
         "properties": {
           "title": {
             "type": "string",
@@ -830,12 +717,7 @@
           },
           "priority": {
             "type": "string",
-            "enum": [
-              "low",
-              "medium",
-              "high",
-              "critical"
-            ]
+            "enum": ["low", "medium", "high", "critical"]
           },
           "assigneeId": {
             "type": "string",

@@ -35,9 +35,5 @@
       "content-type": "text/html"
     }
   },
-  "tags": [
-    "static_files",
-    "index",
-    "middleware"
-  ]
+  "tags": ["static_files", "index", "middleware"]
 }

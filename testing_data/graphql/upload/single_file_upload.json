@@ -57,9 +57,5 @@
       }
     }
   },
-  "tags": [
-    "mutations",
-    "file-upload",
-    "multipart"
-  ]
+  "tags": ["mutations", "file-upload", "multipart"]
 }

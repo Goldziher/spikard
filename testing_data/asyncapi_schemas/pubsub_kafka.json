@@ -132,12 +132,7 @@
     "schemas": {
       "BaseEvent": {
         "type": "object",
-        "required": [
-          "eventId",
-          "eventType",
-          "timestamp",
-          "version"
-        ],
+        "required": ["eventId", "eventType", "timestamp", "version"],
         "properties": {
           "eventId": {
             "type": "string",
@@ -171,11 +166,7 @@
       },
       "User": {
         "type": "object",
-        "required": [
-          "id",
-          "email",
-          "name"
-        ],
+        "required": ["id", "email", "name"],
         "properties": {
           "id": {
             "type": "string",
@@ -190,22 +181,13 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "active",
-              "inactive",
-              "suspended"
-            ]
+            "enum": ["active", "inactive", "suspended"]
           }
         }
       },
       "Order": {
         "type": "object",
-        "required": [
-          "id",
-          "customerId",
-          "total",
-          "currency"
-        ],
+        "required": ["id", "customerId", "total", "currency"],
         "properties": {
           "id": {
             "type": "string",
@@ -238,33 +220,17 @@
           },
           "currency": {
             "type": "string",
-            "enum": [
-              "USD",
-              "EUR",
-              "GBP",
-              "JPY"
-            ]
+            "enum": ["USD", "EUR", "GBP", "JPY"]
           },
           "status": {
             "type": "string",
-            "enum": [
-              "pending",
-              "confirmed",
-              "processing",
-              "shipped",
-              "delivered"
-            ]
+            "enum": ["pending", "confirmed", "processing", "shipped", "delivered"]
           }
         }
       },
       "Payment": {
         "type": "object",
-        "required": [
-          "id",
-          "orderId",
-          "amount",
-          "currency"
-        ],
+        "required": ["id", "orderId", "amount", "currency"],
         "properties": {
           "id": {
             "type": "string",
@@ -282,21 +248,11 @@
           },
           "method": {
             "type": "string",
-            "enum": [
-              "credit_card",
-              "debit_card",
-              "paypal",
-              "bank_transfer"
-            ]
+            "enum": ["credit_card", "debit_card", "paypal", "bank_transfer"]
           },
           "status": {
             "type": "string",
-            "enum": [
-              "pending",
-              "processing",
-              "completed",
-              "failed"
-            ]
+            "enum": ["pending", "processing", "completed", "failed"]
           },
           "transactionId": {
             "type": "string",
@@ -774,11 +730,7 @@
                     },
                     "channel": {
                       "type": "string",
-                      "enum": [
-                        "email",
-                        "sms",
-                        "push"
-                      ]
+                      "enum": ["email", "sms", "push"]
                     }
                   }
                 }
@@ -952,11 +904,7 @@
                     },
                     "severity": {
                       "type": "string",
-                      "enum": [
-                        "warning",
-                        "error",
-                        "critical"
-                      ]
+                      "enum": ["warning", "error", "critical"]
                     }
                   }
                 }

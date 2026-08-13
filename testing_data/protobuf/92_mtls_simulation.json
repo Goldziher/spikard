@@ -68,10 +68,5 @@
       "client_cn": "client.example.com"
     }
   },
-  "tags": [
-    "auth",
-    "mtls",
-    "security",
-    "tls"
-  ]
+  "tags": ["auth", "mtls", "security", "tls"]
 }

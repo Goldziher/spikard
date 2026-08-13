@@ -63,6 +63,16 @@ nav = [
     { "PHP" = "reference/api-php.md" },
     { "Rust" = "reference/api-rust.md" },
     { "Elixir" = "reference/api-elixir.md" },
+    { "Go" = "reference/api-go.md" },
+    { "Java" = "reference/api-java.md" },
+    { "C#" = "reference/api-csharp.md" },
+    { "Kotlin" = "reference/api-kotlin.md" },
+    { "Kotlin (Android)" = "reference/api-kotlin-android.md" },
+    { "Dart" = "reference/api-dart.md" },
+    { "Swift" = "reference/api-swift.md" },
+    { "Zig" = "reference/api-zig.md" },
+    { "C FFI" = "reference/api-c.md" },
+    { "WebAssembly" = "reference/api-wasm.md" },
   ] },
 
   { "Playbooks" = [

@@ -9,7 +9,7 @@ import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'lib.freezed.dart';
 
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `HandlerResult`, `ParseRequest`, `RequestData`, `Request`, `TestingSseEvent`, `ValidateRequest`, `ValidationResponse`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
 
 /// Create a simple schema configuration with only Query type.
 ///
@@ -113,6 +113,24 @@ Future<StaticFilesConfig> createStaticFilesConfigFromJson({
 Future<ServerConfig> createServerConfigFromJson({required String json}) =>
 RustLib.instance.api.crateCreateServerConfigFromJson(json: json);
 
+Future<RequestIdConfig> createRequestIdConfigFromJson({required String json}) =>
+RustLib.instance.api.crateCreateRequestIdConfigFromJson(json: json);
+
+Future<JwtAuthConfig> createJwtAuthConfigFromJson({required String json}) =>
+RustLib.instance.api.crateCreateJwtAuthConfigFromJson(json: json);
+
+Future<ApiKeyAuthConfig> createApiKeyAuthConfigFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateApiKeyAuthConfigFromJson(json: json);
+
+Future<LifecycleHookRef> createLifecycleHookRefFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateLifecycleHookRefFromJson(json: json);
+
+Future<LifecycleHooksConfig> createLifecycleHooksConfigFromJson({
+  required String json,
+}) => RustLib.instance.api.crateCreateLifecycleHooksConfigFromJson(json: json);
+
 Future<JsonRpcMethodInfo> createJsonRpcMethodInfoFromJson({
   required String json,
 }) => RustLib.instance.api.crateCreateJsonRpcMethodInfoFromJson(json: json);
@@ -147,9 +165,6 @@ Future<ResponseSnapshot> createResponseSnapshotFromJson({
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<GraphQLRouteConfig>>
 abstract class GraphQlRouteConfig implements RustOpaqueInterface {
-  static Future<GraphQlRouteConfig> default_() =>
-  RustLib.instance.api.crateGraphQlRouteConfigDefault();
-
   Future<GraphQlRouteConfig> description({required String description});
 
   Future<GraphQlRouteConfig> enablePlayground({required bool enable});
@@ -173,6 +188,10 @@ abstract class GraphQlRouteConfig implements RustOpaqueInterface {
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<RouteBuilder>>
 abstract class RouteBuilder implements RustOpaqueInterface {
+  Future<RouteBuilder> apiKeyAuth({required ApiKeyAuthConfig config});
+
+  Future<RouteBuilder> authorization({required AuthorizationConfig config});
+
   Future<RouteBuilder> bodyLimit({required PlatformInt64 maxBytes});
 
   Future<RouteBuilder> compression({required CompressionConfig compression});
@@ -187,13 +206,25 @@ abstract class RouteBuilder implements RustOpaqueInterface {
 
   Future<RouteBuilder> handlerName({required String name});
 
+  Future<RouteBuilder> jsonrpcMethod({required JsonRpcMethodInfo info});
+
+  Future<RouteBuilder> jwtAuth({required JwtAuthConfig config});
+
+  Future<RouteBuilder> lifecycleHooks({required LifecycleHooksConfig hooks});
+
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
   static Future<RouteBuilder> newInstance({
     required Method method,
     required String path,
   }) => RustLib.instance.api.crateRouteBuilderNew(method: method, path: path);
 
+  Future<RouteBuilder> openrpcSpec({required String spec});
+
   Future<RouteBuilder> paramsSchemaJson({required String schema});
+
+  Future<RouteBuilder> rateLimit({required RateLimitConfig rateLimit});
+
+  Future<RouteBuilder> requestId({required bool enabled});
 
   Future<RouteBuilder> requestSchemaJson({required String schema});
 
@@ -231,6 +262,46 @@ abstract class TestClient implements RustOpaqueInterface {
     String? variables,
     String? operationName,
   });
+}
+
+/// Per-route API key authentication requirement.
+///
+/// Mirrors `spikard_http::ApiKeyConfig` for the same reason `JwtAuthConfig` mirrors
+/// `spikard_http::JwtConfig`: `spikard-core` cannot depend on `spikard-http`. ~keep
+class ApiKeyAuthConfig {
+  /// Whether this per-route API key auth requirement is active. Present on 10/10 `api_key_auth`
+  /// fixture payloads in the corpus; defaults to `true` for the same reason as
+  /// [`JwtAuthConfig::enabled`]. ~keep
+  final bool enabled;
+
+  /// Valid API keys. Defaults to empty (rather than being a required field) so that
+  /// `fixtures/server_config.json`'s `server_jwt_and_api_key_auth_combined` payload
+  /// (`{"enabled": true, "header": "X-API-Key"}`, no `keys` at all) deserializes instead of
+  /// hard-failing with "missing field `keys`". An empty list is NOT "allow everyone": a later
+  /// enforcement phase MUST treat an empty `keys` list as a hard misconfiguration error, never
+  /// as an open gate. ~keep
+  final List<String> keys;
+
+  /// Header name to check (e.g., "X-API-Key")
+  final String headerName;
+
+  const ApiKeyAuthConfig({
+    required this.enabled,
+    required this.keys,
+    required this.headerName,
+  });
+
+  @override
+  int get hashCode => enabled.hashCode ^ keys.hashCode ^ headerName.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+  identical(this, other) ||
+  other is ApiKeyAuthConfig &&
+  runtimeType == other.runtimeType &&
+  enabled == other.enabled &&
+  keys == other.keys &&
+  headerName == other.headerName;
 }
 
 /// API Key authentication configuration
@@ -292,6 +363,58 @@ class AsyncApiConfig {
   runtimeType == other.runtimeType &&
   enabled == other.enabled &&
   spec == other.spec;
+}
+
+/// Per-route roles/scopes/permissions authorization requirement.
+///
+/// `spikard_http::auth::Claims` does not yet carry roles, scopes, or permissions, so nothing can
+/// enforce this today. This type only defines the requirement shape; a later phase must extend
+/// `Claims` (or an equivalent claims-decoding path) to populate them before enforcement is
+/// possible. ~keep
+///
+/// Deserialization goes through [`AuthorizationConfigRepr`] rather than a derive so the fixture's
+/// singular `{"required_role": "admin"}` shape (`fixtures/problem_details.json`'s
+/// `problem_details_403_forbidden`) populates `required_roles` instead of being silently dropped
+/// as an unrecognized field — a config that parses to "no constraint" from real authorization
+/// data is a vacuous-pass bug, not a compatibility shim. `deny_unknown_fields` on the repr means
+/// any other unrecognized key is a loud deserialize error instead. ~keep
+class AuthorizationConfig {
+  /// Roles the authenticated caller must have
+  final List<String> requiredRoles;
+
+  /// OAuth-style scopes the authenticated caller must have
+  final List<String> requiredScopes;
+
+  /// Fine-grained permissions the authenticated caller must have
+  final List<String> requiredPermissions;
+
+  /// When true, the caller must satisfy every listed requirement (AND); when false, any single
+  /// listed requirement is sufficient (OR)
+  final bool requireAll;
+
+  const AuthorizationConfig({
+    required this.requiredRoles,
+    required this.requiredScopes,
+    required this.requiredPermissions,
+    required this.requireAll,
+  });
+
+  @override
+  int get hashCode =>
+  requiredRoles.hashCode ^
+  requiredScopes.hashCode ^
+  requiredPermissions.hashCode ^
+  requireAll.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+  identical(this, other) ||
+  other is AuthorizationConfig &&
+  runtimeType == other.runtimeType &&
+  requiredRoles == other.requiredRoles &&
+  requiredScopes == other.requiredScopes &&
+  requiredPermissions == other.requiredPermissions &&
+  requireAll == other.requireAll;
 }
 
 class BackgroundJobMetadata {
@@ -988,6 +1111,77 @@ class JsonRpcMethodInfo {
   tags == other.tags;
 }
 
+/// Per-route JWT authentication requirement.
+///
+/// `spikard-http` defines the canonical `JwtConfig` used by `ServerConfig.jwt_auth`, but
+/// `spikard-core` cannot depend on `spikard-http` (the dependency runs the other way), so that
+/// type cannot be reused here. This mirrors its fields so a later enforcement phase in
+/// `spikard-http` can convert between the two without losing information. ~keep
+///
+/// `secret` and `public_key` are both optional because asymmetric algorithms (RS256, ES256, ...)
+/// verify against a public key rather than a shared secret; see `fixtures/auth.json`'s
+/// `jwt_config_algorithm_rs256`, which carries `public_key` and no `secret` at all. Exactly one is
+/// expected to be populated for a given `algorithm`, but that cross-field invariant is left to a
+/// later enforcement phase rather than the type itself. ~keep
+class JwtAuthConfig {
+  /// Whether this per-route JWT auth requirement is active. Present on 21/21 `jwt_auth` fixture
+  /// payloads in the corpus; defaults to `true` because presence of a `jwt_auth` block has always
+  /// meant "enabled" up to now. Without this field a fixture setting `"enabled": false` would
+  /// silently keep auth on while the fixture's parse still succeeds — a vacuous pass. ~keep
+  final bool enabled;
+
+  /// Symmetric secret key for JWT verification (HS256, HS384, HS512)
+  final String? secret;
+
+  /// Asymmetric public key for JWT verification (RS256, ES256, etc.)
+  final String? publicKey;
+
+  /// Required algorithm (HS256, HS384, HS512, RS256, etc.)
+  final String algorithm;
+
+  /// Required audience claim
+  final List<String>? audience;
+
+  /// Required issuer claim
+  final String? issuer;
+
+  /// Leeway for expiration checks (seconds)
+  final PlatformInt64 leeway;
+
+  const JwtAuthConfig({
+    required this.enabled,
+    this.secret,
+    this.publicKey,
+    required this.algorithm,
+    this.audience,
+    this.issuer,
+    required this.leeway,
+  });
+
+  @override
+  int get hashCode =>
+  enabled.hashCode ^
+  secret.hashCode ^
+  publicKey.hashCode ^
+  algorithm.hashCode ^
+  audience.hashCode ^
+  issuer.hashCode ^
+  leeway.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+  identical(this, other) ||
+  other is JwtAuthConfig &&
+  runtimeType == other.runtimeType &&
+  enabled == other.enabled &&
+  secret == other.secret &&
+  publicKey == other.publicKey &&
+  algorithm == other.algorithm &&
+  audience == other.audience &&
+  issuer == other.issuer &&
+  leeway == other.leeway;
+}
+
 /// JWT authentication configuration
 class JwtConfig {
   /// Secret key for JWT verification
@@ -1053,6 +1247,127 @@ class LicenseInfo {
   runtimeType == other.runtimeType &&
   name == other.name &&
   url == other.url;
+}
+
+/// The five lifecycle phases a hook can be registered against.
+///
+/// Used to resolve a per-route named hook selection (`LifecycleHooksConfig` in
+/// `spikard-core::http`) against the hooks actually registered on the server: a name is looked
+/// up within one specific phase's registered hooks, not across all five, so a hook registered
+/// for `on_response` can never be silently picked up by a route asking for `on_request`. ~keep
+enum LifecycleHookPhase {
+  onRequest,
+  preValidation,
+  preHandler,
+  onResponse,
+  onError,
+}
+
+/// A single lifecycle hook reference within a [`LifecycleHooksConfig`] phase.
+///
+/// Matches the fixture shape exactly (`fixtures/lifecycle_hooks.json`, `fixtures/di.json`): each
+/// entry is an object with a required `name` and `handler`, an optional list of dependency keys,
+/// and an optional free-form `config` blob (e.g. `{"max_requests": 10, "window_seconds": 60}` for
+/// a rate-limiting hook). `deny_unknown_fields` turns future fixture drift into a loud error. ~keep
+class LifecycleHookRef {
+  /// Registered name of the hook to run, resolved against the server's `LifecycleHooks`
+  final String name;
+
+  /// Name of the handler function this hook invokes
+  final String handler;
+
+  /// Dependency keys this hook requires (for DI), resolved before the hook runs
+  final List<String> dependencies;
+
+  /// Optional free-form configuration passed to the hook (e.g. rate-limit thresholds)
+  final String? config;
+
+  /// Explicit execution order within the phase, where the corpus states one
+  /// (`fixtures/lifecycle_hooks.json`'s `hook_execution_order`). Array position already implies
+  /// an order, so this exists to let a fixture assert ordering rather than rely on it. ~keep
+  final PlatformInt64? order;
+
+  const LifecycleHookRef({
+    required this.name,
+    required this.handler,
+    required this.dependencies,
+    this.config,
+    this.order,
+  });
+
+  @override
+  int get hashCode =>
+  name.hashCode ^
+  handler.hashCode ^
+  dependencies.hashCode ^
+  config.hashCode ^
+  order.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+  identical(this, other) ||
+  other is LifecycleHookRef &&
+  runtimeType == other.runtimeType &&
+  name == other.name &&
+  handler == other.handler &&
+  dependencies == other.dependencies &&
+  config == other.config &&
+  order == other.order;
+}
+
+/// Per-route selection of registered lifecycle hooks.
+///
+/// `ServerConfig.lifecycle_hooks` holds `Arc<dyn LifecycleHook>` function pointers and is marked
+/// `#[serde(skip)]` / `#[alef(skip)]` because closures cannot be serialized or cross the FFI
+/// boundary. A per-route field with that same shape would be invisible to alef, and therefore
+/// invisible to every binding — defeating the purpose of exposing it here. This descriptor
+/// carries [`LifecycleHookRef`] entries instead: each one names a registered hook (plus its
+/// declared dependencies and optional config), so a later enforcement phase can resolve those
+/// names against the server's registered `LifecycleHooks` and run the matches for this route. The
+/// five fields mirror the five hook phases documented in the `tower-middleware-and-lifecycle`
+/// project convention (onRequest, preValidation, preHandler, onResponse, onError). ~keep
+class LifecycleHooksConfig {
+  /// Hooks to run in the `on_request` phase
+  final List<LifecycleHookRef> onRequest;
+
+  /// Hooks to run in the `pre_validation` phase
+  final List<LifecycleHookRef> preValidation;
+
+  /// Hooks to run in the `pre_handler` phase
+  final List<LifecycleHookRef> preHandler;
+
+  /// Hooks to run in the `on_response` phase
+  final List<LifecycleHookRef> onResponse;
+
+  /// Hooks to run in the `on_error` phase
+  final List<LifecycleHookRef> onError;
+
+  const LifecycleHooksConfig({
+    required this.onRequest,
+    required this.preValidation,
+    required this.preHandler,
+    required this.onResponse,
+    required this.onError,
+  });
+
+  @override
+  int get hashCode =>
+  onRequest.hashCode ^
+  preValidation.hashCode ^
+  preHandler.hashCode ^
+  onResponse.hashCode ^
+  onError.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+  identical(this, other) ||
+  other is LifecycleHooksConfig &&
+  runtimeType == other.runtimeType &&
+  onRequest == other.onRequest &&
+  preValidation == other.preValidation &&
+  preHandler == other.preHandler &&
+  onResponse == other.onResponse &&
+  onError == other.onError;
 }
 
 /// HTTP method
@@ -1438,6 +1753,30 @@ class RateLimitConfig {
   perSecond == other.perSecond &&
   burst == other.burst &&
   ipBased == other.ipBased;
+}
+
+/// Per-route request-id generation/propagation override.
+///
+/// Modeled as a struct rather than `Option<bool>` on `RouteMetadata` because the wire shape is an
+/// object, not a bare boolean: `fixtures/request_id.json`'s `request_id_middleware_can_be_disabled`
+/// sends `{"enabled": false}`, which `Option<bool>` cannot deserialize at all ("invalid type: map,
+/// expected a boolean") — the very fixture whose purpose is proving the middleware can be disabled
+/// was the one that failed to parse. ~keep
+class RequestIdConfig {
+  /// Whether request-id generation/propagation is active for this route
+  final bool enabled;
+
+  const RequestIdConfig({required this.enabled});
+
+  @override
+  int get hashCode => enabled.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+  identical(this, other) ||
+  other is RequestIdConfig &&
+  runtimeType == other.runtimeType &&
+  enabled == other.enabled;
 }
 
 /// HTTP Response with custom status code, headers, and content

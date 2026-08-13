@@ -25,10 +25,7 @@
       "errors": [
         {
           "type": "uuid_parsing",
-          "loc": [
-            "path",
-            "id"
-          ],
+          "loc": ["path", "id"],
           "msg": "Input should be a valid UUID",
           "input": "not-a-uuid"
         }

@@ -77,10 +77,5 @@
     "stream": [],
     "details": "Request validation failed due to missing required field 'query' in ValidationRequest message. Server streaming was not initiated."
   },
-  "tags": [
-    "server_streaming",
-    "error_handling",
-    "validation",
-    "invalid_argument"
-  ]
+  "tags": ["server_streaming", "error_handling", "validation", "invalid_argument"]
 }

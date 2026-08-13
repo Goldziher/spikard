@@ -3,6 +3,10 @@
     "id": "ws_upgrade_handshake",
     "description": "Tests WebSocket upgrade returns 101 Switching Protocols with correct Sec-WebSocket-Accept header",
     "category": "websocket",
+    "docs": {
+      "topic": "websocket",
+      "stem": "ws_upgrade_handshake"
+    },
     "skip": {
       "languages": ["dart", "java", "kotlin", "ruby", "php", "swift"],
       "reason": "The HTTP clients used by these languages' e2e suites (dart:io HttpClient, java.net.http, OkHttp, Net::HTTP, Guzzle, URLSession) cannot read a non-final 101 Switching Protocols response, so the WebSocket upgrade handshake is excluded for them rather than emitted as a skipped placeholder."
@@ -42,6 +46,10 @@
     "id": "ws_json_echo_round_trip",
     "description": "Tests JSON message sent by client is echoed back unchanged",
     "category": "websocket",
+    "docs": {
+      "topic": "websocket",
+      "stem": "ws_json_echo_round_trip"
+    },
     "websocket": {
       "handler": {
         "route": "/ws/echo",
@@ -68,6 +76,10 @@
     "id": "ws_schema_validated_message_rejected",
     "description": "Tests that a message failing schema validation receives an error envelope instead of being processed",
     "category": "websocket",
+    "docs": {
+      "topic": "websocket",
+      "stem": "ws_schema_validated_message_rejected"
+    },
     "websocket": {
       "handler": {
         "route": "/ws/validated",
@@ -102,6 +114,10 @@
     "id": "ws_on_connect_fires",
     "description": "Tests that on_connect lifecycle callback is invoked when a WebSocket connection opens",
     "category": "websocket",
+    "docs": {
+      "topic": "websocket",
+      "stem": "ws_on_connect_fires"
+    },
     "websocket": {
       "handler": {
         "route": "/ws/lifecycle",
@@ -131,6 +147,10 @@
     "id": "ws_on_disconnect_fires",
     "description": "Tests that on_disconnect lifecycle callback is invoked after the connection closes",
     "category": "websocket",
+    "docs": {
+      "topic": "websocket",
+      "stem": "ws_on_disconnect_fires"
+    },
     "websocket": {
       "handler": {
         "route": "/ws/lifecycle",
@@ -156,6 +176,10 @@
     "id": "ws_binary_frame_round_trip",
     "description": "Tests that binary frames received from the client are echoed back verbatim",
     "category": "websocket",
+    "docs": {
+      "topic": "websocket",
+      "stem": "ws_binary_frame_round_trip"
+    },
     "websocket": {
       "handler": {
         "route": "/ws/binary",
@@ -183,6 +207,10 @@
     "id": "ws_ping_pong_heartbeat",
     "description": "Tests that a Ping frame from the client receives a matching Pong frame response",
     "category": "websocket",
+    "docs": {
+      "topic": "websocket",
+      "stem": "ws_ping_pong_heartbeat"
+    },
     "websocket": {
       "handler": {
         "route": "/ws/heartbeat",
@@ -210,6 +238,10 @@
     "id": "ws_close_normal_code_1000",
     "description": "Tests that sending a close frame with code 1000 (normal closure) terminates the session cleanly",
     "category": "websocket",
+    "docs": {
+      "topic": "websocket",
+      "stem": "ws_close_normal_code_1000"
+    },
     "websocket": {
       "handler": {
         "route": "/ws/close",
@@ -233,6 +265,10 @@
     "id": "ws_close_abnormal_code_1006",
     "description": "Tests that an abrupt connection drop is reported with close code 1006 (abnormal closure)",
     "category": "websocket",
+    "docs": {
+      "topic": "websocket",
+      "stem": "ws_close_abnormal_code_1006"
+    },
     "websocket": {
       "handler": {
         "route": "/ws/close",
@@ -250,6 +286,10 @@
     "id": "ws_message_ordering_preserved",
     "description": "Tests that multiple sequential messages are processed and echoed back in the same order they were sent",
     "category": "websocket",
+    "docs": {
+      "topic": "websocket",
+      "stem": "ws_message_ordering_preserved"
+    },
     "websocket": {
       "handler": {
         "route": "/ws/ordered",
@@ -273,6 +313,10 @@
     "id": "ws_subscribe_pattern",
     "description": "Tests schema-validated subscribe message pattern where client subscribes to a named channel",
     "category": "websocket",
+    "docs": {
+      "topic": "websocket",
+      "stem": "ws_subscribe_pattern"
+    },
     "websocket": {
       "handler": {
         "route": "/ws/pubsub",
@@ -312,6 +356,10 @@
     "id": "ws_invalid_json_error_response",
     "description": "Tests that sending non-JSON text receives a structured error message",
     "category": "websocket",
+    "docs": {
+      "topic": "websocket",
+      "stem": "ws_invalid_json_error_response"
+    },
     "websocket": {
       "handler": {
         "route": "/ws/echo",
@@ -337,6 +385,10 @@
     "id": "ws_handler_no_response",
     "description": "Tests that when a handler returns None, no response frame is sent to the client",
     "category": "websocket",
+    "docs": {
+      "topic": "websocket",
+      "stem": "ws_handler_no_response"
+    },
     "websocket": {
       "handler": {
         "route": "/ws/sink",

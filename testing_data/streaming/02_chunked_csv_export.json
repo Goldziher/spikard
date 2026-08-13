@@ -33,8 +33,5 @@
       }
     ]
   },
-  "tags": [
-    "streaming",
-    "csv"
-  ]
+  "tags": ["streaming", "csv"]
 }

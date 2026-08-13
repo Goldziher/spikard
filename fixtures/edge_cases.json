@@ -3,6 +3,10 @@
     "id": "unicode_and_emoji_handling",
     "description": "Tests proper handling of Unicode characters and emojis",
     "category": "edge_cases",
+    "docs": {
+      "topic": "edge_cases",
+      "stem": "unicode_and_emoji_handling"
+    },
     "http": {
       "handler": {
         "route": "/items/",
@@ -59,6 +63,10 @@
     "id": "large_integer_boundary_values",
     "description": "Tests handling of very large integer values near system limits",
     "category": "edge_cases",
+    "docs": {
+      "topic": "edge_cases",
+      "stem": "large_integer_boundary_values"
+    },
     "http": {
       "handler": {
         "route": "/numbers/",
@@ -106,6 +114,10 @@
     "id": "float_precision_and_rounding",
     "description": "Tests floating point precision and rounding behavior",
     "category": "edge_cases",
+    "docs": {
+      "topic": "edge_cases",
+      "stem": "float_precision_and_rounding"
+    },
     "http": {
       "handler": {
         "route": "/calculations/",
@@ -173,6 +185,10 @@
     "id": "deeply_nested_structure_10_levels",
     "description": "Tests handling of deeply nested JSON objects",
     "category": "edge_cases",
+    "docs": {
+      "topic": "edge_cases",
+      "stem": "deeply_nested_structure_10_levels"
+    },
     "http": {
       "handler": {
         "route": "/nested/",
@@ -306,6 +322,10 @@
     "id": "special_string_values_and_escaping",
     "description": "Tests handling of special characters, null bytes, and escape sequences",
     "category": "edge_cases",
+    "docs": {
+      "topic": "edge_cases",
+      "stem": "special_string_values_and_escaping"
+    },
     "http": {
       "handler": {
         "route": "/strings/",
@@ -381,6 +401,10 @@
     "id": "empty_and_null_value_handling",
     "description": "Tests distinction between null, empty, and missing values",
     "category": "edge_cases",
+    "docs": {
+      "topic": "edge_cases",
+      "stem": "empty_and_null_value_handling"
+    },
     "http": {
       "handler": {
         "route": "/nulls/",
@@ -453,6 +477,10 @@
     "id": "11_utf8_query_parameter",
     "description": "Query parameter with UTF-8 characters should be handled correctly",
     "category": "edge_cases",
+    "docs": {
+      "topic": "edge_cases",
+      "stem": "11_utf8_query_parameter"
+    },
     "http": {
       "handler": {
         "route": "/search",
@@ -485,6 +513,10 @@
     "id": "12_percent_encoded_special_chars",
     "description": "Percent-encoded special characters should be decoded correctly",
     "category": "edge_cases",
+    "docs": {
+      "topic": "edge_cases",
+      "stem": "12_percent_encoded_special_chars"
+    },
     "http": {
       "handler": {
         "route": "/search",
@@ -517,6 +549,10 @@
     "id": "13_empty_string_query_param_preserved",
     "description": "Empty string query parameter should be preserved, not treated as missing",
     "category": "edge_cases",
+    "docs": {
+      "topic": "edge_cases",
+      "stem": "13_empty_string_query_param_preserved"
+    },
     "http": {
       "handler": {
         "route": "/items",
@@ -549,6 +585,10 @@
     "id": "14_large_integer_boundary",
     "description": "Very large integer at JavaScript MAX_SAFE_INTEGER boundary should be handled",
     "category": "edge_cases",
+    "docs": {
+      "topic": "edge_cases",
+      "stem": "14_large_integer_boundary"
+    },
     "http": {
       "handler": {
         "route": "/items",
@@ -581,6 +621,10 @@
     "id": "15_float_precision_preservation",
     "description": "High-precision floating point numbers should be preserved without loss",
     "category": "edge_cases",
+    "docs": {
+      "topic": "edge_cases",
+      "stem": "15_float_precision_preservation"
+    },
     "http": {
       "handler": {
         "route": "/calculate",
@@ -615,6 +659,10 @@
     "id": "16_negative_zero_handling",
     "description": "Negative zero (-0.0) should be handled correctly in numeric fields",
     "category": "edge_cases",
+    "docs": {
+      "topic": "edge_cases",
+      "stem": "16_negative_zero_handling"
+    },
     "http": {
       "handler": {
         "route": "/data",
@@ -649,6 +697,10 @@
     "id": "17_extremely_long_string",
     "description": "Very long string values should be validated against maxLength",
     "category": "edge_cases",
+    "docs": {
+      "topic": "edge_cases",
+      "stem": "17_extremely_long_string"
+    },
     "http": {
       "handler": {
         "route": "/text",
@@ -698,6 +750,10 @@
     "id": "18_unicode_normalization",
     "description": "Unicode characters with combining diacritics should be handled correctly",
     "category": "edge_cases",
+    "docs": {
+      "topic": "edge_cases",
+      "stem": "18_unicode_normalization"
+    },
     "http": {
       "handler": {
         "route": "/users",
@@ -733,6 +789,10 @@
     "id": "19_emoji_in_strings",
     "description": "Emoji characters should be handled correctly in string fields",
     "category": "edge_cases",
+    "docs": {
+      "topic": "edge_cases",
+      "stem": "19_emoji_in_strings"
+    },
     "http": {
       "handler": {
         "route": "/messages",
@@ -769,6 +829,10 @@
     "id": "21_scientific_notation_number",
     "description": "Numbers in scientific notation should be parsed correctly",
     "category": "edge_cases",
+    "docs": {
+      "topic": "edge_cases",
+      "stem": "21_scientific_notation_number"
+    },
     "http": {
       "handler": {
         "route": "/calculate",
@@ -804,6 +868,10 @@
     "id": "22_leading_zeros_integer",
     "description": "Integer values with leading zeros should be parsed as decimal (not octal)",
     "category": "edge_cases",
+    "docs": {
+      "topic": "edge_cases",
+      "stem": "22_leading_zeros_integer"
+    },
     "http": {
       "handler": {
         "route": "/data",
@@ -837,6 +905,10 @@
     "id": "23_deeply_nested_json_limit",
     "description": "Extremely deeply nested JSON should be rejected to prevent DoS",
     "category": "edge_cases",
+    "docs": {
+      "topic": "edge_cases",
+      "stem": "23_deeply_nested_json_limit"
+    },
     "http": {
       "handler": {
         "route": "/data",
@@ -963,6 +1035,10 @@
     "id": "24_array_with_holes",
     "description": "Array indices with gaps should be rejected in form data",
     "category": "edge_cases",
+    "docs": {
+      "topic": "edge_cases",
+      "stem": "24_array_with_holes"
+    },
     "http": {
       "handler": {
         "route": "/items",

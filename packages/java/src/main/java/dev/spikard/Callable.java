@@ -5,16 +5,15 @@ package dev.spikard;
 /**
  * Functional interface for service handlers.
  *
- * Implementations receive a JSON request string and return a JSON response
- * string.
+ * Implementations receive a JSON request string and return a JSON response string.
  */
 @FunctionalInterface
 public interface Callable {
-  /**
-   * Handle a request.
-   *
-   * @param request JSON request string
-   * @return JSON response string
-   */
-  String handle(String request);
+    /**
+     * Handle a request.
+     *
+     * @param request JSON request string
+     * @return JSON response string
+     */
+    String handle(String request);
 }

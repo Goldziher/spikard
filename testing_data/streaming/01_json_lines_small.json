@@ -33,9 +33,5 @@
       }
     ]
   },
-  "tags": [
-    "streaming",
-    "ndjson",
-    "chunked"
-  ]
+  "tags": ["streaming", "ndjson", "chunked"]
 }

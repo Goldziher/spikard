@@ -97,9 +97,5 @@
       "message": "Stream processing failed after 5 messages"
     }
   },
-  "tags": [
-    "server_streaming",
-    "error_handling",
-    "partial_stream"
-  ]
+  "tags": ["server_streaming", "error_handling", "partial_stream"]
 }

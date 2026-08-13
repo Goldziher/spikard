@@ -3,6 +3,10 @@
     "id": "string_path_parameter_success",
     "description": "Tests string path parameter with valid value",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "string_path_parameter_success"
+    },
     "http": {
       "handler": {
         "route": "/path/str/{item_id}",
@@ -31,6 +35,10 @@
     "id": "integer_path_parameter_success",
     "description": "Tests integer path parameter with valid value",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "integer_path_parameter_success"
+    },
     "http": {
       "handler": {
         "route": "/path/int/{item_id}",
@@ -59,6 +67,10 @@
     "id": "integer_path_parameter_invalid_string",
     "description": "Tests integer path parameter with non-numeric string returns 422",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "integer_path_parameter_invalid_string"
+    },
     "http": {
       "handler": {
         "route": "/path/int/{item_id}",
@@ -98,6 +110,10 @@
     "id": "float_path_parameter_success",
     "description": "Tests float path parameter with valid value",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "float_path_parameter_success"
+    },
     "http": {
       "handler": {
         "route": "/path/float/{item_id}",
@@ -126,6 +142,10 @@
     "id": "uuid_path_parameter_success",
     "description": "Tests UUID path parameter with valid UUID format",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "uuid_path_parameter_success"
+    },
     "http": {
       "handler": {
         "route": "/items/{item_id}",
@@ -155,6 +175,10 @@
     "id": "integer_path_parameter_with_gt_constraint_success",
     "description": "Tests integer path parameter with gt (greater than) validation succeeds",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "integer_path_parameter_with_gt_constraint_success"
+    },
     "http": {
       "handler": {
         "route": "/path/param-gt/{item_id}",
@@ -184,6 +208,10 @@
     "id": "integer_path_parameter_with_gt_constraint_failure",
     "description": "Tests integer path parameter with gt validation fails when value too small",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "integer_path_parameter_with_gt_constraint_failure"
+    },
     "http": {
       "handler": {
         "route": "/path/param-gt/{item_id}",
@@ -227,6 +255,10 @@
     "id": "string_path_parameter_with_min_length_failure",
     "description": "Tests string path parameter with min_length validation fails",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "string_path_parameter_with_min_length_failure"
+    },
     "http": {
       "handler": {
         "route": "/path/param-minlength/{item_id}",
@@ -270,6 +302,10 @@
     "id": "enum_path_parameter_success",
     "description": "Tests enum path parameter with valid enum value",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "enum_path_parameter_success"
+    },
     "http": {
       "handler": {
         "route": "/models/{model_name}",
@@ -299,6 +335,10 @@
     "id": "enum_path_parameter_invalid_value",
     "description": "Tests enum path parameter with invalid enum value returns 422",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "enum_path_parameter_invalid_value"
+    },
     "http": {
       "handler": {
         "route": "/models/{model_name}",
@@ -342,6 +382,10 @@
     "id": "path_type_parameter_file_path",
     "description": "Tests path type parameter that captures remaining path segments",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "path_type_parameter_file_path"
+    },
     "http": {
       "handler": {
         "route": "/files/{file_path:path}",
@@ -370,6 +414,10 @@
     "id": "multiple_path_parameters_success",
     "description": "Tests multiple path parameters in single route",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "multiple_path_parameters_success"
+    },
     "http": {
       "handler": {
         "route": "/{version}/{service_id}/{user_id}/{order_id}",
@@ -411,6 +459,10 @@
     "id": "boolean_path_parameter_true",
     "description": "Tests boolean path parameter with 'True' string value",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "boolean_path_parameter_true"
+    },
     "http": {
       "handler": {
         "route": "/path/bool/{item_id}",
@@ -439,6 +491,10 @@
     "id": "boolean_path_parameter_numeric_1",
     "description": "Tests boolean path parameter with '1' converts to true",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "boolean_path_parameter_numeric_1"
+    },
     "http": {
       "handler": {
         "route": "/path/bool/{item_id}",
@@ -467,6 +523,10 @@
     "id": "integer_path_parameter_with_ge_constraint_success",
     "description": "Tests integer path parameter with ge (greater than or equal) validation at boundary",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "integer_path_parameter_with_ge_constraint_success"
+    },
     "http": {
       "handler": {
         "route": "/path/param-ge/{item_id}",
@@ -496,6 +556,10 @@
     "id": "integer_path_parameter_with_le_constraint_success",
     "description": "Tests integer path parameter with le (less than or equal) validation at boundary",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "integer_path_parameter_with_le_constraint_success"
+    },
     "http": {
       "handler": {
         "route": "/path/param-le/{item_id}",
@@ -525,6 +589,10 @@
     "id": "integer_path_parameter_with_lt_constraint_success",
     "description": "Tests integer path parameter with lt (less than) validation",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "integer_path_parameter_with_lt_constraint_success"
+    },
     "http": {
       "handler": {
         "route": "/path/param-lt/{item_id}",
@@ -554,6 +622,10 @@
     "id": "integer_path_parameter_with_combined_lt_and_gt_constraints_success",
     "description": "Tests integer path parameter with both lt and gt validation (range check)",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "integer_path_parameter_with_combined_lt_and_gt_constraints_success"
+    },
     "http": {
       "handler": {
         "route": "/path/param-lt-gt/{item_id}",
@@ -584,6 +656,10 @@
     "id": "string_path_parameter_with_max_length_failure",
     "description": "Tests string path parameter with max_length validation fails when too long",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "string_path_parameter_with_max_length_failure"
+    },
     "http": {
       "handler": {
         "route": "/path/param-maxlength/{item_id}",
@@ -627,6 +703,10 @@
     "id": "date_path_parameter_success",
     "description": "Tests date path parameter with ISO format date",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "date_path_parameter_success"
+    },
     "http": {
       "handler": {
         "route": "/date/{date_param}",
@@ -656,6 +736,10 @@
     "id": "20_uuid_v3_path_param_success",
     "description": "Path parameter with valid UUID v3 should be accepted",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "20_uuid_v3_path_param_success"
+    },
     "http": {
       "handler": {
         "route": "/items/{id}",
@@ -687,6 +771,10 @@
     "id": "21_uuid_v5_path_param_success",
     "description": "Path parameter with valid UUID v5 should be accepted",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "21_uuid_v5_path_param_success"
+    },
     "http": {
       "handler": {
         "route": "/items/{id}",
@@ -718,6 +806,10 @@
     "id": "24_date_format_path_param_success",
     "description": "Path parameter with valid ISO date format should be accepted",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "24_date_format_path_param_success"
+    },
     "http": {
       "handler": {
         "route": "/events/{date}",
@@ -748,6 +840,10 @@
     "id": "25_date_format_invalid_failure",
     "description": "Path parameter with invalid date format should fail validation",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "25_date_format_invalid_failure"
+    },
     "http": {
       "handler": {
         "route": "/events/{date}",
@@ -793,6 +889,10 @@
     "id": "27_datetime_format_path_param_success",
     "description": "Path parameter with valid ISO 8601 datetime should be accepted",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "27_datetime_format_path_param_success"
+    },
     "http": {
       "handler": {
         "route": "/bookings/{timestamp}",
@@ -823,6 +923,10 @@
     "id": "28_duration_format_path_param_success",
     "description": "Path parameter with valid ISO 8601 duration should be accepted",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "28_duration_format_path_param_success"
+    },
     "http": {
       "handler": {
         "route": "/delays/{duration}",
@@ -853,6 +957,10 @@
     "id": "29_decimal_path_param_success",
     "description": "Path parameter with decimal/money value should be accepted",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "29_decimal_path_param_success"
+    },
     "http": {
       "handler": {
         "route": "/prices/{amount}",
@@ -883,6 +991,10 @@
     "id": "30_string_minlength_path_success",
     "description": "Path parameter with string meeting minLength constraint should succeed",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "30_string_minlength_path_success"
+    },
     "http": {
       "handler": {
         "route": "/users/{username}",
@@ -913,6 +1025,10 @@
     "id": "31_string_minlength_path_failure",
     "description": "Path parameter with string below minLength constraint should fail",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "31_string_minlength_path_failure"
+    },
     "http": {
       "handler": {
         "route": "/users/{username}",
@@ -958,6 +1074,10 @@
     "id": "32_string_maxlength_path_failure",
     "description": "Path parameter with string exceeding maxLength constraint should fail",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "32_string_maxlength_path_failure"
+    },
     "http": {
       "handler": {
         "route": "/users/{username}",
@@ -1003,6 +1123,10 @@
     "id": "33_string_pattern_path_success",
     "description": "Path parameter matching regex pattern should succeed",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "33_string_pattern_path_success"
+    },
     "http": {
       "handler": {
         "route": "/repos/{owner}/{repo}",
@@ -1038,6 +1162,10 @@
     "id": "34_string_pattern_path_failure",
     "description": "Path parameter not matching regex pattern should fail",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "34_string_pattern_path_failure"
+    },
     "http": {
       "handler": {
         "route": "/repos/{owner}",
@@ -1083,6 +1211,10 @@
     "id": "35_negative_integer_path_param",
     "description": "Path parameter with negative integer should be parsed correctly",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "35_negative_integer_path_param"
+    },
     "http": {
       "handler": {
         "route": "/offset/{value}",
@@ -1112,6 +1244,10 @@
     "id": "path_parameter_with_type_syntax_uuid",
     "description": "Tests path parameter with :uuid type syntax auto-generates UUID validation",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "path_parameter_with_type_syntax_uuid"
+    },
     "http": {
       "handler": {
         "route": "/type-syntax/items/{id:uuid}",
@@ -1133,6 +1269,10 @@
     "id": "path_parameter_with_type_syntax_integer",
     "description": "Tests path parameter with :int type syntax auto-generates integer type",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "path_parameter_with_type_syntax_integer"
+    },
     "http": {
       "handler": {
         "route": "/type-syntax/users/{user_id:int}",
@@ -1154,6 +1294,10 @@
     "id": "path_parameter_type_syntax_with_override",
     "description": "Tests that explicit parameter schema merges with auto-generated type syntax schema",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "path_parameter_type_syntax_with_override"
+    },
     "http": {
       "handler": {
         "route": "/type-syntax/items-count/{count:int}",
@@ -1184,6 +1328,10 @@
     "id": "path_parameter_type_syntax_invalid_uuid",
     "description": "Tests that :uuid type syntax auto-generates validation that rejects invalid UUIDs",
     "category": "path_params",
+    "docs": {
+      "topic": "path_params",
+      "stem": "path_parameter_type_syntax_invalid_uuid"
+    },
     "http": {
       "handler": {
         "route": "/type-syntax/items/{id:uuid}",

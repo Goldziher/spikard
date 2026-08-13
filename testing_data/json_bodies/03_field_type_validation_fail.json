@@ -26,12 +26,7 @@
         }
       },
       "additionalProperties": false,
-      "required": [
-        "name",
-        "description",
-        "price",
-        "tax"
-      ]
+      "required": ["name", "description", "price", "tax"]
     }
   },
   "request": {
@@ -57,10 +52,7 @@
       "errors": [
         {
           "type": "float_parsing",
-          "loc": [
-            "body",
-            "price"
-          ],
+          "loc": ["body", "price"],
           "msg": "Input should be a valid number, unable to parse string as a number",
           "input": "not a number"
         }

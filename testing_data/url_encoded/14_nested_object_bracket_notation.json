@@ -13,16 +13,11 @@
     "content_type": "application/x-www-form-urlencoded",
     "body_schema": {
       "type": "object",
-      "required": [
-        "user"
-      ],
+      "required": ["user"],
       "properties": {
         "user": {
           "type": "object",
-          "required": [
-            "name",
-            "email"
-          ],
+          "required": ["name", "email"],
           "properties": {
             "name": {
               "type": "string",
@@ -59,11 +54,5 @@
       }
     }
   },
-  "tags": [
-    "url_encoded",
-    "nested",
-    "objects",
-    "validation",
-    "success"
-  ]
+  "tags": ["url_encoded", "nested", "objects", "validation", "success"]
 }

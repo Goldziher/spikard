@@ -19,10 +19,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "user",
-        "session"
-      ],
+      "required": ["user", "session"],
       "additionalProperties": false
     }
   },

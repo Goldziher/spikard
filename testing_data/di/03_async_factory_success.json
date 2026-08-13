@@ -18,9 +18,7 @@
         "cacheable": true
       }
     },
-    "handler_dependencies": [
-      "db_pool"
-    ]
+    "handler_dependencies": ["db_pool"]
   },
   "request": {
     "method": "GET",
@@ -34,10 +32,5 @@
     }
   },
   "notes": "Async factory creates a database pool. Cacheable=true means the same pool is reused within the request.",
-  "tags": [
-    "dependency_injection",
-    "factory",
-    "async",
-    "cacheable"
-  ]
+  "tags": ["dependency_injection", "factory", "async", "cacheable"]
 }

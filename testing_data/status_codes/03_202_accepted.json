@@ -17,9 +17,7 @@
         }
       },
       "additionalProperties": false,
-      "required": [
-        "task"
-      ]
+      "required": ["task"]
     }
   },
   "request": {

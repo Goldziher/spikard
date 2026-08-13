@@ -107,10 +107,5 @@
       "processing_time_ms": 1000
     }
   },
-  "tags": [
-    "edge_cases",
-    "well_known_types",
-    "timestamp",
-    "duration"
-  ]
+  "tags": ["edge_cases", "well_known_types", "timestamp", "duration"]
 }

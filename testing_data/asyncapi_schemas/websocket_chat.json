@@ -87,11 +87,7 @@
     "schemas": {
       "User": {
         "type": "object",
-        "required": [
-          "id",
-          "username",
-          "status"
-        ],
+        "required": ["id", "username", "status"],
         "properties": {
           "id": {
             "type": "string",
@@ -112,11 +108,7 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "online",
-              "away",
-              "offline"
-            ],
+            "enum": ["online", "away", "offline"],
             "description": "Current user status"
           },
           "lastSeen": {
@@ -128,12 +120,7 @@
       },
       "Message": {
         "type": "object",
-        "required": [
-          "id",
-          "content",
-          "sender",
-          "timestamp"
-        ],
+        "required": ["id", "content", "sender", "timestamp"],
         "properties": {
           "id": {
             "type": "string",
@@ -153,12 +140,7 @@
           },
           "type": {
             "type": "string",
-            "enum": [
-              "text",
-              "image",
-              "file",
-              "link"
-            ],
+            "enum": ["text", "image", "file", "link"],
             "default": "text"
           },
           "metadata": {
@@ -228,11 +210,7 @@
       },
       "Notification": {
         "type": "object",
-        "required": [
-          "id",
-          "type",
-          "timestamp"
-        ],
+        "required": ["id", "type", "timestamp"],
         "properties": {
           "id": {
             "type": "string",
@@ -240,12 +218,7 @@
           },
           "type": {
             "type": "string",
-            "enum": [
-              "message",
-              "mention",
-              "friend_request",
-              "system"
-            ]
+            "enum": ["message", "mention", "friend_request", "system"]
           },
           "title": {
             "type": "string"
@@ -269,10 +242,7 @@
       },
       "PresenceUpdate": {
         "type": "object",
-        "required": [
-          "userId",
-          "status"
-        ],
+        "required": ["userId", "status"],
         "properties": {
           "userId": {
             "type": "string",
@@ -280,11 +250,7 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "online",
-              "away",
-              "offline"
-            ]
+            "enum": ["online", "away", "offline"]
           },
           "lastActivity": {
             "type": "string",
@@ -304,10 +270,7 @@
         "contentType": "application/json",
         "payload": {
           "type": "object",
-          "required": [
-            "user",
-            "timestamp"
-          ],
+          "required": ["user", "timestamp"],
           "properties": {
             "user": {
               "$ref": "#/components/schemas/User"
@@ -327,10 +290,7 @@
         "contentType": "application/json",
         "payload": {
           "type": "object",
-          "required": [
-            "userId",
-            "timestamp"
-          ],
+          "required": ["userId", "timestamp"],
           "properties": {
             "userId": {
               "type": "string",
@@ -357,11 +317,7 @@
         "contentType": "application/json",
         "payload": {
           "type": "object",
-          "required": [
-            "userId",
-            "roomId",
-            "timestamp"
-          ],
+          "required": ["userId", "roomId", "timestamp"],
           "properties": {
             "userId": {
               "type": "string",
@@ -382,11 +338,7 @@
         "contentType": "application/json",
         "payload": {
           "type": "object",
-          "required": [
-            "userId",
-            "roomId",
-            "timestamp"
-          ],
+          "required": ["userId", "roomId", "timestamp"],
           "properties": {
             "userId": {
               "type": "string",

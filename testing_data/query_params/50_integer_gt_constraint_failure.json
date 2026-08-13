@@ -37,10 +37,7 @@
       "errors": [
         {
           "type": "validation_error",
-          "loc": [
-            "query",
-            "limit"
-          ],
+          "loc": ["query", "limit"],
           "msg": "Value must be greater than 0",
           "ctx": {
             "exclusive_minimum": 0,
@@ -50,12 +47,5 @@
       ]
     }
   },
-  "tags": [
-    "query_params",
-    "integer",
-    "gt",
-    "exclusiveMinimum",
-    "validation",
-    "error"
-  ]
+  "tags": ["query_params", "integer", "gt", "exclusiveMinimum", "validation", "error"]
 }

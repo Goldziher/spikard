@@ -137,6 +137,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String dco_decode_String(dynamic raw);
 
   @protected
+  ApiKeyAuthConfig dco_decode_api_key_auth_config(dynamic raw);
+
+  @protected
   ApiKeyConfig dco_decode_api_key_config(dynamic raw);
 
   @protected
@@ -144,6 +147,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   AsyncApiConfig dco_decode_async_api_config(dynamic raw);
+
+  @protected
+  AuthorizationConfig dco_decode_authorization_config(dynamic raw);
 
   @protected
   BackgroundJobMetadata dco_decode_background_job_metadata(dynamic raw);
@@ -155,10 +161,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool dco_decode_bool(dynamic raw);
 
   @protected
+  ApiKeyAuthConfig dco_decode_box_autoadd_api_key_auth_config(dynamic raw);
+
+  @protected
   ApiKeyConfig dco_decode_box_autoadd_api_key_config(dynamic raw);
 
   @protected
   AsyncApiConfig dco_decode_box_autoadd_async_api_config(dynamic raw);
+
+  @protected
+  AuthorizationConfig dco_decode_box_autoadd_authorization_config(dynamic raw);
 
   @protected
   bool dco_decode_box_autoadd_bool(dynamic raw);
@@ -185,10 +197,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   JsonRpcConfig dco_decode_box_autoadd_json_rpc_config(dynamic raw);
 
   @protected
+  JsonRpcMethodInfo dco_decode_box_autoadd_json_rpc_method_info(dynamic raw);
+
+  @protected
+  JwtAuthConfig dco_decode_box_autoadd_jwt_auth_config(dynamic raw);
+
+  @protected
   JwtConfig dco_decode_box_autoadd_jwt_config(dynamic raw);
 
   @protected
   LicenseInfo dco_decode_box_autoadd_license_info(dynamic raw);
+
+  @protected
+  LifecycleHooksConfig dco_decode_box_autoadd_lifecycle_hooks_config(
+    dynamic raw,
+  );
 
   @protected
   OpenApiConfig dco_decode_box_autoadd_open_api_config(dynamic raw);
@@ -244,16 +267,31 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   JsonRpcMethodInfo dco_decode_json_rpc_method_info(dynamic raw);
 
   @protected
+  JwtAuthConfig dco_decode_jwt_auth_config(dynamic raw);
+
+  @protected
   JwtConfig dco_decode_jwt_config(dynamic raw);
 
   @protected
   LicenseInfo dco_decode_license_info(dynamic raw);
 
   @protected
+  LifecycleHookPhase dco_decode_lifecycle_hook_phase(dynamic raw);
+
+  @protected
+  LifecycleHookRef dco_decode_lifecycle_hook_ref(dynamic raw);
+
+  @protected
+  LifecycleHooksConfig dco_decode_lifecycle_hooks_config(dynamic raw);
+
+  @protected
   List<String> dco_decode_list_String(dynamic raw);
 
   @protected
   List<FieldErrorSpec> dco_decode_list_field_error_spec(dynamic raw);
+
+  @protected
+  List<LifecycleHookRef> dco_decode_list_lifecycle_hook_ref(dynamic raw);
 
   @protected
   List<ParsedChannel> dco_decode_list_parsed_channel(dynamic raw);
@@ -359,6 +397,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   (String, String) dco_decode_record_string_string(dynamic raw);
+
+  @protected
+  RequestIdConfig dco_decode_request_id_config(dynamic raw);
 
   @protected
   Response dco_decode_response(dynamic raw);
@@ -502,6 +543,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
+  ApiKeyAuthConfig sse_decode_api_key_auth_config(SseDeserializer deserializer);
+
+  @protected
   ApiKeyConfig sse_decode_api_key_config(SseDeserializer deserializer);
 
   @protected
@@ -509,6 +553,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   AsyncApiConfig sse_decode_async_api_config(SseDeserializer deserializer);
+
+  @protected
+  AuthorizationConfig sse_decode_authorization_config(
+    SseDeserializer deserializer,
+  );
 
   @protected
   BackgroundJobMetadata sse_decode_background_job_metadata(
@@ -524,12 +573,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   bool sse_decode_bool(SseDeserializer deserializer);
 
   @protected
+  ApiKeyAuthConfig sse_decode_box_autoadd_api_key_auth_config(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   ApiKeyConfig sse_decode_box_autoadd_api_key_config(
     SseDeserializer deserializer,
   );
 
   @protected
   AsyncApiConfig sse_decode_box_autoadd_async_api_config(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  AuthorizationConfig sse_decode_box_autoadd_authorization_config(
     SseDeserializer deserializer,
   );
 
@@ -564,10 +623,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  JsonRpcMethodInfo sse_decode_box_autoadd_json_rpc_method_info(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  JwtAuthConfig sse_decode_box_autoadd_jwt_auth_config(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   JwtConfig sse_decode_box_autoadd_jwt_config(SseDeserializer deserializer);
 
   @protected
   LicenseInfo sse_decode_box_autoadd_license_info(SseDeserializer deserializer);
+
+  @protected
+  LifecycleHooksConfig sse_decode_box_autoadd_lifecycle_hooks_config(
+    SseDeserializer deserializer,
+  );
 
   @protected
   OpenApiConfig sse_decode_box_autoadd_open_api_config(
@@ -633,16 +707,37 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  JwtAuthConfig sse_decode_jwt_auth_config(SseDeserializer deserializer);
+
+  @protected
   JwtConfig sse_decode_jwt_config(SseDeserializer deserializer);
 
   @protected
   LicenseInfo sse_decode_license_info(SseDeserializer deserializer);
 
   @protected
+  LifecycleHookPhase sse_decode_lifecycle_hook_phase(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  LifecycleHookRef sse_decode_lifecycle_hook_ref(SseDeserializer deserializer);
+
+  @protected
+  LifecycleHooksConfig sse_decode_lifecycle_hooks_config(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer);
 
   @protected
   List<FieldErrorSpec> sse_decode_list_field_error_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<LifecycleHookRef> sse_decode_list_lifecycle_hook_ref(
     SseDeserializer deserializer,
   );
 
@@ -786,6 +881,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   (String, String) sse_decode_record_string_string(
     SseDeserializer deserializer,
   );
+
+  @protected
+  RequestIdConfig sse_decode_request_id_config(SseDeserializer deserializer);
 
   @protected
   Response sse_decode_response(SseDeserializer deserializer);
@@ -958,6 +1056,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
+  void sse_encode_api_key_auth_config(
+    ApiKeyAuthConfig self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_api_key_config(ApiKeyConfig self, SseSerializer serializer);
 
   @protected
@@ -966,6 +1070,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_async_api_config(
     AsyncApiConfig self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_authorization_config(
+    AuthorizationConfig self,
     SseSerializer serializer,
   );
 
@@ -985,6 +1095,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_bool(bool self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_api_key_auth_config(
+    ApiKeyAuthConfig self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_api_key_config(
     ApiKeyConfig self,
     SseSerializer serializer,
@@ -993,6 +1109,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_async_api_config(
     AsyncApiConfig self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_authorization_config(
+    AuthorizationConfig self,
     SseSerializer serializer,
   );
 
@@ -1042,6 +1164,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_json_rpc_method_info(
+    JsonRpcMethodInfo self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_jwt_auth_config(
+    JwtAuthConfig self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_jwt_config(
     JwtConfig self,
     SseSerializer serializer,
@@ -1050,6 +1184,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_license_info(
     LicenseInfo self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_lifecycle_hooks_config(
+    LifecycleHooksConfig self,
     SseSerializer serializer,
   );
 
@@ -1132,10 +1272,31 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_jwt_auth_config(JwtAuthConfig self, SseSerializer serializer);
+
+  @protected
   void sse_encode_jwt_config(JwtConfig self, SseSerializer serializer);
 
   @protected
   void sse_encode_license_info(LicenseInfo self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_lifecycle_hook_phase(
+    LifecycleHookPhase self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_lifecycle_hook_ref(
+    LifecycleHookRef self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_lifecycle_hooks_config(
+    LifecycleHooksConfig self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
@@ -1143,6 +1304,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_field_error_spec(
     List<FieldErrorSpec> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_lifecycle_hook_ref(
+    List<LifecycleHookRef> self,
     SseSerializer serializer,
   );
 
@@ -1323,6 +1490,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_record_string_string(
     (String, String) self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_request_id_config(
+    RequestIdConfig self,
     SseSerializer serializer,
   );
 

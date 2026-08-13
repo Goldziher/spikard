@@ -3,6 +3,10 @@
     "id": "onrequest_request_logging",
     "description": "Test onRequest hook that logs incoming requests and adds a request ID",
     "category": "lifecycle_hooks",
+    "docs": {
+      "topic": "lifecycle_hooks",
+      "stem": "onrequest_request_logging"
+    },
     "http": {
       "handler": {
         "route": "/api/test-on-request",
@@ -43,6 +47,10 @@
     "id": "prevalidation_rate_limiting",
     "description": "Test preValidation hook that implements rate limiting before validation",
     "category": "lifecycle_hooks",
+    "docs": {
+      "topic": "lifecycle_hooks",
+      "stem": "prevalidation_rate_limiting"
+    },
     "http": {
       "handler": {
         "route": "/api/test-rate-limit",
@@ -94,6 +102,10 @@
     "id": "prevalidation_rate_limit_exceeded_short_circuit",
     "description": "Test preValidation hook that short-circuits when rate limit is exceeded",
     "category": "lifecycle_hooks",
+    "docs": {
+      "topic": "lifecycle_hooks",
+      "stem": "prevalidation_rate_limit_exceeded_short_circuit"
+    },
     "http": {
       "handler": {
         "route": "/api/test-rate-limit-exceeded",
@@ -148,6 +160,10 @@
     "id": "prehandler_authentication_success",
     "description": "Test preHandler hook that validates authentication tokens",
     "category": "lifecycle_hooks",
+    "docs": {
+      "topic": "lifecycle_hooks",
+      "stem": "prehandler_authentication_success"
+    },
     "http": {
       "handler": {
         "route": "/api/protected-resource",
@@ -184,6 +200,10 @@
     "id": "prehandler_authentication_failed_short_circuit",
     "description": "Test preHandler hook that short-circuits on invalid authentication",
     "category": "lifecycle_hooks",
+    "docs": {
+      "topic": "lifecycle_hooks",
+      "stem": "prehandler_authentication_failed_short_circuit"
+    },
     "http": {
       "handler": {
         "route": "/api/protected-resource-fail",
@@ -219,6 +239,10 @@
     "id": "prehandler_authorization_check",
     "description": "Test preHandler hook for role-based authorization after authentication",
     "category": "lifecycle_hooks",
+    "docs": {
+      "topic": "lifecycle_hooks",
+      "stem": "prehandler_authorization_check"
+    },
     "http": {
       "handler": {
         "route": "/api/admin-only",
@@ -259,6 +283,10 @@
     "id": "prehandler_authorization_forbidden_short_circuit",
     "description": "Test preHandler hook that denies access for insufficient permissions",
     "category": "lifecycle_hooks",
+    "docs": {
+      "topic": "lifecycle_hooks",
+      "stem": "prehandler_authorization_forbidden_short_circuit"
+    },
     "http": {
       "handler": {
         "route": "/api/admin-only-forbidden",
@@ -298,6 +326,10 @@
     "id": "onresponse_security_headers",
     "description": "Test onResponse hook that adds security headers to all responses",
     "category": "lifecycle_hooks",
+    "docs": {
+      "topic": "lifecycle_hooks",
+      "stem": "onresponse_security_headers"
+    },
     "http": {
       "handler": {
         "route": "/api/test-security-headers",
@@ -335,6 +367,10 @@
     "id": "onresponse_response_timing",
     "description": "Test onResponse hook that adds timing information to response headers",
     "category": "lifecycle_hooks",
+    "docs": {
+      "topic": "lifecycle_hooks",
+      "stem": "onresponse_response_timing"
+    },
     "http": {
       "handler": {
         "route": "/api/test-timing",
@@ -375,6 +411,10 @@
     "id": "onerror_error_logging",
     "description": "Test onError hook that logs server errors and formats error responses",
     "category": "lifecycle_hooks",
+    "docs": {
+      "topic": "lifecycle_hooks",
+      "stem": "onerror_error_logging"
+    },
     "http": {
       "handler": {
         "route": "/api/test-error",
@@ -415,6 +455,10 @@
     "id": "multiple_hooks_all_phases",
     "description": "Test multiple lifecycle hooks across all five phases for a complete request lifecycle",
     "category": "lifecycle_hooks",
+    "docs": {
+      "topic": "lifecycle_hooks",
+      "stem": "multiple_hooks_all_phases"
+    },
     "http": {
       "handler": {
         "route": "/api/full-lifecycle",
@@ -519,6 +563,10 @@
     "id": "hook_execution_order",
     "description": "Test that multiple hooks of the same type execute in registration order",
     "category": "lifecycle_hooks",
+    "docs": {
+      "topic": "lifecycle_hooks",
+      "stem": "hook_execution_order"
+    },
     "http": {
       "handler": {
         "route": "/api/test-hook-order",

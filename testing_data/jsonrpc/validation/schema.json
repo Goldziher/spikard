@@ -38,11 +38,7 @@
           "description": "Human-readable error message explaining the validation failure"
         }
       },
-      "required": [
-        "fieldPath",
-        "constraint",
-        "details"
-      ]
+      "required": ["fieldPath", "constraint", "details"]
     },
     "testCase": {
       "type": "object",
@@ -97,18 +93,11 @@
               }
             }
           },
-          "required": [
-            "code",
-            "message"
-          ]
+          "required": ["code", "message"]
         },
         "schemaConfig": {
           "type": "string",
-          "enum": [
-            "additionalPropertiesFalse",
-            "additionalPropertiesTrue",
-            "additionalPropertiesDefault"
-          ],
+          "enum": ["additionalPropertiesFalse", "additionalPropertiesTrue", "additionalPropertiesDefault"],
           "description": "Schema configuration variant (used in extra_fields tests)"
         },
         "note": {
@@ -116,12 +105,7 @@
           "description": "Optional explanatory note about the test case"
         }
       },
-      "required": [
-        "name",
-        "method",
-        "params",
-        "expectedSuccess"
-      ]
+      "required": ["name", "method", "params", "expectedSuccess"]
     }
   },
   "properties": {

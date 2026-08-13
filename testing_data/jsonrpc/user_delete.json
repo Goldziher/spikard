@@ -14,9 +14,7 @@
         "description": "ID of user to delete"
       }
     },
-    "required": [
-      "userId"
-    ]
+    "required": ["userId"]
   },
   "result_schema": {
     "type": "object",
@@ -29,10 +27,7 @@
         "format": "uuid"
       }
     },
-    "required": [
-      "success",
-      "deletedId"
-    ]
+    "required": ["success", "deletedId"]
   },
   "examples": [
     {

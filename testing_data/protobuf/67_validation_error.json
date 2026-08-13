@@ -70,9 +70,5 @@
       }
     }
   },
-  "tags": [
-    "grpc_status",
-    "validation",
-    "error"
-  ]
+  "tags": ["grpc_status", "validation", "error"]
 }

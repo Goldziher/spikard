@@ -35,9 +35,5 @@
       }
     }
   },
-  "tags": [
-    "authentication",
-    "jwt",
-    "valid-token"
-  ]
+  "tags": ["authentication", "jwt", "valid-token"]
 }

@@ -56,9 +56,5 @@
       }
     }
   },
-  "tags": [
-    "queries",
-    "persisted-queries",
-    "cache-miss"
-  ]
+  "tags": ["queries", "persisted-queries", "cache-miss"]
 }

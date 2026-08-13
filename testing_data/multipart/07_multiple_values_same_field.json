@@ -27,9 +27,7 @@
         }
       },
       "additionalProperties": false,
-      "required": [
-        "files"
-      ]
+      "required": ["files"]
     }
   },
   "request": {
@@ -53,11 +51,7 @@
       }
     ],
     "data": {
-      "tags": [
-        "python",
-        "rust",
-        "web"
-      ]
+      "tags": ["python", "rust", "web"]
     }
   },
   "expected_response": {
@@ -77,11 +71,7 @@
           "content_type": "text/plain"
         }
       ],
-      "tags": [
-        "python",
-        "rust",
-        "web"
-      ]
+      "tags": ["python", "rust", "web"]
     }
   }
 }

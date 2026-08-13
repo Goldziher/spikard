@@ -12,9 +12,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "note"
-      ],
+      "required": ["note"],
       "additionalProperties": false
     },
     "middleware": {
@@ -37,8 +35,5 @@
       "note": "small"
     }
   },
-  "tags": [
-    "body_limit",
-    "middleware"
-  ]
+  "tags": ["body_limit", "middleware"]
 }

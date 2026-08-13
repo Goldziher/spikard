@@ -87,9 +87,5 @@
       "is_final": false
     }
   },
-  "tags": [
-    "large_payloads",
-    "streaming",
-    "server_streaming"
-  ]
+  "tags": ["large_payloads", "streaming", "server_streaming"]
 }

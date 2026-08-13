@@ -37,10 +37,7 @@
       "errors": [
         {
           "type": "validation_error",
-          "loc": [
-            "query",
-            "email"
-          ],
+          "loc": ["query", "email"],
           "msg": "Invalid email format",
           "ctx": {
             "format": "email",
@@ -50,11 +47,5 @@
       ]
     }
   },
-  "tags": [
-    "query_params",
-    "format",
-    "email",
-    "validation",
-    "error"
-  ]
+  "tags": ["query_params", "format", "email", "validation", "error"]
 }

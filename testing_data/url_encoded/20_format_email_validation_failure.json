@@ -13,9 +13,7 @@
     "content_type": "application/x-www-form-urlencoded",
     "body_schema": {
       "type": "object",
-      "required": [
-        "email"
-      ],
+      "required": ["email"],
       "properties": {
         "email": {
           "type": "string",
@@ -42,10 +40,7 @@
       "errors": [
         {
           "type": "string_pattern_mismatch",
-          "loc": [
-            "body",
-            "email"
-          ],
+          "loc": ["body", "email"],
           "msg": "String should match pattern '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'",
           "input": "not-an-email",
           "ctx": {
@@ -55,11 +50,5 @@
       ]
     }
   },
-  "tags": [
-    "url_encoded",
-    "format",
-    "email",
-    "validation",
-    "error"
-  ]
+  "tags": ["url_encoded", "format", "email", "validation", "error"]
 }

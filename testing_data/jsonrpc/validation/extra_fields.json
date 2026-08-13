@@ -49,9 +49,7 @@
       "email": "diana@example.com",
       "age": 28,
       "phone": "+1-555-0100",
-      "tags": [
-        "admin"
-      ]
+      "tags": ["admin"]
     },
     "expectedSuccess": false,
     "schemaConfig": "additionalPropertiesFalse",

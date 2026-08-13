@@ -14,9 +14,7 @@
       "files": {
         "document": {
           "required": true,
-          "content_type": [
-            "application/pdf"
-          ],
+          "content_type": ["application/pdf"],
           "validate_magic_numbers": true
         }
       }
@@ -37,13 +35,5 @@
   "expected_response": {
     "status_code": 201
   },
-  "tags": [
-    "multipart",
-    "file",
-    "magic_number",
-    "pdf",
-    "security",
-    "validation",
-    "success"
-  ]
+  "tags": ["multipart", "file", "magic_number", "pdf", "security", "validation", "success"]
 }

@@ -3,6 +3,10 @@
     "id": "graphql_simple_query",
     "description": "Tests simple GraphQL query execution returning data from the root query type",
     "category": "graphql_operations",
+    "docs": {
+      "topic": "graphql_operations",
+      "stem": "graphql_simple_query"
+    },
     "http": {
       "handler": {
         "route": "/graphql",
@@ -47,6 +51,10 @@
     "id": "graphql_query_with_variables",
     "description": "Tests GraphQL query that uses variables passed in the request body",
     "category": "graphql_operations",
+    "docs": {
+      "topic": "graphql_operations",
+      "stem": "graphql_query_with_variables"
+    },
     "http": {
       "handler": {
         "route": "/graphql",
@@ -95,6 +103,10 @@
     "id": "graphql_query_nested_fields",
     "description": "Tests GraphQL query selecting nested fields at depth 2-3",
     "category": "graphql_operations",
+    "docs": {
+      "topic": "graphql_operations",
+      "stem": "graphql_query_nested_fields"
+    },
     "http": {
       "handler": {
         "route": "/graphql",
@@ -156,6 +168,10 @@
     "id": "graphql_mutation_create_object",
     "description": "Tests GraphQL mutation with an input type that returns the newly created object",
     "category": "graphql_operations",
+    "docs": {
+      "topic": "graphql_operations",
+      "stem": "graphql_mutation_create_object"
+    },
     "http": {
       "handler": {
         "route": "/graphql",
@@ -211,6 +227,10 @@
     "id": "graphql_subscription_declaration",
     "description": "Tests that a subscription operation type is accepted by SDL/schema validation, and that executing it over the plain-HTTP (non-streaming) transport is rejected the way real GraphQL engines reject subscriptions on transports that cannot stream events",
     "category": "graphql_operations",
+    "docs": {
+      "topic": "graphql_operations",
+      "stem": "graphql_subscription_declaration"
+    },
     "http": {
       "handler": {
         "route": "/graphql",
@@ -259,6 +279,10 @@
     "id": "graphql_introspection_query",
     "description": "Tests that the __schema introspection query returns the schema's query root type name via real introspection execution",
     "category": "graphql_operations",
+    "docs": {
+      "topic": "graphql_operations",
+      "stem": "graphql_introspection_query"
+    },
     "http": {
       "handler": {
         "route": "/graphql",
@@ -305,6 +329,10 @@
     "id": "graphql_invalid_syntax_rejected",
     "description": "Tests that a query with invalid GraphQL syntax returns a syntax error in the errors array",
     "category": "graphql_operations",
+    "docs": {
+      "topic": "graphql_operations",
+      "stem": "graphql_invalid_syntax_rejected"
+    },
     "http": {
       "handler": {
         "route": "/graphql",
@@ -350,6 +378,10 @@
     "id": "graphql_ops_complexity_limit_exceeded",
     "description": "Tests that a query exceeding the configured complexity limit returns an error",
     "category": "graphql_operations",
+    "docs": {
+      "topic": "graphql_operations",
+      "stem": "graphql_ops_complexity_limit_exceeded"
+    },
     "http": {
       "handler": {
         "route": "/graphql",
@@ -396,6 +428,10 @@
     "id": "graphql_ops_depth_limit_exceeded",
     "description": "Tests that a query exceeding the configured depth limit returns an error",
     "category": "graphql_operations",
+    "docs": {
+      "topic": "graphql_operations",
+      "stem": "graphql_ops_depth_limit_exceeded"
+    },
     "http": {
       "handler": {
         "route": "/graphql",
@@ -442,6 +478,10 @@
     "id": "graphql_field_level_error_partial_data",
     "description": "Tests that a field-level resolver error returns partial data alongside an errors array",
     "category": "graphql_operations",
+    "docs": {
+      "topic": "graphql_operations",
+      "stem": "graphql_field_level_error_partial_data"
+    },
     "http": {
       "handler": {
         "route": "/graphql",
@@ -493,6 +533,10 @@
     "id": "graphql_multi_operation_with_operation_name",
     "description": "Tests executing a specific named operation from a document containing multiple operations",
     "category": "graphql_operations",
+    "docs": {
+      "topic": "graphql_operations",
+      "stem": "graphql_multi_operation_with_operation_name"
+    },
     "http": {
       "handler": {
         "route": "/graphql",
@@ -538,6 +582,10 @@
     "id": "graphql_undefined_field_error",
     "description": "Tests that querying a field that does not exist in the schema returns a validation error",
     "category": "graphql_operations",
+    "docs": {
+      "topic": "graphql_operations",
+      "stem": "graphql_undefined_field_error"
+    },
     "http": {
       "handler": {
         "route": "/graphql",

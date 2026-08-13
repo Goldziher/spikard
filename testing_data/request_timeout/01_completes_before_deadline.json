@@ -23,8 +23,5 @@
       "duration": "fast"
     }
   },
-  "tags": [
-    "timeouts",
-    "middleware"
-  ]
+  "tags": ["timeouts", "middleware"]
 }

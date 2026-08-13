@@ -3,12 +3,7 @@
   "title": "Cookie Test Fixture",
   "description": "Schema for cookie handling test fixtures",
   "type": "object",
-  "required": [
-    "name",
-    "description",
-    "request",
-    "expected_response"
-  ],
+  "required": ["name", "description", "request", "expected_response"],
   "properties": {
     "name": {
       "type": "string",
@@ -24,12 +19,7 @@
       "properties": {
         "framework": {
           "type": "string",
-          "enum": [
-            "fastapi",
-            "starlette",
-            "litestar",
-            "spikard"
-          ],
+          "enum": ["fastapi", "starlette", "litestar", "spikard"],
           "description": "Source framework"
         },
         "test_file": {
@@ -46,22 +36,11 @@
     "request": {
       "type": "object",
       "description": "HTTP request details",
-      "required": [
-        "method",
-        "path"
-      ],
+      "required": ["method", "path"],
       "properties": {
         "method": {
           "type": "string",
-          "enum": [
-            "GET",
-            "POST",
-            "PUT",
-            "PATCH",
-            "DELETE",
-            "HEAD",
-            "OPTIONS"
-          ],
+          "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
           "description": "HTTP method"
         },
         "path": {
@@ -87,9 +66,7 @@
     "expected_response": {
       "type": "object",
       "description": "Expected HTTP response",
-      "required": [
-        "status_code"
-      ],
+      "required": ["status_code"],
       "properties": {
         "status_code": {
           "type": "integer",
@@ -134,11 +111,7 @@
               },
               "samesite": {
                 "type": "string",
-                "enum": [
-                  "strict",
-                  "lax",
-                  "none"
-                ],
+                "enum": ["strict", "lax", "none"],
                 "description": "SameSite attribute"
               }
             }
@@ -156,10 +129,7 @@
               "loc": {
                 "type": "array",
                 "items": {
-                  "type": [
-                    "string",
-                    "integer"
-                  ]
+                  "type": ["string", "integer"]
                 }
               },
               "msg": {

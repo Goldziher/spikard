@@ -94,9 +94,5 @@
       "status": "received"
     }
   },
-  "tags": [
-    "large_payloads",
-    "performance",
-    "timeout"
-  ]
+  "tags": ["large_payloads", "performance", "timeout"]
 }

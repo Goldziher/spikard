@@ -131,10 +131,5 @@
       "content-type": "application/grpc"
     }
   },
-  "tags": [
-    "client_streaming",
-    "metadata",
-    "request_headers",
-    "context_propagation"
-  ]
+  "tags": ["client_streaming", "metadata", "request_headers", "context_propagation"]
 }

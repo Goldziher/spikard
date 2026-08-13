@@ -91,9 +91,5 @@
       "compressed": true
     }
   },
-  "tags": [
-    "large_payloads",
-    "compression",
-    "performance"
-  ]
+  "tags": ["large_payloads", "compression", "performance"]
 }

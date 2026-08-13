@@ -87,10 +87,5 @@
       "is_default": true
     }
   },
-  "tags": [
-    "client_streaming",
-    "empty_stream",
-    "default_handling",
-    "edge_cases"
-  ]
+  "tags": ["client_streaming", "empty_stream", "default_handling", "edge_cases"]
 }

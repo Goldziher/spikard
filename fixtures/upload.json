@@ -3,6 +3,10 @@
     "id": "upload_file_basic_success",
     "description": "Tests basic file upload with single file",
     "category": "upload",
+    "docs": {
+      "topic": "upload",
+      "stem": "upload_file_basic_success"
+    },
     "http": {
       "handler": {
         "route": "/upload",
@@ -45,6 +49,10 @@
     "id": "upload_file_with_custom_content_type",
     "description": "Tests file upload preserves custom Content-Type",
     "category": "upload",
+    "docs": {
+      "topic": "upload",
+      "stem": "upload_file_with_custom_content_type"
+    },
     "http": {
       "handler": {
         "route": "/upload/typed",
@@ -89,6 +97,10 @@
     "id": "upload_file_with_gzip_content_encoding",
     "description": "Tests file upload with gzip content encoding",
     "category": "upload",
+    "docs": {
+      "topic": "upload",
+      "stem": "upload_file_with_gzip_content_encoding"
+    },
     "http": {
       "handler": {
         "route": "/upload/compressed",
@@ -132,6 +144,10 @@
     "id": "upload_multiple_files",
     "description": "Tests uploading multiple files at once",
     "category": "upload",
+    "docs": {
+      "topic": "upload",
+      "stem": "upload_multiple_files"
+    },
     "http": {
       "handler": {
         "route": "/upload/multiple",
@@ -180,6 +196,10 @@
     "id": "upload_file_as_bytes",
     "description": "Tests file upload read as byte array",
     "category": "upload",
+    "docs": {
+      "topic": "upload",
+      "stem": "upload_file_as_bytes"
+    },
     "http": {
       "handler": {
         "route": "/upload/bytes",
@@ -223,6 +243,10 @@
     "id": "upload_file_read_to_string",
     "description": "Tests file upload read as string",
     "category": "upload",
+    "docs": {
+      "topic": "upload",
+      "stem": "upload_file_read_to_string"
+    },
     "http": {
       "handler": {
         "route": "/upload/string",
@@ -266,6 +290,10 @@
     "id": "upload_file_with_form_fields",
     "description": "Tests file upload with additional form fields",
     "category": "upload",
+    "docs": {
+      "topic": "upload",
+      "stem": "upload_file_with_form_fields"
+    },
     "http": {
       "handler": {
         "route": "/upload/with-fields",
@@ -317,6 +345,10 @@
     "id": "upload_file_content_type_or_default",
     "description": "Tests file upload uses provided content_type or defaults",
     "category": "upload",
+    "docs": {
+      "topic": "upload",
+      "stem": "upload_file_content_type_or_default"
+    },
     "http": {
       "handler": {
         "route": "/upload/auto-type",

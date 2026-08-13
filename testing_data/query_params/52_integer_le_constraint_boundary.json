@@ -32,13 +32,5 @@
       "limit": 100
     }
   },
-  "tags": [
-    "query_params",
-    "integer",
-    "le",
-    "maximum",
-    "boundary",
-    "validation",
-    "success"
-  ]
+  "tags": ["query_params", "integer", "le", "maximum", "boundary", "validation", "success"]
 }

@@ -84,9 +84,5 @@
       "data_size": 1048576
     }
   },
-  "tags": [
-    "large_payloads",
-    "performance",
-    "file_transfer"
-  ]
+  "tags": ["large_payloads", "performance", "file_transfer"]
 }

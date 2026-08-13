@@ -32,11 +32,5 @@
       "value": 123
     }
   },
-  "tags": [
-    "edge_cases",
-    "integer",
-    "leading_zeros",
-    "parsing",
-    "success"
-  ]
+  "tags": ["edge_cases", "integer", "leading_zeros", "parsing", "success"]
 }

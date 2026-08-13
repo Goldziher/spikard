@@ -59,11 +59,7 @@
           "required": false,
           "schema": {
             "type": "string",
-            "enum": [
-              "admin",
-              "moderator",
-              "user"
-            ]
+            "enum": ["admin", "moderator", "user"]
           }
         },
         {
@@ -72,11 +68,7 @@
           "required": false,
           "schema": {
             "type": "string",
-            "enum": [
-              "active",
-              "inactive",
-              "suspended"
-            ]
+            "enum": ["active", "inactive", "suspended"]
           }
         }
       ],
@@ -384,12 +376,7 @@
           "required": false,
           "schema": {
             "type": "string",
-            "enum": [
-              "user_requested",
-              "admin_action",
-              "inactive",
-              "violation"
-            ]
+            "enum": ["user_requested", "admin_action", "inactive", "violation"]
           }
         }
       ],
@@ -551,13 +538,7 @@
     "schemas": {
       "User": {
         "type": "object",
-        "required": [
-          "id",
-          "email",
-          "name",
-          "role",
-          "status"
-        ],
+        "required": ["id", "email", "name", "role", "status"],
         "properties": {
           "id": {
             "type": "string",
@@ -577,20 +558,12 @@
           },
           "role": {
             "type": "string",
-            "enum": [
-              "admin",
-              "moderator",
-              "user"
-            ],
+            "enum": ["admin", "moderator", "user"],
             "description": "User role"
           },
           "status": {
             "type": "string",
-            "enum": [
-              "active",
-              "inactive",
-              "suspended"
-            ],
+            "enum": ["active", "inactive", "suspended"],
             "default": "active",
             "description": "Account status"
           },
@@ -681,20 +654,12 @@
               },
               "privacyLevel": {
                 "type": "string",
-                "enum": [
-                  "public",
-                  "friends",
-                  "private"
-                ],
+                "enum": ["public", "friends", "private"],
                 "default": "private"
               },
               "theme": {
                 "type": "string",
-                "enum": [
-                  "light",
-                  "dark",
-                  "auto"
-                ],
+                "enum": ["light", "dark", "auto"],
                 "default": "auto"
               }
             },
@@ -704,12 +669,7 @@
       },
       "Pagination": {
         "type": "object",
-        "required": [
-          "page",
-          "pageSize",
-          "total",
-          "totalPages"
-        ],
+        "required": ["page", "pageSize", "total", "totalPages"],
         "properties": {
           "page": {
             "type": "integer",
@@ -731,11 +691,7 @@
       },
       "CreateUserInput": {
         "type": "object",
-        "required": [
-          "email",
-          "name",
-          "password"
-        ],
+        "required": ["email", "name", "password"],
         "properties": {
           "email": {
             "type": "string",
@@ -757,11 +713,7 @@
           },
           "role": {
             "type": "string",
-            "enum": [
-              "admin",
-              "moderator",
-              "user"
-            ],
+            "enum": ["admin", "moderator", "user"],
             "default": "user"
           }
         }
@@ -784,19 +736,11 @@
           },
           "role": {
             "type": "string",
-            "enum": [
-              "admin",
-              "moderator",
-              "user"
-            ]
+            "enum": ["admin", "moderator", "user"]
           },
           "status": {
             "type": "string",
-            "enum": [
-              "active",
-              "inactive",
-              "suspended"
-            ]
+            "enum": ["active", "inactive", "suspended"]
           }
         }
       },
@@ -845,19 +789,11 @@
               },
               "privacyLevel": {
                 "type": "string",
-                "enum": [
-                  "public",
-                  "friends",
-                  "private"
-                ]
+                "enum": ["public", "friends", "private"]
               },
               "theme": {
                 "type": "string",
-                "enum": [
-                  "light",
-                  "dark",
-                  "auto"
-                ]
+                "enum": ["light", "dark", "auto"]
               }
             }
           }

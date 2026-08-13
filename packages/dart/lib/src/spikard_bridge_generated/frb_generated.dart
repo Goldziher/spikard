@@ -3,10 +3,12 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
-import '../native_loader.dart';
+import 'package:spikard/src/native_loader.dart';
 import 'dart:ffi';
 import 'dart:isolate';
 import 'dart:io';
+import 'dart:core' as _DartCore;
+import 'dart:core';
 import 'dart:async';
 import 'dart:convert';
 import 'frb_generated.dart';
@@ -22,7 +24,6 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   static final instance = RustLib._();
 
   RustLib._();
-
   /// Resolve the prebuilt native library from the environment, the package's bundled
   /// natives, or the versioned user cache — downloading it if the cache is cold.
   ///
@@ -117,9 +118,8 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
       final rid = computeRid();
       if (rid != null) {
-        final packageRoot = await Isolate.resolvePackageUri(
-          Uri.parse('package:spikard/spikard.dart'),
-        );
+        final packageRoot =
+        await Isolate.resolvePackageUri(_DartCore.Uri.parse('package:spikard/spikard.dart'));
         if (packageRoot != null) {
           final ridDir = packageRoot.resolve('src/native/$rid/');
           for (final candidate in candidates) {
@@ -133,9 +133,8 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
       }
 
       // Check legacy package-installed location as fallback.
-      final packageRoot = await Isolate.resolvePackageUri(
-        Uri.parse('package:spikard/spikard.dart'),
-      );
+      final packageRoot =
+      await Isolate.resolvePackageUri(_DartCore.Uri.parse('package:spikard/spikard.dart'));
       if (packageRoot != null) {
         final libDir = packageRoot.resolve('src/spikard_bridge_generated/');
         for (final candidate in candidates) {
@@ -161,8 +160,8 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
       try {
         final scriptPath = Platform.script.toFilePath();
         var dir = File(scriptPath).absolute.parent;
-        while (dir.parent.path != dir.path &&
-          !File('${dir.path}/pubspec.yaml').existsSync()) {
+        while (dir.parent.path != dir.path
+          && !File('${dir.path}/pubspec.yaml').existsSync()) {
           dir = dir.parent;
         }
         if (File('${dir.path}/pubspec.yaml').existsSync()) {
@@ -273,7 +272,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => 2099382389;
+  int get rustContentHash => 376714827;
 
   static const kDefaultExternalLibraryLoaderConfig =
   ExternalLibraryLoaderConfig(
@@ -358,8 +357,6 @@ abstract class RustLibApi extends BaseApi {
     required FutureOr<String> Function(String) cb,
   });
 
-  Future<GraphQlRouteConfig> crateGraphQlRouteConfigDefault();
-
   Future<GraphQlRouteConfig> crateGraphQlRouteConfigDescription({
     required GraphQlRouteConfig that,
     required String description,
@@ -398,6 +395,16 @@ abstract class RustLibApi extends BaseApi {
     required String path,
   });
 
+  Future<RouteBuilder> crateRouteBuilderApiKeyAuth({
+    required RouteBuilder that,
+    required ApiKeyAuthConfig config,
+  });
+
+  Future<RouteBuilder> crateRouteBuilderAuthorization({
+    required RouteBuilder that,
+    required AuthorizationConfig config,
+  });
+
   Future<RouteBuilder> crateRouteBuilderBodyLimit({
     required RouteBuilder that,
     required PlatformInt64 maxBytes,
@@ -428,14 +435,44 @@ abstract class RustLibApi extends BaseApi {
     required String name,
   });
 
+  Future<RouteBuilder> crateRouteBuilderJsonrpcMethod({
+    required RouteBuilder that,
+    required JsonRpcMethodInfo info,
+  });
+
+  Future<RouteBuilder> crateRouteBuilderJwtAuth({
+    required RouteBuilder that,
+    required JwtAuthConfig config,
+  });
+
+  Future<RouteBuilder> crateRouteBuilderLifecycleHooks({
+    required RouteBuilder that,
+    required LifecycleHooksConfig hooks,
+  });
+
   Future<RouteBuilder> crateRouteBuilderNew({
     required Method method,
     required String path,
   });
 
+  Future<RouteBuilder> crateRouteBuilderOpenrpcSpec({
+    required RouteBuilder that,
+    required String spec,
+  });
+
   Future<RouteBuilder> crateRouteBuilderParamsSchemaJson({
     required RouteBuilder that,
     required String schema,
+  });
+
+  Future<RouteBuilder> crateRouteBuilderRateLimit({
+    required RouteBuilder that,
+    required RateLimitConfig rateLimit,
+  });
+
+  Future<RouteBuilder> crateRouteBuilderRequestId({
+    required RouteBuilder that,
+    required bool enabled,
   });
 
   Future<RouteBuilder> crateRouteBuilderRequestSchemaJson({
@@ -485,6 +522,10 @@ abstract class RustLibApi extends BaseApi {
     String? operationName,
   });
 
+  Future<ApiKeyAuthConfig> crateCreateApiKeyAuthConfigFromJson({
+    required String json,
+  });
+
   Future<ApiKeyConfig> crateCreateApiKeyConfigFromJson({required String json});
 
   Future<AsyncApiConfig> crateCreateAsyncApiConfigFromJson({
@@ -529,9 +570,21 @@ abstract class RustLibApi extends BaseApi {
     required String json,
   });
 
+  Future<JwtAuthConfig> crateCreateJwtAuthConfigFromJson({
+    required String json,
+  });
+
   Future<JwtConfig> crateCreateJwtConfigFromJson({required String json});
 
   Future<LicenseInfo> crateCreateLicenseInfoFromJson({required String json});
+
+  Future<LifecycleHookRef> crateCreateLifecycleHookRefFromJson({
+    required String json,
+  });
+
+  Future<LifecycleHooksConfig> crateCreateLifecycleHooksConfigFromJson({
+    required String json,
+  });
 
   Future<OpenApiConfig> crateCreateOpenApiConfigFromJson({
     required String json,
@@ -564,6 +617,10 @@ abstract class RustLibApi extends BaseApi {
   });
 
   Future<RateLimitConfig> crateCreateRateLimitConfigFromJson({
+    required String json,
+  });
+
+  Future<RequestIdConfig> crateCreateRequestIdConfigFromJson({
     required String json,
   });
 
@@ -1147,37 +1204,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   );
 
   @override
-  Future<GraphQlRouteConfig> crateGraphQlRouteConfigDefault() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 15,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGraphQLRouteConfig,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateGraphQlRouteConfigDefaultConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateGraphQlRouteConfigDefaultConstMeta =>
-  const TaskConstMeta(
-    debugName: "GraphQlRouteConfig_default",
-    argNames: [],
-  );
-
-  @override
   Future<GraphQlRouteConfig> crateGraphQlRouteConfigDescription({
     required GraphQlRouteConfig that,
     required String description,
@@ -1194,7 +1220,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 16,
+            funcId: 15,
             port: port_,
           );
         },
@@ -1233,7 +1259,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 17,
+            funcId: 16,
             port: port_,
           );
         },
@@ -1270,7 +1296,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 18,
+            funcId: 17,
             port: port_,
           );
         },
@@ -1306,7 +1332,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 19,
+            funcId: 18,
             port: port_,
           );
         },
@@ -1342,7 +1368,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 20,
+            funcId: 19,
             port: port_,
           );
         },
@@ -1378,7 +1404,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 21,
+            funcId: 20,
             port: port_,
           );
         },
@@ -1416,7 +1442,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 22,
+            funcId: 21,
             port: port_,
           );
         },
@@ -1447,7 +1473,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 23,
+            funcId: 22,
             port: port_,
           );
         },
@@ -1483,7 +1509,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 24,
+            funcId: 23,
             port: port_,
           );
         },
@@ -1506,6 +1532,84 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   );
 
   @override
+  Future<RouteBuilder> crateRouteBuilderApiKeyAuth({
+    required RouteBuilder that,
+    required ApiKeyAuthConfig config,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
+            that,
+            serializer,
+          );
+          sse_encode_box_autoadd_api_key_auth_config(config, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 24,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateRouteBuilderApiKeyAuthConstMeta,
+        argValues: [that, config],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateRouteBuilderApiKeyAuthConstMeta =>
+  const TaskConstMeta(
+    debugName: "RouteBuilder_api_key_auth",
+    argNames: ["that", "config"],
+  );
+
+  @override
+  Future<RouteBuilder> crateRouteBuilderAuthorization({
+    required RouteBuilder that,
+    required AuthorizationConfig config,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
+            that,
+            serializer,
+          );
+          sse_encode_box_autoadd_authorization_config(config, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 25,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateRouteBuilderAuthorizationConstMeta,
+        argValues: [that, config],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateRouteBuilderAuthorizationConstMeta =>
+  const TaskConstMeta(
+    debugName: "RouteBuilder_authorization",
+    argNames: ["that", "config"],
+  );
+
+  @override
   Future<RouteBuilder> crateRouteBuilderBodyLimit({
     required RouteBuilder that,
     required PlatformInt64 maxBytes,
@@ -1522,7 +1626,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 25,
+            funcId: 26,
             port: port_,
           );
         },
@@ -1560,7 +1664,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 26,
+            funcId: 27,
             port: port_,
           );
         },
@@ -1599,7 +1703,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 27,
+            funcId: 28,
             port: port_,
           );
         },
@@ -1637,7 +1741,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 28,
+            funcId: 29,
             port: port_,
           );
         },
@@ -1676,7 +1780,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 29,
+            funcId: 30,
             port: port_,
           );
         },
@@ -1715,7 +1819,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 30,
+            funcId: 31,
             port: port_,
           );
         },
@@ -1738,6 +1842,122 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   );
 
   @override
+  Future<RouteBuilder> crateRouteBuilderJsonrpcMethod({
+    required RouteBuilder that,
+    required JsonRpcMethodInfo info,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
+            that,
+            serializer,
+          );
+          sse_encode_box_autoadd_json_rpc_method_info(info, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 32,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateRouteBuilderJsonrpcMethodConstMeta,
+        argValues: [that, info],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateRouteBuilderJsonrpcMethodConstMeta =>
+  const TaskConstMeta(
+    debugName: "RouteBuilder_jsonrpc_method",
+    argNames: ["that", "info"],
+  );
+
+  @override
+  Future<RouteBuilder> crateRouteBuilderJwtAuth({
+    required RouteBuilder that,
+    required JwtAuthConfig config,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
+            that,
+            serializer,
+          );
+          sse_encode_box_autoadd_jwt_auth_config(config, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 33,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateRouteBuilderJwtAuthConstMeta,
+        argValues: [that, config],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateRouteBuilderJwtAuthConstMeta => const TaskConstMeta(
+    debugName: "RouteBuilder_jwt_auth",
+    argNames: ["that", "config"],
+  );
+
+  @override
+  Future<RouteBuilder> crateRouteBuilderLifecycleHooks({
+    required RouteBuilder that,
+    required LifecycleHooksConfig hooks,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
+            that,
+            serializer,
+          );
+          sse_encode_box_autoadd_lifecycle_hooks_config(hooks, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 34,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateRouteBuilderLifecycleHooksConstMeta,
+        argValues: [that, hooks],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateRouteBuilderLifecycleHooksConstMeta =>
+  const TaskConstMeta(
+    debugName: "RouteBuilder_lifecycle_hooks",
+    argNames: ["that", "hooks"],
+  );
+
+  @override
   Future<RouteBuilder> crateRouteBuilderNew({
     required Method method,
     required String path,
@@ -1751,7 +1971,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 31,
+            funcId: 35,
             port: port_,
           );
         },
@@ -1773,6 +1993,45 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   );
 
   @override
+  Future<RouteBuilder> crateRouteBuilderOpenrpcSpec({
+    required RouteBuilder that,
+    required String spec,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
+            that,
+            serializer,
+          );
+          sse_encode_String(spec, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 36,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateRouteBuilderOpenrpcSpecConstMeta,
+        argValues: [that, spec],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateRouteBuilderOpenrpcSpecConstMeta =>
+  const TaskConstMeta(
+    debugName: "RouteBuilder_openrpc_spec",
+    argNames: ["that", "spec"],
+  );
+
+  @override
   Future<RouteBuilder> crateRouteBuilderParamsSchemaJson({
     required RouteBuilder that,
     required String schema,
@@ -1789,7 +2048,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 32,
+            funcId: 37,
             port: port_,
           );
         },
@@ -1812,6 +2071,82 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   );
 
   @override
+  Future<RouteBuilder> crateRouteBuilderRateLimit({
+    required RouteBuilder that,
+    required RateLimitConfig rateLimit,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
+            that,
+            serializer,
+          );
+          sse_encode_box_autoadd_rate_limit_config(rateLimit, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 38,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateRouteBuilderRateLimitConstMeta,
+        argValues: [that, rateLimit],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateRouteBuilderRateLimitConstMeta => const TaskConstMeta(
+    debugName: "RouteBuilder_rate_limit",
+    argNames: ["that", "rateLimit"],
+  );
+
+  @override
+  Future<RouteBuilder> crateRouteBuilderRequestId({
+    required RouteBuilder that,
+    required bool enabled,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder(
+            that,
+            serializer,
+          );
+          sse_encode_bool(enabled, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 39,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+          sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRouteBuilder,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateRouteBuilderRequestIdConstMeta,
+        argValues: [that, enabled],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateRouteBuilderRequestIdConstMeta => const TaskConstMeta(
+    debugName: "RouteBuilder_request_id",
+    argNames: ["that", "enabled"],
+  );
+
+  @override
   Future<RouteBuilder> crateRouteBuilderRequestSchemaJson({
     required RouteBuilder that,
     required String schema,
@@ -1828,7 +2163,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 33,
+            funcId: 40,
             port: port_,
           );
         },
@@ -1867,7 +2202,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 34,
+            funcId: 41,
             port: port_,
           );
         },
@@ -1906,7 +2241,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 35,
+            funcId: 42,
             port: port_,
           );
         },
@@ -1941,7 +2276,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 36,
+            funcId: 43,
             port: port_,
           );
         },
@@ -1981,7 +2316,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 37,
+            funcId: 44,
             port: port_,
           );
         },
@@ -2024,7 +2359,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 38,
+            funcId: 45,
             port: port_,
           );
         },
@@ -2065,7 +2400,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 39,
+            funcId: 46,
             port: port_,
           );
         },
@@ -2109,7 +2444,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 40,
+            funcId: 47,
             port: port_,
           );
         },
@@ -2131,6 +2466,39 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   );
 
   @override
+  Future<ApiKeyAuthConfig> crateCreateApiKeyAuthConfigFromJson({
+    required String json,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(json, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 48,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_api_key_auth_config,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateCreateApiKeyAuthConfigFromJsonConstMeta,
+        argValues: [json],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateCreateApiKeyAuthConfigFromJsonConstMeta =>
+  const TaskConstMeta(
+    debugName: "create_api_key_auth_config_from_json",
+    argNames: ["json"],
+  );
+
+  @override
   Future<ApiKeyConfig> crateCreateApiKeyConfigFromJson({required String json}) {
     return handler.executeNormal(
       NormalTask(
@@ -2140,7 +2508,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 41,
+            funcId: 49,
             port: port_,
           );
         },
@@ -2173,7 +2541,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 42,
+            funcId: 50,
             port: port_,
           );
         },
@@ -2206,7 +2574,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 43,
+            funcId: 51,
             port: port_,
           );
         },
@@ -2239,7 +2607,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 44,
+            funcId: 52,
             port: port_,
           );
         },
@@ -2272,7 +2640,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 45,
+            funcId: 53,
             port: port_,
           );
         },
@@ -2303,7 +2671,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 46,
+            funcId: 54,
             port: port_,
           );
         },
@@ -2334,7 +2702,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 47,
+            funcId: 55,
             port: port_,
           );
         },
@@ -2367,7 +2735,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 48,
+            funcId: 56,
             port: port_,
           );
         },
@@ -2400,7 +2768,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 49,
+            funcId: 57,
             port: port_,
           );
         },
@@ -2433,7 +2801,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 50,
+            funcId: 58,
             port: port_,
           );
         },
@@ -2464,7 +2832,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 51,
+            funcId: 59,
             port: port_,
           );
         },
@@ -2497,7 +2865,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 52,
+            funcId: 60,
             port: port_,
           );
         },
@@ -2530,7 +2898,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 53,
+            funcId: 61,
             port: port_,
           );
         },
@@ -2552,6 +2920,39 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   );
 
   @override
+  Future<JwtAuthConfig> crateCreateJwtAuthConfigFromJson({
+    required String json,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(json, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 62,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_jwt_auth_config,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateCreateJwtAuthConfigFromJsonConstMeta,
+        argValues: [json],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateCreateJwtAuthConfigFromJsonConstMeta =>
+  const TaskConstMeta(
+    debugName: "create_jwt_auth_config_from_json",
+    argNames: ["json"],
+  );
+
+  @override
   Future<JwtConfig> crateCreateJwtConfigFromJson({required String json}) {
     return handler.executeNormal(
       NormalTask(
@@ -2561,7 +2962,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 54,
+            funcId: 63,
             port: port_,
           );
         },
@@ -2592,7 +2993,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 55,
+            funcId: 64,
             port: port_,
           );
         },
@@ -2614,6 +3015,72 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   );
 
   @override
+  Future<LifecycleHookRef> crateCreateLifecycleHookRefFromJson({
+    required String json,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(json, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 65,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_lifecycle_hook_ref,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateCreateLifecycleHookRefFromJsonConstMeta,
+        argValues: [json],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateCreateLifecycleHookRefFromJsonConstMeta =>
+  const TaskConstMeta(
+    debugName: "create_lifecycle_hook_ref_from_json",
+    argNames: ["json"],
+  );
+
+  @override
+  Future<LifecycleHooksConfig> crateCreateLifecycleHooksConfigFromJson({
+    required String json,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(json, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 66,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_lifecycle_hooks_config,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateCreateLifecycleHooksConfigFromJsonConstMeta,
+        argValues: [json],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateCreateLifecycleHooksConfigFromJsonConstMeta =>
+  const TaskConstMeta(
+    debugName: "create_lifecycle_hooks_config_from_json",
+    argNames: ["json"],
+  );
+
+  @override
   Future<OpenApiConfig> crateCreateOpenApiConfigFromJson({
     required String json,
   }) {
@@ -2625,7 +3092,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 56,
+            funcId: 67,
             port: port_,
           );
         },
@@ -2656,7 +3123,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 57,
+            funcId: 68,
             port: port_,
           );
         },
@@ -2689,7 +3156,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 58,
+            funcId: 69,
             port: port_,
           );
         },
@@ -2722,7 +3189,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 59,
+            funcId: 70,
             port: port_,
           );
         },
@@ -2755,7 +3222,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 60,
+            funcId: 71,
             port: port_,
           );
         },
@@ -2788,7 +3255,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 61,
+            funcId: 72,
             port: port_,
           );
         },
@@ -2821,7 +3288,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 62,
+            funcId: 73,
             port: port_,
           );
         },
@@ -2854,7 +3321,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 63,
+            funcId: 74,
             port: port_,
           );
         },
@@ -2887,7 +3354,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 64,
+            funcId: 75,
             port: port_,
           );
         },
@@ -2909,6 +3376,39 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   );
 
   @override
+  Future<RequestIdConfig> crateCreateRequestIdConfigFromJson({
+    required String json,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(json, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 76,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_request_id_config,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateCreateRequestIdConfigFromJsonConstMeta,
+        argValues: [json],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateCreateRequestIdConfigFromJsonConstMeta =>
+  const TaskConstMeta(
+    debugName: "create_request_id_config_from_json",
+    argNames: ["json"],
+  );
+
+  @override
   Future<Response> crateCreateResponseFromJson({required String json}) {
     return handler.executeNormal(
       NormalTask(
@@ -2918,7 +3418,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 65,
+            funcId: 77,
             port: port_,
           );
         },
@@ -2951,7 +3451,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 66,
+            funcId: 78,
             port: port_,
           );
         },
@@ -2982,7 +3482,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 67,
+            funcId: 79,
             port: port_,
           );
         },
@@ -3013,7 +3513,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 68,
+            funcId: 80,
             port: port_,
           );
         },
@@ -3044,7 +3544,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 69,
+            funcId: 81,
             port: port_,
           );
         },
@@ -3075,7 +3575,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 70,
+            funcId: 82,
             port: port_,
           );
         },
@@ -3108,7 +3608,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 71,
+            funcId: 83,
             port: port_,
           );
         },
@@ -3139,7 +3639,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 72,
+            funcId: 84,
             port: port_,
           );
         },
@@ -3170,7 +3670,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 73,
+            funcId: 85,
             port: port_,
           );
         },
@@ -3200,7 +3700,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 74,
+            funcId: 86,
             port: port_,
           );
         },
@@ -3233,7 +3733,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 75,
+            funcId: 87,
             port: port_,
           );
         },
@@ -3263,7 +3763,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 76,
+            funcId: 88,
             port: port_,
           );
         },
@@ -3290,7 +3790,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 77,
+            funcId: 89,
             port: port_,
           );
         },
@@ -3317,7 +3817,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 78,
+            funcId: 90,
             port: port_,
           );
         },
@@ -3574,6 +4074,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ApiKeyAuthConfig dco_decode_api_key_auth_config(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+    throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return ApiKeyAuthConfig(
+      enabled: dco_decode_bool(arr[0]),
+      keys: dco_decode_list_String(arr[1]),
+      headerName: dco_decode_String(arr[2]),
+    );
+  }
+
+  @protected
   ApiKeyConfig dco_decode_api_key_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -3615,6 +4128,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  AuthorizationConfig dco_decode_authorization_config(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4)
+    throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return AuthorizationConfig(
+      requiredRoles: dco_decode_list_String(arr[0]),
+      requiredScopes: dco_decode_list_String(arr[1]),
+      requiredPermissions: dco_decode_list_String(arr[2]),
+      requireAll: dco_decode_bool(arr[3]),
+    );
+  }
+
+  @protected
   BackgroundJobMetadata dco_decode_background_job_metadata(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -3646,6 +4173,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ApiKeyAuthConfig dco_decode_box_autoadd_api_key_auth_config(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_api_key_auth_config(raw);
+  }
+
+  @protected
   ApiKeyConfig dco_decode_box_autoadd_api_key_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_api_key_config(raw);
@@ -3655,6 +4188,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   AsyncApiConfig dco_decode_box_autoadd_async_api_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_async_api_config(raw);
+  }
+
+  @protected
+  AuthorizationConfig dco_decode_box_autoadd_authorization_config(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_authorization_config(raw);
   }
 
   @protected
@@ -3706,6 +4245,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  JsonRpcMethodInfo dco_decode_box_autoadd_json_rpc_method_info(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_json_rpc_method_info(raw);
+  }
+
+  @protected
+  JwtAuthConfig dco_decode_box_autoadd_jwt_auth_config(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_jwt_auth_config(raw);
+  }
+
+  @protected
   JwtConfig dco_decode_box_autoadd_jwt_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_jwt_config(raw);
@@ -3715,6 +4266,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   LicenseInfo dco_decode_box_autoadd_license_info(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_license_info(raw);
+  }
+
+  @protected
+  LifecycleHooksConfig dco_decode_box_autoadd_lifecycle_hooks_config(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_lifecycle_hooks_config(raw);
   }
 
   @protected
@@ -3953,6 +4512,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  JwtAuthConfig dco_decode_jwt_auth_config(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 7)
+    throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    return JwtAuthConfig(
+      enabled: dco_decode_bool(arr[0]),
+      secret: dco_decode_opt_String(arr[1]),
+      publicKey: dco_decode_opt_String(arr[2]),
+      algorithm: dco_decode_String(arr[3]),
+      audience: dco_decode_opt_list_String(arr[4]),
+      issuer: dco_decode_opt_String(arr[5]),
+      leeway: dco_decode_i_64(arr[6]),
+    );
+  }
+
+  @protected
   JwtConfig dco_decode_jwt_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -3980,6 +4556,42 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  LifecycleHookPhase dco_decode_lifecycle_hook_phase(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return LifecycleHookPhase.values[raw as int];
+  }
+
+  @protected
+  LifecycleHookRef dco_decode_lifecycle_hook_ref(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+    throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return LifecycleHookRef(
+      name: dco_decode_String(arr[0]),
+      handler: dco_decode_String(arr[1]),
+      dependencies: dco_decode_list_String(arr[2]),
+      config: dco_decode_opt_String(arr[3]),
+      order: dco_decode_opt_box_autoadd_i_64(arr[4]),
+    );
+  }
+
+  @protected
+  LifecycleHooksConfig dco_decode_lifecycle_hooks_config(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+    throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return LifecycleHooksConfig(
+      onRequest: dco_decode_list_lifecycle_hook_ref(arr[0]),
+      preValidation: dco_decode_list_lifecycle_hook_ref(arr[1]),
+      preHandler: dco_decode_list_lifecycle_hook_ref(arr[2]),
+      onResponse: dco_decode_list_lifecycle_hook_ref(arr[3]),
+      onError: dco_decode_list_lifecycle_hook_ref(arr[4]),
+    );
+  }
+
+  @protected
   List<String> dco_decode_list_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_String).toList();
@@ -3989,6 +4601,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<FieldErrorSpec> dco_decode_list_field_error_spec(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_field_error_spec).toList();
+  }
+
+  @protected
+  List<LifecycleHookRef> dco_decode_list_lifecycle_hook_ref(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_lifecycle_hook_ref).toList();
   }
 
   @protected
@@ -4285,6 +4903,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       throw Exception('Expected 2 elements, got ${arr.length}');
     }
     return (dco_decode_String(arr[0]), dco_decode_String(arr[1]));
+  }
+
+  @protected
+  RequestIdConfig dco_decode_request_id_config(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1)
+    throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return RequestIdConfig(enabled: dco_decode_bool(arr[0]));
   }
 
   @protected
@@ -4710,6 +5337,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ApiKeyAuthConfig sse_decode_api_key_auth_config(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_enabled = sse_decode_bool(deserializer);
+    var var_keys = sse_decode_list_String(deserializer);
+    var var_headerName = sse_decode_String(deserializer);
+    return ApiKeyAuthConfig(
+      enabled: var_enabled,
+      keys: var_keys,
+      headerName: var_headerName,
+    );
+  }
+
+  @protected
   ApiKeyConfig sse_decode_api_key_config(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_keys = sse_decode_list_String(deserializer);
@@ -4749,6 +5391,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  AuthorizationConfig sse_decode_authorization_config(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_requiredRoles = sse_decode_list_String(deserializer);
+    var var_requiredScopes = sse_decode_list_String(deserializer);
+    var var_requiredPermissions = sse_decode_list_String(deserializer);
+    var var_requireAll = sse_decode_bool(deserializer);
+    return AuthorizationConfig(
+      requiredRoles: var_requiredRoles,
+      requiredScopes: var_requiredScopes,
+      requiredPermissions: var_requiredPermissions,
+      requireAll: var_requireAll,
+    );
+  }
+
+  @protected
   BackgroundJobMetadata sse_decode_background_job_metadata(
     SseDeserializer deserializer,
   ) {
@@ -4780,6 +5439,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  ApiKeyAuthConfig sse_decode_box_autoadd_api_key_auth_config(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_api_key_auth_config(deserializer));
+  }
+
+  @protected
   ApiKeyConfig sse_decode_box_autoadd_api_key_config(
     SseDeserializer deserializer,
   ) {
@@ -4793,6 +5460,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_async_api_config(deserializer));
+  }
+
+  @protected
+  AuthorizationConfig sse_decode_box_autoadd_authorization_config(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_authorization_config(deserializer));
   }
 
   @protected
@@ -4852,6 +5527,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  JsonRpcMethodInfo sse_decode_box_autoadd_json_rpc_method_info(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_json_rpc_method_info(deserializer));
+  }
+
+  @protected
+  JwtAuthConfig sse_decode_box_autoadd_jwt_auth_config(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_jwt_auth_config(deserializer));
+  }
+
+  @protected
   JwtConfig sse_decode_box_autoadd_jwt_config(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_jwt_config(deserializer));
@@ -4863,6 +5554,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_license_info(deserializer));
+  }
+
+  @protected
+  LifecycleHooksConfig sse_decode_box_autoadd_lifecycle_hooks_config(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_lifecycle_hooks_config(deserializer));
   }
 
   @protected
@@ -5129,6 +5828,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  JwtAuthConfig sse_decode_jwt_auth_config(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_enabled = sse_decode_bool(deserializer);
+    var var_secret = sse_decode_opt_String(deserializer);
+    var var_publicKey = sse_decode_opt_String(deserializer);
+    var var_algorithm = sse_decode_String(deserializer);
+    var var_audience = sse_decode_opt_list_String(deserializer);
+    var var_issuer = sse_decode_opt_String(deserializer);
+    var var_leeway = sse_decode_i_64(deserializer);
+    return JwtAuthConfig(
+      enabled: var_enabled,
+      secret: var_secret,
+      publicKey: var_publicKey,
+      algorithm: var_algorithm,
+      audience: var_audience,
+      issuer: var_issuer,
+      leeway: var_leeway,
+    );
+  }
+
+  @protected
   JwtConfig sse_decode_jwt_config(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_secret = sse_decode_String(deserializer);
@@ -5154,6 +5874,51 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  LifecycleHookPhase sse_decode_lifecycle_hook_phase(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return LifecycleHookPhase.values[inner];
+  }
+
+  @protected
+  LifecycleHookRef sse_decode_lifecycle_hook_ref(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_name = sse_decode_String(deserializer);
+    var var_handler = sse_decode_String(deserializer);
+    var var_dependencies = sse_decode_list_String(deserializer);
+    var var_config = sse_decode_opt_String(deserializer);
+    var var_order = sse_decode_opt_box_autoadd_i_64(deserializer);
+    return LifecycleHookRef(
+      name: var_name,
+      handler: var_handler,
+      dependencies: var_dependencies,
+      config: var_config,
+      order: var_order,
+    );
+  }
+
+  @protected
+  LifecycleHooksConfig sse_decode_lifecycle_hooks_config(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_onRequest = sse_decode_list_lifecycle_hook_ref(deserializer);
+    var var_preValidation = sse_decode_list_lifecycle_hook_ref(deserializer);
+    var var_preHandler = sse_decode_list_lifecycle_hook_ref(deserializer);
+    var var_onResponse = sse_decode_list_lifecycle_hook_ref(deserializer);
+    var var_onError = sse_decode_list_lifecycle_hook_ref(deserializer);
+    return LifecycleHooksConfig(
+      onRequest: var_onRequest,
+      preValidation: var_preValidation,
+      preHandler: var_preHandler,
+      onResponse: var_onResponse,
+      onError: var_onError,
+    );
+  }
+
+  @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -5175,6 +5940,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var ans_ = <FieldErrorSpec>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_field_error_spec(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<LifecycleHookRef> sse_decode_list_lifecycle_hook_ref(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <LifecycleHookRef>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_lifecycle_hook_ref(deserializer));
     }
     return ans_;
   }
@@ -5628,6 +6407,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_field0 = sse_decode_String(deserializer);
     var var_field1 = sse_decode_String(deserializer);
     return (var_field0, var_field1);
+  }
+
+  @protected
+  RequestIdConfig sse_decode_request_id_config(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_enabled = sse_decode_bool(deserializer);
+    return RequestIdConfig(enabled: var_enabled);
   }
 
   @protected
@@ -6134,6 +6920,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_api_key_auth_config(
+    ApiKeyAuthConfig self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_bool(self.enabled, serializer);
+    sse_encode_list_String(self.keys, serializer);
+    sse_encode_String(self.headerName, serializer);
+  }
+
+  @protected
   void sse_encode_api_key_config(ApiKeyConfig self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_String(self.keys, serializer);
@@ -6170,6 +6967,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_authorization_config(
+    AuthorizationConfig self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_String(self.requiredRoles, serializer);
+    sse_encode_list_String(self.requiredScopes, serializer);
+    sse_encode_list_String(self.requiredPermissions, serializer);
+    sse_encode_bool(self.requireAll, serializer);
+  }
+
+  @protected
   void sse_encode_background_job_metadata(
     BackgroundJobMetadata self,
     SseSerializer serializer,
@@ -6197,6 +7006,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_api_key_auth_config(
+    ApiKeyAuthConfig self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_api_key_auth_config(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_api_key_config(
     ApiKeyConfig self,
     SseSerializer serializer,
@@ -6212,6 +7030,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_async_api_config(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_authorization_config(
+    AuthorizationConfig self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_authorization_config(self, serializer);
   }
 
   @protected
@@ -6284,6 +7111,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_json_rpc_method_info(
+    JsonRpcMethodInfo self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_json_rpc_method_info(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_jwt_auth_config(
+    JwtAuthConfig self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_jwt_auth_config(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_jwt_config(
     JwtConfig self,
     SseSerializer serializer,
@@ -6299,6 +7144,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_license_info(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_lifecycle_hooks_config(
+    LifecycleHooksConfig self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_lifecycle_hooks_config(self, serializer);
   }
 
   @protected
@@ -6516,6 +7370,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_jwt_auth_config(
+    JwtAuthConfig self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_bool(self.enabled, serializer);
+    sse_encode_opt_String(self.secret, serializer);
+    sse_encode_opt_String(self.publicKey, serializer);
+    sse_encode_String(self.algorithm, serializer);
+    sse_encode_opt_list_String(self.audience, serializer);
+    sse_encode_opt_String(self.issuer, serializer);
+    sse_encode_i_64(self.leeway, serializer);
+  }
+
+  @protected
   void sse_encode_jwt_config(JwtConfig self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.secret, serializer);
@@ -6530,6 +7399,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.name, serializer);
     sse_encode_opt_String(self.url, serializer);
+  }
+
+  @protected
+  void sse_encode_lifecycle_hook_phase(
+    LifecycleHookPhase self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_lifecycle_hook_ref(
+    LifecycleHookRef self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.name, serializer);
+    sse_encode_String(self.handler, serializer);
+    sse_encode_list_String(self.dependencies, serializer);
+    sse_encode_opt_String(self.config, serializer);
+    sse_encode_opt_box_autoadd_i_64(self.order, serializer);
+  }
+
+  @protected
+  void sse_encode_lifecycle_hooks_config(
+    LifecycleHooksConfig self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_lifecycle_hook_ref(self.onRequest, serializer);
+    sse_encode_list_lifecycle_hook_ref(self.preValidation, serializer);
+    sse_encode_list_lifecycle_hook_ref(self.preHandler, serializer);
+    sse_encode_list_lifecycle_hook_ref(self.onResponse, serializer);
+    sse_encode_list_lifecycle_hook_ref(self.onError, serializer);
   }
 
   @protected
@@ -6550,6 +7454,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_field_error_spec(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_lifecycle_hook_ref(
+    List<LifecycleHookRef> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_lifecycle_hook_ref(item, serializer);
     }
   }
 
@@ -6954,6 +7870,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.$1, serializer);
     sse_encode_String(self.$2, serializer);
+  }
+
+  @protected
+  void sse_encode_request_id_config(
+    RequestIdConfig self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_bool(self.enabled, serializer);
   }
 
   @protected
@@ -7366,6 +8291,17 @@ class RouteBuilderImpl extends RustOpaque implements RouteBuilder {
     RustLib.instance.api.rust_arc_decrement_strong_count_RouteBuilderPtr,
   );
 
+  Future<RouteBuilder> apiKeyAuth({required ApiKeyAuthConfig config}) => RustLib
+  .instance
+  .api
+  .crateRouteBuilderApiKeyAuth(that: this, config: config);
+
+  Future<RouteBuilder> authorization({required AuthorizationConfig config}) =>
+  RustLib.instance.api.crateRouteBuilderAuthorization(
+    that: this,
+    config: config,
+  );
+
   Future<RouteBuilder> bodyLimit({required PlatformInt64 maxBytes}) => RustLib
   .instance
   .api
@@ -7395,10 +8331,39 @@ class RouteBuilderImpl extends RustOpaque implements RouteBuilder {
   Future<RouteBuilder> handlerName({required String name}) =>
   RustLib.instance.api.crateRouteBuilderHandlerName(that: this, name: name);
 
+  Future<RouteBuilder> jsonrpcMethod({required JsonRpcMethodInfo info}) =>
+  RustLib.instance.api.crateRouteBuilderJsonrpcMethod(
+    that: this,
+    info: info,
+  );
+
+  Future<RouteBuilder> jwtAuth({required JwtAuthConfig config}) =>
+  RustLib.instance.api.crateRouteBuilderJwtAuth(that: this, config: config);
+
+  Future<RouteBuilder> lifecycleHooks({required LifecycleHooksConfig hooks}) =>
+  RustLib.instance.api.crateRouteBuilderLifecycleHooks(
+    that: this,
+    hooks: hooks,
+  );
+
+  Future<RouteBuilder> openrpcSpec({required String spec}) =>
+  RustLib.instance.api.crateRouteBuilderOpenrpcSpec(that: this, spec: spec);
+
   Future<RouteBuilder> paramsSchemaJson({required String schema}) => RustLib
   .instance
   .api
   .crateRouteBuilderParamsSchemaJson(that: this, schema: schema);
+
+  Future<RouteBuilder> rateLimit({required RateLimitConfig rateLimit}) =>
+  RustLib.instance.api.crateRouteBuilderRateLimit(
+    that: this,
+    rateLimit: rateLimit,
+  );
+
+  Future<RouteBuilder> requestId({required bool enabled}) => RustLib
+  .instance
+  .api
+  .crateRouteBuilderRequestId(that: this, enabled: enabled);
 
   Future<RouteBuilder> requestSchemaJson({required String schema}) => RustLib
   .instance

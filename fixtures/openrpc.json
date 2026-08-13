@@ -3,6 +3,10 @@
     "id": "openrpc_method_handler_basic",
     "description": "Tests calling a method defined in an OpenRPC spec that takes typed params and returns a typed result",
     "category": "openrpc",
+    "docs": {
+      "topic": "openrpc",
+      "stem": "openrpc_method_handler_basic"
+    },
     "http": {
       "handler": {
         "route": "/rpc",
@@ -66,6 +70,10 @@
     "id": "openrpc_param_validation_wrong_type",
     "description": "Tests that a parameter with wrong type is rejected per the OpenRPC method param schema",
     "category": "openrpc",
+    "docs": {
+      "topic": "openrpc",
+      "stem": "openrpc_param_validation_wrong_type"
+    },
     "http": {
       "handler": {
         "route": "/rpc",
@@ -128,6 +136,10 @@
     "id": "openrpc_param_validation_missing_required",
     "description": "Tests that a missing required parameter is rejected per the OpenRPC method param schema",
     "category": "openrpc",
+    "docs": {
+      "topic": "openrpc",
+      "stem": "openrpc_param_validation_missing_required"
+    },
     "http": {
       "handler": {
         "route": "/rpc",
@@ -205,6 +217,10 @@
     "id": "openrpc_multi_method_spec",
     "description": "Tests that a spec with multiple methods routes correctly to each registered handler",
     "category": "openrpc",
+    "docs": {
+      "topic": "openrpc",
+      "stem": "openrpc_multi_method_spec"
+    },
     "http": {
       "handler": {
         "route": "/rpc",
@@ -269,6 +285,10 @@
     "id": "openrpc_batch_request_all_valid",
     "description": "Tests batch request against OpenRPC-defined methods where all calls are valid",
     "category": "openrpc",
+    "docs": {
+      "topic": "openrpc",
+      "stem": "openrpc_batch_request_all_valid"
+    },
     "http": {
       "handler": {
         "route": "/rpc",
@@ -319,6 +339,10 @@
     "id": "openrpc_batch_mixed_valid_invalid",
     "description": "Tests batch request where some calls are valid and some reference undefined methods",
     "category": "openrpc",
+    "docs": {
+      "topic": "openrpc",
+      "stem": "openrpc_batch_mixed_valid_invalid"
+    },
     "http": {
       "handler": {
         "route": "/rpc",
@@ -369,6 +393,10 @@
     "id": "openrpc_method_namespacing",
     "description": "Tests method with dot-namespaced name such as account.create is dispatched correctly",
     "category": "openrpc",
+    "docs": {
+      "topic": "openrpc",
+      "stem": "openrpc_method_namespacing"
+    },
     "http": {
       "handler": {
         "route": "/rpc",
@@ -441,6 +469,10 @@
     "id": "openrpc_optional_param_omitted",
     "description": "Tests that a method call omitting an optional parameter succeeds using its default behaviour",
     "category": "openrpc",
+    "docs": {
+      "topic": "openrpc",
+      "stem": "openrpc_optional_param_omitted"
+    },
     "http": {
       "handler": {
         "route": "/rpc",
@@ -517,6 +549,10 @@
     "id": "openrpc_error_mapping_per_spec",
     "description": "Tests that application errors are mapped to the error codes defined in the OpenRPC spec errors array",
     "category": "openrpc",
+    "docs": {
+      "topic": "openrpc",
+      "stem": "openrpc_error_mapping_per_spec"
+    },
     "http": {
       "handler": {
         "route": "/rpc",
@@ -581,6 +617,10 @@
     "id": "openrpc_param_schema_ref_resolution",
     "description": "Tests that parameter schemas referenced via $ref in OpenRPC components/schemas are resolved",
     "category": "openrpc",
+    "docs": {
+      "topic": "openrpc",
+      "stem": "openrpc_param_schema_ref_resolution"
+    },
     "http": {
       "handler": {
         "route": "/rpc",

@@ -3,6 +3,10 @@
     "id": "stream_json_lines",
     "description": "Streams newline-delimited JSON payload in small chunks",
     "category": "streaming",
+    "docs": {
+      "topic": "streaming",
+      "stem": "stream_json_lines"
+    },
     "http": {
       "handler": {
         "route": "/stream/json-lines",
@@ -26,6 +30,10 @@
     "id": "chunked_csv_export",
     "description": "Streams CSV header and rows as discrete chunks",
     "category": "streaming",
+    "docs": {
+      "topic": "streaming",
+      "stem": "chunked_csv_export"
+    },
     "http": {
       "handler": {
         "route": "/stream/csv-report",
@@ -49,6 +57,10 @@
     "id": "binary_log_download",
     "description": "Streams binary log segments with control bytes",
     "category": "streaming",
+    "docs": {
+      "topic": "streaming",
+      "stem": "binary_log_download"
+    },
     "http": {
       "handler": {
         "route": "/stream/logfile",

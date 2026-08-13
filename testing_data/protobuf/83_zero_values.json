@@ -94,9 +94,5 @@
       "fields_received": 5
     }
   },
-  "tags": [
-    "edge_cases",
-    "default_values",
-    "proto3"
-  ]
+  "tags": ["edge_cases", "default_values", "proto3"]
 }

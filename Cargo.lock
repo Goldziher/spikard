@@ -39,8 +39,7 @@ dependencies = [
 
 [[package]]
 name = "alef"
-version = "0.59.0"
-source = "git+https://github.com/xberg-io/alef?tag=v0.59.0#42ab17d147f2588656f91ba13ebd559e8c76956a"
+version = "0.60.2"
 dependencies = [
  "ahash",
  "anyhow",
@@ -4136,6 +4135,7 @@ dependencies = [
  "heck",
  "minijinja",
  "serde",
+ "serde_json",
  "toml 1.1.4+spec-1.1.0",
  "tracing",
 ]
@@ -4319,7 +4319,7 @@ name = "spikard-jni"
 version = "0.17.0-rc.11"
 dependencies = [
  "async-trait",
- "base64 0.22.1",
+ "base64 0.23.1",
  "futures-util",
  "jni",
  "serde_json",

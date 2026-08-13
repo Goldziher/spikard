@@ -92,10 +92,5 @@
     },
     "message": "Stream completed with metadata and trailers"
   },
-  "tags": [
-    "server_streaming",
-    "metadata",
-    "trailers",
-    "headers"
-  ]
+  "tags": ["server_streaming", "metadata", "trailers", "headers"]
 }

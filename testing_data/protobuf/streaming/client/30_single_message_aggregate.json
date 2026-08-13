@@ -98,9 +98,5 @@
       "status": "AGGREGATED"
     }
   },
-  "tags": [
-    "client_streaming",
-    "single_message",
-    "aggregation"
-  ]
+  "tags": ["client_streaming", "single_message", "aggregation"]
 }

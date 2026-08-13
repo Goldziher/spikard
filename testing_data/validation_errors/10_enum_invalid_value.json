@@ -13,11 +13,7 @@
       "path": {
         "model_name": {
           "type": "string",
-          "enum": [
-            "alexnet",
-            "resnet",
-            "lenet"
-          ]
+          "enum": ["alexnet", "resnet", "lenet"]
         }
       }
     }
@@ -36,10 +32,7 @@
       "errors": [
         {
           "type": "enum",
-          "loc": [
-            "path",
-            "model_name"
-          ],
+          "loc": ["path", "model_name"],
           "msg": "Input should be 'alexnet', 'resnet' or 'lenet'",
           "input": "invalid_model",
           "ctx": {

@@ -22,12 +22,7 @@
       "priority": {
         "default": "normal",
         "description": "Notification priority",
-        "enum": [
-          "low",
-          "normal",
-          "high",
-          "urgent"
-        ],
+        "enum": ["low", "normal", "high", "urgent"],
         "type": "string"
       },
       "timestamp": {
@@ -53,13 +48,7 @@
         "type": "string"
       }
     },
-    "required": [
-      "type",
-      "userId",
-      "title",
-      "body",
-      "timestamp"
-    ],
+    "required": ["type", "userId", "title", "body", "timestamp"],
     "type": "object"
   }
 }

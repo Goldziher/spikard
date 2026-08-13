@@ -13,9 +13,7 @@
     "content_type": "application/x-www-form-urlencoded",
     "body_schema": {
       "type": "object",
-      "required": [
-        "tags"
-      ],
+      "required": ["tags"],
       "properties": {
         "tags": {
           "type": "array",
@@ -45,14 +43,9 @@
       "errors": [
         {
           "type": "too_short",
-          "loc": [
-            "body",
-            "tags"
-          ],
+          "loc": ["body", "tags"],
           "msg": "List should have at least 2 item after validation",
-          "input": [
-            "single"
-          ],
+          "input": ["single"],
           "ctx": {
             "min_length": 2
           }
@@ -60,11 +53,5 @@
       ]
     }
   },
-  "tags": [
-    "url_encoded",
-    "arrays",
-    "minItems",
-    "validation",
-    "error"
-  ]
+  "tags": ["url_encoded", "arrays", "minItems", "validation", "error"]
 }

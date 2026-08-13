@@ -99,10 +99,5 @@
     ],
     "message": "Unicode stream completed successfully"
   },
-  "tags": [
-    "server_streaming",
-    "unicode",
-    "internationalization",
-    "special_characters"
-  ]
+  "tags": ["server_streaming", "unicode", "internationalization", "special_characters"]
 }

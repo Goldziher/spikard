@@ -83,10 +83,5 @@
       "improvement_percent": 33
     }
   },
-  "tags": [
-    "dataloader",
-    "caching",
-    "cache-hits",
-    "performance"
-  ]
+  "tags": ["dataloader", "caching", "cache-hits", "performance"]
 }

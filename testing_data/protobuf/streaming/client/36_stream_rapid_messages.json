@@ -115,10 +115,5 @@
       "status": "PROCESSED"
     }
   },
-  "tags": [
-    "client_streaming",
-    "high_frequency",
-    "performance",
-    "metrics"
-  ]
+  "tags": ["client_streaming", "high_frequency", "performance", "metrics"]
 }

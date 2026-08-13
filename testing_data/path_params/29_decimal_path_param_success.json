@@ -29,12 +29,5 @@
       "amount": "19.99"
     }
   },
-  "tags": [
-    "path_params",
-    "decimal",
-    "format",
-    "money",
-    "validation",
-    "success"
-  ]
+  "tags": ["path_params", "decimal", "format", "money", "validation", "success"]
 }

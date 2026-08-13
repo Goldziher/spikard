@@ -47,10 +47,5 @@
       "detail": "Content-Length header does not match actual body size"
     }
   },
-  "tags": [
-    "content_types",
-    "content_length",
-    "validation",
-    "error"
-  ]
+  "tags": ["content_types", "content_length", "validation", "error"]
 }

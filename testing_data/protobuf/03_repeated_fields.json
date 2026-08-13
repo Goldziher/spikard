@@ -106,11 +106,7 @@
     "message": {
       "title": "Getting Started with gRPC",
       "content": "This is a comprehensive guide to gRPC...",
-      "tag_ids": [
-        1,
-        2,
-        3
-      ]
+      "tag_ids": [1, 2, 3]
     }
   },
   "expected_response": {
@@ -133,11 +129,7 @@
           "name": "RPC"
         }
       ],
-      "categories": [
-        "tutorial",
-        "programming",
-        "networking"
-      ]
+      "categories": ["tutorial", "programming", "networking"]
     }
   }
 }

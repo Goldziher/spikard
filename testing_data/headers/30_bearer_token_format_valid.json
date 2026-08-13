@@ -30,12 +30,5 @@
   "expected_response": {
     "status_code": 200
   },
-  "tags": [
-    "headers",
-    "authorization",
-    "bearer_token",
-    "security",
-    "validation",
-    "success"
-  ]
+  "tags": ["headers", "authorization", "bearer_token", "security", "validation", "success"]
 }

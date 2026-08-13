@@ -40,9 +40,5 @@
       "return_value": "modern value"
     }
   },
-  "tags": [
-    "directives",
-    "deprecation",
-    "metadata"
-  ]
+  "tags": ["directives", "deprecation", "metadata"]
 }

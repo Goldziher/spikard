@@ -100,9 +100,5 @@
     ],
     "message": "3 large messages streamed successfully"
   },
-  "tags": [
-    "server_streaming",
-    "large_payloads",
-    "performance"
-  ]
+  "tags": ["server_streaming", "large_payloads", "performance"]
 }

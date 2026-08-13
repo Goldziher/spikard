@@ -56,8 +56,5 @@
   "expected_response": {
     "status_code": "UNKNOWN"
   },
-  "tags": [
-    "grpc_status",
-    "error"
-  ]
+  "tags": ["grpc_status", "error"]
 }

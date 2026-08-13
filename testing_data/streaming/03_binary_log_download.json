@@ -41,9 +41,5 @@
       }
     ]
   },
-  "tags": [
-    "streaming",
-    "binary",
-    "chunked"
-  ]
+  "tags": ["streaming", "binary", "chunked"]
 }

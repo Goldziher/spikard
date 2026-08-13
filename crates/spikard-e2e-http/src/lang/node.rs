@@ -329,7 +329,7 @@ pub fn render_http_test_case(out: &mut String, fixture: &Fixture) {
     // fixture's own Content-Type header verbatim instead of synthesizing a
     // boundary. A synthesized `multipart/form-data; boundary=...` header on a
     // body that isn't real multipart-encoded bytes makes the server's
-    // multipart parser reject the request with 400 before the handler runs.
+    // multipart parser reject the request with 400 before the handler runs. ~keep
     let body_is_string = effective_body
         .as_ref()
         .is_some_and(|b| matches!(b, serde_json::Value::String(_)));

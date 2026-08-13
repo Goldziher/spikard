@@ -61,9 +61,5 @@
       }
     ]
   },
-  "tags": [
-    "bidirectional_streaming",
-    "empty",
-    "request_stream"
-  ]
+  "tags": ["bidirectional_streaming", "empty", "request_stream"]
 }

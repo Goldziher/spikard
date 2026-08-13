@@ -67,9 +67,5 @@
       "token_info": "oauth2_token"
     }
   },
-  "tags": [
-    "auth",
-    "oauth2",
-    "security"
-  ]
+  "tags": ["auth", "oauth2", "security"]
 }

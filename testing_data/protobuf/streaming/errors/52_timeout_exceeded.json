@@ -64,11 +64,5 @@
     },
     "stream": []
   },
-  "tags": [
-    "grpc_status",
-    "deadline_exceeded",
-    "streaming",
-    "error_handling",
-    "timeout"
-  ]
+  "tags": ["grpc_status", "deadline_exceeded", "streaming", "error_handling", "timeout"]
 }

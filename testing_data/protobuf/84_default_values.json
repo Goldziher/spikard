@@ -92,9 +92,5 @@
       "has_id": true
     }
   },
-  "tags": [
-    "edge_cases",
-    "default_values",
-    "proto3"
-  ]
+  "tags": ["edge_cases", "default_values", "proto3"]
 }

@@ -18,9 +18,7 @@
         }
       },
       "additionalProperties": false,
-      "required": [
-        "test"
-      ]
+      "required": ["test"]
     }
   },
   "request": {

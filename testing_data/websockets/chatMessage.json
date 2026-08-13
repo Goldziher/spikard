@@ -24,9 +24,7 @@
     {
       "action": "receive",
       "name": "publishChat",
-      "replies": [
-        "chatAck"
-      ]
+      "replies": ["chatAck"]
     }
   ],
   "protocol": "websocket",
@@ -55,12 +53,7 @@
         "type": "string"
       }
     },
-    "required": [
-      "type",
-      "user",
-      "text",
-      "timestamp"
-    ],
+    "required": ["type", "user", "text", "timestamp"],
     "type": "object"
   }
 }

@@ -11,9 +11,7 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": [
-        "username"
-      ],
+      "required": ["username"],
       "properties": {
         "username": {
           "type": "string",
@@ -42,10 +40,7 @@
       "errors": [
         {
           "type": "string_pattern_mismatch",
-          "loc": [
-            "body",
-            "username"
-          ],
+          "loc": ["body", "username"],
           "msg": "String should match pattern '^[a-z0-9_]+$'",
           "input": "john doe",
           "ctx": {

@@ -105,10 +105,5 @@
       "error_detail": "Message payload size 10240 exceeds maximum allowed size 4096"
     }
   },
-  "tags": [
-    "client_streaming",
-    "size_limit",
-    "resource_exhausted",
-    "error_handling"
-  ]
+  "tags": ["client_streaming", "size_limit", "resource_exhausted", "error_handling"]
 }

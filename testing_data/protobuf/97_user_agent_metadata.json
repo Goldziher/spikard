@@ -67,9 +67,5 @@
       "client_version": "1.2.3"
     }
   },
-  "tags": [
-    "metadata",
-    "client_info",
-    "observability"
-  ]
+  "tags": ["metadata", "client_info", "observability"]
 }

@@ -21,15 +21,7 @@
       "default": "./service.cjs"
     }
   },
-  "files": [
-    "app.cjs",
-    "app.d.ts",
-    "index.js",
-    "index-wrapper.cjs",
-    "index.d.ts",
-    "service.cjs",
-    "*.node"
-  ],
+  "files": ["app.cjs", "app.d.ts", "index.js", "index-wrapper.cjs", "index.d.ts", "service.cjs", "*.node"],
   "dependencies": {
     "zod": "^3.25.0 || ^4.0.0"
   },
@@ -60,13 +52,7 @@
     "artifacts": "npx --yes -p @napi-rs/cli@^3.7.3 napi artifacts",
     "prepublishOnly": "npx --yes -p @napi-rs/cli@^3.7.3 napi prepublish -t npm --skip-optional-publish"
   },
-  "engines": {
-    "node": ">= 22"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "devDependencies": {
-    "@napi-rs/cli": "^3.7.3"
-  }
+  "engines": { "node": ">= 22" },
+  "publishConfig": { "access": "public" },
+  "devDependencies": { "@napi-rs/cli": "^3.7.3" }
 }

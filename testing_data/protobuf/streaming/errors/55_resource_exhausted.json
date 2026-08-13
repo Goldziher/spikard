@@ -69,11 +69,5 @@
     },
     "note": "Client exceeded the configured rate limit of 100 messages per second by attempting to send 100 messages in rapid succession during bidirectional streaming"
   },
-  "tags": [
-    "grpc_status",
-    "bidirectional_streaming",
-    "rate_limiting",
-    "error",
-    "resource_exhausted"
-  ]
+  "tags": ["grpc_status", "bidirectional_streaming", "rate_limiting", "error", "resource_exhausted"]
 }

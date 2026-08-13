@@ -31,9 +31,7 @@
         "scope": "route"
       }
     },
-    "handler_dependencies": [
-      "api_key_validator"
-    ]
+    "handler_dependencies": ["api_key_validator"]
   },
   "request": {
     "method": "GET",
@@ -47,10 +45,5 @@
     }
   },
   "notes": "App-level dependency has mode='production', but route-level override sets mode='test'. Handler should receive the route-level override.",
-  "tags": [
-    "dependency_injection",
-    "override",
-    "testing",
-    "advanced"
-  ]
+  "tags": ["dependency_injection", "override", "testing", "advanced"]
 }

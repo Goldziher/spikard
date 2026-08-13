@@ -163,9 +163,5 @@
       }
     }
   },
-  "tags": [
-    "large_payloads",
-    "nested_messages",
-    "complex_structures"
-  ]
+  "tags": ["large_payloads", "nested_messages", "complex_structures"]
 }

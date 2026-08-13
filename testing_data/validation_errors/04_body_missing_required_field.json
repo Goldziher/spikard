@@ -20,10 +20,7 @@
         }
       },
       "additionalProperties": false,
-      "required": [
-        "name",
-        "price"
-      ]
+      "required": ["name", "price"]
     }
   },
   "request": {
@@ -46,10 +43,7 @@
       "errors": [
         {
           "type": "missing",
-          "loc": [
-            "body",
-            "price"
-          ],
+          "loc": ["body", "price"],
           "msg": "Field required",
           "input": {
             "name": "Item"

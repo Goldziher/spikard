@@ -14,9 +14,7 @@
       "files": {
         "image": {
           "required": true,
-          "content_type": [
-            "image/jpeg"
-          ],
+          "content_type": ["image/jpeg"],
           "validate_magic_numbers": true
         }
       }
@@ -44,10 +42,7 @@
       "errors": [
         {
           "type": "validation_error",
-          "loc": [
-            "files",
-            "image"
-          ],
+          "loc": ["files", "image"],
           "msg": "File type mismatch: MIME type is image/jpeg but magic numbers indicate image/png",
           "ctx": {
             "declared_mime": "image/jpeg",
@@ -58,13 +53,5 @@
       ]
     }
   },
-  "tags": [
-    "multipart",
-    "file",
-    "magic_number",
-    "spoofing",
-    "security",
-    "validation",
-    "error"
-  ]
+  "tags": ["multipart", "file", "magic_number", "spoofing", "security", "validation", "error"]
 }

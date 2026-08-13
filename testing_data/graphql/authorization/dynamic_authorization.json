@@ -35,11 +35,5 @@
       "error_message": "Only post author or admin can approve posts"
     }
   },
-  "tags": [
-    "authorization",
-    "dynamic",
-    "resource-state",
-    "mutation",
-    "error"
-  ]
+  "tags": ["authorization", "dynamic", "resource-state", "mutation", "error"]
 }

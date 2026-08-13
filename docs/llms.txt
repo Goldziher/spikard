@@ -53,11 +53,11 @@
 - **PHP**: `composer require goldziher/spikard` (PHP ≥ 8.2)
 - **Elixir**: `{:spikard, "~> 0.17"}` in mix.exs (Elixir ≥ 1.14)
 - **Go**: `go get github.com/Goldziher/spikard`
-- **Java**: Maven artifact `dev.spikard:spikard:0.17.0` (Java ≥ 25)
+- **Java**: Maven artifact `dev.spikard:spikard:0.17.0-rc.11` (Java ≥ 25)
 - **C#**: `dotnet add package Spikard` (.NET 10)
-- **Kotlin**: `implementation("dev.spikard:spikard-kt:0.17.0")` (Kotlin ≥ 1.8)
+- **Kotlin**: `implementation("dev.spikard:spikard:0.17.0-rc.11")` (Kotlin ≥ 1.8)
 - **Dart**: `dart pub add spikard` (Dart ≥ 3.0)
-- **Swift**: `.package(url: "...", from: "0.17.0")` in Package.swift (Swift ≥ 5.9)
+- **Swift**: `.package(url: "...", from: "0.17.0-rc.11")` in Package.swift (Swift ≥ 5.9)
 - **Zig**: Add to build.zig.zon
 - **C**: spikard-ffi header + shared library from releases
 - **WASM**: `npm install @spikard/node-wasm`

@@ -23,10 +23,7 @@
       "errors": [
         {
           "type": "missing",
-          "loc": [
-            "query",
-            "q"
-          ],
+          "loc": ["query", "q"],
           "msg": "Field required",
           "input": null
         }

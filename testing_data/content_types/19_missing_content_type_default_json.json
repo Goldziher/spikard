@@ -12,9 +12,7 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": [
-        "name"
-      ],
+      "required": ["name"],
       "properties": {
         "name": {
           "type": "string"
@@ -35,9 +33,5 @@
       "name": "test"
     }
   },
-  "tags": [
-    "content_types",
-    "default",
-    "success"
-  ]
+  "tags": ["content_types", "default", "success"]
 }

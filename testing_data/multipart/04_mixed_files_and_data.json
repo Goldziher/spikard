@@ -27,9 +27,7 @@
         }
       },
       "additionalProperties": false,
-      "required": [
-        "file"
-      ]
+      "required": ["file"]
     }
   },
   "request": {

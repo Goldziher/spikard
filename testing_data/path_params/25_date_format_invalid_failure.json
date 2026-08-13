@@ -34,10 +34,7 @@
       "errors": [
         {
           "type": "validation_error",
-          "loc": [
-            "path",
-            "date"
-          ],
+          "loc": ["path", "date"],
           "msg": "Invalid date format",
           "ctx": {
             "format": "date",
@@ -47,11 +44,5 @@
       ]
     }
   },
-  "tags": [
-    "path_params",
-    "date",
-    "format",
-    "validation",
-    "error"
-  ]
+  "tags": ["path_params", "date", "format", "validation", "error"]
 }

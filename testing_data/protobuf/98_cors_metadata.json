@@ -67,9 +67,5 @@
       }
     }
   },
-  "tags": [
-    "cors",
-    "security",
-    "metadata"
-  ]
+  "tags": ["cors", "security", "metadata"]
 }

@@ -31,11 +31,5 @@
       "term": "hi there"
     }
   },
-  "tags": [
-    "edge_cases",
-    "percent_encoding",
-    "query_params",
-    "decoding",
-    "success"
-  ]
+  "tags": ["edge_cases", "percent_encoding", "query_params", "decoding", "success"]
 }

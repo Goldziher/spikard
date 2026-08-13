@@ -62,9 +62,5 @@
       "message": "Resource not found: nonexistent-123"
     }
   },
-  "tags": [
-    "grpc_status",
-    "error_handling",
-    "not_found"
-  ]
+  "tags": ["grpc_status", "error_handling", "not_found"]
 }

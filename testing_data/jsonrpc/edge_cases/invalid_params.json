@@ -202,10 +202,5 @@
       }
     }
   ],
-  "tags": [
-    "invalid-params",
-    "validation",
-    "edge-cases",
-    "error-handling"
-  ]
+  "tags": ["invalid-params", "validation", "edge-cases", "error-handling"]
 }

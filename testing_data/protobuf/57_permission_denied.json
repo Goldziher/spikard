@@ -56,9 +56,5 @@
   "expected_response": {
     "status_code": "PERMISSION_DENIED"
   },
-  "tags": [
-    "grpc_status",
-    "auth",
-    "error"
-  ]
+  "tags": ["grpc_status", "auth", "error"]
 }

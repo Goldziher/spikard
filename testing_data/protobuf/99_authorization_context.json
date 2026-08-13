@@ -100,10 +100,5 @@
       "message": "Access granted with admin privileges"
     }
   },
-  "tags": [
-    "auth",
-    "authorization",
-    "rbac",
-    "security"
-  ]
+  "tags": ["auth", "authorization", "rbac", "security"]
 }

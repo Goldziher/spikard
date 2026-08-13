@@ -3,6 +3,10 @@
     "id": "openapi_basic_spec_generation",
     "description": "Tests OpenAPI specification is generated from route definitions",
     "category": "openapi",
+    "docs": {
+      "topic": "openapi",
+      "stem": "openapi_basic_spec_generation"
+    },
     "http": {
       "handler": {
         "route": "/openapi.json",
@@ -31,6 +35,10 @@
     "id": "openapi_swagger_ui_path",
     "description": "Tests Swagger UI is served at configured path",
     "category": "openapi",
+    "docs": {
+      "topic": "openapi",
+      "stem": "openapi_swagger_ui_path"
+    },
     "http": {
       "handler": {
         "route": "/docs",
@@ -53,6 +61,10 @@
     "id": "openapi_redoc_path",
     "description": "Tests ReDoc UI is served at configured path",
     "category": "openapi",
+    "docs": {
+      "topic": "openapi",
+      "stem": "openapi_redoc_path"
+    },
     "http": {
       "handler": {
         "route": "/redoc",
@@ -75,6 +87,10 @@
     "id": "openapi_json_endpoint_path",
     "description": "Tests OpenAPI JSON is served at configured endpoint",
     "category": "openapi",
+    "docs": {
+      "topic": "openapi",
+      "stem": "openapi_json_endpoint_path"
+    },
     "http": {
       "handler": {
         "route": "/api/openapi.json",
@@ -100,6 +116,10 @@
     "id": "openapi_contact_information",
     "description": "Tests OpenAPI spec includes contact information",
     "category": "openapi",
+    "docs": {
+      "topic": "openapi",
+      "stem": "openapi_contact_information"
+    },
     "http": {
       "handler": {
         "route": "/openapi.json",
@@ -127,6 +147,10 @@
     "id": "openapi_license_information",
     "description": "Tests OpenAPI spec includes license information",
     "category": "openapi",
+    "docs": {
+      "topic": "openapi",
+      "stem": "openapi_license_information"
+    },
     "http": {
       "handler": {
         "route": "/openapi.json",
@@ -153,6 +177,10 @@
     "id": "openapi_servers_configuration",
     "description": "Tests OpenAPI spec includes configured servers",
     "category": "openapi",
+    "docs": {
+      "topic": "openapi",
+      "stem": "openapi_servers_configuration"
+    },
     "http": {
       "handler": {
         "route": "/openapi.json",
@@ -182,6 +210,10 @@
     "id": "openapi_security_schemes_definition",
     "description": "Tests OpenAPI spec includes security schemes",
     "category": "openapi",
+    "docs": {
+      "topic": "openapi",
+      "stem": "openapi_security_schemes_definition"
+    },
     "http": {
       "handler": {
         "route": "/openapi.json",
@@ -211,6 +243,10 @@
     "id": "openapi_enabled_flag_true",
     "description": "Tests OpenAPI can be explicitly enabled",
     "category": "openapi",
+    "docs": {
+      "topic": "openapi",
+      "stem": "openapi_enabled_flag_true"
+    },
     "http": {
       "handler": {
         "route": "/openapi.json",
@@ -233,6 +269,10 @@
     "id": "openapi_disabled_returns_404",
     "description": "Tests OpenAPI returns 404 when explicitly disabled",
     "category": "openapi",
+    "docs": {
+      "topic": "openapi",
+      "stem": "openapi_disabled_returns_404"
+    },
     "http": {
       "handler": {
         "route": "/openapi.json",

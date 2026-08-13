@@ -60,10 +60,5 @@
       }
     }
   },
-  "tags": [
-    "mutations",
-    "file-upload",
-    "validation",
-    "size-limit"
-  ]
+  "tags": ["mutations", "file-upload", "validation", "size-limit"]
 }

@@ -78,9 +78,5 @@
     ],
     "message": "Stream completed with one message"
   },
-  "tags": [
-    "server_streaming",
-    "single_message",
-    "edge_cases"
-  ]
+  "tags": ["server_streaming", "single_message", "edge_cases"]
 }

@@ -97,9 +97,5 @@
       "success": true
     }
   },
-  "tags": [
-    "edge_cases",
-    "well_known_types",
-    "any_type"
-  ]
+  "tags": ["edge_cases", "well_known_types", "any_type"]
 }

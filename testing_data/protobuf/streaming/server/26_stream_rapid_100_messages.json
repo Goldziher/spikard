@@ -104,10 +104,5 @@
     ],
     "message": "100 messages streamed successfully in sequence"
   },
-  "tags": [
-    "server_streaming",
-    "high_volume",
-    "performance",
-    "backpressure"
-  ]
+  "tags": ["server_streaming", "high_volume", "performance", "backpressure"]
 }

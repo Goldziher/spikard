@@ -3,6 +3,10 @@
     "id": "simple_file_upload",
     "description": "Single file upload with text/plain content type",
     "category": "multipart",
+    "docs": {
+      "topic": "multipart",
+      "stem": "simple_file_upload"
+    },
     "http": {
       "handler": {
         "route": "/",
@@ -41,6 +45,10 @@
     "id": "form_data_without_files",
     "description": "Multipart form with only text fields, no file uploads",
     "category": "multipart",
+    "docs": {
+      "topic": "multipart",
+      "stem": "form_data_without_files"
+    },
     "http": {
       "handler": {
         "route": "/",
@@ -72,6 +80,10 @@
     "id": "multiple_file_uploads",
     "description": "Upload multiple files in a single multipart request",
     "category": "multipart",
+    "docs": {
+      "topic": "multipart",
+      "stem": "multiple_file_uploads"
+    },
     "http": {
       "handler": {
         "route": "/",
@@ -120,6 +132,10 @@
     "id": "mixed_files_and_form_data",
     "description": "Multipart request with both file uploads and regular form fields",
     "category": "multipart",
+    "docs": {
+      "topic": "multipart",
+      "stem": "mixed_files_and_form_data"
+    },
     "http": {
       "handler": {
         "route": "/",
@@ -170,6 +186,10 @@
     "id": "file_upload_with_custom_headers",
     "description": "File upload with additional custom headers in the multipart section",
     "category": "multipart",
+    "docs": {
+      "topic": "multipart",
+      "stem": "file_upload_with_custom_headers"
+    },
     "http": {
       "handler": {
         "route": "/",
@@ -213,6 +233,10 @@
     "id": "file_upload_without_filename",
     "description": "Upload file content without providing a filename",
     "category": "multipart",
+    "docs": {
+      "topic": "multipart",
+      "stem": "file_upload_without_filename"
+    },
     "http": {
       "handler": {
         "route": "/",
@@ -246,6 +270,10 @@
     "id": "multiple_values_for_same_field_name",
     "description": "Multiple files uploaded with the same field name (array-like behavior)",
     "category": "multipart",
+    "docs": {
+      "topic": "multipart",
+      "stem": "multiple_values_for_same_field_name"
+    },
     "http": {
       "handler": {
         "route": "/",
@@ -303,6 +331,10 @@
     "id": "optional_file_upload_missing",
     "description": "Tests optional file parameter when no file is provided",
     "category": "multipart",
+    "docs": {
+      "topic": "multipart",
+      "stem": "optional_file_upload_missing"
+    },
     "http": {
       "handler": {
         "route": "/files/optional",
@@ -331,6 +363,10 @@
     "id": "optional_file_upload_provided",
     "description": "Tests optional file parameter when file is provided",
     "category": "multipart",
+    "docs": {
+      "topic": "multipart",
+      "stem": "optional_file_upload_provided"
+    },
     "http": {
       "handler": {
         "route": "/files/optional",
@@ -367,6 +403,10 @@
     "id": "file_list_upload_array_of_files",
     "description": "Tests uploading multiple files as a list parameter",
     "category": "multipart",
+    "docs": {
+      "topic": "multipart",
+      "stem": "file_list_upload_array_of_files"
+    },
     "http": {
       "handler": {
         "route": "/files/list",
@@ -405,6 +445,10 @@
     "id": "empty_file_upload",
     "description": "Tests uploading a file with zero bytes",
     "category": "multipart",
+    "docs": {
+      "topic": "multipart",
+      "stem": "empty_file_upload"
+    },
     "http": {
       "handler": {
         "route": "/files/upload",
@@ -440,6 +484,10 @@
     "id": "image_file_upload",
     "description": "Tests uploading an image file (JPEG)",
     "category": "multipart",
+    "docs": {
+      "topic": "multipart",
+      "stem": "image_file_upload"
+    },
     "http": {
       "handler": {
         "route": "/files/image",
@@ -476,6 +524,10 @@
     "id": "pdf_file_upload",
     "description": "Tests uploading a PDF document",
     "category": "multipart",
+    "docs": {
+      "topic": "multipart",
+      "stem": "pdf_file_upload"
+    },
     "http": {
       "handler": {
         "route": "/files/document",
@@ -512,6 +564,10 @@
     "id": "file_size_validation_too_large",
     "description": "Tests file upload exceeding max size limit",
     "category": "multipart",
+    "docs": {
+      "topic": "multipart",
+      "stem": "file_size_validation_too_large"
+    },
     "http": {
       "handler": {
         "route": "/files/validated",
@@ -545,6 +601,10 @@
     "id": "content_type_validation_invalid_type",
     "description": "Tests file upload with disallowed content type",
     "category": "multipart",
+    "docs": {
+      "topic": "multipart",
+      "stem": "content_type_validation_invalid_type"
+    },
     "http": {
       "handler": {
         "route": "/files/images-only",
@@ -603,6 +663,10 @@
     "id": "required_file_upload_missing",
     "description": "Tests required file parameter when no file is provided",
     "category": "multipart",
+    "docs": {
+      "topic": "multipart",
+      "stem": "required_file_upload_missing"
+    },
     "http": {
       "handler": {
         "route": "/files/required",
@@ -648,6 +712,10 @@
     "id": "17_file_magic_number_png_success",
     "description": "File with correct PNG magic number and matching MIME type should be accepted",
     "category": "multipart",
+    "docs": {
+      "topic": "multipart",
+      "stem": "17_file_magic_number_png_success"
+    },
     "http": {
       "handler": {
         "route": "/upload",
@@ -676,6 +744,10 @@
     "id": "18_file_magic_number_jpeg_success",
     "description": "File with correct JPEG magic number and matching MIME type should be accepted",
     "category": "multipart",
+    "docs": {
+      "topic": "multipart",
+      "stem": "18_file_magic_number_jpeg_success"
+    },
     "http": {
       "handler": {
         "route": "/upload",
@@ -704,6 +776,10 @@
     "id": "19_file_mime_spoofing_png_as_jpeg",
     "description": "File with PNG magic number but JPEG MIME type should be rejected (spoofing detection)",
     "category": "multipart",
+    "docs": {
+      "topic": "multipart",
+      "stem": "19_file_mime_spoofing_png_as_jpeg"
+    },
     "http": {
       "handler": {
         "route": "/upload",
@@ -750,6 +826,10 @@
     "id": "20_file_mime_spoofing_jpeg_as_png",
     "description": "File with JPEG magic number but PNG MIME type should be rejected (spoofing detection)",
     "category": "multipart",
+    "docs": {
+      "topic": "multipart",
+      "stem": "20_file_mime_spoofing_jpeg_as_png"
+    },
     "http": {
       "handler": {
         "route": "/upload",
@@ -796,6 +876,10 @@
     "id": "21_file_pdf_magic_number_success",
     "description": "File with correct PDF magic number should be accepted",
     "category": "multipart",
+    "docs": {
+      "topic": "multipart",
+      "stem": "21_file_pdf_magic_number_success"
+    },
     "http": {
       "handler": {
         "route": "/upload",
@@ -824,6 +908,10 @@
     "id": "22_file_empty_buffer",
     "description": "File with empty buffer should fail validation",
     "category": "multipart",
+    "docs": {
+      "topic": "multipart",
+      "stem": "22_file_empty_buffer"
+    },
     "http": {
       "handler": {
         "route": "/upload",

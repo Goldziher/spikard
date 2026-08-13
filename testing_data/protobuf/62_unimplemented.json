@@ -56,9 +56,5 @@
   "expected_response": {
     "status_code": "UNIMPLEMENTED"
   },
-  "tags": [
-    "grpc_status",
-    "unimplemented",
-    "error"
-  ]
+  "tags": ["grpc_status", "unimplemented", "error"]
 }

@@ -82,10 +82,5 @@
       "message": "Stream processing error at index 3"
     }
   },
-  "tags": [
-    "server_streaming",
-    "error_handling",
-    "partial_stream",
-    "mid_transmission"
-  ]
+  "tags": ["server_streaming", "error_handling", "partial_stream", "mid_transmission"]
 }

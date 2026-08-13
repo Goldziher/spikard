@@ -78,10 +78,5 @@
     }
   },
   "complexity_limit": 10,
-  "tags": [
-    "performance",
-    "batching",
-    "optimization",
-    "parallel-execution"
-  ]
+  "tags": ["performance", "batching", "optimization", "parallel-execution"]
 }

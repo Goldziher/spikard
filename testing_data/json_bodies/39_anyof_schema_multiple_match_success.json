@@ -12,9 +12,7 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": [
-        "name"
-      ],
+      "required": ["name"],
       "properties": {
         "name": {
           "type": "string"
@@ -29,14 +27,10 @@
       },
       "anyOf": [
         {
-          "required": [
-            "email"
-          ]
+          "required": ["email"]
         },
         {
-          "required": [
-            "phone"
-          ]
+          "required": ["phone"]
         }
       ]
     }
@@ -53,11 +47,5 @@
   "expected_response": {
     "status_code": 201
   },
-  "tags": [
-    "json_bodies",
-    "anyOf",
-    "composition",
-    "validation",
-    "success"
-  ]
+  "tags": ["json_bodies", "anyOf", "composition", "validation", "success"]
 }

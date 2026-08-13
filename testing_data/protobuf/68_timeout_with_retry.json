@@ -62,9 +62,5 @@
       }
     }
   },
-  "tags": [
-    "grpc_status",
-    "timeout",
-    "retry"
-  ]
+  "tags": ["grpc_status", "timeout", "retry"]
 }

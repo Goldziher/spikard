@@ -101,10 +101,5 @@
       "status": "PROCESSED"
     }
   },
-  "tags": [
-    "client_streaming",
-    "large_batch",
-    "performance",
-    "aggregation"
-  ]
+  "tags": ["client_streaming", "large_batch", "performance", "aggregation"]
 }

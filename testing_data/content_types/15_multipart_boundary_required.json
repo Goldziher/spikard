@@ -32,11 +32,5 @@
       "error": "multipart/form-data requires 'boundary' parameter"
     }
   },
-  "tags": [
-    "content_types",
-    "multipart",
-    "boundary",
-    "validation",
-    "error"
-  ]
+  "tags": ["content_types", "multipart", "boundary", "validation", "error"]
 }

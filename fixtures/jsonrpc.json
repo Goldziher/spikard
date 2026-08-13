@@ -3,6 +3,10 @@
     "id": "jsonrpc_single_call_success",
     "description": "Tests single JSON-RPC 2.0 call with successful response",
     "category": "jsonrpc",
+    "docs": {
+      "topic": "jsonrpc",
+      "stem": "jsonrpc_single_call_success"
+    },
     "http": {
       "handler": {
         "route": "/rpc",
@@ -57,6 +61,10 @@
     "id": "jsonrpc_call_with_positional_params",
     "description": "Tests JSON-RPC call with positional array parameters",
     "category": "jsonrpc",
+    "docs": {
+      "topic": "jsonrpc",
+      "stem": "jsonrpc_call_with_positional_params"
+    },
     "http": {
       "handler": {
         "route": "/rpc",
@@ -108,6 +116,10 @@
     "id": "jsonrpc_error_response",
     "description": "Tests JSON-RPC error response with error object",
     "category": "jsonrpc",
+    "docs": {
+      "topic": "jsonrpc",
+      "stem": "jsonrpc_error_response"
+    },
     "http": {
       "handler": {
         "route": "/rpc",
@@ -166,6 +178,10 @@
     "id": "jsonrpc_batch_request",
     "description": "Tests JSON-RPC batch request with multiple calls",
     "category": "jsonrpc",
+    "docs": {
+      "topic": "jsonrpc",
+      "stem": "jsonrpc_batch_request"
+    },
     "http": {
       "handler": {
         "route": "/rpc",
@@ -217,6 +233,10 @@
     "id": "jsonrpc_method_not_found",
     "description": "Tests JSON-RPC error when method does not exist",
     "category": "jsonrpc",
+    "docs": {
+      "topic": "jsonrpc",
+      "stem": "jsonrpc_method_not_found"
+    },
     "http": {
       "handler": {
         "route": "/rpc",
@@ -267,6 +287,10 @@
     "id": "jsonrpc_invalid_params",
     "description": "Tests JSON-RPC error for invalid parameters",
     "category": "jsonrpc",
+    "docs": {
+      "topic": "jsonrpc",
+      "stem": "jsonrpc_invalid_params"
+    },
     "http": {
       "handler": {
         "route": "/rpc",
@@ -323,6 +347,10 @@
     "id": "jsonrpc_notification_no_id",
     "description": "Tests JSON-RPC notification (no response expected)",
     "category": "jsonrpc",
+    "docs": {
+      "topic": "jsonrpc",
+      "stem": "jsonrpc_notification_no_id"
+    },
     "http": {
       "handler": {
         "route": "/rpc",
@@ -367,6 +395,10 @@
     "id": "jsonrpc_method_parameter_validation",
     "description": "Tests JSON-RPC validates parameter types and values",
     "category": "jsonrpc",
+    "docs": {
+      "topic": "jsonrpc",
+      "stem": "jsonrpc_method_parameter_validation"
+    },
     "http": {
       "handler": {
         "route": "/rpc",
@@ -428,6 +460,10 @@
     "id": "jsonrpc_config_custom_endpoint_path",
     "description": "Tests JSON-RPC server at custom endpoint path",
     "category": "jsonrpc",
+    "docs": {
+      "topic": "jsonrpc",
+      "stem": "jsonrpc_config_custom_endpoint_path"
+    },
     "http": {
       "handler": {
         "route": "/api/rpc",
@@ -479,6 +515,10 @@
     "id": "jsonrpc_config_batch_disabled",
     "description": "Tests JSON-RPC batch requests disabled returns error",
     "category": "jsonrpc",
+    "docs": {
+      "topic": "jsonrpc",
+      "stem": "jsonrpc_config_batch_disabled"
+    },
     "http": {
       "handler": {
         "route": "/rpc",
@@ -525,6 +565,10 @@
     "id": "jsonrpc_config_max_batch_size",
     "description": "Tests JSON-RPC batch request respects maximum batch size",
     "category": "jsonrpc",
+    "docs": {
+      "topic": "jsonrpc",
+      "stem": "jsonrpc_config_max_batch_size"
+    },
     "http": {
       "handler": {
         "route": "/rpc",
@@ -584,6 +628,10 @@
     "id": "jsonrpc_method_with_params_schema",
     "description": "Tests JSON-RPC method params validated against schema",
     "category": "jsonrpc",
+    "docs": {
+      "topic": "jsonrpc",
+      "stem": "jsonrpc_method_with_params_schema"
+    },
     "http": {
       "handler": {
         "route": "/rpc",
@@ -652,6 +700,10 @@
     "id": "jsonrpc_method_with_result_schema",
     "description": "Tests JSON-RPC method result schema validation",
     "category": "jsonrpc",
+    "docs": {
+      "topic": "jsonrpc",
+      "stem": "jsonrpc_method_with_result_schema"
+    },
     "http": {
       "handler": {
         "route": "/rpc",
@@ -706,6 +758,10 @@
     "id": "jsonrpc_deprecated_method_flag",
     "description": "Tests JSON-RPC method marked as deprecated",
     "category": "jsonrpc",
+    "docs": {
+      "topic": "jsonrpc",
+      "stem": "jsonrpc_deprecated_method_flag"
+    },
     "http": {
       "handler": {
         "route": "/rpc",
@@ -758,6 +814,10 @@
     "id": "jsonrpc_notification_no_response",
     "description": "Tests JSON-RPC notification (no id) doesn't return response",
     "category": "jsonrpc",
+    "docs": {
+      "topic": "jsonrpc",
+      "stem": "jsonrpc_notification_no_response"
+    },
     "http": {
       "handler": {
         "route": "/rpc",

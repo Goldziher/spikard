@@ -3,6 +3,10 @@
     "id": "grpc_unary_call_success",
     "description": "Tests unary gRPC call with successful response",
     "category": "grpc",
+    "docs": {
+      "topic": "grpc",
+      "stem": "grpc_unary_call_success"
+    },
     "http": {
       "handler": {
         "route": "/helloworld.Greeter/SayHello",
@@ -45,6 +49,10 @@
     "id": "grpc_call_with_metadata",
     "description": "Tests gRPC call with request metadata headers",
     "category": "grpc",
+    "docs": {
+      "topic": "grpc",
+      "stem": "grpc_call_with_metadata"
+    },
     "http": {
       "handler": {
         "route": "/api.Service/GetData",
@@ -91,6 +99,10 @@
     "id": "grpc_error_not_found",
     "description": "Tests gRPC NOT_FOUND error status response",
     "category": "grpc",
+    "docs": {
+      "topic": "grpc",
+      "stem": "grpc_error_not_found"
+    },
     "http": {
       "handler": {
         "route": "/api.Service/GetItem",
@@ -134,6 +146,10 @@
     "id": "grpc_error_invalid_argument",
     "description": "Tests gRPC INVALID_ARGUMENT error status response",
     "category": "grpc",
+    "docs": {
+      "topic": "grpc",
+      "stem": "grpc_error_invalid_argument"
+    },
     "http": {
       "handler": {
         "route": "/api.Service/ValidateInput",
@@ -178,6 +194,10 @@
     "id": "grpc_deadline_exceeded",
     "description": "Tests gRPC DEADLINE_EXCEEDED error when timeout occurs",
     "category": "grpc",
+    "docs": {
+      "topic": "grpc",
+      "stem": "grpc_deadline_exceeded"
+    },
     "http": {
       "handler": {
         "route": "/api.Service/SlowOperation",
@@ -222,6 +242,10 @@
     "id": "grpc_request_with_custom_metadata",
     "description": "Tests gRPC request includes custom metadata in trailers",
     "category": "grpc",
+    "docs": {
+      "topic": "grpc",
+      "stem": "grpc_request_with_custom_metadata"
+    },
     "http": {
       "handler": {
         "route": "/api.Service/ProcessWithMetadata",
@@ -275,6 +299,10 @@
     "id": "grpc_config_max_message_size",
     "description": "Tests gRPC server respects maximum message size configuration",
     "category": "grpc",
+    "docs": {
+      "topic": "grpc",
+      "stem": "grpc_config_max_message_size"
+    },
     "http": {
       "handler": {
         "route": "/api.Service/SendLargeMessage",
@@ -317,6 +345,10 @@
     "id": "grpc_config_compression_enabled",
     "description": "Tests gRPC compression is enabled for responses",
     "category": "grpc",
+    "docs": {
+      "topic": "grpc",
+      "stem": "grpc_config_compression_enabled"
+    },
     "http": {
       "handler": {
         "route": "/api.Service/GetCompressedData",
@@ -358,6 +390,10 @@
     "id": "grpc_config_request_timeout",
     "description": "Tests gRPC request timeout configuration",
     "category": "grpc",
+    "docs": {
+      "topic": "grpc",
+      "stem": "grpc_config_request_timeout"
+    },
     "http": {
       "handler": {
         "route": "/api.Service/TimedOperation",
@@ -398,6 +434,10 @@
     "id": "grpc_config_keepalive_settings",
     "description": "Tests gRPC keepalive ping configuration",
     "category": "grpc",
+    "docs": {
+      "topic": "grpc",
+      "stem": "grpc_config_keepalive_settings"
+    },
     "http": {
       "handler": {
         "route": "/api.Service/LongRunning",
@@ -437,6 +477,10 @@
     "id": "grpc_request_service_name_field",
     "description": "Tests gRPC request includes service_name field",
     "category": "grpc",
+    "docs": {
+      "topic": "grpc",
+      "stem": "grpc_request_service_name_field"
+    },
     "http": {
       "handler": {
         "route": "/helloworld.Greeter/SayHello",
@@ -480,6 +524,10 @@
     "id": "grpc_request_method_name_field",
     "description": "Tests gRPC request includes method_name field",
     "category": "grpc",
+    "docs": {
+      "topic": "grpc",
+      "stem": "grpc_request_method_name_field"
+    },
     "http": {
       "handler": {
         "route": "/api.Service/GetData",
@@ -523,6 +571,10 @@
     "id": "grpc_response_with_metadata_trailers",
     "description": "Tests gRPC response includes metadata in trailers",
     "category": "grpc",
+    "docs": {
+      "topic": "grpc",
+      "stem": "grpc_response_with_metadata_trailers"
+    },
     "http": {
       "handler": {
         "route": "/api.Service/MetadataResponse",

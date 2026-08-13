@@ -12,9 +12,7 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": [
-        "value"
-      ],
+      "required": ["value"],
       "properties": {
         "value": {
           "type": "number"
@@ -35,10 +33,5 @@
       "value": 3.141592653589793
     }
   },
-  "tags": [
-    "edge_cases",
-    "float",
-    "precision",
-    "success"
-  ]
+  "tags": ["edge_cases", "float", "precision", "success"]
 }

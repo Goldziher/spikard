@@ -56,9 +56,5 @@
   "expected_response": {
     "status_code": "INTERNAL"
   },
-  "tags": [
-    "grpc_status",
-    "server_error",
-    "error"
-  ]
+  "tags": ["grpc_status", "server_error", "error"]
 }

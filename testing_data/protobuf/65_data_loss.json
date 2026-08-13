@@ -56,9 +56,5 @@
   "expected_response": {
     "status_code": "DATA_LOSS"
   },
-  "tags": [
-    "grpc_status",
-    "data_loss",
-    "error"
-  ]
+  "tags": ["grpc_status", "data_loss", "error"]
 }

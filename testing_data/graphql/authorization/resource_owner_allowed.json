@@ -48,10 +48,5 @@
       }
     }
   },
-  "tags": [
-    "authorization",
-    "resource-ownership",
-    "allowed",
-    "ownership-check"
-  ]
+  "tags": ["authorization", "resource-ownership", "allowed", "ownership-check"]
 }

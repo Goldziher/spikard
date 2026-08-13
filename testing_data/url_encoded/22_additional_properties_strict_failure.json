@@ -13,16 +13,11 @@
     "content_type": "application/x-www-form-urlencoded",
     "body_schema": {
       "type": "object",
-      "required": [
-        "theme"
-      ],
+      "required": ["theme"],
       "properties": {
         "theme": {
           "type": "string",
-          "enum": [
-            "light",
-            "dark"
-          ]
+          "enum": ["light", "dark"]
         }
       },
       "additionalProperties": false
@@ -46,10 +41,7 @@
       "errors": [
         {
           "type": "validation_error",
-          "loc": [
-            "body",
-            "unknown_field"
-          ],
+          "loc": ["body", "unknown_field"],
           "msg": "Additional properties are not allowed",
           "input": {
             "theme": "dark",
@@ -63,10 +55,5 @@
       ]
     }
   },
-  "tags": [
-    "url_encoded",
-    "additionalProperties",
-    "validation",
-    "error"
-  ]
+  "tags": ["url_encoded", "additionalProperties", "validation", "error"]
 }

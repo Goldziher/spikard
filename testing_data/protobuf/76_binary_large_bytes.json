@@ -86,9 +86,5 @@
       "bytes_received": 512000
     }
   },
-  "tags": [
-    "large_payloads",
-    "binary_data",
-    "base64"
-  ]
+  "tags": ["large_payloads", "binary_data", "base64"]
 }

@@ -3,16 +3,7 @@
   "title": "gRPC Streaming Fixture Schema",
   "description": "JSON Schema for gRPC streaming test fixtures",
   "type": "object",
-  "required": [
-    "name",
-    "description",
-    "category",
-    "protobuf",
-    "handler",
-    "request",
-    "expected_response",
-    "tags"
-  ],
+  "required": ["name", "description", "category", "protobuf", "handler", "request", "expected_response", "tags"],
   "properties": {
     "name": {
       "type": "string",
@@ -24,21 +15,12 @@
     },
     "category": {
       "type": "string",
-      "enum": [
-        "server_streaming",
-        "client_streaming",
-        "bidirectional_streaming",
-        "error"
-      ],
+      "enum": ["server_streaming", "client_streaming", "bidirectional_streaming", "error"],
       "description": "Category of streaming test"
     },
     "protobuf": {
       "type": "object",
-      "required": [
-        "package",
-        "messages",
-        "services"
-      ],
+      "required": ["package", "messages", "services"],
       "properties": {
         "package": {
           "type": "string",
@@ -49,10 +31,7 @@
           "description": "Protobuf message definitions",
           "items": {
             "type": "object",
-            "required": [
-              "name",
-              "fields"
-            ],
+            "required": ["name", "fields"],
             "properties": {
               "name": {
                 "type": "string"
@@ -61,12 +40,7 @@
                 "type": "array",
                 "items": {
                   "type": "object",
-                  "required": [
-                    "name",
-                    "type",
-                    "number",
-                    "label"
-                  ],
+                  "required": ["name", "type", "number", "label"],
                   "properties": {
                     "name": {
                       "type": "string"
@@ -79,11 +53,7 @@
                     },
                     "label": {
                       "type": "string",
-                      "enum": [
-                        "required",
-                        "optional",
-                        "repeated"
-                      ]
+                      "enum": ["required", "optional", "repeated"]
                     }
                   }
                 }
@@ -96,10 +66,7 @@
           "description": "Protobuf service definitions",
           "items": {
             "type": "object",
-            "required": [
-              "name",
-              "methods"
-            ],
+            "required": ["name", "methods"],
             "properties": {
               "name": {
                 "type": "string"
@@ -108,13 +75,7 @@
                 "type": "array",
                 "items": {
                   "type": "object",
-                  "required": [
-                    "name",
-                    "input_type",
-                    "output_type",
-                    "client_streaming",
-                    "server_streaming"
-                  ],
+                  "required": ["name", "input_type", "output_type", "client_streaming", "server_streaming"],
                   "properties": {
                     "name": {
                       "type": "string"
@@ -141,10 +102,7 @@
     },
     "handler": {
       "type": "object",
-      "required": [
-        "service",
-        "method"
-      ],
+      "required": ["service", "method"],
       "properties": {
         "service": {
           "type": "string",
@@ -162,9 +120,7 @@
     },
     "request": {
       "type": "object",
-      "required": [
-        "metadata"
-      ],
+      "required": ["metadata"],
       "properties": {
         "metadata": {
           "type": "object",
@@ -193,28 +149,19 @@
       },
       "oneOf": [
         {
-          "required": [
-            "message"
-          ]
+          "required": ["message"]
         },
         {
-          "required": [
-            "stream"
-          ]
+          "required": ["stream"]
         },
         {
-          "required": [
-            "stream_generator",
-            "stream_size"
-          ]
+          "required": ["stream_generator", "stream_size"]
         }
       ]
     },
     "expected_response": {
       "type": "object",
-      "required": [
-        "status_code"
-      ],
+      "required": ["status_code"],
       "properties": {
         "status_code": {
           "type": "string",

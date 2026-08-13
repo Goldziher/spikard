@@ -40,9 +40,5 @@
       "example_output": "HELLO WORLD"
     }
   },
-  "tags": [
-    "directives",
-    "transformation",
-    "formatting"
-  ]
+  "tags": ["directives", "transformation", "formatting"]
 }

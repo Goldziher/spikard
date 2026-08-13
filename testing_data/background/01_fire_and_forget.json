@@ -11,9 +11,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "event"
-      ],
+      "required": ["event"],
       "additionalProperties": false
     }
   },
@@ -34,12 +32,7 @@
     "state_path": "/background/events",
     "state_key": "events",
     "value_field": "event",
-    "expected_state": [
-      "alpha"
-    ]
+    "expected_state": ["alpha"]
   },
-  "tags": [
-    "background",
-    "async"
-  ]
+  "tags": ["background", "async"]
 }

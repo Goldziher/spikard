@@ -3,6 +3,10 @@
     "id": "value_dependency_injection_success",
     "description": "Tests simple value injection (config, constants) into a handler",
     "category": "di",
+    "docs": {
+      "topic": "di",
+      "stem": "value_dependency_injection_success"
+    },
     "http": {
       "handler": {
         "route": "/api/config",
@@ -27,6 +31,10 @@
     "id": "factory_dependency_success",
     "description": "Tests factory dependency that creates instances on-demand",
     "category": "di",
+    "docs": {
+      "topic": "di",
+      "stem": "factory_dependency_success"
+    },
     "http": {
       "handler": {
         "route": "/api/timestamp",
@@ -49,6 +57,10 @@
     "id": "async_factory_dependency_success",
     "description": "Tests async factory that creates database pool asynchronously",
     "category": "di",
+    "docs": {
+      "topic": "di",
+      "stem": "async_factory_dependency_success"
+    },
     "http": {
       "handler": {
         "route": "/api/db-status",
@@ -72,6 +84,10 @@
     "id": "nested_dependencies_3_levels_success",
     "description": "Tests dependency resolution where auth depends on cache and db, which both depend on config",
     "category": "di",
+    "docs": {
+      "topic": "di",
+      "stem": "nested_dependencies_3_levels_success"
+    },
     "http": {
       "handler": {
         "route": "/api/auth-status",
@@ -96,6 +112,10 @@
     "id": "singleton_dependency_caching_success",
     "description": "Tests singleton dependency that is created once and shared across all requests",
     "category": "di",
+    "docs": {
+      "topic": "di",
+      "stem": "singleton_dependency_caching_success"
+    },
     "http": {
       "handler": {
         "route": "/api/app-counter",
@@ -119,6 +139,10 @@
     "id": "per_request_dependency_caching_success",
     "description": "Tests per-request caching where dependency is created once per request but shared by multiple usages within that request",
     "category": "di",
+    "docs": {
+      "topic": "di",
+      "stem": "per_request_dependency_caching_success"
+    },
     "http": {
       "handler": {
         "route": "/api/request-id",
@@ -142,6 +166,10 @@
     "id": "circular_dependency_detection_error",
     "description": "Tests that circular dependencies (A depends on B, B depends on A) are detected and rejected at registration time",
     "category": "di",
+    "docs": {
+      "topic": "di",
+      "stem": "circular_dependency_detection_error"
+    },
     "http": {
       "handler": {
         "route": "/api/circular",
@@ -174,6 +202,10 @@
     "id": "missing_dependency_error",
     "description": "Tests error when handler requires a dependency that was never registered",
     "category": "di",
+    "docs": {
+      "topic": "di",
+      "stem": "missing_dependency_error"
+    },
     "http": {
       "handler": {
         "route": "/api/missing-dep",
@@ -206,6 +238,10 @@
     "id": "type_mismatch_in_dependency_resolution_error",
     "description": "Tests error when handler expects a different type than what the dependency provides",
     "category": "di",
+    "docs": {
+      "topic": "di",
+      "stem": "type_mismatch_in_dependency_resolution_error"
+    },
     "http": {
       "handler": {
         "route": "/api/type-mismatch",
@@ -240,6 +276,10 @@
     "id": "resource_cleanup_after_request_success",
     "description": "Tests generator pattern cleanup where dependency resources are cleaned up after handler completes",
     "category": "di",
+    "docs": {
+      "topic": "di",
+      "stem": "resource_cleanup_after_request_success"
+    },
     "http": {
       "handler": {
         "route": "/api/cleanup-test",
@@ -263,6 +303,10 @@
     "id": "multiple_dependencies_with_cleanup_success",
     "description": "Tests cleanup for multiple dependencies with generator pattern, ensuring all are cleaned up in reverse resolution order",
     "category": "di",
+    "docs": {
+      "topic": "di",
+      "stem": "multiple_dependencies_with_cleanup_success"
+    },
     "http": {
       "handler": {
         "route": "/api/multi-cleanup-test",
@@ -285,6 +329,10 @@
     "id": "python_type_annotation_based_injection_success",
     "description": "Tests Python-specific type annotation-based dependency injection where dependencies are matched by type hints",
     "category": "di",
+    "docs": {
+      "topic": "di",
+      "stem": "python_type_annotation_based_injection_success"
+    },
     "http": {
       "handler": {
         "route": "/api/python-type-inject",
@@ -308,6 +356,10 @@
     "id": "python_parameter_name_based_injection_success",
     "description": "Tests Python-specific parameter name-based dependency injection where dependencies are matched by parameter names",
     "category": "di",
+    "docs": {
+      "topic": "di",
+      "stem": "python_parameter_name_based_injection_success"
+    },
     "http": {
       "handler": {
         "route": "/api/python-name-inject",
@@ -331,6 +383,10 @@
     "id": "node_js_object_destructuring_injection_success",
     "description": "Tests Node.js/TypeScript-specific object destructuring pattern for dependency injection",
     "category": "di",
+    "docs": {
+      "topic": "di",
+      "stem": "node_js_object_destructuring_injection_success"
+    },
     "http": {
       "handler": {
         "route": "/api/node-destructure",
@@ -354,6 +410,10 @@
     "id": "ruby_keyword_argument_injection_success",
     "description": "Tests Ruby-specific keyword argument pattern for dependency injection",
     "category": "di",
+    "docs": {
+      "topic": "di",
+      "stem": "ruby_keyword_argument_injection_success"
+    },
     "http": {
       "handler": {
         "route": "/api/ruby-kwargs",
@@ -377,6 +437,10 @@
     "id": "route_level_dependency_override_success",
     "description": "Tests route-level dependency override of app-level dependency for testing or special cases",
     "category": "di",
+    "docs": {
+      "topic": "di",
+      "stem": "route_level_dependency_override_success"
+    },
     "http": {
       "handler": {
         "route": "/api/override-test",
@@ -400,6 +464,10 @@
     "id": "mixed_singleton_and_per_request_caching_success",
     "description": "Tests mixing singleton dependencies (shared across requests) with per-request dependencies (cached within request)",
     "category": "di",
+    "docs": {
+      "topic": "di",
+      "stem": "mixed_singleton_and_per_request_caching_success"
+    },
     "http": {
       "handler": {
         "route": "/api/mixed-caching",
@@ -424,6 +492,10 @@
     "id": "dependency_injection_in_lifecycle_hooks_success",
     "description": "Tests accessing dependencies in lifecycle hooks (onRequest, preHandler) for auth, logging, etc.",
     "category": "di",
+    "docs": {
+      "topic": "di",
+      "stem": "dependency_injection_in_lifecycle_hooks_success"
+    },
     "http": {
       "handler": {
         "route": "/api/hook-di-test",

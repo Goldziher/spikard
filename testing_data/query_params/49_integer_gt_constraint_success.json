@@ -32,12 +32,5 @@
       "limit": 5
     }
   },
-  "tags": [
-    "query_params",
-    "integer",
-    "gt",
-    "exclusiveMinimum",
-    "validation",
-    "success"
-  ]
+  "tags": ["query_params", "integer", "gt", "exclusiveMinimum", "validation", "success"]
 }

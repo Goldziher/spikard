@@ -32,11 +32,5 @@
       "offset": -10
     }
   },
-  "tags": [
-    "query_params",
-    "integer",
-    "negative",
-    "type_coercion",
-    "success"
-  ]
+  "tags": ["query_params", "integer", "negative", "type_coercion", "success"]
 }

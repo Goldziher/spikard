@@ -76,9 +76,5 @@
       }
     }
   },
-  "tags": [
-    "tracing",
-    "observability",
-    "metadata"
-  ]
+  "tags": ["tracing", "observability", "metadata"]
 }

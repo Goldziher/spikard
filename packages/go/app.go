@@ -34,40 +34,138 @@ func NewTypedApp() (*TypedApp, error) {
 // Get registers a GET route.
 // dto should be nil for routes without a body.
 // handler is called with (dto) and returns (response, error).
-func (a *TypedApp) Get(path string, dto any, handler TypedHandler) error {
-	return a.registerRoute("GET", path, dto, handler)
+// opts configure per-route middleware; see RouteOption.
+func (a *TypedApp) Get(path string, dto any, handler TypedHandler, opts ...RouteOption) error {
+	return a.registerRoute("GET", path, dto, handler, opts...)
 }
 
 // Post registers a POST route with optional body DTO.
 // dto is a prototype instance (or nil) whose type drives schema derivation.
 // handler is called with the hydrated DTO (or nil) and returns (response, error).
-func (a *TypedApp) Post(path string, dto any, handler TypedHandler) error {
-	return a.registerRoute("POST", path, dto, handler)
+// opts configure per-route middleware; see RouteOption.
+func (a *TypedApp) Post(path string, dto any, handler TypedHandler, opts ...RouteOption) error {
+	return a.registerRoute("POST", path, dto, handler, opts...)
 }
 
 // Put registers a PUT route with optional body DTO.
-func (a *TypedApp) Put(path string, dto any, handler TypedHandler) error {
-	return a.registerRoute("PUT", path, dto, handler)
+// opts configure per-route middleware; see RouteOption.
+func (a *TypedApp) Put(path string, dto any, handler TypedHandler, opts ...RouteOption) error {
+	return a.registerRoute("PUT", path, dto, handler, opts...)
 }
 
 // Patch registers a PATCH route with optional body DTO.
-func (a *TypedApp) Patch(path string, dto any, handler TypedHandler) error {
-	return a.registerRoute("PATCH", path, dto, handler)
+// opts configure per-route middleware; see RouteOption.
+func (a *TypedApp) Patch(path string, dto any, handler TypedHandler, opts ...RouteOption) error {
+	return a.registerRoute("PATCH", path, dto, handler, opts...)
 }
 
 // Delete registers a DELETE route.
-func (a *TypedApp) Delete(path string, dto any, handler TypedHandler) error {
-	return a.registerRoute("DELETE", path, dto, handler)
+// opts configure per-route middleware; see RouteOption.
+func (a *TypedApp) Delete(path string, dto any, handler TypedHandler, opts ...RouteOption) error {
+	return a.registerRoute("DELETE", path, dto, handler, opts...)
 }
 
 // Head registers a HEAD route (typically no body).
-func (a *TypedApp) Head(path string, dto any, handler TypedHandler) error {
-	return a.registerRoute("HEAD", path, dto, handler)
+// opts configure per-route middleware; see RouteOption.
+func (a *TypedApp) Head(path string, dto any, handler TypedHandler, opts ...RouteOption) error {
+	return a.registerRoute("HEAD", path, dto, handler, opts...)
 }
 
 // Options registers an OPTIONS route (typically no body).
-func (a *TypedApp) Options(path string, dto any, handler TypedHandler) error {
-	return a.registerRoute("OPTIONS", path, dto, handler)
+// opts configure per-route middleware; see RouteOption.
+func (a *TypedApp) Options(path string, dto any, handler TypedHandler, opts ...RouteOption) error {
+	return a.registerRoute("OPTIONS", path, dto, handler, opts...)
+}
+
+// RouteOption applies a per-route middleware setting to the underlying RouteBuilder.
+// Options are applied in the order they are passed to the route registration method.
+type RouteOption func(*RouteBuilder) (*RouteBuilder, error)
+
+// WithCors attaches a CORS configuration for this route.
+func WithCors(config CorsConfig) RouteOption {
+	return func(builder *RouteBuilder) (*RouteBuilder, error) {
+		return builder.Cors(config)
+	}
+}
+
+// WithCompression attaches a compression configuration for this route.
+func WithCompression(config CompressionConfig) RouteOption {
+	return func(builder *RouteBuilder) (*RouteBuilder, error) {
+		return builder.Compression(config)
+	}
+}
+
+// WithBodyLimit sets the maximum request body size in bytes for this route,
+// overriding the server-global default.
+func WithBodyLimit(maxBytes uint) RouteOption {
+	return func(builder *RouteBuilder) (*RouteBuilder, error) {
+		return builder.BodyLimit(maxBytes), nil
+	}
+}
+
+// WithRequestTimeout sets the request timeout in seconds for this route,
+// overriding the server-global default.
+func WithRequestTimeout(seconds uint64) RouteOption {
+	return func(builder *RouteBuilder) (*RouteBuilder, error) {
+		return builder.RequestTimeout(seconds), nil
+	}
+}
+
+// WithRateLimit attaches a rate limiting configuration for this route,
+// overriding the server-global default.
+func WithRateLimit(config RateLimitConfig) RouteOption {
+	return func(builder *RouteBuilder) (*RouteBuilder, error) {
+		return builder.RateLimit(config)
+	}
+}
+
+// WithRequestID forces request-id generation on or off for this route,
+// overriding the server-global default.
+func WithRequestID(enabled bool) RouteOption {
+	return func(builder *RouteBuilder) (*RouteBuilder, error) {
+		return builder.RequestID(enabled), nil
+	}
+}
+
+// WithJwtAuth requires JWT authentication for this route.
+func WithJwtAuth(config JwtAuthConfig) RouteOption {
+	return func(builder *RouteBuilder) (*RouteBuilder, error) {
+		return builder.JwtAuth(config)
+	}
+}
+
+// WithAPIKeyAuth requires API key authentication for this route.
+func WithAPIKeyAuth(config APIKeyAuthConfig) RouteOption {
+	return func(builder *RouteBuilder) (*RouteBuilder, error) {
+		return builder.APIKeyAuth(config)
+	}
+}
+
+// WithAuthorization attaches an authorization configuration for this route.
+func WithAuthorization(config AuthorizationConfig) RouteOption {
+	return func(builder *RouteBuilder) (*RouteBuilder, error) {
+		return builder.Authorization(config)
+	}
+}
+
+// WithLifecycleHooks selects registered lifecycle hooks to run for this route.
+func WithLifecycleHooks(config LifecycleHooksConfig) RouteOption {
+	return func(builder *RouteBuilder) (*RouteBuilder, error) {
+		return builder.LifecycleHooks(config)
+	}
+}
+
+// WithOpenrpcSpec attaches a literal OpenRPC method spec document for this route.
+func WithOpenrpcSpec(spec json.RawMessage) RouteOption {
+	return func(builder *RouteBuilder) (*RouteBuilder, error) {
+		// The generated OpenrpcSpec setter panics instead of returning an error when the raw
+		// message is not valid JSON; reject it here so the ergonomic layer stays error-returning.
+		// ~keep
+		if !json.Valid(spec) {
+			return nil, fmt.Errorf("invalid OpenRPC spec: not valid JSON")
+		}
+		return builder.OpenrpcSpec(spec), nil
+	}
 }
 
 // Run starts the HTTP server using the configured routes.
@@ -92,7 +190,12 @@ func (a *TypedApp) Close() {
 
 // private: registerRoute creates a RouteBuilder with the derived schema and registers
 // the handler with an adapter that unmarshals the JSON body into the DTO type.
-func (a *TypedApp) registerRoute(method, path string, dtoProto any, handler TypedHandler) error {
+func (a *TypedApp) registerRoute(
+	method, path string,
+	dtoProto any,
+	handler TypedHandler,
+	opts ...RouteOption,
+) error {
 	// Map HTTP method string to Method constant
 	methodConst, err := stringToMethod(method)
 	if err != nil {
@@ -113,6 +216,17 @@ func (a *TypedApp) registerRoute(method, path string, dtoProto any, handler Type
 			return fmt.Errorf("failed to marshal schema: %w", err)
 		}
 		builder = builder.RequestSchemaJSON(schemaJSON)
+	}
+
+	// Apply per-route middleware options
+	for index, opt := range opts {
+		if opt == nil {
+			continue
+		}
+		builder, err = opt(builder)
+		if err != nil {
+			return fmt.Errorf("failed to apply route option %d for %s %s: %w", index, method, path, err)
+		}
 	}
 
 	// Create an adapter function that unmarshals the request body into the DTO type

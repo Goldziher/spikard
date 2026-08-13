@@ -35,11 +35,7 @@
     "status_code": 200,
     "body": {
       "message": "Hooks executed in order",
-      "execution_order": [
-        "first_hook",
-        "second_hook",
-        "third_hook"
-      ]
+      "execution_order": ["first_hook", "second_hook", "third_hook"]
     }
   }
 }

@@ -3,6 +3,10 @@
     "id": "graphql_query_only_schema",
     "description": "Tests GraphQL schema configured with queries only",
     "category": "graphql_schema",
+    "docs": {
+      "topic": "graphql_schema",
+      "stem": "graphql_query_only_schema"
+    },
     "http": {
       "handler": {
         "route": "/graphql",
@@ -51,6 +55,10 @@
     "id": "graphql_query_and_mutation_schema",
     "description": "Tests GraphQL schema with queries and mutations",
     "category": "graphql_schema",
+    "docs": {
+      "topic": "graphql_schema",
+      "stem": "graphql_query_and_mutation_schema"
+    },
     "http": {
       "handler": {
         "route": "/graphql",
@@ -99,6 +107,10 @@
     "id": "graphql_full_schema_with_subscriptions",
     "description": "Tests GraphQL schema with queries, mutations, and subscriptions",
     "category": "graphql_schema",
+    "docs": {
+      "topic": "graphql_schema",
+      "stem": "graphql_full_schema_with_subscriptions"
+    },
     "http": {
       "handler": {
         "route": "/graphql",
@@ -144,6 +156,10 @@
     "id": "graphql_introspection_enabled",
     "description": "Tests GraphQL introspection is available",
     "category": "graphql_schema",
+    "docs": {
+      "topic": "graphql_schema",
+      "stem": "graphql_introspection_enabled"
+    },
     "http": {
       "handler": {
         "route": "/graphql",
@@ -191,6 +207,10 @@
     "id": "graphql_introspection_disabled",
     "description": "Tests GraphQL introspection returns error when disabled",
     "category": "graphql_schema",
+    "docs": {
+      "topic": "graphql_schema",
+      "stem": "graphql_introspection_disabled"
+    },
     "http": {
       "handler": {
         "route": "/graphql",
@@ -238,6 +258,10 @@
     "id": "graphql_complexity_limit_exceeded",
     "description": "Tests GraphQL query complexity validation rejects overly complex queries",
     "category": "graphql_schema",
+    "docs": {
+      "topic": "graphql_schema",
+      "stem": "graphql_complexity_limit_exceeded"
+    },
     "http": {
       "handler": {
         "route": "/graphql",
@@ -285,6 +309,10 @@
     "id": "graphql_depth_limit_exceeded",
     "description": "Tests GraphQL query depth validation rejects deeply nested queries",
     "category": "graphql_schema",
+    "docs": {
+      "topic": "graphql_schema",
+      "stem": "graphql_depth_limit_exceeded"
+    },
     "http": {
       "handler": {
         "route": "/graphql",
@@ -332,6 +360,10 @@
     "id": "graphql_error_response_format",
     "description": "Tests GraphQL error response format with correct structure",
     "category": "graphql_schema",
+    "docs": {
+      "topic": "graphql_schema",
+      "stem": "graphql_error_response_format"
+    },
     "http": {
       "handler": {
         "route": "/graphql",
@@ -376,6 +408,10 @@
     "id": "graphql_custom_endpoint_configuration",
     "description": "Tests GraphQL route configured at custom endpoint",
     "category": "graphql_schema",
+    "docs": {
+      "topic": "graphql_schema",
+      "stem": "graphql_custom_endpoint_configuration"
+    },
     "http": {
       "handler": {
         "route": "/api/v2/query",
@@ -423,6 +459,10 @@
     "id": "graphql_execution_error_variant",
     "description": "Tests GraphQL execution error response",
     "category": "graphql_schema",
+    "docs": {
+      "topic": "graphql_schema",
+      "stem": "graphql_execution_error_variant"
+    },
     "http": {
       "handler": {
         "route": "/graphql",
@@ -470,6 +510,10 @@
     "id": "graphql_schema_build_error_variant",
     "description": "Tests GraphQL schema build error",
     "category": "graphql_schema",
+    "docs": {
+      "topic": "graphql_schema",
+      "stem": "graphql_schema_build_error_variant"
+    },
     "http": {
       "handler": {
         "route": "/graphql",
@@ -513,6 +557,10 @@
     "id": "graphql_serialization_error_variant",
     "description": "Tests GraphQL serialization error for invalid response",
     "category": "graphql_schema",
+    "docs": {
+      "topic": "graphql_schema",
+      "stem": "graphql_serialization_error_variant"
+    },
     "http": {
       "handler": {
         "route": "/graphql",
@@ -556,6 +604,10 @@
     "id": "graphql_authentication_error_variant",
     "description": "Tests GraphQL authentication error when auth fails",
     "category": "graphql_schema",
+    "docs": {
+      "topic": "graphql_schema",
+      "stem": "graphql_authentication_error_variant"
+    },
     "http": {
       "handler": {
         "route": "/graphql",
@@ -612,6 +664,10 @@
     "id": "graphql_authorization_error_variant",
     "description": "Tests GraphQL authorization error when access denied",
     "category": "graphql_schema",
+    "docs": {
+      "topic": "graphql_schema",
+      "stem": "graphql_authorization_error_variant"
+    },
     "http": {
       "handler": {
         "route": "/graphql",
@@ -664,6 +720,10 @@
     "id": "graphql_not_found_error_variant",
     "description": "Tests GraphQL not found error for missing resource",
     "category": "graphql_schema",
+    "docs": {
+      "topic": "graphql_schema",
+      "stem": "graphql_not_found_error_variant"
+    },
     "http": {
       "handler": {
         "route": "/graphql",
@@ -711,6 +771,10 @@
     "id": "graphql_rate_limit_error_variant",
     "description": "Tests GraphQL rate limit exceeded error",
     "category": "graphql_schema",
+    "docs": {
+      "topic": "graphql_schema",
+      "stem": "graphql_rate_limit_error_variant"
+    },
     "http": {
       "handler": {
         "route": "/graphql",
@@ -758,6 +822,10 @@
     "id": "graphql_invalid_input_error_variant",
     "description": "Tests GraphQL invalid input error",
     "category": "graphql_schema",
+    "docs": {
+      "topic": "graphql_schema",
+      "stem": "graphql_invalid_input_error_variant"
+    },
     "http": {
       "handler": {
         "route": "/graphql",

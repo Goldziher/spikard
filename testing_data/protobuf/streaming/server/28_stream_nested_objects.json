@@ -158,9 +158,5 @@
     ],
     "message": "3 people with nested objects streamed successfully"
   },
-  "tags": [
-    "server_streaming",
-    "nested_messages",
-    "complex_structures"
-  ]
+  "tags": ["server_streaming", "nested_messages", "complex_structures"]
 }

@@ -107,10 +107,5 @@
       "count_value": 42
     }
   },
-  "tags": [
-    "edge_cases",
-    "well_known_types",
-    "wrapper_types",
-    "nullable"
-  ]
+  "tags": ["edge_cases", "well_known_types", "wrapper_types", "nullable"]
 }

@@ -3,6 +3,10 @@
     "id": "request_completes_before_timeout",
     "description": "Simulated handler sleeps briefly and should complete before the timeout middleware fires.",
     "category": "request_timeout",
+    "docs": {
+      "topic": "request_timeout",
+      "stem": "request_completes_before_timeout"
+    },
     "http": {
       "handler": {
         "route": "/timeouts/fast",
@@ -32,6 +36,10 @@
     "id": "request_exceeds_timeout",
     "description": "Simulates a handler that sleeps longer than the configured timeout to ensure a 408 response.",
     "category": "request_timeout",
+    "docs": {
+      "topic": "request_timeout",
+      "stem": "request_exceeds_timeout"
+    },
     "http": {
       "handler": {
         "route": "/timeouts/slow",

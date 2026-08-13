@@ -23,10 +23,7 @@
       "errors": [
         {
           "type": "uuid_parsing",
-          "loc": [
-            "query",
-            "item_id"
-          ],
+          "loc": ["query", "item_id"],
           "msg": "Input should be a valid UUID",
           "input": "not-a-uuid"
         }

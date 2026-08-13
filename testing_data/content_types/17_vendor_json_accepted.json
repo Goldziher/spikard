@@ -12,9 +12,7 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": [
-        "data"
-      ],
+      "required": ["data"],
       "properties": {
         "data": {
           "type": "string"
@@ -38,10 +36,5 @@
       "data": "value"
     }
   },
-  "tags": [
-    "content_types",
-    "vendor",
-    "json",
-    "success"
-  ]
+  "tags": ["content_types", "vendor", "json", "success"]
 }

@@ -86,9 +86,5 @@
       }
     ]
   },
-  "tags": [
-    "bidirectional_streaming",
-    "ping_pong",
-    "request_response"
-  ]
+  "tags": ["bidirectional_streaming", "ping_pong", "request_response"]
 }

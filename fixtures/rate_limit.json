@@ -3,6 +3,10 @@
     "id": "rate_limit_below_threshold_succeeds",
     "description": "Verifies that requests below the configured rate limit are served normally.",
     "category": "rate_limit",
+    "docs": {
+      "topic": "rate_limit",
+      "stem": "rate_limit_below_threshold_succeeds"
+    },
     "http": {
       "handler": {
         "route": "/rate-limit/basic",
@@ -32,6 +36,10 @@
     "id": "rate_limit_exceeded_returns_429",
     "description": "Sends sequential requests until the configured limit is exceeded and validates the 429 response.",
     "category": "rate_limit",
+    "docs": {
+      "topic": "rate_limit",
+      "stem": "rate_limit_exceeded_returns_429"
+    },
     "http": {
       "handler": {
         "route": "/rate-limit/exceeded",
@@ -60,6 +68,10 @@
     "id": "rate_limit_per_second_setting_10_requests",
     "description": "Tests rate limit allows up to 10 requests per second",
     "category": "rate_limit",
+    "docs": {
+      "topic": "rate_limit",
+      "stem": "rate_limit_per_second_setting_10_requests"
+    },
     "http": {
       "handler": {
         "route": "/rate-limit/per-second",
@@ -88,6 +100,10 @@
     "id": "rate_limit_burst_setting_allows_spike",
     "description": "Tests burst setting allows request spike beyond per_second rate",
     "category": "rate_limit",
+    "docs": {
+      "topic": "rate_limit",
+      "stem": "rate_limit_burst_setting_allows_spike"
+    },
     "http": {
       "handler": {
         "route": "/rate-limit/burst",
@@ -116,6 +132,10 @@
     "id": "rate_limit_ip_based_tracking",
     "description": "Tests rate limiting is applied per IP address",
     "category": "rate_limit",
+    "docs": {
+      "topic": "rate_limit",
+      "stem": "rate_limit_ip_based_tracking"
+    },
     "http": {
       "handler": {
         "route": "/rate-limit/ip-based",

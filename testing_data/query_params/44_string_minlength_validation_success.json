@@ -32,11 +32,5 @@
       "term": "foo"
     }
   },
-  "tags": [
-    "query_params",
-    "string",
-    "minLength",
-    "validation",
-    "success"
-  ]
+  "tags": ["query_params", "string", "minLength", "validation", "success"]
 }

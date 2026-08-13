@@ -88,9 +88,5 @@
       "data_present": true
     }
   },
-  "tags": [
-    "edge_cases",
-    "oneof",
-    "protobuf_syntax"
-  ]
+  "tags": ["edge_cases", "oneof", "protobuf_syntax"]
 }

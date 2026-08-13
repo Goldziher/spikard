@@ -76,6 +76,11 @@ mod tests {
             args: vec![],
             assertion_recipes: vec![],
             assertions: vec![],
+            docs: None,
+            requirements: vec![],
+            preserve_input_urls: false,
+            asyncapi: None,
+            websocket: None,
             source: String::new(),
             http: None,
         };

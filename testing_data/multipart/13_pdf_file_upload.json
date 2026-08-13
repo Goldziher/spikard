@@ -18,9 +18,7 @@
         }
       },
       "additionalProperties": false,
-      "required": [
-        "document"
-      ]
+      "required": ["document"]
     }
   },
   "request": {

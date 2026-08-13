@@ -90,9 +90,5 @@
       }
     ]
   },
-  "tags": [
-    "bidirectional_streaming",
-    "chat",
-    "conversation"
-  ]
+  "tags": ["bidirectional_streaming", "chat", "conversation"]
 }

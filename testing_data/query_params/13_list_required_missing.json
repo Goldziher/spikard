@@ -20,10 +20,7 @@
       "errors": [
         {
           "type": "missing",
-          "loc": [
-            "query",
-            "device_ids"
-          ],
+          "loc": ["query", "device_ids"],
           "msg": "Field required",
           "input": null
         }

@@ -3,6 +3,10 @@
     "id": "compression_gzip_applied",
     "description": "Serves a JSON payload compressed with gzip when the client advertises support.",
     "category": "compression",
+    "docs": {
+      "topic": "compression",
+      "stem": "compression_gzip_applied"
+    },
     "http": {
       "handler": {
         "route": "/compression/gzip",
@@ -41,6 +45,10 @@
     "id": "compression_payload_below_min_size_is_not_compressed",
     "description": "Ensures responses smaller than the configured min_size are sent uncompressed even when the client sends Accept-Encoding.",
     "category": "compression",
+    "docs": {
+      "topic": "compression",
+      "stem": "compression_payload_below_min_size_is_not_compressed"
+    },
     "http": {
       "handler": {
         "route": "/compression/skip",
@@ -78,6 +86,10 @@
     "id": "compression_brotli_only",
     "description": "Tests Brotli compression when enabled and client supports it",
     "category": "compression",
+    "docs": {
+      "topic": "compression",
+      "stem": "compression_brotli_only"
+    },
     "http": {
       "handler": {
         "route": "/compression/brotli",
@@ -116,6 +128,10 @@
     "id": "compression_quality_level_9",
     "description": "Tests compression with high quality level setting",
     "category": "compression",
+    "docs": {
+      "topic": "compression",
+      "stem": "compression_quality_level_9"
+    },
     "http": {
       "handler": {
         "route": "/compression/high_quality",
@@ -153,6 +169,10 @@
     "id": "compression_min_size_threshold_exact_boundary",
     "description": "Tests compression respects exact minimum size boundary",
     "category": "compression",
+    "docs": {
+      "topic": "compression",
+      "stem": "compression_min_size_threshold_exact_boundary"
+    },
     "http": {
       "handler": {
         "route": "/compression/boundary",

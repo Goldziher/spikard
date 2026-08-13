@@ -102,9 +102,5 @@
       "upload_status": "completed"
     }
   },
-  "tags": [
-    "large_payloads",
-    "streaming",
-    "client_streaming"
-  ]
+  "tags": ["large_payloads", "streaming", "client_streaming"]
 }

@@ -14,9 +14,7 @@
       "oneOf": [
         {
           "type": "object",
-          "required": [
-            "credit_card"
-          ],
+          "required": ["credit_card"],
           "properties": {
             "credit_card": {
               "type": "string",
@@ -26,9 +24,7 @@
         },
         {
           "type": "object",
-          "required": [
-            "paypal_email"
-          ],
+          "required": ["paypal_email"],
           "properties": {
             "paypal_email": {
               "type": "string",
@@ -57,9 +53,7 @@
       "errors": [
         {
           "type": "validation_error",
-          "loc": [
-            "body"
-          ],
+          "loc": ["body"],
           "msg": "{\"credit_card\":\"1234567812345678\",\"paypal_email\":\"user@example.com\"} is valid under more than one of the schemas listed in the 'oneOf' keyword",
           "input": {
             "credit_card": "1234567812345678",
@@ -69,11 +63,5 @@
       ]
     }
   },
-  "tags": [
-    "json_bodies",
-    "oneOf",
-    "composition",
-    "validation",
-    "error"
-  ]
+  "tags": ["json_bodies", "oneOf", "composition", "validation", "error"]
 }

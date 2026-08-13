@@ -11,6 +11,13 @@
 #include <stdlib.h>
 /* Opaque type forward declarations */
 /**
+ * Per-route API key authentication requirement.
+ *
+ * Mirrors `spikard_http::ApiKeyConfig` for the same reason `JwtAuthConfig` mirrors
+ * `spikard_http::JwtConfig`: `spikard-core` cannot depend on `spikard-http`. ~keep
+ */
+typedef struct SPIKARDApiKeyAuthConfig SPIKARDApiKeyAuthConfig;
+/**
  * API Key authentication configuration
  */
 typedef struct SPIKARDApiKeyConfig SPIKARDApiKeyConfig;
@@ -22,6 +29,22 @@ typedef struct SPIKARDApp SPIKARDApp;
  * AsyncAPI HTTP endpoint configuration
  */
 typedef struct SPIKARDAsyncApiConfig SPIKARDAsyncApiConfig;
+/**
+ * Per-route roles/scopes/permissions authorization requirement.
+ *
+ * `spikard_http::auth::Claims` does not yet carry roles, scopes, or permissions, so nothing can
+ * enforce this today. This type only defines the requirement shape; a later phase must extend
+ * `Claims` (or an equivalent claims-decoding path) to populate them before enforcement is
+ * possible. ~keep
+ *
+ * Deserialization goes through `AuthorizationConfigRepr` rather than a derive so the fixture's
+ * singular `{"required_role": "admin"}` shape (`fixtures/problem_details.json`'s
+ * `problem_details_403_forbidden`) populates `required_roles` instead of being silently dropped
+ * as an unrecognized field â a config that parses to "no constraint" from real authorization
+ * data is a vacuous-pass bug, not a compatibility shim. `deny_unknown_fields` on the repr means
+ * any other unrecognized key is a loud deserialize error instead. ~keep
+ */
+typedef struct SPIKARDAuthorizationConfig SPIKARDAuthorizationConfig;
 typedef struct SPIKARDBackgroundJobMetadata SPIKARDBackgroundJobMetadata;
 /**
  * Configuration for in-process background task execution.
@@ -152,6 +175,21 @@ typedef struct SPIKARDJsonRpcConfig SPIKARDJsonRpcConfig;
  */
 typedef struct SPIKARDJsonRpcMethodInfo SPIKARDJsonRpcMethodInfo;
 /**
+ * Per-route JWT authentication requirement.
+ *
+ * `spikard-http` defines the canonical `JwtConfig` used by `ServerConfig.jwt_auth`, but
+ * `spikard-core` cannot depend on `spikard-http` (the dependency runs the other way), so that
+ * type cannot be reused here. This mirrors its fields so a later enforcement phase in
+ * `spikard-http` can convert between the two without losing information. ~keep
+ *
+ * `secret` and `public_key` are both optional because asymmetric algorithms (RS256, ES256, ...)
+ * verify against a public key rather than a shared secret; see `fixtures/auth.json`'s
+ * `jwt_config_algorithm_rs256`, which carries `public_key` and no `secret` at all. Exactly one is
+ * expected to be populated for a given `algorithm`, but that cross-field invariant is left to a
+ * later enforcement phase rather than the type itself. ~keep
+ */
+typedef struct SPIKARDJwtAuthConfig SPIKARDJwtAuthConfig;
+/**
  * JWT authentication configuration
  */
 typedef struct SPIKARDJwtConfig SPIKARDJwtConfig;
@@ -159,6 +197,38 @@ typedef struct SPIKARDJwtConfig SPIKARDJwtConfig;
  * License information
  */
 typedef struct SPIKARDLicenseInfo SPIKARDLicenseInfo;
+/**
+ * The five lifecycle phases a hook can be registered against.
+ *
+ * Used to resolve a per-route named hook selection (`LifecycleHooksConfig` in
+ * `spikard-core::http`) against the hooks actually registered on the server: a name is looked
+ * up within one specific phase's registered hooks, not across all five, so a hook registered
+ * for `on_response` can never be silently picked up by a route asking for `on_request`. ~keep
+ */
+typedef struct SPIKARDLifecycleHookPhase SPIKARDLifecycleHookPhase;
+/**
+ * A single lifecycle hook reference within a `LifecycleHooksConfig` phase.
+ *
+ * Matches the fixture shape exactly (`fixtures/lifecycle_hooks.json`, `fixtures/di.json`): each
+ * entry is an object with a required `name` and `handler`, an optional list of dependency keys,
+ * and an optional free-form `config` blob (e.g. `{"max_requests": 10, "window_seconds": 60}` for
+ * a rate-limiting hook). `deny_unknown_fields` turns future fixture drift into a loud error. ~keep
+ */
+typedef struct SPIKARDLifecycleHookRef SPIKARDLifecycleHookRef;
+/**
+ * Per-route selection of registered lifecycle hooks.
+ *
+ * `ServerConfig.lifecycle_hooks` holds `Arc<dyn LifecycleHook>` function pointers and is marked
+ * `#`serde(skip)`` / `#`alef(skip)`` because closures cannot be serialized or cross the FFI
+ * boundary. A per-route field with that same shape would be invisible to alef, and therefore
+ * invisible to every binding â defeating the purpose of exposing it here. This descriptor
+ * carries `LifecycleHookRef` entries instead: each one names a registered hook (plus its
+ * declared dependencies and optional config), so a later enforcement phase can resolve those
+ * names against the server's registered `LifecycleHooks` and run the matches for this route. The
+ * five fields mirror the five hook phases documented in the `tower-middleware-and-lifecycle`
+ * project convention (onRequest, preValidation, preHandler, onResponse, onError). ~keep
+ */
+typedef struct SPIKARDLifecycleHooksConfig SPIKARDLifecycleHooksConfig;
 /**
  * HTTP method
  */
@@ -225,6 +295,16 @@ typedef struct SPIKARDQueryOnlyConfig SPIKARDQueryOnlyConfig;
 typedef struct SPIKARDRateLimitConfig SPIKARDRateLimitConfig;
 typedef struct SPIKARDRequest SPIKARDRequest;
 typedef struct SPIKARDRequestData SPIKARDRequestData;
+/**
+ * Per-route request-id generation/propagation override.
+ *
+ * Modeled as a struct rather than `Option<bool>` on `RouteMetadata` because the wire shape is an
+ * object, not a bare boolean: `fixtures/request_id.json`'s `request_id_middleware_can_be_disabled`
+ * sends `{"enabled": false}`, which `Option<bool>` cannot deserialize at all ("invalid type: map,
+ * expected a boolean") â the very fixture whose purpose is proving the middleware can be disabled
+ * was the one that failed to parse. ~keep
+ */
+typedef struct SPIKARDRequestIdConfig SPIKARDRequestIdConfig;
 /**
  * HTTP Response with custom status code, headers, and content
  */
@@ -353,18 +433,6 @@ const char *spikard_last_error_context(void);
 void spikard_free_string(char *ptr);
 
 /**
- * Free a byte buffer previously returned by this library via out-params.
- * `ptr`, `len`, and `cap` must match the values written by the library function,
- * or the call must pass `ptr = null` (in which case it is a no-op).
- * # Safety
- * Pointer must have been returned by this library (via out_ptr / out_len / out_cap
- * out-params), or be null. The len and cap values must be unchanged since the call.
- */
-void spikard_free_bytes(uint8_t *ptr,
-                        uintptr_t len,
-                        uintptr_t cap);
-
-/**
  * Return the library version string. The pointer is static and must NOT be freed.
  * # Safety
  * Caller must ensure all pointer arguments are valid or null.
@@ -397,6 +465,8 @@ void spikard_upload_file_free(SPIKARDUploadFile *ptr);
 
 /**
  * Get the `filename` field from a `UploadFile`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -404,6 +474,8 @@ char *spikard_upload_file_filename(const SPIKARDUploadFile *ptr);
 
 /**
  * Get the `content_type` field from a `UploadFile`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -418,6 +490,8 @@ uintptr_t spikard_upload_file_size(const SPIKARDUploadFile *ptr);
 
 /**
  * Get the `content` field from a `UploadFile`.
+ * The returned byte pointer is borrowed from `ptr` and must not be freed.
+ * It remains valid until `ptr` is destroyed or the field is mutated.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -426,6 +500,8 @@ uint8_t *spikard_upload_file_content(const SPIKARDUploadFile *ptr,
 
 /**
  * Get the `content_encoding` field from a `UploadFile`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -480,6 +556,8 @@ void spikard_field_error_spec_free(SPIKARDFieldErrorSpec *ptr);
 
 /**
  * Get the `path` field from a `FieldErrorSpec`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -487,6 +565,8 @@ char *spikard_field_error_spec_path(const SPIKARDFieldErrorSpec *ptr);
 
 /**
  * Get the `message` field from a `FieldErrorSpec`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -538,6 +618,8 @@ uintptr_t spikard_dynamic_schema_config_max_depth(const SPIKARDDynamicSchemaConf
 
 /**
  * Get the `field_errors` field from a `DynamicSchemaConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -617,12 +699,6 @@ int32_t spikard_graph_ql_route_config_is_playground_enabled(const SPIKARDGraphQL
 char *spikard_graph_ql_route_config_get_description(const SPIKARDGraphQLRouteConfig *this_);
 
 /**
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-SPIKARDGraphQLRouteConfig *spikard_graph_ql_route_config_default(void);
-
-/**
  * Create a `SchemaConfig` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
@@ -665,12 +741,6 @@ uintptr_t spikard_schema_config_complexity_limit(const SPIKARDSchemaConfig *ptr)
  * Pointer must be a valid handle returned by this library.
  */
 uintptr_t spikard_schema_config_depth_limit(const SPIKARDSchemaConfig *ptr);
-
-/**
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-SPIKARDSchemaConfig *spikard_schema_config_default(void);
 
 /**
  * Create a `QueryOnlyConfig` from a JSON string. Returns null on failure.
@@ -717,12 +787,6 @@ uintptr_t spikard_query_only_config_complexity_limit(const SPIKARDQueryOnlyConfi
 uintptr_t spikard_query_only_config_depth_limit(const SPIKARDQueryOnlyConfig *ptr);
 
 /**
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-SPIKARDQueryOnlyConfig *spikard_query_only_config_default(void);
-
-/**
  * Create a `QueryMutationConfig` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
@@ -765,12 +829,6 @@ uintptr_t spikard_query_mutation_config_complexity_limit(const SPIKARDQueryMutat
  * Pointer must be a valid handle returned by this library.
  */
 uintptr_t spikard_query_mutation_config_depth_limit(const SPIKARDQueryMutationConfig *ptr);
-
-/**
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-SPIKARDQueryMutationConfig *spikard_query_mutation_config_default(void);
 
 /**
  * Create a `FullSchemaConfig` from a JSON string. Returns null on failure.
@@ -817,12 +875,6 @@ uintptr_t spikard_full_schema_config_complexity_limit(const SPIKARDFullSchemaCon
 uintptr_t spikard_full_schema_config_depth_limit(const SPIKARDFullSchemaConfig *ptr);
 
 /**
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-SPIKARDFullSchemaConfig *spikard_full_schema_config_default(void);
-
-/**
  * Create a `AsyncApiConfig` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
@@ -854,6 +906,8 @@ int32_t spikard_async_api_config_enabled(const SPIKARDAsyncApiConfig *ptr);
 
 /**
  * Get the `spec` field from a `AsyncApiConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -904,12 +958,6 @@ uintptr_t spikard_background_task_config_max_concurrent_tasks(const SPIKARDBackg
 uint64_t spikard_background_task_config_drain_timeout_secs(const SPIKARDBackgroundTaskConfig *ptr);
 
 /**
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-SPIKARDBackgroundTaskConfig *spikard_background_task_config_default(void);
-
-/**
  * Create a `BackgroundJobMetadata` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
@@ -934,6 +982,8 @@ void spikard_background_job_metadata_free(SPIKARDBackgroundJobMetadata *ptr);
 
 /**
  * Get the `name` field from a `BackgroundJobMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -941,16 +991,12 @@ char *spikard_background_job_metadata_name(const SPIKARDBackgroundJobMetadata *p
 
 /**
  * Get the `request_id` field from a `BackgroundJobMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
 char *spikard_background_job_metadata_request_id(const SPIKARDBackgroundJobMetadata *ptr);
-
-/**
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-SPIKARDBackgroundJobMetadata *spikard_background_job_metadata_default(void);
 
 /**
  * Create a `CorsConfig` from a JSON string. Returns null on failure.
@@ -977,6 +1023,8 @@ void spikard_cors_config_free(SPIKARDCorsConfig *ptr);
 
 /**
  * Get the `allowed_origins` field from a `CorsConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -984,6 +1032,8 @@ char *spikard_cors_config_allowed_origins(const SPIKARDCorsConfig *ptr);
 
 /**
  * Get the `allowed_methods` field from a `CorsConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -991,6 +1041,8 @@ char *spikard_cors_config_allowed_methods(const SPIKARDCorsConfig *ptr);
 
 /**
  * Get the `allowed_headers` field from a `CorsConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -998,6 +1050,8 @@ char *spikard_cors_config_allowed_headers(const SPIKARDCorsConfig *ptr);
 
 /**
  * Get the `expose_headers` field from a `CorsConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1046,12 +1100,6 @@ int32_t spikard_cors_config_is_origin_allowed(const SPIKARDCorsConfig *this_,
  */
 int32_t spikard_cors_config_is_method_allowed(const SPIKARDCorsConfig *this_,
                                               const char *method);
-
-/**
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-SPIKARDCorsConfig *spikard_cors_config_default(void);
 
 /**
  * Create a `CompressionConfig` from a JSON string. Returns null on failure.
@@ -1105,12 +1153,6 @@ uintptr_t spikard_compression_config_min_size(const SPIKARDCompressionConfig *pt
 uint32_t spikard_compression_config_quality(const SPIKARDCompressionConfig *ptr);
 
 /**
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-SPIKARDCompressionConfig *spikard_compression_config_default(void);
-
-/**
  * Create a `RateLimitConfig` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
@@ -1153,12 +1195,6 @@ uint32_t spikard_rate_limit_config_burst(const SPIKARDRateLimitConfig *ptr);
  * Pointer must be a valid handle returned by this library.
  */
 int32_t spikard_rate_limit_config_ip_based(const SPIKARDRateLimitConfig *ptr);
-
-/**
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-SPIKARDRateLimitConfig *spikard_rate_limit_config_default(void);
 
 /**
  * Create a `GrpcConfig` from a JSON string. Returns null on failure.
@@ -1247,12 +1283,6 @@ uint64_t spikard_grpc_config_keepalive_timeout(const SPIKARDGrpcConfig *ptr);
 uintptr_t spikard_grpc_config_max_stream_response_bytes(const SPIKARDGrpcConfig *ptr);
 
 /**
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-SPIKARDGrpcConfig *spikard_grpc_config_default(void);
-
-/**
  * Create a `JsonRpcConfig` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
@@ -1284,6 +1314,8 @@ int32_t spikard_json_rpc_config_enabled(const SPIKARDJsonRpcConfig *ptr);
 
 /**
  * Get the `endpoint_path` field from a `JsonRpcConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1302,12 +1334,6 @@ int32_t spikard_json_rpc_config_enable_batch(const SPIKARDJsonRpcConfig *ptr);
  * Pointer must be a valid handle returned by this library.
  */
 uintptr_t spikard_json_rpc_config_max_batch_size(const SPIKARDJsonRpcConfig *ptr);
-
-/**
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-SPIKARDJsonRpcConfig *spikard_json_rpc_config_default(void);
 
 /**
  * Create a `OpenApiConfig` from a JSON string. Returns null on failure.
@@ -1341,6 +1367,8 @@ int32_t spikard_open_api_config_enabled(const SPIKARDOpenApiConfig *ptr);
 
 /**
  * Get the `title` field from a `OpenApiConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1348,6 +1376,8 @@ char *spikard_open_api_config_title(const SPIKARDOpenApiConfig *ptr);
 
 /**
  * Get the `version` field from a `OpenApiConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1355,6 +1385,8 @@ char *spikard_open_api_config_version(const SPIKARDOpenApiConfig *ptr);
 
 /**
  * Get the `description` field from a `OpenApiConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1362,6 +1394,8 @@ char *spikard_open_api_config_description(const SPIKARDOpenApiConfig *ptr);
 
 /**
  * Get the `swagger_ui_path` field from a `OpenApiConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1369,6 +1403,8 @@ char *spikard_open_api_config_swagger_ui_path(const SPIKARDOpenApiConfig *ptr);
 
 /**
  * Get the `redoc_path` field from a `OpenApiConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1376,6 +1412,8 @@ char *spikard_open_api_config_redoc_path(const SPIKARDOpenApiConfig *ptr);
 
 /**
  * Get the `openapi_json_path` field from a `OpenApiConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1383,6 +1421,8 @@ char *spikard_open_api_config_openapi_json_path(const SPIKARDOpenApiConfig *ptr)
 
 /**
  * Get the `contact` field from a `OpenApiConfig`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `spikard_contact_info_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1390,6 +1430,8 @@ SPIKARDContactInfo *spikard_open_api_config_contact(const SPIKARDOpenApiConfig *
 
 /**
  * Get the `license` field from a `OpenApiConfig`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `spikard_license_info_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1397,6 +1439,8 @@ SPIKARDLicenseInfo *spikard_open_api_config_license(const SPIKARDOpenApiConfig *
 
 /**
  * Get the `servers` field from a `OpenApiConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1404,16 +1448,12 @@ char *spikard_open_api_config_servers(const SPIKARDOpenApiConfig *ptr);
 
 /**
  * Get the `security_schemes` field from a `OpenApiConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
 char *spikard_open_api_config_security_schemes(const SPIKARDOpenApiConfig *ptr);
-
-/**
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-SPIKARDOpenApiConfig *spikard_open_api_config_default(void);
 
 /**
  * Create a `Response` from a JSON string. Returns null on failure.
@@ -1440,6 +1480,8 @@ void spikard_response_free(SPIKARDResponse *ptr);
 
 /**
  * Get the `content` field from a `Response`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1454,6 +1496,8 @@ uint16_t spikard_response_status_code(const SPIKARDResponse *ptr);
 
 /**
  * Get the `headers` field from a `Response`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1484,12 +1528,6 @@ void spikard_response_set_cookie(SPIKARDResponse *this_,
                                  const char *same_site);
 
 /**
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-SPIKARDResponse *spikard_response_default(void);
-
-/**
  * Create a `SseEvent` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
@@ -1514,6 +1552,8 @@ void spikard_sse_event_free(SPIKARDSseEvent *ptr);
 
 /**
  * Get the `event_type` field from a `SseEvent`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1521,6 +1561,8 @@ char *spikard_sse_event_event_type(const SPIKARDSseEvent *ptr);
 
 /**
  * Get the `data` field from a `SseEvent`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1528,6 +1570,8 @@ char *spikard_sse_event_data(const SPIKARDSseEvent *ptr);
 
 /**
  * Get the `id` field from a `SseEvent`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1603,6 +1647,8 @@ void spikard_jwt_config_free(SPIKARDJwtConfig *ptr);
 
 /**
  * Get the `secret` field from a `JwtConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1610,6 +1656,8 @@ char *spikard_jwt_config_secret(const SPIKARDJwtConfig *ptr);
 
 /**
  * Get the `algorithm` field from a `JwtConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1617,6 +1665,8 @@ char *spikard_jwt_config_algorithm(const SPIKARDJwtConfig *ptr);
 
 /**
  * Get the `audience` field from a `JwtConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1624,6 +1674,8 @@ char *spikard_jwt_config_audience(const SPIKARDJwtConfig *ptr);
 
 /**
  * Get the `issuer` field from a `JwtConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1661,6 +1713,8 @@ void spikard_api_key_config_free(SPIKARDApiKeyConfig *ptr);
 
 /**
  * Get the `keys` field from a `ApiKeyConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1668,6 +1722,8 @@ char *spikard_api_key_config_keys(const SPIKARDApiKeyConfig *ptr);
 
 /**
  * Get the `header_name` field from a `ApiKeyConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1698,6 +1754,8 @@ void spikard_static_files_config_free(SPIKARDStaticFilesConfig *ptr);
 
 /**
  * Get the `directory` field from a `StaticFilesConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1705,6 +1763,8 @@ char *spikard_static_files_config_directory(const SPIKARDStaticFilesConfig *ptr)
 
 /**
  * Get the `route_prefix` field from a `StaticFilesConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1719,6 +1779,8 @@ int32_t spikard_static_files_config_index_file(const SPIKARDStaticFilesConfig *p
 
 /**
  * Get the `cache_control` field from a `StaticFilesConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1749,6 +1811,8 @@ void spikard_server_config_free(SPIKARDServerConfig *ptr);
 
 /**
  * Get the `host` field from a `ServerConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1791,6 +1855,8 @@ uint64_t spikard_server_config_request_timeout(const SPIKARDServerConfig *ptr);
 
 /**
  * Get the `compression` field from a `ServerConfig`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `spikard_compression_config_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1798,6 +1864,8 @@ SPIKARDCompressionConfig *spikard_server_config_compression(const SPIKARDServerC
 
 /**
  * Get the `rate_limit` field from a `ServerConfig`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `spikard_rate_limit_config_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1805,6 +1873,8 @@ SPIKARDRateLimitConfig *spikard_server_config_rate_limit(const SPIKARDServerConf
 
 /**
  * Get the `jwt_auth` field from a `ServerConfig`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `spikard_jwt_config_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1812,6 +1882,8 @@ SPIKARDJwtConfig *spikard_server_config_jwt_auth(const SPIKARDServerConfig *ptr)
 
 /**
  * Get the `api_key_auth` field from a `ServerConfig`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `spikard_api_key_config_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1819,6 +1891,8 @@ SPIKARDApiKeyConfig *spikard_server_config_api_key_auth(const SPIKARDServerConfi
 
 /**
  * Get the `static_files` field from a `ServerConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1840,6 +1914,8 @@ uint64_t spikard_server_config_shutdown_timeout(const SPIKARDServerConfig *ptr);
 
 /**
  * Get the `asyncapi` field from a `ServerConfig`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `spikard_async_api_config_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1847,6 +1923,8 @@ SPIKARDAsyncApiConfig *spikard_server_config_asyncapi(const SPIKARDServerConfig 
 
 /**
  * Get the `openapi` field from a `ServerConfig`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `spikard_open_api_config_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1854,6 +1932,8 @@ SPIKARDOpenApiConfig *spikard_server_config_openapi(const SPIKARDServerConfig *p
 
 /**
  * Get the `jsonrpc` field from a `ServerConfig`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `spikard_json_rpc_config_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1861,6 +1941,8 @@ SPIKARDJsonRpcConfig *spikard_server_config_jsonrpc(const SPIKARDServerConfig *p
 
 /**
  * Get the `grpc` field from a `ServerConfig`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `spikard_grpc_config_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1868,6 +1950,8 @@ SPIKARDGrpcConfig *spikard_server_config_grpc(const SPIKARDServerConfig *ptr);
 
 /**
  * Get the `background_tasks` field from a `ServerConfig`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `spikard_background_task_config_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1879,12 +1963,6 @@ SPIKARDBackgroundTaskConfig *spikard_server_config_background_tasks(const SPIKAR
  * Pointer must be a valid handle returned by this library.
  */
 int32_t spikard_server_config_enable_http_trace(const SPIKARDServerConfig *ptr);
-
-/**
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-SPIKARDServerConfig *spikard_server_config_default(void);
 
 /**
  * Free a `RouteBuilder` handle.
@@ -1969,6 +2047,76 @@ SPIKARDRouteBuilder *spikard_route_builder_request_timeout(SPIKARDRouteBuilder *
                                                            uint64_t seconds);
 
 /**
+ * Attach a per-route rate limiting configuration, overriding the server-global default.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+SPIKARDRouteBuilder *spikard_route_builder_rate_limit(SPIKARDRouteBuilder *this_,
+                                                      const SPIKARDRateLimitConfig *rate_limit);
+
+/**
+ * Force per-route request-id generation on or off, overriding the server-global default.
+ *
+ * Takes a plain `bool` rather than `RequestIdConfig` directly: the wire/metadata type had
+ * to become a struct to represent `{"enabled": false}` (see `RequestIdConfig`'s docs), but
+ * this builder is the ergonomic call site (`.request_id(true)`), so it keeps accepting a bool
+ * and wraps it into `RequestIdConfig` internally in `Self.into_metadata`.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+SPIKARDRouteBuilder *spikard_route_builder_request_id(SPIKARDRouteBuilder *this_,
+                                                      int32_t enabled);
+
+/**
+ * Require JWT authentication for this route.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+SPIKARDRouteBuilder *spikard_route_builder_jwt_auth(SPIKARDRouteBuilder *this_,
+                                                    const SPIKARDJwtAuthConfig *config);
+
+/**
+ * Require API key authentication for this route.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+SPIKARDRouteBuilder *spikard_route_builder_api_key_auth(SPIKARDRouteBuilder *this_,
+                                                        const SPIKARDApiKeyAuthConfig *config);
+
+/**
+ * Attach a roles/scopes/permissions authorization requirement for this route.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+SPIKARDRouteBuilder *spikard_route_builder_authorization(SPIKARDRouteBuilder *this_,
+                                                         const SPIKARDAuthorizationConfig *config);
+
+/**
+ * Select registered lifecycle hooks to run for this route.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+SPIKARDRouteBuilder *spikard_route_builder_lifecycle_hooks(SPIKARDRouteBuilder *this_,
+                                                           const SPIKARDLifecycleHooksConfig *hooks);
+
+/**
+ * Expose this route as a JSON-RPC method.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+SPIKARDRouteBuilder *spikard_route_builder_jsonrpc_method(SPIKARDRouteBuilder *this_,
+                                                          const SPIKARDJsonRpcMethodInfo *info);
+
+/**
+ * Attach a literal `OpenRPC` method spec document for this route, overriding
+ * auto-derivation from the `Self.jsonrpc_method` metadata when present.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ */
+SPIKARDRouteBuilder *spikard_route_builder_openrpc_spec(SPIKARDRouteBuilder *this_,
+                                                        const char *spec);
+
+/**
  * Mark the route as synchronous.
  * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
  * freed with the appropriate free function.
@@ -1982,6 +2130,341 @@ SPIKARDRouteBuilder *spikard_route_builder_sync(SPIKARDRouteBuilder *this_);
  */
 SPIKARDRouteBuilder *spikard_route_builder_handler_dependencies(SPIKARDRouteBuilder *this_,
                                                                 const char *dependencies);
+
+/**
+ * Create a `RequestIdConfig` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `spikard_request_id_config_free`.
+ */
+SPIKARDRequestIdConfig *spikard_request_id_config_from_json(const char *json);
+
+/**
+ * Serialize a `RequestIdConfig` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `spikard` function.
+ * The returned string must be freed with `spikard_free_string`.
+ */
+char *spikard_request_id_config_to_json(const SPIKARDRequestIdConfig *ptr);
+
+/**
+ * Free a `RequestIdConfig` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void spikard_request_id_config_free(SPIKARDRequestIdConfig *ptr);
+
+/**
+ * Get the `enabled` field from a `RequestIdConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t spikard_request_id_config_enabled(const SPIKARDRequestIdConfig *ptr);
+
+/**
+ * Create a `JwtAuthConfig` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `spikard_jwt_auth_config_free`.
+ */
+SPIKARDJwtAuthConfig *spikard_jwt_auth_config_from_json(const char *json);
+
+/**
+ * Serialize a `JwtAuthConfig` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `spikard` function.
+ * The returned string must be freed with `spikard_free_string`.
+ */
+char *spikard_jwt_auth_config_to_json(const SPIKARDJwtAuthConfig *ptr);
+
+/**
+ * Free a `JwtAuthConfig` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void spikard_jwt_auth_config_free(SPIKARDJwtAuthConfig *ptr);
+
+/**
+ * Get the `enabled` field from a `JwtAuthConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t spikard_jwt_auth_config_enabled(const SPIKARDJwtAuthConfig *ptr);
+
+/**
+ * Get the `secret` field from a `JwtAuthConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_jwt_auth_config_secret(const SPIKARDJwtAuthConfig *ptr);
+
+/**
+ * Get the `public_key` field from a `JwtAuthConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_jwt_auth_config_public_key(const SPIKARDJwtAuthConfig *ptr);
+
+/**
+ * Get the `algorithm` field from a `JwtAuthConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_jwt_auth_config_algorithm(const SPIKARDJwtAuthConfig *ptr);
+
+/**
+ * Get the `audience` field from a `JwtAuthConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_jwt_auth_config_audience(const SPIKARDJwtAuthConfig *ptr);
+
+/**
+ * Get the `issuer` field from a `JwtAuthConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_jwt_auth_config_issuer(const SPIKARDJwtAuthConfig *ptr);
+
+/**
+ * Get the `leeway` field from a `JwtAuthConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uint64_t spikard_jwt_auth_config_leeway(const SPIKARDJwtAuthConfig *ptr);
+
+/**
+ * Create a `ApiKeyAuthConfig` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `spikard_api_key_auth_config_free`.
+ */
+SPIKARDApiKeyAuthConfig *spikard_api_key_auth_config_from_json(const char *json);
+
+/**
+ * Serialize a `ApiKeyAuthConfig` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `spikard` function.
+ * The returned string must be freed with `spikard_free_string`.
+ */
+char *spikard_api_key_auth_config_to_json(const SPIKARDApiKeyAuthConfig *ptr);
+
+/**
+ * Free a `ApiKeyAuthConfig` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void spikard_api_key_auth_config_free(SPIKARDApiKeyAuthConfig *ptr);
+
+/**
+ * Get the `enabled` field from a `ApiKeyAuthConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t spikard_api_key_auth_config_enabled(const SPIKARDApiKeyAuthConfig *ptr);
+
+/**
+ * Get the `keys` field from a `ApiKeyAuthConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_api_key_auth_config_keys(const SPIKARDApiKeyAuthConfig *ptr);
+
+/**
+ * Get the `header_name` field from a `ApiKeyAuthConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_api_key_auth_config_header_name(const SPIKARDApiKeyAuthConfig *ptr);
+
+/**
+ * Free a `AuthorizationConfig` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void spikard_authorization_config_free(SPIKARDAuthorizationConfig *ptr);
+
+/**
+ * Get the `required_roles` field from a `AuthorizationConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_authorization_config_required_roles(const SPIKARDAuthorizationConfig *ptr);
+
+/**
+ * Get the `required_scopes` field from a `AuthorizationConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_authorization_config_required_scopes(const SPIKARDAuthorizationConfig *ptr);
+
+/**
+ * Get the `required_permissions` field from a `AuthorizationConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_authorization_config_required_permissions(const SPIKARDAuthorizationConfig *ptr);
+
+/**
+ * Get the `require_all` field from a `AuthorizationConfig`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t spikard_authorization_config_require_all(const SPIKARDAuthorizationConfig *ptr);
+
+/**
+ * Create a `LifecycleHookRef` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `spikard_lifecycle_hook_ref_free`.
+ */
+SPIKARDLifecycleHookRef *spikard_lifecycle_hook_ref_from_json(const char *json);
+
+/**
+ * Serialize a `LifecycleHookRef` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `spikard` function.
+ * The returned string must be freed with `spikard_free_string`.
+ */
+char *spikard_lifecycle_hook_ref_to_json(const SPIKARDLifecycleHookRef *ptr);
+
+/**
+ * Free a `LifecycleHookRef` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void spikard_lifecycle_hook_ref_free(SPIKARDLifecycleHookRef *ptr);
+
+/**
+ * Get the `name` field from a `LifecycleHookRef`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_lifecycle_hook_ref_name(const SPIKARDLifecycleHookRef *ptr);
+
+/**
+ * Get the `handler` field from a `LifecycleHookRef`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_lifecycle_hook_ref_handler(const SPIKARDLifecycleHookRef *ptr);
+
+/**
+ * Get the `dependencies` field from a `LifecycleHookRef`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_lifecycle_hook_ref_dependencies(const SPIKARDLifecycleHookRef *ptr);
+
+/**
+ * Get the `config` field from a `LifecycleHookRef`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_lifecycle_hook_ref_config(const SPIKARDLifecycleHookRef *ptr);
+
+/**
+ * Get the `order` field from a `LifecycleHookRef`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uint32_t spikard_lifecycle_hook_ref_order(const SPIKARDLifecycleHookRef *ptr);
+
+/**
+ * Create a `LifecycleHooksConfig` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `spikard_lifecycle_hooks_config_free`.
+ */
+SPIKARDLifecycleHooksConfig *spikard_lifecycle_hooks_config_from_json(const char *json);
+
+/**
+ * Serialize a `LifecycleHooksConfig` to a JSON string. Returns null on failure.
+ * # Safety
+ * `ptr` must be a valid, non-null pointer returned by a `spikard` function.
+ * The returned string must be freed with `spikard_free_string`.
+ */
+char *spikard_lifecycle_hooks_config_to_json(const SPIKARDLifecycleHooksConfig *ptr);
+
+/**
+ * Free a `LifecycleHooksConfig` handle.
+ * # Safety
+ * Pointer must have been returned by this library, or be null.
+ */
+void spikard_lifecycle_hooks_config_free(SPIKARDLifecycleHooksConfig *ptr);
+
+/**
+ * Get the `on_request` field from a `LifecycleHooksConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_lifecycle_hooks_config_on_request(const SPIKARDLifecycleHooksConfig *ptr);
+
+/**
+ * Get the `pre_validation` field from a `LifecycleHooksConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_lifecycle_hooks_config_pre_validation(const SPIKARDLifecycleHooksConfig *ptr);
+
+/**
+ * Get the `pre_handler` field from a `LifecycleHooksConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_lifecycle_hooks_config_pre_handler(const SPIKARDLifecycleHooksConfig *ptr);
+
+/**
+ * Get the `on_response` field from a `LifecycleHooksConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_lifecycle_hooks_config_on_response(const SPIKARDLifecycleHooksConfig *ptr);
+
+/**
+ * Get the `on_error` field from a `LifecycleHooksConfig`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *spikard_lifecycle_hooks_config_on_error(const SPIKARDLifecycleHooksConfig *ptr);
 
 /**
  * Create a `JsonRpcMethodInfo` from a JSON string. Returns null on failure.
@@ -2008,6 +2491,8 @@ void spikard_json_rpc_method_info_free(SPIKARDJsonRpcMethodInfo *ptr);
 
 /**
  * Get the `method_name` field from a `JsonRpcMethodInfo`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2015,6 +2500,8 @@ char *spikard_json_rpc_method_info_method_name(const SPIKARDJsonRpcMethodInfo *p
 
 /**
  * Get the `description` field from a `JsonRpcMethodInfo`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2022,6 +2509,8 @@ char *spikard_json_rpc_method_info_description(const SPIKARDJsonRpcMethodInfo *p
 
 /**
  * Get the `params_schema` field from a `JsonRpcMethodInfo`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2029,6 +2518,8 @@ char *spikard_json_rpc_method_info_params_schema(const SPIKARDJsonRpcMethodInfo 
 
 /**
  * Get the `result_schema` field from a `JsonRpcMethodInfo`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2043,6 +2534,8 @@ int32_t spikard_json_rpc_method_info_deprecated(const SPIKARDJsonRpcMethodInfo *
 
 /**
  * Get the `tags` field from a `JsonRpcMethodInfo`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2065,6 +2558,8 @@ void spikard_problem_details_free(SPIKARDProblemDetails *ptr);
 
 /**
  * Get the `type_uri` field from a `ProblemDetails`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2072,6 +2567,8 @@ char *spikard_problem_details_type_uri(const SPIKARDProblemDetails *ptr);
 
 /**
  * Get the `title` field from a `ProblemDetails`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2086,6 +2583,8 @@ uint16_t spikard_problem_details_status(const SPIKARDProblemDetails *ptr);
 
 /**
  * Get the `detail` field from a `ProblemDetails`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2093,6 +2592,8 @@ char *spikard_problem_details_detail(const SPIKARDProblemDetails *ptr);
 
 /**
  * Get the `instance` field from a `ProblemDetails`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2100,6 +2601,8 @@ char *spikard_problem_details_instance(const SPIKARDProblemDetails *ptr);
 
 /**
  * Get the `extensions` field from a `ProblemDetails`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2190,6 +2693,8 @@ void spikard_parsed_channel_free(SPIKARDParsedChannel *ptr);
 
 /**
  * Get the `name` field from a `ParsedChannel`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2197,6 +2702,8 @@ char *spikard_parsed_channel_name(const SPIKARDParsedChannel *ptr);
 
 /**
  * Get the `address` field from a `ParsedChannel`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2204,6 +2711,8 @@ char *spikard_parsed_channel_address(const SPIKARDParsedChannel *ptr);
 
 /**
  * Get the `messages` field from a `ParsedChannel`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2211,6 +2720,8 @@ char *spikard_parsed_channel_messages(const SPIKARDParsedChannel *ptr);
 
 /**
  * Get the `bindings` field from a `ParsedChannel`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2241,6 +2752,8 @@ void spikard_parsed_operation_free(SPIKARDParsedOperation *ptr);
 
 /**
  * Get the `name` field from a `ParsedOperation`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2248,6 +2761,8 @@ char *spikard_parsed_operation_name(const SPIKARDParsedOperation *ptr);
 
 /**
  * Get the `action` field from a `ParsedOperation`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2255,6 +2770,8 @@ char *spikard_parsed_operation_action(const SPIKARDParsedOperation *ptr);
 
 /**
  * Get the `channel` field from a `ParsedOperation`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2285,6 +2802,8 @@ void spikard_parsed_message_free(SPIKARDParsedMessage *ptr);
 
 /**
  * Get the `name` field from a `ParsedMessage`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2292,6 +2811,8 @@ char *spikard_parsed_message_name(const SPIKARDParsedMessage *ptr);
 
 /**
  * Get the `schema` field from a `ParsedMessage`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2322,6 +2843,8 @@ void spikard_parse_result_free(SPIKARDParseResult *ptr);
 
 /**
  * Get the `spec_version` field from a `ParseResult`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2329,6 +2852,8 @@ char *spikard_parse_result_spec_version(const SPIKARDParseResult *ptr);
 
 /**
  * Get the `title` field from a `ParseResult`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2336,6 +2861,8 @@ char *spikard_parse_result_title(const SPIKARDParseResult *ptr);
 
 /**
  * Get the `api_version` field from a `ParseResult`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2343,6 +2870,8 @@ char *spikard_parse_result_api_version(const SPIKARDParseResult *ptr);
 
 /**
  * Get the `channels` field from a `ParseResult`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2350,6 +2879,8 @@ char *spikard_parse_result_channels(const SPIKARDParseResult *ptr);
 
 /**
  * Get the `operations` field from a `ParseResult`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2357,6 +2888,8 @@ char *spikard_parse_result_operations(const SPIKARDParseResult *ptr);
 
 /**
  * Get the `messages` field from a `ParseResult`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2371,6 +2904,8 @@ void spikard_parse_request_free(SPIKARDParseRequest *ptr);
 
 /**
  * Get the `spec` field from a `ParseRequest`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2392,6 +2927,8 @@ int32_t spikard_validation_response_valid(const SPIKARDValidationResponse *ptr);
 
 /**
  * Get the `errors` field from a `ValidationResponse`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2406,6 +2943,8 @@ void spikard_validate_request_free(SPIKARDValidateRequest *ptr);
 
 /**
  * Get the `spec` field from a `ValidateRequest`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2413,6 +2952,8 @@ char *spikard_validate_request_spec(const SPIKARDValidateRequest *ptr);
 
 /**
  * Get the `channel` field from a `ValidateRequest`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2420,6 +2961,8 @@ char *spikard_validate_request_channel(const SPIKARDValidateRequest *ptr);
 
 /**
  * Get the `message` field from a `ValidateRequest`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2427,6 +2970,8 @@ char *spikard_validate_request_message(const SPIKARDValidateRequest *ptr);
 
 /**
  * Get the `payload` field from a `ValidateRequest`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2457,6 +3002,8 @@ void spikard_contact_info_free(SPIKARDContactInfo *ptr);
 
 /**
  * Get the `name` field from a `ContactInfo`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2464,6 +3011,8 @@ char *spikard_contact_info_name(const SPIKARDContactInfo *ptr);
 
 /**
  * Get the `email` field from a `ContactInfo`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2471,6 +3020,8 @@ char *spikard_contact_info_email(const SPIKARDContactInfo *ptr);
 
 /**
  * Get the `url` field from a `ContactInfo`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2501,6 +3052,8 @@ void spikard_license_info_free(SPIKARDLicenseInfo *ptr);
 
 /**
  * Get the `name` field from a `LicenseInfo`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2508,6 +3061,8 @@ char *spikard_license_info_name(const SPIKARDLicenseInfo *ptr);
 
 /**
  * Get the `url` field from a `LicenseInfo`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2538,6 +3093,8 @@ void spikard_server_info_free(SPIKARDServerInfo *ptr);
 
 /**
  * Get the `url` field from a `ServerInfo`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2545,6 +3102,8 @@ char *spikard_server_info_url(const SPIKARDServerInfo *ptr);
 
 /**
  * Get the `description` field from a `ServerInfo`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2559,6 +3118,8 @@ void spikard_testing_sse_event_free(SPIKARDSseEvent *ptr);
 
 /**
  * Get the `data` field from a `TestingSseEvent`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `spikard_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2592,6 +3153,21 @@ int32_t spikard_method_from_i32(int32_t value);
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
 int32_t spikard_method_from_str(const char *name);
+
+/**
+ * Convert an integer to a `LifecycleHookPhase` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t spikard_lifecycle_hook_phase_from_i32(int32_t value);
+
+/**
+ * Convert a `LifecycleHookPhase` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t spikard_lifecycle_hook_phase_from_str(const char *name);
 
 /**
  * Convert an integer to a `SecuritySchemeInfo` variant. Returns -1 on invalid input.

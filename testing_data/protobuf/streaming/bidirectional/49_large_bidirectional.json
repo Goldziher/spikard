@@ -93,9 +93,5 @@
     "status_code": "OK",
     "stream_count": 10
   },
-  "tags": [
-    "bidirectional_streaming",
-    "large",
-    "performance"
-  ]
+  "tags": ["bidirectional_streaming", "large", "performance"]
 }

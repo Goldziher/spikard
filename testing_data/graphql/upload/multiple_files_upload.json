@@ -9,11 +9,7 @@
     "path": "/graphql",
     "query": "mutation MultipleUpload($files: [Upload!]!) {\n  multipleUpload(files: $files) {\n    id\n    filename\n    mimetype\n    size\n  }\n}",
     "variables": {
-      "files": [
-        null,
-        null,
-        null
-      ]
+      "files": [null, null, null]
     },
     "operationName": "MultipleUpload"
   },
@@ -103,10 +99,5 @@
       ]
     }
   },
-  "tags": [
-    "mutations",
-    "file-upload",
-    "multipart",
-    "batch"
-  ]
+  "tags": ["mutations", "file-upload", "multipart", "batch"]
 }

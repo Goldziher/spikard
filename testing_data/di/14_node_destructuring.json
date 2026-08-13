@@ -27,10 +27,7 @@
         "value_type": "object"
       }
     },
-    "handler_dependencies": [
-      "db",
-      "logger"
-    ],
+    "handler_dependencies": ["db", "logger"],
     "injection_strategy": "destructure"
   },
   "request": {
@@ -45,11 +42,5 @@
     }
   },
   "notes": "TypeScript handler uses object destructuring: async (request, { db, logger }: { db: Database, logger: Logger }) => {...}",
-  "tags": [
-    "dependency_injection",
-    "node",
-    "typescript",
-    "destructuring",
-    "language_specific"
-  ]
+  "tags": ["dependency_injection", "node", "typescript", "destructuring", "language_specific"]
 }

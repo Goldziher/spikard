@@ -66,8 +66,5 @@
       "status": "success"
     }
   },
-  "tags": [
-    "grpc_status",
-    "ok"
-  ]
+  "tags": ["grpc_status", "ok"]
 }

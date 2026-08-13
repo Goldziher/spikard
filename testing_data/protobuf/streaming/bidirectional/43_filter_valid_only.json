@@ -74,9 +74,5 @@
       }
     ]
   },
-  "tags": [
-    "bidirectional_streaming",
-    "filter",
-    "validation"
-  ]
+  "tags": ["bidirectional_streaming", "filter", "validation"]
 }

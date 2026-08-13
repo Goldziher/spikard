@@ -101,10 +101,5 @@
       "error_message": "Invalid email format at message index 2: invalid-email"
     }
   },
-  "tags": [
-    "client_streaming",
-    "validation",
-    "error_handling",
-    "mid_stream"
-  ]
+  "tags": ["client_streaming", "validation", "error_handling", "mid_stream"]
 }

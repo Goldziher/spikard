@@ -3,6 +3,10 @@
     "id": "body_under_limit_succeeds",
     "description": "Ensures requests smaller than the configured body limit are accepted.",
     "category": "body_limits",
+    "docs": {
+      "topic": "body_limits",
+      "stem": "body_under_limit_succeeds"
+    },
     "http": {
       "handler": {
         "route": "/body-limit/under",
@@ -44,6 +48,10 @@
     "id": "body_over_limit_returns_413",
     "description": "Requests that exceed the configured max body size should be rejected with Payload Too Large.",
     "category": "body_limits",
+    "docs": {
+      "topic": "body_limits",
+      "stem": "body_over_limit_returns_413"
+    },
     "http": {
       "handler": {
         "route": "/body-limit/over",

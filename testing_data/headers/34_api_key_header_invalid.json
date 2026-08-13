@@ -37,10 +37,7 @@
       "errors": [
         {
           "type": "validation_error",
-          "loc": [
-            "headers",
-            "x-api-key"
-          ],
+          "loc": ["headers", "x-api-key"],
           "msg": "Invalid API key format",
           "ctx": {
             "pattern": "^[a-f0-9]{32}$",
@@ -50,11 +47,5 @@
       ]
     }
   },
-  "tags": [
-    "headers",
-    "api_key",
-    "security",
-    "validation",
-    "error"
-  ]
+  "tags": ["headers", "api_key", "security", "validation", "error"]
 }

@@ -97,10 +97,5 @@
     "partial_delivery": true,
     "note": "Stream was cancelled after exceeding the 1000ms timeout"
   },
-  "tags": [
-    "server_streaming",
-    "timeout",
-    "deadline_exceeded",
-    "error_handling"
-  ]
+  "tags": ["server_streaming", "timeout", "deadline_exceeded", "error_handling"]
 }

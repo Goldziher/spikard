@@ -29,11 +29,5 @@
       "error_message": "Insufficient permissions to access adminPanel"
     }
   },
-  "tags": [
-    "authorization",
-    "role-based",
-    "user-role",
-    "denied",
-    "error"
-  ]
+  "tags": ["authorization", "role-based", "user-role", "denied", "error"]
 }

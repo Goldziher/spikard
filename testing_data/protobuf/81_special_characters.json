@@ -79,10 +79,5 @@
       "echo": "Hello 世界 Привет שלום مرحبا"
     }
   },
-  "tags": [
-    "edge_cases",
-    "unicode",
-    "emoji",
-    "internationalization"
-  ]
+  "tags": ["edge_cases", "unicode", "emoji", "internationalization"]
 }

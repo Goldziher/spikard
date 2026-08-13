@@ -23,12 +23,7 @@
     "properties": {
       "level": {
         "description": "Alert severity level",
-        "enum": [
-          "info",
-          "warning",
-          "error",
-          "critical"
-        ],
+        "enum": ["info", "warning", "error", "critical"],
         "type": "string"
       },
       "message": {
@@ -52,12 +47,7 @@
         "type": "string"
       }
     },
-    "required": [
-      "type",
-      "level",
-      "message",
-      "timestamp"
-    ],
+    "required": ["type", "level", "message", "timestamp"],
     "type": "object"
   }
 }

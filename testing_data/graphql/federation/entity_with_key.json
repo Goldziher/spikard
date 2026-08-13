@@ -48,11 +48,7 @@
       "factory_fn": "resolve_user_by_id"
     }
   },
-  "tags": [
-    "federation",
-    "keys",
-    "entity-resolution"
-  ],
+  "tags": ["federation", "keys", "entity-resolution"],
   "complexity_limit": 100,
   "depth_limit": 4
 }

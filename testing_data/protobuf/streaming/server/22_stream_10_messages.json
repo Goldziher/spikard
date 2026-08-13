@@ -130,9 +130,5 @@
     ],
     "message": "10 messages streamed successfully"
   },
-  "tags": [
-    "server_streaming",
-    "normal_case",
-    "multiple_messages"
-  ]
+  "tags": ["server_streaming", "normal_case", "multiple_messages"]
 }

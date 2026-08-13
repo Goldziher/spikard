@@ -3,6 +3,10 @@
     "id": "sse_simple_event_stream",
     "description": "Tests Server-Sent Events with simple text events",
     "category": "sse",
+    "docs": {
+      "topic": "sse",
+      "stem": "sse_simple_event_stream"
+    },
     "http": {
       "handler": {
         "route": "/events",
@@ -29,6 +33,10 @@
     "id": "sse_event_with_type_field",
     "description": "Tests SSE event includes event type field",
     "category": "sse",
+    "docs": {
+      "topic": "sse",
+      "stem": "sse_event_with_type_field"
+    },
     "http": {
       "handler": {
         "route": "/events/typed",
@@ -54,6 +62,10 @@
     "id": "sse_event_with_id_field",
     "description": "Tests SSE event includes unique ID field",
     "category": "sse",
+    "docs": {
+      "topic": "sse",
+      "stem": "sse_event_with_id_field"
+    },
     "http": {
       "handler": {
         "route": "/events/with-id",
@@ -79,6 +91,10 @@
     "id": "sse_event_with_retry_field",
     "description": "Tests SSE event includes retry interval field",
     "category": "sse",
+    "docs": {
+      "topic": "sse",
+      "stem": "sse_event_with_retry_field"
+    },
     "http": {
       "handler": {
         "route": "/events/with-retry",
@@ -104,6 +120,10 @@
     "id": "sse_event_with_data_and_metadata",
     "description": "Tests SSE event with JSON data and metadata fields",
     "category": "sse",
+    "docs": {
+      "topic": "sse",
+      "stem": "sse_event_with_data_and_metadata"
+    },
     "http": {
       "handler": {
         "route": "/events/data",
@@ -129,6 +149,10 @@
     "id": "sse_event_with_all_fields",
     "description": "Tests SSE event with all optional fields (id, type, retry)",
     "category": "sse",
+    "docs": {
+      "topic": "sse",
+      "stem": "sse_event_with_all_fields"
+    },
     "http": {
       "handler": {
         "route": "/events/complete",
@@ -154,6 +178,10 @@
     "id": "sse_multiple_events_stream",
     "description": "Tests SSE stream with multiple consecutive events",
     "category": "sse",
+    "docs": {
+      "topic": "sse",
+      "stem": "sse_multiple_events_stream"
+    },
     "http": {
       "handler": {
         "route": "/events/multi",
@@ -179,6 +207,10 @@
     "id": "sse_event_retry_5000_milliseconds",
     "description": "Tests SSE event with 5000ms retry interval",
     "category": "sse",
+    "docs": {
+      "topic": "sse",
+      "stem": "sse_event_retry_5000_milliseconds"
+    },
     "http": {
       "handler": {
         "route": "/events/retry-5s",

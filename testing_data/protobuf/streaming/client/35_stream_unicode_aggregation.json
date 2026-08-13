@@ -120,10 +120,5 @@
       "status": "CONCATENATED"
     }
   },
-  "tags": [
-    "client_streaming",
-    "unicode",
-    "utf8",
-    "internationalization"
-  ]
+  "tags": ["client_streaming", "unicode", "utf8", "internationalization"]
 }

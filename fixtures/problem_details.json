@@ -3,6 +3,10 @@
     "id": "problem_details_standard_all_fields",
     "description": "Tests RFC 9457 ProblemDetails response with all standard fields",
     "category": "problem_details",
+    "docs": {
+      "topic": "problem_details",
+      "stem": "problem_details_standard_all_fields"
+    },
     "http": {
       "handler": {
         "route": "/items/{id}",
@@ -36,6 +40,10 @@
     "id": "problem_details_with_type_uri",
     "description": "Tests ProblemDetails includes type URI for error classification",
     "category": "problem_details",
+    "docs": {
+      "topic": "problem_details",
+      "stem": "problem_details_with_type_uri"
+    },
     "http": {
       "handler": {
         "route": "/validate",
@@ -86,6 +94,10 @@
     "id": "problem_details_with_instance",
     "description": "Tests ProblemDetails includes instance URI for context",
     "category": "problem_details",
+    "docs": {
+      "topic": "problem_details",
+      "stem": "problem_details_with_instance"
+    },
     "http": {
       "handler": {
         "route": "/users/{user_id}/posts/{post_id}",
@@ -122,6 +134,10 @@
     "id": "problem_details_with_extensions",
     "description": "Tests ProblemDetails includes custom extensions for additional context",
     "category": "problem_details",
+    "docs": {
+      "topic": "problem_details",
+      "stem": "problem_details_with_extensions"
+    },
     "http": {
       "handler": {
         "route": "/api/resource",
@@ -167,6 +183,10 @@
     "id": "problem_details_400_bad_request",
     "description": "Tests ProblemDetails for 400 Bad Request status",
     "category": "problem_details",
+    "docs": {
+      "topic": "problem_details",
+      "stem": "problem_details_400_bad_request"
+    },
     "http": {
       "handler": {
         "route": "/parse",
@@ -198,6 +218,10 @@
     "id": "problem_details_401_unauthorized",
     "description": "Tests ProblemDetails for 401 Unauthorized status",
     "category": "problem_details",
+    "docs": {
+      "topic": "problem_details",
+      "stem": "problem_details_401_unauthorized"
+    },
     "http": {
       "handler": {
         "route": "/protected",
@@ -230,6 +254,10 @@
     "id": "problem_details_403_forbidden",
     "description": "Tests ProblemDetails for 403 Forbidden status",
     "category": "problem_details",
+    "docs": {
+      "topic": "problem_details",
+      "stem": "problem_details_403_forbidden"
+    },
     "http": {
       "handler": {
         "route": "/admin/config",
@@ -260,6 +288,10 @@
     "id": "problem_details_500_internal_error",
     "description": "Tests ProblemDetails for 500 Internal Server Error status",
     "category": "problem_details",
+    "docs": {
+      "topic": "problem_details",
+      "stem": "problem_details_500_internal_error"
+    },
     "http": {
       "handler": {
         "route": "/error",

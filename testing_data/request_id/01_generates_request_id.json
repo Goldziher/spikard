@@ -24,8 +24,5 @@
       "x-request-id": "<<uuid>>"
     }
   },
-  "tags": [
-    "request_id",
-    "middleware"
-  ]
+  "tags": ["request_id", "middleware"]
 }

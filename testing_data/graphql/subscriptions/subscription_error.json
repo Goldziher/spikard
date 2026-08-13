@@ -33,11 +33,5 @@
     }
   },
   "resolvers": {},
-  "tags": [
-    "subscriptions",
-    "websocket",
-    "error-handling",
-    "validation",
-    "field-not-found"
-  ]
+  "tags": ["subscriptions", "websocket", "error-handling", "validation", "field-not-found"]
 }

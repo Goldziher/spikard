@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- FFI generation now maps middleware DTOs through the public `spikard` facade and excludes the Axum-only authorization
+  middleware implementation, keeping generated C and Swift Rust crates buildable.
+
+- Documentation snippets now use extension-owned, language-native AsyncAPI and WebSocket recipes instead of treating
+  protocol fixtures as ordinary function calls.
+
 - **codegen/protobuf**: the schema parser mishandled single-line message and enum
   blocks (`message X { field = 1; }`). It seeded brace depth from the opening brace
   only, ignoring a closing brace on the same line, so the block stayed "open" and

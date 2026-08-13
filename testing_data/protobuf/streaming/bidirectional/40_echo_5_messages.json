@@ -78,9 +78,5 @@
       }
     ]
   },
-  "tags": [
-    "bidirectional_streaming",
-    "echo",
-    "ordering"
-  ]
+  "tags": ["bidirectional_streaming", "echo", "ordering"]
 }

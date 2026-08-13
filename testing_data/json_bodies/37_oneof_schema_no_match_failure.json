@@ -14,9 +14,7 @@
       "oneOf": [
         {
           "type": "object",
-          "required": [
-            "credit_card"
-          ],
+          "required": ["credit_card"],
           "properties": {
             "credit_card": {
               "type": "string",
@@ -26,9 +24,7 @@
         },
         {
           "type": "object",
-          "required": [
-            "paypal_email"
-          ],
+          "required": ["paypal_email"],
           "properties": {
             "paypal_email": {
               "type": "string",
@@ -56,9 +52,7 @@
       "errors": [
         {
           "type": "validation_error",
-          "loc": [
-            "body"
-          ],
+          "loc": ["body"],
           "msg": "{\"bitcoin_address\":\"1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa\"} is not valid under any of the schemas listed in the 'oneOf' keyword",
           "input": {
             "bitcoin_address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
@@ -67,11 +61,5 @@
       ]
     }
   },
-  "tags": [
-    "json_bodies",
-    "oneOf",
-    "composition",
-    "validation",
-    "error"
-  ]
+  "tags": ["json_bodies", "oneOf", "composition", "validation", "error"]
 }

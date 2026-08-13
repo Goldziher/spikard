@@ -421,9 +421,5 @@
       ]
     }
   ],
-  "tags": [
-    "batch",
-    "protocol",
-    "edge-cases"
-  ]
+  "tags": ["batch", "protocol", "edge-cases"]
 }

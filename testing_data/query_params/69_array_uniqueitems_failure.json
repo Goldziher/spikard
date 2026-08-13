@@ -27,12 +27,7 @@
     "method": "GET",
     "path": "/items",
     "query_params": {
-      "ids": [
-        "1",
-        "2",
-        "2",
-        "3"
-      ]
+      "ids": ["1", "2", "2", "3"]
     }
   },
   "expected_response": {
@@ -45,10 +40,7 @@
       "errors": [
         {
           "type": "validation_error",
-          "loc": [
-            "query",
-            "ids"
-          ],
+          "loc": ["query", "ids"],
           "msg": "Array items must be unique",
           "ctx": {
             "unique_items": true,
@@ -59,11 +51,5 @@
       ]
     }
   },
-  "tags": [
-    "query_params",
-    "array",
-    "uniqueItems",
-    "validation",
-    "error"
-  ]
+  "tags": ["query_params", "array", "uniqueItems", "validation", "error"]
 }

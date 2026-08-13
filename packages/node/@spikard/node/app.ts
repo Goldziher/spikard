@@ -13,6 +13,16 @@
  */
 
 import * as service from "./service.js";
+import type {
+  ApiKeyAuthConfig,
+  AuthorizationConfig,
+  CompressionConfig,
+  CorsConfig,
+  JsonValue,
+  JwtAuthConfig,
+  LifecycleHooksConfig,
+  RateLimitConfig,
+} from "./index.js";
 import type { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
@@ -60,10 +70,43 @@ export type Handler<ReqBody = unknown, ResBody = unknown> = (
 ) => Promise<TypedResponse<ResBody>>;
 
 /**
- * Route configuration with optional schema validation.
+ * Per-route middleware configuration.
+ *
+ * Every field maps one-to-one onto a `RouteBuilder` setter; the middleware itself is applied by
+ * the Rust core, so these options only carry configuration across the FFI boundary. Omitting a
+ * field leaves the server-global default in place, which is why every option is optional rather
+ * than nullable: the core distinguishes "unset" from an explicitly empty configuration. ~keep
+ */
+export interface RouteMiddlewareConfig {
+  /** Per-route CORS configuration, overriding the server-global default */
+  cors?: CorsConfig;
+  /** Per-route response compression configuration, overriding the server-global default */
+  compression?: CompressionConfig;
+  /** Per-route maximum request body size in bytes, overriding the server-global default */
+  bodyLimit?: number;
+  /** Per-route request timeout in seconds, overriding the server-global default */
+  requestTimeout?: number;
+  /** Per-route rate limiting configuration, overriding the server-global default */
+  rateLimit?: RateLimitConfig;
+  /** Force per-route request-id generation on or off, overriding the server-global default */
+  requestId?: boolean;
+  /** Require JWT authentication for this route */
+  jwtAuth?: JwtAuthConfig;
+  /** Require API key authentication for this route */
+  apiKeyAuth?: ApiKeyAuthConfig;
+  /** Roles/scopes/permissions authorization requirement for this route */
+  authorization?: AuthorizationConfig;
+  /** Registered lifecycle hooks to run for this route */
+  lifecycleHooks?: LifecycleHooksConfig;
+  /** Literal OpenRPC method spec document for this route */
+  openrpcSpec?: JsonValue;
+}
+
+/**
+ * Route configuration with optional schema validation and per-route middleware.
  * Schemas are converted to JSON Schema and attached to the Rust core for validation.
  */
-export interface RouteConfig<ReqBody = unknown> {
+export interface RouteConfig<ReqBody = unknown> extends RouteMiddlewareConfig {
   /** Zod schema to validate the request body (converted to JSON Schema in Rust core) */
   body?: z.ZodType<ReqBody>;
   /** Optional query parameters schema (for future use) */
@@ -194,6 +237,8 @@ export class App {
       builder = builder.requestSchemaJson(jsonSchema);
     }
 
+    builder = this.applyMiddleware(builder, config);
+
     // Create the low-level handler that bridges the typed interface to the raw contract
     // At this point, the request body is already validated by the Rust core
     const bridgeHandler = async (requestData: Record<string, any>): Promise<Record<string, any>> => {
@@ -249,6 +294,50 @@ export class App {
 
     // Register with the low-level service App
     this.serviceApp.registerRoute(builder, bridgeHandler);
+  }
+
+  /**
+   * Forward the per-route middleware options onto the RouteBuilder.
+   *
+   * Each setter is called only when the option is present, so an unset option leaves the
+   * server-global default untouched rather than overriding it with an empty configuration. ~keep
+   */
+  private applyMiddleware(builder: service.RouteBuilder, config: RouteMiddlewareConfig): service.RouteBuilder {
+    let result = builder;
+    if (config.cors !== undefined) {
+      result = result.cors(config.cors);
+    }
+    if (config.compression !== undefined) {
+      result = result.compression(config.compression);
+    }
+    if (config.bodyLimit !== undefined) {
+      result = result.bodyLimit(config.bodyLimit);
+    }
+    if (config.requestTimeout !== undefined) {
+      result = result.requestTimeout(config.requestTimeout);
+    }
+    if (config.rateLimit !== undefined) {
+      result = result.rateLimit(config.rateLimit);
+    }
+    if (config.requestId !== undefined) {
+      result = result.requestId(config.requestId);
+    }
+    if (config.jwtAuth !== undefined) {
+      result = result.jwtAuth(config.jwtAuth);
+    }
+    if (config.apiKeyAuth !== undefined) {
+      result = result.apiKeyAuth(config.apiKeyAuth);
+    }
+    if (config.authorization !== undefined) {
+      result = result.authorization(config.authorization);
+    }
+    if (config.lifecycleHooks !== undefined) {
+      result = result.lifecycleHooks(config.lifecycleHooks);
+    }
+    if (config.openrpcSpec !== undefined) {
+      result = result.openrpcSpec(config.openrpcSpec);
+    }
+    return result;
   }
 
   /**

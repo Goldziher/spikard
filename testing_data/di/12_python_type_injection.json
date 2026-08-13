@@ -29,10 +29,7 @@
         "python_type": "CacheClient"
       }
     },
-    "handler_dependencies": [
-      "database_pool",
-      "cache_client"
-    ],
+    "handler_dependencies": ["database_pool", "cache_client"],
     "injection_strategy": "type"
   },
   "request": {
@@ -47,10 +44,5 @@
     }
   },
   "notes": "Python handler uses type hints (def handler(db: DatabasePool, cache: CacheClient)) to automatically inject dependencies by matching types.",
-  "tags": [
-    "dependency_injection",
-    "python",
-    "type_hints",
-    "language_specific"
-  ]
+  "tags": ["dependency_injection", "python", "type_hints", "language_specific"]
 }

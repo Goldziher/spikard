@@ -27,10 +27,7 @@
         }
       },
       "additionalProperties": false,
-      "required": [
-        "name",
-        "price"
-      ]
+      "required": ["name", "price"]
     }
   },
   "request": {

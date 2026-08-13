@@ -86,10 +86,5 @@
       ]
     }
   },
-  "tags": [
-    "queries",
-    "persisted-queries",
-    "registration",
-    "apq"
-  ]
+  "tags": ["queries", "persisted-queries", "registration", "apq"]
 }

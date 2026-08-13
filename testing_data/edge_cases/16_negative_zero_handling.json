@@ -12,9 +12,7 @@
     "method": "POST",
     "body_schema": {
       "type": "object",
-      "required": [
-        "offset"
-      ],
+      "required": ["offset"],
       "properties": {
         "offset": {
           "type": "number"
@@ -35,10 +33,5 @@
       "offset": 0
     }
   },
-  "tags": [
-    "edge_cases",
-    "numeric",
-    "negative_zero",
-    "success"
-  ]
+  "tags": ["edge_cases", "numeric", "negative_zero", "success"]
 }

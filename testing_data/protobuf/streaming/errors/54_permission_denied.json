@@ -72,11 +72,5 @@
     },
     "note": "Client attempted to upload with admin access level but current caller lacks required permissions"
   },
-  "tags": [
-    "grpc_status",
-    "client_streaming",
-    "auth",
-    "error",
-    "permission_denied"
-  ]
+  "tags": ["grpc_status", "client_streaming", "auth", "error", "permission_denied"]
 }

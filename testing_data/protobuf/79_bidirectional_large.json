@@ -73,9 +73,5 @@
       "direction": "server-to-client"
     }
   },
-  "tags": [
-    "large_payloads",
-    "streaming",
-    "bidirectional_streaming"
-  ]
+  "tags": ["large_payloads", "streaming", "bidirectional_streaming"]
 }

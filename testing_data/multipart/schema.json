@@ -17,12 +17,7 @@
       "properties": {
         "framework": {
           "type": "string",
-          "enum": [
-            "starlette",
-            "fastapi",
-            "litestar",
-            "spikard"
-          ]
+          "enum": ["starlette", "fastapi", "litestar", "spikard"]
         },
         "test_file": {
           "type": "string",
@@ -40,11 +35,7 @@
       "properties": {
         "method": {
           "type": "string",
-          "enum": [
-            "POST",
-            "PUT",
-            "PATCH"
-          ]
+          "enum": ["POST", "PUT", "PATCH"]
         },
         "path": {
           "type": "string"
@@ -65,10 +56,7 @@
                 "description": "Form field name for this file"
               },
               "filename": {
-                "type": [
-                  "string",
-                  "null"
-                ],
+                "type": ["string", "null"],
                 "description": "Original filename, null for unnamed files"
               },
               "content": {
@@ -81,17 +69,11 @@
               },
               "content_encoding": {
                 "type": "string",
-                "enum": [
-                  "text",
-                  "base64"
-                ],
+                "enum": ["text", "base64"],
                 "default": "text"
               },
               "content_type": {
-                "type": [
-                  "string",
-                  "null"
-                ],
+                "type": ["string", "null"],
                 "description": "MIME type of the file"
               },
               "headers": {
@@ -102,9 +84,7 @@
                 }
               }
             },
-            "required": [
-              "field_name"
-            ]
+            "required": ["field_name"]
           }
         },
         "data": {
@@ -124,21 +104,14 @@
               {
                 "type": "array",
                 "items": {
-                  "type": [
-                    "string",
-                    "number",
-                    "boolean"
-                  ]
+                  "type": ["string", "number", "boolean"]
                 }
               }
             ]
           }
         }
       },
-      "required": [
-        "method",
-        "path"
-      ]
+      "required": ["method", "path"]
     },
     "expected_response": {
       "type": "object",
@@ -156,9 +129,7 @@
           }
         }
       },
-      "required": [
-        "status_code"
-      ]
+      "required": ["status_code"]
     },
     "handler": {
       "type": "object",
@@ -184,10 +155,5 @@
       "description": "Test category"
     }
   },
-  "required": [
-    "name",
-    "description",
-    "request",
-    "expected_response"
-  ]
+  "required": ["name", "description", "request", "expected_response"]
 }

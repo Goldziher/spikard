@@ -559,6 +559,88 @@ void *__swift_bridge__$Vec_RouteBuilder$get_mut(void *vec_ptr, uintptr_t index);
 uintptr_t __swift_bridge__$Vec_RouteBuilder$len(void *vec_ptr);
 void *__swift_bridge__$Vec_RouteBuilder$as_ptr(void *vec_ptr);
 
+typedef struct RequestIdConfig RequestIdConfig;
+void __swift_bridge__$RequestIdConfig$_free(void *self);
+
+void *__swift_bridge__$Vec_RequestIdConfig$new(void);
+void __swift_bridge__$Vec_RequestIdConfig$drop(void *vec_ptr);
+void __swift_bridge__$Vec_RequestIdConfig$push(void *vec_ptr, void *item_ptr);
+void *__swift_bridge__$Vec_RequestIdConfig$pop(void *vec_ptr);
+void *__swift_bridge__$Vec_RequestIdConfig$get(void *vec_ptr, uintptr_t index);
+void *__swift_bridge__$Vec_RequestIdConfig$get_mut(void *vec_ptr,
+                                                   uintptr_t index);
+uintptr_t __swift_bridge__$Vec_RequestIdConfig$len(void *vec_ptr);
+void *__swift_bridge__$Vec_RequestIdConfig$as_ptr(void *vec_ptr);
+
+typedef struct JwtAuthConfig JwtAuthConfig;
+void __swift_bridge__$JwtAuthConfig$_free(void *self);
+
+void *__swift_bridge__$Vec_JwtAuthConfig$new(void);
+void __swift_bridge__$Vec_JwtAuthConfig$drop(void *vec_ptr);
+void __swift_bridge__$Vec_JwtAuthConfig$push(void *vec_ptr, void *item_ptr);
+void *__swift_bridge__$Vec_JwtAuthConfig$pop(void *vec_ptr);
+void *__swift_bridge__$Vec_JwtAuthConfig$get(void *vec_ptr, uintptr_t index);
+void *__swift_bridge__$Vec_JwtAuthConfig$get_mut(void *vec_ptr,
+                                                 uintptr_t index);
+uintptr_t __swift_bridge__$Vec_JwtAuthConfig$len(void *vec_ptr);
+void *__swift_bridge__$Vec_JwtAuthConfig$as_ptr(void *vec_ptr);
+
+typedef struct ApiKeyAuthConfig ApiKeyAuthConfig;
+void __swift_bridge__$ApiKeyAuthConfig$_free(void *self);
+
+void *__swift_bridge__$Vec_ApiKeyAuthConfig$new(void);
+void __swift_bridge__$Vec_ApiKeyAuthConfig$drop(void *vec_ptr);
+void __swift_bridge__$Vec_ApiKeyAuthConfig$push(void *vec_ptr, void *item_ptr);
+void *__swift_bridge__$Vec_ApiKeyAuthConfig$pop(void *vec_ptr);
+void *__swift_bridge__$Vec_ApiKeyAuthConfig$get(void *vec_ptr, uintptr_t index);
+void *__swift_bridge__$Vec_ApiKeyAuthConfig$get_mut(void *vec_ptr,
+                                                    uintptr_t index);
+uintptr_t __swift_bridge__$Vec_ApiKeyAuthConfig$len(void *vec_ptr);
+void *__swift_bridge__$Vec_ApiKeyAuthConfig$as_ptr(void *vec_ptr);
+
+typedef struct AuthorizationConfig AuthorizationConfig;
+void __swift_bridge__$AuthorizationConfig$_free(void *self);
+
+void *__swift_bridge__$Vec_AuthorizationConfig$new(void);
+void __swift_bridge__$Vec_AuthorizationConfig$drop(void *vec_ptr);
+void __swift_bridge__$Vec_AuthorizationConfig$push(void *vec_ptr,
+                                                   void *item_ptr);
+void *__swift_bridge__$Vec_AuthorizationConfig$pop(void *vec_ptr);
+void *__swift_bridge__$Vec_AuthorizationConfig$get(void *vec_ptr,
+                                                   uintptr_t index);
+void *__swift_bridge__$Vec_AuthorizationConfig$get_mut(void *vec_ptr,
+                                                       uintptr_t index);
+uintptr_t __swift_bridge__$Vec_AuthorizationConfig$len(void *vec_ptr);
+void *__swift_bridge__$Vec_AuthorizationConfig$as_ptr(void *vec_ptr);
+
+typedef struct LifecycleHookRef LifecycleHookRef;
+void __swift_bridge__$LifecycleHookRef$_free(void *self);
+
+void *__swift_bridge__$Vec_LifecycleHookRef$new(void);
+void __swift_bridge__$Vec_LifecycleHookRef$drop(void *vec_ptr);
+void __swift_bridge__$Vec_LifecycleHookRef$push(void *vec_ptr, void *item_ptr);
+void *__swift_bridge__$Vec_LifecycleHookRef$pop(void *vec_ptr);
+void *__swift_bridge__$Vec_LifecycleHookRef$get(void *vec_ptr, uintptr_t index);
+void *__swift_bridge__$Vec_LifecycleHookRef$get_mut(void *vec_ptr,
+                                                    uintptr_t index);
+uintptr_t __swift_bridge__$Vec_LifecycleHookRef$len(void *vec_ptr);
+void *__swift_bridge__$Vec_LifecycleHookRef$as_ptr(void *vec_ptr);
+
+typedef struct LifecycleHooksConfig LifecycleHooksConfig;
+void __swift_bridge__$LifecycleHooksConfig$_free(void *self);
+
+void *__swift_bridge__$Vec_LifecycleHooksConfig$new(void);
+void __swift_bridge__$Vec_LifecycleHooksConfig$drop(void *vec_ptr);
+void __swift_bridge__$Vec_LifecycleHooksConfig$push(void *vec_ptr,
+                                                    void *item_ptr);
+void *__swift_bridge__$Vec_LifecycleHooksConfig$pop(void *vec_ptr);
+void *__swift_bridge__$Vec_LifecycleHooksConfig$get(void *vec_ptr,
+                                                    uintptr_t index);
+void *__swift_bridge__$Vec_LifecycleHooksConfig$get_mut(void *vec_ptr,
+                                                        uintptr_t index);
+uintptr_t __swift_bridge__$Vec_LifecycleHooksConfig$len(void *vec_ptr);
+void *__swift_bridge__$Vec_LifecycleHooksConfig$as_ptr(void *vec_ptr);
+
 typedef struct JsonRpcMethodInfo JsonRpcMethodInfo;
 void __swift_bridge__$JsonRpcMethodInfo$_free(void *self);
 
@@ -762,6 +844,21 @@ void *__swift_bridge__$Vec_Method$get_mut(void *vec_ptr, uintptr_t index);
 uintptr_t __swift_bridge__$Vec_Method$len(void *vec_ptr);
 void *__swift_bridge__$Vec_Method$as_ptr(void *vec_ptr);
 
+typedef struct LifecycleHookPhase LifecycleHookPhase;
+void __swift_bridge__$LifecycleHookPhase$_free(void *self);
+
+void *__swift_bridge__$Vec_LifecycleHookPhase$new(void);
+void __swift_bridge__$Vec_LifecycleHookPhase$drop(void *vec_ptr);
+void __swift_bridge__$Vec_LifecycleHookPhase$push(void *vec_ptr,
+                                                  void *item_ptr);
+void *__swift_bridge__$Vec_LifecycleHookPhase$pop(void *vec_ptr);
+void *__swift_bridge__$Vec_LifecycleHookPhase$get(void *vec_ptr,
+                                                  uintptr_t index);
+void *__swift_bridge__$Vec_LifecycleHookPhase$get_mut(void *vec_ptr,
+                                                      uintptr_t index);
+uintptr_t __swift_bridge__$Vec_LifecycleHookPhase$len(void *vec_ptr);
+void *__swift_bridge__$Vec_LifecycleHookPhase$as_ptr(void *vec_ptr);
+
 typedef struct SecuritySchemeInfo SecuritySchemeInfo;
 void __swift_bridge__$SecuritySchemeInfo$_free(void *self);
 
@@ -879,11 +976,6 @@ uint64_t __swift_bridge__$BackgroundTaskConfig$drain_timeout_secs(void *self);
 void *__swift_bridge__$BackgroundJobMetadata$new(void *name, void *request_id);
 void *__swift_bridge__$BackgroundJobMetadata$name(void *self);
 void *__swift_bridge__$BackgroundJobMetadata$request_id(void *self);
-void *
-__swift_bridge__$CorsConfig$new(void *allowed_origins, void *allowed_methods,
-                                void *allowed_headers, void *expose_headers,
-                                struct __private__OptionU32 max_age,
-                                struct __private__OptionBool allow_credentials);
 void *__swift_bridge__$CorsConfig$allowed_origins(void *self);
 void *__swift_bridge__$CorsConfig$allowed_methods(void *self);
 void *__swift_bridge__$CorsConfig$allowed_headers(void *self);
@@ -937,10 +1029,6 @@ bool __swift_bridge__$JsonRpcConfig$enabled(void *self);
 void *__swift_bridge__$JsonRpcConfig$endpoint_path(void *self);
 bool __swift_bridge__$JsonRpcConfig$enable_batch(void *self);
 uintptr_t __swift_bridge__$JsonRpcConfig$max_batch_size(void *self);
-void *__swift_bridge__$OpenApiConfig$new(
-    bool enabled, void *title, void *version, void *description,
-    void *swagger_ui_path, void *redoc_path, void *openapi_json_path,
-    void *contact, void *license, void *servers, void *security_schemes);
 bool __swift_bridge__$OpenApiConfig$enabled(void *self);
 void *__swift_bridge__$OpenApiConfig$title(void *self);
 void *__swift_bridge__$OpenApiConfig$version(void *self);
@@ -952,8 +1040,6 @@ void *__swift_bridge__$OpenApiConfig$contact(void *self);
 void *__swift_bridge__$OpenApiConfig$license(void *self);
 void *__swift_bridge__$OpenApiConfig$servers(void *self);
 void *__swift_bridge__$OpenApiConfig$security_schemes(void *self);
-void *__swift_bridge__$Response$new(void *content, uint16_t status_code,
-                                    void *headers);
 void *__swift_bridge__$Response$content(void *self);
 uint16_t __swift_bridge__$Response$status_code(void *self);
 void *__swift_bridge__$Response$headers(void *self);
@@ -1029,9 +1115,52 @@ void *__swift_bridge__$route_builder_body_limit(void *client,
                                                 uintptr_t max_bytes);
 void *__swift_bridge__$route_builder_request_timeout(void *client,
                                                      uint64_t seconds);
+void *__swift_bridge__$route_builder_rate_limit(void *client, void *rate_limit);
+void *__swift_bridge__$route_builder_request_id(void *client, bool enabled);
+void *__swift_bridge__$route_builder_jwt_auth(void *client, void *config);
+void *__swift_bridge__$route_builder_api_key_auth(void *client, void *config);
+void *__swift_bridge__$route_builder_authorization(void *client, void *config);
+void *__swift_bridge__$route_builder_lifecycle_hooks(void *client, void *hooks);
+void *__swift_bridge__$route_builder_jsonrpc_method(void *client, void *info);
+void *__swift_bridge__$route_builder_openrpc_spec(void *client, void *spec);
 void *__swift_bridge__$route_builder_sync(void *client);
 void *__swift_bridge__$route_builder_handler_dependencies(void *client,
                                                           void *dependencies);
+void *__swift_bridge__$RequestIdConfig$new(bool enabled);
+bool __swift_bridge__$RequestIdConfig$enabled(void *self);
+bool __swift_bridge__$JwtAuthConfig$enabled(void *self);
+void *__swift_bridge__$JwtAuthConfig$secret(void *self);
+void *__swift_bridge__$JwtAuthConfig$public_key(void *self);
+void *__swift_bridge__$JwtAuthConfig$algorithm(void *self);
+void *__swift_bridge__$JwtAuthConfig$audience(void *self);
+void *__swift_bridge__$JwtAuthConfig$issuer(void *self);
+uint64_t __swift_bridge__$JwtAuthConfig$leeway(void *self);
+bool __swift_bridge__$ApiKeyAuthConfig$enabled(void *self);
+void *__swift_bridge__$ApiKeyAuthConfig$keys(void *self);
+void *__swift_bridge__$ApiKeyAuthConfig$header_name(void *self);
+void *__swift_bridge__$AuthorizationConfig$new(void *required_roles,
+                                               void *required_scopes,
+                                               void *required_permissions,
+                                               bool require_all);
+bool __swift_bridge__$AuthorizationConfig$require_all(void *self);
+void *__swift_bridge__$LifecycleHookRef$new(void *name, void *handler,
+                                            void *dependencies, void *config,
+                                            struct __private__OptionU32 order);
+void *__swift_bridge__$LifecycleHookRef$name(void *self);
+void *__swift_bridge__$LifecycleHookRef$handler(void *self);
+void *__swift_bridge__$LifecycleHookRef$dependencies(void *self);
+void *__swift_bridge__$LifecycleHookRef$config(void *self);
+struct __private__OptionU32 __swift_bridge__$LifecycleHookRef$order(void *self);
+void *__swift_bridge__$LifecycleHooksConfig$new(void *on_request,
+                                                void *pre_validation,
+                                                void *pre_handler,
+                                                void *on_response,
+                                                void *on_error);
+void *__swift_bridge__$LifecycleHooksConfig$on_request(void *self);
+void *__swift_bridge__$LifecycleHooksConfig$pre_validation(void *self);
+void *__swift_bridge__$LifecycleHooksConfig$pre_handler(void *self);
+void *__swift_bridge__$LifecycleHooksConfig$on_response(void *self);
+void *__swift_bridge__$LifecycleHooksConfig$on_error(void *self);
 void *__swift_bridge__$JsonRpcMethodInfo$method_name(void *self);
 void *__swift_bridge__$JsonRpcMethodInfo$description(void *self);
 void *__swift_bridge__$JsonRpcMethodInfo$params_schema(void *self);
@@ -1086,6 +1215,7 @@ void *__swift_bridge__$TestingSseEvent$data(void *self);
 void __swift_bridge__$request_noop(void *client);
 void __swift_bridge__$request_data_noop(void *client);
 void *__swift_bridge__$Method$to_string(void *self);
+void *__swift_bridge__$LifecycleHookPhase$to_string(void *self);
 void *__swift_bridge__$SecuritySchemeInfo$to_string(void *self);
 void __swift_bridge__$handler_result_noop(void *client);
 void *__swift_bridge__$schema_query_only(void);
@@ -1106,6 +1236,16 @@ __swift_bridge__$cors_config_from_json(void *json);
 struct __private__ResultPtrAndPtr
 __swift_bridge__$compression_config_from_json(void *json);
 struct __private__ResultPtrAndPtr
+__swift_bridge__$rate_limit_config_from_json(void *json);
+struct __private__ResultPtrAndPtr
+__swift_bridge__$jwt_auth_config_from_json(void *json);
+struct __private__ResultPtrAndPtr
+__swift_bridge__$api_key_auth_config_from_json(void *json);
+struct __private__ResultPtrAndPtr
+__swift_bridge__$lifecycle_hooks_config_from_json(void *json);
+struct __private__ResultPtrAndPtr
+__swift_bridge__$json_rpc_method_info_from_json(void *json);
+struct __private__ResultPtrAndPtr
 __swift_bridge__$upload_file_from_json(void *json);
 struct __private__ResultPtrAndPtr
 __swift_bridge__$field_error_spec_from_json(void *json);
@@ -1121,8 +1261,6 @@ struct __private__ResultPtrAndPtr
 __swift_bridge__$background_task_config_from_json(void *json);
 struct __private__ResultPtrAndPtr
 __swift_bridge__$background_job_metadata_from_json(void *json);
-struct __private__ResultPtrAndPtr
-__swift_bridge__$rate_limit_config_from_json(void *json);
 struct __private__ResultPtrAndPtr
 __swift_bridge__$grpc_config_from_json(void *json);
 struct __private__ResultPtrAndPtr
@@ -1142,7 +1280,9 @@ __swift_bridge__$static_files_config_from_json(void *json);
 struct __private__ResultPtrAndPtr
 __swift_bridge__$server_config_from_json(void *json);
 struct __private__ResultPtrAndPtr
-__swift_bridge__$json_rpc_method_info_from_json(void *json);
+__swift_bridge__$request_id_config_from_json(void *json);
+struct __private__ResultPtrAndPtr
+__swift_bridge__$lifecycle_hook_ref_from_json(void *json);
 struct __private__ResultPtrAndPtr
 __swift_bridge__$problem_details_from_json(void *json);
 struct __private__ResultPtrAndPtr
@@ -1186,6 +1326,12 @@ void *__swift_bridge__$__alef_phantom_vec_api_key_config(void);
 void *__swift_bridge__$__alef_phantom_vec_static_files_config(void);
 void *__swift_bridge__$__alef_phantom_vec_server_config(void);
 void *__swift_bridge__$__alef_phantom_vec_route_builder(void);
+void *__swift_bridge__$__alef_phantom_vec_request_id_config(void);
+void *__swift_bridge__$__alef_phantom_vec_jwt_auth_config(void);
+void *__swift_bridge__$__alef_phantom_vec_api_key_auth_config(void);
+void *__swift_bridge__$__alef_phantom_vec_authorization_config(void);
+void *__swift_bridge__$__alef_phantom_vec_lifecycle_hook_ref(void);
+void *__swift_bridge__$__alef_phantom_vec_lifecycle_hooks_config(void);
 void *__swift_bridge__$__alef_phantom_vec_json_rpc_method_info(void);
 void *__swift_bridge__$__alef_phantom_vec_problem_details(void);
 void *__swift_bridge__$__alef_phantom_vec_parsed_channel(void);
@@ -1202,6 +1348,7 @@ void *__swift_bridge__$__alef_phantom_vec_handler_result(void);
 void *__swift_bridge__$__alef_phantom_vec_request(void);
 void *__swift_bridge__$__alef_phantom_vec_request_data(void);
 void *__swift_bridge__$__alef_phantom_vec_method(void);
+void *__swift_bridge__$__alef_phantom_vec_lifecycle_hook_phase(void);
 void *__swift_bridge__$__alef_phantom_vec_security_scheme_info(void);
 void *__swift_bridge__$__alef_phantom_vec_testing_sse_event(void);
 

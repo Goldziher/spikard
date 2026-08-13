@@ -34,11 +34,5 @@
       "repo": "spikard-http"
     }
   },
-  "tags": [
-    "path_params",
-    "string",
-    "pattern",
-    "validation",
-    "success"
-  ]
+  "tags": ["path_params", "string", "pattern", "validation", "success"]
 }

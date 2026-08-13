@@ -3,6 +3,10 @@
     "id": "static_file_server_returns_text_file",
     "description": "Tests serving a plain text file with Cache-Control headers.",
     "category": "static_files",
+    "docs": {
+      "topic": "static_files",
+      "stem": "static_file_server_returns_text_file"
+    },
     "http": {
       "handler": {
         "route": "/public/hello.txt",
@@ -41,6 +45,10 @@
     "id": "static_server_returns_index_html_for_directory",
     "description": "When index files are enabled the server should serve index.html when the directory root is requested.",
     "category": "static_files",
+    "docs": {
+      "topic": "static_files",
+      "stem": "static_server_returns_index_html_for_directory"
+    },
     "http": {
       "handler": {
         "route": "/app",

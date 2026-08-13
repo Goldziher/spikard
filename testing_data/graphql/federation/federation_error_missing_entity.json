@@ -18,9 +18,7 @@
   "expected_response": {
     "status_code": 200,
     "data": {
-      "_entities": [
-        null
-      ]
+      "_entities": [null]
     }
   },
   "resolvers": {
@@ -35,11 +33,7 @@
       }
     }
   },
-  "tags": [
-    "federation",
-    "error-handling",
-    "entity-resolution"
-  ],
+  "tags": ["federation", "error-handling", "entity-resolution"],
   "complexity_limit": 50,
   "depth_limit": 3
 }

@@ -1,6 +1,6 @@
 # Feature parity matrix
 
-Spikard ships 15 language bindings sharing a Rust core. This matrix shows which server-side features are available in each binding.
+Spikard is a Rust core plus 14 language bindings. This matrix shows which server-side features are available in each, with the core itself listed first for comparison.
 
 | Binding | Server | HTTP Routing | WebSocket | SSE | gRPC | GraphQL | JSON-RPC | OpenAPI | JWT Auth | API Key Auth | CORS | Compression | Rate Limit | Static Files | TestClient |
 |---------|--------|-----|-----------|-----|------|---------|----------|---------|----------|--------------|------|-------------|------------|--------------|------------|

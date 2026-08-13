@@ -10,10 +10,7 @@
     "query": "subscription OnPostUpdated($authorId: ID!, $statuses: [PostStatus!]!, $tagFilter: String, $scoreThreshold: Int) {\n  postUpdated(filter: {\n    authorId: $authorId\n    status: $statuses\n    tags_contains: $tagFilter\n    minScore: $scoreThreshold\n  }) {\n    id\n    title\n    authorId\n    content\n    status\n    tags\n    score\n    updatedAt\n  }\n}",
     "variables": {
       "authorId": "123",
-      "statuses": [
-        "PUBLISHED",
-        "DRAFT"
-      ],
+      "statuses": ["PUBLISHED", "DRAFT"],
       "tagFilter": "graphql",
       "scoreThreshold": 50
     },
@@ -25,10 +22,7 @@
       "query": "subscription OnPostUpdated($authorId: ID!, $statuses: [PostStatus!]!, $tagFilter: String, $scoreThreshold: Int) {\n  postUpdated(filter: {\n    authorId: $authorId\n    status: $statuses\n    tags_contains: $tagFilter\n    minScore: $scoreThreshold\n  }) {\n    id\n    title\n    authorId\n    content\n    status\n    tags\n    score\n    updatedAt\n  }\n}",
       "variables": {
         "authorId": "123",
-        "statuses": [
-          "PUBLISHED",
-          "DRAFT"
-        ],
+        "statuses": ["PUBLISHED", "DRAFT"],
         "tagFilter": "graphql",
         "scoreThreshold": 50
       },
@@ -44,11 +38,7 @@
         "authorId": "123",
         "content": "A comprehensive guide to GraphQL subscriptions with advanced filtering techniques...",
         "status": "PUBLISHED",
-        "tags": [
-          "graphql",
-          "subscriptions",
-          "real-time"
-        ],
+        "tags": ["graphql", "subscriptions", "real-time"],
         "score": 95,
         "updatedAt": "2025-12-27T15:45:00Z"
       }
@@ -59,10 +49,7 @@
       "type": "mock_with_filter",
       "filter_criteria": {
         "authorId_equals": "123",
-        "status_in": [
-          "PUBLISHED",
-          "DRAFT"
-        ],
+        "status_in": ["PUBLISHED", "DRAFT"],
         "tags_includes": "graphql",
         "score_gte": 50
       },
@@ -72,11 +59,7 @@
         "authorId": "123",
         "content": "A comprehensive guide to GraphQL subscriptions with advanced filtering techniques...",
         "status": "PUBLISHED",
-        "tags": [
-          "graphql",
-          "subscriptions",
-          "real-time"
-        ],
+        "tags": ["graphql", "subscriptions", "real-time"],
         "score": 95,
         "updatedAt": "2025-12-27T15:45:00Z"
       },
@@ -100,10 +83,7 @@
           "title": "Database Design",
           "authorId": "123",
           "status": "PUBLISHED",
-          "tags": [
-            "database",
-            "sql"
-          ],
+          "tags": ["database", "sql"],
           "reason": "tags_contains filter not matched"
         },
         {
@@ -111,22 +91,12 @@
           "title": "Low Score Post",
           "authorId": "123",
           "status": "DRAFT",
-          "tags": [
-            "graphql"
-          ],
+          "tags": ["graphql"],
           "score": 25,
           "reason": "score below threshold"
         }
       ]
     }
   },
-  "tags": [
-    "subscriptions",
-    "websocket",
-    "advanced-filtering",
-    "complex-input",
-    "multi-criteria",
-    "enums",
-    "arrays"
-  ]
+  "tags": ["subscriptions", "websocket", "advanced-filtering", "complex-input", "multi-criteria", "enums", "arrays"]
 }

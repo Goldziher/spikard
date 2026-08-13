@@ -23,8 +23,5 @@
       "request": "under-limit"
     }
   },
-  "tags": [
-    "rate_limit",
-    "middleware"
-  ]
+  "tags": ["rate_limit", "middleware"]
 }

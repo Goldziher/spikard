@@ -3,6 +3,10 @@
     "id": "user_agent_header_default_value",
     "description": "Tests optional User-Agent header when not provided, uses testclient default",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "user_agent_header_default_value"
+    },
     "http": {
       "handler": {
         "route": "/items/",
@@ -34,6 +38,10 @@
     "id": "user_agent_header_custom_value",
     "description": "Tests User-Agent header with custom value",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "user_agent_header_custom_value"
+    },
     "http": {
       "handler": {
         "route": "/items/",
@@ -66,6 +74,10 @@
     "id": "x_api_key_required_header_success",
     "description": "Tests required X-API-Key header with valid value",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "x_api_key_required_header_success"
+    },
     "http": {
       "handler": {
         "route": "/users/me",
@@ -99,6 +111,10 @@
     "id": "x_api_key_required_header_missing",
     "description": "Tests required X-API-Key header when not provided, returns 403",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "x_api_key_required_header_missing"
+    },
     "http": {
       "handler": {
         "route": "/users/me",
@@ -140,6 +156,10 @@
     "id": "x_api_key_optional_header_success",
     "description": "Tests optional X-API-Key header with valid value",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "x_api_key_optional_header_success"
+    },
     "http": {
       "handler": {
         "route": "/users/me",
@@ -173,6 +193,10 @@
     "id": "x_api_key_optional_header_missing",
     "description": "Tests optional X-API-Key header when not provided, returns fallback message",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "x_api_key_optional_header_missing"
+    },
     "http": {
       "handler": {
         "route": "/users/me",
@@ -203,6 +227,10 @@
     "id": "authorization_header_success",
     "description": "Tests Authorization header with valid Digest scheme",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "authorization_header_success"
+    },
     "http": {
       "handler": {
         "route": "/users/me",
@@ -236,6 +264,10 @@
     "id": "authorization_header_missing",
     "description": "Tests missing Authorization header returns 403",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "authorization_header_missing"
+    },
     "http": {
       "handler": {
         "route": "/users/me",
@@ -277,6 +309,10 @@
     "id": "authorization_header_wrong_scheme",
     "description": "Tests Authorization header with incorrect scheme returns 403",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "authorization_header_wrong_scheme"
+    },
     "http": {
       "handler": {
         "route": "/users/me",
@@ -322,6 +358,10 @@
     "id": "multiple_header_values_x_token",
     "description": "Tests multiple values for same header name (X-Token)",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "multiple_header_values_x_token"
+    },
     "http": {
       "handler": {
         "route": "/items/",
@@ -354,6 +394,10 @@
     "id": "header_case_insensitivity_access",
     "description": "Tests case-insensitive header access (Content-Type vs content-type)",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "header_case_insensitivity_access"
+    },
     "http": {
       "handler": {
         "route": "/echo",
@@ -393,6 +437,10 @@
     "id": "optional_header_with_none_default_missing",
     "description": "Tests optional header parameter with None default when not provided",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "optional_header_with_none_default_missing"
+    },
     "http": {
       "handler": {
         "route": "/items/",
@@ -424,6 +472,10 @@
     "id": "content_type_header_application_json",
     "description": "Tests Content-Type header with JSON media type",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "content_type_header_application_json"
+    },
     "http": {
       "handler": {
         "route": "/headers/content-type",
@@ -456,6 +508,10 @@
     "id": "accept_header_json",
     "description": "Tests Accept header for content negotiation",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "accept_header_json"
+    },
     "http": {
       "handler": {
         "route": "/headers/accept",
@@ -488,6 +544,10 @@
     "id": "bearer_token_authentication_success",
     "description": "Tests Authorization header with Bearer token scheme",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "bearer_token_authentication_success"
+    },
     "http": {
       "handler": {
         "route": "/headers/bearer-auth",
@@ -520,6 +580,10 @@
     "id": "bearer_token_authentication_missing",
     "description": "Tests missing Bearer token returns 401 Unauthorized",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "bearer_token_authentication_missing"
+    },
     "http": {
       "handler": {
         "route": "/headers/bearer-auth",
@@ -562,6 +626,10 @@
     "id": "multiple_custom_headers",
     "description": "Tests multiple custom headers in single request",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "multiple_custom_headers"
+    },
     "http": {
       "handler": {
         "route": "/headers/multiple",
@@ -606,6 +674,10 @@
     "id": "header_validation_min_length_constraint",
     "description": "Tests header validation with min_length constraint",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "header_validation_min_length_constraint"
+    },
     "http": {
       "handler": {
         "route": "/headers/validated",
@@ -653,6 +725,10 @@
     "id": "accept_language_header",
     "description": "Tests Accept-Language header for locale/i18n",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "accept_language_header"
+    },
     "http": {
       "handler": {
         "route": "/headers/accept-language",
@@ -685,6 +761,10 @@
     "id": "referer_header",
     "description": "Tests Referer header (standard misspelling)",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "referer_header"
+    },
     "http": {
       "handler": {
         "route": "/headers/referer",
@@ -717,6 +797,10 @@
     "id": "header_regex_validation_fail",
     "description": "Tests header with regex pattern validation failure",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "header_regex_validation_fail"
+    },
     "http": {
       "handler": {
         "route": "/headers/pattern",
@@ -764,6 +848,10 @@
     "id": "header_regex_validation_success",
     "description": "Tests header with regex pattern validation success",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "header_regex_validation_success"
+    },
     "http": {
       "handler": {
         "route": "/headers/pattern",
@@ -797,6 +885,10 @@
     "id": "host_header",
     "description": "Tests Host header (standard HTTP header)",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "host_header"
+    },
     "http": {
       "handler": {
         "route": "/headers/host",
@@ -829,6 +921,10 @@
     "id": "header_validation_max_length_constraint_fail",
     "description": "Tests header validation with max_length constraint failure",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "header_validation_max_length_constraint_fail"
+    },
     "http": {
       "handler": {
         "route": "/headers/max-length",
@@ -876,6 +972,10 @@
     "id": "basic_authentication_success",
     "description": "Tests Authorization header with Basic auth scheme",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "basic_authentication_success"
+    },
     "http": {
       "handler": {
         "route": "/headers/basic-auth",
@@ -909,6 +1009,10 @@
     "id": "origin_header",
     "description": "Tests Origin header for CORS",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "origin_header"
+    },
     "http": {
       "handler": {
         "route": "/headers/origin",
@@ -941,6 +1045,10 @@
     "id": "accept_encoding_header",
     "description": "Tests Accept-Encoding header for compression negotiation",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "accept_encoding_header"
+    },
     "http": {
       "handler": {
         "route": "/headers/accept-encoding",
@@ -973,6 +1081,10 @@
     "id": "header_with_underscore_conversion_explicit",
     "description": "Tests X-Token header converted to x_token parameter",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "header_with_underscore_conversion_explicit"
+    },
     "http": {
       "handler": {
         "route": "/headers/underscore",
@@ -1005,6 +1117,10 @@
     "id": "30_bearer_token_format_valid",
     "description": "Authorization header with valid Bearer token format should be accepted",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "30_bearer_token_format_valid"
+    },
     "http": {
       "handler": {
         "route": "/protected",
@@ -1036,6 +1152,10 @@
     "id": "31_bearer_token_format_invalid",
     "description": "Authorization header with invalid Bearer token format should fail validation",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "31_bearer_token_format_invalid"
+    },
     "http": {
       "handler": {
         "route": "/protected",
@@ -1084,6 +1204,10 @@
     "id": "32_bearer_token_missing_prefix",
     "description": "Authorization header without Bearer prefix should fail validation",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "32_bearer_token_missing_prefix"
+    },
     "http": {
       "handler": {
         "route": "/protected",
@@ -1132,6 +1256,10 @@
     "id": "33_api_key_header_valid",
     "description": "X-API-Key header with valid format should be accepted",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "33_api_key_header_valid"
+    },
     "http": {
       "handler": {
         "route": "/api/data",
@@ -1163,6 +1291,10 @@
     "id": "34_api_key_header_invalid",
     "description": "X-API-Key header with invalid format should fail validation",
     "category": "headers",
+    "docs": {
+      "topic": "headers",
+      "stem": "34_api_key_header_invalid"
+    },
     "http": {
       "handler": {
         "route": "/api/data",

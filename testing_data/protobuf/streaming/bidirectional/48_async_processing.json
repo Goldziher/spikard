@@ -95,9 +95,5 @@
       }
     ]
   },
-  "tags": [
-    "bidirectional_streaming",
-    "async",
-    "processing"
-  ]
+  "tags": ["bidirectional_streaming", "async", "processing"]
 }

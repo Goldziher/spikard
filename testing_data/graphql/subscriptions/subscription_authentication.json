@@ -32,11 +32,5 @@
       "error_message": "Unauthorized: Missing authentication token"
     }
   },
-  "tags": [
-    "subscriptions",
-    "websocket",
-    "authentication",
-    "security",
-    "error-handling"
-  ]
+  "tags": ["subscriptions", "websocket", "authentication", "security", "error-handling"]
 }

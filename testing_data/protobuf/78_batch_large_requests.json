@@ -88,10 +88,5 @@
       "total_bytes": 5242880
     }
   },
-  "tags": [
-    "large_payloads",
-    "streaming",
-    "client_streaming",
-    "batching"
-  ]
+  "tags": ["large_payloads", "streaming", "client_streaming", "batching"]
 }

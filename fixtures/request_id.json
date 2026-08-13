@@ -3,6 +3,10 @@
     "id": "request_id_is_generated_when_not_provided",
     "description": "Ensures the request ID middleware attaches a UUID to responses when the client does not send one.",
     "category": "request_id",
+    "docs": {
+      "topic": "request_id",
+      "stem": "request_id_is_generated_when_not_provided"
+    },
     "http": {
       "handler": {
         "route": "/request-id/generated",
@@ -33,6 +37,10 @@
     "id": "request_id_header_is_preserved",
     "description": "When the client supplies X-Request-ID the same value should appear on the response.",
     "category": "request_id",
+    "docs": {
+      "topic": "request_id",
+      "stem": "request_id_header_is_preserved"
+    },
     "http": {
       "handler": {
         "route": "/request-id/preserved",
@@ -62,6 +70,10 @@
     "id": "request_id_middleware_can_be_disabled",
     "description": "When request ID generation is disabled the response should not contain X-Request-ID even if the client sends a header.",
     "category": "request_id",
+    "docs": {
+      "topic": "request_id",
+      "stem": "request_id_middleware_can_be_disabled"
+    },
     "http": {
       "handler": {
         "route": "/request-id/disabled",
