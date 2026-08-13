@@ -1,6 +1,17 @@
 //! WebAssembly HTTP e2e test generation (server-pattern slice from alef core).
 //!
-//! This module owns the server-pattern files for spikard's WASM e2e suite:
+//! **Inert under spikard's own configuration — this module emits nothing today.** `emit` requires
+//! `use_server_pattern`, which requires the `App` class to be exported, and `alef.toml`'s
+//! `[crates.wasm] exclude_types` permanently excludes both `App` and `RouteBuilder`. So
+//! `app_class_excluded` is always true and `emit` always returns an empty vector. spikard's WASM
+//! suite therefore runs the generic client pattern against `mock-server` and is contract testing,
+//! not binding e2e — see `docs/adr/0024-wasm-e2e-is-contract-testing.md`. Do not read a green WASM
+//! suite as evidence about the WASM binding.
+//!
+//! The code below is retained rather than deleted because the gate, not the renderer, is the
+//! decision: it fails closed, and a target that *does* export `App` would need exactly this. ~keep
+//!
+//! When it does apply, this module owns the server-pattern files:
 //! - `app_harness.mjs` — spawns the SUT as an HTTP server via the wasm-bindgen binding
 //! - `globalSetup.ts` — the server-pattern variant that spawns the app harness subprocess
 //!
