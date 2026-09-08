@@ -164,7 +164,6 @@ GEMINI.md
 .task/timestamp/
 
 # --- Per-language project state ---
-crates/spikard-node/index.d.ts
 crates/spikard-node/index.js
 crates/spikard-node/npm/
 crates/spikard-wasm/pkg/
@@ -215,7 +214,6 @@ tools/benchmark-harness/apps/phalcon/cache/
 tools/benchmark-harness/apps/phalcon/tmp/
 
 # --- Misc ---
-rust-toolchain.toml
 snapshots
 todo.md
 /*_TODO.md

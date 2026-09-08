@@ -19,6 +19,76 @@ languages = [
   "wasm",
 ]
 
+[workspace.ownership]
+# ~keep Paths this repository authors, not alef. Each was in a stable bad state before this
+# declaration: alef claims the path, the write guard refuses it for want of a provenance
+# marker, `alef verify` reports it stale, and `alef adopt` -- the remedy verify names --
+# refuses it too, either as a create-once seed or as a path it does not resolve as managed
+# output at all. That is a permanent failure with no reachable fix, exactly the condition
+# [workspace.ownership] exists to end. Listed one path at a time rather than by broad glob:
+# a wildcard over e.g. the fixture trees would take ~1100 genuinely alef-owned files out of
+# content verification to settle a handful, and silently hide real drift later.
+user_owned = [
+  # Hand-authored root README and the template it renders from. spikard configures no root
+  # README output -- `output_pattern` covers packages/{language} only and the four explicit
+  # output_paths are all under crates/ -- so `alef adopt` correctly answers "no alef-managed
+  # output matches", while verify counted them as stale bindings.
+  "README.md",
+  "templates/readme/root.md",
+  # Create-once seed, now committed rather than gitignored so a clone gets the pin from git.
+  # alef writes it only when absent, so it could never carry a hash line and was reported
+  # stale on every run forever.
+  "rust-toolchain.toml",
+  # `packages/dart/rust` is in the root workspace's `exclude` list, so it cannot inherit
+  # anything from `[workspace.package]`. alef's dart scaffolder emits `version.workspace = true`
+  # regardless, which makes cargo fail to parse the manifest outright ("error inheriting
+  # `version` from workspace root manifest") and takes flutter_rust_bridge_codegen down with it.
+  # Held here until the generator learns to check workspace membership.
+  "packages/dart/rust/Cargo.toml",
+  # Live files alef emits but does not record in its managed surface, so its orphan check
+  # reports them and `has_orphan_files` gates `alef verify`. They are NOT stale: each is
+  # referenced by a suite that would stop compiling without it -- App.java by four java
+  # harness/test files under e2e/ and test_apps/, and the kotlin trio by five
+  # e2e/kotlin_android tests, with HandlerResult.kt the only definition of that type in the
+  # package. alef's own advice on an orphan is "delete by hand if genuinely stale", which here
+  # would break both suites. Declared rather than deleted until the java and kotlin_android
+  # emitters record what they write.
+  "packages/java/src/main/java/dev/spikard/App.java",
+  "packages/java/src/main/java/dev/spikard/Callable.java",
+  "packages/kotlin-android/src/main/kotlin/dev/spikard/android/src/main/kotlin/dev/spikard/HandlerResult.kt",
+  "packages/kotlin-android/src/main/kotlin/dev/spikard/android/src/main/kotlin/dev/spikard/Request.kt",
+  "packages/kotlin-android/src/main/kotlin/dev/spikard/android/src/main/kotlin/dev/spikard/RequestData.kt",
+  # e2e and test-app manifests: real suites grown well past alef's placeholder seed. alef
+  # re-renders them each run and would write different bytes, but the guard refuses, so each
+  # appeared under "frozen path(s) DRIFTED" every run with no action available.
+  "e2e/csharp/Spikard.E2eTests.csproj",
+  "e2e/dart/pubspec.yaml",
+  "e2e/elixir/test/test_helper.exs",
+  "e2e/go/go.mod",
+  "e2e/java/pom.xml",
+  "e2e/java/src/test/resources/fixtures/background_task_error_handling.json",
+  "e2e/kotlin/build.gradle.kts",
+  "e2e/kotlin_android/build.gradle.kts",
+  "e2e/node/package.json",
+  "e2e/wasm/package.json",
+  "e2e/zig/build.zig",
+  "test_apps/csharp/Spikard.E2eTests.csproj",
+  "test_apps/dart/pubspec.yaml",
+  "test_apps/elixir/mix.exs",
+  "test_apps/elixir/test/test_helper.exs",
+  "test_apps/go/go.mod",
+  "test_apps/java/pom.xml",
+  "test_apps/java/src/test/resources/fixtures/background_task_error_handling.json",
+  "test_apps/kotlin/build.gradle.kts",
+  "test_apps/kotlin_android/build.gradle.kts",
+  "test_apps/kotlin_android/gradle/wrapper/gradle-wrapper.properties",
+  "test_apps/node/package.json",
+  "test_apps/ruby/Gemfile",
+  "test_apps/wasm/package.json",
+  "test_apps/zig/build.zig",
+  "test_apps/zig/build.zig.zon",
+]
+
 [workspace.dto]
 python = "dataclass"
 python_output = "typed-dict"
