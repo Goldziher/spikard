@@ -1,0 +1,50 @@
+# alef ownership record -- COMMIT THIS FILE, do not add it to .gitignore.
+#
+# Lists the alef-generated paths whose format cannot carry an `alef:hash:`
+# provenance marker (`package.json`, `*.jar`, ...). Every other format proves
+# alef's ownership from the marker in the file itself and never appears here.
+# Without this list committed, a fresh clone cannot tell an alef-generated
+# `package.json` from a hand-written one and refuses to regenerate it.
+#
+# Ownership is a fact about history, not about content: a path lands here only
+# because alef created the file, or because a human ran `alef adopt` on it.
+# Nothing here is inferred by comparing bytes against generated output -- a
+# hand-written file that happens to match must never be claimed. Do not hand-add
+# entries; run `alef adopt <path>`, read the diff it prints, and let it write.
+
+owned_paths = [
+  "crates/spikard-node/.gitignore",
+  "crates/spikard-node/npm/darwin-arm64/package.json",
+  "crates/spikard-node/npm/linux-arm64-gnu/package.json",
+  "crates/spikard-node/npm/linux-arm64-musl/package.json",
+  "crates/spikard-node/npm/linux-x64-gnu/package.json",
+  "crates/spikard-node/npm/linux-x64-musl/package.json",
+  "crates/spikard-node/npm/win32-arm64-msvc/package.json",
+  "crates/spikard-node/npm/win32-x64-msvc/package.json",
+  "docs/reference/api-c.md",
+  "docs/reference/api-csharp.md",
+  "docs/reference/api-dart.md",
+  "docs/reference/api-elixir.md",
+  "docs/reference/api-go.md",
+  "docs/reference/api-java.md",
+  "docs/reference/api-kotlin-android.md",
+  "docs/reference/api-kotlin.md",
+  "docs/reference/api-php.md",
+  "docs/reference/api-python.md",
+  "docs/reference/api-ruby.md",
+  "docs/reference/api-rust.md",
+  "docs/reference/api-swift.md",
+  "docs/reference/api-typescript.md",
+  "docs/reference/api-wasm.md",
+  "docs/reference/api-zig.md",
+  "docs/reference/configuration.md",
+  "docs/reference/types.md",
+  "e2e/node/app_harness.mjs",
+  "packages/kotlin-android/src/main/kotlin/dev/spikard/android/LICENSE",
+  "packages/kotlin-android/src/main/kotlin/dev/spikard/android/gradle.properties",
+  "packages/kotlin-android/src/main/kotlin/dev/spikard/android/src/main/AndroidManifest.xml",
+  "packages/python/spikard/_spikard.pyi",
+  "packages/ruby/Gemfile",
+  "packages/ruby/sig/types.rbs",
+  "test_apps/node/app_harness.mjs",
+]

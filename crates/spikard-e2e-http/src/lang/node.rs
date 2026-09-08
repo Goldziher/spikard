@@ -382,7 +382,7 @@ pub fn render_http_test_case(out: &mut String, fixture: &Fixture) {
     };
 
     let init_str = fetch_init;
-    let path = format!("/fixtures/{}{}", &fixture.id, &http.request.path);
+    let path = format!("/fixtures/{}{}", fixture.id, http.request.path);
 
     let status = http.expected_response.status_code;
 

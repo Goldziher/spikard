@@ -25,7 +25,11 @@ const GRAPHQL_WS_MAX_CONTROL_MESSAGES: usize = 32;
 ///
 /// Derives `Serialize` so language bindings (e.g. the JNI backend) can marshal it
 /// across the FFI boundary via `serde_json` without a hand-written wrapper.
-#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+// ~keep `Default` is load-bearing for codegen, not just ergonomics: `errors` is a
+// `Vec<serde_json::Value>`, which is not representable as a PHP constructor parameter, so the
+// PHP backend reads the field's initial value out of this impl instead. Removing the derive
+// fails `alef generate` for php outright.
+#[derive(Debug, Clone, Default, PartialEq, serde::Serialize)]
 pub struct GraphQLSubscriptionSnapshot {
     /// Operation id used for the subscription request.
     pub operation_id: String,

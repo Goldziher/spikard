@@ -41,7 +41,15 @@ permissions:
   id-token: write
 
 concurrency:
-  group: ${{ github.workflow }}-${{ (github.event_name == 'workflow_dispatch' && (github.event.inputs.ref || github.event.inputs.tag)) || github.ref || github.run_id }}
+  # ~keep Normalize the dispatch input and the release event onto the SAME group key. A
+  # `release` event supplies the fully-qualified `refs/tags/vX.Y.Z` in `github.ref`, while a
+  # `workflow_dispatch` supplies the bare `vX.Y.Z`. Those are different strings, so the two
+  # runs never serialized: for v0.17.0-rc.11 both fired 25s apart and fought over the same
+  # Maven coordinates and the same release assets, and each killed one of the other's jobs
+  # ("Component with coordinate ... is currently being published in another deployment").
+  # GitHub expressions have no `replace()`, so normalize toward the qualified form instead
+  # of stripping the prefix.
+  group: ${{ github.workflow }}-${{ github.event_name != 'workflow_dispatch' && (github.ref || github.run_id) || (github.event.inputs.ref || github.event.inputs.tag) == '' && (github.ref || github.run_id) || startsWith(github.event.inputs.ref || github.event.inputs.tag, 'refs/tags/') && (github.event.inputs.ref || github.event.inputs.tag) || format('refs/tags/{0}', github.event.inputs.ref || github.event.inputs.tag) }}
   cancel-in-progress: false
 
 env:
@@ -164,7 +172,7 @@ jobs:
           package: "@spikard/node"
           version: ${{ needs.prepare.outputs.version }}
           extra-packages: |
-            wasm_exists=@spikard/wasm
+            wasm_exists=@spikard/node-wasm
 
       - id: rubygems
         if: ${{ needs.prepare.outputs.release_ruby == 'true' }}

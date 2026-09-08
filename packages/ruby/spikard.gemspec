@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name = "spikard"
-  spec.version = "0.17.0.pre.rc.11"
+  spec.version = "0.17.0"
   spec.authors       = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
   spec.summary       = "Codegen-first polyglot web toolkit with a Rust core and bindings for 14 languages"
   spec.description   = "Codegen-first polyglot web toolkit with a Rust core and bindings for 14 languages"
@@ -19,6 +19,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
   spec.extensions    = ["ext/spikard_rb/native/extconf.rb"]
 
-  spec.add_dependency "rb_sys", ">= 0.9", "< 0.9.128"
+  spec.add_dependency "rb_sys", ">= 0.9.130", "< 0.10"
   spec.add_dependency "sorbet-runtime", "~> 0.5"
 end

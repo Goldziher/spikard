@@ -29,7 +29,7 @@ use alef::e2e::fixture::{Fixture, FixtureGroup, HttpMiddleware};
 use anyhow::Result;
 use heck::ToUpperCamelCase;
 use minijinja::{Environment, context};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fmt::Write as FmtWrite;
 use std::path::PathBuf;
 
@@ -260,7 +260,7 @@ pub fn render_app_harness(e2e_config: &E2eConfig, groups: &[FixtureGroup]) -> St
 /// Render environment variable setup lines for `spec_helper.rb`.
 /// Returns empty string if env is empty; otherwise returns alphabetically-sorted
 /// `ENV[k] ||= v` assignments, each on its own line.
-fn render_env_setup(env: &HashMap<String, String>) -> String {
+fn render_env_setup(env: &BTreeMap<String, String>) -> String {
     if env.is_empty() {
         return String::new();
     }
@@ -445,7 +445,7 @@ fn render_http_example_sut(out: &mut String, fixture: &Fixture, env: &Environmen
 
     let method = http.request.method.to_uppercase();
     let method_class = http_method_class(&method);
-    let path = format!("/fixtures/{}{}", &fixture.id, &http.request.path);
+    let path = format!("/fixtures/{}{}", fixture.id, http.request.path);
 
     let content_type_lower = http
         .request

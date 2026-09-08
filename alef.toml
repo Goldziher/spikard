@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.60.2"
+alef_version = "0.85.6"
 languages = [
   "python",
   "node",
@@ -29,19 +29,9 @@ elixir = "struct"
 go = "struct"
 java = "record"
 csharp = "record"
-kotlin = "data-class"
-kotlin_android = "data-class"
-dart = "class"
-swift = "struct"
-zig = "struct"
 
 [workspace.sync]
 extra_paths = []
-
-[[workspace.sync.text_replacements]]
-path = "crates/spikard-http/src/lib.rs"
-search = 'version = "\d+\.\d+\.\d+"'
-replace = 'version = "{version}"'
 
 [workspace.opaque_types]
 # not attempt to model the parameterised type as a `#[wasm_bindgen]` class.
@@ -212,11 +202,6 @@ output = "packages/python/spikard/"
 tokio = { version = "1", features = ["full"] }
 axum = { version = "0.8", default-features = false }
 
-[crates.build_commands.python]
-precondition = "command -v maturin >/dev/null 2>&1"
-build = "cd packages/python && maturin develop"
-build_release = "cd packages/python && maturin develop --release"
-
 [crates.node]
 package_name = "@spikard/node"
 features = ["di"]
@@ -238,11 +223,6 @@ spikard-http = { path = "../../../../../crates/spikard-http" }
 
 [crates.ruby.stubs]
 output = "packages/ruby/sig/"
-
-[crates.build_commands.ruby]
-precondition = "command -v cargo >/dev/null 2>&1"
-build = "cargo build --manifest-path packages/ruby/ext/spikard_rb/native/Cargo.toml"
-build_release = "cargo build --manifest-path packages/ruby/ext/spikard_rb/native/Cargo.toml --release"
 
 [crates.php]
 extension_name = "spikard_php"
@@ -268,11 +248,6 @@ exclude_types = ["UploadFile", "TestClient", "HandlerResult", "Request", "Reques
 spikard-core = { path = "../../../../crates/spikard-core" }
 spikard-graphql = { path = "../../../../crates/spikard-graphql" }
 spikard-http = { path = "../../../../crates/spikard-http" }
-
-[crates.build_commands.elixir]
-precondition = "command -v mix >/dev/null 2>&1"
-build = "cd packages/elixir && mix compile"
-build_release = "cd packages/elixir && MIX_ENV=prod mix compile"
 
 [crates.wasm]
 package_name = "@spikard/node-wasm"
@@ -331,9 +306,6 @@ exclude_types = [
   "MultipartFilePart",
 ]
 
-[crates.ffi.extra_dependencies]
-axum = { version = "0.8", default-features = false }
-
 [crates.go]
 module = "github.com/Goldziher/spikard/packages/go"
 package_name = "spikard"
@@ -353,19 +325,12 @@ spikard-graphql = { path = "../../../crates/spikard-graphql" }
 spikard-http = { path = "../../../crates/spikard-http" }
 axum = { version = "0.8", default-features = false }
 
-[crates.build_commands.dart]
-precondition = "command -v cargo >/dev/null 2>&1"
-before = "cd packages/dart && dart pub get"
-build = "cargo build --manifest-path packages/dart/rust/Cargo.toml"
-build_release = "cargo build --release --manifest-path packages/dart/rust/Cargo.toml"
-
 [crates.kotlin]
 package = "dev.spikard"
 target = "jvm"
 
 [crates.kotlin_android]
 package = "dev.spikard"
-target = "android"
 
 [crates.swift]
 module_name = "Spikard"
@@ -385,37 +350,8 @@ axum = { version = "0.8", default-features = false }
 namespace = "Spikard"
 project_file = "packages/csharp/Spikard/Spikard.csproj"
 
-[crates.build_commands.csharp]
-precondition = "command -v dotnet >/dev/null 2>&1"
-build = "dotnet build packages/csharp/Spikard/Spikard.csproj --configuration Debug --verbosity quiet -p:NuGetAudit=false"
-build_release = "dotnet build packages/csharp/Spikard/Spikard.csproj --configuration Release --verbosity quiet -p:NuGetAudit=false"
-
-[crates.build_commands.kotlin]
-precondition = "command -v gradle >/dev/null 2>&1"
-before = "cargo build -p spikard-ffi"
-build = "cd packages/kotlin && gradle build -x test --no-daemon"
-build_release = "cd packages/kotlin && gradle build -x test --no-daemon"
-
-[crates.build_commands.kotlin_android]
-precondition = "command -v gradle >/dev/null 2>&1"
-before = "cargo build -p spikard-ffi"
-build = ":"
-build_release = ":"
-
-[crates.build_commands.swift]
-precondition = "command -v swift >/dev/null 2>&1"
-build = "INPUT_PACKAGE_DIR=packages/swift INPUT_CRATE_NAME=spikard-swift INPUT_BUILD_PROFILE=dev INPUT_DRY_RUN=false bash ../kreuzberg-dev/actions/build-swift-package/scripts/build.sh && cd packages/swift && CLANG_MODULE_CACHE_PATH=.build/clang-module-cache swift build"
-build_release = "INPUT_PACKAGE_DIR=packages/swift INPUT_CRATE_NAME=spikard-swift INPUT_BUILD_PROFILE=release INPUT_DRY_RUN=false bash ../kreuzberg-dev/actions/build-swift-package/scripts/build.sh && cd packages/swift && CLANG_MODULE_CACHE_PATH=.build/clang-module-cache swift build -c release"
-
-[crates.build_commands.zig]
-precondition = "command -v zig >/dev/null 2>&1"
-before = "cargo build -p spikard-ffi"
-build = "cd packages/zig && zig build -Dffi_path=../../target/debug"
-build_release = "cd packages/zig && zig build -Doptimize=ReleaseSafe -Dffi_path=../../target/release"
-
 [crates.zig]
 module_name = "spikard"
-
 
 [[crates.services]]
 owner_type = "App"
@@ -517,7 +453,6 @@ ruby = "packages/ruby/ext/spikard_rb/src/"
 php = "crates/spikard-php/src/"
 elixir = "packages/elixir/lib/"
 ffi = "crates/spikard-ffi/src/"
-jni = "crates/spikard-jni/src/"
 wasm = "crates/spikard-wasm/src/"
 go = "packages/go/"
 java = "packages/java/src/main/java/"
@@ -537,8 +472,6 @@ methods = [
   "ProblemDetails.with_extensions",
   "ProblemDetails.from_validation_error",
   "ProblemDetails.internal_server_error_debug",
-  "GraphQLError.to_graphql_response",
-  "GraphQLError.to_http_response",
   "SchemaConfig.validate",
   "SchemaConfig.set_introspection_enabled",
   "SchemaConfig.set_complexity_limit",
@@ -585,65 +518,36 @@ types = [
   "Claims",
   "GrpcRequestData",
   "GrpcResponseData",
-  "JsonRpcRequestOrBatch",
-  "JsonRpcResponseType",
   "ValidatedParams",
-  "BackgroundJobFuture",
   "BackgroundRuntime",
   "BackgroundShutdownError",
-  "ContentTypeKind",
   "Dependency",
   "DependencyContainer",
-  "DependencyGraph",
   "DependencyInjectingHandler",
   "ErrorCondition",
   "ErrorMapper",
   "FactoryDependency",
   "FactoryDependencyBuilder",
-  "FactoryFn",
-  "FastRouter",
-  "GenericGrpcService",
   "HandlerResponse",
   "HandlerResult",
   "LifecycleHooks",
   "LifecycleHooksBuilder",
-  "MessageStream",
-  "MethodExample",
-  "MethodMetadata",
-  "PreParsedJson",
-  "PreReadBody",
-  "RegistryError",
   "RequestContext",
   "RequestData",
   "ResolvedDependencies",
-  "RouteInfo",
-  "RpcMode",
   "SchemaBuilder",
   "SseState",
-  "ValidatingHandler",
   "WebSocketState",
-  "WithoutBodyExtractionOptions",
   "RawResponse",
   "StaticAsset",
   "StructuredError",
-  "AsyncApiState",
-  "JsonRpcState",
-  "JsonRpcMethodRegistry",
-  "JsonRpcRequest",
-  "JsonRpcResponse",
-  "JsonRpcError",
-  "JsonRpcErrorResponse",
-  "JsonRpcRouter",
   "GrpcHandlerResult",
   "GrpcHandler",
   "GrpcRegistry",
-  "StreamingRequest",
   "Server",
   "ServerConfigBuilder",
   "StaticResponseHandler",
   "StaticResponse",
-  "RouteHandler",
-  "Router",
   "SchemaRegistry",
   "SchemaValidator",
   "ParameterValidator",
@@ -654,21 +558,10 @@ types = [
   "TestServer",
   "WebSocketConnection",
   "SseStream",
-  "LifecycleHooks2",
-  "LifecycleHooksBuilder2",
-  "RequestData2",
-  "WebSocketMessage2",
-  "Method2",
-  "HandlerResponse2",
-  "ErrorMapperErrorCondition",
-  "TestingWebSocketMessage",
-  "GrpcGrpcRegistry",
   "HookResult",
   "TargetLifecycleHooks",
   "NativeLifecycleHook",
   "LocalLifecycleHook",
-  "spikard_graphql::error::Result",
-  "spikard_graphql::schema::SchemaResult",
 ]
 functions = [
   "request_hook",
@@ -684,185 +577,32 @@ functions = [
   "build_graphql_body",
   "build_router_with_handlers",
   "build_router_with_handlers_and_config",
-  "build_router_with_handlers_and_config_and_grpc",
   "build_server_runtime",
   "call_test_server",
   "connect_websocket",
-  "convert_string_to_json_value",
-  "copy_metadata",
-  "create_request_data_with_body",
-  "create_request_data_without_body",
-  "empty_message_stream",
-  "encode_grpc_message",
-  "error_stream",
-  "execute_with_lifecycle_hooks",
-  "extract_cookies",
-  "extract_headers",
   "extract_parameters_from_schema",
   "extract_path_param_names",
-  "extract_query_params",
-  "extract_raw_query_params",
   "generate_openapi_spec",
-  "generate_openrpc_spec",
-  "grpc_response_to_tonic",
-  "handle_jsonrpc",
   "handle_preflight",
-  "init",
-  "is_enabled",
-  "is_form_urlencoded",
   "is_grpc_request",
-  "is_json_content_type",
-  "is_json_like",
-  "is_json_like_str",
-  "is_multipart_form_data",
-  "is_server_error",
   "json_schema_to_request_body",
   "json_schema_to_response",
   "json_value_to_schema",
   "jwt_auth_middleware",
   "merge_parameter_schemas",
-  "message_stream_from_vec",
-  "parse_grpc_client_stream",
-  "parse_grpc_path",
-  "parse_multipart_to_json",
-  "parse_query_pairs_to_json",
-  "parse_query_string",
-  "parse_query_string_to_json",
   "parse_type_hints",
-  "parse_unary_grpc_message",
-  "parse_urlencoded_to_json",
-  "route_grpc_request",
   "security_scheme_info_to_openapi",
-  "single_message_stream",
   "snapshot_http_response",
   "snapshot_http_response_allow_body_errors",
   "snapshot_response",
   "strip_type_hints",
   "type_hint_to_schema",
-  "validate_content_length",
-  "validate_content_type_headers",
-  "validate_content_type_headers_and_classify",
-  "validate_content_type_middleware",
   "validate_cors_request",
-  "validate_json_content_type",
   "validate_jsonrpc_method_name",
-  "validate_method_name",
-  "build_multipart_body",
-  "encode_urlencoded_body",
   "test_client_from_app",
-  "handle_asyncapi_validate",
-  "handle_asyncapi_json",
-  "handle_asyncapi_parse",
   "parse_asyncapi_value",
   "validate_message",
 ]
-
-[crates.lint.python]
-precondition = "command -v ruff >/dev/null 2>&1"
-check = "ruff check packages/python/"
-typecheck = "pyrefly check packages/python"
-
-[crates.lint.node]
-precondition = "command -v pnpm >/dev/null 2>&1"
-check = "pnpm dlx oxlint --fix crates/spikard-node"
-typecheck = "pnpm tsc --noEmit -p crates/spikard-node/tsconfig.json"
-
-[crates.lint.ruby]
-precondition = "command -v bundle >/dev/null 2>&1"
-check = "cd packages/ruby && bundle exec rubocop"
-typecheck = "cd packages/ruby && bundle exec steep check"
-
-[crates.lint.php]
-precondition = "command -v php >/dev/null 2>&1"
-check = "cd packages/php && composer run lint"
-
-[crates.lint.elixir]
-precondition = "command -v mix >/dev/null 2>&1"
-typecheck = "cd packages/elixir && mix dialyzer"
-
-[crates.lint.go]
-precondition = "command -v go >/dev/null 2>&1"
-before = "cargo build --release -p spikard-ffi"
-check = "cd packages/go && go vet ./..."
-
-[crates.lint.java]
-precondition = "command -v mvn >/dev/null 2>&1"
-check = "mvn -f packages/java/pom.xml -B -DskipTests verify"
-
-[crates.lint.csharp]
-precondition = "command -v dotnet >/dev/null 2>&1"
-check = "dotnet format packages/csharp/Spikard/Spikard.csproj --verify-no-changes"
-
-[crates.lint.kotlin]
-precondition = "command -v gradle >/dev/null 2>&1"
-check = "cd packages/kotlin && gradle ktlintCheck --no-daemon"
-
-[crates.lint.kotlin_android]
-precondition = "command -v gradle >/dev/null 2>&1"
-check = ":"
-
-[crates.lint.dart]
-precondition = "command -v dart >/dev/null 2>&1"
-check = "cd packages/dart && dart analyze"
-
-[crates.lint.swift]
-precondition = "command -v swift >/dev/null 2>&1"
-check = "swift format lint --recursive packages/swift/Sources"
-
-[crates.lint.zig]
-precondition = "command -v zig >/dev/null 2>&1"
-check = "cd packages/zig && zig fmt --check src"
-
-[crates.lint.wasm]
-precondition = "command -v pnpm >/dev/null 2>&1"
-check = "pnpm dlx oxlint --fix crates/spikard-wasm"
-
-[crates.lint.ffi]
-precondition = "test -d crates/spikard-ffi/include"
-check = "find crates/spikard-ffi/include -name '*.h' | xargs clang-format --dry-run --Werror"
-
-[crates.update.python]
-precondition = "command -v uv >/dev/null 2>&1"
-update = "cd crates/spikard-py/src/ && uv sync --all-packages --all-extras --no-install-project"
-upgrade = "cd crates/spikard-py/src/ && uv sync --all-packages --all-extras --upgrade --no-install-project"
-
-[crates.update.kotlin]
-precondition = "command -v gradle >/dev/null 2>&1"
-update = "echo 'kotlin: no-op (versions pinned by generated Gradle files)'"
-upgrade = "echo 'kotlin: no-op (versions pinned by generated Gradle files)'"
-
-[crates.update.node]
-precondition = "command -v pnpm >/dev/null 2>&1"
-update = "pnpm up -r --config.auto-install-peers=false --config.dedupe-peer-dependents=false"
-upgrade = [
-  "rm -rf node_modules",
-  "pnpm install",
-  "pnpm up --latest -r -w --config.auto-install-peers=false --config.dedupe-peer-dependents=false",
-]
-
-[crates.update.wasm]
-precondition = "command -v pnpm >/dev/null 2>&1"
-update = "pnpm up -r --config.auto-install-peers=false --config.dedupe-peer-dependents=false"
-upgrade = [
-  "rm -rf node_modules",
-  "pnpm install",
-  "pnpm up --latest -r -w --config.auto-install-peers=false --config.dedupe-peer-dependents=false",
-]
-
-[crates.update.dart]
-precondition = "command -v dart >/dev/null 2>&1"
-update = "cd packages/dart && dart pub upgrade"
-upgrade = "cd packages/dart && dart pub upgrade --major-versions"
-
-[crates.update.swift]
-precondition = "command -v swift >/dev/null 2>&1"
-update = "cd packages/swift && swift package update"
-upgrade = "cd packages/swift && swift package update"
-
-[crates.update.zig]
-precondition = "command -v zig >/dev/null 2>&1"
-update = "cd packages/zig && zig build --fetch"
-upgrade = "cd packages/zig && zig build --fetch"
 
 [crates.test.rust]
 precondition = "command -v cargo >/dev/null 2>&1"
@@ -978,10 +718,6 @@ languages = [
   "wasm",
   "brew",
 ]
-
-[crates.e2e.snippets]
-output = "docs/snippets-generated"
-languages = ["python", "ruby", "php", "elixir", "rust", "go", "java", "csharp", "dart", "swift", "zig"]
 
 [crates.e2e.harness]
 imports = ["spikard"]
@@ -1107,7 +843,7 @@ name = "Spikard"
 
 [crates.e2e.registry.packages.zig]
 name = "spikard"
-hash = "spikard-0.17.0-rc.11-PLACEHOLDER1234567890abcdefABCDEF0987654321"
+hash = "spikard-0.17.0-PLACEHOLDER1234567890abcdefABCDEF0987654321"
 
 [crates.e2e.registry.packages.wasm]
 name = "@spikard/node-wasm"

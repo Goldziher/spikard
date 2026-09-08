@@ -127,6 +127,11 @@ pub(crate) struct PreParsedJson(pub serde_json::Value);
 ///
 /// Coverage: Tested via integration tests (multipart and form parsing tested end-to-end)
 #[cfg(not(tarpaulin_include))]
+// ~keep `Result<Response, Response>` is axum's middleware contract, not a choice: both
+// variants must be a `Response` for `from_fn`/`from_fn_with_state` to accept the handler,
+// so the `Err` variant cannot be boxed without breaking the signature. Matches the
+// existing allows on the validation middleware in this crate.
+#[allow(clippy::result_large_err)]
 pub async fn validate_content_type_middleware(
     State(route_info): State<RouteInfo>,
     request: Request,
@@ -481,6 +486,7 @@ fn payload_too_large_response() -> Response {
 /// Returns a `413 Payload Too Large` `ProblemDetails` response (as `Err`) when the
 /// request body exceeds the configured limit.
 #[cfg(not(tarpaulin_include))]
+#[allow(clippy::result_large_err)]
 pub(crate) async fn body_limit_middleware(
     State(state): State<BodyLimitState>,
     request: Request,

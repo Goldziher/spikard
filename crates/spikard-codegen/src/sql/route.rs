@@ -298,11 +298,11 @@ mod tests {
     }
 
     fn get_user_query() -> AnalyzedQuery {
-        AnalyzedQuery {
-            name: "GetUser".to_string(),
-            command: QueryCommand::One,
-            sql: "SELECT id, email, name FROM users WHERE id = $1".to_string(),
-            columns: vec![
+        AnalyzedQuery::build(|q| {
+            q.name = "GetUser".to_string();
+            q.command = QueryCommand::One;
+            q.sql = "SELECT id, email, name FROM users WHERE id = $1".to_string();
+            q.columns = vec![
                 AnalyzedColumn {
                     name: "id".to_string(),
                     neutral_type: "int64".to_string(),
@@ -321,86 +321,94 @@ mod tests {
                     nullable: true,
                     ..Default::default()
                 },
-            ],
-            params: vec![AnalyzedParam {
+            ];
+            q.params = vec![AnalyzedParam {
                 name: "id".to_string(),
                 neutral_type: "int64".to_string(),
                 nullable: false,
                 position: 1,
-            }],
-            deprecated: None,
-            source_table: Some("users".to_string()),
-            composites: vec![],
-            enums: vec![],
-            optional_params: vec![],
-            group_by: None,
-            custom: vec![
+                ..Default::default()
+            }];
+            q.deprecated = None;
+            q.source_table = Some("users".to_string());
+            q.composites = vec![];
+            q.enums = vec![];
+            q.optional_params = vec![];
+            q.group_by = None;
+            q.custom = vec![
                 CustomAnnotation {
                     name: "http".into(),
                     value: "GET /users/{id}".into(),
                     line: 3,
+                    suggested_keyword: None,
                 },
                 CustomAnnotation {
                     name: "http_auth".into(),
                     value: "bearer:jwt".into(),
                     line: 4,
+                    suggested_keyword: None,
                 },
                 CustomAnnotation {
                     name: "http_status".into(),
                     value: "200,404".into(),
                     line: 5,
+                    suggested_keyword: None,
                 },
-            ],
-        }
+            ];
+        })
     }
 
     fn create_user_query() -> AnalyzedQuery {
-        AnalyzedQuery {
-            name: "CreateUser".to_string(),
-            command: QueryCommand::ExecRows,
-            sql: "INSERT INTO users (email, name) VALUES ($1, $2)".to_string(),
-            columns: vec![],
-            params: vec![
+        AnalyzedQuery::build(|q| {
+            q.name = "CreateUser".to_string();
+            q.command = QueryCommand::ExecRows;
+            q.sql = "INSERT INTO users (email, name) VALUES ($1, $2)".to_string();
+            q.columns = vec![];
+            q.params = vec![
                 AnalyzedParam {
                     name: "email".to_string(),
                     neutral_type: "string".to_string(),
                     nullable: false,
                     position: 1,
+                    ..Default::default()
                 },
                 AnalyzedParam {
                     name: "name".to_string(),
                     neutral_type: "string".to_string(),
                     nullable: true,
                     position: 2,
+                    ..Default::default()
                 },
-            ],
-            deprecated: None,
-            source_table: None,
-            composites: vec![],
-            enums: vec![],
-            optional_params: vec![],
-            group_by: None,
-            custom: vec![
+            ];
+            q.deprecated = None;
+            q.source_table = None;
+            q.composites = vec![];
+            q.enums = vec![];
+            q.optional_params = vec![];
+            q.group_by = None;
+            q.custom = vec![
                 CustomAnnotation {
                     name: "http".into(),
                     value: "POST /users".into(),
                     line: 1,
+                    suggested_keyword: None,
                 },
                 CustomAnnotation {
                     name: "http_status".into(),
                     value: "201".into(),
                     line: 2,
+                    suggested_keyword: None,
                 },
-            ],
-        }
+            ];
+        })
     }
 
     fn list_users_query() -> AnalyzedQuery {
-        AnalyzedQuery {
-            name: "ListUsers".to_string(),
-            command: QueryCommand::Many,
-            sql: "SELECT id, email FROM users LIMIT $1 OFFSET $2".to_string(),
-            columns: vec![
+        AnalyzedQuery::build(|q| {
+            q.name = "ListUsers".to_string();
+            q.command = QueryCommand::Many;
+            q.sql = "SELECT id, email FROM users LIMIT $1 OFFSET $2".to_string();
+            q.columns = vec![
                 AnalyzedColumn {
                     name: "id".to_string(),
                     neutral_type: "int64".to_string(),
@@ -413,33 +421,36 @@ mod tests {
                     nullable: false,
                     ..Default::default()
                 },
-            ],
-            params: vec![
+            ];
+            q.params = vec![
                 AnalyzedParam {
                     name: "limit".to_string(),
                     neutral_type: "int32".to_string(),
                     nullable: true,
                     position: 1,
+                    ..Default::default()
                 },
                 AnalyzedParam {
                     name: "offset".to_string(),
                     neutral_type: "int32".to_string(),
                     nullable: true,
                     position: 2,
+                    ..Default::default()
                 },
-            ],
-            deprecated: None,
-            source_table: Some("users".to_string()),
-            composites: vec![],
-            enums: vec![],
-            optional_params: vec!["limit".to_string(), "offset".to_string()],
-            group_by: None,
-            custom: vec![CustomAnnotation {
+            ];
+            q.deprecated = None;
+            q.source_table = Some("users".to_string());
+            q.composites = vec![];
+            q.enums = vec![];
+            q.optional_params = vec!["limit".to_string(), "offset".to_string()];
+            q.group_by = None;
+            q.custom = vec![CustomAnnotation {
                 name: "http".into(),
                 value: "GET /users".into(),
                 line: 1,
-            }],
-        }
+                suggested_keyword: None,
+            }];
+        })
     }
 
     #[test]

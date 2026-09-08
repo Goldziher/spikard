@@ -1,6 +1,6 @@
 {
   "name": "@spikard/node-wasm",
-  "version": "0.17.0-rc.11",
+  "version": "0.17.0",
   "private": false,
   "description": "Codegen-first polyglot web toolkit with a Rust core and bindings for 14 languages",
   "license": "MIT",
@@ -17,6 +17,15 @@
   "main": "pkg/nodejs/spikard_wasm.js",
   "module": "pkg/web/spikard_wasm.js",
   "types": "pkg/nodejs/spikard_wasm.d.ts",
+  "exports": {
+    ".": {
+      "types": "./pkg/nodejs/spikard_wasm.d.ts",
+      "browser": "./pkg/web/spikard_wasm.js",
+      "import": "./pkg/nodejs/spikard_wasm.js",
+      "require": "./pkg/nodejs/spikard_wasm.js",
+      "default": "./pkg/nodejs/spikard_wasm.js"
+    }
+  },
   "engines": {
     "node": ">= 22"
   },
@@ -32,5 +41,9 @@
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
     "clean": "rm -rf pkg dist"
+  },
+  "devDependencies": {
+    "vitest": "^5.0.0",
+    "@vitest/coverage-v8": "^5.0.0"
   }
 }

@@ -1,14 +1,17 @@
 // swift-format-ignore-file
 import RustBridgeC
 
-public func uploadFileAsBytesFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
-    try { let val = __swift_bridge__$upload_file_as_bytes_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func corsConfigAllowedMethodsJoinedFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$cors_config_allowed_methods_joined_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
-public func uploadFileReadToStringFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
-    try { let val = __swift_bridge__$upload_file_read_to_string_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func corsConfigAllowedHeadersJoinedFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$cors_config_allowed_headers_joined_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
-public func uploadFileContentTypeOrDefaultFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
-    try { let val = __swift_bridge__$upload_file_content_type_or_default_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func corsConfigIsOriginAllowedFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString, _ origin: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$cors_config_is_origin_allowed_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = origin.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func corsConfigIsMethodAllowedFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString, _ method: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$cors_config_is_method_allowed_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = method.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
 public func graphQlRouteConfigPath<GenericIntoRustString: IntoRustString>(_ client: GraphQLRouteConfigRef, _ path: GenericIntoRustString) -> GraphQLRouteConfig {
     GraphQLRouteConfig(ptr: __swift_bridge__$graph_ql_route_config_path(client.ptr, { let rustString = path.intoRustString(); rustString.isOwned = false; return rustString.ptr }()))
@@ -34,29 +37,29 @@ public func graphQlRouteConfigIsPlaygroundEnabled(_ client: GraphQLRouteConfigRe
 public func graphQlRouteConfigGetDescription(_ client: GraphQLRouteConfigRef) -> RustString {
     RustString(ptr: __swift_bridge__$graph_ql_route_config_get_description(client.ptr))
 }
-public func corsConfigAllowedMethodsJoinedFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
-    try { let val = __swift_bridge__$cors_config_allowed_methods_joined_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func problemDetailsWithDetailFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString, _ detail: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$problem_details_with_detail_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = detail.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
-public func corsConfigAllowedHeadersJoinedFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
-    try { let val = __swift_bridge__$cors_config_allowed_headers_joined_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func problemDetailsWithInstanceFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString, _ instance: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$problem_details_with_instance_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = instance.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
-public func corsConfigIsOriginAllowedFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString, _ origin: GenericIntoRustString) throws -> RustString {
-    try { let val = __swift_bridge__$cors_config_is_origin_allowed_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = origin.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func problemDetailsToJsonFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$problem_details_to_json_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
-public func corsConfigIsMethodAllowedFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString, _ method: GenericIntoRustString) throws -> RustString {
-    try { let val = __swift_bridge__$cors_config_is_method_allowed_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = method.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func problemDetailsToJsonPrettyFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$problem_details_to_json_pretty_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func request_noop(_ client: RequestRef) {
+    __swift_bridge__$request_noop(client.ptr)
+}
+public func request_data_noop(_ client: RequestDataRef) {
+    __swift_bridge__$request_data_noop(client.ptr)
 }
 public func responseSetHeaderFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString, _ key: GenericIntoRustString, _ value: GenericIntoRustString) throws -> RustString {
     try { let val = __swift_bridge__$response_set_header_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = key.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = value.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
 public func responseSetCookieFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString, _ key: GenericIntoRustString, _ value: GenericIntoRustString, _ secure: Bool, _ http_only: Bool, _ max_age: Optional<Int64>, _ domain: Optional<GenericIntoRustString>, _ path: Optional<GenericIntoRustString>, _ same_site: Optional<GenericIntoRustString>) throws -> RustString {
     try { let val = __swift_bridge__$response_set_cookie_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = key.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = value.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), secure, http_only, max_age.intoFfiRepr(), { if let rustString = optionalStringIntoRustString(domain) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(path) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(same_site) { rustString.isOwned = false; return rustString.ptr } else { return nil } }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
-}
-public func sseEventWithIdFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString, _ id: GenericIntoRustString) throws -> RustString {
-    try { let val = __swift_bridge__$sse_event_with_id_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = id.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
-}
-public func sseEventWithRetryFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString, _ retry_ms: UInt64) throws -> RustString {
-    try { let val = __swift_bridge__$sse_event_with_retry_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), retry_ms); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
 public func routeBuilderHandlerName<GenericIntoRustString: IntoRustString>(_ client: RouteBuilderRef, _ name: GenericIntoRustString) -> RouteBuilder {
     RouteBuilder(ptr: __swift_bridge__$route_builder_handler_name(client.ptr, { let rustString = name.intoRustString(); rustString.isOwned = false; return rustString.ptr }()))
@@ -115,35 +118,32 @@ public func routeBuilderSync(_ client: RouteBuilderRef) -> RouteBuilder {
 public func routeBuilderHandlerDependencies<GenericIntoRustString: IntoRustString>(_ client: RouteBuilderRef, _ dependencies: RustVec<GenericIntoRustString>) -> RouteBuilder {
     RouteBuilder(ptr: __swift_bridge__$route_builder_handler_dependencies(client.ptr, { let val = dependencies; val.isOwned = false; return val.ptr }()))
 }
-public func problemDetailsWithDetailFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString, _ detail: GenericIntoRustString) throws -> RustString {
-    try { let val = __swift_bridge__$problem_details_with_detail_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = detail.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func sseEventWithIdFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString, _ id: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$sse_event_with_id_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = id.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
-public func problemDetailsWithInstanceFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString, _ instance: GenericIntoRustString) throws -> RustString {
-    try { let val = __swift_bridge__$problem_details_with_instance_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = instance.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func sseEventWithRetryFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString, _ retry_ms: UInt64) throws -> RustString {
+    try { let val = __swift_bridge__$sse_event_with_retry_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), retry_ms); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
-public func problemDetailsToJsonFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
-    try { let val = __swift_bridge__$problem_details_to_json_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func uploadFileAsBytesFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$upload_file_as_bytes_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
-public func problemDetailsToJsonPrettyFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
-    try { let val = __swift_bridge__$problem_details_to_json_pretty_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func uploadFileReadToStringFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$upload_file_read_to_string_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
-public func request_noop(_ client: RequestRef) {
-    __swift_bridge__$request_noop(client.ptr)
-}
-public func request_data_noop(_ client: RequestDataRef) {
-    __swift_bridge__$request_data_noop(client.ptr)
+public func uploadFileContentTypeOrDefaultFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
+    try { let val = __swift_bridge__$upload_file_content_type_or_default_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
 public func handler_result_noop(_ client: HandlerResultRef) {
     __swift_bridge__$handler_result_noop(client.ptr)
 }
-public func schemaQueryOnly() -> QueryOnlyConfig {
-    QueryOnlyConfig(ptr: __swift_bridge__$schema_query_only())
+public func schemaFull() -> FullSchemaConfig {
+    FullSchemaConfig(ptr: __swift_bridge__$schema_full())
 }
 public func schemaQueryMutation() -> QueryMutationConfig {
     QueryMutationConfig(ptr: __swift_bridge__$schema_query_mutation())
 }
-public func schemaFull() -> FullSchemaConfig {
-    FullSchemaConfig(ptr: __swift_bridge__$schema_full())
+public func schemaQueryOnly() -> QueryOnlyConfig {
+    QueryOnlyConfig(ptr: __swift_bridge__$schema_query_only())
 }
 public func appRawPtr(_ client: AppRefMut) -> UInt {
     __swift_bridge__$app_raw_ptr(client.ptr)
@@ -160,56 +160,41 @@ public func routeBuilderNew<GenericIntoRustString: IntoRustString>(_ method: Met
 public func routeBuilderRawPtr(_ client: RouteBuilderRefMut) -> UInt {
     __swift_bridge__$route_builder_raw_ptr(client.ptr)
 }
-public func dynamicSchemaConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> DynamicSchemaConfig {
-    try { let val = __swift_bridge__$dynamic_schema_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return DynamicSchemaConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
-}
-public func schemaConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> SchemaConfig {
-    try { let val = __swift_bridge__$schema_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return SchemaConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
-}
-public func corsConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> CorsConfig {
-    try { let val = __swift_bridge__$cors_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return CorsConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
-}
-public func compressionConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> CompressionConfig {
-    try { let val = __swift_bridge__$compression_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return CompressionConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
-}
-public func rateLimitConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RateLimitConfig {
-    try { let val = __swift_bridge__$rate_limit_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RateLimitConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
-}
-public func jwtAuthConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> JwtAuthConfig {
-    try { let val = __swift_bridge__$jwt_auth_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return JwtAuthConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
-}
 public func apiKeyAuthConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ApiKeyAuthConfig {
     try { let val = __swift_bridge__$api_key_auth_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ApiKeyAuthConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
-public func lifecycleHooksConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> LifecycleHooksConfig {
-    try { let val = __swift_bridge__$lifecycle_hooks_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return LifecycleHooksConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
-}
-public func jsonRpcMethodInfoFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> JsonRpcMethodInfo {
-    try { let val = __swift_bridge__$json_rpc_method_info_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return JsonRpcMethodInfo(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
-}
-public func uploadFileFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> UploadFile {
-    try { let val = __swift_bridge__$upload_file_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return UploadFile(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
-}
-public func fieldErrorSpecFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> FieldErrorSpec {
-    try { let val = __swift_bridge__$field_error_spec_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return FieldErrorSpec(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
-}
-public func queryOnlyConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> QueryOnlyConfig {
-    try { let val = __swift_bridge__$query_only_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return QueryOnlyConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
-}
-public func queryMutationConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> QueryMutationConfig {
-    try { let val = __swift_bridge__$query_mutation_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return QueryMutationConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
-}
-public func fullSchemaConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> FullSchemaConfig {
-    try { let val = __swift_bridge__$full_schema_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return FullSchemaConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func apiKeyConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ApiKeyConfig {
+    try { let val = __swift_bridge__$api_key_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ApiKeyConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
 public func asyncApiConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> AsyncApiConfig {
     try { let val = __swift_bridge__$async_api_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return AsyncApiConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
-public func backgroundTaskConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> BackgroundTaskConfig {
-    try { let val = __swift_bridge__$background_task_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return BackgroundTaskConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func authorizationConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> AuthorizationConfig {
+    try { let val = __swift_bridge__$authorization_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return AuthorizationConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
 public func backgroundJobMetadataFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> BackgroundJobMetadata {
     try { let val = __swift_bridge__$background_job_metadata_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return BackgroundJobMetadata(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func backgroundTaskConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> BackgroundTaskConfig {
+    try { let val = __swift_bridge__$background_task_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return BackgroundTaskConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func compressionConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> CompressionConfig {
+    try { let val = __swift_bridge__$compression_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return CompressionConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func contactInfoFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ContactInfo {
+    try { let val = __swift_bridge__$contact_info_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ContactInfo(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func corsConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> CorsConfig {
+    try { let val = __swift_bridge__$cors_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return CorsConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func fieldErrorSpecFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> FieldErrorSpec {
+    try { let val = __swift_bridge__$field_error_spec_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return FieldErrorSpec(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func fullSchemaConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> FullSchemaConfig {
+    try { let val = __swift_bridge__$full_schema_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return FullSchemaConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func graphQlRouteConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> GraphQLRouteConfig {
+    try { let val = __swift_bridge__$graph_ql_route_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return GraphQLRouteConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
 public func grpcConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> GrpcConfig {
     try { let val = __swift_bridge__$grpc_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return GrpcConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
@@ -217,56 +202,77 @@ public func grpcConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: Ge
 public func jsonRpcConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> JsonRpcConfig {
     try { let val = __swift_bridge__$json_rpc_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return JsonRpcConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
-public func openApiConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> OpenApiConfig {
-    try { let val = __swift_bridge__$open_api_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return OpenApiConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func jsonRpcMethodInfoFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> JsonRpcMethodInfo {
+    try { let val = __swift_bridge__$json_rpc_method_info_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return JsonRpcMethodInfo(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
-public func responseFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> Response {
-    try { let val = __swift_bridge__$response_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return Response(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
-}
-public func sseEventFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> SseEvent {
-    try { let val = __swift_bridge__$sse_event_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return SseEvent(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func jwtAuthConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> JwtAuthConfig {
+    try { let val = __swift_bridge__$jwt_auth_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return JwtAuthConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
 public func jwtConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> JwtConfig {
     try { let val = __swift_bridge__$jwt_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return JwtConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
-public func apiKeyConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ApiKeyConfig {
-    try { let val = __swift_bridge__$api_key_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ApiKeyConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
-}
-public func staticFilesConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> StaticFilesConfig {
-    try { let val = __swift_bridge__$static_files_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return StaticFilesConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
-}
-public func serverConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ServerConfig {
-    try { let val = __swift_bridge__$server_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ServerConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
-}
-public func requestIdConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RequestIdConfig {
-    try { let val = __swift_bridge__$request_id_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RequestIdConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func licenseInfoFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> LicenseInfo {
+    try { let val = __swift_bridge__$license_info_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return LicenseInfo(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
 public func lifecycleHookRefFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> LifecycleHookRef {
     try { let val = __swift_bridge__$lifecycle_hook_ref_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return LifecycleHookRef(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
-public func problemDetailsFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ProblemDetails {
-    try { let val = __swift_bridge__$problem_details_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ProblemDetails(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func lifecycleHooksConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> LifecycleHooksConfig {
+    try { let val = __swift_bridge__$lifecycle_hooks_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return LifecycleHooksConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func openApiConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> OpenApiConfig {
+    try { let val = __swift_bridge__$open_api_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return OpenApiConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
 public func parsedChannelFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ParsedChannel {
     try { let val = __swift_bridge__$parsed_channel_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ParsedChannel(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
+public func parsedMessageFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ParsedMessage {
+    try { let val = __swift_bridge__$parsed_message_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ParsedMessage(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
 public func parsedOperationFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ParsedOperation {
     try { let val = __swift_bridge__$parsed_operation_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ParsedOperation(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
-public func parsedMessageFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ParsedMessage {
-    try { let val = __swift_bridge__$parsed_message_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ParsedMessage(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func problemDetailsFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ProblemDetails {
+    try { let val = __swift_bridge__$problem_details_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ProblemDetails(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func queryMutationConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> QueryMutationConfig {
+    try { let val = __swift_bridge__$query_mutation_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return QueryMutationConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func queryOnlyConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> QueryOnlyConfig {
+    try { let val = __swift_bridge__$query_only_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return QueryOnlyConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func rateLimitConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RateLimitConfig {
+    try { let val = __swift_bridge__$rate_limit_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RateLimitConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func responseFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> Response {
+    try { let val = __swift_bridge__$response_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return Response(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func schemaConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> SchemaConfig {
+    try { let val = __swift_bridge__$schema_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return SchemaConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func serverConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ServerConfig {
+    try { let val = __swift_bridge__$server_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ServerConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func serverInfoFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ServerInfo {
+    try { let val = __swift_bridge__$server_info_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ServerInfo(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func sseEventFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> SseEvent {
+    try { let val = __swift_bridge__$sse_event_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return SseEvent(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func staticFilesConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> StaticFilesConfig {
+    try { let val = __swift_bridge__$static_files_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return StaticFilesConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func dynamicSchemaConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> DynamicSchemaConfig {
+    try { let val = __swift_bridge__$dynamic_schema_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return DynamicSchemaConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
 public func parseResultFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ParseResult {
     try { let val = __swift_bridge__$parse_result_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ParseResult(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
-public func contactInfoFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ContactInfo {
-    try { let val = __swift_bridge__$contact_info_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ContactInfo(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func requestIdConfigFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RequestIdConfig {
+    try { let val = __swift_bridge__$request_id_config_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RequestIdConfig(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
-public func licenseInfoFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> LicenseInfo {
-    try { let val = __swift_bridge__$license_info_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return LicenseInfo(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
-}
-public func serverInfoFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ServerInfo {
-    try { let val = __swift_bridge__$server_info_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ServerInfo(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func uploadFileFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> UploadFile {
+    try { let val = __swift_bridge__$upload_file_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return UploadFile(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
 public func methodFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> Method {
     try { let val = __swift_bridge__$method_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return Method(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
@@ -274,89 +280,65 @@ public func methodFromJson<GenericIntoRustString: IntoRustString>(_ json: Generi
 public func securitySchemeInfoFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> SecuritySchemeInfo {
     try { let val = __swift_bridge__$security_scheme_info_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return SecuritySchemeInfo(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
-public func __alef_phantom_vec_upload_file() -> RustVec<UploadFile> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_upload_file())
-}
-public func __alef_phantom_vec_field_error_spec() -> RustVec<FieldErrorSpec> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_field_error_spec())
-}
-public func __alef_phantom_vec_dynamic_schema_config() -> RustVec<DynamicSchemaConfig> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_dynamic_schema_config())
-}
-public func __alef_phantom_vec_graph_ql_route_config() -> RustVec<GraphQLRouteConfig> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_graph_ql_route_config())
-}
-public func __alef_phantom_vec_schema_config() -> RustVec<SchemaConfig> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_schema_config())
-}
-public func __alef_phantom_vec_query_only_config() -> RustVec<QueryOnlyConfig> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_query_only_config())
-}
-public func __alef_phantom_vec_query_mutation_config() -> RustVec<QueryMutationConfig> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_query_mutation_config())
-}
-public func __alef_phantom_vec_full_schema_config() -> RustVec<FullSchemaConfig> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_full_schema_config())
-}
-public func __alef_phantom_vec_async_api_config() -> RustVec<AsyncApiConfig> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_async_api_config())
-}
-public func __alef_phantom_vec_background_task_config() -> RustVec<BackgroundTaskConfig> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_background_task_config())
-}
-public func __alef_phantom_vec_background_job_metadata() -> RustVec<BackgroundJobMetadata> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_background_job_metadata())
-}
-public func __alef_phantom_vec_cors_config() -> RustVec<CorsConfig> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_cors_config())
-}
-public func __alef_phantom_vec_compression_config() -> RustVec<CompressionConfig> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_compression_config())
-}
-public func __alef_phantom_vec_rate_limit_config() -> RustVec<RateLimitConfig> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_rate_limit_config())
-}
-public func __alef_phantom_vec_grpc_config() -> RustVec<GrpcConfig> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_grpc_config())
-}
-public func __alef_phantom_vec_json_rpc_config() -> RustVec<JsonRpcConfig> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_json_rpc_config())
-}
-public func __alef_phantom_vec_open_api_config() -> RustVec<OpenApiConfig> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_open_api_config())
-}
-public func __alef_phantom_vec_response() -> RustVec<Response> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_response())
-}
-public func __alef_phantom_vec_sse_event() -> RustVec<SseEvent> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_sse_event())
-}
-public func __alef_phantom_vec_jwt_config() -> RustVec<JwtConfig> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_jwt_config())
+public func __alef_phantom_vec_api_key_auth_config() -> RustVec<ApiKeyAuthConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_api_key_auth_config())
 }
 public func __alef_phantom_vec_api_key_config() -> RustVec<ApiKeyConfig> {
     RustVec(ptr: __swift_bridge__$__alef_phantom_vec_api_key_config())
 }
-public func __alef_phantom_vec_static_files_config() -> RustVec<StaticFilesConfig> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_static_files_config())
+public func __alef_phantom_vec_async_api_config() -> RustVec<AsyncApiConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_async_api_config())
 }
-public func __alef_phantom_vec_server_config() -> RustVec<ServerConfig> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_server_config())
+public func __alef_phantom_vec_authorization_config() -> RustVec<AuthorizationConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_authorization_config())
 }
-public func __alef_phantom_vec_route_builder() -> RustVec<RouteBuilder> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_route_builder())
+public func __alef_phantom_vec_background_job_metadata() -> RustVec<BackgroundJobMetadata> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_background_job_metadata())
 }
-public func __alef_phantom_vec_request_id_config() -> RustVec<RequestIdConfig> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_request_id_config())
+public func __alef_phantom_vec_background_task_config() -> RustVec<BackgroundTaskConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_background_task_config())
+}
+public func __alef_phantom_vec_compression_config() -> RustVec<CompressionConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_compression_config())
+}
+public func __alef_phantom_vec_contact_info() -> RustVec<ContactInfo> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_contact_info())
+}
+public func __alef_phantom_vec_cors_config() -> RustVec<CorsConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_cors_config())
+}
+public func __alef_phantom_vec_dynamic_schema_config() -> RustVec<DynamicSchemaConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_dynamic_schema_config())
+}
+public func __alef_phantom_vec_field_error_spec() -> RustVec<FieldErrorSpec> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_field_error_spec())
+}
+public func __alef_phantom_vec_full_schema_config() -> RustVec<FullSchemaConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_full_schema_config())
+}
+public func __alef_phantom_vec_graph_ql_route_config() -> RustVec<GraphQLRouteConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_graph_ql_route_config())
+}
+public func __alef_phantom_vec_grpc_config() -> RustVec<GrpcConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_grpc_config())
+}
+public func __alef_phantom_vec_handler_result() -> RustVec<HandlerResult> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_handler_result())
+}
+public func __alef_phantom_vec_json_rpc_config() -> RustVec<JsonRpcConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_json_rpc_config())
+}
+public func __alef_phantom_vec_json_rpc_method_info() -> RustVec<JsonRpcMethodInfo> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_json_rpc_method_info())
 }
 public func __alef_phantom_vec_jwt_auth_config() -> RustVec<JwtAuthConfig> {
     RustVec(ptr: __swift_bridge__$__alef_phantom_vec_jwt_auth_config())
 }
-public func __alef_phantom_vec_api_key_auth_config() -> RustVec<ApiKeyAuthConfig> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_api_key_auth_config())
+public func __alef_phantom_vec_jwt_config() -> RustVec<JwtConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_jwt_config())
 }
-public func __alef_phantom_vec_authorization_config() -> RustVec<AuthorizationConfig> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_authorization_config())
+public func __alef_phantom_vec_license_info() -> RustVec<LicenseInfo> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_license_info())
 }
 public func __alef_phantom_vec_lifecycle_hook_ref() -> RustVec<LifecycleHookRef> {
     RustVec(ptr: __swift_bridge__$__alef_phantom_vec_lifecycle_hook_ref())
@@ -364,44 +346,35 @@ public func __alef_phantom_vec_lifecycle_hook_ref() -> RustVec<LifecycleHookRef>
 public func __alef_phantom_vec_lifecycle_hooks_config() -> RustVec<LifecycleHooksConfig> {
     RustVec(ptr: __swift_bridge__$__alef_phantom_vec_lifecycle_hooks_config())
 }
-public func __alef_phantom_vec_json_rpc_method_info() -> RustVec<JsonRpcMethodInfo> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_json_rpc_method_info())
-}
-public func __alef_phantom_vec_problem_details() -> RustVec<ProblemDetails> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_problem_details())
-}
-public func __alef_phantom_vec_parsed_channel() -> RustVec<ParsedChannel> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_parsed_channel())
-}
-public func __alef_phantom_vec_parsed_operation() -> RustVec<ParsedOperation> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_parsed_operation())
-}
-public func __alef_phantom_vec_parsed_message() -> RustVec<ParsedMessage> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_parsed_message())
-}
-public func __alef_phantom_vec_parse_result() -> RustVec<ParseResult> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_parse_result())
+public func __alef_phantom_vec_open_api_config() -> RustVec<OpenApiConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_open_api_config())
 }
 public func __alef_phantom_vec_parse_request() -> RustVec<ParseRequest> {
     RustVec(ptr: __swift_bridge__$__alef_phantom_vec_parse_request())
 }
-public func __alef_phantom_vec_validation_response() -> RustVec<ValidationResponse> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_validation_response())
+public func __alef_phantom_vec_parse_result() -> RustVec<ParseResult> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_parse_result())
 }
-public func __alef_phantom_vec_validate_request() -> RustVec<ValidateRequest> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_validate_request())
+public func __alef_phantom_vec_parsed_channel() -> RustVec<ParsedChannel> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_parsed_channel())
 }
-public func __alef_phantom_vec_contact_info() -> RustVec<ContactInfo> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_contact_info())
+public func __alef_phantom_vec_parsed_message() -> RustVec<ParsedMessage> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_parsed_message())
 }
-public func __alef_phantom_vec_license_info() -> RustVec<LicenseInfo> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_license_info())
+public func __alef_phantom_vec_parsed_operation() -> RustVec<ParsedOperation> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_parsed_operation())
 }
-public func __alef_phantom_vec_server_info() -> RustVec<ServerInfo> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_server_info())
+public func __alef_phantom_vec_problem_details() -> RustVec<ProblemDetails> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_problem_details())
 }
-public func __alef_phantom_vec_handler_result() -> RustVec<HandlerResult> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_handler_result())
+public func __alef_phantom_vec_query_mutation_config() -> RustVec<QueryMutationConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_query_mutation_config())
+}
+public func __alef_phantom_vec_query_only_config() -> RustVec<QueryOnlyConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_query_only_config())
+}
+public func __alef_phantom_vec_rate_limit_config() -> RustVec<RateLimitConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_rate_limit_config())
 }
 public func __alef_phantom_vec_request() -> RustVec<Request> {
     RustVec(ptr: __swift_bridge__$__alef_phantom_vec_request())
@@ -409,11 +382,44 @@ public func __alef_phantom_vec_request() -> RustVec<Request> {
 public func __alef_phantom_vec_request_data() -> RustVec<RequestData> {
     RustVec(ptr: __swift_bridge__$__alef_phantom_vec_request_data())
 }
-public func __alef_phantom_vec_method() -> RustVec<Method> {
-    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_method())
+public func __alef_phantom_vec_request_id_config() -> RustVec<RequestIdConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_request_id_config())
+}
+public func __alef_phantom_vec_response() -> RustVec<Response> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_response())
+}
+public func __alef_phantom_vec_route_builder() -> RustVec<RouteBuilder> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_route_builder())
+}
+public func __alef_phantom_vec_schema_config() -> RustVec<SchemaConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_schema_config())
+}
+public func __alef_phantom_vec_server_config() -> RustVec<ServerConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_server_config())
+}
+public func __alef_phantom_vec_server_info() -> RustVec<ServerInfo> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_server_info())
+}
+public func __alef_phantom_vec_sse_event() -> RustVec<SseEvent> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_sse_event())
+}
+public func __alef_phantom_vec_static_files_config() -> RustVec<StaticFilesConfig> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_static_files_config())
+}
+public func __alef_phantom_vec_upload_file() -> RustVec<UploadFile> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_upload_file())
+}
+public func __alef_phantom_vec_validate_request() -> RustVec<ValidateRequest> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_validate_request())
+}
+public func __alef_phantom_vec_validation_response() -> RustVec<ValidationResponse> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_validation_response())
 }
 public func __alef_phantom_vec_lifecycle_hook_phase() -> RustVec<LifecycleHookPhase> {
     RustVec(ptr: __swift_bridge__$__alef_phantom_vec_lifecycle_hook_phase())
+}
+public func __alef_phantom_vec_method() -> RustVec<Method> {
+    RustVec(ptr: __swift_bridge__$__alef_phantom_vec_method())
 }
 public func __alef_phantom_vec_security_scheme_info() -> RustVec<SecuritySchemeInfo> {
     RustVec(ptr: __swift_bridge__$__alef_phantom_vec_security_scheme_info())
@@ -422,7 +428,7 @@ public func __alef_phantom_vec_testing_sse_event() -> RustVec<TestingSseEvent> {
     RustVec(ptr: __swift_bridge__$__alef_phantom_vec_testing_sse_event())
 }
 
-public class UploadFile: UploadFileRefMut {
+public class ApiKeyAuthConfig: ApiKeyAuthConfigRefMut {
     public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
@@ -431,94 +437,86 @@ public class UploadFile: UploadFileRefMut {
 
     deinit {
         if isOwned {
-            __swift_bridge__$UploadFile$_free(ptr)
+            __swift_bridge__$ApiKeyAuthConfig$_free(ptr)
         }
     }
 }
-public class UploadFileRefMut: UploadFileRef {
+public class ApiKeyAuthConfigRefMut: ApiKeyAuthConfigRef {
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
     }
 }
-public class UploadFileRef {
+public class ApiKeyAuthConfigRef {
     public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
     }
 }
-extension UploadFileRef {
-    public func filename() -> RustString {
-        RustString(ptr: __swift_bridge__$UploadFile$filename(ptr))
+extension ApiKeyAuthConfigRef {
+    public func enabled() -> Bool {
+        __swift_bridge__$ApiKeyAuthConfig$enabled(ptr)
     }
 
-    public func contentType() -> Optional<RustString> {
-        { let val = __swift_bridge__$UploadFile$content_type(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    public func keys() -> RustVec<RustString> {
+        RustVec(ptr: __swift_bridge__$ApiKeyAuthConfig$keys(ptr))
     }
 
-    public func size() -> Optional<UInt> {
-        __swift_bridge__$UploadFile$size(ptr).intoSwiftRepr()
-    }
-
-    public func content() -> RustVec<UInt8> {
-        RustVec(ptr: __swift_bridge__$UploadFile$content(ptr))
-    }
-
-    public func contentEncoding() -> Optional<RustString> {
-        { let val = __swift_bridge__$UploadFile$content_encoding(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    public func headerName() -> RustString {
+        RustString(ptr: __swift_bridge__$ApiKeyAuthConfig$header_name(ptr))
     }
 }
-extension UploadFile: Vectorizable {
+extension ApiKeyAuthConfig: Vectorizable {
     public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_UploadFile$new()
+        __swift_bridge__$Vec_ApiKeyAuthConfig$new()
     }
 
     public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_UploadFile$drop(vecPtr)
+        __swift_bridge__$Vec_ApiKeyAuthConfig$drop(vecPtr)
     }
 
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: UploadFile) {
-        __swift_bridge__$Vec_UploadFile$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: ApiKeyAuthConfig) {
+        __swift_bridge__$Vec_ApiKeyAuthConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
     }
 
     public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_UploadFile$pop(vecPtr)
+        let pointer = __swift_bridge__$Vec_ApiKeyAuthConfig$pop(vecPtr)
         if pointer == nil {
             return nil
         } else {
-            return (UploadFile(ptr: pointer!) as! Self)
+            return (ApiKeyAuthConfig(ptr: pointer!) as! Self)
         }
     }
 
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<UploadFileRef> {
-        let pointer = __swift_bridge__$Vec_UploadFile$get(vecPtr, index)
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ApiKeyAuthConfigRef> {
+        let pointer = __swift_bridge__$Vec_ApiKeyAuthConfig$get(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return UploadFileRef(ptr: pointer!)
+            return ApiKeyAuthConfigRef(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<UploadFileRefMut> {
-        let pointer = __swift_bridge__$Vec_UploadFile$get_mut(vecPtr, index)
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ApiKeyAuthConfigRefMut> {
+        let pointer = __swift_bridge__$Vec_ApiKeyAuthConfig$get_mut(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return UploadFileRefMut(ptr: pointer!)
+            return ApiKeyAuthConfigRefMut(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<UploadFileRef> {
-        UnsafePointer<UploadFileRef>(OpaquePointer(__swift_bridge__$Vec_UploadFile$as_ptr(vecPtr)))
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ApiKeyAuthConfigRef> {
+        UnsafePointer<ApiKeyAuthConfigRef>(OpaquePointer(__swift_bridge__$Vec_ApiKeyAuthConfig$as_ptr(vecPtr)))
     }
 
     public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_UploadFile$len(vecPtr)
+        __swift_bridge__$Vec_ApiKeyAuthConfig$len(vecPtr)
     }
 }
 
 
-public class FieldErrorSpec: FieldErrorSpecRefMut {
+public class ApiKeyConfig: ApiKeyConfigRefMut {
     public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
@@ -527,621 +525,77 @@ public class FieldErrorSpec: FieldErrorSpecRefMut {
 
     deinit {
         if isOwned {
-            __swift_bridge__$FieldErrorSpec$_free(ptr)
+            __swift_bridge__$ApiKeyConfig$_free(ptr)
         }
     }
 }
-public class FieldErrorSpecRefMut: FieldErrorSpecRef {
+public class ApiKeyConfigRefMut: ApiKeyConfigRef {
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
     }
 }
-public class FieldErrorSpecRef {
+public class ApiKeyConfigRef {
     public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
     }
 }
-extension FieldErrorSpecRef {
-    public func path() -> RustString {
-        RustString(ptr: __swift_bridge__$FieldErrorSpec$path(ptr))
+extension ApiKeyConfigRef {
+    public func keys() -> RustVec<RustString> {
+        RustVec(ptr: __swift_bridge__$ApiKeyConfig$keys(ptr))
     }
 
-    public func message() -> RustString {
-        RustString(ptr: __swift_bridge__$FieldErrorSpec$message(ptr))
+    public func headerName() -> RustString {
+        RustString(ptr: __swift_bridge__$ApiKeyConfig$header_name(ptr))
     }
 }
-extension FieldErrorSpec: Vectorizable {
+extension ApiKeyConfig: Vectorizable {
     public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_FieldErrorSpec$new()
+        __swift_bridge__$Vec_ApiKeyConfig$new()
     }
 
     public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_FieldErrorSpec$drop(vecPtr)
+        __swift_bridge__$Vec_ApiKeyConfig$drop(vecPtr)
     }
 
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: FieldErrorSpec) {
-        __swift_bridge__$Vec_FieldErrorSpec$push(vecPtr, {value.isOwned = false; return value.ptr;}())
-    }
-
-    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_FieldErrorSpec$pop(vecPtr)
-        if pointer == nil {
-            return nil
-        } else {
-            return (FieldErrorSpec(ptr: pointer!) as! Self)
-        }
-    }
-
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<FieldErrorSpecRef> {
-        let pointer = __swift_bridge__$Vec_FieldErrorSpec$get(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return FieldErrorSpecRef(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<FieldErrorSpecRefMut> {
-        let pointer = __swift_bridge__$Vec_FieldErrorSpec$get_mut(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return FieldErrorSpecRefMut(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<FieldErrorSpecRef> {
-        UnsafePointer<FieldErrorSpecRef>(OpaquePointer(__swift_bridge__$Vec_FieldErrorSpec$as_ptr(vecPtr)))
-    }
-
-    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_FieldErrorSpec$len(vecPtr)
-    }
-}
-
-
-public class DynamicSchemaConfig: DynamicSchemaConfigRefMut {
-    public var isOwned: Bool = true
-
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-
-    deinit {
-        if isOwned {
-            __swift_bridge__$DynamicSchemaConfig$_free(ptr)
-        }
-    }
-}
-extension DynamicSchemaConfig {
-    public convenience init(_ introspection_enabled: Bool, _ max_complexity: Optional<UInt>, _ max_depth: Optional<UInt>, _ field_errors: RustVec<FieldErrorSpec>) {
-        self.init(ptr: __swift_bridge__$DynamicSchemaConfig$new(introspection_enabled, max_complexity.intoFfiRepr(), max_depth.intoFfiRepr(), { let val = field_errors; val.isOwned = false; return val.ptr }()))
-    }
-}
-public class DynamicSchemaConfigRefMut: DynamicSchemaConfigRef {
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-}
-public class DynamicSchemaConfigRef {
-    public var ptr: UnsafeMutableRawPointer
-
-    public init(ptr: UnsafeMutableRawPointer) {
-        self.ptr = ptr
-    }
-}
-extension DynamicSchemaConfigRef {
-    public func introspectionEnabled() -> Bool {
-        __swift_bridge__$DynamicSchemaConfig$introspection_enabled(ptr)
-    }
-
-    public func maxComplexity() -> Optional<UInt> {
-        __swift_bridge__$DynamicSchemaConfig$max_complexity(ptr).intoSwiftRepr()
-    }
-
-    public func maxDepth() -> Optional<UInt> {
-        __swift_bridge__$DynamicSchemaConfig$max_depth(ptr).intoSwiftRepr()
-    }
-
-    public func fieldErrors() -> RustVec<RustString> {
-        RustVec(ptr: __swift_bridge__$DynamicSchemaConfig$field_errors(ptr))
-    }
-}
-extension DynamicSchemaConfig: Vectorizable {
-    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_DynamicSchemaConfig$new()
-    }
-
-    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_DynamicSchemaConfig$drop(vecPtr)
-    }
-
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: DynamicSchemaConfig) {
-        __swift_bridge__$Vec_DynamicSchemaConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: ApiKeyConfig) {
+        __swift_bridge__$Vec_ApiKeyConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
     }
 
     public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_DynamicSchemaConfig$pop(vecPtr)
+        let pointer = __swift_bridge__$Vec_ApiKeyConfig$pop(vecPtr)
         if pointer == nil {
             return nil
         } else {
-            return (DynamicSchemaConfig(ptr: pointer!) as! Self)
+            return (ApiKeyConfig(ptr: pointer!) as! Self)
         }
     }
 
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<DynamicSchemaConfigRef> {
-        let pointer = __swift_bridge__$Vec_DynamicSchemaConfig$get(vecPtr, index)
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ApiKeyConfigRef> {
+        let pointer = __swift_bridge__$Vec_ApiKeyConfig$get(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return DynamicSchemaConfigRef(ptr: pointer!)
+            return ApiKeyConfigRef(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<DynamicSchemaConfigRefMut> {
-        let pointer = __swift_bridge__$Vec_DynamicSchemaConfig$get_mut(vecPtr, index)
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ApiKeyConfigRefMut> {
+        let pointer = __swift_bridge__$Vec_ApiKeyConfig$get_mut(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return DynamicSchemaConfigRefMut(ptr: pointer!)
+            return ApiKeyConfigRefMut(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<DynamicSchemaConfigRef> {
-        UnsafePointer<DynamicSchemaConfigRef>(OpaquePointer(__swift_bridge__$Vec_DynamicSchemaConfig$as_ptr(vecPtr)))
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ApiKeyConfigRef> {
+        UnsafePointer<ApiKeyConfigRef>(OpaquePointer(__swift_bridge__$Vec_ApiKeyConfig$as_ptr(vecPtr)))
     }
 
     public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_DynamicSchemaConfig$len(vecPtr)
-    }
-}
-
-
-public class GraphQLRouteConfig: GraphQLRouteConfigRefMut {
-    public var isOwned: Bool = true
-
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-
-    deinit {
-        if isOwned {
-            __swift_bridge__$GraphQLRouteConfig$_free(ptr)
-        }
-    }
-}
-public class GraphQLRouteConfigRefMut: GraphQLRouteConfigRef {
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-}
-public class GraphQLRouteConfigRef {
-    public var ptr: UnsafeMutableRawPointer
-
-    public init(ptr: UnsafeMutableRawPointer) {
-        self.ptr = ptr
-    }
-}
-extension GraphQLRouteConfig: Vectorizable {
-    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_GraphQLRouteConfig$new()
-    }
-
-    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_GraphQLRouteConfig$drop(vecPtr)
-    }
-
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: GraphQLRouteConfig) {
-        __swift_bridge__$Vec_GraphQLRouteConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
-    }
-
-    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_GraphQLRouteConfig$pop(vecPtr)
-        if pointer == nil {
-            return nil
-        } else {
-            return (GraphQLRouteConfig(ptr: pointer!) as! Self)
-        }
-    }
-
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<GraphQLRouteConfigRef> {
-        let pointer = __swift_bridge__$Vec_GraphQLRouteConfig$get(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return GraphQLRouteConfigRef(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<GraphQLRouteConfigRefMut> {
-        let pointer = __swift_bridge__$Vec_GraphQLRouteConfig$get_mut(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return GraphQLRouteConfigRefMut(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<GraphQLRouteConfigRef> {
-        UnsafePointer<GraphQLRouteConfigRef>(OpaquePointer(__swift_bridge__$Vec_GraphQLRouteConfig$as_ptr(vecPtr)))
-    }
-
-    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_GraphQLRouteConfig$len(vecPtr)
-    }
-}
-
-
-public class SchemaConfig: SchemaConfigRefMut {
-    public var isOwned: Bool = true
-
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-
-    deinit {
-        if isOwned {
-            __swift_bridge__$SchemaConfig$_free(ptr)
-        }
-    }
-}
-extension SchemaConfig {
-    public convenience init(_ introspection_enabled: Bool, _ complexity_limit: Optional<UInt>, _ depth_limit: Optional<UInt>) {
-        self.init(ptr: __swift_bridge__$SchemaConfig$new(introspection_enabled, complexity_limit.intoFfiRepr(), depth_limit.intoFfiRepr()))
-    }
-}
-public class SchemaConfigRefMut: SchemaConfigRef {
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-}
-public class SchemaConfigRef {
-    public var ptr: UnsafeMutableRawPointer
-
-    public init(ptr: UnsafeMutableRawPointer) {
-        self.ptr = ptr
-    }
-}
-extension SchemaConfigRef {
-    public func introspectionEnabled() -> Bool {
-        __swift_bridge__$SchemaConfig$introspection_enabled(ptr)
-    }
-
-    public func complexityLimit() -> Optional<UInt> {
-        __swift_bridge__$SchemaConfig$complexity_limit(ptr).intoSwiftRepr()
-    }
-
-    public func depthLimit() -> Optional<UInt> {
-        __swift_bridge__$SchemaConfig$depth_limit(ptr).intoSwiftRepr()
-    }
-}
-extension SchemaConfig: Vectorizable {
-    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_SchemaConfig$new()
-    }
-
-    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_SchemaConfig$drop(vecPtr)
-    }
-
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: SchemaConfig) {
-        __swift_bridge__$Vec_SchemaConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
-    }
-
-    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_SchemaConfig$pop(vecPtr)
-        if pointer == nil {
-            return nil
-        } else {
-            return (SchemaConfig(ptr: pointer!) as! Self)
-        }
-    }
-
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<SchemaConfigRef> {
-        let pointer = __swift_bridge__$Vec_SchemaConfig$get(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return SchemaConfigRef(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<SchemaConfigRefMut> {
-        let pointer = __swift_bridge__$Vec_SchemaConfig$get_mut(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return SchemaConfigRefMut(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<SchemaConfigRef> {
-        UnsafePointer<SchemaConfigRef>(OpaquePointer(__swift_bridge__$Vec_SchemaConfig$as_ptr(vecPtr)))
-    }
-
-    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_SchemaConfig$len(vecPtr)
-    }
-}
-
-
-public class QueryOnlyConfig: QueryOnlyConfigRefMut {
-    public var isOwned: Bool = true
-
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-
-    deinit {
-        if isOwned {
-            __swift_bridge__$QueryOnlyConfig$_free(ptr)
-        }
-    }
-}
-extension QueryOnlyConfig {
-    public convenience init(_ introspection_enabled: Bool, _ complexity_limit: Optional<UInt>, _ depth_limit: Optional<UInt>) {
-        self.init(ptr: __swift_bridge__$QueryOnlyConfig$new(introspection_enabled, complexity_limit.intoFfiRepr(), depth_limit.intoFfiRepr()))
-    }
-}
-public class QueryOnlyConfigRefMut: QueryOnlyConfigRef {
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-}
-public class QueryOnlyConfigRef {
-    public var ptr: UnsafeMutableRawPointer
-
-    public init(ptr: UnsafeMutableRawPointer) {
-        self.ptr = ptr
-    }
-}
-extension QueryOnlyConfigRef {
-    public func introspectionEnabled() -> Bool {
-        __swift_bridge__$QueryOnlyConfig$introspection_enabled(ptr)
-    }
-
-    public func complexityLimit() -> Optional<UInt> {
-        __swift_bridge__$QueryOnlyConfig$complexity_limit(ptr).intoSwiftRepr()
-    }
-
-    public func depthLimit() -> Optional<UInt> {
-        __swift_bridge__$QueryOnlyConfig$depth_limit(ptr).intoSwiftRepr()
-    }
-}
-extension QueryOnlyConfig: Vectorizable {
-    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_QueryOnlyConfig$new()
-    }
-
-    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_QueryOnlyConfig$drop(vecPtr)
-    }
-
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: QueryOnlyConfig) {
-        __swift_bridge__$Vec_QueryOnlyConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
-    }
-
-    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_QueryOnlyConfig$pop(vecPtr)
-        if pointer == nil {
-            return nil
-        } else {
-            return (QueryOnlyConfig(ptr: pointer!) as! Self)
-        }
-    }
-
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<QueryOnlyConfigRef> {
-        let pointer = __swift_bridge__$Vec_QueryOnlyConfig$get(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return QueryOnlyConfigRef(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<QueryOnlyConfigRefMut> {
-        let pointer = __swift_bridge__$Vec_QueryOnlyConfig$get_mut(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return QueryOnlyConfigRefMut(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<QueryOnlyConfigRef> {
-        UnsafePointer<QueryOnlyConfigRef>(OpaquePointer(__swift_bridge__$Vec_QueryOnlyConfig$as_ptr(vecPtr)))
-    }
-
-    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_QueryOnlyConfig$len(vecPtr)
-    }
-}
-
-
-public class QueryMutationConfig: QueryMutationConfigRefMut {
-    public var isOwned: Bool = true
-
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-
-    deinit {
-        if isOwned {
-            __swift_bridge__$QueryMutationConfig$_free(ptr)
-        }
-    }
-}
-extension QueryMutationConfig {
-    public convenience init(_ introspection_enabled: Bool, _ complexity_limit: Optional<UInt>, _ depth_limit: Optional<UInt>) {
-        self.init(ptr: __swift_bridge__$QueryMutationConfig$new(introspection_enabled, complexity_limit.intoFfiRepr(), depth_limit.intoFfiRepr()))
-    }
-}
-public class QueryMutationConfigRefMut: QueryMutationConfigRef {
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-}
-public class QueryMutationConfigRef {
-    public var ptr: UnsafeMutableRawPointer
-
-    public init(ptr: UnsafeMutableRawPointer) {
-        self.ptr = ptr
-    }
-}
-extension QueryMutationConfigRef {
-    public func introspectionEnabled() -> Bool {
-        __swift_bridge__$QueryMutationConfig$introspection_enabled(ptr)
-    }
-
-    public func complexityLimit() -> Optional<UInt> {
-        __swift_bridge__$QueryMutationConfig$complexity_limit(ptr).intoSwiftRepr()
-    }
-
-    public func depthLimit() -> Optional<UInt> {
-        __swift_bridge__$QueryMutationConfig$depth_limit(ptr).intoSwiftRepr()
-    }
-}
-extension QueryMutationConfig: Vectorizable {
-    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_QueryMutationConfig$new()
-    }
-
-    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_QueryMutationConfig$drop(vecPtr)
-    }
-
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: QueryMutationConfig) {
-        __swift_bridge__$Vec_QueryMutationConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
-    }
-
-    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_QueryMutationConfig$pop(vecPtr)
-        if pointer == nil {
-            return nil
-        } else {
-            return (QueryMutationConfig(ptr: pointer!) as! Self)
-        }
-    }
-
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<QueryMutationConfigRef> {
-        let pointer = __swift_bridge__$Vec_QueryMutationConfig$get(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return QueryMutationConfigRef(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<QueryMutationConfigRefMut> {
-        let pointer = __swift_bridge__$Vec_QueryMutationConfig$get_mut(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return QueryMutationConfigRefMut(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<QueryMutationConfigRef> {
-        UnsafePointer<QueryMutationConfigRef>(OpaquePointer(__swift_bridge__$Vec_QueryMutationConfig$as_ptr(vecPtr)))
-    }
-
-    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_QueryMutationConfig$len(vecPtr)
-    }
-}
-
-
-public class FullSchemaConfig: FullSchemaConfigRefMut {
-    public var isOwned: Bool = true
-
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-
-    deinit {
-        if isOwned {
-            __swift_bridge__$FullSchemaConfig$_free(ptr)
-        }
-    }
-}
-extension FullSchemaConfig {
-    public convenience init(_ introspection_enabled: Bool, _ complexity_limit: Optional<UInt>, _ depth_limit: Optional<UInt>) {
-        self.init(ptr: __swift_bridge__$FullSchemaConfig$new(introspection_enabled, complexity_limit.intoFfiRepr(), depth_limit.intoFfiRepr()))
-    }
-}
-public class FullSchemaConfigRefMut: FullSchemaConfigRef {
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-}
-public class FullSchemaConfigRef {
-    public var ptr: UnsafeMutableRawPointer
-
-    public init(ptr: UnsafeMutableRawPointer) {
-        self.ptr = ptr
-    }
-}
-extension FullSchemaConfigRef {
-    public func introspectionEnabled() -> Bool {
-        __swift_bridge__$FullSchemaConfig$introspection_enabled(ptr)
-    }
-
-    public func complexityLimit() -> Optional<UInt> {
-        __swift_bridge__$FullSchemaConfig$complexity_limit(ptr).intoSwiftRepr()
-    }
-
-    public func depthLimit() -> Optional<UInt> {
-        __swift_bridge__$FullSchemaConfig$depth_limit(ptr).intoSwiftRepr()
-    }
-}
-extension FullSchemaConfig: Vectorizable {
-    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_FullSchemaConfig$new()
-    }
-
-    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_FullSchemaConfig$drop(vecPtr)
-    }
-
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: FullSchemaConfig) {
-        __swift_bridge__$Vec_FullSchemaConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
-    }
-
-    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_FullSchemaConfig$pop(vecPtr)
-        if pointer == nil {
-            return nil
-        } else {
-            return (FullSchemaConfig(ptr: pointer!) as! Self)
-        }
-    }
-
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<FullSchemaConfigRef> {
-        let pointer = __swift_bridge__$Vec_FullSchemaConfig$get(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return FullSchemaConfigRef(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<FullSchemaConfigRefMut> {
-        let pointer = __swift_bridge__$Vec_FullSchemaConfig$get_mut(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return FullSchemaConfigRefMut(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<FullSchemaConfigRef> {
-        UnsafePointer<FullSchemaConfigRef>(OpaquePointer(__swift_bridge__$Vec_FullSchemaConfig$as_ptr(vecPtr)))
-    }
-
-    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_FullSchemaConfig$len(vecPtr)
+        __swift_bridge__$Vec_ApiKeyConfig$len(vecPtr)
     }
 }
 
@@ -1235,7 +689,7 @@ extension AsyncApiConfig: Vectorizable {
 }
 
 
-public class BackgroundTaskConfig: BackgroundTaskConfigRefMut {
+public class AuthorizationConfig: AuthorizationConfigRefMut {
     public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
@@ -1244,86 +698,90 @@ public class BackgroundTaskConfig: BackgroundTaskConfigRefMut {
 
     deinit {
         if isOwned {
-            __swift_bridge__$BackgroundTaskConfig$_free(ptr)
+            __swift_bridge__$AuthorizationConfig$_free(ptr)
         }
     }
 }
-extension BackgroundTaskConfig {
-    public convenience init(_ max_queue_size: UInt, _ max_concurrent_tasks: UInt, _ drain_timeout_secs: UInt64) {
-        self.init(ptr: __swift_bridge__$BackgroundTaskConfig$new(max_queue_size, max_concurrent_tasks, drain_timeout_secs))
+extension AuthorizationConfig {
+    public convenience init<GenericIntoRustString: IntoRustString>(_ required_roles: RustVec<GenericIntoRustString>, _ required_scopes: RustVec<GenericIntoRustString>, _ required_permissions: RustVec<GenericIntoRustString>, _ require_all: Bool) {
+        self.init(ptr: __swift_bridge__$AuthorizationConfig$new({ let val = required_roles; val.isOwned = false; return val.ptr }(), { let val = required_scopes; val.isOwned = false; return val.ptr }(), { let val = required_permissions; val.isOwned = false; return val.ptr }(), require_all))
     }
 }
-public class BackgroundTaskConfigRefMut: BackgroundTaskConfigRef {
+public class AuthorizationConfigRefMut: AuthorizationConfigRef {
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
     }
 }
-public class BackgroundTaskConfigRef {
+public class AuthorizationConfigRef {
     public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
     }
 }
-extension BackgroundTaskConfigRef {
-    public func maxQueueSize() -> UInt {
-        __swift_bridge__$BackgroundTaskConfig$max_queue_size(ptr)
+extension AuthorizationConfigRef {
+    public func requiredRoles() -> RustVec<RustString> {
+        RustVec(ptr: __swift_bridge__$AuthorizationConfig$required_roles(ptr))
     }
 
-    public func maxConcurrentTasks() -> UInt {
-        __swift_bridge__$BackgroundTaskConfig$max_concurrent_tasks(ptr)
+    public func requiredScopes() -> RustVec<RustString> {
+        RustVec(ptr: __swift_bridge__$AuthorizationConfig$required_scopes(ptr))
     }
 
-    public func drainTimeoutSecs() -> UInt64 {
-        __swift_bridge__$BackgroundTaskConfig$drain_timeout_secs(ptr)
+    public func requiredPermissions() -> RustVec<RustString> {
+        RustVec(ptr: __swift_bridge__$AuthorizationConfig$required_permissions(ptr))
+    }
+
+    public func requireAll() -> Bool {
+        __swift_bridge__$AuthorizationConfig$require_all(ptr)
     }
 }
-extension BackgroundTaskConfig: Vectorizable {
+extension AuthorizationConfig: Vectorizable {
     public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_BackgroundTaskConfig$new()
+        __swift_bridge__$Vec_AuthorizationConfig$new()
     }
 
     public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_BackgroundTaskConfig$drop(vecPtr)
+        __swift_bridge__$Vec_AuthorizationConfig$drop(vecPtr)
     }
 
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: BackgroundTaskConfig) {
-        __swift_bridge__$Vec_BackgroundTaskConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: AuthorizationConfig) {
+        __swift_bridge__$Vec_AuthorizationConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
     }
 
     public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_BackgroundTaskConfig$pop(vecPtr)
+        let pointer = __swift_bridge__$Vec_AuthorizationConfig$pop(vecPtr)
         if pointer == nil {
             return nil
         } else {
-            return (BackgroundTaskConfig(ptr: pointer!) as! Self)
+            return (AuthorizationConfig(ptr: pointer!) as! Self)
         }
     }
 
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<BackgroundTaskConfigRef> {
-        let pointer = __swift_bridge__$Vec_BackgroundTaskConfig$get(vecPtr, index)
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<AuthorizationConfigRef> {
+        let pointer = __swift_bridge__$Vec_AuthorizationConfig$get(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return BackgroundTaskConfigRef(ptr: pointer!)
+            return AuthorizationConfigRef(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<BackgroundTaskConfigRefMut> {
-        let pointer = __swift_bridge__$Vec_BackgroundTaskConfig$get_mut(vecPtr, index)
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<AuthorizationConfigRefMut> {
+        let pointer = __swift_bridge__$Vec_AuthorizationConfig$get_mut(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return BackgroundTaskConfigRefMut(ptr: pointer!)
+            return AuthorizationConfigRefMut(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<BackgroundTaskConfigRef> {
-        UnsafePointer<BackgroundTaskConfigRef>(OpaquePointer(__swift_bridge__$Vec_BackgroundTaskConfig$as_ptr(vecPtr)))
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<AuthorizationConfigRef> {
+        UnsafePointer<AuthorizationConfigRef>(OpaquePointer(__swift_bridge__$Vec_AuthorizationConfig$as_ptr(vecPtr)))
     }
 
     public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_BackgroundTaskConfig$len(vecPtr)
+        __swift_bridge__$Vec_AuthorizationConfig$len(vecPtr)
     }
 }
 
@@ -1413,6 +871,288 @@ extension BackgroundJobMetadata: Vectorizable {
 
     public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
         __swift_bridge__$Vec_BackgroundJobMetadata$len(vecPtr)
+    }
+}
+
+
+public class BackgroundTaskConfig: BackgroundTaskConfigRefMut {
+    public var isOwned: Bool = true
+
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+
+    deinit {
+        if isOwned {
+            __swift_bridge__$BackgroundTaskConfig$_free(ptr)
+        }
+    }
+}
+extension BackgroundTaskConfig {
+    public convenience init(_ enabled: Bool, _ max_queue_size: UInt, _ max_concurrent_tasks: UInt, _ drain_timeout_secs: UInt64) {
+        self.init(ptr: __swift_bridge__$BackgroundTaskConfig$new(enabled, max_queue_size, max_concurrent_tasks, drain_timeout_secs))
+    }
+}
+public class BackgroundTaskConfigRefMut: BackgroundTaskConfigRef {
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+}
+public class BackgroundTaskConfigRef {
+    public var ptr: UnsafeMutableRawPointer
+
+    public init(ptr: UnsafeMutableRawPointer) {
+        self.ptr = ptr
+    }
+}
+extension BackgroundTaskConfigRef {
+    public func enabled() -> Bool {
+        __swift_bridge__$BackgroundTaskConfig$enabled(ptr)
+    }
+
+    public func maxQueueSize() -> UInt {
+        __swift_bridge__$BackgroundTaskConfig$max_queue_size(ptr)
+    }
+
+    public func maxConcurrentTasks() -> UInt {
+        __swift_bridge__$BackgroundTaskConfig$max_concurrent_tasks(ptr)
+    }
+
+    public func drainTimeoutSecs() -> UInt64 {
+        __swift_bridge__$BackgroundTaskConfig$drain_timeout_secs(ptr)
+    }
+}
+extension BackgroundTaskConfig: Vectorizable {
+    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+        __swift_bridge__$Vec_BackgroundTaskConfig$new()
+    }
+
+    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+        __swift_bridge__$Vec_BackgroundTaskConfig$drop(vecPtr)
+    }
+
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: BackgroundTaskConfig) {
+        __swift_bridge__$Vec_BackgroundTaskConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    }
+
+    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
+        let pointer = __swift_bridge__$Vec_BackgroundTaskConfig$pop(vecPtr)
+        if pointer == nil {
+            return nil
+        } else {
+            return (BackgroundTaskConfig(ptr: pointer!) as! Self)
+        }
+    }
+
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<BackgroundTaskConfigRef> {
+        let pointer = __swift_bridge__$Vec_BackgroundTaskConfig$get(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return BackgroundTaskConfigRef(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<BackgroundTaskConfigRefMut> {
+        let pointer = __swift_bridge__$Vec_BackgroundTaskConfig$get_mut(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return BackgroundTaskConfigRefMut(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<BackgroundTaskConfigRef> {
+        UnsafePointer<BackgroundTaskConfigRef>(OpaquePointer(__swift_bridge__$Vec_BackgroundTaskConfig$as_ptr(vecPtr)))
+    }
+
+    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+        __swift_bridge__$Vec_BackgroundTaskConfig$len(vecPtr)
+    }
+}
+
+
+public class CompressionConfig: CompressionConfigRefMut {
+    public var isOwned: Bool = true
+
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+
+    deinit {
+        if isOwned {
+            __swift_bridge__$CompressionConfig$_free(ptr)
+        }
+    }
+}
+extension CompressionConfig {
+    public convenience init(_ gzip: Bool, _ brotli: Bool, _ min_size: UInt, _ quality: UInt32) {
+        self.init(ptr: __swift_bridge__$CompressionConfig$new(gzip, brotli, min_size, quality))
+    }
+}
+public class CompressionConfigRefMut: CompressionConfigRef {
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+}
+public class CompressionConfigRef {
+    public var ptr: UnsafeMutableRawPointer
+
+    public init(ptr: UnsafeMutableRawPointer) {
+        self.ptr = ptr
+    }
+}
+extension CompressionConfigRef {
+    public func gzip() -> Bool {
+        __swift_bridge__$CompressionConfig$gzip(ptr)
+    }
+
+    public func brotli() -> Bool {
+        __swift_bridge__$CompressionConfig$brotli(ptr)
+    }
+
+    public func minSize() -> UInt {
+        __swift_bridge__$CompressionConfig$min_size(ptr)
+    }
+
+    public func quality() -> UInt32 {
+        __swift_bridge__$CompressionConfig$quality(ptr)
+    }
+}
+extension CompressionConfig: Vectorizable {
+    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+        __swift_bridge__$Vec_CompressionConfig$new()
+    }
+
+    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+        __swift_bridge__$Vec_CompressionConfig$drop(vecPtr)
+    }
+
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: CompressionConfig) {
+        __swift_bridge__$Vec_CompressionConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    }
+
+    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
+        let pointer = __swift_bridge__$Vec_CompressionConfig$pop(vecPtr)
+        if pointer == nil {
+            return nil
+        } else {
+            return (CompressionConfig(ptr: pointer!) as! Self)
+        }
+    }
+
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<CompressionConfigRef> {
+        let pointer = __swift_bridge__$Vec_CompressionConfig$get(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return CompressionConfigRef(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<CompressionConfigRefMut> {
+        let pointer = __swift_bridge__$Vec_CompressionConfig$get_mut(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return CompressionConfigRefMut(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<CompressionConfigRef> {
+        UnsafePointer<CompressionConfigRef>(OpaquePointer(__swift_bridge__$Vec_CompressionConfig$as_ptr(vecPtr)))
+    }
+
+    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+        __swift_bridge__$Vec_CompressionConfig$len(vecPtr)
+    }
+}
+
+
+public class ContactInfo: ContactInfoRefMut {
+    public var isOwned: Bool = true
+
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+
+    deinit {
+        if isOwned {
+            __swift_bridge__$ContactInfo$_free(ptr)
+        }
+    }
+}
+public class ContactInfoRefMut: ContactInfoRef {
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+}
+public class ContactInfoRef {
+    public var ptr: UnsafeMutableRawPointer
+
+    public init(ptr: UnsafeMutableRawPointer) {
+        self.ptr = ptr
+    }
+}
+extension ContactInfoRef {
+    public func name() -> Optional<RustString> {
+        { let val = __swift_bridge__$ContactInfo$name(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    }
+
+    public func email() -> Optional<RustString> {
+        { let val = __swift_bridge__$ContactInfo$email(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    }
+
+    public func url() -> Optional<RustString> {
+        { let val = __swift_bridge__$ContactInfo$url(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    }
+}
+extension ContactInfo: Vectorizable {
+    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+        __swift_bridge__$Vec_ContactInfo$new()
+    }
+
+    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+        __swift_bridge__$Vec_ContactInfo$drop(vecPtr)
+    }
+
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: ContactInfo) {
+        __swift_bridge__$Vec_ContactInfo$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    }
+
+    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
+        let pointer = __swift_bridge__$Vec_ContactInfo$pop(vecPtr)
+        if pointer == nil {
+            return nil
+        } else {
+            return (ContactInfo(ptr: pointer!) as! Self)
+        }
+    }
+
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ContactInfoRef> {
+        let pointer = __swift_bridge__$Vec_ContactInfo$get(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return ContactInfoRef(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ContactInfoRefMut> {
+        let pointer = __swift_bridge__$Vec_ContactInfo$get_mut(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return ContactInfoRefMut(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ContactInfoRef> {
+        UnsafePointer<ContactInfoRef>(OpaquePointer(__swift_bridge__$Vec_ContactInfo$as_ptr(vecPtr)))
+    }
+
+    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+        __swift_bridge__$Vec_ContactInfo$len(vecPtr)
     }
 }
 
@@ -1517,7 +1257,7 @@ extension CorsConfig: Vectorizable {
 }
 
 
-public class CompressionConfig: CompressionConfigRefMut {
+public class DynamicSchemaConfig: DynamicSchemaConfigRefMut {
     public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
@@ -1526,95 +1266,95 @@ public class CompressionConfig: CompressionConfigRefMut {
 
     deinit {
         if isOwned {
-            __swift_bridge__$CompressionConfig$_free(ptr)
+            __swift_bridge__$DynamicSchemaConfig$_free(ptr)
         }
     }
 }
-extension CompressionConfig {
-    public convenience init(_ gzip: Bool, _ brotli: Bool, _ min_size: UInt, _ quality: UInt32) {
-        self.init(ptr: __swift_bridge__$CompressionConfig$new(gzip, brotli, min_size, quality))
+extension DynamicSchemaConfig {
+    public convenience init(_ introspection_enabled: Bool, _ max_complexity: Optional<UInt>, _ max_depth: Optional<UInt>, _ field_errors: RustVec<FieldErrorSpec>) {
+        self.init(ptr: __swift_bridge__$DynamicSchemaConfig$new(introspection_enabled, max_complexity.intoFfiRepr(), max_depth.intoFfiRepr(), { let val = field_errors; val.isOwned = false; return val.ptr }()))
     }
 }
-public class CompressionConfigRefMut: CompressionConfigRef {
+public class DynamicSchemaConfigRefMut: DynamicSchemaConfigRef {
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
     }
 }
-public class CompressionConfigRef {
+public class DynamicSchemaConfigRef {
     public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
     }
 }
-extension CompressionConfigRef {
-    public func gzip() -> Bool {
-        __swift_bridge__$CompressionConfig$gzip(ptr)
+extension DynamicSchemaConfigRef {
+    public func introspectionEnabled() -> Bool {
+        __swift_bridge__$DynamicSchemaConfig$introspection_enabled(ptr)
     }
 
-    public func brotli() -> Bool {
-        __swift_bridge__$CompressionConfig$brotli(ptr)
+    public func maxComplexity() -> Optional<UInt> {
+        __swift_bridge__$DynamicSchemaConfig$max_complexity(ptr).intoSwiftRepr()
     }
 
-    public func minSize() -> UInt {
-        __swift_bridge__$CompressionConfig$min_size(ptr)
+    public func maxDepth() -> Optional<UInt> {
+        __swift_bridge__$DynamicSchemaConfig$max_depth(ptr).intoSwiftRepr()
     }
 
-    public func quality() -> UInt32 {
-        __swift_bridge__$CompressionConfig$quality(ptr)
+    public func fieldErrors() -> RustVec<RustString> {
+        RustVec(ptr: __swift_bridge__$DynamicSchemaConfig$field_errors(ptr))
     }
 }
-extension CompressionConfig: Vectorizable {
+extension DynamicSchemaConfig: Vectorizable {
     public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_CompressionConfig$new()
+        __swift_bridge__$Vec_DynamicSchemaConfig$new()
     }
 
     public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_CompressionConfig$drop(vecPtr)
+        __swift_bridge__$Vec_DynamicSchemaConfig$drop(vecPtr)
     }
 
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: CompressionConfig) {
-        __swift_bridge__$Vec_CompressionConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: DynamicSchemaConfig) {
+        __swift_bridge__$Vec_DynamicSchemaConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
     }
 
     public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_CompressionConfig$pop(vecPtr)
+        let pointer = __swift_bridge__$Vec_DynamicSchemaConfig$pop(vecPtr)
         if pointer == nil {
             return nil
         } else {
-            return (CompressionConfig(ptr: pointer!) as! Self)
+            return (DynamicSchemaConfig(ptr: pointer!) as! Self)
         }
     }
 
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<CompressionConfigRef> {
-        let pointer = __swift_bridge__$Vec_CompressionConfig$get(vecPtr, index)
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<DynamicSchemaConfigRef> {
+        let pointer = __swift_bridge__$Vec_DynamicSchemaConfig$get(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return CompressionConfigRef(ptr: pointer!)
+            return DynamicSchemaConfigRef(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<CompressionConfigRefMut> {
-        let pointer = __swift_bridge__$Vec_CompressionConfig$get_mut(vecPtr, index)
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<DynamicSchemaConfigRefMut> {
+        let pointer = __swift_bridge__$Vec_DynamicSchemaConfig$get_mut(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return CompressionConfigRefMut(ptr: pointer!)
+            return DynamicSchemaConfigRefMut(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<CompressionConfigRef> {
-        UnsafePointer<CompressionConfigRef>(OpaquePointer(__swift_bridge__$Vec_CompressionConfig$as_ptr(vecPtr)))
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<DynamicSchemaConfigRef> {
+        UnsafePointer<DynamicSchemaConfigRef>(OpaquePointer(__swift_bridge__$Vec_DynamicSchemaConfig$as_ptr(vecPtr)))
     }
 
     public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_CompressionConfig$len(vecPtr)
+        __swift_bridge__$Vec_DynamicSchemaConfig$len(vecPtr)
     }
 }
 
 
-public class RateLimitConfig: RateLimitConfigRefMut {
+public class FieldErrorSpec: FieldErrorSpecRefMut {
     public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
@@ -1623,86 +1363,245 @@ public class RateLimitConfig: RateLimitConfigRefMut {
 
     deinit {
         if isOwned {
-            __swift_bridge__$RateLimitConfig$_free(ptr)
+            __swift_bridge__$FieldErrorSpec$_free(ptr)
         }
     }
 }
-extension RateLimitConfig {
-    public convenience init(_ per_second: UInt64, _ burst: UInt32, _ ip_based: Bool) {
-        self.init(ptr: __swift_bridge__$RateLimitConfig$new(per_second, burst, ip_based))
-    }
-}
-public class RateLimitConfigRefMut: RateLimitConfigRef {
+public class FieldErrorSpecRefMut: FieldErrorSpecRef {
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
     }
 }
-public class RateLimitConfigRef {
+public class FieldErrorSpecRef {
     public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
     }
 }
-extension RateLimitConfigRef {
-    public func perSecond() -> UInt64 {
-        __swift_bridge__$RateLimitConfig$per_second(ptr)
+extension FieldErrorSpecRef {
+    public func path() -> RustString {
+        RustString(ptr: __swift_bridge__$FieldErrorSpec$path(ptr))
     }
 
-    public func burst() -> UInt32 {
-        __swift_bridge__$RateLimitConfig$burst(ptr)
-    }
-
-    public func ipBased() -> Bool {
-        __swift_bridge__$RateLimitConfig$ip_based(ptr)
+    public func message() -> RustString {
+        RustString(ptr: __swift_bridge__$FieldErrorSpec$message(ptr))
     }
 }
-extension RateLimitConfig: Vectorizable {
+extension FieldErrorSpec: Vectorizable {
     public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_RateLimitConfig$new()
+        __swift_bridge__$Vec_FieldErrorSpec$new()
     }
 
     public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_RateLimitConfig$drop(vecPtr)
+        __swift_bridge__$Vec_FieldErrorSpec$drop(vecPtr)
     }
 
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: RateLimitConfig) {
-        __swift_bridge__$Vec_RateLimitConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: FieldErrorSpec) {
+        __swift_bridge__$Vec_FieldErrorSpec$push(vecPtr, {value.isOwned = false; return value.ptr;}())
     }
 
     public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_RateLimitConfig$pop(vecPtr)
+        let pointer = __swift_bridge__$Vec_FieldErrorSpec$pop(vecPtr)
         if pointer == nil {
             return nil
         } else {
-            return (RateLimitConfig(ptr: pointer!) as! Self)
+            return (FieldErrorSpec(ptr: pointer!) as! Self)
         }
     }
 
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<RateLimitConfigRef> {
-        let pointer = __swift_bridge__$Vec_RateLimitConfig$get(vecPtr, index)
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<FieldErrorSpecRef> {
+        let pointer = __swift_bridge__$Vec_FieldErrorSpec$get(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return RateLimitConfigRef(ptr: pointer!)
+            return FieldErrorSpecRef(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<RateLimitConfigRefMut> {
-        let pointer = __swift_bridge__$Vec_RateLimitConfig$get_mut(vecPtr, index)
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<FieldErrorSpecRefMut> {
+        let pointer = __swift_bridge__$Vec_FieldErrorSpec$get_mut(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return RateLimitConfigRefMut(ptr: pointer!)
+            return FieldErrorSpecRefMut(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<RateLimitConfigRef> {
-        UnsafePointer<RateLimitConfigRef>(OpaquePointer(__swift_bridge__$Vec_RateLimitConfig$as_ptr(vecPtr)))
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<FieldErrorSpecRef> {
+        UnsafePointer<FieldErrorSpecRef>(OpaquePointer(__swift_bridge__$Vec_FieldErrorSpec$as_ptr(vecPtr)))
     }
 
     public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_RateLimitConfig$len(vecPtr)
+        __swift_bridge__$Vec_FieldErrorSpec$len(vecPtr)
+    }
+}
+
+
+public class FullSchemaConfig: FullSchemaConfigRefMut {
+    public var isOwned: Bool = true
+
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+
+    deinit {
+        if isOwned {
+            __swift_bridge__$FullSchemaConfig$_free(ptr)
+        }
+    }
+}
+extension FullSchemaConfig {
+    public convenience init(_ introspection_enabled: Bool, _ complexity_limit: Optional<UInt>, _ depth_limit: Optional<UInt>) {
+        self.init(ptr: __swift_bridge__$FullSchemaConfig$new(introspection_enabled, complexity_limit.intoFfiRepr(), depth_limit.intoFfiRepr()))
+    }
+}
+public class FullSchemaConfigRefMut: FullSchemaConfigRef {
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+}
+public class FullSchemaConfigRef {
+    public var ptr: UnsafeMutableRawPointer
+
+    public init(ptr: UnsafeMutableRawPointer) {
+        self.ptr = ptr
+    }
+}
+extension FullSchemaConfigRef {
+    public func introspectionEnabled() -> Bool {
+        __swift_bridge__$FullSchemaConfig$introspection_enabled(ptr)
+    }
+
+    public func complexityLimit() -> Optional<UInt> {
+        __swift_bridge__$FullSchemaConfig$complexity_limit(ptr).intoSwiftRepr()
+    }
+
+    public func depthLimit() -> Optional<UInt> {
+        __swift_bridge__$FullSchemaConfig$depth_limit(ptr).intoSwiftRepr()
+    }
+}
+extension FullSchemaConfig: Vectorizable {
+    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+        __swift_bridge__$Vec_FullSchemaConfig$new()
+    }
+
+    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+        __swift_bridge__$Vec_FullSchemaConfig$drop(vecPtr)
+    }
+
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: FullSchemaConfig) {
+        __swift_bridge__$Vec_FullSchemaConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    }
+
+    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
+        let pointer = __swift_bridge__$Vec_FullSchemaConfig$pop(vecPtr)
+        if pointer == nil {
+            return nil
+        } else {
+            return (FullSchemaConfig(ptr: pointer!) as! Self)
+        }
+    }
+
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<FullSchemaConfigRef> {
+        let pointer = __swift_bridge__$Vec_FullSchemaConfig$get(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return FullSchemaConfigRef(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<FullSchemaConfigRefMut> {
+        let pointer = __swift_bridge__$Vec_FullSchemaConfig$get_mut(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return FullSchemaConfigRefMut(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<FullSchemaConfigRef> {
+        UnsafePointer<FullSchemaConfigRef>(OpaquePointer(__swift_bridge__$Vec_FullSchemaConfig$as_ptr(vecPtr)))
+    }
+
+    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+        __swift_bridge__$Vec_FullSchemaConfig$len(vecPtr)
+    }
+}
+
+
+public class GraphQLRouteConfig: GraphQLRouteConfigRefMut {
+    public var isOwned: Bool = true
+
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+
+    deinit {
+        if isOwned {
+            __swift_bridge__$GraphQLRouteConfig$_free(ptr)
+        }
+    }
+}
+public class GraphQLRouteConfigRefMut: GraphQLRouteConfigRef {
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+}
+public class GraphQLRouteConfigRef {
+    public var ptr: UnsafeMutableRawPointer
+
+    public init(ptr: UnsafeMutableRawPointer) {
+        self.ptr = ptr
+    }
+}
+extension GraphQLRouteConfig: Vectorizable {
+    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+        __swift_bridge__$Vec_GraphQLRouteConfig$new()
+    }
+
+    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+        __swift_bridge__$Vec_GraphQLRouteConfig$drop(vecPtr)
+    }
+
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: GraphQLRouteConfig) {
+        __swift_bridge__$Vec_GraphQLRouteConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    }
+
+    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
+        let pointer = __swift_bridge__$Vec_GraphQLRouteConfig$pop(vecPtr)
+        if pointer == nil {
+            return nil
+        } else {
+            return (GraphQLRouteConfig(ptr: pointer!) as! Self)
+        }
+    }
+
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<GraphQLRouteConfigRef> {
+        let pointer = __swift_bridge__$Vec_GraphQLRouteConfig$get(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return GraphQLRouteConfigRef(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<GraphQLRouteConfigRefMut> {
+        let pointer = __swift_bridge__$Vec_GraphQLRouteConfig$get_mut(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return GraphQLRouteConfigRefMut(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<GraphQLRouteConfigRef> {
+        UnsafePointer<GraphQLRouteConfigRef>(OpaquePointer(__swift_bridge__$Vec_GraphQLRouteConfig$as_ptr(vecPtr)))
+    }
+
+    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+        __swift_bridge__$Vec_GraphQLRouteConfig$len(vecPtr)
     }
 }
 
@@ -1921,7 +1820,7 @@ extension JsonRpcConfig: Vectorizable {
 }
 
 
-public class OpenApiConfig: OpenApiConfigRefMut {
+public class JsonRpcMethodInfo: JsonRpcMethodInfoRefMut {
     public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
@@ -1930,882 +1829,93 @@ public class OpenApiConfig: OpenApiConfigRefMut {
 
     deinit {
         if isOwned {
-            __swift_bridge__$OpenApiConfig$_free(ptr)
+            __swift_bridge__$JsonRpcMethodInfo$_free(ptr)
         }
     }
 }
-public class OpenApiConfigRefMut: OpenApiConfigRef {
+public class JsonRpcMethodInfoRefMut: JsonRpcMethodInfoRef {
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
     }
 }
-public class OpenApiConfigRef {
+public class JsonRpcMethodInfoRef {
     public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
     }
 }
-extension OpenApiConfigRef {
-    public func enabled() -> Bool {
-        __swift_bridge__$OpenApiConfig$enabled(ptr)
-    }
-
-    public func title() -> RustString {
-        RustString(ptr: __swift_bridge__$OpenApiConfig$title(ptr))
-    }
-
-    public func version() -> RustString {
-        RustString(ptr: __swift_bridge__$OpenApiConfig$version(ptr))
+extension JsonRpcMethodInfoRef {
+    public func methodName() -> RustString {
+        RustString(ptr: __swift_bridge__$JsonRpcMethodInfo$method_name(ptr))
     }
 
     public func description() -> Optional<RustString> {
-        { let val = __swift_bridge__$OpenApiConfig$description(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+        { let val = __swift_bridge__$JsonRpcMethodInfo$description(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 
-    public func swaggerUiPath() -> RustString {
-        RustString(ptr: __swift_bridge__$OpenApiConfig$swagger_ui_path(ptr))
+    public func paramsSchema() -> Optional<RustString> {
+        { let val = __swift_bridge__$JsonRpcMethodInfo$params_schema(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 
-    public func redocPath() -> RustString {
-        RustString(ptr: __swift_bridge__$OpenApiConfig$redoc_path(ptr))
+    public func resultSchema() -> Optional<RustString> {
+        { let val = __swift_bridge__$JsonRpcMethodInfo$result_schema(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 
-    public func openapiJsonPath() -> RustString {
-        RustString(ptr: __swift_bridge__$OpenApiConfig$openapi_json_path(ptr))
+    public func deprecated() -> Bool {
+        __swift_bridge__$JsonRpcMethodInfo$deprecated(ptr)
     }
 
-    public func contact() -> Optional<ContactInfo> {
-        { let val = __swift_bridge__$OpenApiConfig$contact(ptr); if val != nil { return ContactInfo(ptr: val!) } else { return nil } }()
-    }
-
-    public func license() -> Optional<LicenseInfo> {
-        { let val = __swift_bridge__$OpenApiConfig$license(ptr); if val != nil { return LicenseInfo(ptr: val!) } else { return nil } }()
-    }
-
-    public func servers() -> RustVec<ServerInfo> {
-        RustVec(ptr: __swift_bridge__$OpenApiConfig$servers(ptr))
-    }
-
-    public func securitySchemes() -> RustString {
-        RustString(ptr: __swift_bridge__$OpenApiConfig$security_schemes(ptr))
+    public func tags() -> RustVec<RustString> {
+        RustVec(ptr: __swift_bridge__$JsonRpcMethodInfo$tags(ptr))
     }
 }
-extension OpenApiConfig: Vectorizable {
+extension JsonRpcMethodInfo: Vectorizable {
     public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_OpenApiConfig$new()
+        __swift_bridge__$Vec_JsonRpcMethodInfo$new()
     }
 
     public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_OpenApiConfig$drop(vecPtr)
+        __swift_bridge__$Vec_JsonRpcMethodInfo$drop(vecPtr)
     }
 
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: OpenApiConfig) {
-        __swift_bridge__$Vec_OpenApiConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
-    }
-
-    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_OpenApiConfig$pop(vecPtr)
-        if pointer == nil {
-            return nil
-        } else {
-            return (OpenApiConfig(ptr: pointer!) as! Self)
-        }
-    }
-
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<OpenApiConfigRef> {
-        let pointer = __swift_bridge__$Vec_OpenApiConfig$get(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return OpenApiConfigRef(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<OpenApiConfigRefMut> {
-        let pointer = __swift_bridge__$Vec_OpenApiConfig$get_mut(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return OpenApiConfigRefMut(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<OpenApiConfigRef> {
-        UnsafePointer<OpenApiConfigRef>(OpaquePointer(__swift_bridge__$Vec_OpenApiConfig$as_ptr(vecPtr)))
-    }
-
-    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_OpenApiConfig$len(vecPtr)
-    }
-}
-
-
-public class Response: ResponseRefMut {
-    public var isOwned: Bool = true
-
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-
-    deinit {
-        if isOwned {
-            __swift_bridge__$Response$_free(ptr)
-        }
-    }
-}
-public class ResponseRefMut: ResponseRef {
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-}
-public class ResponseRef {
-    public var ptr: UnsafeMutableRawPointer
-
-    public init(ptr: UnsafeMutableRawPointer) {
-        self.ptr = ptr
-    }
-}
-extension ResponseRef {
-    public func content() -> Optional<RustString> {
-        { let val = __swift_bridge__$Response$content(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
-    }
-
-    public func statusCode() -> UInt16 {
-        __swift_bridge__$Response$status_code(ptr)
-    }
-
-    public func headers() -> RustString {
-        RustString(ptr: __swift_bridge__$Response$headers(ptr))
-    }
-}
-extension Response: Vectorizable {
-    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_Response$new()
-    }
-
-    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_Response$drop(vecPtr)
-    }
-
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: Response) {
-        __swift_bridge__$Vec_Response$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: JsonRpcMethodInfo) {
+        __swift_bridge__$Vec_JsonRpcMethodInfo$push(vecPtr, {value.isOwned = false; return value.ptr;}())
     }
 
     public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_Response$pop(vecPtr)
+        let pointer = __swift_bridge__$Vec_JsonRpcMethodInfo$pop(vecPtr)
         if pointer == nil {
             return nil
         } else {
-            return (Response(ptr: pointer!) as! Self)
+            return (JsonRpcMethodInfo(ptr: pointer!) as! Self)
         }
     }
 
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ResponseRef> {
-        let pointer = __swift_bridge__$Vec_Response$get(vecPtr, index)
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<JsonRpcMethodInfoRef> {
+        let pointer = __swift_bridge__$Vec_JsonRpcMethodInfo$get(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return ResponseRef(ptr: pointer!)
+            return JsonRpcMethodInfoRef(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ResponseRefMut> {
-        let pointer = __swift_bridge__$Vec_Response$get_mut(vecPtr, index)
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<JsonRpcMethodInfoRefMut> {
+        let pointer = __swift_bridge__$Vec_JsonRpcMethodInfo$get_mut(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return ResponseRefMut(ptr: pointer!)
+            return JsonRpcMethodInfoRefMut(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ResponseRef> {
-        UnsafePointer<ResponseRef>(OpaquePointer(__swift_bridge__$Vec_Response$as_ptr(vecPtr)))
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<JsonRpcMethodInfoRef> {
+        UnsafePointer<JsonRpcMethodInfoRef>(OpaquePointer(__swift_bridge__$Vec_JsonRpcMethodInfo$as_ptr(vecPtr)))
     }
 
     public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_Response$len(vecPtr)
-    }
-}
-
-
-public class SseEvent: SseEventRefMut {
-    public var isOwned: Bool = true
-
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-
-    deinit {
-        if isOwned {
-            __swift_bridge__$SseEvent$_free(ptr)
-        }
-    }
-}
-public class SseEventRefMut: SseEventRef {
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-}
-public class SseEventRef {
-    public var ptr: UnsafeMutableRawPointer
-
-    public init(ptr: UnsafeMutableRawPointer) {
-        self.ptr = ptr
-    }
-}
-extension SseEventRef {
-    public func eventType() -> Optional<RustString> {
-        { let val = __swift_bridge__$SseEvent$event_type(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
-    }
-
-    public func data() -> RustString {
-        RustString(ptr: __swift_bridge__$SseEvent$data(ptr))
-    }
-
-    public func id() -> Optional<RustString> {
-        { let val = __swift_bridge__$SseEvent$id(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
-    }
-
-    public func retry() -> Optional<UInt64> {
-        __swift_bridge__$SseEvent$retry(ptr).intoSwiftRepr()
-    }
-}
-extension SseEvent: Vectorizable {
-    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_SseEvent$new()
-    }
-
-    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_SseEvent$drop(vecPtr)
-    }
-
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: SseEvent) {
-        __swift_bridge__$Vec_SseEvent$push(vecPtr, {value.isOwned = false; return value.ptr;}())
-    }
-
-    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_SseEvent$pop(vecPtr)
-        if pointer == nil {
-            return nil
-        } else {
-            return (SseEvent(ptr: pointer!) as! Self)
-        }
-    }
-
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<SseEventRef> {
-        let pointer = __swift_bridge__$Vec_SseEvent$get(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return SseEventRef(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<SseEventRefMut> {
-        let pointer = __swift_bridge__$Vec_SseEvent$get_mut(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return SseEventRefMut(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<SseEventRef> {
-        UnsafePointer<SseEventRef>(OpaquePointer(__swift_bridge__$Vec_SseEvent$as_ptr(vecPtr)))
-    }
-
-    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_SseEvent$len(vecPtr)
-    }
-}
-
-
-public class JwtConfig: JwtConfigRefMut {
-    public var isOwned: Bool = true
-
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-
-    deinit {
-        if isOwned {
-            __swift_bridge__$JwtConfig$_free(ptr)
-        }
-    }
-}
-public class JwtConfigRefMut: JwtConfigRef {
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-}
-public class JwtConfigRef {
-    public var ptr: UnsafeMutableRawPointer
-
-    public init(ptr: UnsafeMutableRawPointer) {
-        self.ptr = ptr
-    }
-}
-extension JwtConfigRef {
-    public func secret() -> RustString {
-        RustString(ptr: __swift_bridge__$JwtConfig$secret(ptr))
-    }
-
-    public func algorithm() -> RustString {
-        RustString(ptr: __swift_bridge__$JwtConfig$algorithm(ptr))
-    }
-
-    public func audience() -> RustString {
-        RustString(ptr: __swift_bridge__$JwtConfig$audience(ptr))
-    }
-
-    public func issuer() -> Optional<RustString> {
-        { let val = __swift_bridge__$JwtConfig$issuer(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
-    }
-
-    public func leeway() -> UInt64 {
-        __swift_bridge__$JwtConfig$leeway(ptr)
-    }
-}
-extension JwtConfig: Vectorizable {
-    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_JwtConfig$new()
-    }
-
-    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_JwtConfig$drop(vecPtr)
-    }
-
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: JwtConfig) {
-        __swift_bridge__$Vec_JwtConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
-    }
-
-    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_JwtConfig$pop(vecPtr)
-        if pointer == nil {
-            return nil
-        } else {
-            return (JwtConfig(ptr: pointer!) as! Self)
-        }
-    }
-
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<JwtConfigRef> {
-        let pointer = __swift_bridge__$Vec_JwtConfig$get(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return JwtConfigRef(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<JwtConfigRefMut> {
-        let pointer = __swift_bridge__$Vec_JwtConfig$get_mut(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return JwtConfigRefMut(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<JwtConfigRef> {
-        UnsafePointer<JwtConfigRef>(OpaquePointer(__swift_bridge__$Vec_JwtConfig$as_ptr(vecPtr)))
-    }
-
-    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_JwtConfig$len(vecPtr)
-    }
-}
-
-
-public class ApiKeyConfig: ApiKeyConfigRefMut {
-    public var isOwned: Bool = true
-
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-
-    deinit {
-        if isOwned {
-            __swift_bridge__$ApiKeyConfig$_free(ptr)
-        }
-    }
-}
-public class ApiKeyConfigRefMut: ApiKeyConfigRef {
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-}
-public class ApiKeyConfigRef {
-    public var ptr: UnsafeMutableRawPointer
-
-    public init(ptr: UnsafeMutableRawPointer) {
-        self.ptr = ptr
-    }
-}
-extension ApiKeyConfigRef {
-    public func keys() -> RustVec<RustString> {
-        RustVec(ptr: __swift_bridge__$ApiKeyConfig$keys(ptr))
-    }
-
-    public func headerName() -> RustString {
-        RustString(ptr: __swift_bridge__$ApiKeyConfig$header_name(ptr))
-    }
-}
-extension ApiKeyConfig: Vectorizable {
-    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_ApiKeyConfig$new()
-    }
-
-    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_ApiKeyConfig$drop(vecPtr)
-    }
-
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: ApiKeyConfig) {
-        __swift_bridge__$Vec_ApiKeyConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
-    }
-
-    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_ApiKeyConfig$pop(vecPtr)
-        if pointer == nil {
-            return nil
-        } else {
-            return (ApiKeyConfig(ptr: pointer!) as! Self)
-        }
-    }
-
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ApiKeyConfigRef> {
-        let pointer = __swift_bridge__$Vec_ApiKeyConfig$get(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return ApiKeyConfigRef(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ApiKeyConfigRefMut> {
-        let pointer = __swift_bridge__$Vec_ApiKeyConfig$get_mut(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return ApiKeyConfigRefMut(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ApiKeyConfigRef> {
-        UnsafePointer<ApiKeyConfigRef>(OpaquePointer(__swift_bridge__$Vec_ApiKeyConfig$as_ptr(vecPtr)))
-    }
-
-    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_ApiKeyConfig$len(vecPtr)
-    }
-}
-
-
-public class StaticFilesConfig: StaticFilesConfigRefMut {
-    public var isOwned: Bool = true
-
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-
-    deinit {
-        if isOwned {
-            __swift_bridge__$StaticFilesConfig$_free(ptr)
-        }
-    }
-}
-public class StaticFilesConfigRefMut: StaticFilesConfigRef {
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-}
-public class StaticFilesConfigRef {
-    public var ptr: UnsafeMutableRawPointer
-
-    public init(ptr: UnsafeMutableRawPointer) {
-        self.ptr = ptr
-    }
-}
-extension StaticFilesConfigRef {
-    public func directory() -> RustString {
-        RustString(ptr: __swift_bridge__$StaticFilesConfig$directory(ptr))
-    }
-
-    public func routePrefix() -> RustString {
-        RustString(ptr: __swift_bridge__$StaticFilesConfig$route_prefix(ptr))
-    }
-
-    public func indexFile() -> Bool {
-        __swift_bridge__$StaticFilesConfig$index_file(ptr)
-    }
-
-    public func cacheControl() -> Optional<RustString> {
-        { let val = __swift_bridge__$StaticFilesConfig$cache_control(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
-    }
-}
-extension StaticFilesConfig: Vectorizable {
-    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_StaticFilesConfig$new()
-    }
-
-    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_StaticFilesConfig$drop(vecPtr)
-    }
-
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: StaticFilesConfig) {
-        __swift_bridge__$Vec_StaticFilesConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
-    }
-
-    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_StaticFilesConfig$pop(vecPtr)
-        if pointer == nil {
-            return nil
-        } else {
-            return (StaticFilesConfig(ptr: pointer!) as! Self)
-        }
-    }
-
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<StaticFilesConfigRef> {
-        let pointer = __swift_bridge__$Vec_StaticFilesConfig$get(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return StaticFilesConfigRef(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<StaticFilesConfigRefMut> {
-        let pointer = __swift_bridge__$Vec_StaticFilesConfig$get_mut(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return StaticFilesConfigRefMut(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<StaticFilesConfigRef> {
-        UnsafePointer<StaticFilesConfigRef>(OpaquePointer(__swift_bridge__$Vec_StaticFilesConfig$as_ptr(vecPtr)))
-    }
-
-    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_StaticFilesConfig$len(vecPtr)
-    }
-}
-
-
-public class ServerConfig: ServerConfigRefMut {
-    public var isOwned: Bool = true
-
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-
-    deinit {
-        if isOwned {
-            __swift_bridge__$ServerConfig$_free(ptr)
-        }
-    }
-}
-extension ServerConfig {
-    public convenience init<GenericIntoRustString: IntoRustString>(_ host: GenericIntoRustString, _ port: UInt16, _ workers: UInt, _ enable_request_id: Bool, _ max_body_size: Optional<UInt>, _ request_timeout: Optional<UInt64>, _ compression: Optional<CompressionConfig>, _ rate_limit: Optional<RateLimitConfig>, _ jwt_auth: Optional<JwtConfig>, _ api_key_auth: Optional<ApiKeyConfig>, _ static_files: RustVec<StaticFilesConfig>, _ graceful_shutdown: Bool, _ shutdown_timeout: UInt64, _ asyncapi: Optional<AsyncApiConfig>, _ openapi: Optional<OpenApiConfig>, _ jsonrpc: Optional<JsonRpcConfig>, _ grpc: Optional<GrpcConfig>, _ background_tasks: BackgroundTaskConfig, _ enable_http_trace: Bool) {
-        self.init(ptr: __swift_bridge__$ServerConfig$new({ let rustString = host.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), port, workers, enable_request_id, max_body_size.intoFfiRepr(), request_timeout.intoFfiRepr(), { if let val = compression { val.isOwned = false; return val.ptr } else { return nil } }(), { if let val = rate_limit { val.isOwned = false; return val.ptr } else { return nil } }(), { if let val = jwt_auth { val.isOwned = false; return val.ptr } else { return nil } }(), { if let val = api_key_auth { val.isOwned = false; return val.ptr } else { return nil } }(), { let val = static_files; val.isOwned = false; return val.ptr }(), graceful_shutdown, shutdown_timeout, { if let val = asyncapi { val.isOwned = false; return val.ptr } else { return nil } }(), { if let val = openapi { val.isOwned = false; return val.ptr } else { return nil } }(), { if let val = jsonrpc { val.isOwned = false; return val.ptr } else { return nil } }(), { if let val = grpc { val.isOwned = false; return val.ptr } else { return nil } }(), {background_tasks.isOwned = false; return background_tasks.ptr;}(), enable_http_trace))
-    }
-}
-public class ServerConfigRefMut: ServerConfigRef {
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-}
-public class ServerConfigRef {
-    public var ptr: UnsafeMutableRawPointer
-
-    public init(ptr: UnsafeMutableRawPointer) {
-        self.ptr = ptr
-    }
-}
-extension ServerConfigRef {
-    public func host() -> RustString {
-        RustString(ptr: __swift_bridge__$ServerConfig$host(ptr))
-    }
-
-    public func port() -> UInt16 {
-        __swift_bridge__$ServerConfig$port(ptr)
-    }
-
-    public func workers() -> UInt {
-        __swift_bridge__$ServerConfig$workers(ptr)
-    }
-
-    public func enableRequestId() -> Bool {
-        __swift_bridge__$ServerConfig$enable_request_id(ptr)
-    }
-
-    public func maxBodySize() -> Optional<UInt> {
-        __swift_bridge__$ServerConfig$max_body_size(ptr).intoSwiftRepr()
-    }
-
-    public func requestTimeout() -> Optional<UInt64> {
-        __swift_bridge__$ServerConfig$request_timeout(ptr).intoSwiftRepr()
-    }
-
-    public func compression() -> Optional<CompressionConfig> {
-        { let val = __swift_bridge__$ServerConfig$compression(ptr); if val != nil { return CompressionConfig(ptr: val!) } else { return nil } }()
-    }
-
-    public func rateLimit() -> Optional<RateLimitConfig> {
-        { let val = __swift_bridge__$ServerConfig$rate_limit(ptr); if val != nil { return RateLimitConfig(ptr: val!) } else { return nil } }()
-    }
-
-    public func jwtAuth() -> Optional<JwtConfig> {
-        { let val = __swift_bridge__$ServerConfig$jwt_auth(ptr); if val != nil { return JwtConfig(ptr: val!) } else { return nil } }()
-    }
-
-    public func apiKeyAuth() -> Optional<ApiKeyConfig> {
-        { let val = __swift_bridge__$ServerConfig$api_key_auth(ptr); if val != nil { return ApiKeyConfig(ptr: val!) } else { return nil } }()
-    }
-
-    public func staticFiles() -> RustVec<StaticFilesConfig> {
-        RustVec(ptr: __swift_bridge__$ServerConfig$static_files(ptr))
-    }
-
-    public func gracefulShutdown() -> Bool {
-        __swift_bridge__$ServerConfig$graceful_shutdown(ptr)
-    }
-
-    public func shutdownTimeout() -> UInt64 {
-        __swift_bridge__$ServerConfig$shutdown_timeout(ptr)
-    }
-
-    public func asyncapi() -> Optional<AsyncApiConfig> {
-        { let val = __swift_bridge__$ServerConfig$asyncapi(ptr); if val != nil { return AsyncApiConfig(ptr: val!) } else { return nil } }()
-    }
-
-    public func openapi() -> Optional<OpenApiConfig> {
-        { let val = __swift_bridge__$ServerConfig$openapi(ptr); if val != nil { return OpenApiConfig(ptr: val!) } else { return nil } }()
-    }
-
-    public func jsonrpc() -> Optional<JsonRpcConfig> {
-        { let val = __swift_bridge__$ServerConfig$jsonrpc(ptr); if val != nil { return JsonRpcConfig(ptr: val!) } else { return nil } }()
-    }
-
-    public func grpc() -> Optional<GrpcConfig> {
-        { let val = __swift_bridge__$ServerConfig$grpc(ptr); if val != nil { return GrpcConfig(ptr: val!) } else { return nil } }()
-    }
-
-    public func backgroundTasks() -> BackgroundTaskConfig {
-        BackgroundTaskConfig(ptr: __swift_bridge__$ServerConfig$background_tasks(ptr))
-    }
-
-    public func enableHttpTrace() -> Bool {
-        __swift_bridge__$ServerConfig$enable_http_trace(ptr)
-    }
-}
-extension ServerConfig: Vectorizable {
-    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_ServerConfig$new()
-    }
-
-    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_ServerConfig$drop(vecPtr)
-    }
-
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: ServerConfig) {
-        __swift_bridge__$Vec_ServerConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
-    }
-
-    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_ServerConfig$pop(vecPtr)
-        if pointer == nil {
-            return nil
-        } else {
-            return (ServerConfig(ptr: pointer!) as! Self)
-        }
-    }
-
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ServerConfigRef> {
-        let pointer = __swift_bridge__$Vec_ServerConfig$get(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return ServerConfigRef(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ServerConfigRefMut> {
-        let pointer = __swift_bridge__$Vec_ServerConfig$get_mut(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return ServerConfigRefMut(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ServerConfigRef> {
-        UnsafePointer<ServerConfigRef>(OpaquePointer(__swift_bridge__$Vec_ServerConfig$as_ptr(vecPtr)))
-    }
-
-    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_ServerConfig$len(vecPtr)
-    }
-}
-
-
-public class RouteBuilder: RouteBuilderRefMut {
-    public var isOwned: Bool = true
-
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-
-    deinit {
-        if isOwned {
-            __swift_bridge__$RouteBuilder$_free(ptr)
-        }
-    }
-}
-public class RouteBuilderRefMut: RouteBuilderRef {
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-}
-public class RouteBuilderRef {
-    public var ptr: UnsafeMutableRawPointer
-
-    public init(ptr: UnsafeMutableRawPointer) {
-        self.ptr = ptr
-    }
-}
-extension RouteBuilder: Vectorizable {
-    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_RouteBuilder$new()
-    }
-
-    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_RouteBuilder$drop(vecPtr)
-    }
-
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: RouteBuilder) {
-        __swift_bridge__$Vec_RouteBuilder$push(vecPtr, {value.isOwned = false; return value.ptr;}())
-    }
-
-    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_RouteBuilder$pop(vecPtr)
-        if pointer == nil {
-            return nil
-        } else {
-            return (RouteBuilder(ptr: pointer!) as! Self)
-        }
-    }
-
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<RouteBuilderRef> {
-        let pointer = __swift_bridge__$Vec_RouteBuilder$get(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return RouteBuilderRef(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<RouteBuilderRefMut> {
-        let pointer = __swift_bridge__$Vec_RouteBuilder$get_mut(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return RouteBuilderRefMut(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<RouteBuilderRef> {
-        UnsafePointer<RouteBuilderRef>(OpaquePointer(__swift_bridge__$Vec_RouteBuilder$as_ptr(vecPtr)))
-    }
-
-    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_RouteBuilder$len(vecPtr)
-    }
-}
-
-
-public class RequestIdConfig: RequestIdConfigRefMut {
-    public var isOwned: Bool = true
-
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-
-    deinit {
-        if isOwned {
-            __swift_bridge__$RequestIdConfig$_free(ptr)
-        }
-    }
-}
-extension RequestIdConfig {
-    public convenience init(_ enabled: Bool) {
-        self.init(ptr: __swift_bridge__$RequestIdConfig$new(enabled))
-    }
-}
-public class RequestIdConfigRefMut: RequestIdConfigRef {
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-}
-public class RequestIdConfigRef {
-    public var ptr: UnsafeMutableRawPointer
-
-    public init(ptr: UnsafeMutableRawPointer) {
-        self.ptr = ptr
-    }
-}
-extension RequestIdConfigRef {
-    public func enabled() -> Bool {
-        __swift_bridge__$RequestIdConfig$enabled(ptr)
-    }
-}
-extension RequestIdConfig: Vectorizable {
-    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_RequestIdConfig$new()
-    }
-
-    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_RequestIdConfig$drop(vecPtr)
-    }
-
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: RequestIdConfig) {
-        __swift_bridge__$Vec_RequestIdConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
-    }
-
-    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_RequestIdConfig$pop(vecPtr)
-        if pointer == nil {
-            return nil
-        } else {
-            return (RequestIdConfig(ptr: pointer!) as! Self)
-        }
-    }
-
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<RequestIdConfigRef> {
-        let pointer = __swift_bridge__$Vec_RequestIdConfig$get(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return RequestIdConfigRef(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<RequestIdConfigRefMut> {
-        let pointer = __swift_bridge__$Vec_RequestIdConfig$get_mut(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return RequestIdConfigRefMut(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<RequestIdConfigRef> {
-        UnsafePointer<RequestIdConfigRef>(OpaquePointer(__swift_bridge__$Vec_RequestIdConfig$as_ptr(vecPtr)))
-    }
-
-    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_RequestIdConfig$len(vecPtr)
+        __swift_bridge__$Vec_JsonRpcMethodInfo$len(vecPtr)
     }
 }
 
@@ -2914,7 +2024,7 @@ extension JwtAuthConfig: Vectorizable {
 }
 
 
-public class ApiKeyAuthConfig: ApiKeyAuthConfigRefMut {
+public class JwtConfig: JwtConfigRefMut {
     public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
@@ -2923,86 +2033,94 @@ public class ApiKeyAuthConfig: ApiKeyAuthConfigRefMut {
 
     deinit {
         if isOwned {
-            __swift_bridge__$ApiKeyAuthConfig$_free(ptr)
+            __swift_bridge__$JwtConfig$_free(ptr)
         }
     }
 }
-public class ApiKeyAuthConfigRefMut: ApiKeyAuthConfigRef {
+public class JwtConfigRefMut: JwtConfigRef {
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
     }
 }
-public class ApiKeyAuthConfigRef {
+public class JwtConfigRef {
     public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
     }
 }
-extension ApiKeyAuthConfigRef {
-    public func enabled() -> Bool {
-        __swift_bridge__$ApiKeyAuthConfig$enabled(ptr)
+extension JwtConfigRef {
+    public func secret() -> RustString {
+        RustString(ptr: __swift_bridge__$JwtConfig$secret(ptr))
     }
 
-    public func keys() -> RustVec<RustString> {
-        RustVec(ptr: __swift_bridge__$ApiKeyAuthConfig$keys(ptr))
+    public func algorithm() -> RustString {
+        RustString(ptr: __swift_bridge__$JwtConfig$algorithm(ptr))
     }
 
-    public func headerName() -> RustString {
-        RustString(ptr: __swift_bridge__$ApiKeyAuthConfig$header_name(ptr))
+    public func audience() -> RustString {
+        RustString(ptr: __swift_bridge__$JwtConfig$audience(ptr))
+    }
+
+    public func issuer() -> Optional<RustString> {
+        { let val = __swift_bridge__$JwtConfig$issuer(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    }
+
+    public func leeway() -> UInt64 {
+        __swift_bridge__$JwtConfig$leeway(ptr)
     }
 }
-extension ApiKeyAuthConfig: Vectorizable {
+extension JwtConfig: Vectorizable {
     public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_ApiKeyAuthConfig$new()
+        __swift_bridge__$Vec_JwtConfig$new()
     }
 
     public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_ApiKeyAuthConfig$drop(vecPtr)
+        __swift_bridge__$Vec_JwtConfig$drop(vecPtr)
     }
 
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: ApiKeyAuthConfig) {
-        __swift_bridge__$Vec_ApiKeyAuthConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: JwtConfig) {
+        __swift_bridge__$Vec_JwtConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
     }
 
     public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_ApiKeyAuthConfig$pop(vecPtr)
+        let pointer = __swift_bridge__$Vec_JwtConfig$pop(vecPtr)
         if pointer == nil {
             return nil
         } else {
-            return (ApiKeyAuthConfig(ptr: pointer!) as! Self)
+            return (JwtConfig(ptr: pointer!) as! Self)
         }
     }
 
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ApiKeyAuthConfigRef> {
-        let pointer = __swift_bridge__$Vec_ApiKeyAuthConfig$get(vecPtr, index)
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<JwtConfigRef> {
+        let pointer = __swift_bridge__$Vec_JwtConfig$get(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return ApiKeyAuthConfigRef(ptr: pointer!)
+            return JwtConfigRef(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ApiKeyAuthConfigRefMut> {
-        let pointer = __swift_bridge__$Vec_ApiKeyAuthConfig$get_mut(vecPtr, index)
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<JwtConfigRefMut> {
+        let pointer = __swift_bridge__$Vec_JwtConfig$get_mut(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return ApiKeyAuthConfigRefMut(ptr: pointer!)
+            return JwtConfigRefMut(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ApiKeyAuthConfigRef> {
-        UnsafePointer<ApiKeyAuthConfigRef>(OpaquePointer(__swift_bridge__$Vec_ApiKeyAuthConfig$as_ptr(vecPtr)))
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<JwtConfigRef> {
+        UnsafePointer<JwtConfigRef>(OpaquePointer(__swift_bridge__$Vec_JwtConfig$as_ptr(vecPtr)))
     }
 
     public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_ApiKeyAuthConfig$len(vecPtr)
+        __swift_bridge__$Vec_JwtConfig$len(vecPtr)
     }
 }
 
 
-public class AuthorizationConfig: AuthorizationConfigRefMut {
+public class LicenseInfo: LicenseInfoRefMut {
     public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
@@ -3011,78 +2129,77 @@ public class AuthorizationConfig: AuthorizationConfigRefMut {
 
     deinit {
         if isOwned {
-            __swift_bridge__$AuthorizationConfig$_free(ptr)
+            __swift_bridge__$LicenseInfo$_free(ptr)
         }
     }
 }
-extension AuthorizationConfig {
-    public convenience init<GenericIntoRustString: IntoRustString>(_ required_roles: RustVec<GenericIntoRustString>, _ required_scopes: RustVec<GenericIntoRustString>, _ required_permissions: RustVec<GenericIntoRustString>, _ require_all: Bool) {
-        self.init(ptr: __swift_bridge__$AuthorizationConfig$new({ let val = required_roles; val.isOwned = false; return val.ptr }(), { let val = required_scopes; val.isOwned = false; return val.ptr }(), { let val = required_permissions; val.isOwned = false; return val.ptr }(), require_all))
-    }
-}
-public class AuthorizationConfigRefMut: AuthorizationConfigRef {
+public class LicenseInfoRefMut: LicenseInfoRef {
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
     }
 }
-public class AuthorizationConfigRef {
+public class LicenseInfoRef {
     public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
     }
 }
-extension AuthorizationConfigRef {
-    public func requireAll() -> Bool {
-        __swift_bridge__$AuthorizationConfig$require_all(ptr)
+extension LicenseInfoRef {
+    public func name() -> RustString {
+        RustString(ptr: __swift_bridge__$LicenseInfo$name(ptr))
+    }
+
+    public func url() -> Optional<RustString> {
+        { let val = __swift_bridge__$LicenseInfo$url(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 }
-extension AuthorizationConfig: Vectorizable {
+extension LicenseInfo: Vectorizable {
     public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_AuthorizationConfig$new()
+        __swift_bridge__$Vec_LicenseInfo$new()
     }
 
     public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_AuthorizationConfig$drop(vecPtr)
+        __swift_bridge__$Vec_LicenseInfo$drop(vecPtr)
     }
 
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: AuthorizationConfig) {
-        __swift_bridge__$Vec_AuthorizationConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: LicenseInfo) {
+        __swift_bridge__$Vec_LicenseInfo$push(vecPtr, {value.isOwned = false; return value.ptr;}())
     }
 
     public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_AuthorizationConfig$pop(vecPtr)
+        let pointer = __swift_bridge__$Vec_LicenseInfo$pop(vecPtr)
         if pointer == nil {
             return nil
         } else {
-            return (AuthorizationConfig(ptr: pointer!) as! Self)
+            return (LicenseInfo(ptr: pointer!) as! Self)
         }
     }
 
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<AuthorizationConfigRef> {
-        let pointer = __swift_bridge__$Vec_AuthorizationConfig$get(vecPtr, index)
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<LicenseInfoRef> {
+        let pointer = __swift_bridge__$Vec_LicenseInfo$get(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return AuthorizationConfigRef(ptr: pointer!)
+            return LicenseInfoRef(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<AuthorizationConfigRefMut> {
-        let pointer = __swift_bridge__$Vec_AuthorizationConfig$get_mut(vecPtr, index)
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<LicenseInfoRefMut> {
+        let pointer = __swift_bridge__$Vec_LicenseInfo$get_mut(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return AuthorizationConfigRefMut(ptr: pointer!)
+            return LicenseInfoRefMut(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<AuthorizationConfigRef> {
-        UnsafePointer<AuthorizationConfigRef>(OpaquePointer(__swift_bridge__$Vec_AuthorizationConfig$as_ptr(vecPtr)))
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<LicenseInfoRef> {
+        UnsafePointer<LicenseInfoRef>(OpaquePointer(__swift_bridge__$Vec_LicenseInfo$as_ptr(vecPtr)))
     }
 
     public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_AuthorizationConfig$len(vecPtr)
+        __swift_bridge__$Vec_LicenseInfo$len(vecPtr)
     }
 }
 
@@ -3289,7 +2406,7 @@ extension LifecycleHooksConfig: Vectorizable {
 }
 
 
-public class JsonRpcMethodInfo: JsonRpcMethodInfoRefMut {
+public class OpenApiConfig: OpenApiConfigRefMut {
     public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
@@ -3298,198 +2415,118 @@ public class JsonRpcMethodInfo: JsonRpcMethodInfoRefMut {
 
     deinit {
         if isOwned {
-            __swift_bridge__$JsonRpcMethodInfo$_free(ptr)
+            __swift_bridge__$OpenApiConfig$_free(ptr)
         }
     }
 }
-public class JsonRpcMethodInfoRefMut: JsonRpcMethodInfoRef {
+public class OpenApiConfigRefMut: OpenApiConfigRef {
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
     }
 }
-public class JsonRpcMethodInfoRef {
+public class OpenApiConfigRef {
     public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
     }
 }
-extension JsonRpcMethodInfoRef {
-    public func methodName() -> RustString {
-        RustString(ptr: __swift_bridge__$JsonRpcMethodInfo$method_name(ptr))
-    }
-
-    public func description() -> Optional<RustString> {
-        { let val = __swift_bridge__$JsonRpcMethodInfo$description(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
-    }
-
-    public func paramsSchema() -> Optional<RustString> {
-        { let val = __swift_bridge__$JsonRpcMethodInfo$params_schema(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
-    }
-
-    public func resultSchema() -> Optional<RustString> {
-        { let val = __swift_bridge__$JsonRpcMethodInfo$result_schema(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
-    }
-
-    public func deprecated() -> Bool {
-        __swift_bridge__$JsonRpcMethodInfo$deprecated(ptr)
-    }
-
-    public func tags() -> RustVec<RustString> {
-        RustVec(ptr: __swift_bridge__$JsonRpcMethodInfo$tags(ptr))
-    }
-}
-extension JsonRpcMethodInfo: Vectorizable {
-    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_JsonRpcMethodInfo$new()
-    }
-
-    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_JsonRpcMethodInfo$drop(vecPtr)
-    }
-
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: JsonRpcMethodInfo) {
-        __swift_bridge__$Vec_JsonRpcMethodInfo$push(vecPtr, {value.isOwned = false; return value.ptr;}())
-    }
-
-    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_JsonRpcMethodInfo$pop(vecPtr)
-        if pointer == nil {
-            return nil
-        } else {
-            return (JsonRpcMethodInfo(ptr: pointer!) as! Self)
-        }
-    }
-
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<JsonRpcMethodInfoRef> {
-        let pointer = __swift_bridge__$Vec_JsonRpcMethodInfo$get(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return JsonRpcMethodInfoRef(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<JsonRpcMethodInfoRefMut> {
-        let pointer = __swift_bridge__$Vec_JsonRpcMethodInfo$get_mut(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return JsonRpcMethodInfoRefMut(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<JsonRpcMethodInfoRef> {
-        UnsafePointer<JsonRpcMethodInfoRef>(OpaquePointer(__swift_bridge__$Vec_JsonRpcMethodInfo$as_ptr(vecPtr)))
-    }
-
-    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_JsonRpcMethodInfo$len(vecPtr)
-    }
-}
-
-
-public class ProblemDetails: ProblemDetailsRefMut {
-    public var isOwned: Bool = true
-
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-
-    deinit {
-        if isOwned {
-            __swift_bridge__$ProblemDetails$_free(ptr)
-        }
-    }
-}
-public class ProblemDetailsRefMut: ProblemDetailsRef {
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-}
-public class ProblemDetailsRef {
-    public var ptr: UnsafeMutableRawPointer
-
-    public init(ptr: UnsafeMutableRawPointer) {
-        self.ptr = ptr
-    }
-}
-extension ProblemDetailsRef {
-    public func typeUri() -> RustString {
-        RustString(ptr: __swift_bridge__$ProblemDetails$type_uri(ptr))
+extension OpenApiConfigRef {
+    public func enabled() -> Bool {
+        __swift_bridge__$OpenApiConfig$enabled(ptr)
     }
 
     public func title() -> RustString {
-        RustString(ptr: __swift_bridge__$ProblemDetails$title(ptr))
+        RustString(ptr: __swift_bridge__$OpenApiConfig$title(ptr))
     }
 
-    public func status() -> UInt16 {
-        __swift_bridge__$ProblemDetails$status(ptr)
+    public func version() -> RustString {
+        RustString(ptr: __swift_bridge__$OpenApiConfig$version(ptr))
     }
 
-    public func detail() -> Optional<RustString> {
-        { let val = __swift_bridge__$ProblemDetails$detail(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    public func description() -> Optional<RustString> {
+        { let val = __swift_bridge__$OpenApiConfig$description(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 
-    public func instance() -> Optional<RustString> {
-        { let val = __swift_bridge__$ProblemDetails$instance(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    public func swaggerUiPath() -> RustString {
+        RustString(ptr: __swift_bridge__$OpenApiConfig$swagger_ui_path(ptr))
     }
 
-    public func extensions() -> RustString {
-        RustString(ptr: __swift_bridge__$ProblemDetails$extensions(ptr))
+    public func redocPath() -> RustString {
+        RustString(ptr: __swift_bridge__$OpenApiConfig$redoc_path(ptr))
+    }
+
+    public func openapiJsonPath() -> RustString {
+        RustString(ptr: __swift_bridge__$OpenApiConfig$openapi_json_path(ptr))
+    }
+
+    public func contact() -> Optional<ContactInfo> {
+        { let val = __swift_bridge__$OpenApiConfig$contact(ptr); if val != nil { return ContactInfo(ptr: val!) } else { return nil } }()
+    }
+
+    public func license() -> Optional<LicenseInfo> {
+        { let val = __swift_bridge__$OpenApiConfig$license(ptr); if val != nil { return LicenseInfo(ptr: val!) } else { return nil } }()
+    }
+
+    public func servers() -> RustVec<ServerInfo> {
+        RustVec(ptr: __swift_bridge__$OpenApiConfig$servers(ptr))
+    }
+
+    public func securitySchemes() -> RustString {
+        RustString(ptr: __swift_bridge__$OpenApiConfig$security_schemes(ptr))
     }
 }
-extension ProblemDetails: Vectorizable {
+extension OpenApiConfig: Vectorizable {
     public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_ProblemDetails$new()
+        __swift_bridge__$Vec_OpenApiConfig$new()
     }
 
     public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_ProblemDetails$drop(vecPtr)
+        __swift_bridge__$Vec_OpenApiConfig$drop(vecPtr)
     }
 
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: ProblemDetails) {
-        __swift_bridge__$Vec_ProblemDetails$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: OpenApiConfig) {
+        __swift_bridge__$Vec_OpenApiConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
     }
 
     public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_ProblemDetails$pop(vecPtr)
+        let pointer = __swift_bridge__$Vec_OpenApiConfig$pop(vecPtr)
         if pointer == nil {
             return nil
         } else {
-            return (ProblemDetails(ptr: pointer!) as! Self)
+            return (OpenApiConfig(ptr: pointer!) as! Self)
         }
     }
 
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ProblemDetailsRef> {
-        let pointer = __swift_bridge__$Vec_ProblemDetails$get(vecPtr, index)
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<OpenApiConfigRef> {
+        let pointer = __swift_bridge__$Vec_OpenApiConfig$get(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return ProblemDetailsRef(ptr: pointer!)
+            return OpenApiConfigRef(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ProblemDetailsRefMut> {
-        let pointer = __swift_bridge__$Vec_ProblemDetails$get_mut(vecPtr, index)
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<OpenApiConfigRefMut> {
+        let pointer = __swift_bridge__$Vec_OpenApiConfig$get_mut(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return ProblemDetailsRefMut(ptr: pointer!)
+            return OpenApiConfigRefMut(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ProblemDetailsRef> {
-        UnsafePointer<ProblemDetailsRef>(OpaquePointer(__swift_bridge__$Vec_ProblemDetails$as_ptr(vecPtr)))
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<OpenApiConfigRef> {
+        UnsafePointer<OpenApiConfigRef>(OpaquePointer(__swift_bridge__$Vec_OpenApiConfig$as_ptr(vecPtr)))
     }
 
     public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_ProblemDetails$len(vecPtr)
+        __swift_bridge__$Vec_OpenApiConfig$len(vecPtr)
     }
 }
 
 
-public class ParsedChannel: ParsedChannelRefMut {
+public class ParseRequest: ParseRequestRefMut {
     public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
@@ -3498,257 +2535,73 @@ public class ParsedChannel: ParsedChannelRefMut {
 
     deinit {
         if isOwned {
-            __swift_bridge__$ParsedChannel$_free(ptr)
+            __swift_bridge__$ParseRequest$_free(ptr)
         }
     }
 }
-public class ParsedChannelRefMut: ParsedChannelRef {
+public class ParseRequestRefMut: ParseRequestRef {
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
     }
 }
-public class ParsedChannelRef {
+public class ParseRequestRef {
     public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
     }
 }
-extension ParsedChannelRef {
-    public func name() -> RustString {
-        RustString(ptr: __swift_bridge__$ParsedChannel$name(ptr))
-    }
-
-    public func address() -> RustString {
-        RustString(ptr: __swift_bridge__$ParsedChannel$address(ptr))
-    }
-
-    public func messages() -> RustVec<RustString> {
-        RustVec(ptr: __swift_bridge__$ParsedChannel$messages(ptr))
-    }
-
-    public func bindings() -> Optional<RustString> {
-        { let val = __swift_bridge__$ParsedChannel$bindings(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+extension ParseRequestRef {
+    public func spec() -> RustString {
+        RustString(ptr: __swift_bridge__$ParseRequest$spec(ptr))
     }
 }
-extension ParsedChannel: Vectorizable {
+extension ParseRequest: Vectorizable {
     public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_ParsedChannel$new()
+        __swift_bridge__$Vec_ParseRequest$new()
     }
 
     public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_ParsedChannel$drop(vecPtr)
+        __swift_bridge__$Vec_ParseRequest$drop(vecPtr)
     }
 
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: ParsedChannel) {
-        __swift_bridge__$Vec_ParsedChannel$push(vecPtr, {value.isOwned = false; return value.ptr;}())
-    }
-
-    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_ParsedChannel$pop(vecPtr)
-        if pointer == nil {
-            return nil
-        } else {
-            return (ParsedChannel(ptr: pointer!) as! Self)
-        }
-    }
-
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ParsedChannelRef> {
-        let pointer = __swift_bridge__$Vec_ParsedChannel$get(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return ParsedChannelRef(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ParsedChannelRefMut> {
-        let pointer = __swift_bridge__$Vec_ParsedChannel$get_mut(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return ParsedChannelRefMut(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ParsedChannelRef> {
-        UnsafePointer<ParsedChannelRef>(OpaquePointer(__swift_bridge__$Vec_ParsedChannel$as_ptr(vecPtr)))
-    }
-
-    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_ParsedChannel$len(vecPtr)
-    }
-}
-
-
-public class ParsedOperation: ParsedOperationRefMut {
-    public var isOwned: Bool = true
-
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-
-    deinit {
-        if isOwned {
-            __swift_bridge__$ParsedOperation$_free(ptr)
-        }
-    }
-}
-public class ParsedOperationRefMut: ParsedOperationRef {
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-}
-public class ParsedOperationRef {
-    public var ptr: UnsafeMutableRawPointer
-
-    public init(ptr: UnsafeMutableRawPointer) {
-        self.ptr = ptr
-    }
-}
-extension ParsedOperationRef {
-    public func name() -> RustString {
-        RustString(ptr: __swift_bridge__$ParsedOperation$name(ptr))
-    }
-
-    public func action() -> RustString {
-        RustString(ptr: __swift_bridge__$ParsedOperation$action(ptr))
-    }
-
-    public func channel() -> RustString {
-        RustString(ptr: __swift_bridge__$ParsedOperation$channel(ptr))
-    }
-}
-extension ParsedOperation: Vectorizable {
-    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_ParsedOperation$new()
-    }
-
-    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_ParsedOperation$drop(vecPtr)
-    }
-
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: ParsedOperation) {
-        __swift_bridge__$Vec_ParsedOperation$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: ParseRequest) {
+        __swift_bridge__$Vec_ParseRequest$push(vecPtr, {value.isOwned = false; return value.ptr;}())
     }
 
     public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_ParsedOperation$pop(vecPtr)
+        let pointer = __swift_bridge__$Vec_ParseRequest$pop(vecPtr)
         if pointer == nil {
             return nil
         } else {
-            return (ParsedOperation(ptr: pointer!) as! Self)
+            return (ParseRequest(ptr: pointer!) as! Self)
         }
     }
 
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ParsedOperationRef> {
-        let pointer = __swift_bridge__$Vec_ParsedOperation$get(vecPtr, index)
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ParseRequestRef> {
+        let pointer = __swift_bridge__$Vec_ParseRequest$get(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return ParsedOperationRef(ptr: pointer!)
+            return ParseRequestRef(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ParsedOperationRefMut> {
-        let pointer = __swift_bridge__$Vec_ParsedOperation$get_mut(vecPtr, index)
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ParseRequestRefMut> {
+        let pointer = __swift_bridge__$Vec_ParseRequest$get_mut(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return ParsedOperationRefMut(ptr: pointer!)
+            return ParseRequestRefMut(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ParsedOperationRef> {
-        UnsafePointer<ParsedOperationRef>(OpaquePointer(__swift_bridge__$Vec_ParsedOperation$as_ptr(vecPtr)))
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ParseRequestRef> {
+        UnsafePointer<ParseRequestRef>(OpaquePointer(__swift_bridge__$Vec_ParseRequest$as_ptr(vecPtr)))
     }
 
     public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_ParsedOperation$len(vecPtr)
-    }
-}
-
-
-public class ParsedMessage: ParsedMessageRefMut {
-    public var isOwned: Bool = true
-
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-
-    deinit {
-        if isOwned {
-            __swift_bridge__$ParsedMessage$_free(ptr)
-        }
-    }
-}
-public class ParsedMessageRefMut: ParsedMessageRef {
-    public override init(ptr: UnsafeMutableRawPointer) {
-        super.init(ptr: ptr)
-    }
-}
-public class ParsedMessageRef {
-    public var ptr: UnsafeMutableRawPointer
-
-    public init(ptr: UnsafeMutableRawPointer) {
-        self.ptr = ptr
-    }
-}
-extension ParsedMessageRef {
-    public func name() -> RustString {
-        RustString(ptr: __swift_bridge__$ParsedMessage$name(ptr))
-    }
-
-    public func schema() -> Optional<RustString> {
-        { let val = __swift_bridge__$ParsedMessage$schema(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
-    }
-}
-extension ParsedMessage: Vectorizable {
-    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_ParsedMessage$new()
-    }
-
-    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_ParsedMessage$drop(vecPtr)
-    }
-
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: ParsedMessage) {
-        __swift_bridge__$Vec_ParsedMessage$push(vecPtr, {value.isOwned = false; return value.ptr;}())
-    }
-
-    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_ParsedMessage$pop(vecPtr)
-        if pointer == nil {
-            return nil
-        } else {
-            return (ParsedMessage(ptr: pointer!) as! Self)
-        }
-    }
-
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ParsedMessageRef> {
-        let pointer = __swift_bridge__$Vec_ParsedMessage$get(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return ParsedMessageRef(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ParsedMessageRefMut> {
-        let pointer = __swift_bridge__$Vec_ParsedMessage$get_mut(vecPtr, index)
-        if pointer == nil {
-            return nil
-        } else {
-            return ParsedMessageRefMut(ptr: pointer!)
-        }
-    }
-
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ParsedMessageRef> {
-        UnsafePointer<ParsedMessageRef>(OpaquePointer(__swift_bridge__$Vec_ParsedMessage$as_ptr(vecPtr)))
-    }
-
-    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_ParsedMessage$len(vecPtr)
+        __swift_bridge__$Vec_ParseRequest$len(vecPtr)
     }
 }
 
@@ -3853,7 +2706,7 @@ extension ParseResult: Vectorizable {
 }
 
 
-public class ParseRequest: ParseRequestRefMut {
+public class ParsedChannel: ParsedChannelRefMut {
     public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
@@ -3862,78 +2715,90 @@ public class ParseRequest: ParseRequestRefMut {
 
     deinit {
         if isOwned {
-            __swift_bridge__$ParseRequest$_free(ptr)
+            __swift_bridge__$ParsedChannel$_free(ptr)
         }
     }
 }
-public class ParseRequestRefMut: ParseRequestRef {
+public class ParsedChannelRefMut: ParsedChannelRef {
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
     }
 }
-public class ParseRequestRef {
+public class ParsedChannelRef {
     public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
     }
 }
-extension ParseRequestRef {
-    public func spec() -> RustString {
-        RustString(ptr: __swift_bridge__$ParseRequest$spec(ptr))
+extension ParsedChannelRef {
+    public func name() -> RustString {
+        RustString(ptr: __swift_bridge__$ParsedChannel$name(ptr))
+    }
+
+    public func address() -> RustString {
+        RustString(ptr: __swift_bridge__$ParsedChannel$address(ptr))
+    }
+
+    public func messages() -> RustVec<RustString> {
+        RustVec(ptr: __swift_bridge__$ParsedChannel$messages(ptr))
+    }
+
+    public func bindings() -> Optional<RustString> {
+        { let val = __swift_bridge__$ParsedChannel$bindings(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 }
-extension ParseRequest: Vectorizable {
+extension ParsedChannel: Vectorizable {
     public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_ParseRequest$new()
+        __swift_bridge__$Vec_ParsedChannel$new()
     }
 
     public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_ParseRequest$drop(vecPtr)
+        __swift_bridge__$Vec_ParsedChannel$drop(vecPtr)
     }
 
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: ParseRequest) {
-        __swift_bridge__$Vec_ParseRequest$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: ParsedChannel) {
+        __swift_bridge__$Vec_ParsedChannel$push(vecPtr, {value.isOwned = false; return value.ptr;}())
     }
 
     public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_ParseRequest$pop(vecPtr)
+        let pointer = __swift_bridge__$Vec_ParsedChannel$pop(vecPtr)
         if pointer == nil {
             return nil
         } else {
-            return (ParseRequest(ptr: pointer!) as! Self)
+            return (ParsedChannel(ptr: pointer!) as! Self)
         }
     }
 
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ParseRequestRef> {
-        let pointer = __swift_bridge__$Vec_ParseRequest$get(vecPtr, index)
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ParsedChannelRef> {
+        let pointer = __swift_bridge__$Vec_ParsedChannel$get(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return ParseRequestRef(ptr: pointer!)
+            return ParsedChannelRef(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ParseRequestRefMut> {
-        let pointer = __swift_bridge__$Vec_ParseRequest$get_mut(vecPtr, index)
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ParsedChannelRefMut> {
+        let pointer = __swift_bridge__$Vec_ParsedChannel$get_mut(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return ParseRequestRefMut(ptr: pointer!)
+            return ParsedChannelRefMut(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ParseRequestRef> {
-        UnsafePointer<ParseRequestRef>(OpaquePointer(__swift_bridge__$Vec_ParseRequest$as_ptr(vecPtr)))
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ParsedChannelRef> {
+        UnsafePointer<ParsedChannelRef>(OpaquePointer(__swift_bridge__$Vec_ParsedChannel$as_ptr(vecPtr)))
     }
 
     public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_ParseRequest$len(vecPtr)
+        __swift_bridge__$Vec_ParsedChannel$len(vecPtr)
     }
 }
 
 
-public class ValidationResponse: ValidationResponseRefMut {
+public class ParsedMessage: ParsedMessageRefMut {
     public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
@@ -3942,78 +2807,82 @@ public class ValidationResponse: ValidationResponseRefMut {
 
     deinit {
         if isOwned {
-            __swift_bridge__$ValidationResponse$_free(ptr)
+            __swift_bridge__$ParsedMessage$_free(ptr)
         }
     }
 }
-public class ValidationResponseRefMut: ValidationResponseRef {
+public class ParsedMessageRefMut: ParsedMessageRef {
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
     }
 }
-public class ValidationResponseRef {
+public class ParsedMessageRef {
     public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
     }
 }
-extension ValidationResponseRef {
-    public func valid() -> Bool {
-        __swift_bridge__$ValidationResponse$valid(ptr)
+extension ParsedMessageRef {
+    public func name() -> RustString {
+        RustString(ptr: __swift_bridge__$ParsedMessage$name(ptr))
+    }
+
+    public func schema() -> Optional<RustString> {
+        { let val = __swift_bridge__$ParsedMessage$schema(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 }
-extension ValidationResponse: Vectorizable {
+extension ParsedMessage: Vectorizable {
     public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_ValidationResponse$new()
+        __swift_bridge__$Vec_ParsedMessage$new()
     }
 
     public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_ValidationResponse$drop(vecPtr)
+        __swift_bridge__$Vec_ParsedMessage$drop(vecPtr)
     }
 
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: ValidationResponse) {
-        __swift_bridge__$Vec_ValidationResponse$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: ParsedMessage) {
+        __swift_bridge__$Vec_ParsedMessage$push(vecPtr, {value.isOwned = false; return value.ptr;}())
     }
 
     public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_ValidationResponse$pop(vecPtr)
+        let pointer = __swift_bridge__$Vec_ParsedMessage$pop(vecPtr)
         if pointer == nil {
             return nil
         } else {
-            return (ValidationResponse(ptr: pointer!) as! Self)
+            return (ParsedMessage(ptr: pointer!) as! Self)
         }
     }
 
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ValidationResponseRef> {
-        let pointer = __swift_bridge__$Vec_ValidationResponse$get(vecPtr, index)
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ParsedMessageRef> {
+        let pointer = __swift_bridge__$Vec_ParsedMessage$get(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return ValidationResponseRef(ptr: pointer!)
+            return ParsedMessageRef(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ValidationResponseRefMut> {
-        let pointer = __swift_bridge__$Vec_ValidationResponse$get_mut(vecPtr, index)
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ParsedMessageRefMut> {
+        let pointer = __swift_bridge__$Vec_ParsedMessage$get_mut(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return ValidationResponseRefMut(ptr: pointer!)
+            return ParsedMessageRefMut(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ValidationResponseRef> {
-        UnsafePointer<ValidationResponseRef>(OpaquePointer(__swift_bridge__$Vec_ValidationResponse$as_ptr(vecPtr)))
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ParsedMessageRef> {
+        UnsafePointer<ParsedMessageRef>(OpaquePointer(__swift_bridge__$Vec_ParsedMessage$as_ptr(vecPtr)))
     }
 
     public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_ValidationResponse$len(vecPtr)
+        __swift_bridge__$Vec_ParsedMessage$len(vecPtr)
     }
 }
 
 
-public class ValidateRequest: ValidateRequestRefMut {
+public class ParsedOperation: ParsedOperationRefMut {
     public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
@@ -4022,90 +2891,86 @@ public class ValidateRequest: ValidateRequestRefMut {
 
     deinit {
         if isOwned {
-            __swift_bridge__$ValidateRequest$_free(ptr)
+            __swift_bridge__$ParsedOperation$_free(ptr)
         }
     }
 }
-public class ValidateRequestRefMut: ValidateRequestRef {
+public class ParsedOperationRefMut: ParsedOperationRef {
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
     }
 }
-public class ValidateRequestRef {
+public class ParsedOperationRef {
     public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
     }
 }
-extension ValidateRequestRef {
-    public func spec() -> RustString {
-        RustString(ptr: __swift_bridge__$ValidateRequest$spec(ptr))
+extension ParsedOperationRef {
+    public func name() -> RustString {
+        RustString(ptr: __swift_bridge__$ParsedOperation$name(ptr))
+    }
+
+    public func action() -> RustString {
+        RustString(ptr: __swift_bridge__$ParsedOperation$action(ptr))
     }
 
     public func channel() -> RustString {
-        RustString(ptr: __swift_bridge__$ValidateRequest$channel(ptr))
-    }
-
-    public func message() -> RustString {
-        RustString(ptr: __swift_bridge__$ValidateRequest$message(ptr))
-    }
-
-    public func payload() -> RustString {
-        RustString(ptr: __swift_bridge__$ValidateRequest$payload(ptr))
+        RustString(ptr: __swift_bridge__$ParsedOperation$channel(ptr))
     }
 }
-extension ValidateRequest: Vectorizable {
+extension ParsedOperation: Vectorizable {
     public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_ValidateRequest$new()
+        __swift_bridge__$Vec_ParsedOperation$new()
     }
 
     public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_ValidateRequest$drop(vecPtr)
+        __swift_bridge__$Vec_ParsedOperation$drop(vecPtr)
     }
 
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: ValidateRequest) {
-        __swift_bridge__$Vec_ValidateRequest$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: ParsedOperation) {
+        __swift_bridge__$Vec_ParsedOperation$push(vecPtr, {value.isOwned = false; return value.ptr;}())
     }
 
     public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_ValidateRequest$pop(vecPtr)
+        let pointer = __swift_bridge__$Vec_ParsedOperation$pop(vecPtr)
         if pointer == nil {
             return nil
         } else {
-            return (ValidateRequest(ptr: pointer!) as! Self)
+            return (ParsedOperation(ptr: pointer!) as! Self)
         }
     }
 
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ValidateRequestRef> {
-        let pointer = __swift_bridge__$Vec_ValidateRequest$get(vecPtr, index)
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ParsedOperationRef> {
+        let pointer = __swift_bridge__$Vec_ParsedOperation$get(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return ValidateRequestRef(ptr: pointer!)
+            return ParsedOperationRef(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ValidateRequestRefMut> {
-        let pointer = __swift_bridge__$Vec_ValidateRequest$get_mut(vecPtr, index)
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ParsedOperationRefMut> {
+        let pointer = __swift_bridge__$Vec_ParsedOperation$get_mut(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return ValidateRequestRefMut(ptr: pointer!)
+            return ParsedOperationRefMut(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ValidateRequestRef> {
-        UnsafePointer<ValidateRequestRef>(OpaquePointer(__swift_bridge__$Vec_ValidateRequest$as_ptr(vecPtr)))
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ParsedOperationRef> {
+        UnsafePointer<ParsedOperationRef>(OpaquePointer(__swift_bridge__$Vec_ParsedOperation$as_ptr(vecPtr)))
     }
 
     public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_ValidateRequest$len(vecPtr)
+        __swift_bridge__$Vec_ParsedOperation$len(vecPtr)
     }
 }
 
 
-public class ContactInfo: ContactInfoRefMut {
+public class ProblemDetails: ProblemDetailsRefMut {
     public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
@@ -4114,86 +2979,98 @@ public class ContactInfo: ContactInfoRefMut {
 
     deinit {
         if isOwned {
-            __swift_bridge__$ContactInfo$_free(ptr)
+            __swift_bridge__$ProblemDetails$_free(ptr)
         }
     }
 }
-public class ContactInfoRefMut: ContactInfoRef {
+public class ProblemDetailsRefMut: ProblemDetailsRef {
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
     }
 }
-public class ContactInfoRef {
+public class ProblemDetailsRef {
     public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
     }
 }
-extension ContactInfoRef {
-    public func name() -> Optional<RustString> {
-        { let val = __swift_bridge__$ContactInfo$name(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+extension ProblemDetailsRef {
+    public func typeUri() -> RustString {
+        RustString(ptr: __swift_bridge__$ProblemDetails$type_uri(ptr))
     }
 
-    public func email() -> Optional<RustString> {
-        { let val = __swift_bridge__$ContactInfo$email(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    public func title() -> RustString {
+        RustString(ptr: __swift_bridge__$ProblemDetails$title(ptr))
     }
 
-    public func url() -> Optional<RustString> {
-        { let val = __swift_bridge__$ContactInfo$url(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    public func status() -> UInt16 {
+        __swift_bridge__$ProblemDetails$status(ptr)
+    }
+
+    public func detail() -> Optional<RustString> {
+        { let val = __swift_bridge__$ProblemDetails$detail(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    }
+
+    public func instance() -> Optional<RustString> {
+        { let val = __swift_bridge__$ProblemDetails$instance(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    }
+
+    public func extensions() -> RustString {
+        RustString(ptr: __swift_bridge__$ProblemDetails$extensions(ptr))
     }
 }
-extension ContactInfo: Vectorizable {
+extension ProblemDetails: Vectorizable {
     public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_ContactInfo$new()
+        __swift_bridge__$Vec_ProblemDetails$new()
     }
 
     public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_ContactInfo$drop(vecPtr)
+        __swift_bridge__$Vec_ProblemDetails$drop(vecPtr)
     }
 
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: ContactInfo) {
-        __swift_bridge__$Vec_ContactInfo$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: ProblemDetails) {
+        __swift_bridge__$Vec_ProblemDetails$push(vecPtr, {value.isOwned = false; return value.ptr;}())
     }
 
     public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_ContactInfo$pop(vecPtr)
+        let pointer = __swift_bridge__$Vec_ProblemDetails$pop(vecPtr)
         if pointer == nil {
             return nil
         } else {
-            return (ContactInfo(ptr: pointer!) as! Self)
+            return (ProblemDetails(ptr: pointer!) as! Self)
         }
     }
 
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ContactInfoRef> {
-        let pointer = __swift_bridge__$Vec_ContactInfo$get(vecPtr, index)
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ProblemDetailsRef> {
+        let pointer = __swift_bridge__$Vec_ProblemDetails$get(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return ContactInfoRef(ptr: pointer!)
+            return ProblemDetailsRef(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ContactInfoRefMut> {
-        let pointer = __swift_bridge__$Vec_ContactInfo$get_mut(vecPtr, index)
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ProblemDetailsRefMut> {
+        let pointer = __swift_bridge__$Vec_ProblemDetails$get_mut(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return ContactInfoRefMut(ptr: pointer!)
+            return ProblemDetailsRefMut(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ContactInfoRef> {
-        UnsafePointer<ContactInfoRef>(OpaquePointer(__swift_bridge__$Vec_ContactInfo$as_ptr(vecPtr)))
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ProblemDetailsRef> {
+        UnsafePointer<ProblemDetailsRef>(OpaquePointer(__swift_bridge__$Vec_ProblemDetails$as_ptr(vecPtr)))
     }
 
     public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_ContactInfo$len(vecPtr)
+        __swift_bridge__$Vec_ProblemDetails$len(vecPtr)
     }
 }
 
 
-public class LicenseInfo: LicenseInfoRefMut {
+public class QueryMutationConfig: QueryMutationConfigRefMut {
     public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
@@ -4202,82 +3079,91 @@ public class LicenseInfo: LicenseInfoRefMut {
 
     deinit {
         if isOwned {
-            __swift_bridge__$LicenseInfo$_free(ptr)
+            __swift_bridge__$QueryMutationConfig$_free(ptr)
         }
     }
 }
-public class LicenseInfoRefMut: LicenseInfoRef {
+extension QueryMutationConfig {
+    public convenience init(_ introspection_enabled: Bool, _ complexity_limit: Optional<UInt>, _ depth_limit: Optional<UInt>) {
+        self.init(ptr: __swift_bridge__$QueryMutationConfig$new(introspection_enabled, complexity_limit.intoFfiRepr(), depth_limit.intoFfiRepr()))
+    }
+}
+public class QueryMutationConfigRefMut: QueryMutationConfigRef {
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
     }
 }
-public class LicenseInfoRef {
+public class QueryMutationConfigRef {
     public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
     }
 }
-extension LicenseInfoRef {
-    public func name() -> RustString {
-        RustString(ptr: __swift_bridge__$LicenseInfo$name(ptr))
+extension QueryMutationConfigRef {
+    public func introspectionEnabled() -> Bool {
+        __swift_bridge__$QueryMutationConfig$introspection_enabled(ptr)
     }
 
-    public func url() -> Optional<RustString> {
-        { let val = __swift_bridge__$LicenseInfo$url(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    public func complexityLimit() -> Optional<UInt> {
+        __swift_bridge__$QueryMutationConfig$complexity_limit(ptr).intoSwiftRepr()
+    }
+
+    public func depthLimit() -> Optional<UInt> {
+        __swift_bridge__$QueryMutationConfig$depth_limit(ptr).intoSwiftRepr()
     }
 }
-extension LicenseInfo: Vectorizable {
+extension QueryMutationConfig: Vectorizable {
     public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_LicenseInfo$new()
+        __swift_bridge__$Vec_QueryMutationConfig$new()
     }
 
     public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_LicenseInfo$drop(vecPtr)
+        __swift_bridge__$Vec_QueryMutationConfig$drop(vecPtr)
     }
 
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: LicenseInfo) {
-        __swift_bridge__$Vec_LicenseInfo$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: QueryMutationConfig) {
+        __swift_bridge__$Vec_QueryMutationConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
     }
 
     public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_LicenseInfo$pop(vecPtr)
+        let pointer = __swift_bridge__$Vec_QueryMutationConfig$pop(vecPtr)
         if pointer == nil {
             return nil
         } else {
-            return (LicenseInfo(ptr: pointer!) as! Self)
+            return (QueryMutationConfig(ptr: pointer!) as! Self)
         }
     }
 
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<LicenseInfoRef> {
-        let pointer = __swift_bridge__$Vec_LicenseInfo$get(vecPtr, index)
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<QueryMutationConfigRef> {
+        let pointer = __swift_bridge__$Vec_QueryMutationConfig$get(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return LicenseInfoRef(ptr: pointer!)
+            return QueryMutationConfigRef(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<LicenseInfoRefMut> {
-        let pointer = __swift_bridge__$Vec_LicenseInfo$get_mut(vecPtr, index)
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<QueryMutationConfigRefMut> {
+        let pointer = __swift_bridge__$Vec_QueryMutationConfig$get_mut(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return LicenseInfoRefMut(ptr: pointer!)
+            return QueryMutationConfigRefMut(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<LicenseInfoRef> {
-        UnsafePointer<LicenseInfoRef>(OpaquePointer(__swift_bridge__$Vec_LicenseInfo$as_ptr(vecPtr)))
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<QueryMutationConfigRef> {
+        UnsafePointer<QueryMutationConfigRef>(OpaquePointer(__swift_bridge__$Vec_QueryMutationConfig$as_ptr(vecPtr)))
     }
 
     public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_LicenseInfo$len(vecPtr)
+        __swift_bridge__$Vec_QueryMutationConfig$len(vecPtr)
     }
 }
 
 
-public class ServerInfo: ServerInfoRefMut {
+public class QueryOnlyConfig: QueryOnlyConfigRefMut {
     public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
@@ -4286,82 +3172,91 @@ public class ServerInfo: ServerInfoRefMut {
 
     deinit {
         if isOwned {
-            __swift_bridge__$ServerInfo$_free(ptr)
+            __swift_bridge__$QueryOnlyConfig$_free(ptr)
         }
     }
 }
-public class ServerInfoRefMut: ServerInfoRef {
+extension QueryOnlyConfig {
+    public convenience init(_ introspection_enabled: Bool, _ complexity_limit: Optional<UInt>, _ depth_limit: Optional<UInt>) {
+        self.init(ptr: __swift_bridge__$QueryOnlyConfig$new(introspection_enabled, complexity_limit.intoFfiRepr(), depth_limit.intoFfiRepr()))
+    }
+}
+public class QueryOnlyConfigRefMut: QueryOnlyConfigRef {
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
     }
 }
-public class ServerInfoRef {
+public class QueryOnlyConfigRef {
     public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
     }
 }
-extension ServerInfoRef {
-    public func url() -> RustString {
-        RustString(ptr: __swift_bridge__$ServerInfo$url(ptr))
+extension QueryOnlyConfigRef {
+    public func introspectionEnabled() -> Bool {
+        __swift_bridge__$QueryOnlyConfig$introspection_enabled(ptr)
     }
 
-    public func description() -> Optional<RustString> {
-        { let val = __swift_bridge__$ServerInfo$description(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    public func complexityLimit() -> Optional<UInt> {
+        __swift_bridge__$QueryOnlyConfig$complexity_limit(ptr).intoSwiftRepr()
+    }
+
+    public func depthLimit() -> Optional<UInt> {
+        __swift_bridge__$QueryOnlyConfig$depth_limit(ptr).intoSwiftRepr()
     }
 }
-extension ServerInfo: Vectorizable {
+extension QueryOnlyConfig: Vectorizable {
     public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_ServerInfo$new()
+        __swift_bridge__$Vec_QueryOnlyConfig$new()
     }
 
     public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_ServerInfo$drop(vecPtr)
+        __swift_bridge__$Vec_QueryOnlyConfig$drop(vecPtr)
     }
 
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: ServerInfo) {
-        __swift_bridge__$Vec_ServerInfo$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: QueryOnlyConfig) {
+        __swift_bridge__$Vec_QueryOnlyConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
     }
 
     public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_ServerInfo$pop(vecPtr)
+        let pointer = __swift_bridge__$Vec_QueryOnlyConfig$pop(vecPtr)
         if pointer == nil {
             return nil
         } else {
-            return (ServerInfo(ptr: pointer!) as! Self)
+            return (QueryOnlyConfig(ptr: pointer!) as! Self)
         }
     }
 
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ServerInfoRef> {
-        let pointer = __swift_bridge__$Vec_ServerInfo$get(vecPtr, index)
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<QueryOnlyConfigRef> {
+        let pointer = __swift_bridge__$Vec_QueryOnlyConfig$get(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return ServerInfoRef(ptr: pointer!)
+            return QueryOnlyConfigRef(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ServerInfoRefMut> {
-        let pointer = __swift_bridge__$Vec_ServerInfo$get_mut(vecPtr, index)
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<QueryOnlyConfigRefMut> {
+        let pointer = __swift_bridge__$Vec_QueryOnlyConfig$get_mut(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return ServerInfoRefMut(ptr: pointer!)
+            return QueryOnlyConfigRefMut(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ServerInfoRef> {
-        UnsafePointer<ServerInfoRef>(OpaquePointer(__swift_bridge__$Vec_ServerInfo$as_ptr(vecPtr)))
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<QueryOnlyConfigRef> {
+        UnsafePointer<QueryOnlyConfigRef>(OpaquePointer(__swift_bridge__$Vec_QueryOnlyConfig$as_ptr(vecPtr)))
     }
 
     public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_ServerInfo$len(vecPtr)
+        __swift_bridge__$Vec_QueryOnlyConfig$len(vecPtr)
     }
 }
 
 
-public class TestingSseEvent: TestingSseEventRefMut {
+public class RateLimitConfig: RateLimitConfigRefMut {
     public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
@@ -4370,73 +3265,86 @@ public class TestingSseEvent: TestingSseEventRefMut {
 
     deinit {
         if isOwned {
-            __swift_bridge__$TestingSseEvent$_free(ptr)
+            __swift_bridge__$RateLimitConfig$_free(ptr)
         }
     }
 }
-public class TestingSseEventRefMut: TestingSseEventRef {
+extension RateLimitConfig {
+    public convenience init(_ per_second: UInt64, _ burst: UInt32, _ ip_based: Bool) {
+        self.init(ptr: __swift_bridge__$RateLimitConfig$new(per_second, burst, ip_based))
+    }
+}
+public class RateLimitConfigRefMut: RateLimitConfigRef {
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
     }
 }
-public class TestingSseEventRef {
+public class RateLimitConfigRef {
     public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
     }
 }
-extension TestingSseEventRef {
-    public func data() -> RustString {
-        RustString(ptr: __swift_bridge__$TestingSseEvent$data(ptr))
+extension RateLimitConfigRef {
+    public func perSecond() -> UInt64 {
+        __swift_bridge__$RateLimitConfig$per_second(ptr)
+    }
+
+    public func burst() -> UInt32 {
+        __swift_bridge__$RateLimitConfig$burst(ptr)
+    }
+
+    public func ipBased() -> Bool {
+        __swift_bridge__$RateLimitConfig$ip_based(ptr)
     }
 }
-extension TestingSseEvent: Vectorizable {
+extension RateLimitConfig: Vectorizable {
     public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_TestingSseEvent$new()
+        __swift_bridge__$Vec_RateLimitConfig$new()
     }
 
     public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_TestingSseEvent$drop(vecPtr)
+        __swift_bridge__$Vec_RateLimitConfig$drop(vecPtr)
     }
 
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: TestingSseEvent) {
-        __swift_bridge__$Vec_TestingSseEvent$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: RateLimitConfig) {
+        __swift_bridge__$Vec_RateLimitConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
     }
 
     public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_TestingSseEvent$pop(vecPtr)
+        let pointer = __swift_bridge__$Vec_RateLimitConfig$pop(vecPtr)
         if pointer == nil {
             return nil
         } else {
-            return (TestingSseEvent(ptr: pointer!) as! Self)
+            return (RateLimitConfig(ptr: pointer!) as! Self)
         }
     }
 
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<TestingSseEventRef> {
-        let pointer = __swift_bridge__$Vec_TestingSseEvent$get(vecPtr, index)
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<RateLimitConfigRef> {
+        let pointer = __swift_bridge__$Vec_RateLimitConfig$get(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return TestingSseEventRef(ptr: pointer!)
+            return RateLimitConfigRef(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<TestingSseEventRefMut> {
-        let pointer = __swift_bridge__$Vec_TestingSseEvent$get_mut(vecPtr, index)
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<RateLimitConfigRefMut> {
+        let pointer = __swift_bridge__$Vec_RateLimitConfig$get_mut(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return TestingSseEventRefMut(ptr: pointer!)
+            return RateLimitConfigRefMut(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<TestingSseEventRef> {
-        UnsafePointer<TestingSseEventRef>(OpaquePointer(__swift_bridge__$Vec_TestingSseEvent$as_ptr(vecPtr)))
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<RateLimitConfigRef> {
+        UnsafePointer<RateLimitConfigRef>(OpaquePointer(__swift_bridge__$Vec_RateLimitConfig$as_ptr(vecPtr)))
     }
 
     public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_TestingSseEvent$len(vecPtr)
+        __swift_bridge__$Vec_RateLimitConfig$len(vecPtr)
     }
 }
 
@@ -4591,7 +3499,7 @@ extension RequestData: Vectorizable {
 }
 
 
-public class Method: MethodRefMut {
+public class RequestIdConfig: RequestIdConfigRefMut {
     public var isOwned: Bool = true
 
     public override init(ptr: UnsafeMutableRawPointer) {
@@ -4600,73 +3508,1107 @@ public class Method: MethodRefMut {
 
     deinit {
         if isOwned {
-            __swift_bridge__$Method$_free(ptr)
+            __swift_bridge__$RequestIdConfig$_free(ptr)
         }
     }
 }
-public class MethodRefMut: MethodRef {
+extension RequestIdConfig {
+    public convenience init(_ enabled: Bool) {
+        self.init(ptr: __swift_bridge__$RequestIdConfig$new(enabled))
+    }
+}
+public class RequestIdConfigRefMut: RequestIdConfigRef {
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
     }
 }
-public class MethodRef {
+public class RequestIdConfigRef {
     public var ptr: UnsafeMutableRawPointer
 
     public init(ptr: UnsafeMutableRawPointer) {
         self.ptr = ptr
     }
 }
-extension MethodRef {
-    public func to_string() -> RustString {
-        RustString(ptr: __swift_bridge__$Method$to_string(ptr))
+extension RequestIdConfigRef {
+    public func enabled() -> Bool {
+        __swift_bridge__$RequestIdConfig$enabled(ptr)
     }
 }
-extension Method: Vectorizable {
+extension RequestIdConfig: Vectorizable {
     public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
-        __swift_bridge__$Vec_Method$new()
+        __swift_bridge__$Vec_RequestIdConfig$new()
     }
 
     public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
-        __swift_bridge__$Vec_Method$drop(vecPtr)
+        __swift_bridge__$Vec_RequestIdConfig$drop(vecPtr)
     }
 
-    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: Method) {
-        __swift_bridge__$Vec_Method$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: RequestIdConfig) {
+        __swift_bridge__$Vec_RequestIdConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
     }
 
     public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
-        let pointer = __swift_bridge__$Vec_Method$pop(vecPtr)
+        let pointer = __swift_bridge__$Vec_RequestIdConfig$pop(vecPtr)
         if pointer == nil {
             return nil
         } else {
-            return (Method(ptr: pointer!) as! Self)
+            return (RequestIdConfig(ptr: pointer!) as! Self)
         }
     }
 
-    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<MethodRef> {
-        let pointer = __swift_bridge__$Vec_Method$get(vecPtr, index)
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<RequestIdConfigRef> {
+        let pointer = __swift_bridge__$Vec_RequestIdConfig$get(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return MethodRef(ptr: pointer!)
+            return RequestIdConfigRef(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<MethodRefMut> {
-        let pointer = __swift_bridge__$Vec_Method$get_mut(vecPtr, index)
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<RequestIdConfigRefMut> {
+        let pointer = __swift_bridge__$Vec_RequestIdConfig$get_mut(vecPtr, index)
         if pointer == nil {
             return nil
         } else {
-            return MethodRefMut(ptr: pointer!)
+            return RequestIdConfigRefMut(ptr: pointer!)
         }
     }
 
-    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<MethodRef> {
-        UnsafePointer<MethodRef>(OpaquePointer(__swift_bridge__$Vec_Method$as_ptr(vecPtr)))
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<RequestIdConfigRef> {
+        UnsafePointer<RequestIdConfigRef>(OpaquePointer(__swift_bridge__$Vec_RequestIdConfig$as_ptr(vecPtr)))
     }
 
     public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
-        __swift_bridge__$Vec_Method$len(vecPtr)
+        __swift_bridge__$Vec_RequestIdConfig$len(vecPtr)
+    }
+}
+
+
+public class Response: ResponseRefMut {
+    public var isOwned: Bool = true
+
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+
+    deinit {
+        if isOwned {
+            __swift_bridge__$Response$_free(ptr)
+        }
+    }
+}
+public class ResponseRefMut: ResponseRef {
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+}
+public class ResponseRef {
+    public var ptr: UnsafeMutableRawPointer
+
+    public init(ptr: UnsafeMutableRawPointer) {
+        self.ptr = ptr
+    }
+}
+extension ResponseRef {
+    public func content() -> Optional<RustString> {
+        { let val = __swift_bridge__$Response$content(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    }
+
+    public func statusCode() -> UInt16 {
+        __swift_bridge__$Response$status_code(ptr)
+    }
+
+    public func headers() -> RustString {
+        RustString(ptr: __swift_bridge__$Response$headers(ptr))
+    }
+}
+extension Response: Vectorizable {
+    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+        __swift_bridge__$Vec_Response$new()
+    }
+
+    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+        __swift_bridge__$Vec_Response$drop(vecPtr)
+    }
+
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: Response) {
+        __swift_bridge__$Vec_Response$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    }
+
+    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
+        let pointer = __swift_bridge__$Vec_Response$pop(vecPtr)
+        if pointer == nil {
+            return nil
+        } else {
+            return (Response(ptr: pointer!) as! Self)
+        }
+    }
+
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ResponseRef> {
+        let pointer = __swift_bridge__$Vec_Response$get(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return ResponseRef(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ResponseRefMut> {
+        let pointer = __swift_bridge__$Vec_Response$get_mut(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return ResponseRefMut(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ResponseRef> {
+        UnsafePointer<ResponseRef>(OpaquePointer(__swift_bridge__$Vec_Response$as_ptr(vecPtr)))
+    }
+
+    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+        __swift_bridge__$Vec_Response$len(vecPtr)
+    }
+}
+
+
+public class RouteBuilder: RouteBuilderRefMut {
+    public var isOwned: Bool = true
+
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+
+    deinit {
+        if isOwned {
+            __swift_bridge__$RouteBuilder$_free(ptr)
+        }
+    }
+}
+public class RouteBuilderRefMut: RouteBuilderRef {
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+}
+public class RouteBuilderRef {
+    public var ptr: UnsafeMutableRawPointer
+
+    public init(ptr: UnsafeMutableRawPointer) {
+        self.ptr = ptr
+    }
+}
+extension RouteBuilder: Vectorizable {
+    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+        __swift_bridge__$Vec_RouteBuilder$new()
+    }
+
+    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+        __swift_bridge__$Vec_RouteBuilder$drop(vecPtr)
+    }
+
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: RouteBuilder) {
+        __swift_bridge__$Vec_RouteBuilder$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    }
+
+    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
+        let pointer = __swift_bridge__$Vec_RouteBuilder$pop(vecPtr)
+        if pointer == nil {
+            return nil
+        } else {
+            return (RouteBuilder(ptr: pointer!) as! Self)
+        }
+    }
+
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<RouteBuilderRef> {
+        let pointer = __swift_bridge__$Vec_RouteBuilder$get(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return RouteBuilderRef(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<RouteBuilderRefMut> {
+        let pointer = __swift_bridge__$Vec_RouteBuilder$get_mut(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return RouteBuilderRefMut(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<RouteBuilderRef> {
+        UnsafePointer<RouteBuilderRef>(OpaquePointer(__swift_bridge__$Vec_RouteBuilder$as_ptr(vecPtr)))
+    }
+
+    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+        __swift_bridge__$Vec_RouteBuilder$len(vecPtr)
+    }
+}
+
+
+public class SchemaConfig: SchemaConfigRefMut {
+    public var isOwned: Bool = true
+
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+
+    deinit {
+        if isOwned {
+            __swift_bridge__$SchemaConfig$_free(ptr)
+        }
+    }
+}
+extension SchemaConfig {
+    public convenience init(_ introspection_enabled: Bool, _ complexity_limit: Optional<UInt>, _ depth_limit: Optional<UInt>) {
+        self.init(ptr: __swift_bridge__$SchemaConfig$new(introspection_enabled, complexity_limit.intoFfiRepr(), depth_limit.intoFfiRepr()))
+    }
+}
+public class SchemaConfigRefMut: SchemaConfigRef {
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+}
+public class SchemaConfigRef {
+    public var ptr: UnsafeMutableRawPointer
+
+    public init(ptr: UnsafeMutableRawPointer) {
+        self.ptr = ptr
+    }
+}
+extension SchemaConfigRef {
+    public func introspectionEnabled() -> Bool {
+        __swift_bridge__$SchemaConfig$introspection_enabled(ptr)
+    }
+
+    public func complexityLimit() -> Optional<UInt> {
+        __swift_bridge__$SchemaConfig$complexity_limit(ptr).intoSwiftRepr()
+    }
+
+    public func depthLimit() -> Optional<UInt> {
+        __swift_bridge__$SchemaConfig$depth_limit(ptr).intoSwiftRepr()
+    }
+}
+extension SchemaConfig: Vectorizable {
+    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+        __swift_bridge__$Vec_SchemaConfig$new()
+    }
+
+    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+        __swift_bridge__$Vec_SchemaConfig$drop(vecPtr)
+    }
+
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: SchemaConfig) {
+        __swift_bridge__$Vec_SchemaConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    }
+
+    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
+        let pointer = __swift_bridge__$Vec_SchemaConfig$pop(vecPtr)
+        if pointer == nil {
+            return nil
+        } else {
+            return (SchemaConfig(ptr: pointer!) as! Self)
+        }
+    }
+
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<SchemaConfigRef> {
+        let pointer = __swift_bridge__$Vec_SchemaConfig$get(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return SchemaConfigRef(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<SchemaConfigRefMut> {
+        let pointer = __swift_bridge__$Vec_SchemaConfig$get_mut(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return SchemaConfigRefMut(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<SchemaConfigRef> {
+        UnsafePointer<SchemaConfigRef>(OpaquePointer(__swift_bridge__$Vec_SchemaConfig$as_ptr(vecPtr)))
+    }
+
+    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+        __swift_bridge__$Vec_SchemaConfig$len(vecPtr)
+    }
+}
+
+
+public class ServerConfig: ServerConfigRefMut {
+    public var isOwned: Bool = true
+
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+
+    deinit {
+        if isOwned {
+            __swift_bridge__$ServerConfig$_free(ptr)
+        }
+    }
+}
+extension ServerConfig {
+    public convenience init<GenericIntoRustString: IntoRustString>(_ host: GenericIntoRustString, _ port: UInt16, _ workers: UInt, _ enable_request_id: Bool, _ max_body_size: Optional<UInt>, _ request_timeout: Optional<UInt64>, _ compression: Optional<CompressionConfig>, _ rate_limit: Optional<RateLimitConfig>, _ jwt_auth: Optional<JwtConfig>, _ api_key_auth: Optional<ApiKeyConfig>, _ static_files: RustVec<StaticFilesConfig>, _ graceful_shutdown: Bool, _ shutdown_timeout: UInt64, _ asyncapi: Optional<AsyncApiConfig>, _ openapi: Optional<OpenApiConfig>, _ jsonrpc: Optional<JsonRpcConfig>, _ grpc: Optional<GrpcConfig>, _ background_tasks: BackgroundTaskConfig, _ enable_http_trace: Bool) {
+        self.init(ptr: __swift_bridge__$ServerConfig$new({ let rustString = host.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), port, workers, enable_request_id, max_body_size.intoFfiRepr(), request_timeout.intoFfiRepr(), { if let val = compression { val.isOwned = false; return val.ptr } else { return nil } }(), { if let val = rate_limit { val.isOwned = false; return val.ptr } else { return nil } }(), { if let val = jwt_auth { val.isOwned = false; return val.ptr } else { return nil } }(), { if let val = api_key_auth { val.isOwned = false; return val.ptr } else { return nil } }(), { let val = static_files; val.isOwned = false; return val.ptr }(), graceful_shutdown, shutdown_timeout, { if let val = asyncapi { val.isOwned = false; return val.ptr } else { return nil } }(), { if let val = openapi { val.isOwned = false; return val.ptr } else { return nil } }(), { if let val = jsonrpc { val.isOwned = false; return val.ptr } else { return nil } }(), { if let val = grpc { val.isOwned = false; return val.ptr } else { return nil } }(), {background_tasks.isOwned = false; return background_tasks.ptr;}(), enable_http_trace))
+    }
+}
+public class ServerConfigRefMut: ServerConfigRef {
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+}
+public class ServerConfigRef {
+    public var ptr: UnsafeMutableRawPointer
+
+    public init(ptr: UnsafeMutableRawPointer) {
+        self.ptr = ptr
+    }
+}
+extension ServerConfigRef {
+    public func host() -> RustString {
+        RustString(ptr: __swift_bridge__$ServerConfig$host(ptr))
+    }
+
+    public func port() -> UInt16 {
+        __swift_bridge__$ServerConfig$port(ptr)
+    }
+
+    public func workers() -> UInt {
+        __swift_bridge__$ServerConfig$workers(ptr)
+    }
+
+    public func enableRequestId() -> Bool {
+        __swift_bridge__$ServerConfig$enable_request_id(ptr)
+    }
+
+    public func maxBodySize() -> Optional<UInt> {
+        __swift_bridge__$ServerConfig$max_body_size(ptr).intoSwiftRepr()
+    }
+
+    public func requestTimeout() -> Optional<UInt64> {
+        __swift_bridge__$ServerConfig$request_timeout(ptr).intoSwiftRepr()
+    }
+
+    public func compression() -> Optional<CompressionConfig> {
+        { let val = __swift_bridge__$ServerConfig$compression(ptr); if val != nil { return CompressionConfig(ptr: val!) } else { return nil } }()
+    }
+
+    public func rateLimit() -> Optional<RateLimitConfig> {
+        { let val = __swift_bridge__$ServerConfig$rate_limit(ptr); if val != nil { return RateLimitConfig(ptr: val!) } else { return nil } }()
+    }
+
+    public func jwtAuth() -> Optional<JwtConfig> {
+        { let val = __swift_bridge__$ServerConfig$jwt_auth(ptr); if val != nil { return JwtConfig(ptr: val!) } else { return nil } }()
+    }
+
+    public func apiKeyAuth() -> Optional<ApiKeyConfig> {
+        { let val = __swift_bridge__$ServerConfig$api_key_auth(ptr); if val != nil { return ApiKeyConfig(ptr: val!) } else { return nil } }()
+    }
+
+    public func staticFiles() -> RustVec<StaticFilesConfig> {
+        RustVec(ptr: __swift_bridge__$ServerConfig$static_files(ptr))
+    }
+
+    public func gracefulShutdown() -> Bool {
+        __swift_bridge__$ServerConfig$graceful_shutdown(ptr)
+    }
+
+    public func shutdownTimeout() -> UInt64 {
+        __swift_bridge__$ServerConfig$shutdown_timeout(ptr)
+    }
+
+    public func asyncapi() -> Optional<AsyncApiConfig> {
+        { let val = __swift_bridge__$ServerConfig$asyncapi(ptr); if val != nil { return AsyncApiConfig(ptr: val!) } else { return nil } }()
+    }
+
+    public func openapi() -> Optional<OpenApiConfig> {
+        { let val = __swift_bridge__$ServerConfig$openapi(ptr); if val != nil { return OpenApiConfig(ptr: val!) } else { return nil } }()
+    }
+
+    public func jsonrpc() -> Optional<JsonRpcConfig> {
+        { let val = __swift_bridge__$ServerConfig$jsonrpc(ptr); if val != nil { return JsonRpcConfig(ptr: val!) } else { return nil } }()
+    }
+
+    public func grpc() -> Optional<GrpcConfig> {
+        { let val = __swift_bridge__$ServerConfig$grpc(ptr); if val != nil { return GrpcConfig(ptr: val!) } else { return nil } }()
+    }
+
+    public func backgroundTasks() -> BackgroundTaskConfig {
+        BackgroundTaskConfig(ptr: __swift_bridge__$ServerConfig$background_tasks(ptr))
+    }
+
+    public func enableHttpTrace() -> Bool {
+        __swift_bridge__$ServerConfig$enable_http_trace(ptr)
+    }
+}
+extension ServerConfig: Vectorizable {
+    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+        __swift_bridge__$Vec_ServerConfig$new()
+    }
+
+    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+        __swift_bridge__$Vec_ServerConfig$drop(vecPtr)
+    }
+
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: ServerConfig) {
+        __swift_bridge__$Vec_ServerConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    }
+
+    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
+        let pointer = __swift_bridge__$Vec_ServerConfig$pop(vecPtr)
+        if pointer == nil {
+            return nil
+        } else {
+            return (ServerConfig(ptr: pointer!) as! Self)
+        }
+    }
+
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ServerConfigRef> {
+        let pointer = __swift_bridge__$Vec_ServerConfig$get(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return ServerConfigRef(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ServerConfigRefMut> {
+        let pointer = __swift_bridge__$Vec_ServerConfig$get_mut(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return ServerConfigRefMut(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ServerConfigRef> {
+        UnsafePointer<ServerConfigRef>(OpaquePointer(__swift_bridge__$Vec_ServerConfig$as_ptr(vecPtr)))
+    }
+
+    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+        __swift_bridge__$Vec_ServerConfig$len(vecPtr)
+    }
+}
+
+
+public class ServerInfo: ServerInfoRefMut {
+    public var isOwned: Bool = true
+
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+
+    deinit {
+        if isOwned {
+            __swift_bridge__$ServerInfo$_free(ptr)
+        }
+    }
+}
+public class ServerInfoRefMut: ServerInfoRef {
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+}
+public class ServerInfoRef {
+    public var ptr: UnsafeMutableRawPointer
+
+    public init(ptr: UnsafeMutableRawPointer) {
+        self.ptr = ptr
+    }
+}
+extension ServerInfoRef {
+    public func url() -> RustString {
+        RustString(ptr: __swift_bridge__$ServerInfo$url(ptr))
+    }
+
+    public func description() -> Optional<RustString> {
+        { let val = __swift_bridge__$ServerInfo$description(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    }
+}
+extension ServerInfo: Vectorizable {
+    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+        __swift_bridge__$Vec_ServerInfo$new()
+    }
+
+    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+        __swift_bridge__$Vec_ServerInfo$drop(vecPtr)
+    }
+
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: ServerInfo) {
+        __swift_bridge__$Vec_ServerInfo$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    }
+
+    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
+        let pointer = __swift_bridge__$Vec_ServerInfo$pop(vecPtr)
+        if pointer == nil {
+            return nil
+        } else {
+            return (ServerInfo(ptr: pointer!) as! Self)
+        }
+    }
+
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ServerInfoRef> {
+        let pointer = __swift_bridge__$Vec_ServerInfo$get(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return ServerInfoRef(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ServerInfoRefMut> {
+        let pointer = __swift_bridge__$Vec_ServerInfo$get_mut(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return ServerInfoRefMut(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ServerInfoRef> {
+        UnsafePointer<ServerInfoRef>(OpaquePointer(__swift_bridge__$Vec_ServerInfo$as_ptr(vecPtr)))
+    }
+
+    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+        __swift_bridge__$Vec_ServerInfo$len(vecPtr)
+    }
+}
+
+
+public class SseEvent: SseEventRefMut {
+    public var isOwned: Bool = true
+
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+
+    deinit {
+        if isOwned {
+            __swift_bridge__$SseEvent$_free(ptr)
+        }
+    }
+}
+public class SseEventRefMut: SseEventRef {
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+}
+public class SseEventRef {
+    public var ptr: UnsafeMutableRawPointer
+
+    public init(ptr: UnsafeMutableRawPointer) {
+        self.ptr = ptr
+    }
+}
+extension SseEventRef {
+    public func eventType() -> Optional<RustString> {
+        { let val = __swift_bridge__$SseEvent$event_type(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    }
+
+    public func data() -> RustString {
+        RustString(ptr: __swift_bridge__$SseEvent$data(ptr))
+    }
+
+    public func id() -> Optional<RustString> {
+        { let val = __swift_bridge__$SseEvent$id(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    }
+
+    public func retry() -> Optional<UInt64> {
+        __swift_bridge__$SseEvent$retry(ptr).intoSwiftRepr()
+    }
+}
+extension SseEvent: Vectorizable {
+    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+        __swift_bridge__$Vec_SseEvent$new()
+    }
+
+    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+        __swift_bridge__$Vec_SseEvent$drop(vecPtr)
+    }
+
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: SseEvent) {
+        __swift_bridge__$Vec_SseEvent$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    }
+
+    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
+        let pointer = __swift_bridge__$Vec_SseEvent$pop(vecPtr)
+        if pointer == nil {
+            return nil
+        } else {
+            return (SseEvent(ptr: pointer!) as! Self)
+        }
+    }
+
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<SseEventRef> {
+        let pointer = __swift_bridge__$Vec_SseEvent$get(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return SseEventRef(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<SseEventRefMut> {
+        let pointer = __swift_bridge__$Vec_SseEvent$get_mut(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return SseEventRefMut(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<SseEventRef> {
+        UnsafePointer<SseEventRef>(OpaquePointer(__swift_bridge__$Vec_SseEvent$as_ptr(vecPtr)))
+    }
+
+    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+        __swift_bridge__$Vec_SseEvent$len(vecPtr)
+    }
+}
+
+
+public class StaticFilesConfig: StaticFilesConfigRefMut {
+    public var isOwned: Bool = true
+
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+
+    deinit {
+        if isOwned {
+            __swift_bridge__$StaticFilesConfig$_free(ptr)
+        }
+    }
+}
+public class StaticFilesConfigRefMut: StaticFilesConfigRef {
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+}
+public class StaticFilesConfigRef {
+    public var ptr: UnsafeMutableRawPointer
+
+    public init(ptr: UnsafeMutableRawPointer) {
+        self.ptr = ptr
+    }
+}
+extension StaticFilesConfigRef {
+    public func directory() -> RustString {
+        RustString(ptr: __swift_bridge__$StaticFilesConfig$directory(ptr))
+    }
+
+    public func routePrefix() -> RustString {
+        RustString(ptr: __swift_bridge__$StaticFilesConfig$route_prefix(ptr))
+    }
+
+    public func indexFile() -> Bool {
+        __swift_bridge__$StaticFilesConfig$index_file(ptr)
+    }
+
+    public func cacheControl() -> Optional<RustString> {
+        { let val = __swift_bridge__$StaticFilesConfig$cache_control(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    }
+}
+extension StaticFilesConfig: Vectorizable {
+    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+        __swift_bridge__$Vec_StaticFilesConfig$new()
+    }
+
+    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+        __swift_bridge__$Vec_StaticFilesConfig$drop(vecPtr)
+    }
+
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: StaticFilesConfig) {
+        __swift_bridge__$Vec_StaticFilesConfig$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    }
+
+    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
+        let pointer = __swift_bridge__$Vec_StaticFilesConfig$pop(vecPtr)
+        if pointer == nil {
+            return nil
+        } else {
+            return (StaticFilesConfig(ptr: pointer!) as! Self)
+        }
+    }
+
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<StaticFilesConfigRef> {
+        let pointer = __swift_bridge__$Vec_StaticFilesConfig$get(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return StaticFilesConfigRef(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<StaticFilesConfigRefMut> {
+        let pointer = __swift_bridge__$Vec_StaticFilesConfig$get_mut(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return StaticFilesConfigRefMut(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<StaticFilesConfigRef> {
+        UnsafePointer<StaticFilesConfigRef>(OpaquePointer(__swift_bridge__$Vec_StaticFilesConfig$as_ptr(vecPtr)))
+    }
+
+    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+        __swift_bridge__$Vec_StaticFilesConfig$len(vecPtr)
+    }
+}
+
+
+public class TestingSseEvent: TestingSseEventRefMut {
+    public var isOwned: Bool = true
+
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+
+    deinit {
+        if isOwned {
+            __swift_bridge__$TestingSseEvent$_free(ptr)
+        }
+    }
+}
+public class TestingSseEventRefMut: TestingSseEventRef {
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+}
+public class TestingSseEventRef {
+    public var ptr: UnsafeMutableRawPointer
+
+    public init(ptr: UnsafeMutableRawPointer) {
+        self.ptr = ptr
+    }
+}
+extension TestingSseEventRef {
+    public func data() -> RustString {
+        RustString(ptr: __swift_bridge__$TestingSseEvent$data(ptr))
+    }
+}
+extension TestingSseEvent: Vectorizable {
+    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+        __swift_bridge__$Vec_TestingSseEvent$new()
+    }
+
+    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+        __swift_bridge__$Vec_TestingSseEvent$drop(vecPtr)
+    }
+
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: TestingSseEvent) {
+        __swift_bridge__$Vec_TestingSseEvent$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    }
+
+    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
+        let pointer = __swift_bridge__$Vec_TestingSseEvent$pop(vecPtr)
+        if pointer == nil {
+            return nil
+        } else {
+            return (TestingSseEvent(ptr: pointer!) as! Self)
+        }
+    }
+
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<TestingSseEventRef> {
+        let pointer = __swift_bridge__$Vec_TestingSseEvent$get(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return TestingSseEventRef(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<TestingSseEventRefMut> {
+        let pointer = __swift_bridge__$Vec_TestingSseEvent$get_mut(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return TestingSseEventRefMut(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<TestingSseEventRef> {
+        UnsafePointer<TestingSseEventRef>(OpaquePointer(__swift_bridge__$Vec_TestingSseEvent$as_ptr(vecPtr)))
+    }
+
+    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+        __swift_bridge__$Vec_TestingSseEvent$len(vecPtr)
+    }
+}
+
+
+public class UploadFile: UploadFileRefMut {
+    public var isOwned: Bool = true
+
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+
+    deinit {
+        if isOwned {
+            __swift_bridge__$UploadFile$_free(ptr)
+        }
+    }
+}
+public class UploadFileRefMut: UploadFileRef {
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+}
+public class UploadFileRef {
+    public var ptr: UnsafeMutableRawPointer
+
+    public init(ptr: UnsafeMutableRawPointer) {
+        self.ptr = ptr
+    }
+}
+extension UploadFileRef {
+    public func filename() -> RustString {
+        RustString(ptr: __swift_bridge__$UploadFile$filename(ptr))
+    }
+
+    public func contentType() -> Optional<RustString> {
+        { let val = __swift_bridge__$UploadFile$content_type(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    }
+
+    public func size() -> Optional<UInt> {
+        __swift_bridge__$UploadFile$size(ptr).intoSwiftRepr()
+    }
+
+    public func content() -> RustVec<UInt8> {
+        RustVec(ptr: __swift_bridge__$UploadFile$content(ptr))
+    }
+
+    public func contentEncoding() -> Optional<RustString> {
+        { let val = __swift_bridge__$UploadFile$content_encoding(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
+    }
+}
+extension UploadFile: Vectorizable {
+    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+        __swift_bridge__$Vec_UploadFile$new()
+    }
+
+    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+        __swift_bridge__$Vec_UploadFile$drop(vecPtr)
+    }
+
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: UploadFile) {
+        __swift_bridge__$Vec_UploadFile$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    }
+
+    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
+        let pointer = __swift_bridge__$Vec_UploadFile$pop(vecPtr)
+        if pointer == nil {
+            return nil
+        } else {
+            return (UploadFile(ptr: pointer!) as! Self)
+        }
+    }
+
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<UploadFileRef> {
+        let pointer = __swift_bridge__$Vec_UploadFile$get(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return UploadFileRef(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<UploadFileRefMut> {
+        let pointer = __swift_bridge__$Vec_UploadFile$get_mut(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return UploadFileRefMut(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<UploadFileRef> {
+        UnsafePointer<UploadFileRef>(OpaquePointer(__swift_bridge__$Vec_UploadFile$as_ptr(vecPtr)))
+    }
+
+    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+        __swift_bridge__$Vec_UploadFile$len(vecPtr)
+    }
+}
+
+
+public class ValidateRequest: ValidateRequestRefMut {
+    public var isOwned: Bool = true
+
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+
+    deinit {
+        if isOwned {
+            __swift_bridge__$ValidateRequest$_free(ptr)
+        }
+    }
+}
+public class ValidateRequestRefMut: ValidateRequestRef {
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+}
+public class ValidateRequestRef {
+    public var ptr: UnsafeMutableRawPointer
+
+    public init(ptr: UnsafeMutableRawPointer) {
+        self.ptr = ptr
+    }
+}
+extension ValidateRequestRef {
+    public func spec() -> RustString {
+        RustString(ptr: __swift_bridge__$ValidateRequest$spec(ptr))
+    }
+
+    public func channel() -> RustString {
+        RustString(ptr: __swift_bridge__$ValidateRequest$channel(ptr))
+    }
+
+    public func message() -> RustString {
+        RustString(ptr: __swift_bridge__$ValidateRequest$message(ptr))
+    }
+
+    public func payload() -> RustString {
+        RustString(ptr: __swift_bridge__$ValidateRequest$payload(ptr))
+    }
+}
+extension ValidateRequest: Vectorizable {
+    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+        __swift_bridge__$Vec_ValidateRequest$new()
+    }
+
+    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+        __swift_bridge__$Vec_ValidateRequest$drop(vecPtr)
+    }
+
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: ValidateRequest) {
+        __swift_bridge__$Vec_ValidateRequest$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    }
+
+    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
+        let pointer = __swift_bridge__$Vec_ValidateRequest$pop(vecPtr)
+        if pointer == nil {
+            return nil
+        } else {
+            return (ValidateRequest(ptr: pointer!) as! Self)
+        }
+    }
+
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ValidateRequestRef> {
+        let pointer = __swift_bridge__$Vec_ValidateRequest$get(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return ValidateRequestRef(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ValidateRequestRefMut> {
+        let pointer = __swift_bridge__$Vec_ValidateRequest$get_mut(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return ValidateRequestRefMut(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ValidateRequestRef> {
+        UnsafePointer<ValidateRequestRef>(OpaquePointer(__swift_bridge__$Vec_ValidateRequest$as_ptr(vecPtr)))
+    }
+
+    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+        __swift_bridge__$Vec_ValidateRequest$len(vecPtr)
+    }
+}
+
+
+public class ValidationResponse: ValidationResponseRefMut {
+    public var isOwned: Bool = true
+
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+
+    deinit {
+        if isOwned {
+            __swift_bridge__$ValidationResponse$_free(ptr)
+        }
+    }
+}
+public class ValidationResponseRefMut: ValidationResponseRef {
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+}
+public class ValidationResponseRef {
+    public var ptr: UnsafeMutableRawPointer
+
+    public init(ptr: UnsafeMutableRawPointer) {
+        self.ptr = ptr
+    }
+}
+extension ValidationResponseRef {
+    public func valid() -> Bool {
+        __swift_bridge__$ValidationResponse$valid(ptr)
+    }
+}
+extension ValidationResponse: Vectorizable {
+    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+        __swift_bridge__$Vec_ValidationResponse$new()
+    }
+
+    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+        __swift_bridge__$Vec_ValidationResponse$drop(vecPtr)
+    }
+
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: ValidationResponse) {
+        __swift_bridge__$Vec_ValidationResponse$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    }
+
+    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
+        let pointer = __swift_bridge__$Vec_ValidationResponse$pop(vecPtr)
+        if pointer == nil {
+            return nil
+        } else {
+            return (ValidationResponse(ptr: pointer!) as! Self)
+        }
+    }
+
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ValidationResponseRef> {
+        let pointer = __swift_bridge__$Vec_ValidationResponse$get(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return ValidationResponseRef(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<ValidationResponseRefMut> {
+        let pointer = __swift_bridge__$Vec_ValidationResponse$get_mut(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return ValidationResponseRefMut(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<ValidationResponseRef> {
+        UnsafePointer<ValidationResponseRef>(OpaquePointer(__swift_bridge__$Vec_ValidationResponse$as_ptr(vecPtr)))
+    }
+
+    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+        __swift_bridge__$Vec_ValidationResponse$len(vecPtr)
     }
 }
 
@@ -4747,6 +4689,86 @@ extension LifecycleHookPhase: Vectorizable {
 
     public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
         __swift_bridge__$Vec_LifecycleHookPhase$len(vecPtr)
+    }
+}
+
+
+public class Method: MethodRefMut {
+    public var isOwned: Bool = true
+
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+
+    deinit {
+        if isOwned {
+            __swift_bridge__$Method$_free(ptr)
+        }
+    }
+}
+public class MethodRefMut: MethodRef {
+    public override init(ptr: UnsafeMutableRawPointer) {
+        super.init(ptr: ptr)
+    }
+}
+public class MethodRef {
+    public var ptr: UnsafeMutableRawPointer
+
+    public init(ptr: UnsafeMutableRawPointer) {
+        self.ptr = ptr
+    }
+}
+extension MethodRef {
+    public func to_string() -> RustString {
+        RustString(ptr: __swift_bridge__$Method$to_string(ptr))
+    }
+}
+extension Method: Vectorizable {
+    public static func vecOfSelfNew() -> UnsafeMutableRawPointer {
+        __swift_bridge__$Vec_Method$new()
+    }
+
+    public static func vecOfSelfFree(vecPtr: UnsafeMutableRawPointer) {
+        __swift_bridge__$Vec_Method$drop(vecPtr)
+    }
+
+    public static func vecOfSelfPush(vecPtr: UnsafeMutableRawPointer, value: Method) {
+        __swift_bridge__$Vec_Method$push(vecPtr, {value.isOwned = false; return value.ptr;}())
+    }
+
+    public static func vecOfSelfPop(vecPtr: UnsafeMutableRawPointer) -> Optional<Self> {
+        let pointer = __swift_bridge__$Vec_Method$pop(vecPtr)
+        if pointer == nil {
+            return nil
+        } else {
+            return (Method(ptr: pointer!) as! Self)
+        }
+    }
+
+    public static func vecOfSelfGet(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<MethodRef> {
+        let pointer = __swift_bridge__$Vec_Method$get(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return MethodRef(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfGetMut(vecPtr: UnsafeMutableRawPointer, index: UInt) -> Optional<MethodRefMut> {
+        let pointer = __swift_bridge__$Vec_Method$get_mut(vecPtr, index)
+        if pointer == nil {
+            return nil
+        } else {
+            return MethodRefMut(ptr: pointer!)
+        }
+    }
+
+    public static func vecOfSelfAsPtr(vecPtr: UnsafeMutableRawPointer) -> UnsafePointer<MethodRef> {
+        UnsafePointer<MethodRef>(OpaquePointer(__swift_bridge__$Vec_Method$as_ptr(vecPtr)))
+    }
+
+    public static func vecOfSelfLen(vecPtr: UnsafeMutableRawPointer) -> UInt {
+        __swift_bridge__$Vec_Method$len(vecPtr)
     }
 }
 
@@ -4984,6 +5006,3 @@ extension App: Vectorizable {
         __swift_bridge__$Vec_App$len(vecPtr)
     }
 }
-
-
-

@@ -423,6 +423,7 @@ mod tests {
             name: name.to_string(),
             value: value.to_string(),
             line,
+            suggested_keyword: None,
         }
     }
 

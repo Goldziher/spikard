@@ -69,6 +69,11 @@ pub struct Claims {
 /// Returns an error response when the Authorization header is missing, malformed,
 /// the token is invalid, or configuration is incorrect.
 #[cfg(not(tarpaulin_include))]
+// ~keep `Result<Response, Response>` is axum's middleware contract, not a choice: both
+// variants must be a `Response` for `from_fn`/`from_fn_with_state` to accept the handler,
+// so the `Err` variant cannot be boxed without breaking the signature. Matches the
+// existing allows on the validation middleware in this crate.
+#[allow(clippy::result_large_err)]
 pub async fn jwt_auth_middleware(
     config: JwtConfig,
     headers: HeaderMap,
@@ -188,6 +193,7 @@ fn parse_algorithm(alg: &str) -> Result<Algorithm, String> {
 /// # Errors
 /// Returns an error response when the API key is missing or invalid.
 #[cfg(not(tarpaulin_include))]
+#[allow(clippy::result_large_err)]
 pub async fn api_key_auth_middleware(
     config: ApiKeyConfig,
     headers: HeaderMap,
@@ -235,6 +241,7 @@ pub async fn api_key_auth_middleware(
 /// request, or when the authenticated caller does not satisfy the configured
 /// role/scope/permission requirement.
 #[cfg(not(tarpaulin_include))]
+#[allow(clippy::result_large_err)]
 pub async fn authorization_middleware(
     config: crate::AuthorizationConfig,
     request: Request<Body>,

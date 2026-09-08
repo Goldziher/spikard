@@ -79,8 +79,16 @@ impl Response {
 }
 
 impl Default for Response {
+    // ~keep Spelled out as a struct literal rather than delegating to `Self::new(None)` so the
+    // codegen can read the concrete per-field defaults. A delegating body is opaque to it, and
+    // every binding would then emit its own target-language zero underneath a doc comment
+    // quoting this Rust default -- `status_code` would document 200 and generate 0.
     fn default() -> Self {
-        Self::new(None)
+        Self {
+            content: None,
+            status_code: 200,
+            headers: HashMap::new(),
+        }
     }
 }
 

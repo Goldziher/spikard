@@ -66,6 +66,27 @@ pub struct ProblemDetails {
     pub extensions: HashMap<String, serde_json::Value>,
 }
 
+// ~keep Load-bearing for codegen, not just ergonomics. `extensions` is a
+// `HashMap<String, serde_json::Value>`, which the PHP backend cannot express as a
+// `#[php(constructor)]` parameter, so it reads the field's initial value out of this impl;
+// without it `alef generate` fails for php outright. Written as a literal (not
+// `#[derive(Default)]`, and not delegating to a constructor) because the generator resolves
+// only concrete per-field values -- and because a derived default would claim `status = 0`,
+// which is not a valid HTTP status. `about:blank` is the RFC 9457 default for an absent
+// `type`; every binding that *can* represent `extensions` still exposes it.
+impl Default for ProblemDetails {
+    fn default() -> Self {
+        Self {
+            type_uri: "about:blank".to_string(),
+            title: String::new(),
+            status: 500,
+            detail: None,
+            instance: None,
+            extensions: HashMap::new(),
+        }
+    }
+}
+
 impl ProblemDetails {
     /// Standard type URI for validation errors (422)
     pub const TYPE_VALIDATION_ERROR: &'static str = "https://spikard.dev/errors/validation-error";

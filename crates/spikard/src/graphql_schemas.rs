@@ -8,6 +8,14 @@
 //! Do not extend these schemas with product behavior — they are test fixtures, not
 //! part of Spikard's business logic surface.
 
+// ~keep clippy 1.98 split trait-impl resolvers out of `unused_async` into the separate
+// `unused_async_trait_impl` lint, which the `#[expect(clippy::unused_async)]` below does not
+// cover. Naming the new lint directly would break the pinned 1.95 toolchain (`unknown_lints`),
+// so that is allowed first. async-graphql requires every field resolver to be `async` whether or
+// not its body awaits, so there is nothing to restructure here.
+#![allow(unknown_lints)]
+#![allow(clippy::unused_async_trait_impl)]
+
 use async_graphql::{Object, SimpleObject};
 
 /// A user record served by the built-in test schemas.

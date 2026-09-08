@@ -52,10 +52,10 @@ prost-reflect = "0.16"         # Protocol Buffers reflection
 prost-types = "0.14"           # Protocol Buffers well-known types
 protox = "0.9"                 # Protocol Buffers compilation
 
-rmcp = { version = "3.1.2", features = ["client", "transport-io"], optional = true }
-scythe-core = { version = "0.13", features = ["serde"] }
+rmcp = { version = "3.2.0", features = ["client", "transport-io"], optional = true }
+scythe-core = { version = "0.18", features = ["serde"] }
 serde.workspace = true
-serde-saphyr = "1.0.1"
+serde-saphyr = "1.2.0"
 serde_json.workspace = true
 spikard.workspace = true
 spikard-codegen = { workspace = true }

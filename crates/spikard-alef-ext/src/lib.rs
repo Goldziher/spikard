@@ -20,7 +20,6 @@
 pub mod config;
 pub mod emit;
 pub mod ir;
-mod snippets;
 
 use alef::core::backend::GeneratedFile;
 use alef::core::config::Language;
@@ -203,18 +202,6 @@ impl Extension for HttpExtension {
             _ => Ok(Vec::new()),
         }
     }
-
-    fn render_e2e_snippet(
-        &self,
-        fixture: &alef::e2e::fixture::Fixture,
-        e2e_config: &alef::core::config::E2eConfig,
-        config: &alef::core::config::ResolvedCrateConfig,
-        language: &str,
-        type_defs: &[alef::core::ir::TypeDef],
-        enums: &[alef::core::ir::EnumDef],
-    ) -> Result<Option<String>> {
-        snippets::render(fixture, language, e2e_config, config, type_defs, enums)
-    }
 }
 
 /// Raw lines appended to `packages/python/spikard/__init__.py` to expose the ergonomic surface.
@@ -339,12 +326,22 @@ mod tests {
             (
                 "magnus/app.rb",
                 include_str!("templates/magnus/app.rb.jinja"),
-                &["authorization", "lifecycle_hooks", "openrpc_spec", "ROUTE_MIDDLEWARE_KEYS"],
+                &[
+                    "authorization",
+                    "lifecycle_hooks",
+                    "openrpc_spec",
+                    "ROUTE_MIDDLEWARE_KEYS",
+                ],
             ),
             (
                 "go/app.go",
                 include_str!("templates/go/app.go.jinja"),
-                &["WithAuthorization", "WithLifecycleHooks", "WithOpenrpcSpec", "RouteOption"],
+                &[
+                    "WithAuthorization",
+                    "WithLifecycleHooks",
+                    "WithOpenrpcSpec",
+                    "RouteOption",
+                ],
             ),
             (
                 "php/app.php",

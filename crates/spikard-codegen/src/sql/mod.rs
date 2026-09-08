@@ -173,51 +173,53 @@ mod orchestrator_tests {
     }
 
     fn get_user() -> AnalyzedQuery {
-        AnalyzedQuery {
-            name: "GetUser".to_string(),
-            command: QueryCommand::One,
-            sql: "SELECT id FROM users WHERE id = $1".into(),
-            columns: vec![AnalyzedColumn {
+        AnalyzedQuery::build(|q| {
+            q.name = "GetUser".to_string();
+            q.command = QueryCommand::One;
+            q.sql = "SELECT id FROM users WHERE id = $1".into();
+            q.columns = vec![AnalyzedColumn {
                 name: "id".into(),
                 neutral_type: "int64".into(),
                 nullable: false,
                 ..Default::default()
-            }],
-            params: vec![AnalyzedParam {
+            }];
+            q.params = vec![AnalyzedParam {
                 name: "id".into(),
                 neutral_type: "int64".into(),
                 nullable: false,
                 position: 1,
-            }],
-            deprecated: None,
-            source_table: Some("users".into()),
-            composites: vec![],
-            enums: vec![],
-            optional_params: vec![],
-            group_by: None,
-            custom: vec![CustomAnnotation {
+                ..Default::default()
+            }];
+            q.deprecated = None;
+            q.source_table = Some("users".into());
+            q.composites = vec![];
+            q.enums = vec![];
+            q.optional_params = vec![];
+            q.group_by = None;
+            q.custom = vec![CustomAnnotation {
                 name: "http".into(),
                 value: "GET /users/{id}".into(),
                 line: 1,
-            }],
-        }
+                suggested_keyword: None,
+            }];
+        })
     }
 
     fn no_http() -> AnalyzedQuery {
-        AnalyzedQuery {
-            name: "InternalQuery".to_string(),
-            command: QueryCommand::One,
-            sql: "SELECT 1".into(),
-            columns: vec![],
-            params: vec![],
-            deprecated: None,
-            source_table: None,
-            composites: vec![],
-            enums: vec![],
-            optional_params: vec![],
-            group_by: None,
-            custom: vec![],
-        }
+        AnalyzedQuery::build(|q| {
+            q.name = "InternalQuery".to_string();
+            q.command = QueryCommand::One;
+            q.sql = "SELECT 1".into();
+            q.columns = vec![];
+            q.params = vec![];
+            q.deprecated = None;
+            q.source_table = None;
+            q.composites = vec![];
+            q.enums = vec![];
+            q.optional_params = vec![];
+            q.group_by = None;
+            q.custom = vec![];
+        })
     }
 
     #[test]

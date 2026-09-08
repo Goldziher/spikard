@@ -158,7 +158,7 @@ pub fn render_app_harness(
         "app._app".to_string()
     } else {
         let module_leaf = imports[0].rsplit('.').next().unwrap_or(&imports[0]).replace('-', "_");
-        format!("{}._{}", &imports[0], module_leaf)
+        format!("{}._{}", imports[0], module_leaf)
     };
     let method_enum_import = route_builder_import.clone();
 
@@ -199,7 +199,7 @@ fn render_env_setup_block(e2e_config: &E2eConfig) -> String {
     keys.sort();
     let entries = keys
         .iter()
-        .map(|k| format!("    {:?}: {:?},", k, &e2e_config.env[*k]))
+        .map(|k| format!("    {:?}: {:?},", k, e2e_config.env[*k]))
         .collect::<Vec<_>>()
         .join("\n");
     format!(

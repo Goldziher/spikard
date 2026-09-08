@@ -1,8 +1,8 @@
 PATH
   remote: .
   specs:
-    spikard (0.17.0.pre.rc.11)
-      rb_sys (>= 0.9, < 0.9.128)
+    spikard (0.17.0)
+      rb_sys (>= 0.9.130, < 0.10)
       sorbet-runtime (~> 0.5)
 
 GEM
@@ -63,7 +63,7 @@ GEM
     rb-fsevent (0.11.2)
     rb-inotify (0.11.1)
       ffi (~> 1.0)
-    rb_sys (0.9.127)
+    rb_sys (0.9.130)
       rake-compiler-dock (= 1.12.0)
     rbs (3.10.4)
       logger
@@ -147,7 +147,7 @@ PLATFORMS
 
 DEPENDENCIES
   rake-compiler (~> 1.2)
-  rb_sys (>= 0.9, < 0.9.128)
+  rb_sys (>= 0.9.130, < 0.10)
   rspec (~> 3.0)
   rubocop (~> 1.0)
   rubocop-performance (~> 1.0)
@@ -189,7 +189,7 @@ CHECKSUMS
   rake-compiler-dock (1.12.0) sha256=f13205c2738f3d2053afcd03491a9e4541b22a59a0bfc53fc8bc883bd8188023
   rb-fsevent (0.11.2) sha256=43900b972e7301d6570f64b850a5aa67833ee7d87b458ee92805d56b7318aefe
   rb-inotify (0.11.1) sha256=a0a700441239b0ff18eb65e3866236cd78613d6b9f78fea1f9ac47a85e47be6e
-  rb_sys (0.9.127) sha256=e9f90df3bb0577472d26d96127d5b5774b98f44de881e7d36aeefd28d6337847
+  rb_sys (0.9.130) sha256=7d486d99c1da02635515deaf9860fc5aea90bb4ab2589b2deec7fdc7d3548615
   rbs (3.10.4) sha256=b17d7c4be4bb31a11a3b529830f0aa206a807ca42f2e7921a3027dfc6b7e5ce8
   regexp_parser (2.12.0) sha256=35a916a1d63190ab5c9009457136ae5f3c0c7512d60291d0d1378ba18ce08ebb
   rspec (3.13.2) sha256=206284a08ad798e61f86d7ca3e376718d52c0bc944626b2349266f239f820587
@@ -204,7 +204,7 @@ CHECKSUMS
   ruby-progressbar (1.13.0) sha256=80fc9c47a9b640d6834e0dc7b3c94c9df37f08cb072b7761e4a71e22cff29b33
   securerandom (0.4.1) sha256=cc5193d414a4341b6e225f0cb4446aceca8e50d5e1888743fac16987638ea0b1
   sorbet-runtime (0.6.13420) sha256=5ecbb843cdc17a55c2a35b98c9bd090736c897e53735f888590b361dd0cad492
-  spikard (0.17.0.pre.rc.11)
+  spikard (0.17.0)
   steep (1.10.0) sha256=1b295b55f9aaff1b8d3ee42453ee55bc2a1078fda0268f288edb2dc014f4d7d1
   strscan (3.1.8) sha256=aae2db611a225559f21ffbb71765c9a4e60fd262534a9ea84f4f11c7f32f679e
   terminal-table (4.0.0) sha256=f504793203f8251b2ea7c7068333053f0beeea26093ec9962e62ea79f94301d2

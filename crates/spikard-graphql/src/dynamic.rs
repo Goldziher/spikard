@@ -334,7 +334,7 @@ fn json_to_field_value<'a>(node: Option<&JsonValue>) -> async_graphql::Result<Op
         Some(JsonValue::Array(items)) => {
             let mut values = Vec::with_capacity(items.len());
             for item in items {
-                values.push(json_to_field_value(Some(item))?.map_or(FieldValue::NULL, |value| value));
+                values.push(json_to_field_value(Some(item))?.unwrap_or(FieldValue::NULL));
             }
             Ok(Some(FieldValue::list(values)))
         }

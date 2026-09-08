@@ -7,6 +7,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-09-07
+
+### Changed
+
+- **Upgraded the code generator from alef 0.60.2 to 0.85.5**, and regenerated every binding and
+  E2E suite. The previous pin was never released — no `v0.60.2` tag or GitHub release ever
+  existed — so `install-alef` returned 404 in every CI workflow and in the root `prepare` job of
+  the publish workflow, and both of its source-build fallbacks failed too.
+- The `alef` dependency in `spikard-alef`, `spikard-alef-ext` and `spikard-e2e-http` now resolves
+  from crates.io instead of a local filesystem path. That path pointed outside the repository, so
+  it resolved on exactly one machine and failed `cargo metadata` for the entire workspace
+  everywhere else — which is why every Rust CI job was red.
+- `alef.toml` migrated to the 0.85 schema. alef 0.61.0 made unknown keys fatal and 0.82.0 removed
+  `[crates.build_commands.*]`, `[crates.lint.*]` and `[crates.update.*]` outright, so 31 tables
+  and 5 dead keys are gone. There is no replacement key — alef's built-in defaults now run.
+- `mix dialyzer` moved from `[crates.lint.elixir]` into a new `elixir:typecheck` task. It was the
+  only check in the removed tables with no other home; the rest are already covered by poly, the
+  existing per-language tasks, or the CI actions.
+- `[crates.e2e.snippets]` removed. Its output directory `docs/snippets-generated` has never
+  existed and nothing consumes it, but alef now hard-fails generation on missing snippet
+  coverage — 6391 gaps — so the unused config blocked every regeneration.
+- `WebSocketMessage` now crosses the Node boundary as a tagged object carrying its payload,
+  rather than a `string_enum` that silently dropped it.
+
+### Fixed
+
+- **The publish workflow did not serialize a `workflow_dispatch` against the matching `release`
+  event.** A dispatch keys the concurrency group on the bare tag while a release keys it on the
+  fully-qualified `refs/tags/…`, so for 0.17.0-rc.11 both ran 25 seconds apart and fought over
+  the same Maven coordinates and the same GitHub release assets, each failing jobs the other had
+  already claimed. Both event types now normalize onto one key.
+- **The release gates probed the wrong npm package.** The WASM binding publishes as
+  `@spikard/node-wasm`, but the publish workflow's exists-check and the published-package tests
+  probed `@spikard/wasm` — an unrelated package stuck at 0.9.1. The exists-gate was therefore
+  always false and the post-release check always reported the package missing.
+- `alef.toml`'s `alef_version` and the `alef` dependency in the three Cargo manifests had nothing
+  keeping them in step, and had drifted twice. A new `alef:check-pin` task asserts they agree and
+  runs as part of `alef:verify`.
+- `spikard-http.toml` drives extension codegen but fed no hash and appeared in no workflow
+  `paths:` filter, so editing it produced a silently stale tree. It now triggers CI.
+- `Response::default` and `ProblemDetails` gained readable concrete defaults and
+  `GraphQLSubscriptionSnapshot` gained `Default`. The generator resolves only literal per-field
+  values, and the PHP backend reads fields it cannot express as constructor parameters out of a
+  `Default` impl; without these, generation failed outright.
+- The wasm binding failed to compile once the generator began emitting delegating `Default`/`From`
+  bodies for config types: those bodies were qualified with the *source* crate path, which the
+  wasm crate does not depend on, giving `E0433` at every site. Fixed in alef 0.85.3 by routing
+  them through the same `core_crate_override` remap the rest of the backend already used.
+- The Ruby gemspec pinned `rb_sys < 0.9.128` against a generated Gemfile requiring `>= 0.9.130`,
+  leaving the two constraints with no intersection. The cap was a stale generated value.
+- Bumped `h2` to 0.4.19 for RUSTSEC-2026-0258 (unbounded empty DATA frames), and dropped three
+  advisory exceptions that no longer match anything in the tree (two for pyo3 0.28.3 — pyo3 is
+  now 0.29 — and one for `paste`).
+- Upgraded workspace dependencies: `brotli` 8.0 → 9.0, `jsonschema` 0.49 → 0.55, `rmcp` 3.1.2 →
+  3.2.0, `scythe-core` 0.13 → 0.18, `serde-saphyr` 1.0.1 → 1.2.0, `tungstenite` 0.29 → 0.30,
+  `uuid` 1.24 → 1.26 and `tower-http` 0.7.0 → 0.7.1.
+- Removed 571 lines of dead FFI: `crates/spikard-ffi/src/lifecycle_ffi.rs` and `test_client_ffi.rs`
+  were orphaned in June when `a923b20af` dropped their `include!` lines. Neither file had been
+  compiled since — 14 `extern "C"` symbols that no binding could have linked against — and nothing
+  in the repository referenced them. `examples/test_config_deser.rs` went with them: a scratch file
+  whose `println!` calls tripped the newly generated `print_stdout = "deny"` lint.
+- Deleted `packages/swift/rust/Cargo.lock`. That crate is a member of the root workspace, so cargo
+  resolved it from the root lock and never read this one; it was stale cruft that only looked
+  authoritative.
+
 ## [0.17.0-rc.11] - 2026-08-06
 
 ### Fixed

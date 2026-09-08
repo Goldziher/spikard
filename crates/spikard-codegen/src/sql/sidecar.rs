@@ -143,11 +143,11 @@ mod tests {
     use scythe_core::parser::QueryCommand;
 
     fn fake_query() -> AnalyzedQuery {
-        AnalyzedQuery {
-            name: "GetUser".to_string(),
-            command: QueryCommand::One,
-            sql: "SELECT id, name FROM users WHERE id = $1".to_string(),
-            columns: vec![
+        AnalyzedQuery::build(|q| {
+            q.name = "GetUser".to_string();
+            q.command = QueryCommand::One;
+            q.sql = "SELECT id, name FROM users WHERE id = $1".to_string();
+            q.columns = vec![
                 AnalyzedColumn {
                     name: "id".to_string(),
                     neutral_type: "int32".to_string(),
@@ -160,21 +160,22 @@ mod tests {
                     nullable: true,
                     ..Default::default()
                 },
-            ],
-            params: vec![AnalyzedParam {
+            ];
+            q.params = vec![AnalyzedParam {
                 name: "id".to_string(),
                 neutral_type: "int32".to_string(),
                 nullable: false,
                 position: 1,
-            }],
-            deprecated: None,
-            source_table: Some("users".to_string()),
-            composites: vec![],
-            enums: vec![],
-            optional_params: vec![],
-            group_by: None,
-            custom: vec![],
-        }
+                ..Default::default()
+            }];
+            q.deprecated = None;
+            q.source_table = Some("users".to_string());
+            q.composites = vec![];
+            q.enums = vec![];
+            q.optional_params = vec![];
+            q.group_by = None;
+            q.custom = vec![];
+        })
     }
 
     fn py_lang_type(neutral: &str, nullable: bool) -> String {

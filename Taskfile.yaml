@@ -216,10 +216,37 @@ tasks:
           fi
         ignore_error: true
 
+  alef:check-pin:
+    desc: "Check alef.toml's alef_version matches the alef dependency in every Cargo manifest"
+    # ~keep Two independent sources of the alef version with nothing tying them together.
+    # They have drifted twice: v0.60.2 pinned an alef release that was never cut (404ing
+    # every CI job), and the same commit swapped the Cargo dep to a local filesystem path
+    # that broke `cargo metadata` for the whole workspace on any clean checkout.
+    cmds:
+      - |
+        set -e
+        pin=$(sed -n '/^\[workspace\]/,/^\[/{ s/^alef_version *= *"\(.*\)"/\1/p; }' alef.toml | head -1)
+        if [ -z "$pin" ]; then echo "alef:check-pin: no alef_version in alef.toml" >&2; exit 1; fi
+        rc=0
+        for m in crates/spikard-alef/Cargo.toml crates/spikard-alef-ext/Cargo.toml crates/spikard-e2e-http/Cargo.toml; do
+          dep=$(sed -n 's/^alef = "\(.*\)"$/\1/p' "$m" | head -1)
+          if [ -z "$dep" ]; then
+            echo "alef:check-pin: $m does not declare a plain versioned \`alef = \"<version>\"\` dependency" >&2
+            echo "  found: $(grep -n '^alef =' "$m" || echo '<no alef dependency>')" >&2
+            rc=1
+          elif [ "$dep" != "$pin" ]; then
+            echo "alef:check-pin: $m has alef = \"$dep\" but alef.toml pins $pin" >&2
+            rc=1
+          fi
+        done
+        [ $rc -eq 0 ] && echo "alef:check-pin: all manifests agree on alef $pin"
+        exit $rc
+
   alef:verify:
     desc: "Check Alef-generated files are up to date"
+    deps: [alef:check-pin]
     cmds:
-      - cargo run -p spikard-alef --release -- verify --exit-code
+      - cargo run -p spikard-alef --release -- verify
 
   alef:build:
     desc: "Build all language bindings"
@@ -389,6 +416,16 @@ tasks:
     desc: "Package built artifacts into distributable archives"
     cmds:
       - alef publish package -o dist/
+
+  elixir:typecheck:
+    desc: "Typecheck Elixir binding with dialyzer"
+    # ~keep Salvaged from `[crates.lint.elixir] typecheck` in alef.toml, which alef 0.82.0
+    # removed with no replacement config key. Every other check those tables carried is
+    # covered elsewhere (poly, per-language Taskfile tasks, or the CI actions); dialyzer
+    # was the only one with no other home.
+    cmds:
+      - mix dialyzer
+    dir: packages/elixir
 
   go:lint:
     desc: "Lint Go binding with golangci-lint"

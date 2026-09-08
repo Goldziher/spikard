@@ -117,12 +117,12 @@ jobs:
             MISSING+=("GoProxy")
           fi
 
-          # npm (@spikard/wasm)
-          if curl -s "https://registry.npmjs.org/@spikard/wasm/$VERSION" | jq -e '.version' > /dev/null 2>&1; then
-            echo "✓ npm: @spikard/wasm $VERSION found"
+          # npm (@spikard/node-wasm)
+          if curl -s "https://registry.npmjs.org/@spikard/node-wasm/$VERSION" | jq -e '.version' > /dev/null 2>&1; then
+            echo "✓ npm: @spikard/node-wasm $VERSION found"
           else
-            echo "✗ npm: @spikard/wasm $VERSION not found"
-            MISSING+=("npm:@spikard/wasm")
+            echo "✗ npm: @spikard/node-wasm $VERSION not found"
+            MISSING+=("npm:@spikard/node-wasm")
           fi
 
           # Maven Central (java: dev.spikard:spikard, kotlin: dev.spikard:spikard-kotlin)
@@ -876,7 +876,7 @@ jobs:
           - [crates.io: spikard](https://crates.io/crates/spikard/$VERSION)
           - [Hex.pm: spikard](https://hex.pm/packages/spikard)
           - [Go proxy: github.com/Goldziher/spikard](https://pkg.go.dev/github.com/Goldziher/spikard@v$VERSION)
-          - [npm: @spikard/wasm](https://www.npmjs.com/package/@spikard/wasm/v/$VERSION)
+          - [npm: @spikard/node-wasm](https://www.npmjs.com/package/@spikard/node-wasm/v/$VERSION)
           - [Maven Central: dev.spikard:spikard](https://central.sonatype.com/artifact/dev.spikard/spikard/$VERSION)
           - [Maven Central: dev.spikard:spikard-kotlin](https://central.sonatype.com/artifact/dev.spikard/spikard-kotlin/$VERSION)
           - [NuGet: Spikard](https://www.nuget.org/packages/Spikard/$VERSION)

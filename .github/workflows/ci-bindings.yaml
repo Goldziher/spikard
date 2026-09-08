@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - "alef.toml"
+      - "spikard-http.toml"
       - "crates/**"
       - "packages/**"
       - "Cargo.toml"
@@ -17,6 +18,7 @@ on:
     branches: [main]
     paths:
       - "alef.toml"
+      - "spikard-http.toml"
       - "crates/**"
       - "packages/**"
       - "Cargo.toml"

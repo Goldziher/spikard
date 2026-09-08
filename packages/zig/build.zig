@@ -31,11 +31,12 @@ pub fn build(b: *std.Build) void {
     module.linkSystemLibrary("spikard_ffi", .{});
 
     const test_module = b.createModule(.{
-        .root_source_file = b.path("src/spikard.zig"),
+        .root_source_file = b.path("test/spikard_test.zig"),
         .target = target,
         .optimize = optimize,
         .link_libc = true,
     });
+    test_module.addImport("spikard", module);
     test_module.addLibraryPath(.{ .cwd_relative = ffi_path });
     test_module.addIncludePath(.{ .cwd_relative = ffi_include });
     test_module.linkSystemLibrary("spikard_ffi", .{});

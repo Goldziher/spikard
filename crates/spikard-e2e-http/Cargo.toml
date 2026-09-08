@@ -1,6 +1,6 @@
 [package]
 name = "spikard-e2e-http"
-version = "0.17.0-rc.11"
+version.workspace = true
 edition = "2024"
 authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
 license = "MIT"
@@ -14,7 +14,7 @@ publish = false
 ignored = ["serde"]
 
 [dependencies]
-alef = { path = "../../../xberg-io/alef" }
+alef = "0.85.6"
 anyhow = "1"
 heck = "0.5"
 minijinja = "2"
