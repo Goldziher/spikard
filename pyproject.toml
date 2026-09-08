@@ -26,7 +26,6 @@ doc = ["zensical"]
 packages = []
 
 [tool.uv]
-sources.uv-bump = { git = "https://github.com/Goldziher/uv-bump" }
 workspace.members = ["packages/python"]
 cache-keys = [
   { file = "pyproject.toml" },
