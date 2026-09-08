@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.85.6"
+alef_version = "0.85.7"
 languages = [
   "python",
   "node",
@@ -39,12 +39,6 @@ user_owned = [
   # alef writes it only when absent, so it could never carry a hash line and was reported
   # stale on every run forever.
   "rust-toolchain.toml",
-  # `packages/dart/rust` is in the root workspace's `exclude` list, so it cannot inherit
-  # anything from `[workspace.package]`. alef's dart scaffolder emits `version.workspace = true`
-  # regardless, which makes cargo fail to parse the manifest outright ("error inheriting
-  # `version` from workspace root manifest") and takes flutter_rust_bridge_codegen down with it.
-  # Held here until the generator learns to check workspace membership.
-  "packages/dart/rust/Cargo.toml",
   # Live files alef emits but does not record in its managed surface, so its orphan check
   # reports them and `has_orphan_files` gates `alef verify`. They are NOT stale: each is
   # referenced by a suite that would stop compiling without it -- App.java by four java
