@@ -7,11 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.17.0] - 2026-09-07
+## [0.17.0] - 2026-09-08
 
 ### Changed
 
-- **Upgraded the code generator from alef 0.60.2 to 0.85.5**, and regenerated every binding and
+- **Upgraded the code generator from alef 0.60.2 to 0.85.6**, and regenerated every binding and
   E2E suite. The previous pin was never released — no `v0.60.2` tag or GitHub release ever
   existed — so `install-alef` returned 404 in every CI workflow and in the root `prepare` job of
   the publish workflow, and both of its source-build fallbacks failed too.
@@ -33,6 +33,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The commit gate lint-checked with a different Rust than the project pins.** poly's
+  whole-workspace hooks run inside a snapshot of the git index, and `rust-toolchain.toml` is
+  gitignored so each CI job can pin its own toolchain — a Windows publish leg on nightly, an MSRV
+  matrix. The pin was therefore absent from the snapshot, rustup fell back to the host default,
+  and the gate denied lints that do not exist at the pinned 1.95, rejecting code CI accepts. Since
+  the offending files were `alef:hash:`-stamped generated output, each one cost a full alef
+  release to clear. Fixed upstream in alef 0.85.6, which now emits
+  `[hooks] snapshot_include = ["rust-toolchain.toml"]` into `poly.toml`.
+- **`uv-bump` could not be installed, taking down every CI job that sets up Python.** `uv.lock`
+  pinned it to a commit in a fork repository that has since been deleted — `git ls-remote` and the
+  GitHub API both 404 — so `Setup Python` failed in CI Validate, all four CI Rust jobs and the E2E
+  legs before any project code ran. It is a dev dependency invoked by no task, script or workflow;
+  the `[tool.uv]` git source override is dropped so it resolves from PyPI.
+- **Six `useless_borrows_in_formatting` errors in the generated Swift bridge crate.** The alef
+  getter template emitted `format!("{:?}", &self.0.field)`; `format!` already takes its arguments
+  by reference. Fixed in the generator (alef 0.85.6) rather than the hash-stamped output.
 - **The publish workflow did not serialize a `workflow_dispatch` against the matching `release`
   event.** A dispatch keys the concurrency group on the bare tag while a release keys it on the
   fully-qualified `refs/tags/…`, so for 0.17.0-rc.11 both ran 25 seconds apart and fought over
