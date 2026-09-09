@@ -154,13 +154,18 @@ public class HarnessMain {
                 }
             }
 
-            // Configure the app to bind to the effective host and port
-            app.config(effectiveHost, effectivePort);
+            // No app.config(...) call: `App.config` is listed in `[crates.exclude] methods`, so
+            // the java binding exposes no configurator, and the port is carried by the
+            // SPIKARD_SERVER_PORT environment variable the spawner already set -- the Rust core
+            // reads it in `spikard-http/src/server/mod.rs`. This mirrors the python harness,
+            // which skips its own config call for exactly the same reason. Calling a two-arg
+            // `config(host, port)` here bound the suite to a convenience only a stale, frozen
+            // App.java ever had. ~keep
 
             // Optionally emit the harness port for debugging, but the test runner
             // does not rely on this message due to Java process-pipe buffering.
             // Instead, tests use TCP polling against the configured default port.
-            System.out.println("HARNESS_PORT=" + effectivePort);
+            System.out.println("HARNESS_HOST=" + effectiveHost + " HARNESS_PORT=" + effectivePort);
             System.out.flush();
 
             // Run the app (blocks indefinitely)

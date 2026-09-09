@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.1] - 2026-09-09
+
+Upgrades the code generator from alef 0.85.7 to 0.85.11 and regenerates every binding, E2E suite
+and test app. The Java and C# bindings change substantively; the rest is version stamping.
+
+### Fixed
+
+- **The Java binding never declared the application surface.** `NativeLib.java` listed no
+  `spikard_app_*` symbol at all — not `spikard_app_new`, not `spikard_app_register_route`, not any
+  of the fifteen — and `App.java` carried no `responseFree` upcall stub, though the C export had
+  grown one. The generator's Java backend marks a service owner `binding_excluded` so the plain
+  type pipeline does not emit a duplicate class beside the service class, then folded those marks
+  into its own exclusion set and asked, in effect, whether a service is excluded for being a
+  service. The answer was yes, for every consumer, so no service class was ever emitted. What
+  shipped was an `App.java` left over from before that mark existed, frozen and drifting until
+  every route registration returned non-zero. `spikard_free_bytes` was missing from the symbol
+  table for the same reason.
+
+- **C# typed exceptions lost their native numeric code.** An exception dispatched by message
+  prefix — `GraphQLException`, `IntrospectionDisabledException`, `ComplexityLimitExceededException`
+  and the rest — was constructed without its code, so `Code` read as its default and the numeric
+  identity of the failure disappeared at the moment it became typed. `Code` is now
+  `{ get; private set; }`, stamped through a generated `WithNativeCode` helper, and every existing
+  public constructor is unchanged.
+
+- **`FfiJsonExtensions.cs` was never emitted,** though the service-API surface calls into it
+  unconditionally. It is now part of the C# package.
+
+### Changed
+
+- **Generated C# is no longer reformatted by poly.** Poly delegates `.cs` to an external
+  clang-format whose layout is not stable across its own versions, so two machines on identical
+  toolchains committed different bytes for the same generated file and the freshness gate failed
+  for a reason invisible in either diff. Alef already emits C# in the layout `dotnet format`
+  accepts, so the committed bytes now equal what the generator produces. This reindents the whole
+  C# package — the churn across `packages/csharp` is that one change, not a behavioural one.
+
+- `alef.toml` and the `alef` dependency in `spikard-alef`, `spikard-alef-ext` and
+  `spikard-e2e-http` move to 0.85.11.
+
+### Known issues
+
+- `test_apps/rust/Cargo.lock` still resolves `spikard` to the published 0.17.0 while its manifest
+  asks for 0.17.1, because the test app links the crate from crates.io by design and 0.17.1 does
+  not exist there until this release publishes. The same one-version lag was committed for 0.17.0
+  (against `0.17.0-rc.11`). It clears on the first regeneration after publication.
+
 ## [0.17.0] - 2026-09-08
 
 ### Changed

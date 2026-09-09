@@ -1,6 +1,6 @@
 name: spikard
 description: Codegen-first polyglot web toolkit with a Rust core and bindings for 14 languages
-version: 0.17.0
+version: 0.17.1
 repository: https://github.com/Goldziher/spikard
 homepage: https://github.com/Goldziher/spikard
 environment:
@@ -12,7 +12,12 @@ dependencies:
   # SHA-256 verification of downloaded native-library release assets.
   crypto: "^3.0.0"
   # FRB runtime is pure-Dart; works in both Flutter and server-Dart contexts.
-  flutter_rust_bridge: ^2.12.0
+  # Pinned exactly, not with a caret: flutter_rust_bridge asserts at RustLib.init() that the
+  # Dart runtime version equals the version its codegen ran as, and packages/dart/rust/Cargo.toml
+  # carries an `=` pin on the same version. A caret let `dart pub get` satisfy a stale
+  # e2e/dart/pubspec.lock with 2.12.0 against a 2.13.0 codegen, which failed all 36 dart e2e
+  # tests at setUpAll with a "Bad state: codegen version should be the same as runtime version".
+  flutter_rust_bridge: 2.13.0
   # FRB codegen-2.x emits `@freezed` sealed classes annotated with these.
   freezed_annotation: "^3.1.0"
   json_annotation: "^4.11.0"

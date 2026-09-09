@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.85.7"
+alef_version = "0.85.11"
 languages = [
   "python",
   "node",
@@ -41,26 +41,36 @@ user_owned = [
   "rust-toolchain.toml",
   # Live files alef emits but does not record in its managed surface, so its orphan check
   # reports them and `has_orphan_files` gates `alef verify`. They are NOT stale: each is
-  # referenced by a suite that would stop compiling without it -- App.java by four java
-  # harness/test files under e2e/ and test_apps/, and the kotlin trio by five
-  # e2e/kotlin_android tests, with HandlerResult.kt the only definition of that type in the
-  # package. alef's own advice on an orphan is "delete by hand if genuinely stale", which here
-  # would break both suites. Declared rather than deleted until the java and kotlin_android
-  # emitters record what they write.
-  "packages/java/src/main/java/dev/spikard/App.java",
-  "packages/java/src/main/java/dev/spikard/Callable.java",
+  # referenced by five e2e/kotlin_android tests, with HandlerResult.kt the only definition of
+  # that type in the package. alef's own advice on an orphan is "delete by hand if genuinely
+  # stale", which here would break the suite. Declared rather than deleted until the
+  # kotlin_android emitter records what it writes.
+  #
+  # App.java and Callable.java were listed here too and must never be: `user_owned` stops alef
+  # writing a path at all, so declaring a file alef genuinely generates freezes it. Both went
+  # stale against the java service-registration template -- App.java's FFI descriptor lost the
+  # `response_free` upcall the C export grew, so every route registration returned non-zero and
+  # the whole java e2e suite answered 404. Silencing an orphan report by claiming ownership of
+  # generated output buys a green verify with a dead binding. ~keep
   "packages/kotlin-android/src/main/kotlin/dev/spikard/android/src/main/kotlin/dev/spikard/HandlerResult.kt",
   "packages/kotlin-android/src/main/kotlin/dev/spikard/android/src/main/kotlin/dev/spikard/Request.kt",
   "packages/kotlin-android/src/main/kotlin/dev/spikard/android/src/main/kotlin/dev/spikard/RequestData.kt",
   # e2e and test-app manifests: real suites grown well past alef's placeholder seed. alef
   # re-renders them each run and would write different bytes, but the guard refuses, so each
   # appeared under "frozen path(s) DRIFTED" every run with no action available.
+  #
+  # Manifests only. The two java `background_task_error_handling.json` fixture copies were once
+  # listed here and had no business being: a fixture resource is pure generated output with no
+  # hand-grown content to protect, and freezing it pinned the harness's copy at an expected body
+  # carrying a `will_retry` field the canonical fixture had already dropped. The generated test
+  # asserted the canonical body, the harness served the frozen one, and the java suite failed one
+  # test for months on a disagreement between two copies of the same fixture. If a path under
+  # this heading is not a build manifest, it does not belong here. ~keep
   "e2e/csharp/Spikard.E2eTests.csproj",
   "e2e/dart/pubspec.yaml",
   "e2e/elixir/test/test_helper.exs",
   "e2e/go/go.mod",
   "e2e/java/pom.xml",
-  "e2e/java/src/test/resources/fixtures/background_task_error_handling.json",
   "e2e/kotlin/build.gradle.kts",
   "e2e/kotlin_android/build.gradle.kts",
   "e2e/node/package.json",
@@ -72,7 +82,6 @@ user_owned = [
   "test_apps/elixir/test/test_helper.exs",
   "test_apps/go/go.mod",
   "test_apps/java/pom.xml",
-  "test_apps/java/src/test/resources/fixtures/background_task_error_handling.json",
   "test_apps/kotlin/build.gradle.kts",
   "test_apps/kotlin_android/build.gradle.kts",
   "test_apps/kotlin_android/gradle/wrapper/gradle-wrapper.properties",
@@ -434,6 +443,12 @@ callback_contract = "Handler"
 # backend must emit the GenServer wrapper that builds it. Before alef 0.58.2 this was
 # inferred from the literal method name "route"; it is now declared explicitly. ~keep
 handler_shape = "context_object"
+# Per-route middleware the verb shortcuts must be able to express. Without these a binding whose
+# only route API is `app.get(handler, path)` cannot attach CORS or compression to a route at all:
+# the shortcut can pin constructor args but nothing the builder sets afterwards. Swift was in
+# exactly that state -- its e2e harness called `app.get(..., cors:, compression:)` against a
+# generated App.swift that had no such parameters, so the suite did not compile. ~keep
+wrapper_options = ["cors", "compression"]
 
 [[crates.services.registrations.variants]]
 name = "get"
@@ -692,7 +707,12 @@ e2e = "cd e2e/ruby && bundle install --quiet && bundle exec rspec"
 
 [crates.test.php]
 precondition = "command -v php >/dev/null 2>&1"
-before = "cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
+# The extension itself must be built here, and only here: spikard-php is excluded from the root
+# workspace (ext-php-rs links against libphp, which a workspace-wide `cargo build` must not be
+# dragged into) and its whole crate body sits behind `--features extension-module`, so no other
+# build step in the matrix produces it. Without this the harness looks for a cdylib nothing
+# emits and fails with "no spikard_php PHP extension build found". ~keep
+before = "cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release && cargo build --release --manifest-path crates/spikard-php/Cargo.toml --features extension-module"
 e2e = "cd e2e/php && composer install --no-interaction --quiet && php run_tests.php"
 
 [crates.test.elixir]
@@ -702,7 +722,13 @@ e2e = "cd e2e/elixir && mix deps.get && RUSTLER_PRECOMPILED_FORCE_BUILD_ALL=1 mi
 
 [crates.test.go]
 precondition = "command -v go >/dev/null 2>&1"
-before = "cargo build --release -p spikard-ffi && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
+# The go suite's TestMain forks `cmd/harness/harness`, so that binary has to exist before any
+# test runs -- without it every go run dies in TestMain with "fork/exec ...: no such file or
+# directory" before a single assertion executes. It used to be built by a bespoke step in
+# ci-e2e.yaml, which meant `alef test --e2e --lang go` could never pass locally and CI was the
+# only place the suite ran at all. A suite whose setup lives in the CI workflow rather than in
+# its own `before` hook is a suite nobody can reproduce. ~keep
+before = "cargo build --release -p spikard-ffi && cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release && cd e2e/go && go build -o cmd/harness/harness ./cmd/harness/"
 e2e = "cd e2e/go && go test ./... -count=1"
 
 [crates.test.java]
@@ -907,7 +933,7 @@ name = "Spikard"
 
 [crates.e2e.registry.packages.zig]
 name = "spikard"
-hash = "spikard-0.17.0-PLACEHOLDER1234567890abcdefABCDEF0987654321"
+hash = "spikard-0.17.1-PLACEHOLDER1234567890abcdefABCDEF0987654321"
 
 [crates.e2e.registry.packages.wasm]
 name = "@spikard/node-wasm"

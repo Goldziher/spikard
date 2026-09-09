@@ -35,7 +35,7 @@
         },
         "headers": {
           "content-encoding": "gzip",
-          "vary": "Accept-Encoding"
+          "vary": "accept-encoding"
         }
       }
     },
@@ -118,7 +118,7 @@
         },
         "headers": {
           "content-encoding": "br",
-          "vary": "Accept-Encoding"
+          "vary": "accept-encoding"
         }
       }
     },

@@ -1,8 +1,8 @@
 PATH
   remote: ../../packages/ruby
   specs:
-    spikard (0.17.0)
-      rb_sys (>= 0.9, < 0.9.128)
+    spikard (0.17.1)
+      rb_sys (>= 0.9.130, < 0.10)
       sorbet-runtime (~> 0.5)
 
 GEM
@@ -30,7 +30,7 @@ GEM
     racc (1.8.1)
     rainbow (3.1.1)
     rake-compiler-dock (1.12.0)
-    rb_sys (0.9.127)
+    rb_sys (0.9.130)
       rake-compiler-dock (= 1.12.0)
     regexp_parser (2.12.0)
     rspec (3.13.2)
@@ -64,7 +64,7 @@ GEM
       lint_roller (~> 1.1)
       rubocop (~> 1.81)
     ruby-progressbar (1.13.0)
-    sorbet-runtime (0.6.13266)
+    sorbet-runtime (0.6.13486)
     unicode-display_width (3.2.0)
       unicode-emoji (~> 4.1)
     unicode-emoji (4.2.0)
@@ -97,7 +97,7 @@ CHECKSUMS
   racc (1.8.1) sha256=4a7f6929691dbec8b5209a0b373bc2614882b55fc5d2e447a21aaa691303d62f
   rainbow (3.1.1) sha256=039491aa3a89f42efa1d6dec2fc4e62ede96eb6acd95e52f1ad581182b79bc6a
   rake-compiler-dock (1.12.0) sha256=f13205c2738f3d2053afcd03491a9e4541b22a59a0bfc53fc8bc883bd8188023
-  rb_sys (0.9.127) sha256=e9f90df3bb0577472d26d96127d5b5774b98f44de881e7d36aeefd28d6337847
+  rb_sys (0.9.130) sha256=7d486d99c1da02635515deaf9860fc5aea90bb4ab2589b2deec7fdc7d3548615
   regexp_parser (2.12.0) sha256=35a916a1d63190ab5c9009457136ae5f3c0c7512d60291d0d1378ba18ce08ebb
   rspec (3.13.2) sha256=206284a08ad798e61f86d7ca3e376718d52c0bc944626b2349266f239f820587
   rspec-core (3.13.6) sha256=a8823c6411667b60a8bca135364351dda34cd55e44ff94c4be4633b37d828b2d
@@ -108,8 +108,8 @@ CHECKSUMS
   rubocop-ast (1.49.1) sha256=4412f3ee70f6fe4546cc489548e0f6fcf76cafcfa80fa03af67098ffed755035
   rubocop-rspec (3.9.0) sha256=8fa70a3619408237d789aeecfb9beef40576acc855173e60939d63332fdb55e2
   ruby-progressbar (1.13.0) sha256=80fc9c47a9b640d6834e0dc7b3c94c9df37f08cb072b7761e4a71e22cff29b33
-  sorbet-runtime (0.6.13266) sha256=4a7123b62a9174d64a80ec5feae6abbf2d68553cc4c77315c0633b72c9823cc9
-  spikard (0.17.0)
+  sorbet-runtime (0.6.13486) sha256=5bf87f227b38c87fecc8be6d3a2e5a5a21d06c2a5136e78f73ac22c95ce7274f
+  spikard (0.17.1)
   unicode-display_width (3.2.0) sha256=0cdd96b5681a5949cdbc2c55e7b420facae74c4aaf9a9815eee1087cb1853c42
   unicode-emoji (4.2.0) sha256=519e69150f75652e40bf736106cfbc8f0f73aa3fb6a65afe62fefa7f80b0f80f
   uri (1.1.1) sha256=379fa58d27ffb1387eaada68c749d1426738bd0f654d812fcc07e7568f5c57c6
