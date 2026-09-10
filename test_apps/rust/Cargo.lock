@@ -3101,9 +3101,9 @@ dependencies = [
 
 [[package]]
 name = "spikard"
-version = "0.17.0"
+version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "00f30bd3be8b84ab16412144c753add156248f76e8dd88929bf20de745fdab18"
+checksum = "4f9948b54baa602948f4a108370fc20999efe204cc3c268faeb81a4c796d7a4e"
 dependencies = [
  "anyhow",
  "async-graphql",
@@ -3122,9 +3122,9 @@ dependencies = [
 
 [[package]]
 name = "spikard-core"
-version = "0.17.0"
+version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d7d39543e4f191f362caacef671a0d2b0bdcb37db7d503d0f79adc4b6de8ff8e"
+checksum = "53506d31ee39475e21d461d3a309ec86abe3c54e6588f0ea2128ebf7dfe1f192"
 dependencies = [
  "anyhow",
  "base64 0.23.1",
@@ -3148,11 +3148,13 @@ dependencies = [
 
 [[package]]
 name = "spikard-e2e-rust"
-version = "0.17.0"
+version = "0.17.1"
 dependencies = [
  "axum",
  "axum-test",
+ "brotli 9.0.0",
  "bytes",
+ "flate2",
  "serde",
  "serde_json",
  "spikard",
@@ -3164,9 +3166,9 @@ dependencies = [
 
 [[package]]
 name = "spikard-graphql"
-version = "0.17.0"
+version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3791d18bbec232a84631339d970ba5c8166138fb6d2c981183298d9f70512b96"
+checksum = "cfc46b90c3d6ff4a4ac8edb3aa35ee3899776ef63a79b80cc1d10dcb4034b762"
 dependencies = [
  "async-graphql",
  "async-graphql-parser",
@@ -3186,9 +3188,9 @@ dependencies = [
 
 [[package]]
 name = "spikard-http"
-version = "0.17.0"
+version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bcd953dfcf62e9711acd937f28c413b3bf4951006c39071502682dfd4fd6ee4b"
+checksum = "a2bf9f0733a5a0c69915acdf5e375865c8232389a68dcb471f1639557f775b74"
 dependencies = [
  "ahash",
  "anyhow",

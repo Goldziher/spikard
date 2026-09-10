@@ -132,6 +132,18 @@ jobs:
           bundler-cache: true
           working-directory: packages/ruby
 
+      - name: Build Ruby native extension
+        # ~keep rspec loads spikard_rb.so through an ABI-versioned search path
+        # ~keep (lib/spikard_rb/<abi>/spikard_rb.so). Nothing else in this workflow
+        # ~keep compiles it -- `Build shared FFI` covers only the cdylib consumers --
+        # ~keep so without this the job installed Ruby, bundled, and ran rspec against
+        # ~keep an extension that was never built, failing with LoadError before a
+        # ~keep single example ran. Same `rake compile` the publish workflow uses.
+        if: matrix.language == 'ruby'
+        working-directory: packages/ruby
+        shell: bash
+        run: bundle exec rake compile
+
       - name: Setup PHP
         if: matrix.language == 'php'
         uses: xberg-io/actions/setup-php@v1

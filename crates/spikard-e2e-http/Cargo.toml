@@ -14,7 +14,7 @@ publish = false
 ignored = ["serde"]
 
 [dependencies]
-alef = "0.85.11"
+alef = "0.85.12"
 anyhow = "1"
 heck = "0.5"
 minijinja = "2"

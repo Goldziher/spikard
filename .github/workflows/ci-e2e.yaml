@@ -121,6 +121,18 @@ jobs:
         with:
           php-version: "8.4"
 
+      - name: Install PHP binding package dependencies
+        # ~keep e2e/php/bootstrap.php requires TWO autoloaders: its own (PHPUnit, test
+        # ~keep helpers) and the binding package's, which is what exposes Spikard\Php\*
+        # ~keep via the PSR-4 map in packages/php/composer.json. vendor/ is gitignored and
+        # ~keep nothing here created the second one, so the suite aborted with
+        # ~keep "PHP binding package autoloader not found at packages/php/vendor/autoload.php"
+        # ~keep before running a test.
+        if: matrix.language == 'php'
+        working-directory: packages/php
+        shell: bash
+        run: composer install --no-interaction --no-progress
+
       - name: Setup Elixir
         if: matrix.language == 'elixir'
         uses: xberg-io/actions/setup-elixir@v1

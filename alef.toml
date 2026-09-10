@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.85.11"
+alef_version = "0.85.12"
 languages = [
   "python",
   "node",
@@ -39,12 +39,21 @@ user_owned = [
   # alef writes it only when absent, so it could never carry a hash line and was reported
   # stale on every run forever.
   "rust-toolchain.toml",
-  # Live files alef emits but does not record in its managed surface, so its orphan check
-  # reports them and `has_orphan_files` gates `alef verify`. They are NOT stale: each is
-  # referenced by five e2e/kotlin_android tests, with HandlerResult.kt the only definition of
-  # that type in the package. alef's own advice on an orphan is "delete by hand if genuinely
-  # stale", which here would break the suite. Declared rather than deleted until the
-  # kotlin_android emitter records what it writes.
+  # HandlerResult.kt, Request.kt and RequestData.kt were declared here on the grounds that
+  # each was "referenced by five e2e/kotlin_android tests". That stopped being true, and
+  # nothing caught it, because `user_owned` is exactly the declaration that stops alef
+  # looking. At removal the reference count across e2e/kotlin_android and the whole
+  # kotlin-android package was zero. Meanwhile alef had stopped emitting them: the wrapper
+  # classes and the Bridge's `nativeFree<Type>` externals come from one predicate
+  # (`handle_only_type_names`) whose own comment says the two must never disagree, and these
+  # three types left it. Frozen, they kept calling nativeFreeHandlerResult /
+  # nativeFreeRequest / nativeFreeRequestData, which SpikardBridge.kt no longer declares, so
+  # `:compileReleaseKotlin` failed on three unresolved references and the Android AAR
+  # publish leg had been red since 0.17.0.
+  #
+  # This is the App.java lesson a second time, and the entry below already spells it out:
+  # declaring a path `user_owned` freezes generated output and buys a green verify over a
+  # binding that does not build. Deleted rather than re-declared. ~keep
   #
   # App.java and Callable.java were listed here too and must never be: `user_owned` stops alef
   # writing a path at all, so declaring a file alef genuinely generates freezes it. Both went
@@ -52,9 +61,6 @@ user_owned = [
   # `response_free` upcall the C export grew, so every route registration returned non-zero and
   # the whole java e2e suite answered 404. Silencing an orphan report by claiming ownership of
   # generated output buys a green verify with a dead binding. ~keep
-  "packages/kotlin-android/src/main/kotlin/dev/spikard/android/src/main/kotlin/dev/spikard/HandlerResult.kt",
-  "packages/kotlin-android/src/main/kotlin/dev/spikard/android/src/main/kotlin/dev/spikard/Request.kt",
-  "packages/kotlin-android/src/main/kotlin/dev/spikard/android/src/main/kotlin/dev/spikard/RequestData.kt",
   # e2e and test-app manifests: real suites grown well past alef's placeholder seed. alef
   # re-renders them each run and would write different bytes, but the guard refuses, so each
   # appeared under "frozen path(s) DRIFTED" every run with no action available.

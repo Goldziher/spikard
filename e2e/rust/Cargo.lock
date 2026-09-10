@@ -3148,6 +3148,7 @@ version = "0.17.1"
 dependencies = [
  "axum",
  "axum-test",
+ "brotli 9.0.0",
  "bytes",
  "flate2",
  "serde",
