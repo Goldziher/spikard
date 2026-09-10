@@ -1,0 +1,30 @@
+version: 2
+
+updates:
+  # npm security updates for this repo aborted on every run with
+  #   "The following path based dependencies could not be retrieved: @spikard/node-wasm"
+  # With no config file, Dependabot auto-discovers every package.json and fetches
+  # each one's dependency graph. e2e/wasm/package.json declares
+  #   "@spikard/node-wasm": "file:../../crates/spikard-wasm/pkg"
+  # and that pkg/ directory is a wasm-pack build output, gitignored, so it does not
+  # exist in the clean checkout Dependabot clones. One unresolvable path dependency
+  # fails the whole npm job, which is why no npm security update has ever landed here
+  # despite open advisories on vite, vitest, postcss, nanoid and js-yaml.
+  #
+  # Excluding that one directory restores the ecosystem. It costs nothing: e2e/wasm
+  # consumes the binding from the local build tree, not from the registry, so there is
+  # no published version there for Dependabot to bump.
+  #
+  # open-pull-requests-limit: 0 disables *version* update PRs, keeping the current
+  # (quiet) behaviour. Security updates ignore this limit by design and are the point
+  # of this file.
+  - package-ecosystem: "npm"
+    directories:
+      - "/"
+      - "/test_apps/node"
+      - "/test_apps/wasm"
+    exclude-paths:
+      - "/e2e/wasm"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
