@@ -13,7 +13,7 @@ name = "spikard-alef"
 path = "src/main.rs"
 
 [dependencies]
-alef = "0.85.12"
+alef = "0.85.15"
 spikard-alef-ext = { path = "../spikard-alef-ext" }
 spikard-e2e-http = { path = "../spikard-e2e-http" }
 
