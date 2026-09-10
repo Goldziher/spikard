@@ -15,14 +15,17 @@ updates:
   # consumes the binding from the local build tree, not from the registry, so there is
   # no published version there for Dependabot to bump.
   #
+  # directories is "/**/*" (every directory, root included) rather than a literal list
+  # of today's four package.json locations, so coverage keeps following the repo. An
+  # enumerated allowlist would silently drop any package.json added later, which is the
+  # same class of silent-gap this file exists to close.
+  #
   # open-pull-requests-limit: 0 disables *version* update PRs, keeping the current
   # (quiet) behaviour. Security updates ignore this limit by design and are the point
   # of this file.
   - package-ecosystem: "npm"
     directories:
-      - "/"
-      - "/test_apps/node"
-      - "/test_apps/wasm"
+      - "/**/*"
     exclude-paths:
       - "/e2e/wasm"
     schedule:
