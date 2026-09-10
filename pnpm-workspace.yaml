@@ -3,3 +3,9 @@ packages:
   - "e2e/node"
 allowBuilds:
   esbuild: true
+minimumReleaseAgeExclude:
+  - "@spikard/node-darwin-arm64@0.17.1"
+  - "@spikard/node-linux-arm64-gnu@0.17.1"
+  - "@spikard/node-linux-x64-gnu@0.17.1"
+  - "@spikard/node-win32-arm64-msvc@0.17.1"
+  - "@spikard/node-win32-x64-msvc@0.17.1"
