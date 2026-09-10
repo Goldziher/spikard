@@ -51,7 +51,15 @@ jobs:
   rust:
     name: Rust ${{ matrix.suite }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 90
+    # ~keep 90 minutes killed the `test` suite on both platforms, every run, for days --
+    # and a killed job reads as `cancelled`, which looks self-inflicted rather than like a
+    # limit being hit. Measured on 34393823986: compilation finished in 13 minutes and the
+    # rest was test runtime, dominated by spikard-cli's 531 tests at 1420s and still going
+    # in graphql_codegen_integration when the axe fell. Nothing failed and nothing hung.
+    # This interacts with the cache note above: a killed job never saves its cache, so every
+    # run restarted cold and re-earned the timeout. The limit has to exceed the real runtime
+    # once for that cycle to break.
+    timeout-minutes: 360
     strategy:
       fail-fast: false
       matrix:

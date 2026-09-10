@@ -121,6 +121,23 @@ jobs:
         with:
           php-version: "8.4"
 
+      - name: Build PHP native extension
+        # ~keep run_tests.php refuses to run without a built extension, and the app harness
+        # ~keep constructs Spikard\Php\App, which the extension registers -- there is no PHP
+        # ~keep source for it (packages/php/src holds no .php files). Two things make the
+        # ~keep build command unlike every other binding crate, and both are load-bearing:
+        # ~keep the crate is excluded from the root workspace, so `-p spikard-php` from the
+        # ~keep repo root does not match any package and it builds into its own target/;
+        # ~keep and the whole crate body is gated behind `extension-module`, which is
+        # ~keep deliberately not in `default`. Built without that feature it still links --
+        # ~keep it just produces an empty dylib with no symbols, which fails later and much
+        # ~keep less clearly. run_tests.php probes crates/spikard-php/target/release, which
+        # ~keep is exactly where this puts it.
+        if: matrix.language == 'php'
+        working-directory: crates/spikard-php
+        shell: bash
+        run: cargo build --release --features extension-module
+
       - name: Install PHP binding package dependencies
         # ~keep e2e/php/bootstrap.php requires TWO autoloaders: its own (PHPUnit, test
         # ~keep helpers) and the binding package's, which is what exposes Spikard\Php\*
