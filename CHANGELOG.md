@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.2] - 2026-10-09
+
+Upgrades the code generator from alef 0.85.15 to 0.107.11 and regenerates every binding, E2E suite
+and test app, alongside a refresh of the Rust and per-language dependencies.
+
+### Changed
+
+- **Regenerated with alef 0.107.11** (from 0.85.15). The 0.107 extractor resolves sibling modules
+  correctly, so several previously-missed `pub fn`s now reach the binding surfaces; the Rust-only
+  helpers below are marked accordingly.
+- **Upgraded the Rust dependency set**: `utoipa` 5→6, `jsonschema` 0.55→0.58, `minijinja` 2→3,
+  `asyncapiv3` 0.1→0.2, `protox` 0.9→0.10, `scythe-core` 0.18→0.20, `rmcp` 3.2→3.5,
+  `jsonwebtoken` 11.0→11.1.
+- **Refreshed the per-language dependency lockfiles** (Python, Node, Dart, Elixir, Java, Ruby, PHP).
+- **Upgraded the GitHub Actions references**, including `actions/checkout` v7, `setup-java` v6,
+  `setup-go` v7 and `astral-sh/setup-uv` v10.
+
+### Fixed
+
+- **Ported to the `utoipa` 6 `RefOr` wrapping** and the **`minijinja` 3 `set_syntax` API** (the
+  `set_trim_blocks`/`set_lstrip_blocks` environment setters were removed in 3.0).
+- **Marked the Rust-only helpers `#[doc(hidden)]`** — `build_multipart_body`,
+  `encode_urlencoded_body`, `MultipartFilePart`, `HookRegistry::register_from_list`, and the
+  `lifecycle::adapter` `error`/`serial` helpers. alef 0.107's corrected module resolution began
+  extracting them into every binding, where their `Body`/`serde_json::Value`/`impl Display`
+  signatures have no faithful mapping.
+- **`crates/spikard-cli`'s MCP smoke test uses `rmcp`'s `ClientConfig`**, replacing the deprecated
+  `ClientInfo` alias that `-D warnings` rejected.
+- **`ci-validate` installs the pinned `clang-format` 22.1.8 and `shfmt` 3.14.1 before
+  `alef:verify`** (mirroring `reusable-validate.yml`), so the byte-level freshness check reproduces
+  the committed generated Java and shell scripts instead of the runner image's differing formatter.
+- **`e2e/zig/build.zig` no longer calls the removed `b.pathFromRoot`.** It was a stale, unmarked
+  generated file still written for Zig 0.16; regeneration emits the 0.17 template.
+
 ## [0.17.1] - 2026-09-09
 
 Upgrades the code generator from alef 0.85.7 to 0.85.11 and regenerates every binding, E2E suite

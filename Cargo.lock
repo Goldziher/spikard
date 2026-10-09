@@ -4061,7 +4061,7 @@ dependencies = [
 
 [[package]]
 name = "spikard"
-version = "0.17.1"
+version = "0.17.2"
 dependencies = [
  "anyhow",
  "async-graphql",
@@ -4082,7 +4082,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-alef"
-version = "0.17.1"
+version = "0.17.2"
 dependencies = [
  "alef",
  "spikard-alef-ext",
@@ -4091,7 +4091,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-alef-ext"
-version = "0.17.1"
+version = "0.17.2"
 dependencies = [
  "alef",
  "anyhow",
@@ -4104,7 +4104,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-cli"
-version = "0.17.1"
+version = "0.17.2"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -4137,7 +4137,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-codegen"
-version = "0.17.1"
+version = "0.17.2"
 dependencies = [
  "indexmap",
  "scythe-core",
@@ -4148,7 +4148,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-core"
-version = "0.17.1"
+version = "0.17.2"
 dependencies = [
  "anyhow",
  "base64 0.23.1",
@@ -4173,7 +4173,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-e2e-http"
-version = "0.17.1"
+version = "0.17.2"
 dependencies = [
  "alef",
  "anyhow",
@@ -4185,7 +4185,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-ffi"
-version = "0.17.1"
+version = "0.17.2"
 dependencies = [
  "ahash",
  "cbindgen",
@@ -4201,7 +4201,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-graphql"
-version = "0.17.1"
+version = "0.17.2"
 dependencies = [
  "async-graphql",
  "async-graphql-parser",
@@ -4223,7 +4223,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-http"
-version = "0.17.1"
+version = "0.17.2"
 dependencies = [
  "ahash",
  "anyhow",
@@ -4279,7 +4279,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-jni"
-version = "0.17.1"
+version = "0.17.2"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -4293,7 +4293,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-node"
-version = "0.17.1"
+version = "0.17.2"
 dependencies = [
  "axum",
  "napi",
@@ -4310,7 +4310,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-py"
-version = "0.17.1"
+version = "0.17.2"
 dependencies = [
  "axum",
  "pyo3",
@@ -4326,7 +4326,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-swift"
-version = "0.17.1"
+version = "0.17.2"
 dependencies = [
  "ahash",
  "async-trait",
@@ -4345,7 +4345,7 @@ dependencies = [
 
 [[package]]
 name = "spikard-wasm"
-version = "0.17.1"
+version = "0.17.2"
 dependencies = [
  "axum",
  "futures",
