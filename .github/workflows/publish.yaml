@@ -93,7 +93,7 @@ jobs:
       release_wasm: ${{ steps.meta.outputs.release_wasm }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ (inputs.republish == true && (inputs.ref || github.event.repository.default_branch)) || inputs.ref || inputs.tag || github.ref }}
           fetch-depth: 0
@@ -127,7 +127,7 @@ jobs:
     if: ${{ needs.prepare.outputs.is_tag == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
@@ -247,7 +247,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: xberg-io/actions/setup-rust@v1
@@ -271,13 +271,13 @@ jobs:
     if: ${{ !cancelled() && needs.publish-crates.result != 'failure' && needs.prepare.outputs.release_python == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.14"
       - uses: xberg-io/actions/build-python-sdist@v1
@@ -299,7 +299,7 @@ jobs:
     if: ${{ needs.prepare.outputs.release_node == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: xberg-io/actions/setup-rust@v1
@@ -377,7 +377,7 @@ jobs:
           # ~keep musl and armv7 targets deferred — napi-cross artifact path mismatch
           # ~keep ("No dist dir found") blocks cross-compiled bindings in build-node-napi@v1.
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - name: Free disk space
@@ -410,7 +410,7 @@ jobs:
     if: ${{ needs.prepare.outputs.release_wasm == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: xberg-io/actions/setup-rust@v1
@@ -458,7 +458,7 @@ jobs:
           # ~keep - { os: macos-15-intel, label: macos-x86_64 }
           # ~keep - { os: windows-latest, label: windows-x86_64 }
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: xberg-io/actions/setup-rust@v1
@@ -526,7 +526,7 @@ jobs:
           - { os: macos-latest, label: macos-arm64, target: aarch64-apple-darwin }
           - { os: windows-latest, label: windows-x86_64, target: x86_64-pc-windows-msvc }
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: xberg-io/actions/setup-php@v1
@@ -581,7 +581,7 @@ jobs:
           - { os: macos-latest, target: aarch64-apple-darwin, label: macos-aarch64 }
           - { os: windows-latest, target: x86_64-pc-windows-msvc, label: windows-x86_64 }
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: xberg-io/actions/setup-rust@v1
@@ -676,7 +676,7 @@ jobs:
               nif: "2.17",
             }
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: xberg-io/actions/setup-elixir@v1
@@ -713,7 +713,7 @@ jobs:
     if: ${{ needs.prepare.outputs.release_kotlin == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: xberg-io/actions/setup-rust@v1
@@ -776,7 +776,7 @@ jobs:
     if: ${{ !cancelled() && needs.prepare.outputs.release_crates == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.crates_core_exists != 'true') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: xberg-io/actions/setup-rust@v1
@@ -848,7 +848,7 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: actions/download-artifact@v8
@@ -957,7 +957,7 @@ jobs:
         with:
           name: wasm-package
           path: dist/wasm
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
@@ -1026,7 +1026,7 @@ jobs:
     if: ${{ !cancelled() && needs.prepare.outputs.release_elixir == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && needs.build-elixir.result == 'success' && needs.upload-release-assets.result == 'success' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.hex_exists != 'true') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: xberg-io/actions/setup-elixir@v1
@@ -1076,10 +1076,10 @@ jobs:
     if: ${{ !cancelled() && needs.prepare.outputs.release_java == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.maven_java_exists != 'true') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "25"
@@ -1125,7 +1125,7 @@ jobs:
     if: ${{ !cancelled() && needs.prepare.outputs.release_kotlin == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.maven_kotlin_exists != 'true') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: xberg-io/actions/publish-maven-gradle@v1
@@ -1148,16 +1148,16 @@ jobs:
     if: ${{ !cancelled() && needs.prepare.outputs.release_kotlin_android == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.maven_android_exists != 'true') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "25"
       # com.android.library's assembleRelease (pulled in transitively by the
       # publishAndReleaseToMavenCentral task) needs the Android SDK + accepted licenses.
-      - uses: android-actions/setup-android@v3
+      - uses: android-actions/setup-android@v4
       - name: Download Android natives (all ABIs)
         uses: actions/download-artifact@v8
         with:
@@ -1193,10 +1193,10 @@ jobs:
     if: ${{ !cancelled() && needs.prepare.outputs.release_csharp == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.nuget_exists != 'true') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: actions/setup-dotnet@v5
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: "10.0.x"
       - name: Download C# natives (all RIDs)
@@ -1264,7 +1264,7 @@ jobs:
     if: ${{ !cancelled() && needs.prepare.outputs.release_zig == 'true' && needs.build-c-ffi.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - name: Download per-target C FFI artifacts
@@ -1359,12 +1359,12 @@ jobs:
       contents: write
     steps:
       - name: Checkout source repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
 
       - name: Checkout homebrew-tap
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: Goldziher/homebrew-tap
           token: ${{ secrets.HOMEBREW_TOKEN }}
@@ -1438,7 +1438,7 @@ jobs:
             install_brew: true
     steps:
       - name: Checkout source repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
 
@@ -1479,12 +1479,12 @@ jobs:
       contents: write
     steps:
       - name: Checkout source repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
 
       - name: Checkout homebrew-tap
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: Goldziher/homebrew-tap
           token: ${{ secrets.HOMEBREW_TOKEN }}
@@ -1528,7 +1528,7 @@ jobs:
     if: ${{ needs.prepare.outputs.release_swift == 'true' }}
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
@@ -1561,7 +1561,7 @@ jobs:
     if: ${{ needs.prepare.outputs.release_swift == 'true' }}
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
@@ -1586,7 +1586,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
@@ -1683,7 +1683,7 @@ jobs:
           - { os: macos-latest, platform: macos-arm64, target: aarch64-apple-darwin }
           - { os: windows-latest, platform: windows-x86_64, target: x86_64-pc-windows-msvc }
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: xberg-io/actions/setup-rust@v1
@@ -1727,7 +1727,7 @@ jobs:
           - { os: macos-latest, platform: macos-arm64, target: aarch64-apple-darwin }
           - { os: windows-latest, platform: windows-x86_64, target: x86_64-pc-windows-msvc }
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: xberg-io/actions/setup-rust@v1
@@ -1783,7 +1783,7 @@ jobs:
           - { os: macos-latest, classifier: macos-arm64, target: aarch64-apple-darwin }
           - { os: windows-latest, classifier: windows-x86_64, target: x86_64-pc-windows-msvc }
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: xberg-io/actions/setup-rust@v1
@@ -1819,7 +1819,7 @@ jobs:
     # per-OS java matrix), so a single job builds every ABI.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: xberg-io/actions/setup-rust@v1
@@ -1861,7 +1861,7 @@ jobs:
           - { os: windows-latest, rid: win-x64, target: x86_64-pc-windows-msvc }
           - { os: windows-latest, rid: win-arm64, target: aarch64-pc-windows-msvc }
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: xberg-io/actions/setup-rust@v1
@@ -1903,7 +1903,7 @@ jobs:
           - { os: macos-latest, target: aarch64-apple-darwin, rid: macos-arm64, lib: libspikard_dart.dylib }
           - { os: windows-latest, target: x86_64-pc-windows-msvc, rid: windows-x64, lib: spikard_dart.dll }
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
@@ -1936,7 +1936,7 @@ jobs:
     if: ${{ needs.prepare.outputs.release_dart == 'true' && (needs.check-registries.outputs.pub_exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
