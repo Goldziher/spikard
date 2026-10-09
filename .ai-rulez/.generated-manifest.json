@@ -30,6 +30,40 @@
     ".claude/agents/wasm-specialist.md",
     ".claude/agents/zig-specialist.md",
     ".claude/plugins.json",
+    ".claude/rules/agent-workflow.md",
+    ".claude/rules/atomic-commits.md",
+    ".claude/rules/branch-hygiene.md",
+    ".claude/rules/codegen-and-serialization.md",
+    ".claude/rules/comment-discipline.md",
+    ".claude/rules/commit-messages.md",
+    ".claude/rules/commit-procedure.md",
+    ".claude/rules/communication-style.md",
+    ".claude/rules/context-preservation.md",
+    ".claude/rules/docs-and-project-metadata.md",
+    ".claude/rules/explain-reasoning.md",
+    ".claude/rules/extraction-measurement-hygiene.md",
+    ".claude/rules/fixture-driven-testing.md",
+    ".claude/rules/generated-code-policy.md",
+    ".claude/rules/handler-trait-and-ffi-safety.md",
+    ".claude/rules/input-validation.md",
+    ".claude/rules/least-privilege.md",
+    ".claude/rules/logging-tracing.md",
+    ".claude/rules/measurement-discipline.md",
+    ".claude/rules/minimal-changes.md",
+    ".claude/rules/no-ai-signatures.md",
+    ".claude/rules/output-awareness.md",
+    ".claude/rules/partner-corpus-handling.md",
+    ".claude/rules/prove-the-check-fired.md",
+    ".claude/rules/read-before-write.md",
+    ".claude/rules/safe-git-operations.md",
+    ".claude/rules/secrets-handling.md",
+    ".claude/rules/systematic-debugging.md",
+    ".claude/rules/targeted-verification.md",
+    ".claude/rules/test-alongside-code.md",
+    ".claude/rules/thin-binding-architecture.md",
+    ".claude/rules/tower-middleware-and-lifecycle.md",
+    ".claude/rules/tracing-product-surface.md",
+    ".claude/rules/verification-before-completion.md",
     ".claude/skills/add-language-generator/SKILL.md",
     ".claude/skills/agent-coordination/SKILL.md",
     ".claude/skills/alef-workflow/SKILL.md",
@@ -222,6 +256,25 @@
     ".opencode/skills/typescript-conventions/SKILL.md",
     ".opencode/skills/xberg-brand-and-docs/SKILL.md",
     "AGENTS.md",
-    "CLAUDE.md"
-  ]
+    "CLAUDE.md",
+    "opencode.json"
+  ],
+  "merged": {
+    "opencode.json": [
+      {
+        "path": [
+          "$schema"
+        ],
+        "sum": "5b44767d48bb2a2ba170d7412d260e9c0d31fcdc2e7cbd38225464a63880d42e"
+      },
+      {
+        "path": [
+          "instructions"
+        ],
+        "elements": [
+          "AGENTS.local.md"
+        ]
+      }
+    ]
+  }
 }

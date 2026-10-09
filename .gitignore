@@ -239,4 +239,5 @@ poly.local.toml
 .ai-rulez/.generated-manifest.json
 .opencode/agents/
 .opencode/skills/
+opencode.json
 # END ai-rulez
