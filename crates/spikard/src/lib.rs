@@ -6,9 +6,14 @@
 //! by the shared `spikard-http` runtime, ensuring identical validation and
 //! middleware behaviour across languages.
 
+pub mod components;
 mod graphql_schemas;
 pub mod upload;
 pub mod validation;
+
+#[cfg(feature = "codegen-openapi")]
+pub use components::OpenApiCompiler;
+pub use components::{ComponentError, SpecCompiler};
 
 use std::collections::HashMap;
 use std::future::Future;

@@ -1,0 +1,30 @@
+{
+  "schema_version": 2,
+  "public_keys": { "dev-2026": "AJA6iDgkeu8RcOKR8KsrHleIaHHBhtACyRWqgEa8+9U=" },
+  "artifacts": [
+    {
+      "identity": {
+        "crate_name": "spikard",
+        "component": "openapi",
+        "version": "0.17.2",
+        "target": "aarch64-apple-darwin",
+        "feature_hash": "94613997b451e4fb6f89a9ed7c0c9277ecd34ab99077f25b7da6a4d72a262c72",
+        "contract_hash": "0ed69d25deb886321b648dc89dd6a3ed96bce6bbb9ecfb8ae425788ed954be3e"
+      },
+      "provides": [
+        {
+          "contract": "spec",
+          "interface_version": 1,
+          "contract_hash": "0ed69d25deb886321b648dc89dd6a3ed96bce6bbb9ecfb8ae425788ed954be3e",
+          "implementation": "spikard::OpenApiCompiler"
+        }
+      ],
+      "mode": "download",
+      "url": "https://github.com/Goldziher/spikard/releases/download/components-v0.17.2/openapi/aarch64-apple-darwin/spikard-openapi-0.17.2-94613997b451e4fb-0ed69d25deb88632-aarch64-apple-darwin.tar.gz",
+      "sha256": "c25cdda30fb1e7142e028881a571073bff278fad2e268020632ab6972cf83e45",
+      "size": 1161014,
+      "manifest_sha256": "4b97a69c5c8a3888f7dc073d067506fa7ff5387573ee74435b9c4d45bf2f73ab",
+      "key_id": "dev-2026"
+    }
+  ]
+}

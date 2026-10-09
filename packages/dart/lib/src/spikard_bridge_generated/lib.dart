@@ -8,9 +8,21 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'lib.freezed.dart';
 
-// These functions are ignored because they are not marked as `pub`: `try_convert_method_from_core`, `try_convert_security_scheme_info_from_core`, `try_convert_snapshot_error_from_core`, `try_convert_web_socket_message_from_core`
+// These functions are ignored because they are not marked as `pub`: `alef_component_cache_path`, `alef_component_cache_root`, `alef_component_error_message`, `alef_component_load`, `alef_component_manager`, `alef_component_prefetch`, `alef_component_status_code`, `alef_component_status_numeric_code`, `alef_component_status_tag`, `alef_component_status_typed`, `alef_component_status`, `alef_component_target`, `try_convert_method_from_core`, `try_convert_security_scheme_info_from_core`, `try_convert_snapshot_error_from_core`, `try_convert_web_socket_message_from_core`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `HandlerResult`, `HookRegistry`, `ParseRequest`, `RequestData`, `Request`, `TestingSseEvent`, `ValidateRequest`, `ValidationResponse`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
+
+Future<void> componentLoad({required String component}) =>
+    RustLib.instance.api.crateComponentLoad(component: component);
+
+Future<List<String>> componentPrefetch({String? component}) =>
+    RustLib.instance.api.crateComponentPrefetch(component: component);
+
+String componentStatus({required String component}) =>
+    RustLib.instance.api.crateComponentStatus(component: component);
+
+String componentCachePath({required String component}) =>
+    RustLib.instance.api.crateComponentCachePath(component: component);
 
 /// Create a simple schema configuration with only Query type.
 ///

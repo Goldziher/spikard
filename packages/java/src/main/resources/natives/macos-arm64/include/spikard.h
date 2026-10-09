@@ -355,6 +355,16 @@ typedef struct SPIKARDServerConfig SPIKARDServerConfig;
  */
 typedef struct SPIKARDServerInfo SPIKARDServerInfo;
 /**
+ * The `spec` contract: turn a specification document into spikard's canonical,
+ * normalised form.
+ *
+ * A downloadable component implements this behind its own Cargo feature set;
+ * the core crate looks the active implementation up through
+ * `alef-component-abi`'s provider registry and falls back to `OpenApiCompiler`
+ * when no component has been activated.
+ */
+typedef uint64_t SPIKARDSpecCompiler;
+/**
  * An individual SSE event
  *
  * Represents a single Server-Sent Event to be sent to a connected client.
@@ -511,6 +521,56 @@ void spikard_free_bytes(uint8_t *ptr, uintptr_t len, uintptr_t cap);
  * Returned pointers must be freed with the appropriate free function.
  */
 const char *spikard_version(void);
+
+/**
+ * Download and verify a configured component's artifact.
+ * Returns 0 on success and -1 on failure. Failure details are available through
+ * `spikard_last_error_code` and `spikard_last_error_context`.
+ * # Safety
+ * `component` must point to a valid, NUL-terminated UTF-8 string.
+ */
+int32_t spikard_component_load(const char *component);
+
+/**
+ * Download and verify one component, or all configured components when
+ * `component` is NULL. Returns an owned JSON array of cache paths, freed with
+ * `spikard_free_string`. # Safety A non-null `component` must point to a valid,
+ * NUL-terminated UTF-8 string.
+ */
+char *spikard_component_prefetch(const char *component);
+
+/**
+ * Return `ready`, `cached`, `not_downloaded`, `bundled`, or
+ * `unsupported:<reason>` for a configured component. The returned string is
+ * owned and must be freed with `spikard_free_string`. See
+ * `spikard_component_status_code` for the matching numeric code. # Safety
+ * `component` must point to a valid, NUL-terminated UTF-8 string.
+ */
+char *spikard_component_status(const char *component);
+
+/**
+ * The numeric counterpart to `spikard_component_status`, stable across
+ * releases. Returns -1 and sets the last error on failure. # Safety `component`
+ * must point to a valid, NUL-terminated UTF-8 string.
+ */
+int32_t spikard_component_status_code(const char *component);
+
+/**
+ * Return the content-addressed cache path for a configured component.
+ * The returned string is owned and must be freed with `spikard_free_string`.
+ * # Safety
+ * `component` must point to a valid, NUL-terminated UTF-8 string.
+ */
+char *spikard_component_cache_path(const char *component);
+
+/**
+ * Download, verify, load, and register a configured component's contracts so
+ * core-crate code that looks them up through `alef_component_abi::provider`
+ * finds them. Returns 0 on success and -1 on failure; never runs implicitly.
+ * # Safety
+ * `component` must point to a valid, NUL-terminated UTF-8 string.
+ */
+int32_t spikard_component_activate(const char *component);
 
 /**
  * Create a `ApiKeyAuthConfig` from a JSON string. Returns null on failure.

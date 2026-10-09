@@ -40,16 +40,17 @@ dependencies = [
 [[package]]
 name = "alef"
 version = "0.107.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8a7bedd67a75a058533cd252fc49b45bf316be408f6ebcdad40dff03f5b8f59"
 dependencies = [
  "ahash",
+ "alef-component-runtime 0.107.11",
  "anyhow",
  "base64 0.23.1",
  "blake3",
  "chrono",
  "clap",
  "convert_case",
+ "ed25519-dalek",
+ "flate2",
  "glob",
  "heck",
  "icu_casemap",
@@ -68,6 +69,7 @@ dependencies = [
  "sha2 0.11.0",
  "similar",
  "syn 3.0.6",
+ "tar",
  "tempfile",
  "thiserror 2.0.21",
  "toml 1.1.8+spec-1.1.0",
@@ -80,6 +82,58 @@ dependencies = [
  "which",
  "windows-sys 0.61.2",
  "zip 9.0.0",
+]
+
+[[package]]
+name = "alef-component-abi"
+version = "0.107.11"
+
+[[package]]
+name = "alef-component-abi"
+version = "0.107.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cfeccb03e342de476b592d20f4ff0900f3c1aae7ab1fd5a12252055c4647aae2"
+
+[[package]]
+name = "alef-component-runtime"
+version = "0.107.11"
+dependencies = [
+ "alef-component-abi 0.107.11",
+ "base64 0.23.1",
+ "ed25519-dalek",
+ "flate2",
+ "fs2",
+ "hex",
+ "libloading",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
+ "tar",
+ "tempfile",
+ "thiserror 2.0.21",
+ "ureq",
+]
+
+[[package]]
+name = "alef-component-runtime"
+version = "0.107.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "821ae6f061e891edb7fa40f57526e227a0dfd5ae69eba2c1e02aa4fbb1eb989a"
+dependencies = [
+ "alef-component-abi 0.107.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "base64 0.23.1",
+ "ed25519-dalek",
+ "flate2",
+ "fs2",
+ "hex",
+ "libloading",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
+ "tar",
+ "tempfile",
+ "thiserror 2.0.21",
+ "ureq",
 ]
 
 [[package]]
@@ -1191,6 +1245,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "directories"
+version = "6.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "16f5094c54661b38d03bd7e50df373292118db60b585c08a411c6d840017fe7d"
+dependencies = [
+ "dirs-sys",
+]
+
+[[package]]
+name = "dirs-sys"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e01a3366d27ee9890022452ee61b2b63a67e6f13f58900b651ff5665f0bb1fab"
+dependencies = [
+ "libc",
+ "option-ext",
+ "redox_users",
+ "windows-sys 0.61.2",
+]
+
+[[package]]
 name = "displaydoc"
 version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1450,6 +1525,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "28dea519a9695b9977216879a3ebfddf92f1c08c05d984f8996aecd6ecdc811d"
 
 [[package]]
+name = "filetime"
+version = "0.2.29"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5c287a33c7f0a620c38e641e7f60827713987b3c0f26e8ddc9462cc69cf75759"
+dependencies = [
+ "cfg-if",
+ "libc",
+]
+
+[[package]]
 name = "find-msvc-tools"
 version = "0.1.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1525,6 +1610,16 @@ checksum = "e246562084dde8ebbcc943b261c406ce4f68e5032ec28029a251a47d6a295500"
 dependencies = [
  "num",
  "num-bigint",
+]
+
+[[package]]
+name = "fs2"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9564fc758e15025b46aa6643b1b77d047d1a56a1aea6e01002ac0c7026876213"
+dependencies = [
+ "libc",
+ "winapi",
 ]
 
 [[package]]
@@ -1817,6 +1912,12 @@ name = "hermit-abi"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e17592d60ebacc7d5e169f4663c5f84f9161cc90328abcfe8456f41e4dfcb284"
+
+[[package]]
+name = "hex"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "hkdf"
@@ -2377,6 +2478,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6d2cec3eae94f9f509c767b45932f1ada8350c4bdb85af2fcab4a3c14807981"
 
 [[package]]
+name = "libredox"
+version = "0.1.25"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "61ff90caf6077a803a240f62fdbe88645a890bbca49ef8174c3cb0404362171d"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "linux-raw-sys"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2822,6 +2932,12 @@ dependencies = [
  "serde",
  "serde_json",
 ]
+
+[[package]]
+name = "option-ext"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "04744f49eae99ab78e0d5c0b603ab218f515ea8cfe5a456d7629ad883a3b6e7d"
 
 [[package]]
 name = "outref"
@@ -3447,6 +3563,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "redox_users"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "60dc65c0ff1a7ae1294b0c67b9f14baf70b644404010370171787bfac1038fc0"
+dependencies = [
+ "libredox",
+ "thiserror 2.0.21",
+]
+
+[[package]]
 name = "ref-cast"
 version = "1.0.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4063,6 +4189,7 @@ dependencies = [
 name = "spikard"
 version = "0.17.2"
 dependencies = [
+ "alef-component-abi 0.107.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "anyhow",
  "async-graphql",
  "axum",
@@ -4072,6 +4199,7 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
+ "spikard-codegen",
  "spikard-core",
  "spikard-graphql",
  "spikard-http",
@@ -4188,7 +4316,10 @@ name = "spikard-ffi"
 version = "0.17.2"
 dependencies = [
  "ahash",
+ "alef-component-abi 0.107.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "alef-component-runtime 0.107.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "cbindgen",
+ "directories",
  "serde",
  "serde_json",
  "spikard",
@@ -4295,7 +4426,10 @@ dependencies = [
 name = "spikard-node"
 version = "0.17.2"
 dependencies = [
+ "alef-component-abi 0.107.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "alef-component-runtime 0.107.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "axum",
+ "directories",
  "napi",
  "napi-build",
  "napi-derive",
@@ -4309,10 +4443,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "spikard-openapi-component"
+version = "0.17.2"
+dependencies = [
+ "alef-component-abi 0.107.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "futures",
+ "spikard",
+]
+
+[[package]]
 name = "spikard-py"
 version = "0.17.2"
 dependencies = [
+ "alef-component-abi 0.107.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "alef-component-runtime 0.107.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "axum",
+ "directories",
  "pyo3",
  "pyo3-async-runtimes",
  "serde",
@@ -4329,8 +4475,11 @@ name = "spikard-swift"
 version = "0.17.2"
 dependencies = [
  "ahash",
+ "alef-component-abi 0.107.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "alef-component-runtime 0.107.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "async-trait",
  "axum",
+ "directories",
  "libc",
  "serde",
  "serde_json",
@@ -4599,6 +4748,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 3.0.6",
+]
+
+[[package]]
+name = "tar"
+version = "0.4.46"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f6221d9a6003c78398e3b239969f352578258df48c8eb051caadae0015bc840"
+dependencies = [
+ "filetime",
+ "libc",
+ "xattr",
 ]
 
 [[package]]
@@ -5680,6 +5840,16 @@ name = "writeable"
 version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3ad82d2a33cdc9674dc7465672f271e096168fcdbe0f799d9e6db8c5892679dc"
+
+[[package]]
+name = "xattr"
+version = "1.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "32e45ad4206f6d2479085147f02bc2ef834ac85886624a23575ae137c8aa8156"
+dependencies = [
+ "libc",
+ "rustix",
+]
 
 [[package]]
 name = "yansi"
