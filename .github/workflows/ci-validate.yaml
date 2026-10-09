@@ -140,14 +140,26 @@ jobs:
         continue-on-error: true
         run: mix deps.get || echo "mix deps.get skipped — non-fatal for poly"
 
+      # ~keep poly delegates formatting to native tools when present, and their output decides
+      # whether alef:verify's byte-level freshness check passes: generated Java (and C/C#) go
+      # through clang-format and shell through shfmt. The runner image ships a different
+      # clang-format, which rewrites generated Java so the re-render no longer matches the
+      # committed bytes. Install the pinned clang-format + shfmt (same as reusable-validate.yml)
+      # before poly and alef:verify.
+      - name: Set up clang-format and shfmt
+        uses: xberg-io/actions/setup-c-cpp-tools@v1
+        with:
+          install-cppcheck: "false"
+          install-shellcheck: "false"
+
       - name: Install poly
         uses: Goldziher/polylint@v0
 
       # ~keep alef:verify re-runs the generated-file formatters to reproduce the committed
-      # bytes, so it must run with poly AND the language toolchains (JDK for the Java
-      # formatter, shfmt for shell, etc.) already on PATH. Run it here, after every setup
-      # step, rather than early -- otherwise the re-render formats generated .java/.md/.sh
-      # differently and the freshness check reports spurious drift.
+      # bytes, so it must run with poly AND the language toolchains (JDK, clang-format, shfmt,
+      # ...) already on PATH. Run it here, after every setup step, rather than early --
+      # otherwise the re-render formats generated .java/.md/.sh differently and the freshness
+      # check reports spurious drift.
       - name: Verify Alef output
         run: task alef:verify
 
