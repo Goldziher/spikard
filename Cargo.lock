@@ -39,9 +39,9 @@ dependencies = [
 
 [[package]]
 name = "alef"
-version = "0.107.10"
+version = "0.107.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8bd5bc2fe78c1c96ac07cc30dcf0730921e82f58c884ecd6ef3fd236e0a1819a"
+checksum = "b8a7bedd67a75a058533cd252fc49b45bf316be408f6ebcdad40dff03f5b8f59"
 dependencies = [
  "ahash",
  "anyhow",
