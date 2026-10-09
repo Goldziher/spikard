@@ -15,7 +15,10 @@ formula="${tap_dir}/Formula/spikard.rb"
 }
 
 revision="${REVISION:-$(git rev-parse "${tag}^{commit}")}"
-[[ -n "$revision" ]] || { echo "Could not resolve git revision for $tag" >&2; exit 1; }
+[[ -n "$revision" ]] || {
+  echo "Could not resolve git revision for $tag" >&2
+  exit 1
+}
 
 write_formula() {
   cat >"$formula" <<EOF

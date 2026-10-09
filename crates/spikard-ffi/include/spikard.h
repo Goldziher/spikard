@@ -141,6 +141,10 @@ typedef uint64_t SPIKARDGraphQLRouteConfig;
 typedef struct SPIKARDGrpcConfig SPIKARDGrpcConfig;
 typedef uint64_t SPIKARDHandlerResult;
 /**
+ * Helper for registering hooks with standard naming conventions
+ */
+typedef uint64_t SPIKARDHookRegistry;
+/**
  * Convert user-facing handler functions into the low-level `Handler` trait.
  */
 typedef uint64_t SPIKARDIntoHandler;
@@ -410,6 +414,7 @@ enum SPIKARDAlefFfiErrorCode
   SpikardAlefUnknown = 2,
   SpikardAlefPanic = 3,
   SpikardAlefInvalidHandle = 4,
+  SpikardAlefCancelled = 5,
 };
 #if __STDC_VERSION__ >= 202311L
 typedef enum SPIKARDAlefFfiErrorCode SPIKARDAlefFfiErrorCode;
@@ -434,6 +439,41 @@ int32_t spikard_last_error_code(void);
  * The returned pointer is borrowed from thread-local storage and must NOT be freed.
  */
 const char *spikard_last_error_context(void);
+
+/**
+ * Return the variant name of the last typed error, such as `RateLimited`.
+ * The pointer is NULL when the last error did not come from a typed error value, and is borrowed
+ * and valid until the next FFI call on this thread.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * The returned pointer is borrowed from thread-local storage and must NOT be freed.
+ */
+const char *spikard_last_error_variant(void);
+
+/**
+ * Return the last error's `status_code` value (the zero value when there is no typed error).
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * This function does not allocate and returns no owned pointer.
+ */
+uint16_t spikard_last_error_status_code(void);
+
+/**
+ * Return the last error's `is_transient` value (the zero value when there is no typed error).
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * This function does not allocate and returns no owned pointer.
+ */
+bool spikard_last_error_is_transient(void);
+
+/**
+ * Return the last error's `error_type` value, or NULL when the last error did not carry one.
+ * The pointer is borrowed and valid until the next FFI call on this thread.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * The returned pointer is borrowed from thread-local storage and must NOT be freed.
+ */
+const char *spikard_last_error_error_type(void);
 
 /**
  * Free a string previously returned by this library.
@@ -1398,6 +1438,13 @@ SPIKARDAlefHandle spikard_grpc_config_default(void);
  * Handle must have been returned by this library, or be zero.
  */
 void spikard_handler_result_free(SPIKARDAlefHandle handle);
+
+/**
+ * Free a `HookRegistry` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void spikard_hook_registry_free(SPIKARDAlefHandle handle);
 
 /**
  * Create a `JsonRpcConfig` from a JSON string. Returns null on failure.
@@ -3617,6 +3664,48 @@ SPIKARDAlefHandle spikard_method_from_json(const char *json);
  * Handle must have been returned by this library, or be zero.
  */
 void spikard_method_free(SPIKARDAlefHandle handle);
+
+/**
+ * Allocate a cancel token.
+ *
+ * Pass the token to a `*_cancellable` export to make that blocking call abortable, then call
+ * `spikard_cancel_token_cancel` from any thread to abort it. The call returns with last-error code
+ * `Cancelled` and the underlying request is dropped. One token may be shared by several calls.
+ * A cancelled token stays cancelled.
+ *
+ * Returns `0` on failure (see `spikard_last_error_code`). The caller owns the handle and
+ * MUST release it with `spikard_cancel_token_free` once no call using it is still running.
+ *
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * The returned handle is owned by the caller and must be freed with `spikard_cancel_token_free`.
+ */
+SPIKARDAlefHandle spikard_cancel_token_new(void);
+
+/**
+ * Trip a cancel token. Safe to call from any thread, repeatedly, and while a call using the
+ * token is blocked.
+ *
+ * Returns `0` on success and `-1` for an invalid, stale or wrong-typed handle (see
+ * `spikard_last_error_code`).
+ *
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * This function does not allocate and returns no owned pointer.
+ */
+int32_t spikard_cancel_token_cancel(SPIKARDAlefHandle token);
+
+/**
+ * Free a cancel token created by `spikard_cancel_token_new`.
+ *
+ * Passing `0` is a no-op. The token must not be used afterwards, and no call using it may still
+ * be running.
+ *
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * `token` must be `0` or a handle returned by `spikard_cancel_token_new` that has not been freed.
+ */
+void spikard_cancel_token_free(SPIKARDAlefHandle token);
 
 /**
  * Create a schema configuration with all three root types.

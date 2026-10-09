@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.85.15"
+alef_version = "0.107.10"
 languages = [
   "python",
   "node",
@@ -308,6 +308,12 @@ extension_name = "spikard_php"
 feature_gate = "extension-module"
 features = ["di"]
 exclude_types = ["TestClient"]
+# ~keep PHP route handlers are registered as request-bound Zend callables, which alef refuses
+# to bridge into `Send + Sync` Rust trait objects by default. spikard's generated bridge stores
+# only a usize index into a per-thread registry, so the callable is never moved across threads:
+# `app_run` drives a single-threaded server loop on the originating PHP thread. Acknowledge the
+# constraint to keep the PHP service surface generated. ~keep
+allow_service_handler_callbacks = true
 
 [crates.php.extra_dependencies]
 axum = { version = "0.8", default-features = false }

@@ -33,17 +33,15 @@ fn route_to_operation(route: &RouteMetadata) -> Result<utoipa::openapi::path::Op
         let parameters =
             crate::openapi::parameter_extraction::extract_parameters_from_schema(param_schema, &route.path)?;
         if !parameters.is_empty() {
-            let unwrapped: Vec<_> = parameters
-                .into_iter()
-                .filter_map(|p| if let RefOr::T(param) = p { Some(param) } else { None })
-                .collect();
-            operation.parameters = Some(unwrapped);
+            // ~keep utoipa 6 stores operation parameters as `Vec<RefOr<Parameter>>`; the
+            // extractor already yields `RefOr::T` entries, so keep them as-is.
+            operation.parameters = Some(parameters);
         }
     }
 
     if let Some(request_schema) = &route.request_schema {
         let request_body = crate::openapi::schema_conversion::json_schema_to_request_body(request_schema)?;
-        operation.request_body = Some(request_body);
+        operation.request_body = Some(RefOr::T(request_body));
     }
 
     let mut responses = Responses::new();

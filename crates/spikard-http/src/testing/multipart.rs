@@ -1,6 +1,13 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// File part metadata for multipart/form-data payloads.
+//
+// ~keep alef 0.107 began following `pub use` re-exports when extracting the API surface,
+// which pulled these Rust test helpers into every binding. `serde_json::Value` params and
+// `Vec<MultipartFilePart>` cannot be declared in an ffi/swift-bridge extern, so the
+// generated bindings failed to compile. They were never part of the binding surface
+// before the alef jump; `doc(hidden)` keeps them Rust-callable and out of the bindings.
+#[doc(hidden)]
 #[derive(Debug, Clone)]
 pub struct MultipartFilePart {
     pub field_name: String,
@@ -10,6 +17,7 @@ pub struct MultipartFilePart {
 }
 
 /// Build a multipart/form-data body from fields and files.
+#[doc(hidden)]
 pub fn build_multipart_body(form_fields: &[(String, String)], files: &[MultipartFilePart]) -> (Vec<u8>, String) {
     let boundary = generate_boundary();
     let mut body = Vec::new();

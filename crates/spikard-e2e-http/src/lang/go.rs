@@ -47,9 +47,14 @@ fn build_middleware_value(middleware: Option<&HttpMiddleware>) -> serde_json::Va
 /// Build the private template environment holding the Go HTTP templates.
 fn make_env() -> Environment<'static> {
     let mut env = Environment::new();
-    env.set_trim_blocks(true);
-    env.set_lstrip_blocks(true);
-    env.set_keep_trailing_newline(true);
+    env.set_syntax(
+        minijinja::syntax::SyntaxConfig::builder()
+            .trim_blocks(true)
+            .lstrip_blocks(true)
+            .keep_trailing_newline(true)
+            .build()
+            .expect("valid whitespace syntax config"),
+    );
     env.add_template_owned(
         "go/harness_main.go.jinja".to_owned(),
         include_str!("../../templates/go/harness_main.go.jinja").to_owned(),
@@ -112,7 +117,7 @@ fn render_harness_main(_e2e_config: &E2eConfig, groups: &[FixtureGroup], go_modu
     let template = env.get_template("harness").unwrap();
     let output = template
         .render(context! {
-            imports => vec![go_module_path],
+            imports => vec![go_module_path.to_owned()],
             import_alias => import_alias,
             register_route_method => "RegisterRoute",
             run_method => "Run",

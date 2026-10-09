@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'lib.dart';
@@ -9,6 +9,7 @@ part of 'lib.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $AppErrorCopyWith<AppError> get copyWith => _$AppErrorCopyWithImpl<AppError>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppError&&(identical(other.field0, field0) || other.field0 == field0));
+  final _this = this as AppError;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppError&&(identical(other.field0, _this.field0) || other.field0 == _this.field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,field0);
+int get hashCode {
+  final _this = this as AppError;
+  return Object.hash(runtimeType,_this.field0);
+}
 
 @override
 String toString() {
-  return 'AppError(field0: $field0)';
+  final _this = this as AppError;
+  return 'AppError(field0: ${_this.field0})';
 }
 
 
@@ -233,16 +239,18 @@ $AppError_RouteCopyWith<AppError_Route> get copyWith => _$AppError_RouteCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppError_Route&&(identical(other.field0, field0) || other.field0 == field0));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AppError_Route&&(identical(other.field0, field0) || other.field0 == field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,field0);
+int get hashCode {
+    return Object.hash(runtimeType,field0);
+}
 
 @override
 String toString() {
-  return 'AppError.route(field0: $field0)';
+    return 'AppError.route(field0: $field0)';
 }
 
 
@@ -299,16 +307,18 @@ $AppError_ServerCopyWith<AppError_Server> get copyWith => _$AppError_ServerCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppError_Server&&(identical(other.field0, field0) || other.field0 == field0));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AppError_Server&&(identical(other.field0, field0) || other.field0 == field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,field0);
+int get hashCode {
+    return Object.hash(runtimeType,field0);
+}
 
 @override
 String toString() {
-  return 'AppError.server(field0: $field0)';
+    return 'AppError.server(field0: $field0)';
 }
 
 
@@ -365,16 +375,18 @@ $AppError_DecodeCopyWith<AppError_Decode> get copyWith => _$AppError_DecodeCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppError_Decode&&(identical(other.field0, field0) || other.field0 == field0));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AppError_Decode&&(identical(other.field0, field0) || other.field0 == field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,field0);
+int get hashCode {
+    return Object.hash(runtimeType,field0);
+}
 
 @override
 String toString() {
-  return 'AppError.decode(field0: $field0)';
+    return 'AppError.decode(field0: $field0)';
 }
 
 
@@ -431,16 +443,18 @@ $AppError_GraphQLCopyWith<AppError_GraphQL> get copyWith => _$AppError_GraphQLCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppError_GraphQL&&(identical(other.field0, field0) || other.field0 == field0));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AppError_GraphQL&&(identical(other.field0, field0) || other.field0 == field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,field0);
+int get hashCode {
+    return Object.hash(runtimeType,field0);
+}
 
 @override
 String toString() {
-  return 'AppError.graphQl(field0: $field0)';
+    return 'AppError.graphQl(field0: $field0)';
 }
 
 
@@ -487,7 +501,7 @@ mixin _$GraphQLError {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError);
 }
 
 
@@ -496,7 +510,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'GraphQLError()';
+    return 'GraphQLError()';
 }
 
 
@@ -741,16 +755,18 @@ $GraphQLError_ExecutionErrorCopyWith<GraphQLError_ExecutionError> get copyWith =
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_ExecutionError&&(identical(other.field0, field0) || other.field0 == field0));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_ExecutionError&&(identical(other.field0, field0) || other.field0 == field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,field0);
+int get hashCode {
+    return Object.hash(runtimeType,field0);
+}
 
 @override
 String toString() {
-  return 'GraphQLError.executionError(field0: $field0)';
+    return 'GraphQLError.executionError(field0: $field0)';
 }
 
 
@@ -807,16 +823,18 @@ $GraphQLError_SchemaBuildErrorCopyWith<GraphQLError_SchemaBuildError> get copyWi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_SchemaBuildError&&(identical(other.field0, field0) || other.field0 == field0));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_SchemaBuildError&&(identical(other.field0, field0) || other.field0 == field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,field0);
+int get hashCode {
+    return Object.hash(runtimeType,field0);
+}
 
 @override
 String toString() {
-  return 'GraphQLError.schemaBuildError(field0: $field0)';
+    return 'GraphQLError.schemaBuildError(field0: $field0)';
 }
 
 
@@ -873,16 +891,18 @@ $GraphQLError_RequestHandlingErrorCopyWith<GraphQLError_RequestHandlingError> ge
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_RequestHandlingError&&(identical(other.field0, field0) || other.field0 == field0));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_RequestHandlingError&&(identical(other.field0, field0) || other.field0 == field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,field0);
+int get hashCode {
+    return Object.hash(runtimeType,field0);
+}
 
 @override
 String toString() {
-  return 'GraphQLError.requestHandlingError(field0: $field0)';
+    return 'GraphQLError.requestHandlingError(field0: $field0)';
 }
 
 
@@ -939,16 +959,18 @@ $GraphQLError_SerializationErrorCopyWith<GraphQLError_SerializationError> get co
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_SerializationError&&(identical(other.field0, field0) || other.field0 == field0));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_SerializationError&&(identical(other.field0, field0) || other.field0 == field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,field0);
+int get hashCode {
+    return Object.hash(runtimeType,field0);
+}
 
 @override
 String toString() {
-  return 'GraphQLError.serializationError(field0: $field0)';
+    return 'GraphQLError.serializationError(field0: $field0)';
 }
 
 
@@ -1005,16 +1027,18 @@ $GraphQLError_JsonErrorCopyWith<GraphQLError_JsonError> get copyWith => _$GraphQ
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_JsonError&&(identical(other.field0, field0) || other.field0 == field0));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_JsonError&&(identical(other.field0, field0) || other.field0 == field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,field0);
+int get hashCode {
+    return Object.hash(runtimeType,field0);
+}
 
 @override
 String toString() {
-  return 'GraphQLError.jsonError(field0: $field0)';
+    return 'GraphQLError.jsonError(field0: $field0)';
 }
 
 
@@ -1071,16 +1095,18 @@ $GraphQLError_ValidationErrorCopyWith<GraphQLError_ValidationError> get copyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_ValidationError&&(identical(other.field0, field0) || other.field0 == field0));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_ValidationError&&(identical(other.field0, field0) || other.field0 == field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,field0);
+int get hashCode {
+    return Object.hash(runtimeType,field0);
+}
 
 @override
 String toString() {
-  return 'GraphQLError.validationError(field0: $field0)';
+    return 'GraphQLError.validationError(field0: $field0)';
 }
 
 
@@ -1137,16 +1163,18 @@ $GraphQLError_ParseErrorCopyWith<GraphQLError_ParseError> get copyWith => _$Grap
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_ParseError&&(identical(other.field0, field0) || other.field0 == field0));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_ParseError&&(identical(other.field0, field0) || other.field0 == field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,field0);
+int get hashCode {
+    return Object.hash(runtimeType,field0);
+}
 
 @override
 String toString() {
-  return 'GraphQLError.parseError(field0: $field0)';
+    return 'GraphQLError.parseError(field0: $field0)';
 }
 
 
@@ -1203,16 +1231,18 @@ $GraphQLError_AuthenticationErrorCopyWith<GraphQLError_AuthenticationError> get 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_AuthenticationError&&(identical(other.field0, field0) || other.field0 == field0));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_AuthenticationError&&(identical(other.field0, field0) || other.field0 == field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,field0);
+int get hashCode {
+    return Object.hash(runtimeType,field0);
+}
 
 @override
 String toString() {
-  return 'GraphQLError.authenticationError(field0: $field0)';
+    return 'GraphQLError.authenticationError(field0: $field0)';
 }
 
 
@@ -1269,16 +1299,18 @@ $GraphQLError_AuthorizationErrorCopyWith<GraphQLError_AuthorizationError> get co
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_AuthorizationError&&(identical(other.field0, field0) || other.field0 == field0));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_AuthorizationError&&(identical(other.field0, field0) || other.field0 == field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,field0);
+int get hashCode {
+    return Object.hash(runtimeType,field0);
+}
 
 @override
 String toString() {
-  return 'GraphQLError.authorizationError(field0: $field0)';
+    return 'GraphQLError.authorizationError(field0: $field0)';
 }
 
 
@@ -1335,16 +1367,18 @@ $GraphQLError_NotFoundCopyWith<GraphQLError_NotFound> get copyWith => _$GraphQLE
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_NotFound&&(identical(other.field0, field0) || other.field0 == field0));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_NotFound&&(identical(other.field0, field0) || other.field0 == field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,field0);
+int get hashCode {
+    return Object.hash(runtimeType,field0);
+}
 
 @override
 String toString() {
-  return 'GraphQLError.notFound(field0: $field0)';
+    return 'GraphQLError.notFound(field0: $field0)';
 }
 
 
@@ -1401,16 +1435,18 @@ $GraphQLError_RateLimitExceededCopyWith<GraphQLError_RateLimitExceeded> get copy
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_RateLimitExceeded&&(identical(other.field0, field0) || other.field0 == field0));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_RateLimitExceeded&&(identical(other.field0, field0) || other.field0 == field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,field0);
+int get hashCode {
+    return Object.hash(runtimeType,field0);
+}
 
 @override
 String toString() {
-  return 'GraphQLError.rateLimitExceeded(field0: $field0)';
+    return 'GraphQLError.rateLimitExceeded(field0: $field0)';
 }
 
 
@@ -1467,16 +1503,18 @@ $GraphQLError_InvalidInputCopyWith<GraphQLError_InvalidInput> get copyWith => _$
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_InvalidInput&&(identical(other.message, message) || other.message == message));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_InvalidInput&&(identical(other.message, message) || other.message == message));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,message);
+int get hashCode {
+    return Object.hash(runtimeType,message);
+}
 
 @override
 String toString() {
-  return 'GraphQLError.invalidInput(message: $message)';
+    return 'GraphQLError.invalidInput(message: $message)';
 }
 
 
@@ -1528,7 +1566,7 @@ class GraphQLError_ComplexityLimitExceeded extends GraphQLError {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_ComplexityLimitExceeded);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_ComplexityLimitExceeded);
 }
 
 
@@ -1537,7 +1575,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'GraphQLError.complexityLimitExceeded()';
+    return 'GraphQLError.complexityLimitExceeded()';
 }
 
 
@@ -1560,7 +1598,7 @@ class GraphQLError_DepthLimitExceeded extends GraphQLError {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_DepthLimitExceeded);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_DepthLimitExceeded);
 }
 
 
@@ -1569,7 +1607,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'GraphQLError.depthLimitExceeded()';
+    return 'GraphQLError.depthLimitExceeded()';
 }
 
 
@@ -1592,7 +1630,7 @@ class GraphQLError_IntrospectionDisabled extends GraphQLError {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_IntrospectionDisabled);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_IntrospectionDisabled);
 }
 
 
@@ -1601,7 +1639,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'GraphQLError.introspectionDisabled()';
+    return 'GraphQLError.introspectionDisabled()';
 }
 
 
@@ -1629,16 +1667,18 @@ $GraphQLError_InternalErrorCopyWith<GraphQLError_InternalError> get copyWith => 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_InternalError&&(identical(other.field0, field0) || other.field0 == field0));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is GraphQLError_InternalError&&(identical(other.field0, field0) || other.field0 == field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,field0);
+int get hashCode {
+    return Object.hash(runtimeType,field0);
+}
 
 @override
 String toString() {
-  return 'GraphQLError.internalError(field0: $field0)';
+    return 'GraphQLError.internalError(field0: $field0)';
 }
 
 
@@ -1685,7 +1725,7 @@ mixin _$SchemaError {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SchemaError);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SchemaError);
 }
 
 
@@ -1694,7 +1734,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'SchemaError()';
+    return 'SchemaError()';
 }
 
 
@@ -1867,16 +1907,18 @@ $SchemaError_BuildingFailedCopyWith<SchemaError_BuildingFailed> get copyWith => 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SchemaError_BuildingFailed&&(identical(other.field0, field0) || other.field0 == field0));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SchemaError_BuildingFailed&&(identical(other.field0, field0) || other.field0 == field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,field0);
+int get hashCode {
+    return Object.hash(runtimeType,field0);
+}
 
 @override
 String toString() {
-  return 'SchemaError.buildingFailed(field0: $field0)';
+    return 'SchemaError.buildingFailed(field0: $field0)';
 }
 
 
@@ -1933,16 +1975,18 @@ $SchemaError_ValidationErrorCopyWith<SchemaError_ValidationError> get copyWith =
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SchemaError_ValidationError&&(identical(other.field0, field0) || other.field0 == field0));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SchemaError_ValidationError&&(identical(other.field0, field0) || other.field0 == field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,field0);
+int get hashCode {
+    return Object.hash(runtimeType,field0);
+}
 
 @override
 String toString() {
-  return 'SchemaError.validationError(field0: $field0)';
+    return 'SchemaError.validationError(field0: $field0)';
 }
 
 
@@ -2000,16 +2044,18 @@ $SchemaError_ComplexityLimitExceededCopyWith<SchemaError_ComplexityLimitExceeded
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SchemaError_ComplexityLimitExceeded&&(identical(other.limit, limit) || other.limit == limit)&&(identical(other.actual, actual) || other.actual == actual));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SchemaError_ComplexityLimitExceeded&&(identical(other.limit, limit) || other.limit == limit)&&(identical(other.actual, actual) || other.actual == actual));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,limit,actual);
+int get hashCode {
+    return Object.hash(runtimeType,limit,actual);
+}
 
 @override
 String toString() {
-  return 'SchemaError.complexityLimitExceeded(limit: $limit, actual: $actual)';
+    return 'SchemaError.complexityLimitExceeded(limit: $limit, actual: $actual)';
 }
 
 
@@ -2068,16 +2114,18 @@ $SchemaError_DepthLimitExceededCopyWith<SchemaError_DepthLimitExceeded> get copy
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SchemaError_DepthLimitExceeded&&(identical(other.limit, limit) || other.limit == limit)&&(identical(other.actual, actual) || other.actual == actual));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SchemaError_DepthLimitExceeded&&(identical(other.limit, limit) || other.limit == limit)&&(identical(other.actual, actual) || other.actual == actual));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,limit,actual);
+int get hashCode {
+    return Object.hash(runtimeType,limit,actual);
+}
 
 @override
 String toString() {
-  return 'SchemaError.depthLimitExceeded(limit: $limit, actual: $actual)';
+    return 'SchemaError.depthLimitExceeded(limit: $limit, actual: $actual)';
 }
 
 
@@ -2125,7 +2173,7 @@ mixin _$SecuritySchemeInfo {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SecuritySchemeInfo);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SecuritySchemeInfo);
 }
 
 
@@ -2134,7 +2182,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'SecuritySchemeInfo()';
+    return 'SecuritySchemeInfo()';
 }
 
 
@@ -2296,16 +2344,18 @@ $SecuritySchemeInfo_HttpCopyWith<SecuritySchemeInfo_Http> get copyWith => _$Secu
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SecuritySchemeInfo_Http&&(identical(other.scheme, scheme) || other.scheme == scheme)&&(identical(other.bearerFormat, bearerFormat) || other.bearerFormat == bearerFormat));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SecuritySchemeInfo_Http&&(identical(other.scheme, scheme) || other.scheme == scheme)&&(identical(other.bearerFormat, bearerFormat) || other.bearerFormat == bearerFormat));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,scheme,bearerFormat);
+int get hashCode {
+    return Object.hash(runtimeType,scheme,bearerFormat);
+}
 
 @override
 String toString() {
-  return 'SecuritySchemeInfo.http(scheme: $scheme, bearerFormat: $bearerFormat)';
+    return 'SecuritySchemeInfo.http(scheme: $scheme, bearerFormat: $bearerFormat)';
 }
 
 
@@ -2364,16 +2414,18 @@ $SecuritySchemeInfo_ApiKeyCopyWith<SecuritySchemeInfo_ApiKey> get copyWith => _$
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SecuritySchemeInfo_ApiKey&&(identical(other.location, location) || other.location == location)&&(identical(other.name, name) || other.name == name));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SecuritySchemeInfo_ApiKey&&(identical(other.location, location) || other.location == location)&&(identical(other.name, name) || other.name == name));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,location,name);
+int get hashCode {
+    return Object.hash(runtimeType,location,name);
+}
 
 @override
 String toString() {
-  return 'SecuritySchemeInfo.apiKey(location: $location, name: $name)';
+    return 'SecuritySchemeInfo.apiKey(location: $location, name: $name)';
 }
 
 
@@ -2426,16 +2478,21 @@ $SnapshotErrorCopyWith<SnapshotError> get copyWith => _$SnapshotErrorCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SnapshotError&&(identical(other.field0, field0) || other.field0 == field0));
+  final _this = this as SnapshotError;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SnapshotError&&(identical(other.field0, _this.field0) || other.field0 == _this.field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,field0);
+int get hashCode {
+  final _this = this as SnapshotError;
+  return Object.hash(runtimeType,_this.field0);
+}
 
 @override
 String toString() {
-  return 'SnapshotError(field0: $field0)';
+  final _this = this as SnapshotError;
+  return 'SnapshotError(field0: ${_this.field0})';
 }
 
 
@@ -2622,16 +2679,18 @@ $SnapshotError_InvalidHeaderCopyWith<SnapshotError_InvalidHeader> get copyWith =
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SnapshotError_InvalidHeader&&(identical(other.field0, field0) || other.field0 == field0));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SnapshotError_InvalidHeader&&(identical(other.field0, field0) || other.field0 == field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,field0);
+int get hashCode {
+    return Object.hash(runtimeType,field0);
+}
 
 @override
 String toString() {
-  return 'SnapshotError.invalidHeader(field0: $field0)';
+    return 'SnapshotError.invalidHeader(field0: $field0)';
 }
 
 
@@ -2688,16 +2747,18 @@ $SnapshotError_DecompressionCopyWith<SnapshotError_Decompression> get copyWith =
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SnapshotError_Decompression&&(identical(other.field0, field0) || other.field0 == field0));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SnapshotError_Decompression&&(identical(other.field0, field0) || other.field0 == field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,field0);
+int get hashCode {
+    return Object.hash(runtimeType,field0);
+}
 
 @override
 String toString() {
-  return 'SnapshotError.decompression(field0: $field0)';
+    return 'SnapshotError.decompression(field0: $field0)';
 }
 
 
@@ -2744,7 +2805,7 @@ mixin _$WebSocketMessage {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WebSocketMessage);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is WebSocketMessage);
 }
 
 
@@ -2753,7 +2814,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'WebSocketMessage()';
+    return 'WebSocketMessage()';
 }
 
 
@@ -2932,16 +2993,18 @@ $WebSocketMessage_TextCopyWith<WebSocketMessage_Text> get copyWith => _$WebSocke
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WebSocketMessage_Text&&(identical(other.field0, field0) || other.field0 == field0));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is WebSocketMessage_Text&&(identical(other.field0, field0) || other.field0 == field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,field0);
+int get hashCode {
+    return Object.hash(runtimeType,field0);
+}
 
 @override
 String toString() {
-  return 'WebSocketMessage.text(field0: $field0)';
+    return 'WebSocketMessage.text(field0: $field0)';
 }
 
 
@@ -2998,16 +3061,18 @@ $WebSocketMessage_BinaryCopyWith<WebSocketMessage_Binary> get copyWith => _$WebS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WebSocketMessage_Binary&&const DeepCollectionEquality().equals(other.field0, field0));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is WebSocketMessage_Binary&&const DeepCollectionEquality().equals(other.field0, field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(field0));
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(field0));
+}
 
 @override
 String toString() {
-  return 'WebSocketMessage.binary(field0: $field0)';
+    return 'WebSocketMessage.binary(field0: $field0)';
 }
 
 
@@ -3067,16 +3132,18 @@ $WebSocketMessage_CloseCopyWith<WebSocketMessage_Close> get copyWith => _$WebSoc
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WebSocketMessage_Close&&(identical(other.code, code) || other.code == code)&&(identical(other.reason, reason) || other.reason == reason));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is WebSocketMessage_Close&&(identical(other.code, code) || other.code == code)&&(identical(other.reason, reason) || other.reason == reason));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,code,reason);
+int get hashCode {
+    return Object.hash(runtimeType,code,reason);
+}
 
 @override
 String toString() {
-  return 'WebSocketMessage.close(code: $code, reason: $reason)';
+    return 'WebSocketMessage.close(code: $code, reason: $reason)';
 }
 
 
@@ -3134,16 +3201,18 @@ $WebSocketMessage_PingCopyWith<WebSocketMessage_Ping> get copyWith => _$WebSocke
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WebSocketMessage_Ping&&const DeepCollectionEquality().equals(other.field0, field0));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is WebSocketMessage_Ping&&const DeepCollectionEquality().equals(other.field0, field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(field0));
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(field0));
+}
 
 @override
 String toString() {
-  return 'WebSocketMessage.ping(field0: $field0)';
+    return 'WebSocketMessage.ping(field0: $field0)';
 }
 
 
@@ -3200,16 +3269,18 @@ $WebSocketMessage_PongCopyWith<WebSocketMessage_Pong> get copyWith => _$WebSocke
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WebSocketMessage_Pong&&const DeepCollectionEquality().equals(other.field0, field0));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is WebSocketMessage_Pong&&const DeepCollectionEquality().equals(other.field0, field0));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(field0));
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(field0));
+}
 
 @override
 String toString() {
-  return 'WebSocketMessage.pong(field0: $field0)';
+    return 'WebSocketMessage.pong(field0: $field0)';
 }
 
 

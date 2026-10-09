@@ -1,6 +1,12 @@
 use serde_json::Value;
 
 /// Encode JSON form data as application/x-www-form-urlencoded bytes.
+//
+// ~keep Rust test helper pulled into every binding by alef 0.107's `pub use` re-export
+// following; its `serde_json::Value` parameter has no ffi/swift bridge mapping. It was not
+// in the binding surface before the alef jump. `doc(hidden)` keeps it out of the bindings
+// while remaining callable from Rust tests. ~keep
+#[doc(hidden)]
 pub fn encode_urlencoded_body(value: &Value) -> Result<Vec<u8>, String> {
     match value {
         Value::String(s) => Ok(s.as_bytes().to_vec()),

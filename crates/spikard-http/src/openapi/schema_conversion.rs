@@ -87,7 +87,9 @@ pub fn json_schema_to_request_body(
     let content = ContentBuilder::new().schema(Some(openapi_schema)).build();
 
     let mut request_body = utoipa::openapi::request_body::RequestBody::new();
-    request_body.content.insert("application/json".to_string(), content);
+    request_body
+        .content
+        .insert("application/json".to_string(), RefOr::T(content));
 
     request_body.required = Some(utoipa::openapi::Required::True);
 
@@ -103,7 +105,9 @@ pub fn json_schema_to_response(schema: &serde_json::Value) -> Result<utoipa::ope
     let content = ContentBuilder::new().schema(Some(openapi_schema)).build();
 
     let mut response = utoipa::openapi::Response::new("Successful response");
-    response.content.insert("application/json".to_string(), content);
+    response
+        .content
+        .insert("application/json".to_string(), RefOr::T(content));
 
     Ok(response)
 }

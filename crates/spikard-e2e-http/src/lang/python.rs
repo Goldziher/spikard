@@ -24,9 +24,14 @@ use serde_json::json;
 /// Build the private template environment holding the Python HTTP templates.
 fn make_env() -> Environment<'static> {
     let mut env = Environment::new();
-    env.set_trim_blocks(true);
-    env.set_lstrip_blocks(true);
-    env.set_keep_trailing_newline(true);
+    env.set_syntax(
+        minijinja::syntax::SyntaxConfig::builder()
+            .trim_blocks(true)
+            .lstrip_blocks(true)
+            .keep_trailing_newline(true)
+            .build()
+            .expect("valid whitespace syntax config"),
+    );
     env.add_template_owned(
         "python/app_harness.py.jinja".to_owned(),
         include_str!("../../templates/python/app_harness.py.jinja").to_owned(),

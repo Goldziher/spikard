@@ -3,6 +3,12 @@
 //! This module provides common error messages, hook registration patterns, and
 //! serialization utilities to eliminate duplication across Python, Node.js,
 //! Ruby, and WASM bindings.
+//!
+//! ~keep Every item below is `#[doc(hidden)]`. The binding crates call them from Rust, but
+//! they were never meant to be binding API (`impl Display` params and `Body`/`Value` returns
+//! have no faithful mapping in the Python/WASM/Swift/FFI surfaces). alef 0.107's corrected
+//! sibling-module resolution began extracting them into every surface, so each is marked
+//! Rust-only to keep the generated bindings representable. ~keep
 
 use crate::lifecycle::LifecycleHook;
 use axum::body::Body;
@@ -15,46 +21,55 @@ pub mod error {
     use std::fmt::Display;
 
     /// Format error when a hook invocation fails
+    #[doc(hidden)]
     pub fn call_failed(hook_name: &str, reason: impl Display) -> String {
         format!("Hook '{}' call failed: {}", hook_name, reason)
     }
 
     /// Format error when a task execution fails (tokio/threading)
+    #[doc(hidden)]
     pub fn task_error(hook_name: &str, reason: impl Display) -> String {
         format!("Hook '{}' task error: {}", hook_name, reason)
     }
 
     /// Format error when a promise/future fails
+    #[doc(hidden)]
     pub fn promise_failed(hook_name: &str, reason: impl Display) -> String {
         format!("Hook '{}' promise failed: {}", hook_name, reason)
     }
 
     /// Format error for Python-specific failures
+    #[doc(hidden)]
     pub fn python_error(hook_name: &str, reason: impl Display) -> String {
         format!("Hook '{}' Python error: {}", hook_name, reason)
     }
 
     /// Format error when body reading fails
+    #[doc(hidden)]
     pub fn body_read_failed(direction: &str, reason: impl Display) -> String {
         format!("Failed to read {} body: {}", direction, reason)
     }
 
     /// Format error when body writing fails
+    #[doc(hidden)]
     pub fn body_write_failed(reason: impl Display) -> String {
         format!("Failed to write body: {}", reason)
     }
 
     /// Format error for serialization failures
+    #[doc(hidden)]
     pub fn serialize_failed(context: &str, reason: impl Display) -> String {
         format!("Failed to serialize {}: {}", context, reason)
     }
 
     /// Format error for deserialization failures
+    #[doc(hidden)]
     pub fn deserialize_failed(context: &str, reason: impl Display) -> String {
         format!("Failed to deserialize {}: {}", context, reason)
     }
 
     /// Format error when building HTTP objects fails
+    #[doc(hidden)]
     pub fn build_failed(what: &str, reason: impl Display) -> String {
         format!("Failed to build {}: {}", what, reason)
     }
@@ -65,6 +80,7 @@ pub mod serial {
     use super::*;
 
     /// Extract body bytes from an axum Body
+    #[doc(hidden)]
     pub async fn extract_body(body: Body) -> Result<bytes::Bytes, String> {
         use axum::body::to_bytes;
         to_bytes(body, usize::MAX)
@@ -73,6 +89,7 @@ pub mod serial {
     }
 
     /// Create a JSON-formatted response body
+    #[doc(hidden)]
     pub fn json_response_body(json: &serde_json::Value) -> Result<Body, String> {
         serde_json::to_string(json)
             .map(Body::from)
@@ -80,6 +97,7 @@ pub mod serial {
     }
 
     /// Parse a JSON value from bytes
+    #[doc(hidden)]
     pub fn parse_json(bytes: &[u8]) -> Result<serde_json::Value, String> {
         if bytes.is_empty() {
             return Ok(serde_json::Value::Null);
@@ -98,6 +116,12 @@ pub struct HookRegistry;
 impl HookRegistry {
     /// Extract hooks from a configuration and register them with a naming pattern
     /// Used by bindings to standardize hook naming (e.g., "on_request_hook_0")
+    //
+    // ~keep alef's extractor rejects public generic inherent methods (they cannot be
+    // monomorphized for a binding), and this helper is only exercised by the unit test
+    // below -- no binding calls it. `#[doc(hidden)]` records that it is outside the
+    // binding surface so extraction stays clean.
+    #[doc(hidden)]
     pub fn register_from_list<F>(
         hooks: &mut HttpLifecycleHooks,
         hook_list: Vec<Arc<dyn LifecycleHook<Request<Body>, Response<Body>>>>,

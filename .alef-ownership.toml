@@ -51,6 +51,7 @@ owned_paths = [
   "e2e/node/.npmrc",
   "e2e/node/app_harness.mjs",
   "e2e/php/phpunit.xml",
+  "e2e/zig/build.zig.zon",
   "packages/elixir/README.md",
   "packages/go/README.md",
   "packages/java/README.md",
