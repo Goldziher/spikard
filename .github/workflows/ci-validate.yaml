@@ -83,6 +83,13 @@ jobs:
       - name: Install Task
         uses: xberg-io/actions/install-task@v1
 
+      # ~keep alef:verify re-runs the generated-file formatters to reproduce the committed
+      # bytes. The Markdown pass (poly) adds the blank line before fenced blocks in
+      # docs/reference/*.md; without poly on PATH the re-render drops it and the freshness
+      # check reports spurious drift, so poly must be installed before this step, not after.
+      - name: Install poly
+        uses: Goldziher/polylint@v0
+
       - name: Verify Alef output
         run: task alef:verify
 
@@ -142,9 +149,6 @@ jobs:
         working-directory: packages/elixir
         continue-on-error: true
         run: mix deps.get || echo "mix deps.get skipped — non-fatal for poly"
-
-      - name: Install poly
-        uses: Goldziher/polylint@v0
 
       - name: Lint (poly)
         run: task lint:check

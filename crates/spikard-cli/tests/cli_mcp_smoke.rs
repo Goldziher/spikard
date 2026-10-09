@@ -2,7 +2,7 @@ use assert_cmd::Command;
 use predicates::prelude::*;
 use rmcp::{
     ClientHandler, RoleClient, ServiceExt,
-    model::{CallToolRequestParams, ClientInfo},
+    model::{CallToolRequestParams, ClientConfig},
     service::RunningService,
 };
 use serde_json::json;
@@ -17,8 +17,8 @@ use tokio::{
 struct DummyClientHandler;
 
 impl ClientHandler for DummyClientHandler {
-    fn get_info(&self) -> ClientInfo {
-        ClientInfo::default()
+    fn get_info(&self) -> ClientConfig {
+        ClientConfig::default()
     }
 }
 
