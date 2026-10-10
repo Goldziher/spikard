@@ -41,7 +41,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1054762717;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -946094526;
 
 // Section: executor
 
@@ -1670,112 +1670,6 @@ fn wire__crate__TestClient_graphql_subscription_at_impl(
                     .await,
                 )
             }
-        },
-    )
-}
-fn wire__crate__component_cache_path_impl(
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "component_cache_path",
-            port: None,
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_)
-            };
-            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_component = <String>::sse_decode(&mut deserializer);
-            deserializer.end();
-            transform_result_sse::<_, String>((move || {
-                let output_ok = crate::component_cache_path(api_component)?;
-                std::result::Result::Ok(output_ok)
-            })())
-        },
-    )
-}
-fn wire__crate__component_load_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "component_load",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_)
-            };
-            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_component = <String>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| {
-                transform_result_sse::<_, String>((move || {
-                    let output_ok = crate::component_load(api_component)?;
-                    std::result::Result::Ok(output_ok)
-                })())
-            }
-        },
-    )
-}
-fn wire__crate__component_prefetch_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "component_prefetch",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_)
-            };
-            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_component = <Option<String>>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| {
-                transform_result_sse::<_, String>((move || {
-                    let output_ok = crate::component_prefetch(api_component)?;
-                    std::result::Result::Ok(output_ok)
-                })())
-            }
-        },
-    )
-}
-fn wire__crate__component_status_impl(
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "component_status",
-            port: None,
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(ptr_, rust_vec_len_, data_len_)
-            };
-            let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_component = <String>::sse_decode(&mut deserializer);
-            deserializer.end();
-            transform_result_sse::<_, String>((move || {
-                let output_ok = crate::component_status(api_component)?;
-                std::result::Result::Ok(output_ok)
-            })())
         },
     )
 }
@@ -5011,59 +4905,57 @@ fn pde_ffi_dispatcher_primary_impl(
         46 => wire__crate__TestClient_graphql_at_impl(port, ptr, rust_vec_len, data_len),
         47 => wire__crate__TestClient_graphql_subscription_impl(port, ptr, rust_vec_len, data_len),
         48 => wire__crate__TestClient_graphql_subscription_at_impl(port, ptr, rust_vec_len, data_len),
-        50 => wire__crate__component_load_impl(port, ptr, rust_vec_len, data_len),
-        51 => wire__crate__component_prefetch_impl(port, ptr, rust_vec_len, data_len),
-        53 => wire__crate__create_api_key_auth_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        54 => wire__crate__create_api_key_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        55 => wire__crate__create_async_api_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        56 => wire__crate__create_authorization_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        57 => wire__crate__create_background_job_metadata_from_json_impl(port, ptr, rust_vec_len, data_len),
-        58 => wire__crate__create_background_task_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        59 => wire__crate__create_compression_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        60 => wire__crate__create_contact_info_from_json_impl(port, ptr, rust_vec_len, data_len),
-        61 => wire__crate__create_cors_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        62 => wire__crate__create_dynamic_schema_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        63 => wire__crate__create_field_error_spec_from_json_impl(port, ptr, rust_vec_len, data_len),
-        64 => wire__crate__create_full_schema_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        65 => wire__crate__create_grpc_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        66 => wire__crate__create_json_rpc_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        67 => wire__crate__create_json_rpc_method_info_from_json_impl(port, ptr, rust_vec_len, data_len),
-        68 => wire__crate__create_jwt_auth_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        69 => wire__crate__create_jwt_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        70 => wire__crate__create_license_info_from_json_impl(port, ptr, rust_vec_len, data_len),
-        71 => wire__crate__create_lifecycle_hook_ref_from_json_impl(port, ptr, rust_vec_len, data_len),
-        72 => wire__crate__create_lifecycle_hooks_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        73 => wire__crate__create_method_from_json_impl(port, ptr, rust_vec_len, data_len),
-        74 => wire__crate__create_open_api_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        75 => wire__crate__create_parse_result_from_json_impl(port, ptr, rust_vec_len, data_len),
-        76 => wire__crate__create_parsed_channel_from_json_impl(port, ptr, rust_vec_len, data_len),
-        77 => wire__crate__create_parsed_message_from_json_impl(port, ptr, rust_vec_len, data_len),
-        78 => wire__crate__create_parsed_operation_from_json_impl(port, ptr, rust_vec_len, data_len),
-        79 => wire__crate__create_problem_details_from_json_impl(port, ptr, rust_vec_len, data_len),
-        80 => wire__crate__create_query_mutation_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        81 => wire__crate__create_query_only_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        82 => wire__crate__create_rate_limit_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        83 => wire__crate__create_request_id_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        84 => wire__crate__create_response_from_json_impl(port, ptr, rust_vec_len, data_len),
+        49 => wire__crate__create_api_key_auth_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        50 => wire__crate__create_api_key_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        51 => wire__crate__create_async_api_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        52 => wire__crate__create_authorization_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        53 => wire__crate__create_background_job_metadata_from_json_impl(port, ptr, rust_vec_len, data_len),
+        54 => wire__crate__create_background_task_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        55 => wire__crate__create_compression_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        56 => wire__crate__create_contact_info_from_json_impl(port, ptr, rust_vec_len, data_len),
+        57 => wire__crate__create_cors_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        58 => wire__crate__create_dynamic_schema_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        59 => wire__crate__create_field_error_spec_from_json_impl(port, ptr, rust_vec_len, data_len),
+        60 => wire__crate__create_full_schema_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        61 => wire__crate__create_grpc_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        62 => wire__crate__create_json_rpc_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        63 => wire__crate__create_json_rpc_method_info_from_json_impl(port, ptr, rust_vec_len, data_len),
+        64 => wire__crate__create_jwt_auth_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        65 => wire__crate__create_jwt_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        66 => wire__crate__create_license_info_from_json_impl(port, ptr, rust_vec_len, data_len),
+        67 => wire__crate__create_lifecycle_hook_ref_from_json_impl(port, ptr, rust_vec_len, data_len),
+        68 => wire__crate__create_lifecycle_hooks_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        69 => wire__crate__create_method_from_json_impl(port, ptr, rust_vec_len, data_len),
+        70 => wire__crate__create_open_api_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        71 => wire__crate__create_parse_result_from_json_impl(port, ptr, rust_vec_len, data_len),
+        72 => wire__crate__create_parsed_channel_from_json_impl(port, ptr, rust_vec_len, data_len),
+        73 => wire__crate__create_parsed_message_from_json_impl(port, ptr, rust_vec_len, data_len),
+        74 => wire__crate__create_parsed_operation_from_json_impl(port, ptr, rust_vec_len, data_len),
+        75 => wire__crate__create_problem_details_from_json_impl(port, ptr, rust_vec_len, data_len),
+        76 => wire__crate__create_query_mutation_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        77 => wire__crate__create_query_only_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        78 => wire__crate__create_rate_limit_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        79 => wire__crate__create_request_id_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        80 => wire__crate__create_response_from_json_impl(port, ptr, rust_vec_len, data_len),
         #[cfg(not(target_arch = "wasm32"))]
-        85 => wire__crate__create_response_snapshot_from_json_impl(port, ptr, rust_vec_len, data_len),
-        86 => wire__crate__create_schema_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        87 => wire__crate__create_security_scheme_info_from_json_impl(port, ptr, rust_vec_len, data_len),
-        88 => wire__crate__create_server_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        89 => wire__crate__create_server_info_from_json_impl(port, ptr, rust_vec_len, data_len),
+        81 => wire__crate__create_response_snapshot_from_json_impl(port, ptr, rust_vec_len, data_len),
+        82 => wire__crate__create_schema_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        83 => wire__crate__create_security_scheme_info_from_json_impl(port, ptr, rust_vec_len, data_len),
+        84 => wire__crate__create_server_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        85 => wire__crate__create_server_info_from_json_impl(port, ptr, rust_vec_len, data_len),
         #[cfg(not(target_arch = "wasm32"))]
-        90 => wire__crate__create_snapshot_error_from_json_impl(port, ptr, rust_vec_len, data_len),
-        91 => wire__crate__create_sse_event_from_json_impl(port, ptr, rust_vec_len, data_len),
-        92 => wire__crate__create_static_files_config_from_json_impl(port, ptr, rust_vec_len, data_len),
-        93 => wire__crate__create_upload_file_from_json_impl(port, ptr, rust_vec_len, data_len),
+        86 => wire__crate__create_snapshot_error_from_json_impl(port, ptr, rust_vec_len, data_len),
+        87 => wire__crate__create_sse_event_from_json_impl(port, ptr, rust_vec_len, data_len),
+        88 => wire__crate__create_static_files_config_from_json_impl(port, ptr, rust_vec_len, data_len),
+        89 => wire__crate__create_upload_file_from_json_impl(port, ptr, rust_vec_len, data_len),
         #[cfg(not(target_arch = "wasm32"))]
-        94 => wire__crate__create_web_socket_message_from_json_impl(port, ptr, rust_vec_len, data_len),
-        95 => wire__crate__graph_ql_error_error_type_impl(port, ptr, rust_vec_len, data_len),
-        96 => wire__crate__graph_ql_error_is_transient_impl(port, ptr, rust_vec_len, data_len),
-        97 => wire__crate__graph_ql_error_status_code_impl(port, ptr, rust_vec_len, data_len),
-        98 => wire__crate__schema_full_impl(port, ptr, rust_vec_len, data_len),
-        99 => wire__crate__schema_query_mutation_impl(port, ptr, rust_vec_len, data_len),
-        100 => wire__crate__schema_query_only_impl(port, ptr, rust_vec_len, data_len),
+        90 => wire__crate__create_web_socket_message_from_json_impl(port, ptr, rust_vec_len, data_len),
+        91 => wire__crate__graph_ql_error_error_type_impl(port, ptr, rust_vec_len, data_len),
+        92 => wire__crate__graph_ql_error_is_transient_impl(port, ptr, rust_vec_len, data_len),
+        93 => wire__crate__graph_ql_error_status_code_impl(port, ptr, rust_vec_len, data_len),
+        94 => wire__crate__schema_full_impl(port, ptr, rust_vec_len, data_len),
+        95 => wire__crate__schema_query_mutation_impl(port, ptr, rust_vec_len, data_len),
+        96 => wire__crate__schema_query_only_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -5088,8 +4980,6 @@ fn pde_ffi_dispatcher_sync_impl(
         10 => wire__crate__service_api__App_put_impl(ptr, rust_vec_len, data_len),
         11 => wire__crate__service_api__App_route_impl(ptr, rust_vec_len, data_len),
         13 => wire__crate__service_api__App_trace_impl(ptr, rust_vec_len, data_len),
-        49 => wire__crate__component_cache_path_impl(ptr, rust_vec_len, data_len),
-        52 => wire__crate__component_status_impl(ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }

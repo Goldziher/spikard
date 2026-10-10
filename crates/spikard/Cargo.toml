@@ -24,12 +24,8 @@ path = "src/lib.rs"
 [features]
 default = ["di"]
 di = ["spikard-http/di", "spikard-core/di"]
-# Enabled in the downloadable `openapi` component's producer crate so the component
-# compiles the reference `OpenApiCompiler` into its cdylib. See `src/components.rs`. ~keep
-codegen-openapi = ["dep:spikard-codegen"]
 
 [dependencies]
-alef-component-abi = "0.107.11"
 anyhow = "1.0"
 async-graphql = "7"
 axum.workspace = true
@@ -39,7 +35,6 @@ bytes = "1.12"
 schemars = { version = "1.2", features = ["derive"] }
 serde.workspace = true
 serde_json.workspace = true
-spikard-codegen = { workspace = true, optional = true }
 spikard-core = { workspace = true, optional = true }
 spikard-graphql = { workspace = true }
 spikard-http = { workspace = true }

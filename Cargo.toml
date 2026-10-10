@@ -13,7 +13,6 @@ members = [
     "crates/spikard-http",
     "crates/spikard-jni",
     "crates/spikard-node",
-    "crates/spikard-openapi-component",
     "crates/spikard-py",
     "crates/spikard-wasm",
     "packages/swift/rust",
@@ -113,11 +112,3 @@ strip = true
 [profile.dev]
 opt-level = 0
 debug = true
-
-# ~keep TEMPORARY local patch: spikard consumes the un-released alef components work
-# (PR #224) from the sibling worktree so the generator itself has the component codegen.
-# The component crates (`alef-component-abi`/`runtime`) are published, so generated
-# bindings resolve those from crates.io. Drop this block once the alef release carrying
-# components is available.
-[patch.crates-io]
-alef = { path = "../alef-components" }

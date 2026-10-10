@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.107.11"
+alef_version = "0.109.0"
 languages = [
   "python",
   "node",
@@ -218,38 +218,9 @@ suppress_validation_codes = [
   "backend_stub_path",
 ]
 
-# ~keep Downloadable `openapi` component. The `spec` contract lives in
-# crates/spikard/src/components.rs; its trait path and method signatures are hashed into
-# every signed artifact, so renaming the trait or reshaping a method invalidates published
-# components. `dev-2026` is a local test signing key (the release workflow substitutes the
-# protected CI key in component_distribution.public_keys).
-[[crates.component_contracts]]
-name = "spec"
-trait_path = "spikard::SpecCompiler"
-interface_version = 1
-
-[[crates.components]]
-name = "openapi"
-provides = [{ contract = "spec", implementation = "spikard::OpenApiCompiler" }]
-features = ["codegen-openapi"]
-default_features = false
-# ~keep Local proof builds package only the host triple; the release matrix widens this
-# to the full SUPPORTED_COMPONENT_TARGETS set. `component lock` rejects a lock whose
-# records do not cover every configured target, so this must match what CI packages.
-targets = ["aarch64-apple-darwin"]
-
-[crates.component_distribution]
-url_template = "https://github.com/Goldziher/spikard/releases/download/components-v{version}/{component}/{target}/{artifact}"
-public_keys = { "dev-2026" = "AJA6iDgkeu8RcOKR8KsrHleIaHHBhtACyRWqgEa8+9U=" }
-
 [[crates.source_crates]]
 name = "spikard"
-sources = [
-  "crates/spikard/src/lib.rs",
-  "crates/spikard/src/components.rs",
-  "crates/spikard/src/upload.rs",
-  "crates/spikard/src/testing.rs",
-]
+sources = ["crates/spikard/src/lib.rs", "crates/spikard/src/upload.rs", "crates/spikard/src/testing.rs"]
 
 [[crates.source_crates]]
 name = "spikard-core"

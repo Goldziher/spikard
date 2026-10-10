@@ -1,18 +1,6 @@
 // swift-format-ignore-file
 import RustBridgeC
 
-public func component_load<GenericIntoRustString: IntoRustString>(_ component: GenericIntoRustString) -> RustString {
-    RustString(ptr: __swift_bridge__$component_load({ let rustString = component.intoRustString(); rustString.isOwned = false; return rustString.ptr }()))
-}
-public func component_prefetch<GenericIntoRustString: IntoRustString>(_ component: Optional<GenericIntoRustString>) -> RustString {
-    RustString(ptr: __swift_bridge__$component_prefetch({ if let rustString = optionalStringIntoRustString(component) { rustString.isOwned = false; return rustString.ptr } else { return nil } }()))
-}
-public func component_status<GenericIntoRustString: IntoRustString>(_ component: GenericIntoRustString) -> RustString {
-    RustString(ptr: __swift_bridge__$component_status({ let rustString = component.intoRustString(); rustString.isOwned = false; return rustString.ptr }()))
-}
-public func component_cache_path<GenericIntoRustString: IntoRustString>(_ component: GenericIntoRustString) -> RustString {
-    RustString(ptr: __swift_bridge__$component_cache_path({ let rustString = component.intoRustString(); rustString.isOwned = false; return rustString.ptr }()))
-}
 public func corsConfigAllowedMethodsJoinedFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> RustString {
     try { let val = __swift_bridge__$cors_config_allowed_methods_joined_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return RustString(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
