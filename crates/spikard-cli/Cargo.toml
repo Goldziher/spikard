@@ -4,6 +4,7 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+license-file.workspace = true
 repository.workspace = true
 homepage.workspace = true
 description = "Command-line interface for building and validating Spikard applications"
@@ -11,6 +12,14 @@ keywords = ["cli", "http", "api", "codegen", "validation"]
 categories = ["command-line-utilities", "development-tools"]
 documentation = "https://docs.rs/spikard-cli"
 readme = "README.md"
+include = [
+  "/src/**",
+  "/Cargo.toml",
+  "/Cargo.lock",
+  "/LICENSE*",
+  "/README*",
+  "!/src/codegen/openrpc/generators/tests.rs",
+]
 
 [package.metadata.cargo-machete]
 ignored = ["clap_complete", "clap_mangen", "prost", "prost-reflect", "prost-types", "protox"]

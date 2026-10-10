@@ -2,11 +2,14 @@
 name = "spikard-codegen"
 version.workspace = true
 edition.workspace = true
+authors.workspace = true
 license.workspace = true
+license-file.workspace = true
 repository.workspace = true
 homepage.workspace = true
 description = "Code generation utilities for Spikard"
 documentation = "https://docs.rs/spikard-codegen"
+include = ["/src/**", "/Cargo.toml", "/Cargo.lock", "/LICENSE*", "/README*"]
 
 [dependencies]
 indexmap = { version = "2.14", features = ["serde"] }

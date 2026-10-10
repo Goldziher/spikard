@@ -4,6 +4,7 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
+license-file.workspace = true
 repository.workspace = true
 homepage.workspace = true
 description = "GraphQL support for Spikard with async-graphql integration"
@@ -11,6 +12,7 @@ keywords = ["graphql", "async-graphql", "server", "api"]
 categories = ["web-programming::http-server", "web-programming"]
 documentation = "https://docs.rs/spikard-graphql"
 readme = "README.md"
+include = ["/src/**", "/Cargo.toml", "/Cargo.lock", "/LICENSE*", "/README*"]
 
 [package.metadata.cargo-machete]
 ignored = [

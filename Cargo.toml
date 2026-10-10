@@ -33,6 +33,7 @@ version = "0.17.2"
 edition = "2024"
 authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
 license = "MIT"
+license-file = "LICENSE"
 repository = "https://github.com/Goldziher/spikard"
 homepage = "https://github.com/Goldziher/spikard"
 
