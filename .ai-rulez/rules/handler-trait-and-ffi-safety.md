@@ -1,5 +1,11 @@
 ---
-priority: critical
+type: Decision
+title: Handler Trait And Ffi Safety
+x-ai-rulez:
+  kind: rule
+  id: handler-trait-and-ffi-safety
+  metadata:
+    priority: critical
 ---
 
 # Handler Trait and FFI Safety

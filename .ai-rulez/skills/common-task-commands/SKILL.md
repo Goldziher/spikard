@@ -1,6 +1,12 @@
 ---
-priority: critical
-description: "Common Task Commands"
+type: Playbook
+title: Common Task Commands
+description: Common Task Commands
+x-ai-rulez:
+  kind: skill
+  id: common-task-commands
+  metadata:
+    priority: critical
 ---
 
 ---

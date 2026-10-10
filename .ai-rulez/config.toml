@@ -1,9 +1,9 @@
 
-version = '4.0'
+version = "5.0"
 name = 'spikard'
 description = 'Codegen-first polyglot web toolkit: a Rust core plus 14 language bindings (Python, TypeScript/Node, Ruby, PHP, Elixir, Go, Java, C#, Kotlin, Dart, Swift, Zig, C FFI, WebAssembly), providing core library, CLI, MCP server, and tower-http runtime. Spec-driven codegen (OpenAPI, AsyncAPI, GraphQL, JSON-RPC, gRPC, SQL-to-HTTP) with fixture-driven testing across all platforms. Experimental, pre-1.0.'
 gitignore = true
-presets = ["claude", "codex", "opencode"]
+presets = ["claude", "codex", "opencode", "pi"]
 builtins = [
   'rust',
   'python',
@@ -21,6 +21,7 @@ builtins = [
 
 [header]
 style = 'minimal'
+hashes = "full"
 
 [[includes]]
 name = 'xberg-core'

@@ -1,5 +1,11 @@
 ---
-priority: critical
+type: Decision
+title: Docs And Project Metadata
+x-ai-rulez:
+  kind: rule
+  id: docs-and-project-metadata
+  metadata:
+    priority: critical
 ---
 
 # Docs and Project Metadata

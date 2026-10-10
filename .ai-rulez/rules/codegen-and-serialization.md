@@ -1,5 +1,11 @@
 ---
-priority: high
+type: Decision
+title: Codegen And Serialization
+x-ai-rulez:
+  kind: rule
+  id: codegen-and-serialization
+  metadata:
+    priority: high
 ---
 
 # Code Generation and Serialization

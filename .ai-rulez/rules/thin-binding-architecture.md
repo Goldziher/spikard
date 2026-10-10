@@ -1,5 +1,11 @@
 ---
-priority: critical
+type: Decision
+title: Thin Binding Architecture
+x-ai-rulez:
+  kind: rule
+  id: thin-binding-architecture
+  metadata:
+    priority: critical
 ---
 
 # Thin Binding Architecture

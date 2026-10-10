@@ -1,7 +1,13 @@
 ---
-name: spikard-developer
+type: Reference
+title: Spikard Developer
 description: General development agent for the spikard polyglot HTTP framework. Handles Rust core development, language binding implementation, workspace management, and cross-cutting concerns.
-model: sonnet
+x-ai-rulez:
+  kind: agent
+  id: spikard-developer
+  metadata:
+    model: sonnet
+    name: spikard-developer
 ---
 
 # spikard-developer

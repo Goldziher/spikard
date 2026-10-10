@@ -1,5 +1,11 @@
 ---
-priority: critical
+type: Decision
+title: Fixture Driven Testing
+x-ai-rulez:
+  kind: rule
+  id: fixture-driven-testing
+  metadata:
+    priority: critical
 ---
 
 # Fixture-Driven Testing

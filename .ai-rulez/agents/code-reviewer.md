@@ -1,7 +1,13 @@
 ---
-name: code-reviewer
+type: Reference
+title: Code Reviewer
 description: Reviews code changes for codegen output quality, FFI safety, HTTP middleware correctness, and cross-binding consistency.
-model: sonnet
+x-ai-rulez:
+  kind: agent
+  id: code-reviewer
+  metadata:
+    model: sonnet
+    name: code-reviewer
 ---
 
 # code-reviewer

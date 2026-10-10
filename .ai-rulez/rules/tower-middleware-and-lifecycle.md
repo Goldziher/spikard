@@ -1,5 +1,11 @@
 ---
-priority: high
+type: Decision
+title: Tower Middleware And Lifecycle
+x-ai-rulez:
+  kind: rule
+  id: tower-middleware-and-lifecycle
+  metadata:
+    priority: high
 ---
 
 # Tower Middleware and Lifecycle Hooks
