@@ -11,7 +11,8 @@
   },
   "devDependencies": {
     "@spikard/node-wasm": "file:../../crates/spikard-wasm/pkg",
-    "rollup": "^4.63.1",
-    "vitest": "^4.1.11"
-  }
+    "rollup": "^4.64.5",
+    "vitest": "^5.0.3"
+  },
+  "packageManager": "pnpm@12.11.2"
 }

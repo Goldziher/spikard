@@ -5,9 +5,9 @@
 pip install {{ package_name }}
 ```
 
-{% elif pm == "npm" %}
+{% elif pm == "pnpm" %}
 ```bash
-npm install {{ package_name }}
+pnpm add {{ package_name }}
 ```
 
 {% elif pm == "go get" %}
@@ -94,14 +94,7 @@ Add to `build.zig.zon`:
 {% endif %}
 {% else %}
 {% for pm in package_manager %}
-{% if pm == "npm" %}
-**npm:**
-
-```bash
-npm install {{ package_name }}
-```
-
-{% elif pm == "pnpm" %}
+{% if pm == "pnpm" %}
 **pnpm:**
 
 ```bash

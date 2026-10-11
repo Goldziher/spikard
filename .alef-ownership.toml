@@ -14,6 +14,7 @@
 
 owned_paths = [
   "crates/spikard-node/.gitignore",
+  "crates/spikard-node/README.md",
   "crates/spikard-node/app.cjs",
   "crates/spikard-node/npm/darwin-arm64/package.json",
   "crates/spikard-node/npm/linux-arm64-gnu/package.json",
@@ -23,6 +24,7 @@ owned_paths = [
   "crates/spikard-node/npm/win32-arm64-msvc/package.json",
   "crates/spikard-node/npm/win32-x64-msvc/package.json",
   "crates/spikard-node/service.cjs",
+  "crates/spikard-wasm/README.md",
   "docs/reference/api-c.md",
   "docs/reference/api-csharp.md",
   "docs/reference/api-dart.md",

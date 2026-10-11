@@ -72,10 +72,14 @@ jobs:
           cache-key-prefix: validate
           use-sccache: "true"
 
-      - name: Setup Node
-        uses: xberg-io/actions/setup-node-workspace@v1
+      - uses: pnpm/action-setup@v6
+        with:
+          version: "12.11.2"
+      - uses: actions/setup-node@v7
         with:
           node-version: "24"
+      - name: Install Node workspace dependencies
+        run: pnpm install --no-frozen-lockfile
 
       - name: Install Alef
         uses: xberg-io/actions/install-alef@v1

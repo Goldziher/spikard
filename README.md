@@ -113,8 +113,8 @@ Each binding ships through its native package manager.
 | Rust    | `spikard` on crates.io                 | `cargo add spikard`                                  |
 | CLI     | `spikard-cli` on crates.io             | `cargo install spikard-cli` or `cargo binstall spikard-cli` |
 | Python  | `spikard` on PyPI                      | `pip install spikard`                                |
-| Node.js | `@spikard/node` on npm                 | `npm install @spikard/node`                          |
-| WASM    | `@spikard/node-wasm` on npm            | `npm install @spikard/node-wasm`                     |
+| Node.js | `@spikard/node` on npm                 | `pnpm add @spikard/node`                          |
+| WASM    | `@spikard/node-wasm` on npm            | `pnpm add @spikard/node-wasm`                     |
 | Ruby    | `spikard` on RubyGems                  | `gem install spikard`                                |
 | PHP     | `goldziher/spikard` on Packagist       | `composer require goldziher/spikard`                 |
 | Elixir  | `spikard` on Hex                       | Add `{:spikard, "~> 0.17"}` to `mix.exs`             |

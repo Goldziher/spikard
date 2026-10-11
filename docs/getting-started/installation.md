@@ -15,11 +15,7 @@ Spikard ships a Rust core plus 14 language bindings. Install only what you need;
 === "TypeScript / Node"
 
     ```bash
-    npm install @spikard/node
-    # or
     pnpm add @spikard/node
-    # or
-    yarn add @spikard/node
     ```
 
     Requires Node ≥ 18. Prebuilt binaries available for Linux, macOS, and Windows.
@@ -141,7 +137,7 @@ Spikard ships a Rust core plus 14 language bindings. Install only what you need;
 === "WebAssembly"
 
     ```bash
-    npm install @spikard/node-wasm
+    pnpm add @spikard/node-wasm
     ```
 
     WASM provides client-side type stubs and serialization helpers for talking to a remote Spikard server. No server-side runtime.

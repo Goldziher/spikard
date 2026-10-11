@@ -90,11 +90,17 @@ jobs:
       # NOTE: Language toolchains are only needed by the test suite (some
       # core-crate tests exercise binding-adjacent codegen); clippy/fmt/check
       # are pure Rust and skip them for a faster lint job.
-      - name: Setup Node
+      - uses: pnpm/action-setup@v6
         if: matrix.suite == 'test'
-        uses: xberg-io/actions/setup-node-workspace@v1
+        with:
+          version: "12.11.2"
+      - uses: actions/setup-node@v7
+        if: matrix.suite == 'test'
         with:
           node-version: "24"
+      - name: Install Node workspace dependencies
+        if: matrix.suite == 'test'
+        run: pnpm install --no-frozen-lockfile
 
       - name: Setup PHP
         if: matrix.suite == 'test'

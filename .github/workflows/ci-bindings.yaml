@@ -118,11 +118,17 @@ jobs:
         with:
           python-version: "3.14"
 
-      - name: Setup Node
+      - uses: pnpm/action-setup@v6
         if: matrix.language == 'node'
-        uses: xberg-io/actions/setup-node-workspace@v1
+        with:
+          version: "12.11.2"
+      - uses: actions/setup-node@v7
+        if: matrix.language == 'node'
         with:
           node-version: "24"
+      - name: Install Node workspace dependencies
+        if: matrix.language == 'node'
+        run: pnpm install --no-frozen-lockfile
 
       - name: Setup Ruby
         if: matrix.language == 'ruby'

@@ -17,7 +17,7 @@ Before opening a PR, run `task check` (formatting, linting, and docs consistency
 ## Prerequisites
 
 - Rust 1.85+ (edition 2024)
-- Node.js 20+
+- Node.js 22+ and pnpm 12.11.2
 - Python 3.10+
 - Ruby 3.2+
 - PHP 8.2+ (optional)

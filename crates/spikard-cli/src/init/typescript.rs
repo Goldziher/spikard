@@ -75,6 +75,7 @@ impl TypeScriptScaffolder {
             r#"{{
 	"name": "{kebab_name}",
 	"version": "0.0.1",
+	"packageManager": "pnpm@12.11.2",
 	"type": "module",
 	"description": "Spikard TypeScript application",
 	"main": "dist/server.js",

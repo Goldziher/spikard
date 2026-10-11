@@ -175,11 +175,11 @@ it("should handle authorization header", async () => {
 
 ```bash
 # Run all tests
-npx vitest
+pnpm exec vitest
 
 # Run with coverage
-npx vitest --coverage
+pnpm exec vitest --coverage
 
 # Run specific file
-npx vitest user_handler.test.ts
+pnpm exec vitest user_handler.test.ts
 ```

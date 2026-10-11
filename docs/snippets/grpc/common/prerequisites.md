@@ -28,7 +28,7 @@
 
 === "TypeScript"
 `bash
-    npm install protobufjs  # or: pnpm add protobufjs
+    pnpm add protobufjs
     `
 
 === "Ruby"

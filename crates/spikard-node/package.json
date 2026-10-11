@@ -21,18 +21,26 @@
       "default": "./service.cjs"
     }
   },
-  "files": ["app.cjs", "app.d.ts", "index.js", "index-wrapper.cjs", "index.d.ts", "service.cjs", "*.node"],
+  "files": [
+    "app.cjs",
+    "app.d.ts",
+    "index.js",
+    "index-wrapper.cjs",
+    "index.d.ts",
+    "service.cjs",
+    "*.node"
+  ],
   "dependencies": {
     "zod": "^3.25.0 || ^4.0.0"
   },
   "optionalDependencies": {
-    "@spikard/node-linux-x64-gnu": "0.17.2",
-    "@spikard/node-linux-arm64-gnu": "0.17.2",
-    "@spikard/node-linux-x64-musl": "0.17.2",
-    "@spikard/node-linux-arm64-musl": "0.17.2",
-    "@spikard/node-darwin-arm64": "0.17.2",
-    "@spikard/node-win32-x64-msvc": "0.17.2",
-    "@spikard/node-win32-arm64-msvc": "0.17.2"
+    "@spikard/node-darwin-arm64": "0.17.1",
+    "@spikard/node-linux-arm64-gnu": "0.17.1",
+    "@spikard/node-linux-arm64-musl": "0.0.1",
+    "@spikard/node-linux-x64-gnu": "0.17.1",
+    "@spikard/node-linux-x64-musl": "0.0.1",
+    "@spikard/node-win32-arm64-msvc": "0.17.1",
+    "@spikard/node-win32-x64-msvc": "0.17.1"
   },
   "napi": {
     "packageName": "@spikard/node",
@@ -48,11 +56,18 @@
     ]
   },
   "scripts": {
-    "build": "npx --yes -p @napi-rs/cli@^3.7.3 napi build --platform --release",
-    "artifacts": "npx --yes -p @napi-rs/cli@^3.7.3 napi artifacts",
-    "prepublishOnly": "npx --yes -p @napi-rs/cli@^3.7.3 napi prepublish -t npm --skip-optional-publish"
+    "build": "pnpm exec napi build --platform --release",
+    "artifacts": "pnpm exec napi artifacts",
+    "prepublishOnly": "pnpm exec napi prepublish -t npm --skip-optional-publish"
   },
-  "engines": { "node": ">= 22" },
-  "publishConfig": { "access": "public" },
-  "devDependencies": { "@napi-rs/cli": "^3.7.3" }
+  "engines": {
+    "node": ">= 22"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^3.10.8"
+  },
+  "packageManager": "pnpm@12.11.2"
 }

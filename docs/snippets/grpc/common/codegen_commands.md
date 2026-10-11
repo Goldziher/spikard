@@ -12,7 +12,7 @@ protoc --python_out=. user_service.proto
 
 ```bash
 # Install protobufjs CLI
-npm install -g protobufjs-cli
+pnpm add --global protobufjs-cli
 
 # Generate TypeScript definitions
 pbjs -t static-module -w commonjs -o user_service.js user_service.proto

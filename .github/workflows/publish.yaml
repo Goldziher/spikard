@@ -305,9 +305,14 @@ jobs:
       - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
-      - uses: xberg-io/actions/setup-node-workspace@v1
+      - uses: pnpm/action-setup@v6
+        with:
+          version: "12.11.2"
+      - uses: actions/setup-node@v7
         with:
           node-version: "24"
+      - name: Install Node workspace dependencies
+        run: pnpm install --no-frozen-lockfile
       - name: Generate TypeScript definitions
         # ~keep napi build emits index.js + index.d.ts as a side effect; both are
         # ~keep platform-agnostic (the platform binary lives in @spikard/node-<rid>).
@@ -388,9 +393,14 @@ jobs:
           toolchain: "1.95"
           target: ${{ matrix.rust_target || matrix.target }}
           cache-key-prefix: publish-node-${{ matrix.target }}
-      - uses: xberg-io/actions/setup-node-workspace@v1
+      - uses: pnpm/action-setup@v6
+        with:
+          version: "12.11.2"
+      - uses: actions/setup-node@v7
         with:
           node-version: "24"
+      - name: Install Node workspace dependencies
+        run: pnpm install --no-frozen-lockfile
       - name: Build native module
         uses: xberg-io/actions/build-node-napi@v1
         with:
@@ -416,9 +426,14 @@ jobs:
       - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
-      - uses: xberg-io/actions/setup-node-workspace@v1
+      - uses: pnpm/action-setup@v6
+        with:
+          version: "12.11.2"
+      - uses: actions/setup-node@v7
         with:
           node-version: "24"
+      - name: Install Node workspace dependencies
+        run: pnpm install --no-frozen-lockfile
       - uses: xberg-io/actions/build-wasm-package@v1
         id: build-wasm
         with:
@@ -427,7 +442,7 @@ jobs:
           # ~keep so the published package.json main/module/types resolve, and strip the
           # ~keep wasm-pack-emitted pkg/.gitignore ("*") that otherwise makes npm drop all
           # ~keep of pkg/ from the tarball. See the package.json "build:all" script.
-          build-command: npm run build:all
+          build-command: pnpm run build:all
           pack-tarball: "true"
       - uses: actions/upload-artifact@v7
         with:
@@ -860,10 +875,15 @@ jobs:
         with:
           name: node-typescript-defs
           path: typescript-defs
-      - uses: xberg-io/actions/setup-node-workspace@v1
+      - uses: pnpm/action-setup@v6
+        with:
+          version: "12.11.2"
+      - uses: actions/setup-node@v7
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org/"
+      - name: Install Node workspace dependencies
+        run: pnpm install --no-frozen-lockfile
       - name: Stage platform packages and main package
         # ~keep Per-platform Node artifact layout: one tarball per target staging
         # ~keep crates/spikard-node/npm/<platform>/. The main package needs an
@@ -887,7 +907,7 @@ jobs:
           cd crates/spikard-node/npm
           for dir in */; do
             if [ -f "$dir/package.json" ]; then
-              (cd "$dir" && npm pack && mv ./*.tgz ..)
+              (cd "$dir" && pnpm pack && mv ./*.tgz ..)
             fi
           done
           cd ../../..
@@ -921,7 +941,7 @@ jobs:
           dry-run: ${{ needs.prepare.outputs.dry_run }}
       # ~keep Wait for the platform sub-packages to index before publishing the main
       # ~keep package, whose optionalDependencies reference them — otherwise there is a
-      # ~keep window where `npm install @spikard/node` fails on unresolved deps.
+      # ~keep window where `pnpm add @spikard/node` fails on unresolved deps.
       - name: Wait for npm indexing (node-linux-x64-gnu)
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
         uses: xberg-io/actions/wait-for-package@v1

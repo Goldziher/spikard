@@ -5,7 +5,7 @@ Spikard exposes a Rust core with thin bindings.
 Current binding summary:
 
 - Python: `pip install spikard`
-- TypeScript: `npm install spikard`
+- TypeScript: `pnpm add spikard`
 - Ruby: `gem install spikard`
 
 Working rules:

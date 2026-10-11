@@ -981,7 +981,7 @@ package_name = "@spikard/node"
 badge_url = "https://img.shields.io/npm/v/@spikard/node?label=TypeScript&color=007ec6"
 docs_url = "https://spikard.dev"
 description = "Codegen-first polyglot web toolkit on a Rust core: OpenAPI/AsyncAPI/GraphQL/JSON-RPC/gRPC codegen, SQL-to-HTTP, tower-http middleware, and an MCP server. Experimental, pre-1.0. Native NAPI-RS bindings for Node.js with TypeScript type definitions."
-package_manager = ["npm", "pnpm", "yarn"]
+package_manager = ["pnpm"]
 snippets = { quickstart = "quickstart_routes.md", hello_route = "hello_route.md", routing_basic = "routing_basic.md", validation_basic = "validation_basic.md", middleware_basic = "middleware_basic.md" }
 
 [crates.readme.languages.ruby]
@@ -1083,7 +1083,7 @@ package_name = "@spikard/node-wasm"
 badge_url = "https://img.shields.io/npm/v/@spikard/node-wasm?label=WASM&color=007ec6"
 docs_url = "https://spikard.dev"
 description = "Codegen-first polyglot web toolkit on a Rust core: OpenAPI/AsyncAPI/GraphQL/JSON-RPC/gRPC codegen, SQL-to-HTTP, tower-http middleware, and an MCP server. Experimental, pre-1.0. WebAssembly bindings for browsers, Deno, and Cloudflare Workers."
-package_manager = ["npm", "pnpm", "yarn"]
+package_manager = ["pnpm"]
 snippets = {}
 
 [crates.readme.languages.swift]

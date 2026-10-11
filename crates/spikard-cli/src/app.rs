@@ -118,7 +118,7 @@ pub fn feature_summary() -> FeatureSummary {
             },
             LanguageBinding {
                 name: "TypeScript".to_string(),
-                install_hint: "npm install spikard".to_string(),
+                install_hint: "pnpm add spikard".to_string(),
                 usage_hint: "node server.js".to_string(),
             },
             LanguageBinding {

@@ -1585,10 +1585,10 @@ Error: Permission denied: ./generated/handlers.py
 
    ```bash
    # OpenAPI
-   npx @apidevtools/swagger-cli validate openapi.yaml
+   pnpm dlx @apidevtools/swagger-cli validate openapi.yaml
 
    # AsyncAPI
-   npx @asyncapi/cli validate asyncapi.yaml
+   pnpm dlx @asyncapi/cli validate asyncapi.yaml
    ```
 
 3. **Generate to a scratch file for inspection:**
