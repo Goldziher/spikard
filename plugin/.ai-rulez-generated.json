@@ -1,6 +1,6 @@
 {
   "schema_version": "v1",
-  "source_hash": "blake3:0e1040a6a44b29031c75923924e3da054ae0a44f030d577859c7a6c9e3c29eb4",
+  "source_hash": "blake3:84f6dbbe893d49479fb99571e00f7caaad8c748add1fe1e87aa99532bca9d9eb",
   "outputs": {
     ".claude-plugin/plugin.json": {
       "content_hash": "blake3:b6978b7e39b6a964f334c39defde8f167c322395ebe34c5cf34325c48bf48985",
@@ -51,7 +51,7 @@
       "mode": "0644"
     },
     ".hermes/package/pyproject.toml": {
-      "content_hash": "blake3:e74dc3c4310d20fbd9bb277cb916a3ce5016a0651a95753bdbb2b985a1fa4579",
+      "content_hash": "blake3:c0ddc77cc90a7a67ccdee9b02cdb9a5b294685c35bb3318e52e952458cdcf6d8",
       "mode": "0644"
     },
     ".hermes/package/src/spikard_hermes_plugin/__init__.py": {

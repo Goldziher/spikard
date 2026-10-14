@@ -13,7 +13,7 @@ jobs:
       - uses: xberg-io/actions/setup-ai-rulez@98adf87f1ed4c62a57ff56f9010d62faf42d4db6
         with:
           ai-rulez-version: "5.3.0"
-          source-revision: "1dd46d774f156f3d170ecd1b702598b12d1eaf5b"
+          source-revision: "12aa1103ddfb1baf1a439df5b479b0129bba27c1"
       - uses: xberg-io/actions/validate-ai-rulez@98adf87f1ed4c62a57ff56f9010d62faf42d4db6
         with:
           expected-config-count: "2"
@@ -38,6 +38,16 @@ jobs:
           ref: caf557be5b4c9ae75b3a7566d65d3df2c701c5df
           path: .native/hermes
       - uses: astral-sh/setup-uv@v10.3.0
+      - name: Build and strictly validate the Hermes wheel
+        shell: bash
+        run: |
+          set -euo pipefail
+          wheel_directory="$(mktemp -d)"
+          test -n "$wheel_directory"
+          uv build --wheel --out-dir "$wheel_directory" plugin/.hermes/package
+          mapfile -t wheels < <(find "$wheel_directory" -maxdepth 1 -type f -name '*.whl')
+          test "${#wheels[@]}" -eq 1
+          uvx --from twine==7.0.0 --with packaging==26.3 twine check --strict "${wheels[0]}"
       - name: Verify actual Hermes skill discovery
         env:
           PYTHONPATH: ${{ github.workspace }}/.native/hermes
