@@ -40,4 +40,4 @@ Standalone skills: copy `skills/spikard` into the client's skills directory, ret
 
 Author product content in `plugin/.ai-rulez/`; repository governance stays in `.ai-rulez/`. Both use a separate `config.plugins.toml` layer. Run `task plugin:generate`, `task ai:check`, and the public resource/native SDK tests before committing. Public `skills/` bytes are generated from the curated native bundle, with ownership hashes and drift checks.
 
-The [publishing setup](../../.github/PLUGIN-PUBLISHING.md) describes GitHub artifacts, npm and PyPI trusted publishers. Until the new packages are first published, use the checkout paths above. Registry versions are immutable; a subsequent changed bundle needs a new version.
+The [publishing setup](https://github.com/Goldziher/spikard/blob/main/.github/PLUGIN-PUBLISHING.md) describes GitHub artifacts, npm and PyPI trusted publishers. Until the new packages are first published, use the checkout paths above. Registry versions are immutable; a subsequent changed bundle needs a new version.
