@@ -3,8 +3,11 @@ version = "5.0"
 name = 'spikard'
 description = 'Codegen-first polyglot web toolkit: a Rust core plus 14 language bindings (Python, TypeScript/Node, Ruby, PHP, Elixir, Go, Java, C#, Kotlin, Dart, Swift, Zig, C FFI, WebAssembly), providing core library, CLI, MCP server, and tower-http runtime. Spec-driven codegen (OpenAPI, AsyncAPI, GraphQL, JSON-RPC, gRPC, SQL-to-HTTP) with fixture-driven testing across all platforms. Experimental, pre-1.0.'
 gitignore = true
+default_layers = ["plugins"]
+gitignore_exclude = [".ai-rulez/.generated-manifest.json"]
 presets = ["claude", "codex", "opencode", "pi"]
 builtins = [
+  "!git-workflow",
   'rust',
   'python',
   'typescript',
@@ -19,54 +22,48 @@ builtins = [
   'default-commands',
 ]
 
-[header]
-text = """Generated file — DO NOT EDIT.
-Project: spikard
-Source: .ai-rulez/config.toml
-Modify .ai-rulez/ content and regenerate with ai-rulez generate.
-MCP server: pnpm dlx ai-rulez@5.0.1 mcp
-"""
-style = 'minimal'
-hashes = "full"
 
 [[includes]]
 name = 'xberg-core'
 source = 'https://github.com/xberg-io/agent-conventions.git'
+ref = '41783fcc1f8578ac8cfdd6835653fb2ac46edd4e'
 path = 'modules/core'
 merge_strategy = 'local-override'
 
 [[includes]]
 name = 'xberg-languages'
 source = 'https://github.com/xberg-io/agent-conventions.git'
+ref = '41783fcc1f8578ac8cfdd6835653fb2ac46edd4e'
 path = 'modules/languages'
 merge_strategy = 'local-override'
 
 [[includes]]
 name = 'xberg-cicd'
 source = 'https://github.com/xberg-io/agent-conventions.git'
+ref = '41783fcc1f8578ac8cfdd6835653fb2ac46edd4e'
 path = 'modules/cicd'
 merge_strategy = 'local-override'
 
 [[includes]]
 name = 'xberg-e2e-generator'
 source = 'https://github.com/xberg-io/agent-conventions.git'
+ref = '41783fcc1f8578ac8cfdd6835653fb2ac46edd4e'
 path = 'modules/e2e-generator'
 merge_strategy = 'local-override'
 
 [[installed_skills]]
 name = 'alef'
 source = 'https://github.com/xberg-io/alef.git'
+ref = '0f9a0e0b0d7e71b0b20eb1babeeadcc59901a461'
 
-[[marketplaces]]
-name = "basemind"
-source = "Goldziher/basemind"
-type = "github"
-
-[[plugins]]
-marketplace = "basemind"
-name = "basemind"
-scope = "project"
-enabled = true
 
 [mcp]
-self_server_command = ["pnpm", "dlx", "ai-rulez@5.0.1", "mcp"]
+self_server_command = ["ai-rulez", "mcp"]
+
+[lock]
+include_outputs = false
+
+[codex]
+project_doc_max_bytes = 65536
+[lint.load_budgets]
+"codex-agents-chain" = 65536

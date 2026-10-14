@@ -1,6 +1,13 @@
+<!--
+AI-RULEZ :: GENERATED FILE — DO NOT EDIT
+Content-Hash: blake3:4c716e43c759cf1965d31e5562dd3af2f2df993acfee6051c7ba481373431751
+Source-Hash: blake3:0e1040a6a44b29031c75923924e3da054ae0a44f030d577859c7a6c9e3c29eb4
+Schema-Version: v1
+-->
+
 # Spikard Codegen Workflows
 
-Use Spikard as a schema-to-code generator first.
+Use Spikard as a schema-to-code generator first. The examples use the repository checkout's `testing_data/schemas/` fixtures. For standalone skill installations, replace those paths with your project's schema files.
 
 ## OpenAPI
 
@@ -55,3 +62,13 @@ spikard generate php-dto --output src/Generated
 ```
 
 When an agent is driving generation repeatedly, prefer the MCP server so file outputs come back as structured tool results.
+
+## SQL-to-HTTP
+
+Annotate named SQL queries with `-- @http GET /items` (or the appropriate method and route), supply schema DDL, then generate route sidecars and an OpenAPI 3.1 document:
+
+```bash
+spikard generate sql queries --schema schema.sql --lang python --output generated
+```
+
+Choose the dialect explicitly when it is not PostgreSQL. Query data access remains in the generated language adapter; the HTTP runtime consumes the generated routes. Inspect output files before integrating them. Use `--strict` to reject unsupported neutral types instead of an any-JSON fallback.

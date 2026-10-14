@@ -1,0 +1,61 @@
+{
+  "author": {
+    "name": "Goldziher"
+  },
+  "dependencies": {
+    "@opencode/plugin": "^2.0.26"
+  },
+  "description": "Generate HTTP applications, schema handlers and fixtures using Spikard's local CLI and MCP server.",
+  "exports": {
+    ".": "./.opencode/plugins/spikard.js"
+  },
+  "files": [
+    ".opencode/ai-rulez-bundle.json",
+    ".opencode/ai-rulez-content.js",
+    ".opencode/plugins/spikard.js",
+    ".opencode/skills/spikard/SKILL.md",
+    ".opencode/skills/spikard/index.md",
+    ".opencode/skills/spikard/references/cli-reference.md",
+    ".opencode/skills/spikard/references/codegen-workflows.md",
+    ".opencode/skills/spikard/references/language-bindings.md",
+    ".opencode/skills/spikard/references/mcp-tools.md",
+    ".opencode/skills/spikard/references/project-scaffolding.md",
+    ".opencode/skills/spikard/references/testing-and-fixtures.md",
+    ".pi/skills/spikard/SKILL.md",
+    ".pi/skills/spikard/index.md",
+    ".pi/skills/spikard/references/cli-reference.md",
+    ".pi/skills/spikard/references/codegen-workflows.md",
+    ".pi/skills/spikard/references/language-bindings.md",
+    ".pi/skills/spikard/references/mcp-tools.md",
+    ".pi/skills/spikard/references/project-scaffolding.md",
+    ".pi/skills/spikard/references/testing-and-fixtures.md",
+    "README.md",
+    "assets/",
+    "scripts/"
+  ],
+  "keywords": [
+    "asyncapi",
+    "code-generation",
+    "graphql",
+    "grpc",
+    "http",
+    "openapi",
+    "pi-package",
+    "sql"
+  ],
+  "license": "MIT",
+  "main": ".opencode/plugins/spikard.js",
+  "name": "@goldziher/opencode-spikard",
+  "pi": {
+    "prompts": [],
+    "skills": [
+      "./.pi/skills/spikard"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Goldziher/spikard"
+  },
+  "type": "module",
+  "version": "0.17.2"
+}

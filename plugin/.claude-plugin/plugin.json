@@ -1,0 +1,27 @@
+{
+  "name": "spikard",
+  "description": "Generate HTTP applications, schema handlers and fixtures using Spikard's local CLI and MCP server.",
+  "version": "0.17.2",
+  "author": {
+    "name": "Goldziher"
+  },
+  "repository": "https://github.com/Goldziher/spikard",
+  "license": "MIT",
+  "keywords": [
+    "http",
+    "code-generation",
+    "openapi",
+    "asyncapi",
+    "graphql",
+    "grpc",
+    "sql"
+  ],
+  "mcpServers": {
+    "spikard": {
+      "command": "${CLAUDE_PLUGIN_ROOT}/scripts/mcp-launch.sh",
+      "args": [
+        "mcp"
+      ]
+    }
+  }
+}

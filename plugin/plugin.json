@@ -1,0 +1,20 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "spikard",
+  "version": "0.17.2",
+  "description": "Generate HTTP applications, schema handlers and fixtures using Spikard's local CLI and MCP server.",
+  "author": {
+    "name": "Goldziher"
+  },
+  "repository": "https://github.com/Goldziher/spikard",
+  "license": "MIT",
+  "keywords": [
+    "http",
+    "code-generation",
+    "openapi",
+    "asyncapi",
+    "graphql",
+    "grpc",
+    "sql"
+  ]
+}

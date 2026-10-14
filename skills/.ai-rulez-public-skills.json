@@ -1,0 +1,14 @@
+{
+  "source": "plugin/skills",
+  "skill_count": 1,
+  "files": {
+    "spikard/SKILL.md": "49bc9182ee700b5e2dca40b4190bf5c046d4dfbb2904f993e9bd26770188e741",
+    "spikard/index.md": "9657fa8e84f3bc8ae4ee918d6133a00ddff0bdb7f8fbd7ace67e56962f89b323",
+    "spikard/references/cli-reference.md": "a860dd62e78ad971ccd614969d947d165b0b01680be3b867d7deea86fd081580",
+    "spikard/references/codegen-workflows.md": "4d0705290fcce521e78bd1dcf4b2272d734b5b3127e5581342af8bbf766745d9",
+    "spikard/references/language-bindings.md": "024163f5b02ecce29aead88ea59a0ef6256f3090f9bcfc35ea62ff116541bfc7",
+    "spikard/references/mcp-tools.md": "55a87409bb43b991e1f3b991162f8b97fe0cec4db2af5d606b14e5c0887e89a8",
+    "spikard/references/project-scaffolding.md": "00496f90604307e0c37899e5cf732b33877d7fcb224590a4d013577aa13abbdf",
+    "spikard/references/testing-and-fixtures.md": "f37297c21a51bc42e3f3e319f3c0f94ccf6f56f9bf19349ca70cdeb9259a942c"
+  }
+}

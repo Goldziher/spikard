@@ -1,5 +1,9 @@
 ---
-priority: high
+type: Concept
+title: Http Framework
+x-ai-rulez:
+  kind: domain
+  id: http-framework
 ---
 
 # HTTP Framework Domain

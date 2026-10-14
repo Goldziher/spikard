@@ -1,5 +1,9 @@
 ---
-priority: high
+type: Concept
+title: Handler Abstraction
+x-ai-rulez:
+  kind: domain
+  id: handler-abstraction
 ---
 
 # Handler Abstraction Domain

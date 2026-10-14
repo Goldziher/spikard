@@ -1,0 +1,42 @@
+{
+  "name": "spikard",
+  "version": "0.17.2",
+  "description": "Generate HTTP applications, schema handlers and fixtures using Spikard's local CLI and MCP server.",
+  "author": {
+    "name": "Goldziher"
+  },
+  "license": "MIT",
+  "keywords": [
+    "http",
+    "code-generation",
+    "openapi",
+    "asyncapi",
+    "graphql",
+    "grpc",
+    "sql"
+  ],
+  "skills": "./skills/",
+  "mcpServers": {
+    "spikard": {
+      "command": "./scripts/mcp-launch.sh",
+      "args": [
+        "mcp"
+      ]
+    }
+  },
+  "interface": {
+    "displayName": "Spikard",
+    "shortDescription": "Generate HTTP apps and fixtures from schemas",
+    "longDescription": "Scaffold applications and generate handlers from OpenAPI, AsyncAPI, OpenRPC, GraphQL, Protobuf and SQL using the installed Spikard CLI. Includes the complete public Spikard skill and local MCP connection.",
+    "developerName": "Goldziher",
+    "category": "developer-tools",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Generate handlers from this API schema",
+      "Scaffold a Spikard app"
+    ]
+  }
+}

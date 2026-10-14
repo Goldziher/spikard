@@ -9,10 +9,6 @@ x-ai-rulez:
     priority: critical
 ---
 
----
-
-## priority: critical
-
 # Common Task Commands
 
 **Setup & Installation**:
@@ -71,7 +67,6 @@ x-ai-rulez:
 - `task version:sync`: Sync version from Cargo.toml to all manifests (package.json, pyproject.toml, pom.xml, go.mod, Gemfile, etc.)
 - `poly hooks run`: Run poly's git hooks manually
 - `task pdfium:install`: Download and install PDFium library
-- `task smoke`: Run smoke tests (quick validation)
 
 **Alef Generation**:
 

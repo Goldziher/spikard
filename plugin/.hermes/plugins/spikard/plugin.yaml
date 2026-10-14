@@ -1,0 +1,8 @@
+name: "spikard"
+version: "0.17.2"
+description: "Generate HTTP applications, schema handlers and fixtures using Spikard's local CLI and MCP server."
+author: "Goldziher"
+kind: "standalone"
+python_dependencies:
+  - "mcp==1.28.1"
+  - "PyYAML==6.0.3"

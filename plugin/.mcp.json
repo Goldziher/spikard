@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "spikard": {
+      "command": "./scripts/mcp-launch.sh",
+      "args": [
+        "mcp"
+      ]
+    }
+  }
+}

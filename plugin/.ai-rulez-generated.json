@@ -1,0 +1,290 @@
+{
+  "schema_version": "v1",
+  "source_hash": "blake3:0e1040a6a44b29031c75923924e3da054ae0a44f030d577859c7a6c9e3c29eb4",
+  "outputs": {
+    ".claude-plugin/plugin.json": {
+      "content_hash": "blake3:b6978b7e39b6a964f334c39defde8f167c322395ebe34c5cf34325c48bf48985",
+      "mode": "0644"
+    },
+    ".codex-plugin/plugin.json": {
+      "content_hash": "blake3:8bbe3a3c80add89d228c513c253cc5b52735f102be6a96cd5f8720aa80caa5de",
+      "mode": "0644"
+    },
+    ".cursor-plugin/plugin.json": {
+      "content_hash": "blake3:dee7ab66264046fea4fc1ceb1e80c841c1fa4ad5b87f8b9af952a9eb9bab667b",
+      "mode": "0644"
+    },
+    ".cursor-plugin/skills/spikard/SKILL.md": {
+      "content_hash": "blake3:5f4f9aed1c6ad96d229173f0cacb330816c4c11870832ef3cdd63ecc0c629dc8",
+      "mode": "0644"
+    },
+    ".cursor-plugin/skills/spikard/index.md": {
+      "content_hash": "blake3:d5040555a979a73f90bb62a79248d944de2d652dd5f5f4f433addba7431ca9bd",
+      "mode": "0644"
+    },
+    ".cursor-plugin/skills/spikard/references/cli-reference.md": {
+      "content_hash": "blake3:c4ed906524a7768898f2fe4d2495f02b04a2192232b8e60bb44e8fcbb7a2875b",
+      "mode": "0644"
+    },
+    ".cursor-plugin/skills/spikard/references/codegen-workflows.md": {
+      "content_hash": "blake3:4c716e43c759cf1965d31e5562dd3af2f2df993acfee6051c7ba481373431751",
+      "mode": "0644"
+    },
+    ".cursor-plugin/skills/spikard/references/language-bindings.md": {
+      "content_hash": "blake3:d94a1e52eca0b07cb5af132d5b7fba85a8bf8939cb327556266b59b29c0f1481",
+      "mode": "0644"
+    },
+    ".cursor-plugin/skills/spikard/references/mcp-tools.md": {
+      "content_hash": "blake3:1a430263e98109668e184b2939f9e4bba30a970a0ea24d023a3f125872b22654",
+      "mode": "0644"
+    },
+    ".cursor-plugin/skills/spikard/references/project-scaffolding.md": {
+      "content_hash": "blake3:049284776566008882299b28587b5c4a6cdd1aea52b8796c2b2fe11101e5a888",
+      "mode": "0644"
+    },
+    ".cursor-plugin/skills/spikard/references/testing-and-fixtures.md": {
+      "content_hash": "blake3:05d8054d7ad5e1098a8159f90ca66a28a0db1d3019563feab98170164f1f9d71",
+      "mode": "0644"
+    },
+    ".factory-plugin/plugin.json": {
+      "content_hash": "blake3:5da98fc8db94b1607abce92fa9522d3087d5fe43af34a7be0e1f5b2476be56ea",
+      "mode": "0644"
+    },
+    ".hermes/package/pyproject.toml": {
+      "content_hash": "blake3:e74dc3c4310d20fbd9bb277cb916a3ce5016a0651a95753bdbb2b985a1fa4579",
+      "mode": "0644"
+    },
+    ".hermes/package/src/spikard_hermes_plugin/__init__.py": {
+      "content_hash": "blake3:2a9e144b6f6aa96a16ac624c4ef9503288ecedeb2baa865e721a5a7fd878bc4b",
+      "mode": "0644"
+    },
+    ".hermes/package/src/spikard_hermes_plugin/hermes.py": {
+      "content_hash": "blake3:44048ec561c188e9d1914269d3fadfc3e32313bebdcd53887cb3a427758104dd",
+      "mode": "0644"
+    },
+    ".hermes/package/src/spikard_hermes_plugin/plugin.yaml": {
+      "content_hash": "blake3:aea110facee3f0cae65e807cebce8ef9822c46f9ae2fceb44f3824943cac444d",
+      "mode": "0644"
+    },
+    ".hermes/package/src/spikard_hermes_plugin/skills/spikard/SKILL.md": {
+      "content_hash": "blake3:5f4f9aed1c6ad96d229173f0cacb330816c4c11870832ef3cdd63ecc0c629dc8",
+      "mode": "0644"
+    },
+    ".hermes/package/src/spikard_hermes_plugin/skills/spikard/index.md": {
+      "content_hash": "blake3:d5040555a979a73f90bb62a79248d944de2d652dd5f5f4f433addba7431ca9bd",
+      "mode": "0644"
+    },
+    ".hermes/package/src/spikard_hermes_plugin/skills/spikard/references/cli-reference.md": {
+      "content_hash": "blake3:c4ed906524a7768898f2fe4d2495f02b04a2192232b8e60bb44e8fcbb7a2875b",
+      "mode": "0644"
+    },
+    ".hermes/package/src/spikard_hermes_plugin/skills/spikard/references/codegen-workflows.md": {
+      "content_hash": "blake3:4c716e43c759cf1965d31e5562dd3af2f2df993acfee6051c7ba481373431751",
+      "mode": "0644"
+    },
+    ".hermes/package/src/spikard_hermes_plugin/skills/spikard/references/language-bindings.md": {
+      "content_hash": "blake3:d94a1e52eca0b07cb5af132d5b7fba85a8bf8939cb327556266b59b29c0f1481",
+      "mode": "0644"
+    },
+    ".hermes/package/src/spikard_hermes_plugin/skills/spikard/references/mcp-tools.md": {
+      "content_hash": "blake3:1a430263e98109668e184b2939f9e4bba30a970a0ea24d023a3f125872b22654",
+      "mode": "0644"
+    },
+    ".hermes/package/src/spikard_hermes_plugin/skills/spikard/references/project-scaffolding.md": {
+      "content_hash": "blake3:049284776566008882299b28587b5c4a6cdd1aea52b8796c2b2fe11101e5a888",
+      "mode": "0644"
+    },
+    ".hermes/package/src/spikard_hermes_plugin/skills/spikard/references/testing-and-fixtures.md": {
+      "content_hash": "blake3:05d8054d7ad5e1098a8159f90ca66a28a0db1d3019563feab98170164f1f9d71",
+      "mode": "0644"
+    },
+    ".hermes/plugins/spikard/__init__.py": {
+      "content_hash": "blake3:2a9e144b6f6aa96a16ac624c4ef9503288ecedeb2baa865e721a5a7fd878bc4b",
+      "mode": "0644"
+    },
+    ".hermes/plugins/spikard/hermes.py": {
+      "content_hash": "blake3:44048ec561c188e9d1914269d3fadfc3e32313bebdcd53887cb3a427758104dd",
+      "mode": "0644"
+    },
+    ".hermes/plugins/spikard/plugin.yaml": {
+      "content_hash": "blake3:aea110facee3f0cae65e807cebce8ef9822c46f9ae2fceb44f3824943cac444d",
+      "mode": "0644"
+    },
+    ".hermes/plugins/spikard/skills/spikard/SKILL.md": {
+      "content_hash": "blake3:5f4f9aed1c6ad96d229173f0cacb330816c4c11870832ef3cdd63ecc0c629dc8",
+      "mode": "0644"
+    },
+    ".hermes/plugins/spikard/skills/spikard/index.md": {
+      "content_hash": "blake3:d5040555a979a73f90bb62a79248d944de2d652dd5f5f4f433addba7431ca9bd",
+      "mode": "0644"
+    },
+    ".hermes/plugins/spikard/skills/spikard/references/cli-reference.md": {
+      "content_hash": "blake3:c4ed906524a7768898f2fe4d2495f02b04a2192232b8e60bb44e8fcbb7a2875b",
+      "mode": "0644"
+    },
+    ".hermes/plugins/spikard/skills/spikard/references/codegen-workflows.md": {
+      "content_hash": "blake3:4c716e43c759cf1965d31e5562dd3af2f2df993acfee6051c7ba481373431751",
+      "mode": "0644"
+    },
+    ".hermes/plugins/spikard/skills/spikard/references/language-bindings.md": {
+      "content_hash": "blake3:d94a1e52eca0b07cb5af132d5b7fba85a8bf8939cb327556266b59b29c0f1481",
+      "mode": "0644"
+    },
+    ".hermes/plugins/spikard/skills/spikard/references/mcp-tools.md": {
+      "content_hash": "blake3:1a430263e98109668e184b2939f9e4bba30a970a0ea24d023a3f125872b22654",
+      "mode": "0644"
+    },
+    ".hermes/plugins/spikard/skills/spikard/references/project-scaffolding.md": {
+      "content_hash": "blake3:049284776566008882299b28587b5c4a6cdd1aea52b8796c2b2fe11101e5a888",
+      "mode": "0644"
+    },
+    ".hermes/plugins/spikard/skills/spikard/references/testing-and-fixtures.md": {
+      "content_hash": "blake3:05d8054d7ad5e1098a8159f90ca66a28a0db1d3019563feab98170164f1f9d71",
+      "mode": "0644"
+    },
+    ".mcp.json": {
+      "content_hash": "blake3:aef1d2fee290beac95ff5f2216d925f37b702e1d9861d0e82e4e78e3ec26d601",
+      "mode": "0644"
+    },
+    ".opencode/ai-rulez-bundle.json": {
+      "content_hash": "blake3:9f9da29c4baeb9ae89ed343931c828dc38f6c2f8a0657e1204289bad9c87634a",
+      "mode": "0644"
+    },
+    ".opencode/ai-rulez-content.js": {
+      "content_hash": "blake3:011ec20caa671eb4bd4e886b09e15f720a786de4bf747419efd0690889fc5549",
+      "mode": "0644"
+    },
+    ".opencode/plugins/spikard.js": {
+      "content_hash": "blake3:a7c106308b3345f76ab1d6073ef3256b596d1da1282310da3f25de7c8d7301fc",
+      "mode": "0644"
+    },
+    ".opencode/skills/spikard/SKILL.md": {
+      "content_hash": "blake3:5f4f9aed1c6ad96d229173f0cacb330816c4c11870832ef3cdd63ecc0c629dc8",
+      "mode": "0644"
+    },
+    ".opencode/skills/spikard/index.md": {
+      "content_hash": "blake3:d5040555a979a73f90bb62a79248d944de2d652dd5f5f4f433addba7431ca9bd",
+      "mode": "0644"
+    },
+    ".opencode/skills/spikard/references/cli-reference.md": {
+      "content_hash": "blake3:c4ed906524a7768898f2fe4d2495f02b04a2192232b8e60bb44e8fcbb7a2875b",
+      "mode": "0644"
+    },
+    ".opencode/skills/spikard/references/codegen-workflows.md": {
+      "content_hash": "blake3:4c716e43c759cf1965d31e5562dd3af2f2df993acfee6051c7ba481373431751",
+      "mode": "0644"
+    },
+    ".opencode/skills/spikard/references/language-bindings.md": {
+      "content_hash": "blake3:d94a1e52eca0b07cb5af132d5b7fba85a8bf8939cb327556266b59b29c0f1481",
+      "mode": "0644"
+    },
+    ".opencode/skills/spikard/references/mcp-tools.md": {
+      "content_hash": "blake3:1a430263e98109668e184b2939f9e4bba30a970a0ea24d023a3f125872b22654",
+      "mode": "0644"
+    },
+    ".opencode/skills/spikard/references/project-scaffolding.md": {
+      "content_hash": "blake3:049284776566008882299b28587b5c4a6cdd1aea52b8796c2b2fe11101e5a888",
+      "mode": "0644"
+    },
+    ".opencode/skills/spikard/references/testing-and-fixtures.md": {
+      "content_hash": "blake3:05d8054d7ad5e1098a8159f90ca66a28a0db1d3019563feab98170164f1f9d71",
+      "mode": "0644"
+    },
+    ".pi/skills/spikard/SKILL.md": {
+      "content_hash": "blake3:5f4f9aed1c6ad96d229173f0cacb330816c4c11870832ef3cdd63ecc0c629dc8",
+      "mode": "0644"
+    },
+    ".pi/skills/spikard/index.md": {
+      "content_hash": "blake3:d5040555a979a73f90bb62a79248d944de2d652dd5f5f4f433addba7431ca9bd",
+      "mode": "0644"
+    },
+    ".pi/skills/spikard/references/cli-reference.md": {
+      "content_hash": "blake3:c4ed906524a7768898f2fe4d2495f02b04a2192232b8e60bb44e8fcbb7a2875b",
+      "mode": "0644"
+    },
+    ".pi/skills/spikard/references/codegen-workflows.md": {
+      "content_hash": "blake3:4c716e43c759cf1965d31e5562dd3af2f2df993acfee6051c7ba481373431751",
+      "mode": "0644"
+    },
+    ".pi/skills/spikard/references/language-bindings.md": {
+      "content_hash": "blake3:d94a1e52eca0b07cb5af132d5b7fba85a8bf8939cb327556266b59b29c0f1481",
+      "mode": "0644"
+    },
+    ".pi/skills/spikard/references/mcp-tools.md": {
+      "content_hash": "blake3:1a430263e98109668e184b2939f9e4bba30a970a0ea24d023a3f125872b22654",
+      "mode": "0644"
+    },
+    ".pi/skills/spikard/references/project-scaffolding.md": {
+      "content_hash": "blake3:049284776566008882299b28587b5c4a6cdd1aea52b8796c2b2fe11101e5a888",
+      "mode": "0644"
+    },
+    ".pi/skills/spikard/references/testing-and-fixtures.md": {
+      "content_hash": "blake3:05d8054d7ad5e1098a8159f90ca66a28a0db1d3019563feab98170164f1f9d71",
+      "mode": "0644"
+    },
+    "assets/GEMINI.md": {
+      "content_hash": "blake3:abc044af85ab9757f714c2c4a26ddeb885120ce318c3eec66468f85d48e1e2ad",
+      "mode": "0644"
+    },
+    "gemini-extension.json": {
+      "content_hash": "blake3:6e3446384c68df5446b912dafaf584c4935b514fbb38020dd3462c4523538d3f",
+      "mode": "0644"
+    },
+    "kimi.plugin.json": {
+      "content_hash": "blake3:0712d9b896c39ced15230d5f3ef558b2d19f543876250582654ede018feda25b",
+      "mode": "0644"
+    },
+    "mcp.json": {
+      "content_hash": "blake3:43ded16ef499e1a67c5bd3cac5b5fe041fafce587769cbba25230ef1819d9456",
+      "mode": "0644"
+    },
+    "package.json": {
+      "content_hash": "blake3:e6713c3a07422c9f32b18e7544b7b49cf7e9c4efd54013012b349644cda33ebd",
+      "mode": "0644"
+    },
+    "plugin.json": {
+      "content_hash": "blake3:05f40f3fd48228ca1bf70ce3bf9dc5f27f710899fe35e9218f7c2ad42c26fadc",
+      "mode": "0644"
+    },
+    "scripts/mcp-launch.sh": {
+      "content_hash": "blake3:ea3e3324732f5b1e3e2dd6ff0e47284c68e09a9a6b9fcfa17c065e7f2d7c590c",
+      "mode": "0755"
+    },
+    "skills/spikard/SKILL.md": {
+      "content_hash": "blake3:5f4f9aed1c6ad96d229173f0cacb330816c4c11870832ef3cdd63ecc0c629dc8",
+      "mode": "0644"
+    },
+    "skills/spikard/index.md": {
+      "content_hash": "blake3:d5040555a979a73f90bb62a79248d944de2d652dd5f5f4f433addba7431ca9bd",
+      "mode": "0644"
+    },
+    "skills/spikard/references/cli-reference.md": {
+      "content_hash": "blake3:c4ed906524a7768898f2fe4d2495f02b04a2192232b8e60bb44e8fcbb7a2875b",
+      "mode": "0644"
+    },
+    "skills/spikard/references/codegen-workflows.md": {
+      "content_hash": "blake3:4c716e43c759cf1965d31e5562dd3af2f2df993acfee6051c7ba481373431751",
+      "mode": "0644"
+    },
+    "skills/spikard/references/language-bindings.md": {
+      "content_hash": "blake3:d94a1e52eca0b07cb5af132d5b7fba85a8bf8939cb327556266b59b29c0f1481",
+      "mode": "0644"
+    },
+    "skills/spikard/references/mcp-tools.md": {
+      "content_hash": "blake3:1a430263e98109668e184b2939f9e4bba30a970a0ea24d023a3f125872b22654",
+      "mode": "0644"
+    },
+    "skills/spikard/references/project-scaffolding.md": {
+      "content_hash": "blake3:049284776566008882299b28587b5c4a6cdd1aea52b8796c2b2fe11101e5a888",
+      "mode": "0644"
+    },
+    "skills/spikard/references/testing-and-fixtures.md": {
+      "content_hash": "blake3:05d8054d7ad5e1098a8159f90ca66a28a0db1d3019563feab98170164f1f9d71",
+      "mode": "0644"
+    }
+  },
+  "includes": [
+    "assets/GEMINI.md",
+    "scripts/mcp-launch.sh"
+  ]
+}

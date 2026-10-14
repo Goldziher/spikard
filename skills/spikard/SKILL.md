@@ -1,15 +1,18 @@
 ---
-name: spikard
-description: >-
-  Scaffold Spikard projects and generate code from OpenAPI, AsyncAPI, OpenRPC,
-  GraphQL, and Protobuf schemas using the Spikard CLI or its MCP server. Use
-  when building or updating Spikard-based apps, fixtures, test apps, or agent
-  workflows that should prefer code generation over handwritten boilerplate.
+description: Scaffold Spikard projects and generate code from OpenAPI, AsyncAPI, OpenRPC, GraphQL, Protobuf and SQL schemas using the Spikard CLI or its MCP server. Use when building or updating Spikard-based apps, fixtures, test apps, or agent workflows that should prefer code generation over handwritten boilerplate.
 license: MIT
 metadata:
-  author: spikard
-  version: "1.0"
+    author: spikard
+    version: "0.17.2"
+name: spikard
 ---
+
+<!--
+AI-RULEZ :: GENERATED FILE — DO NOT EDIT
+Content-Hash: blake3:5f4f9aed1c6ad96d229173f0cacb330816c4c11870832ef3cdd63ecc0c629dc8
+Source-Hash: blake3:0e1040a6a44b29031c75923924e3da054ae0a44f030d577859c7a6c9e3c29eb4
+Schema-Version: v1
+-->
 
 # Spikard Codegen-First Workflows
 
@@ -25,9 +28,10 @@ Use this skill when the task involves:
 
 ## Use MCP First
 
-Start the tracked MCP server from the repo or installed binary:
+Start the tracked MCP server from an installed MCP-enabled CLI (the Python and Node bindings do not install this binary):
 
 ```bash
+cargo install spikard-cli --version 0.17.2 --locked
 spikard mcp
 ```
 
@@ -42,6 +46,7 @@ Use the MCP tools for:
 - `generate_graphql`
 - `generate_protobuf`
 - `generate_php_dto`
+- `generate_sql`
 - `generate_asyncapi_fixtures`
 - `generate_asyncapi_test_app`
 - `generate_asyncapi_bundle`

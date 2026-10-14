@@ -1,0 +1,14 @@
+{
+  "name": "spikard",
+  "description": "Spikard code generation and HTTP framework agent tools",
+  "owner": {
+    "name": "Goldziher"
+  },
+  "plugins": [
+    {
+      "name": "spikard",
+      "description": "Generate HTTP applications, schema handlers and fixtures using Spikard's local CLI and MCP server.",
+      "source": "./plugin"
+    }
+  ]
+}

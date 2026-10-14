@@ -276,7 +276,7 @@ tasks:
   alef:scaffold:
     desc: "Generate package scaffolding (Cargo.toml, pyproject.toml, etc.)"
     cmds:
-      - alef scaffold
+      - cargo run --package spikard-alef -- scaffold
 
   e2e:generate:
     desc: "Generate E2E tests for all languages from fixtures"
@@ -855,6 +855,32 @@ tasks:
       - bash test_apps/scripts/update-versions.sh {{.VERSION}}
     vars:
       VERSION: '{{.VERSION | default "0.6.0"}}'
+
+  plugin:generate:
+    desc: Generate all plugin runtimes and public skill exports
+    cmds:
+      - python3 scripts/sync_plugin_version.py
+      - ai-rulez generate --plugin --no-local
+      - python3 scripts/sync_public_skills.py
+      - ai-rulez lock --content-only
+      - ai-rulez -C plugin/.ai-rulez lock --content-only
+
+  plugin:verify:
+    desc: Verify plugin versions, provenance and public skills
+    cmds:
+      - python3 scripts/sync_plugin_version.py --check
+      - ai-rulez verify --plugin
+      - python3 scripts/sync_public_skills.py --check
+
+  ai:check:
+    desc: Validate both governance configurations and generated outputs
+    cmds:
+      - ai-rulez validate --strict
+      - ai-rulez -C plugin/.ai-rulez validate --strict
+      - ai-rulez lock --check
+      - ai-rulez -C plugin/.ai-rulez lock --check
+      - ai-rulez generate --no-local --check
+      - task: plugin:verify
 
   clean:
     desc: "Remove build artifacts across all languages"

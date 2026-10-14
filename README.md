@@ -193,6 +193,10 @@ Thirteen tools are exposed, covering project init, codegen from every supported 
 SQL→HTTP pipeline, AsyncAPI fixture and test-app generation, schema validation, and a feature summary.
 See the [MCP documentation](https://spikard.dev/mcp/) for the full tool list and worked flows.
 
+## Coding agent plugins
+
+Install the curated Spikard plugin for Claude, Codex, Cursor, Gemini, Kimi, OpenCode, Pi, Hermes, Factory, Agent Plugins and Copilot. It includes the public `skills/spikard` skill and six API references; MCP-enabled clients connect to the installed local CLI. See the [installation guide](docs/guides/agent-plugins.md) and [plugin publishing setup](.github/PLUGIN-PUBLISHING.md).
+
 ## SQL to HTTP
 
 Annotate a SQL query and spikard emits the route, an OpenAPI 3.1 fragment, and a typed handler stub

@@ -1,5 +1,9 @@
 ---
-priority: high
+type: Concept
+title: Code Generation
+x-ai-rulez:
+  kind: domain
+  id: code-generation
 ---
 
 # Code Generation Domain

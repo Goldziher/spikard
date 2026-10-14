@@ -1,3 +1,10 @@
+<!--
+AI-RULEZ :: GENERATED FILE — DO NOT EDIT
+Content-Hash: blake3:1a430263e98109668e184b2939f9e4bba30a970a0ea24d023a3f125872b22654
+Source-Hash: blake3:0e1040a6a44b29031c75923924e3da054ae0a44f030d577859c7a6c9e3c29eb4
+Schema-Version: v1
+-->
+
 # Spikard MCP Tools
 
 Tool surface exposed by `spikard mcp`:
@@ -7,7 +14,7 @@ Tool surface exposed by `spikard mcp`:
 Params:
 
 - `name`: project name
-- `language`: `python`, `typescript`, `rust`, `ruby`, or `php`
+- `language`: `python`, `typescript`, `rust`, `ruby`, `php`, or `elixir`
 - `directory`: optional base directory, default `.` before appending `name`
 - `schema_path`: optional schema path to seed the project
 
@@ -103,6 +110,14 @@ Params:
 - `schema`
 
 Returns a structured summary with title, version, primary protocol, and channel count.
+
+## `generate_sql`
+
+Generate SQL-to-HTTP routing, language sidecars and an OpenAPI 3.1 spec.
+
+Required parameters: `queries` (annotated SQL file or directory), `schema` (nonempty array of DDL paths), `lang` (nonempty array of target languages).
+Optional: `dialect` (`postgresql`, `mysql`, `sqlite`, `mssql`, `oracle`, `snowflake`; default `postgresql`), `output` (default `generated`), `decimal_mode` (`string-pattern` or `number`), `strict`, `no_openapi`, `api_title`, `api_version`.
+Query routing annotations use `-- @http <METHOD> <PATH>`. Prefer lossless `string-pattern` decimals. Call `list_tools` to inspect the installed server's exact input schema before submitting requests.
 
 ## `get_features`
 

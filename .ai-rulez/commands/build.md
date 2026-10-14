@@ -1,7 +1,7 @@
 ---
 type: Reference
 title: Build
-description: Build the project
+description: Build Spikard core and optional language bindings
 x-ai-rulez:
   kind: command
   id: build

@@ -1,3 +1,10 @@
+<!--
+AI-RULEZ :: GENERATED FILE — DO NOT EDIT
+Content-Hash: blake3:049284776566008882299b28587b5c4a6cdd1aea52b8796c2b2fe11101e5a888
+Source-Hash: blake3:0e1040a6a44b29031c75923924e3da054ae0a44f030d577859c7a6c9e3c29eb4
+Schema-Version: v1
+-->
+
 # Project Scaffolding
 
 Use `spikard init` or the `init_project` MCP tool to create a new app skeleton.
@@ -15,6 +22,7 @@ Supported languages:
 - `rust`
 - `ruby`
 - `php`
+- `elixir`
 
 Behavior:
 

@@ -236,7 +236,6 @@ poly.local.toml
 **/.alef/
 
 # BEGIN ai-rulez (DO NOT EDIT - managed by ai-rulez)
-.ai-rulez/.generated-manifest.json
 .ai-rulez/.generated-manifest.local.json
 .ai-rulez/local/
 .opencode/agents/
@@ -245,3 +244,10 @@ poly.local.toml
 .pi/prompts/
 opencode.json
 # END ai-rulez
+
+# Machine-only SDK fixture downloads and migration backups. ~keep
+.native/
+plugin/.ai-rulez.bak-*/
+
+# Native output ownership is machine-local; source locks and bundle provenance are committed. ~keep
+/.ai-rulez/.generated-manifest.json

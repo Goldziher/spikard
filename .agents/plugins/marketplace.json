@@ -1,0 +1,20 @@
+{
+  "name": "spikard",
+  "interface": {
+    "displayName": "spikard"
+  },
+  "plugins": [
+    {
+      "name": "spikard",
+      "source": {
+        "source": "local",
+        "path": "./plugin"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

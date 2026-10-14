@@ -1,0 +1,53 @@
+name: AI-Rulez validation
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: xberg-io/actions/setup-ai-rulez@98adf87f1ed4c62a57ff56f9010d62faf42d4db6
+        with:
+          ai-rulez-version: "5.3.0"
+          source-revision: "1dd46d774f156f3d170ecd1b702598b12d1eaf5b"
+      - uses: xberg-io/actions/validate-ai-rulez@98adf87f1ed4c62a57ff56f9010d62faf42d4db6
+        with:
+          expected-config-count: "2"
+          additional-config-directories: plugin/.ai-rulez
+          verify-plugin: "true"
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+      - name: Verify public skills, runtime registrations and versions
+        run: |
+          python3 scripts/sync_plugin_version.py --check
+          python3 scripts/sync_public_skills.py --check
+          python3 scripts/tests/test_public_skills.py
+      - name: Verify native Pi and OpenCode SDK contracts
+        run: |
+          npm install --prefix .native/sdk --ignore-scripts --no-package-lock @opencode/plugin@2.0.26 @earendil-works/pi-coding-agent@1.2.0 effect@4.0.0-rc.112
+          node --test scripts/tests/native-skills.test.mjs
+      - name: Check out the pinned Hermes plugin SDK
+        uses: actions/checkout@v7
+        with:
+          repository: NousResearch/hermes-agent
+          ref: caf557be5b4c9ae75b3a7566d65d3df2c701c5df
+          path: .native/hermes
+      - uses: astral-sh/setup-uv@v10.3.0
+      - name: Verify actual Hermes skill discovery
+        env:
+          PYTHONPATH: ${{ github.workspace }}/.native/hermes
+        run: uv run --no-project --python 3.11 --with PyYAML==6.0.3 --with mcp==1.28.1 python scripts/tests/test_hermes_skills.py
+      - name: Verify real MCP bridge requests and handler result contracts
+        run: uv run --no-project --python 3.11 --with mcp==1.28.1 --with PyYAML==6.0.3 python scripts/tests/test_hermes_plugin.py
+      - name: Verify published CLI digest and real product MCP requests
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          binary="$(python3 scripts/install_plugin_cli_fixture.py .native/cli)"
+          test -n "$binary"
+          SPIKARD_TEST_BIN="$binary" uv run --no-project --python 3.11 --with mcp==1.28.1 --with PyYAML==6.0.3 python scripts/tests/test_native_mcp.py

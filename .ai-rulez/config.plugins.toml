@@ -1,0 +1,10 @@
+[[marketplaces]]
+name = "basemind"
+source = "Goldziher/basemind"
+type = "github"
+[marketplace]
+name = "spikard"
+description = "Spikard code generation and HTTP framework agent tools"
+members = ["plugin"]
+[marketplace.owner]
+name = "Goldziher"

@@ -1,0 +1,40 @@
+[plugin]
+name = "spikard"
+version = "0.17.2"
+runtimes = [
+  "claude",
+  "cursor",
+  "codex",
+  "gemini",
+  "kimi",
+  "opencode",
+  "factory",
+  "hermes",
+  "pi",
+  "agent-plugins",
+  "copilot",
+]
+display_name = "Spikard"
+description = "Generate HTTP applications, schema handlers and fixtures using Spikard's local CLI and MCP server."
+repository = "https://github.com/Goldziher/spikard"
+license = "MIT"
+keywords = ["http", "code-generation", "openapi", "asyncapi", "graphql", "grpc", "sql"]
+include = ["scripts/**", "assets/**"]
+[plugin.author]
+name = "Goldziher"
+[[plugin.mcp]]
+name = "spikard"
+command = "${PLUGIN_ROOT}/scripts/mcp-launch.sh"
+args = ["mcp"]
+[plugin.interface]
+developer_name = "Goldziher"
+category = "developer-tools"
+capabilities = ["Read", "Write"]
+default_prompt = ["Generate handlers from this API schema", "Scaffold a Spikard app"]
+display_name = "Spikard"
+short_description = "Generate HTTP apps and fixtures from schemas"
+long_description = "Scaffold applications and generate handlers from OpenAPI, AsyncAPI, OpenRPC, GraphQL, Protobuf and SQL using the installed Spikard CLI. Includes the complete public Spikard skill and local MCP connection."
+[plugin.gemini]
+context_file_name = "assets/GEMINI.md"
+[plugin.hermes]
+dependencies = ["mcp==1.28.1", "PyYAML==6.0.3"]

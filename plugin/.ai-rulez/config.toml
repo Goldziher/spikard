@@ -1,0 +1,10 @@
+version = "5.0"
+name = "spikard"
+description = "Spikard code generation and local MCP tools"
+default_layers = ["plugins"]
+agents_md = false
+gitignore = true
+[mcp]
+self_server = false
+[lock]
+include_outputs = false
