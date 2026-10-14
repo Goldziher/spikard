@@ -577,18 +577,18 @@ tasks:
   docs:build:
     desc: "Build documentation site"
     cmds:
-      - uv run zensical build --clean
+      - uv run --frozen --only-group docs zensical build --clean
 
   docs:serve:
     desc: "Serve documentation locally"
     cmds:
-      - uv run zensical serve
+      - uv run --frozen --only-group docs zensical serve
 
   docs:deploy:
     desc: "Build and deploy documentation"
     cmds:
       - alef docs
-      - uv run zensical build --clean --strict
+      - uv run --frozen --only-group docs zensical build --clean --strict
 
   docs:lint:links:
     desc: "Check links in docs and READMEs with lychee"
