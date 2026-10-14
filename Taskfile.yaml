@@ -875,6 +875,8 @@ tasks:
   ai:check:
     desc: Validate both governance configurations and generated outputs
     cmds:
+      - ai-rulez migrate okf --check
+      - ai-rulez -C plugin/.ai-rulez migrate okf --check
       - ai-rulez validate --strict
       - ai-rulez -C plugin/.ai-rulez validate --strict
       - ai-rulez lock --check

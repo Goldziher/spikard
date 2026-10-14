@@ -251,3 +251,5 @@ plugin/.ai-rulez.bak-*/
 
 # Native output ownership is machine-local; source locks and bundle provenance are committed. ~keep
 /.ai-rulez/.generated-manifest.json
+
+/.ai-rulez.bak-*/
