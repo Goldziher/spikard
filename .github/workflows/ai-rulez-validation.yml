@@ -19,9 +19,9 @@ jobs:
           expected-config-count: "2"
           additional-config-directories: plugin/.ai-rulez
           verify-plugin: "true"
-      - uses: actions/setup-node@v7
+      - uses: xberg-io/actions/setup-mise@v1
         with:
-          node-version: "24"
+          tools: node uv
       - name: Verify public skills, runtime registrations and versions
         run: |
           python3 scripts/sync_plugin_version.py --check
@@ -37,7 +37,6 @@ jobs:
           repository: NousResearch/hermes-agent
           ref: caf557be5b4c9ae75b3a7566d65d3df2c701c5df
           path: .native/hermes
-      - uses: astral-sh/setup-uv@v10.3.0
       - name: Build and strictly validate the Hermes wheel
         shell: bash
         run: |

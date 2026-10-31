@@ -13,8 +13,9 @@ on:
       - "e2e/**"
       - "Cargo.toml"
       - "Cargo.lock"
-      - "Taskfile.yaml"
-      - ".task/**"
+      - "mise.toml"
+      - "mise.lock"
+      - "mise-tasks/**"
       - ".github/workflows/ci-e2e.yaml"
   pull_request:
     branches: [main]
@@ -27,8 +28,9 @@ on:
       - "e2e/**"
       - "Cargo.toml"
       - "Cargo.lock"
-      - "Taskfile.yaml"
-      - ".task/**"
+      - "mise.toml"
+      - "mise.lock"
+      - "mise-tasks/**"
       - ".github/workflows/ci-e2e.yaml"
 
 concurrency:
@@ -64,6 +66,7 @@ jobs:
             os: ubuntu-latest
           - language: ruby
             os: ubuntu-latest
+            mise-tools: ruby
           - language: php
             os: ubuntu-latest
           - language: elixir
@@ -71,8 +74,10 @@ jobs:
             timeout-minutes: 90
           - language: go
             os: ubuntu-latest
+            mise-tools: go
           - language: java
             os: ubuntu-latest
+            mise-tools: java
           - language: csharp
             os: ubuntu-latest
           - language: kotlin
@@ -88,6 +93,14 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # ~keep `mise-tools` names the languages each leg installs through mise; a leg without one
+      # ~keep sets mise up for the composite setup actions and `mise run` and installs nothing itself.
+      - name: Setup mise
+        uses: xberg-io/actions/setup-mise@v1
+        with:
+          install: ${{ matrix.mise-tools && 'true' || 'false' }}
+          tools: ${{ matrix.mise-tools }}
+
       - name: Setup Rust
         uses: xberg-io/actions/setup-rust@v1
         with:
@@ -101,25 +114,14 @@ jobs:
         with:
           python-version: "3.14"
 
-      - uses: pnpm/action-setup@v6
+      - name: Setup Node workspace
         if: matrix.language == 'node' || matrix.language == 'wasm'
-        with:
-          version: "12.11.2"
-      - uses: actions/setup-node@v7
-        if: matrix.language == 'node' || matrix.language == 'wasm'
-        with:
-          node-version: "24"
-      - name: Install Node workspace dependencies
-        if: matrix.language == 'node' || matrix.language == 'wasm'
-        run: pnpm install --no-frozen-lockfile
+        uses: xberg-io/actions/setup-node-workspace@v1
 
-      - name: Setup Ruby
+      - name: Install Ruby e2e dependencies
         if: matrix.language == 'ruby'
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.4"
-          bundler-cache: true
-          working-directory: e2e/ruby
+        working-directory: e2e/ruby
+        run: bundle install
 
       - name: Setup PHP
         if: matrix.language == 'php'
@@ -163,19 +165,6 @@ jobs:
           elixir-version: "1.18"
           otp-version: "27"
 
-      - name: Setup Go
-        if: matrix.language == 'go'
-        uses: actions/setup-go@v7
-        with:
-          go-version-file: packages/go/go.mod
-
-      - name: Setup JDK 25 for Maven
-        if: matrix.language == 'java'
-        uses: actions/setup-java@v6
-        with:
-          distribution: temurin
-          java-version: "25"
-
       - name: Setup Maven
         if: matrix.language == 'java'
         uses: xberg-io/actions/setup-maven@v1
@@ -187,12 +176,14 @@ jobs:
           java-version: "25"
           gradle-version: "9.5.1"
 
+      # ~keep dotnet is a mise lock gap; setup-dotnet stays.
       - name: Setup .NET
         if: matrix.language == 'csharp'
         uses: actions/setup-dotnet@v6
         with:
           dotnet-version: "10.0.x"
 
+      # ~keep Dart stays on its setup action (org toolchain policy).
       - name: Setup Dart
         if: matrix.language == 'dart'
         uses: dart-lang/setup-dart@v1
@@ -225,9 +216,6 @@ jobs:
       - name: Install Alef
         uses: xberg-io/actions/install-alef@v1
 
-      - name: Install Task
-        uses: xberg-io/actions/install-task@v1
-
       - name: Build and bundle Go native library
         if: matrix.language == 'go'
         run: |
@@ -247,7 +235,7 @@ jobs:
           cp target/release/libspikard_ffi.so packages/java/src/main/resources/natives/linux-x86_64/libspikard_ffi.so
 
       - name: Generate E2E suites
-        run: task e2e:generate
+        run: mise run e2e:generate
 
       - name: Run generated E2E suites
-        run: task ${{ matrix.language }}:e2e
+        run: mise run ${{ matrix.language }}:e2e

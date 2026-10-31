@@ -277,9 +277,11 @@ jobs:
       - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
-      - uses: actions/setup-python@v7
+      # ~keep config-ref: a republish of a tag cut before the mise migration has no mise.toml.
+      - uses: xberg-io/actions/setup-mise@v1
         with:
-          python-version: "3.14"
+          tools: python=3.14
+          config-ref: ${{ github.sha }}
       - uses: xberg-io/actions/build-python-sdist@v1
         with:
           package-dir: packages/python
@@ -305,14 +307,12 @@ jobs:
       - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
-      - uses: pnpm/action-setup@v6
+      # ~keep config-ref: a republish of a tag cut before the mise migration has no mise.toml.
+      - uses: xberg-io/actions/setup-mise@v1
         with:
-          version: "12.11.2"
-      - uses: actions/setup-node@v7
-        with:
-          node-version: "24"
-      - name: Install Node workspace dependencies
-        run: pnpm install --no-frozen-lockfile
+          install: "false"
+          config-ref: ${{ github.sha }}
+      - uses: xberg-io/actions/setup-node-workspace@v1
       - name: Generate TypeScript definitions
         # ~keep napi build emits index.js + index.d.ts as a side effect; both are
         # ~keep platform-agnostic (the platform binary lives in @spikard/node-<rid>).
@@ -393,14 +393,12 @@ jobs:
           toolchain: "1.95"
           target: ${{ matrix.rust_target || matrix.target }}
           cache-key-prefix: publish-node-${{ matrix.target }}
-      - uses: pnpm/action-setup@v6
+      # ~keep config-ref: a republish of a tag cut before the mise migration has no mise.toml.
+      - uses: xberg-io/actions/setup-mise@v1
         with:
-          version: "12.11.2"
-      - uses: actions/setup-node@v7
-        with:
-          node-version: "24"
-      - name: Install Node workspace dependencies
-        run: pnpm install --no-frozen-lockfile
+          install: "false"
+          config-ref: ${{ github.sha }}
+      - uses: xberg-io/actions/setup-node-workspace@v1
       - name: Build native module
         uses: xberg-io/actions/build-node-napi@v1
         with:
@@ -426,14 +424,12 @@ jobs:
       - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
-      - uses: pnpm/action-setup@v6
+      # ~keep config-ref: a republish of a tag cut before the mise migration has no mise.toml.
+      - uses: xberg-io/actions/setup-mise@v1
         with:
-          version: "12.11.2"
-      - uses: actions/setup-node@v7
-        with:
-          node-version: "24"
-      - name: Install Node workspace dependencies
-        run: pnpm install --no-frozen-lockfile
+          install: "false"
+          config-ref: ${{ github.sha }}
+      - uses: xberg-io/actions/setup-node-workspace@v1
       - uses: xberg-io/actions/build-wasm-package@v1
         id: build-wasm
         with:
@@ -479,11 +475,14 @@ jobs:
       - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
-      - uses: ruby/setup-ruby@v1
+      # ~keep config-ref: a republish of a tag cut before the mise migration has no mise.toml.
+      - uses: xberg-io/actions/setup-mise@v1
         with:
-          ruby-version: "3.4"
-          bundler-cache: true
-          working-directory: packages/ruby
+          tools: ruby
+          config-ref: ${{ github.sha }}
+      - name: Install Ruby binding dependencies
+        working-directory: packages/ruby
+        run: bundle install
       - uses: xberg-io/actions/build-ruby-gem@v1
         with:
           package-dir: packages/ruby
@@ -875,15 +874,14 @@ jobs:
         with:
           name: node-typescript-defs
           path: typescript-defs
-      - uses: pnpm/action-setup@v6
+      # ~keep config-ref: a republish of a tag cut before the mise migration has no mise.toml.
+      - uses: xberg-io/actions/setup-mise@v1
         with:
-          version: "12.11.2"
-      - uses: actions/setup-node@v7
+          install: "false"
+          config-ref: ${{ github.sha }}
+      - uses: xberg-io/actions/setup-node-workspace@v1
         with:
-          node-version: "24"
           registry-url: "https://registry.npmjs.org/"
-      - name: Install Node workspace dependencies
-        run: pnpm install --no-frozen-lockfile
       - name: Stage platform packages and main package
         # ~keep Per-platform Node artifact layout: one tarball per target staging
         # ~keep crates/spikard-node/npm/<platform>/. The main package needs an
@@ -973,14 +971,25 @@ jobs:
     if: ${{ !cancelled() && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.release_wasm == 'true' && (needs.prepare.outputs.force_republish == 'true' || needs.check-registries.outputs.npm_wasm_exists != 'true') }}
     runs-on: ubuntu-latest
     steps:
+      # ~keep The checkout only supplies mise.toml and the workspace that setup-node-workspace installs,
+      # ~keep which writes the npm registry auth setup-node used to. It runs before the download,
+      # ~keep since a checkout cleans the workspace.
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+      # ~keep config-ref: a republish of a tag cut before the mise migration has no mise.toml.
+      - uses: xberg-io/actions/setup-mise@v1
+        with:
+          install: "false"
+          config-ref: ${{ github.sha }}
+      - uses: xberg-io/actions/setup-node-workspace@v1
+        with:
+          ignore-scripts: "true"
+          registry-url: "https://registry.npmjs.org"
       - uses: actions/download-artifact@v8
         with:
           name: wasm-package
           path: dist/wasm
-      - uses: actions/setup-node@v7
-        with:
-          node-version: "24"
-          registry-url: "https://registry.npmjs.org"
       - uses: xberg-io/actions/publish-npm@v1
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -1005,10 +1014,10 @@ jobs:
           # ~keep No merge-multiple: the canonical linux-x86_64 builder also ships the
           # ~keep fallback source gem spikard-<version>.gem, whose basename collides
           # ~keep across runners. publish-rubygems globs recursively and dedupes.
-      - uses: ruby/setup-ruby@v1
+      # ~keep No checkout here, so no mise.toml: the version is mise.toml's Ruby, spelled out.
+      - uses: xberg-io/actions/setup-mise@v1
         with:
-          ruby-version: "3.4"
-          bundler-cache: false
+          tools: ruby=3.4.12
       # ~keep Trusted publishing (OIDC) needs a recent RubyGems; the runner's bundled
       # ~keep version can be too old for configure-rubygems-credentials.
       - name: Update RubyGems for OIDC trusted publishing
@@ -1099,10 +1108,11 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: actions/setup-java@v6
+      # ~keep config-ref: a republish of a tag cut before the mise migration has no mise.toml.
+      - uses: xberg-io/actions/setup-mise@v1
         with:
-          distribution: temurin
-          java-version: "25"
+          tools: java
+          config-ref: ${{ github.sha }}
       - uses: xberg-io/actions/setup-maven@v1
       - name: Download Java natives (all classifiers)
         uses: actions/download-artifact@v8
@@ -1171,12 +1181,14 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
-      - uses: actions/setup-java@v6
+      # ~keep config-ref: a republish of a tag cut before the mise migration has no mise.toml.
+      - uses: xberg-io/actions/setup-mise@v1
         with:
-          distribution: temurin
-          java-version: "25"
+          tools: java
+          config-ref: ${{ github.sha }}
       # com.android.library's assembleRelease (pulled in transitively by the
       # publishAndReleaseToMavenCentral task) needs the Android SDK + accepted licenses.
+      # ~keep The Android SDK stays on its setup action (org toolchain policy).
       - uses: android-actions/setup-android@v4
       - name: Download Android natives (all ABIs)
         uses: actions/download-artifact@v8
@@ -1216,6 +1228,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
+      # ~keep dotnet is a mise lock gap; setup-dotnet stays.
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: "10.0.x"
@@ -1963,6 +1976,7 @@ jobs:
       - uses: xberg-io/actions/setup-rust@v1
         with:
           toolchain: "1.95"
+      # ~keep Dart stays on its setup action (org toolchain policy).
       - uses: dart-lang/setup-dart@v1
       - uses: xberg-io/actions/build-dart-package@v1
         with:

@@ -11,7 +11,8 @@ on:
       - "Cargo.lock"
       - "rust-toolchain.toml"
       - ".cargo/config.toml"
-      - ".task/languages/rust.yml"
+      - "mise.toml"
+      - "mise.lock"
       - ".github/workflows/ci-rust.yaml"
   pull_request:
     branches: [main]
@@ -22,7 +23,8 @@ on:
       - "Cargo.lock"
       - "rust-toolchain.toml"
       - ".cargo/config.toml"
-      - ".task/languages/rust.yml"
+      - "mise.toml"
+      - "mise.lock"
       - ".github/workflows/ci-rust.yaml"
 
 concurrency:
@@ -75,6 +77,14 @@ jobs:
           show-initial: "false"
           show-final: "true"
 
+      # ~keep Only the test suite needs a mise-managed language here (Ruby); the lint suite runs
+      # ~keep cargo alone, so it sets mise up without installing any tool.
+      - name: Setup mise
+        uses: xberg-io/actions/setup-mise@v1
+        with:
+          install: ${{ matrix.suite == 'test' && 'true' || 'false' }}
+          tools: ruby
+
       - name: Setup Python
         uses: xberg-io/actions/setup-python-env@v1
         with:
@@ -90,17 +100,9 @@ jobs:
       # NOTE: Language toolchains are only needed by the test suite (some
       # core-crate tests exercise binding-adjacent codegen); clippy/fmt/check
       # are pure Rust and skip them for a faster lint job.
-      - uses: pnpm/action-setup@v6
+      - name: Setup Node workspace
         if: matrix.suite == 'test'
-        with:
-          version: "12.11.2"
-      - uses: actions/setup-node@v7
-        if: matrix.suite == 'test'
-        with:
-          node-version: "24"
-      - name: Install Node workspace dependencies
-        if: matrix.suite == 'test'
-        run: pnpm install --no-frozen-lockfile
+        uses: xberg-io/actions/setup-node-workspace@v1
 
       - name: Setup PHP
         if: matrix.suite == 'test'
@@ -116,16 +118,10 @@ jobs:
           elixir-version: "1.18"
           otp-version: "27"
 
-      - name: Setup Ruby
+      - name: Install Ruby binding dependencies
         if: matrix.suite == 'test'
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.4"
-          bundler-cache: true
-          working-directory: packages/ruby
-
-      - name: Install Task
-        uses: xberg-io/actions/install-task@v1
+        working-directory: packages/ruby
+        run: bundle install
 
       # The codegen quality-gate tests (spikard-cli) shell out to `poly lint` to
       # validate generated Python instead of requiring a standalone `ruff`/`uv`
@@ -136,7 +132,7 @@ jobs:
 
       - name: Run clippy and format check
         if: matrix.suite == 'lint'
-        run: task rust:lint:check
+        run: mise run rust:lint:check
 
       - name: Check no-default-features
         if: matrix.suite == 'lint'
@@ -144,4 +140,4 @@ jobs:
 
       - name: Run Rust tests
         if: matrix.suite == 'test'
-        run: task rust:test:ci
+        run: mise run rust:test:ci

@@ -7,11 +7,13 @@ on:
     paths:
       - ".github/**"
       - "poly.toml"
-      - ".task/**"
+      - "mise.toml"
+      - "mise.lock"
+      - "mise-tasks/**"
+      - "toolchains.toml"
       - ".ai-rulez/**"
       - "alef.toml"
       - "spikard-http.toml"
-      - "Taskfile.yaml"
       - "Cargo.toml"
       - "Cargo.lock"
       - "pyproject.toml"
@@ -24,11 +26,13 @@ on:
     paths:
       - ".github/**"
       - "poly.toml"
-      - ".task/**"
+      - "mise.toml"
+      - "mise.lock"
+      - "mise-tasks/**"
+      - "toolchains.toml"
       - ".ai-rulez/**"
       - "alef.toml"
       - "spikard-http.toml"
-      - "Taskfile.yaml"
       - "Cargo.toml"
       - "Cargo.lock"
       - "pyproject.toml"
@@ -60,6 +64,16 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Check toolchain
+        uses: xberg-io/actions/check-toolchain@v1
+
+      # ~keep Java (checkstyle), Go (golangci-lint) and Ruby (rubocop) feed poly's whole-project
+      # ~keep phase below; Python and Node come from their own setup steps.
+      - name: Setup mise
+        uses: xberg-io/actions/setup-mise@v1
+        with:
+          tools: java go ruby
+
       - name: Setup Python
         uses: xberg-io/actions/setup-python-env@v1
         with:
@@ -72,23 +86,14 @@ jobs:
           cache-key-prefix: validate
           use-sccache: "true"
 
-      - uses: pnpm/action-setup@v6
-        with:
-          version: "12.11.2"
-      - uses: actions/setup-node@v7
-        with:
-          node-version: "24"
-      - name: Install Node workspace dependencies
-        run: pnpm install --no-frozen-lockfile
+      - name: Setup Node workspace
+        uses: xberg-io/actions/setup-node-workspace@v1
 
       - name: Install Alef
         uses: xberg-io/actions/install-alef@v1
 
-      - name: Install Task
-        uses: xberg-io/actions/install-task@v1
-
-      - name: Check Taskfile surface
-        run: task --list
+      - name: Validate mise tasks
+        run: mise tasks validate
 
       - name: Run actionlint
         uses: reviewdog/action-actionlint@v1
@@ -96,33 +101,20 @@ jobs:
           reporter: github-check
           fail_level: error
 
-      - name: Setup JDK 25 for checkstyle
-        uses: actions/setup-java@v6
-        with:
-          distribution: temurin
-          java-version: "25"
-
-      # ~keep poly's whole-project phase (which `task lint:check` -> `poly lint .` always
+      # ~keep poly's whole-project phase (which `mise run lint` -> `poly lint .` always
       # runs unless `--no-workspace` is passed) auto-discovers golangci-lint, rubocop, credo,
       # and dart-analyze project checks from packages/go, packages/ruby, packages/elixir, and
       # packages/dart. Without these toolchains on PATH each hook fails with
       # `poly-hook: 1: <tool>: not found` (exit 201) instead of actually linting. Mirrors the
       # sibling repos' `reusable-validate.yml` inputs (see liter-llm's ci-lint.yaml).
-      - name: Setup Go
-        uses: actions/setup-go@v7
-        with:
-          go-version-file: packages/go/go.mod
-
       - name: Install golangci-lint
         run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
 
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.4"
-          bundler-cache: true
-          working-directory: packages/ruby
+      - name: Install Ruby binding dependencies
+        working-directory: packages/ruby
+        run: bundle install
 
+      # ~keep Dart stays on its setup action (org toolchain policy).
       - name: Setup Dart
         uses: dart-lang/setup-dart@v1
 
@@ -165,7 +157,7 @@ jobs:
       # otherwise the re-render formats generated .java/.md/.sh differently and the freshness
       # check reports spurious drift.
       - name: Verify Alef output
-        run: task alef:verify
+        run: mise run alef:verify
 
       - name: Lint (poly)
-        run: task lint:check
+        run: mise run lint

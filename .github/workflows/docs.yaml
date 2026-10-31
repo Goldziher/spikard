@@ -9,8 +9,8 @@ on:
       - "crates/**"
       - "packages/**"
       - "alef.toml"
-      - "Taskfile.yaml"
-      - ".task/**"
+      - "mise.toml"
+      - "mise.lock"
       - ".github/workflows/docs.yaml"
   workflow_dispatch:
 
@@ -61,11 +61,14 @@ jobs:
       - name: Install Alef
         uses: xberg-io/actions/install-alef@v1
 
-      - name: Install Task
-        uses: xberg-io/actions/install-task@v1
+      # ~keep docs:build needs only uv, which setup-python-env installed.
+      - name: Setup mise
+        uses: xberg-io/actions/setup-mise@v1
+        with:
+          install: "false"
 
       - name: Build documentation
-        run: task docs:build
+        run: mise run docs:build
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5

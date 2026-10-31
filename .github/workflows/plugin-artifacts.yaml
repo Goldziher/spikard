@@ -99,9 +99,10 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v7
+      # ~keep Only the npm registry auth is needed here; the workspace install skips native scripts.
+      - uses: xberg-io/actions/setup-node-workspace@v1
         with:
-          node-version: "24"
+          ignore-scripts: "true"
           registry-url: "https://registry.npmjs.org/"
       - name: Install ai-rulez
         uses: xberg-io/actions/setup-ai-rulez@98adf87f1ed4c62a57ff56f9010d62faf42d4db6
@@ -226,9 +227,9 @@ jobs:
           python3 scripts/sync_plugin_version.py --expect "${VERSION#v}"
           python3 scripts/sync_public_skills.py --check
           ai-rulez verify --plugin
-      - uses: astral-sh/setup-uv@v10.3.0
+      - uses: xberg-io/actions/setup-mise@v1
         with:
-          python-version: "3.13"
+          tools: python=3.13 uv
       - name: Read the verified Hermes package version
         id: wheel-version
         env:

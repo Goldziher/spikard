@@ -11,8 +11,8 @@ on:
       - "packages/**"
       - "Cargo.toml"
       - "Cargo.lock"
-      - "Taskfile.yaml"
-      - ".task/**"
+      - "mise.toml"
+      - "mise.lock"
       - ".github/workflows/ci-bindings.yaml"
   pull_request:
     branches: [main]
@@ -23,8 +23,8 @@ on:
       - "packages/**"
       - "Cargo.toml"
       - "Cargo.lock"
-      - "Taskfile.yaml"
-      - ".task/**"
+      - "mise.toml"
+      - "mise.lock"
       - ".github/workflows/ci-bindings.yaml"
 
 concurrency:
@@ -60,9 +60,11 @@ jobs:
             command: pnpm --filter @spikard/node test
           - language: ruby
             os: ubuntu-latest
+            mise-tools: ruby
             command: cd packages/ruby && bundle exec rspec
           - language: php
             os: ubuntu-latest
+            mise-tools: java
             # `composer run lint` -> `poly lint`, which always runs its whole-project phase
             # (golangci-lint, rubocop, credo, dart-analyze, checkstyle, pyrefly) regardless of
             # the path scanned, unless told not to — this job only sets up PHP, so those hooks
@@ -74,9 +76,11 @@ jobs:
             command: cd packages/elixir && mix deps.get && mix compile --warnings-as-errors
           - language: go
             os: ubuntu-latest
+            mise-tools: go
             command: cd packages/go && go test ./...
           - language: java
             os: ubuntu-latest
+            mise-tools: java
             command: cd packages/java && mvn -B verify
           - language: csharp
             os: ubuntu-latest
@@ -109,8 +113,13 @@ jobs:
       - name: Install Alef
         uses: xberg-io/actions/install-alef@v1
 
-      - name: Install Task
-        uses: xberg-io/actions/install-task@v1
+      # ~keep `mise-tools` names the languages each leg installs through mise; a leg without one
+      # ~keep sets mise up for the composite setup actions below and installs nothing itself.
+      - name: Setup mise
+        uses: xberg-io/actions/setup-mise@v1
+        with:
+          install: ${{ matrix.mise-tools && 'true' || 'false' }}
+          tools: ${{ matrix.mise-tools }}
 
       - name: Setup Python
         if: matrix.language == 'python'
@@ -118,25 +127,14 @@ jobs:
         with:
           python-version: "3.14"
 
-      - uses: pnpm/action-setup@v6
+      - name: Setup Node workspace
         if: matrix.language == 'node'
-        with:
-          version: "12.11.2"
-      - uses: actions/setup-node@v7
-        if: matrix.language == 'node'
-        with:
-          node-version: "24"
-      - name: Install Node workspace dependencies
-        if: matrix.language == 'node'
-        run: pnpm install --no-frozen-lockfile
+        uses: xberg-io/actions/setup-node-workspace@v1
 
-      - name: Setup Ruby
+      - name: Install Ruby binding dependencies
         if: matrix.language == 'ruby'
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: "3.4"
-          bundler-cache: true
-          working-directory: packages/ruby
+        working-directory: packages/ruby
+        run: bundle install
 
       - name: Build Ruby native extension
         # ~keep rspec loads spikard_rb.so through an ABI-versioned search path
@@ -163,23 +161,11 @@ jobs:
           elixir-version: "1.18"
           otp-version: "27"
 
-      - name: Setup Go
-        if: matrix.language == 'go'
-        uses: actions/setup-go@v7
-        with:
-          go-version-file: packages/go/go.mod
-
-      - name: Setup JDK 25 for Maven / checkstyle
-        if: contains(fromJSON('["java","php"]'), matrix.language)
-        uses: actions/setup-java@v6
-        with:
-          distribution: temurin
-          java-version: "25"
-
       - name: Setup Maven
         if: matrix.language == 'java'
         uses: xberg-io/actions/setup-maven@v1
 
+      # ~keep dotnet is a mise lock gap; setup-dotnet stays.
       - name: Setup .NET
         if: matrix.language == 'csharp'
         uses: actions/setup-dotnet@v6
@@ -193,6 +179,7 @@ jobs:
           java-version: "25"
           gradle-version: "9.1.0"
 
+      # ~keep Dart stays on its setup action (org toolchain policy).
       - name: Setup Dart
         if: matrix.language == 'dart'
         uses: dart-lang/setup-dart@v1
