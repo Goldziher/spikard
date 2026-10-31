@@ -69,6 +69,7 @@ owned_paths = [
   "packages/ruby/sig/types.rbs",
   "packages/ruby/spikard.gemspec",
   "packages/swift/README.md",
+  "packages/zig/build.zig.zon",
   "test_apps/java/src/test/resources/fixtures/06_cors_preflight_method_not_allowed.json",
   "test_apps/java/src/test/resources/fixtures/07_cors_preflight_header_not_allowed.json",
   "test_apps/java/src/test/resources/fixtures/08_cors_max_age.json",

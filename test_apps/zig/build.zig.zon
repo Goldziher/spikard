@@ -2,7 +2,7 @@
     .name = .e2e_zig,
     .version = "0.1.0",
     .fingerprint = 0xf16334c0592376fc,
-    .minimum_zig_version = "0.16.0",
+    .minimum_zig_version = "0.17.0",
     .dependencies = .{
         .spikard = .{
             .url = "https://github.com/Goldziher/spikard/releases/download/v0.17.0-rc.11/spikard-zig-v0.17.0-rc.11.tar.gz",
