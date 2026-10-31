@@ -52,6 +52,7 @@ owned_paths = [
   "e2e/java/src/test/resources/fixtures/cors_custom_allowed_headers_x_custom.json",
   "e2e/node/.npmrc",
   "e2e/node/app_harness.mjs",
+  "e2e/php/composer.json",
   "e2e/php/phpunit.xml",
   "e2e/zig/build.zig.zon",
   "packages/elixir/README.md",
@@ -77,5 +78,6 @@ owned_paths = [
   "test_apps/java/src/test/resources/fixtures/cors_custom_allowed_headers_x_custom.json",
   "test_apps/node/.npmrc",
   "test_apps/node/app_harness.mjs",
+  "test_apps/php/composer.json",
   "test_apps/php/phpunit.xml",
 ]
