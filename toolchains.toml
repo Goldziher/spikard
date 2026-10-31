@@ -1,9 +1,5 @@
 baseline = "v1.12.3"
 task_sets = ["alef-bindings", "alef-publish", "governance", "lint-format", "rust"]
 
-[overrides.zig]
-version = "0.16.0"
-reason = "packages/zig/build.zig.zon sets minimum_zig_version 0.16.0 and the Zig binding targets the 0.16 API"
-
 [task_overrides]
 "alef:build" = "runs the repository's spikard-alef build (alef plus the spikard extensions), not the bare alef CLI"

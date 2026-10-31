@@ -1345,7 +1345,7 @@ jobs:
         with:
           working-directory: packages/zig
           tag: ${{ needs.prepare.outputs.tag }}
-          zig-version: "0.16.0"
+          zig-version: "0.17.0"
           package-name: spikard-zig
           multi-platform-ffi-dir: ffi-artifacts
           module-name: spikard

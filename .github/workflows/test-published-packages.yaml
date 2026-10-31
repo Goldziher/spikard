@@ -495,7 +495,7 @@ jobs:
         run: mise run test-apps:wasm
 
   test-zig:
-    name: Test Zig package (Ubuntu, Zig 0.16)
+    name: Test Zig package (Ubuntu, Zig 0.17)
     needs: prepare
     if: needs.prepare.outputs.release_ready == 'true'
     runs-on: ubuntu-latest
