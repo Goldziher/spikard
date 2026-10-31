@@ -92,7 +92,7 @@ jobs:
             os: ubuntu-latest
             command: cd packages/dart && dart pub get && dart test
           - language: swift
-            os: macos-latest
+            os: macos-26
             command: ""
           - language: zig
             os: ubuntu-latest

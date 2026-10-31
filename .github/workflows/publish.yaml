@@ -245,7 +245,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-26, windows-latest]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -350,7 +350,7 @@ jobs:
       matrix:
         include:
           - {
-              os: macos-latest,
+              os: macos-26,
               target: aarch64-apple-darwin,
               rust_target: "",
               use_napi_cross: false,
@@ -463,10 +463,10 @@ jobs:
         include:
           - { os: ubuntu-latest, label: linux-x86_64 }
           - { os: ubuntu-24.04-arm, label: linux-aarch64 }
-          - { os: macos-latest, label: macos-arm64 }
+          - { os: macos-26, label: macos-arm64 }
           # ~keep Opt-in legs for the remaining CROSS_PLATFORMS entries (x86_64-darwin,
           # ~keep x64-mingw-ucrt); without them those consumers fall back to the source gem.
-          # ~keep - { os: macos-15-intel, label: macos-x86_64 }
+          # ~keep - { os: macos-26-intel, label: macos-x86_64 }
           # ~keep - { os: windows-latest, label: windows-x86_64 }
     steps:
       - uses: actions/checkout@v7
@@ -537,7 +537,7 @@ jobs:
         platform:
           - { os: ubuntu-latest, label: linux-x86_64, target: x86_64-unknown-linux-gnu }
           - { os: ubuntu-24.04-arm, label: linux-arm64, target: aarch64-unknown-linux-gnu }
-          - { os: macos-latest, label: macos-arm64, target: aarch64-apple-darwin }
+          - { os: macos-26, label: macos-arm64, target: aarch64-apple-darwin }
           - { os: windows-latest, label: windows-x86_64, target: x86_64-pc-windows-msvc }
     steps:
       - uses: actions/checkout@v7
@@ -592,7 +592,7 @@ jobs:
         include:
           - { os: ubuntu-latest, target: x86_64-unknown-linux-gnu, label: linux-x86_64 }
           - { os: ubuntu-24.04-arm, target: aarch64-unknown-linux-gnu, label: linux-aarch64 }
-          - { os: macos-latest, target: aarch64-apple-darwin, label: macos-aarch64 }
+          - { os: macos-26, target: aarch64-apple-darwin, label: macos-aarch64 }
           - { os: windows-latest, target: x86_64-pc-windows-msvc, label: windows-x86_64 }
     steps:
       - uses: actions/checkout@v7
@@ -675,8 +675,8 @@ jobs:
               target: aarch64-unknown-linux-gnu,
               nif: "2.17",
             }
-          - { os: macos-latest, label: macos-arm64, target: aarch64-apple-darwin, nif: "2.16" }
-          - { os: macos-latest, label: macos-arm64, target: aarch64-apple-darwin, nif: "2.17" }
+          - { os: macos-26, label: macos-arm64, target: aarch64-apple-darwin, nif: "2.16" }
+          - { os: macos-26, label: macos-arm64, target: aarch64-apple-darwin, nif: "2.17" }
           - {
               os: windows-latest,
               label: windows-x86_64,
@@ -1460,7 +1460,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-latest
+          - os: macos-26
             bottle_tag: arm64_sequoia
             install_brew: false
           - os: ubuntu-latest
@@ -1559,7 +1559,7 @@ jobs:
     name: Build Swift artifact bundle
     needs: prepare
     if: ${{ needs.prepare.outputs.release_swift == 'true' }}
-    runs-on: macos-latest
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v7
         with:
@@ -1592,7 +1592,7 @@ jobs:
     name: Build Swift package
     needs: prepare
     if: ${{ needs.prepare.outputs.release_swift == 'true' }}
-    runs-on: macos-latest
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v7
         with:
@@ -1713,7 +1713,7 @@ jobs:
         include:
           - { os: ubuntu-latest, platform: linux-x86_64, target: x86_64-unknown-linux-gnu }
           - { os: ubuntu-24.04-arm, platform: linux-aarch64, target: aarch64-unknown-linux-gnu }
-          - { os: macos-latest, platform: macos-arm64, target: aarch64-apple-darwin }
+          - { os: macos-26, platform: macos-arm64, target: aarch64-apple-darwin }
           - { os: windows-latest, platform: windows-x86_64, target: x86_64-pc-windows-msvc }
     steps:
       - uses: actions/checkout@v7
@@ -1757,7 +1757,7 @@ jobs:
         include:
           - { os: ubuntu-latest, platform: linux-x86_64, target: x86_64-unknown-linux-gnu }
           - { os: ubuntu-24.04-arm, platform: linux-aarch64, target: aarch64-unknown-linux-gnu }
-          - { os: macos-latest, platform: macos-arm64, target: aarch64-apple-darwin }
+          - { os: macos-26, platform: macos-arm64, target: aarch64-apple-darwin }
           - { os: windows-latest, platform: windows-x86_64, target: x86_64-pc-windows-msvc }
     steps:
       - uses: actions/checkout@v7
@@ -1813,7 +1813,7 @@ jobs:
         include:
           - { os: ubuntu-latest, classifier: linux-x86_64, target: x86_64-unknown-linux-gnu }
           - { os: ubuntu-24.04-arm, classifier: linux-aarch64, target: aarch64-unknown-linux-gnu }
-          - { os: macos-latest, classifier: macos-arm64, target: aarch64-apple-darwin }
+          - { os: macos-26, classifier: macos-arm64, target: aarch64-apple-darwin }
           - { os: windows-latest, classifier: windows-x86_64, target: x86_64-pc-windows-msvc }
     steps:
       - uses: actions/checkout@v7
@@ -1889,8 +1889,8 @@ jobs:
         include:
           - { os: ubuntu-latest, rid: linux-x64, target: x86_64-unknown-linux-gnu }
           - { os: ubuntu-24.04-arm, rid: linux-arm64, target: aarch64-unknown-linux-gnu }
-          - { os: macos-latest, rid: osx-arm64, target: aarch64-apple-darwin }
-          - { os: macos-latest, rid: osx-x64, target: x86_64-apple-darwin }
+          - { os: macos-26, rid: osx-arm64, target: aarch64-apple-darwin }
+          - { os: macos-26, rid: osx-x64, target: x86_64-apple-darwin }
           - { os: windows-latest, rid: win-x64, target: x86_64-pc-windows-msvc }
           - { os: windows-latest, rid: win-arm64, target: aarch64-pc-windows-msvc }
     steps:
@@ -1933,7 +1933,7 @@ jobs:
         include:
           - { os: ubuntu-latest, target: x86_64-unknown-linux-gnu, rid: linux-x64, lib: libspikard_dart.so }
           - { os: ubuntu-24.04-arm, target: aarch64-unknown-linux-gnu, rid: linux-arm64, lib: libspikard_dart.so }
-          - { os: macos-latest, target: aarch64-apple-darwin, rid: macos-arm64, lib: libspikard_dart.dylib }
+          - { os: macos-26, target: aarch64-apple-darwin, rid: macos-arm64, lib: libspikard_dart.dylib }
           - { os: windows-latest, target: x86_64-pc-windows-msvc, rid: windows-x64, lib: spikard_dart.dll }
     steps:
       - uses: actions/checkout@v7

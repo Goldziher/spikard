@@ -85,7 +85,7 @@ jobs:
           - language: dart
             os: ubuntu-latest
           - language: swift
-            os: macos-latest
+            os: macos-26
           - language: zig
             os: ubuntu-latest
           - language: wasm
