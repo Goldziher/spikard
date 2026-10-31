@@ -28,10 +28,6 @@ lychee = "0.24.2"
 [env]
 DOCKER_BUILDKIT = "1"
 BUILDKIT_PROGRESS = "plain"
-# ~keep uv takes the python first on PATH (mise.toml's, or the one a CI job set up), not a newer
-# ~keep uv-managed one: rust:test points PYTHONHOME at uv's interpreter while spikard-cli's quality
-# ~keep gates run python3 from PATH, and a version mismatch fails them at interpreter start.
-UV_PYTHON_PREFERENCE = "only-system"
 
 [vars]
 # The spikard-alef crate is alef plus the spikard extensions (crates/spikard-alef-ext). ~keep
@@ -340,7 +336,10 @@ run = "cargo build --locked --release --package spikard-ffi"
 [tasks."rust:test"]
 description = "Run all Rust tests"
 # ~keep PyO3 builds and tests need the interpreter uv manages and PYTHONHOME at its prefix, not the
-# first python on PATH.
+# first python on PATH. uv takes the python first on PATH (mise.toml's, or the one a CI job set up),
+# not a newer uv-managed one: spikard-cli's quality gates run python3 from PATH under that
+# PYTHONHOME, and a version mismatch fails them at interpreter start.
+env = { UV_PYTHON_PREFERENCE = "only-system" }
 run = """
 export PYO3_PYTHON="$(uv run which python 2>/dev/null || command -v python3 || echo python)"
 export PYTHONHOME="$(uv run python -c 'import sys; print(sys.base_prefix)' 2>/dev/null || echo '')"

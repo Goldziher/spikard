@@ -1,0 +1,4 @@
+# Matrix legs CI selects with MISE_ENV=ci: the published-package Python test runs on each
+# interpreter it supports, so each one is locked in mise.ci.lock. ~keep
+[tools]
+python = ["3.13.18", "3.12.16", "3.10.22"]

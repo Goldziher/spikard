@@ -219,17 +219,20 @@ jobs:
         os: [ubuntu-latest, macos-26, windows-latest]
         python-version: ["3.10", "3.12", "3.13"]
     runs-on: ${{ matrix.os }}
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
+      UV_PYTHON_DOWNLOADS: never
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Install uv
+      # ~keep mise.ci.toml locks each matrix Python; UV_PYTHON makes uv use that interpreter and
+      # ~keep never fall back to downloading another one.
+      - name: Install uv and Python
         uses: xberg-io/actions/setup-mise@v1
         with:
-          tools: uv
-
-      - name: Set up Python
-        run: uv python install ${{ matrix.python-version }}
+          mise-env: ci
+          tools: uv python=${{ matrix.python-version }}
 
       - name: Update pyproject.toml version
         working-directory: test_apps/python
