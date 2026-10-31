@@ -39,12 +39,12 @@ Spikard can run as a compiled Rust binary, via the CLI, or packaged into contain
 ## Example Dockerfile sketch
 
 ```dockerfile
-FROM rust:1.85-slim AS build
+FROM rust:1.99.1-slim-trixie AS build
 WORKDIR /app
 COPY . .
 RUN cargo build --release
 
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 WORKDIR /app
 COPY --from=build /app/target/release/your_app /usr/local/bin/your_app
 ENV HOST=0.0.0.0

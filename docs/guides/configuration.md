@@ -138,7 +138,7 @@ Spikard listens on plain HTTP. Use a reverse proxy for TLS termination:
     # docker-compose.yml
     services:
       traefik:
-        image: traefik:v2.10
+        image: traefik:v3.7
         command:
           - --entrypoints.websecure.address=:443
           - --certificatesresolvers.myresolver.acme.tlschallenge=true
