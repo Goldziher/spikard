@@ -6,20 +6,16 @@ build-backend = 'hatchling.build'
 name = 'spikard-hermes-plugin'
 version = '0.17.2'
 description = "Generate HTTP applications, schema handlers and fixtures using Spikard's local CLI and MCP server."
-license = 'MIT'
 requires-python = '>=3.11'
-dependencies = ['mcp==1.28.1', 'PyYAML==6.0.3']
+dependencies = ['mcp==1.30.0', 'PyYAML==6.0.3']
 keywords = ['http', 'code-generation', 'openapi', 'asyncapi', 'graphql', 'grpc', 'sql']
-
-[project.readme]
-content-type = 'text/markdown'
-text = "# spikard Hermes plugin\n\nGenerate HTTP applications, schema handlers and fixtures using Spikard's local CLI and MCP server.\n\nInstall this package in the same Python environment as Hermes Agent:\n\n```sh\npython -m pip install spikard-hermes-plugin\n```\n\nEnable the plugin through Hermes Agent's plugin configuration. Available registrations depend on the plugin's authored Hermes adapter.\n"
 
 [project.entry-points]
 [project.entry-points.'hermes_agent.plugins']
 spikard = 'spikard_hermes_plugin'
 
 [project.urls]
+Homepage = ''
 Repository = 'https://github.com/Goldziher/spikard'
 
 [tool]
