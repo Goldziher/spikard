@@ -1,3 +1,3 @@
 # Concepts
 
-* [Common Task Commands](SKILL.md) - Common Task Commands
+- [Common Task Commands](SKILL.md) - Common Task Commands

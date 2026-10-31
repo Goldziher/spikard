@@ -1,11 +1,7 @@
 {
   "schema_version": "v1",
-  "source_hash": "blake3:abccd7eb49522b31a5fd250dd2cb28fb991f8bdb6528b9fd032c3d50821ccf1b",
+  "source_hash": "blake3:a219347b4d2aad909b974d29f82e208111d7d1beb70c61c52a5543cf385bba44",
   "outputs": {
-    ".claude-plugin/marketplace.json": {
-      "content_hash": "blake3:a70109f70cd49fc577ca01fe4031e07b29ee151c10add5f99310b73c41ccf177",
-      "mode": "0644"
-    },
     ".claude-plugin/plugin.json": {
       "content_hash": "blake3:b6978b7e39b6a964f334c39defde8f167c322395ebe34c5cf34325c48bf48985",
       "mode": "0644"
@@ -54,12 +50,8 @@
       "content_hash": "blake3:5da98fc8db94b1607abce92fa9522d3087d5fe43af34a7be0e1f5b2476be56ea",
       "mode": "0644"
     },
-    ".github/plugin/marketplace.json": {
-      "content_hash": "blake3:8ec29c8b2302bfac28af531f1c68d396e3129eb338fec801f6cfeca8f9351249",
-      "mode": "0644"
-    },
     ".hermes/package/pyproject.toml": {
-      "content_hash": "blake3:bac2ecfce22728aef177965f5a3f491e638ea681a5f4539f22b5f7147ea50478",
+      "content_hash": "blake3:aa0999057e9a2cbc5fd70164081b39f82cc54fc2d1bff405ebb60c7e280ff878",
       "mode": "0644"
     },
     ".hermes/package/src/spikard_hermes_plugin/__init__.py": {
@@ -155,11 +147,11 @@
       "mode": "0644"
     },
     ".opencode/ai-rulez-bundle.json": {
-      "content_hash": "blake3:422478a99dc68b09a8e3f8fd266e0fc0fcd8507c989bab314ea69a536dcd82f2",
+      "content_hash": "blake3:9f9da29c4baeb9ae89ed343931c828dc38f6c2f8a0657e1204289bad9c87634a",
       "mode": "0644"
     },
     ".opencode/ai-rulez-content.js": {
-      "content_hash": "blake3:822c510deb007e4f72877ad42f29918d0499f210ae363e82d465a0f0331ab294",
+      "content_hash": "blake3:011ec20caa671eb4bd4e886b09e15f720a786de4bf747419efd0690889fc5549",
       "mode": "0644"
     },
     ".opencode/plugins/spikard.js": {
