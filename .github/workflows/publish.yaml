@@ -1461,7 +1461,7 @@ jobs:
       matrix:
         include:
           - os: macos-26
-            bottle_tag: arm64_sequoia
+            bottle_tag: arm64_tahoe
             install_brew: false
           - os: ubuntu-latest
             bottle_tag: x86_64_linux
