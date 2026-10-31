@@ -3,6 +3,6 @@
 # To verify freshness: alef verify
 
 [toolchain]
-channel = "1.95"
+channel = "1.99.1"
 components = ["rust-src", "rustfmt", "clippy"]
 targets = ["wasm32-unknown-unknown"]

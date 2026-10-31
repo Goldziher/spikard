@@ -1,10 +1,6 @@
 baseline = "v1.12.3"
 task_sets = ["alef-bindings", "alef-publish", "governance", "lint-format", "rust"]
 
-[overrides.rust]
-version = "1.95"
-reason = "rust-toolchain.toml pins 1.95; moving 22 crates and 14 bindings to 1.99 is its own change, with new clippy lints to clear"
-
 [overrides.zig]
 version = "0.16.0"
 reason = "packages/zig/build.zig.zon sets minimum_zig_version 0.16.0 and the Zig binding targets the 0.16 API"

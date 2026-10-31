@@ -475,7 +475,7 @@ jobs:
       - name: Setup Rust
         uses: xberg-io/actions/setup-rust@v1
         with:
-          toolchain: "1.95"
+          toolchain: "1.99.1"
           cache-key-prefix: test-published-wasm-${{ matrix.os }}
 
       - name: Setup Node and pnpm
@@ -506,7 +506,7 @@ jobs:
       - name: Setup Rust
         uses: xberg-io/actions/setup-rust@v1
         with:
-          toolchain: "1.95"
+          toolchain: "1.99.1"
           cache-key-prefix: test-published-zig
 
       - name: Setup Zig
@@ -548,7 +548,7 @@ jobs:
       - name: Setup Rust
         uses: xberg-io/actions/setup-rust@v1
         with:
-          toolchain: "1.95"
+          toolchain: "1.99.1"
           cache-key-prefix: test-published-java-${{ matrix.os }}
 
       - name: Setup JDK
@@ -581,7 +581,7 @@ jobs:
       - name: Setup Rust
         uses: xberg-io/actions/setup-rust@v1
         with:
-          toolchain: "1.95"
+          toolchain: "1.99.1"
           cache-key-prefix: test-published-csharp-${{ matrix.os }}
 
       # ~keep dotnet is a mise lock gap; setup-dotnet stays.
@@ -622,7 +622,7 @@ jobs:
       - name: Setup Rust
         uses: xberg-io/actions/setup-rust@v1
         with:
-          toolchain: "1.95"
+          toolchain: "1.99.1"
           cache-key-prefix: test-published-kotlin-${{ matrix.os }}
 
       - name: Setup Gradle
@@ -660,7 +660,7 @@ jobs:
       - name: Setup Rust
         uses: xberg-io/actions/setup-rust@v1
         with:
-          toolchain: "1.95"
+          toolchain: "1.99.1"
           cache-key-prefix: test-published-kotlin-android
 
       - name: Setup Gradle
@@ -702,7 +702,7 @@ jobs:
       - name: Setup Rust
         uses: xberg-io/actions/setup-rust@v1
         with:
-          toolchain: "1.95"
+          toolchain: "1.99.1"
           cache-key-prefix: test-published-dart-${{ matrix.os }}
 
       # ~keep Dart stays on its setup action (org toolchain policy).
@@ -735,7 +735,7 @@ jobs:
       - name: Setup Rust
         uses: xberg-io/actions/setup-rust@v1
         with:
-          toolchain: "1.95"
+          toolchain: "1.99.1"
           cache-key-prefix: test-published-swift
 
       - name: Setup mise
