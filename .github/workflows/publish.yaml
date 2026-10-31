@@ -1022,7 +1022,7 @@ jobs:
       # ~keep version can be too old for configure-rubygems-credentials.
       - name: Update RubyGems for OIDC trusted publishing
         run: gem update --system
-      - uses: rubygems/configure-rubygems-credentials@v2.0.0
+      - uses: rubygems/configure-rubygems-credentials@v2.1.0
       - uses: xberg-io/actions/publish-rubygems@v1
         with:
           gems-dir: dist
