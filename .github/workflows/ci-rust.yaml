@@ -144,3 +144,27 @@ jobs:
       - name: Run Rust tests
         if: matrix.suite == 'test'
         run: mise run rust:test:ci
+
+  # ~keep The workspace declares rust-version 1.95 and the published-package test builds spikard
+  # ~keep on 1.95, so a newer-Rust construct must fail here, before release.
+  msrv:
+    name: Rust MSRV check (1.95)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup mise
+        uses: xberg-io/actions/setup-mise@v1
+        with:
+          install: "false"
+
+      - name: Setup Rust 1.95
+        uses: xberg-io/actions/setup-rust@v1
+        with:
+          toolchain: "1.95"
+          cache-key-prefix: rust-msrv
+          use-sccache: "true"
+
+      - name: Check the published crates on 1.95
+        run: mise run rust:check:msrv

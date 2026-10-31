@@ -352,6 +352,14 @@ alias = "cov:rust"
 env = { CARGO_TERM_COLOR = "always" }
 run = 'RUST_BACKTRACE="${RUST_BACKTRACE:-1}" mise run rust:test'
 
+[tasks."rust:check:msrv"]
+description = "Check the published crates build on the declared rust-version (1.95)"
+# ~keep The published-package test builds spikard on 1.95; this catches a newer-Rust construct
+# before release rather than after.
+run = """\
+  cargo +1.95 check --locked --all-features -p spikard -p spikard-cli -p spikard-codegen \
+  -p spikard-core -p spikard-graphql -p spikard-http"""
+
 [tasks."rust:test:quick"]
 description = "Run fast Rust tests (unit tests only)"
 run = "cargo test --locked --lib --workspace {{vars.alef_excludes}}"

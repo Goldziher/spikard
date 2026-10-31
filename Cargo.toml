@@ -30,6 +30,7 @@ exclude = [
 [workspace.package]
 version = "0.17.2"
 edition = "2024"
+rust-version = "1.95"
 authors = ["Na'aman Hirschfeld <nhirschfeld@gmail.com>"]
 license = "MIT"
 license-file = "LICENSE"
