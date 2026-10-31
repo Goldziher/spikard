@@ -22,10 +22,10 @@ To generate charts locally:
 
 ```bash
 # Download and aggregate latest benchmark results
-task benchmarks:aggregate
+mise run benchmarks:aggregate
 
 # Generate visualization charts
-task benchmarks:visualize
+mise run benchmarks:visualize
 ```
 
 Or using the CLI directly:

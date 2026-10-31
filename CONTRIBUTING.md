@@ -12,7 +12,7 @@ Spikard is experimental and pre-1.0, which means contributions land quickly and 
 - **[Help wanted](https://github.com/Goldziher/spikard/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22)** — larger subsystems from the [roadmap](https://spikard.dev/roadmap/), each backed by an ADR describing the intended design. Worth commenting on the issue before starting so effort is not duplicated.
 - **Found something wrong?** Opening an issue is a contribution. Rough edges in the API, confusing errors, and docs that do not match reality are all worth reporting.
 
-Before opening a PR, run `task check` (formatting, linting, and docs consistency).
+Before opening a PR, run `mise run check` (formatting, linting, and docs consistency).
 
 ## Prerequisites
 
@@ -22,14 +22,14 @@ Before opening a PR, run `task check` (formatting, linting, and docs consistency
 - Ruby 3.2+
 - PHP 8.2+ (optional)
 - Elixir 1.18+ with OTP 27+ (optional)
-- [Task](https://taskfile.dev/) (task runner)
+- [mise](https://mise.jdx.dev/) (toolchain and task runner)
 
 ## Setup
 
 ```bash
 git clone https://github.com/goldziher/spikard.git
 cd spikard
-task setup
+mise run setup
 ```
 
 This installs all language dependencies and pre-commit hooks.
@@ -39,30 +39,30 @@ This installs all language dependencies and pre-commit hooks.
 ### Building
 
 ```bash
-task build              # Build everything
-task build:rust         # Rust core only
-task build:python       # Python bindings
-task build:node         # Node.js bindings
-task build:ruby         # Ruby bindings
-task build:php          # PHP bindings
-task build:elixir       # Elixir bindings
+mise run build              # Build everything
+mise run build:rust         # Rust core only
+mise run build:python       # Python bindings
+mise run build:node         # Node.js bindings
+mise run build:ruby         # Ruby bindings
+mise run build:php          # PHP bindings
+mise run build:elixir       # Elixir bindings
 ```
 
 ### Testing
 
 ```bash
-task test               # Run all test suites
-task test:rust          # Rust tests
-task test:python        # Python tests
-task test:js            # TypeScript tests
-task test:elixir        # Elixir tests
+mise run test               # Run all test suites
+mise run test:rust          # Rust tests
+mise run test:python        # Python tests
+mise run test:js            # TypeScript tests
+mise run test:elixir        # Elixir tests
 ```
 
 ### Linting & Formatting
 
 ```bash
-task lint               # Check all code quality
-task format             # Apply formatting
+mise run lint               # Check all code quality
+mise run format             # Apply formatting
 ```
 
 Run these before opening a PR. The CI pipeline enforces them.
@@ -97,7 +97,7 @@ See [Architecture Decision Records](docs/adr/) for design rationale.
 
 1. Fork the repo and create a feature branch from `main`
 2. Make your changes
-3. Run `task lint` and `task test` — both must pass
+3. Run `mise run lint` and `mise run test` — both must pass
 4. Update `CHANGELOG.md` if applicable
 5. Submit a PR with a clear description of the change
 

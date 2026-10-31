@@ -14,7 +14,7 @@ x-ai-rulez:
 
 Automatically fix as many issues as possible:
 
-1. Run `task format` if available, otherwise run language-specific formatters; this excludes Alef formatting
+1. Run `mise run format` if available, otherwise run language-specific formatters; this excludes Alef formatting
 2. Run `poly lint --fix .` and `poly fmt --fix .` to catch and fix remaining issues
-3. Run `task alef:format` only when Alef-generated output needs formatting
+3. Run `mise run alef:format` only when Alef-generated output needs formatting
 4. Report what was fixed and what still needs manual attention

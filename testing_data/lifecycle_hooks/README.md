@@ -120,13 +120,13 @@ Generate tests from these fixtures:
 
 ```bash
 # Generate Python e2e tests
-task generate:tests:python
+mise run generate:tests:python
 
 # Generate all language tests
-task generate:tests
+mise run generate:tests
 
 # Run generated tests
-task test:e2e:python
+mise run test:e2e:python
 ```
 
 ## Implementation Status

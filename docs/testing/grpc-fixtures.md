@@ -358,7 +358,7 @@ Use this template:
 Run validation to ensure JSON conforms to schema:
 
 ```bash
-task validate:fixtures
+mise run validate:fixtures
 ```
 
 Expected output:
@@ -373,13 +373,13 @@ Once fixture is added, tests automatically discover it:
 
 ```bash
 # Run all languages
-task test:grpc:fixtures
+mise run test:grpc:fixtures
 
 # Or individually
-task test:grpc:python
-task test:grpc:typescript
-task test:grpc:ruby
-task test:grpc:php
+mise run test:grpc:python
+mise run test:grpc:typescript
+mise run test:grpc:ruby
+mise run test:grpc:php
 ```
 
 ### Complete Example: Bidirectional Echo
@@ -458,7 +458,7 @@ task test:grpc:php
 ### All Languages
 
 ```bash
-task test:grpc:fixtures
+mise run test:grpc:fixtures
 ```
 
 Runs parametrized tests in Python, TypeScript, Ruby, and PHP simultaneously.
@@ -467,16 +467,16 @@ Runs parametrized tests in Python, TypeScript, Ruby, and PHP simultaneously.
 
 ```bash
 # Python
-task test:grpc:python
+mise run test:grpc:python
 
 # TypeScript
-task test:grpc:typescript
+mise run test:grpc:typescript
 
 # Ruby
-task test:grpc:ruby
+mise run test:grpc:ruby
 
 # PHP
-task test:grpc:php
+mise run test:grpc:php
 ```
 
 ### Specific Test Categories
@@ -743,7 +743,7 @@ All language bindings must pass **identical fixtures**. If a fixture passes in P
 1. **Run all languages in same test suite**:
 
    ```bash
-   task test:grpc:fixtures
+   mise run test:grpc:fixtures
    ```
 
 2. **Verify identical results**:
@@ -800,7 +800,7 @@ Unacceptable (must be fixed):
 Run all coverage checks automatically:
 
 ```bash
-task verify:coverage
+mise run verify:coverage
 ```
 
 Expected output:
@@ -834,7 +834,7 @@ If coverage is below threshold:
 3. **Re-run coverage verification**:
 
    ```bash
-   task verify:coverage
+   mise run verify:coverage
    ```
 
 ---
@@ -861,7 +861,7 @@ On every push to `main` or PR:
      runs-on: ubuntu-latest
      needs: validate-fixtures
      steps:
-       - run: task test:grpc:python
+       - run: mise run test:grpc:python
        - run: pytest --cov --cov-fail-under=80
    ```
 
@@ -872,7 +872,7 @@ On every push to `main` or PR:
      runs-on: ubuntu-latest
      needs: [test-python, test-typescript, test-ruby, test-php]
      steps:
-       - run: task verify:coverage
+       - run: mise run verify:coverage
    ```
 
 ### CI Triggering
@@ -891,16 +891,16 @@ Run CI checks locally before pushing:
 
 ```bash
 # Validate fixtures
-task validate:fixtures
+mise run validate:fixtures
 
 # Run all language tests
-task test:grpc:fixtures
+mise run test:grpc:fixtures
 
 # Verify coverage
-task verify:coverage
+mise run verify:coverage
 
 # Full suite (as CI will run)
-task test
+mise run test
 ```
 
 ---
@@ -909,7 +909,7 @@ task test
 
 ### Fixture Validation Fails
 
-**Problem**: `task validate:fixtures` fails with schema error.
+**Problem**: `mise run validate:fixtures` fails with schema error.
 
 **Solution**:
 
@@ -1020,19 +1020,19 @@ cat > testing_data/protobuf/streaming/{category}/{number}_{name}.json << 'EOF'
   ...
 }
 EOF
-task validate:fixtures
+mise run validate:fixtures
 ```
 
 ### Run All Tests
 
 ```bash
-task test:grpc:fixtures
+mise run test:grpc:fixtures
 ```
 
 ### Check Coverage
 
 ```bash
-task verify:coverage
+mise run verify:coverage
 ```
 
 ### Debug Specific Fixture

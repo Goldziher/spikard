@@ -4,10 +4,10 @@
   "private": true,
   "description": "Spikard HTTP framework - Multi-language workspace",
   "scripts": {
-    "build": "task build",
-    "test": "task test",
-    "lint": "task lint",
-    "format": "task format"
+    "build": "mise run build",
+    "test": "mise run test",
+    "lint": "mise run lint",
+    "format": "mise run format"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",

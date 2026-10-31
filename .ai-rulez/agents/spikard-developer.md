@@ -43,9 +43,9 @@ Tools: `tools/benchmark-harness`, `tools/snippet-runner`, `tools/test-generator`
 
 ## Development Workflow
 
-- `task build` is core-only; use `task build:bindings` or `task build:all` explicitly when bindings are needed
-- `task test` / `task lint` / `task format` for standard operations; `task format` excludes Alef formatting
-- `task test:rust`, `task test:python`, `task test:node`, `task test:ruby`, `task test:php` for per-language tests
-- `task alef:generate` runs `alef all --clean --format=false`; use `task alef:format` explicitly when needed
-- `task e2e:generate`, `task e2e:build`, `task e2e:test`, and `task e2e:all` for generated e2e suites
-- `poly lint .` / `poly fmt --check .` enforce linting and formatting; `task version:sync` keeps versions aligned
+- `mise run build` is core-only; use `mise run build:bindings` or `mise run build:all` explicitly when bindings are needed
+- `mise run test` / `mise run lint` / `mise run format` for standard operations; `mise run format` excludes Alef formatting
+- `mise run test:rust`, `mise run test:python`, `mise run test:node`, `mise run test:ruby`, `mise run test:php` for per-language tests
+- `mise run alef:generate` runs `alef all --clean --format=false`; use `mise run alef:format` explicitly when needed
+- `mise run e2e:generate`, `mise run e2e:build`, `mise run e2e:test`, and `mise run e2e:all` for generated e2e suites
+- `poly lint .` / `poly fmt --check .` enforce linting and formatting; `mise run version:sync` keeps versions aligned

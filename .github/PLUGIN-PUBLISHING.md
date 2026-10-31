@@ -17,4 +17,4 @@ For npm, an authorized maintainer must establish ownership of the package/scope 
 
 For the new PyPI project, register a pending trusted publisher under the account's Publishing page using the project name and claims above. It creates the project on first authorized publication and does not reserve the name beforehand. [PyPI pending-publisher documentation](https://docs.pypi.org/trusted-publishers/creating-a-project-through-oidc/) explains that setup.
 
-Do not manually modify generated npm or wheel manifests. Change native `plugin/.ai-rulez` authoring, regenerate and export with `task plugin:generate`, then verify and review the resulting committed artifacts before dispatching.
+Do not manually modify generated npm or wheel manifests. Change native `plugin/.ai-rulez` authoring, regenerate and export with `mise run plugin:generate`, then verify and review the resulting committed artifacts before dispatching.

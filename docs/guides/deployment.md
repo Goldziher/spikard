@@ -29,11 +29,11 @@ Spikard can run as a compiled Rust binary, via the CLI, or packaged into contain
 - Set explicit `host`/`port` and timeouts; avoid relying on defaults in container platforms.
 - Enable structured logging + tracing (OTel recommended) and forward request IDs.
 - Run health checks against a lightweight endpoint with minimal middleware.
-- Use the Taskfile to build bindings before containerizing (`task build` or targeted language tasks).
+- Use the mise tasks to build bindings before containerizing (`mise run build` or targeted language tasks).
 
 ## Versioned docs & config
 
-- Publish docs with `task docs:deploy` after syncing schemas/code.
+- Publish docs with `mise run docs:deploy` after syncing schemas/code.
 - Keep configuration declarative and environment-driven (see [Configuration](configuration.md)).
 
 ## Example Dockerfile sketch

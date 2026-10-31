@@ -56,7 +56,7 @@ rustflags = ["-C", "link-arg=-Wl,-undefined,dynamic_lookup"]
 rustflags = ["-C", "link-arg=-Wl,--allow-shlib-undefined"]
 
 # Note: env table is not supported in Cargo config.toml
-# Set these in your shell or Taskfile instead:
+# Set these in your shell or mise.toml [env] instead:
 # export LIBCLANG_PATH=/opt/homebrew/opt/llvm/lib
 # export LLVM_CONFIG_PATH=/opt/homebrew/opt/llvm/bin/llvm-config
 # export BINDGEN_EXTRA_CLANG_ARGS="-isysroot $(xcrun --sdk macosx --show-sdk-path)"

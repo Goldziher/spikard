@@ -1,7 +1,7 @@
 ---
 type: Playbook
 title: Release Workflow
-description: Release/publish the spikard Rust core crate and CLI end-to-end. Load when releasing or publishing spikard — cutting a new version, tagging, running `gh release create`, and installing the released build locally. Covers version set via Taskfile, CHANGELOG roll, the clean-tree precondition, GitHub release, local install, and artifact cleanup.
+description: Release/publish the spikard Rust core crate and CLI end-to-end. Load when releasing or publishing spikard — cutting a new version, tagging, running `gh release create`, and installing the released build locally. Covers version set via mise, CHANGELOG roll, the clean-tree precondition, GitHub release, local install, and artifact cleanup.
 x-ai-rulez:
   kind: skill
   id: release-workflow
@@ -13,26 +13,26 @@ x-ai-rulez:
 
 Ground truth: spikard is a Rust workspace (core library + `spikard-cli` +
 polyglot bindings). It has **no `set-version` task** — the equivalent is
-`task version:set` (a `version-sync` include). `Cargo.toml` is the single source
+`mise run version:set` (a mise task in `mise.toml`). `Cargo.toml` is the single source
 of truth; `version:set` syncs it to every binding manifest.
 
 ## 1. Set the version
 
 ```bash
-task version:set -- X.Y.Z        # e.g. task version:set -- 0.7.0-rc.1
+mise run version:set X.Y.Z        # e.g. mise run version:set 0.7.0-rc.1
 ```
 
 `version:set` takes the version as a `--` positional argument (CLI_ARGS). It runs
 `alef sync-versions --set <version>` then the full `sync` (regenerate READMEs,
 docs, bindings, scaffold, stubs, e2e, and precise `cargo update` for the core
 crate across dependent manifests). Bump variants also exist:
-`task version:bump:patch`, `task version:bump:minor`, `task version:bump:major`.
-`task version:show` prints the current version.
+`mise run version:bump:patch`, `mise run version:bump:minor`, `mise run version:bump:major`.
+`mise run version:show` prints the current version.
 
 Verify:
 
 ```bash
-task version:show
+mise run version:show
 grep -m1 '^version' Cargo.toml
 ```
 
@@ -47,15 +47,15 @@ Re-create an empty `[Unreleased]`. Never tag an empty section.
 Never release a dirty or failing tree.
 
 ```bash
-poly fmt --check .    # formatting clean (task format:check)
-poly lint .           # lint clean (task lint)
-task test             # Rust core tests pass (rust:test)
+poly fmt --check .    # formatting clean (mise run format:check)
+poly lint .           # lint clean (mise run lint)
+mise run test             # Rust core tests pass (rust:test)
 ```
 
-Use `poly fmt --fix .` (or `task format`) to apply formatting, then re-stage.
-For a full cross-binding gate before a release, run `task test:all`
-(`task test` + `alef test`). Optionally validate manifests with
-`task publish:validate` (`alef publish validate`). Fix any failure — do not
+Use `poly fmt --fix .` (or `mise run format`) to apply formatting, then re-stage.
+For a full cross-binding gate before a release, run `mise run test:all`
+(`mise run test` + `alef test`). Optionally validate manifests with
+`mise run publish:validate` (`alef publish validate`). Fix any failure — do not
 release past it.
 
 ## 4. Commit, tag, and publish the GitHub release
@@ -81,24 +81,24 @@ cargo install --path crates/spikard-cli --force
 ```
 
 Installs the `spikard` CLI binary from the workspace. (If a change is only in the
-core crate, `task build:release` builds `spikard` core; `task build:cli` builds
+core crate, `mise run build:release` builds `spikard` core; `mise run build:cli` builds
 the CLI binary to `target/release/spikard`.) Confirm `which spikard` and
 `spikard --version` reflect X.Y.Z.
 
 ## 6. Clean up build artifacts
 
 ```bash
-task clean        # cargo clean + alef clean + rm -rf dist/ .alef/ caches
+mise run clean        # cargo clean + alef clean + rm -rf dist/ .alef/ caches
 ```
 
-`task clean` runs `cargo clean` (removing `target/` to reclaim space) plus
+`mise run clean` runs `cargo clean` (removing `target/` to reclaim space) plus
 `alef clean` and removes `dist/`, `.alef/`, and language caches.
 
 ## Anti-patterns
 
-- Reaching for a `set-version` task — spikard uses `task version:set -- X.Y.Z`.
+- Reaching for a `set-version` task — spikard uses `mise run version:set X.Y.Z`.
 - Hand-editing `version` in `Cargo.toml` or any binding manifest instead of
-  `task version:set`.
+  `mise run version:set`.
 - Releasing a dirty or lint/test-failing tree.
 - Tagging without `gh release create`.
 - AI attribution in commit/tag/release text.

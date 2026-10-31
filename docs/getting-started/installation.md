@@ -164,11 +164,11 @@ The repo uses `uv` to manage Python deps and pnpm for JavaScript:
 
 ```bash
 # install all languages + hooks
-task setup
+mise run setup
 
 # or only the Python/Node deps needed for docs
 uv sync --group docs --group doc --no-install-workspace
 pnpm install --frozen-lockfile
 ```
 
-When working on docs locally, run `task docs:serve` to launch Zensical with live reload.
+When working on docs locally, run `mise run docs:serve` to launch Zensical with live reload.

@@ -34,7 +34,7 @@ Spikard delivers the same runtime and developer experience across languages whil
 
 - CLI (`spikard-cli`) to run apps and generate DTOs/handlers from OpenAPI, AsyncAPI, OpenRPC, and Protobuf schemas
 - Binding-managed auto-reload for Python development via `Spikard.run(reload=True)`
-- Taskfile targets for installing deps, building bindings, and serving docs
+- mise tasks for installing deps, building bindings, and serving docs
 - Extensive fixture-driven tests to keep language parity
 
 ## Deployment

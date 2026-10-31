@@ -72,7 +72,7 @@ Editing a generated file wastes the edit; the next regen reverts it.
   When you change one, change the other, or they silently diverge.
 - `docs/**` except `docs/reference/**` — including `docs/index.md`, `docs/llms.txt`, `docs/mcp.md`,
   and everything under `docs/guides/` and `docs/getting-started/`.
-- `zensical.toml` (including `site_description`), `CONTRIBUTING.md`, `Taskfile.yaml`.
+- `zensical.toml` (including `site_description`), `CONTRIBUTING.md`, `mise.toml`.
 
 `docs_url` and `description` in `alef.toml` are **source** — they propagate into every published
 package README, so a wrong value there ships to 15 registries.
@@ -86,8 +86,8 @@ updated with every minor release:
 - `docs/llms.txt` (installation snippets section)
 - `README.md` and `templates/readme/root.md` (the Elixir `~> x.y` row)
 
-Verify with `task docs:check` (`alef validate versions` — manifests only; prose still needs a human
-eye). `task docs:gaps` reports snippet coverage and is deliberately **not** part of `task check`,
+Verify with `mise run docs:check` (`alef validate versions` — manifests only; prose still needs a human
+eye). `mise run docs:gaps` reports snippet coverage and is deliberately **not** part of `mise run check`,
 because it exits non-zero while the good-first-issue backlog is open.
 
 Do not add a bespoke consistency script — alef already owns version and snippet validation.

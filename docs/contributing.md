@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping shape Spikard! The fastest way to get started is to follow the existing Taskfile and language-specific READMEs.
+Thanks for helping shape Spikard! The fastest way to get started is to follow the mise tasks (`mise tasks ls`) and language-specific READMEs.
 
 ## Where to start
 
@@ -10,22 +10,22 @@ Spikard is experimental and pre-1.0, so contributions land quickly and genuinely
 - **[Help wanted](https://github.com/Goldziher/spikard/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22)** — larger subsystems from the [roadmap](roadmap.md), each backed by an ADR.
 - **Found something wrong?** Opening an issue is a contribution. Rough edges, confusing errors, and docs that do not match reality are all worth reporting.
 
-Before opening a PR, run `task check` (formatting, linting, and docs consistency).
+Before opening a PR, run `mise run check` (formatting, linting, and docs consistency).
 
 ## Setup
 
 ```bash
-task setup
+mise run setup
 ```
 
 This installs Rust, Python, Node, and Ruby dependencies plus pre-commit hooks.
 
 ## Common Tasks
 
-- `task build` – build Rust core and bindings
-- `task test` – run all language test suites
-- `task lint` / `task format` – apply linters and formatters
-- `task docs:serve` – work on this documentation locally
+- `mise run build` – build Rust core and bindings
+- `mise run test` – run all language test suites
+- `mise run lint` / `mise run format` – apply linters and formatters
+- `mise run docs:serve` – work on this documentation locally
 
 ## Guidelines
 

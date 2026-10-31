@@ -28,4 +28,4 @@ x-ai-rulez:
 - Zero-copy JSON to Python: direct PyO3 type construction (PyDict, PyList, PyString) instead of json.loads
 - Use raw_body for bindings to avoid double JSON parsing
 - serde-ready Rust structs for binding reuse
-- Release mode (`task build:rust`) for benchmarking, never debug builds
+- Release mode (`mise run build:rust`) for benchmarking, never debug builds

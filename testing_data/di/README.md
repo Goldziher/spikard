@@ -610,9 +610,9 @@ When adding new DI features:
 
 1. Create fixture(s) first (TDD approach)
 2. Update this README with fixture documentation
-3. Run `task test` to verify fixtures fail (red)
+3. Run `mise run test` to verify fixtures fail (red)
 4. Implement feature
-5. Run `task test` to verify fixtures pass (green)
+5. Run `mise run test` to verify fixtures pass (green)
 6. Document in ADR-0008 and IMPLEMENTATION_PLAN.md
 
 ## Questions & Support

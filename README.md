@@ -258,15 +258,15 @@ Compression (gzip/brotli), rate limiting, timeouts, request IDs, authentication 
 ## Development
 
 ```bash
-task setup     # Install dependencies
-task build     # Build Rust core (debug)
-task test      # Run Rust tests
-task test:all  # Run all tests (Rust + bindings)
-task e2e:all   # Generate + build + run e2e tests
-task format    # Format all code
+mise run setup     # Install dependencies
+mise run build     # Build Rust core (debug)
+mise run test      # Run Rust tests
+mise run test:all  # Run all tests (Rust + bindings)
+mise run e2e:all   # Generate + build + run e2e tests
+mise run format    # Format all code
 ```
 
-Run `task --list` for the full task catalog.
+Run `mise tasks ls` for the full task catalog.
 
 <details>
 <summary><strong>Project status</strong></summary>
