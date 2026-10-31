@@ -28,6 +28,10 @@ lychee = "0.24.2"
 [env]
 DOCKER_BUILDKIT = "1"
 BUILDKIT_PROGRESS = "plain"
+# ~keep uv takes the python first on PATH (mise.toml's, or the one a CI job set up), not a newer
+# ~keep uv-managed one: rust:test points PYTHONHOME at uv's interpreter while spikard-cli's quality
+# ~keep gates run python3 from PATH, and a version mismatch fails them at interpreter start.
+UV_PYTHON_PREFERENCE = "only-system"
 
 [vars]
 # The spikard-alef crate is alef plus the spikard extensions (crates/spikard-alef-ext). ~keep
