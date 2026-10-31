@@ -4,6 +4,9 @@
 lockfile = true
 lockfile_platforms = ["linux-x64", "linux-arm64", "macos-arm64", "macos-x64", "windows-x64"]
 
+[task_config]
+includes = ["mise-tasks/shared.toml", "mise-tasks"]
+
 [tools]
 python = "3.13.18"
 uv = "0.13.6"
@@ -21,3 +24,800 @@ cargo-deny = "0.20.2"
 "github:rustwasm/wasm-pack" = "0.15.0"
 actionlint = "1.7.12"
 lychee = "0.24.2"
+
+[env]
+DOCKER_BUILDKIT = "1"
+BUILDKIT_PROGRESS = "plain"
+
+[vars]
+# The spikard-alef crate is alef plus the spikard extensions (crates/spikard-alef-ext). ~keep
+alef = "cargo run -p spikard-alef --release --"
+# Crates the workspace-wide Rust tasks skip: alef builds and tests the binding crates. ~keep
+alef_excludes = """\
+  --exclude spikard-py --exclude spikard-node --exclude spikard-rb --exclude spikard-php \
+  --exclude spikard-elixir --exclude spikard_nif --exclude spikard-ffi --exclude spikard-swift \
+  --exclude spikard-wasm --exclude benchmark-harness"""
+
+# ---- Entry points ------------------------------------------------------------------------------
+
+[tasks.default]
+description = "List available tasks"
+run = "mise tasks ls"
+
+[tasks.setup]
+description = "Install all dependencies and setup development environment"
+run = [
+  "mise install",
+  { task = "rust:install" },
+  "alef setup",
+  { task = "governance:hooks:install" },
+]
+
+[tasks.build]
+description = "Build Rust core library only (debug)"
+alias = "build:core"
+run = [{ task = "rust:build:dev" }]
+
+[tasks."build:all"]
+description = "Build Rust core library and all language bindings (debug)"
+run = [{ task = "build" }, { task = "alef:build" }]
+
+[tasks."build:http"]
+description = "Build HTTP server binary"
+run = "cargo build --locked --release --package spikard-http"
+
+[tasks.test]
+description = "Run Rust core tests"
+run = [{ task = "rust:test" }]
+
+[tasks."test:all"]
+description = "Run all test suites (Rust core + bindings)"
+run = [{ task = "test" }, "alef test"]
+
+[tasks."test:cov"]
+description = "Run all tests with coverage"
+alias = ["test:ci", "cov:all"]
+run = [{ task = "rust:test:ci" }, "alef test --coverage"]
+
+[tasks.check]
+description = "Run all checks (format + lint + docs consistency, no modifications)"
+run = [{ task = "format:check" }, { task = "lint" }, { task = "docs:check" }]
+
+[tasks.update]
+description = "Update all dependencies within major versions (minor patches only)"
+run = [{ task = "rust:update" }, "alef update"]
+
+[tasks.upgrade]
+description = "Upgrade all dependencies to latest including breaking changes"
+run = [
+  { task = "rust:upgrade" },
+  { task = "zig:deps:upgrade" },
+  "alef update --latest",
+  "gau --recursive .github/ || echo 'gau (gh-actions-updater) failed or is not installed; skipping'",
+]
+
+[tasks.clean]
+description = "Remove build artifacts across all languages"
+run = [
+  "cargo clean",
+  "alef clean",
+  "rm -rf coverage.lcov dist/ .alef/",
+  "rm -rf .pytest_cache/ .ruff_cache/",
+  'find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true',
+  'find . -type f -name "*.pyc" -delete 2>/dev/null || true',
+]
+
+[tasks."clean:generated"]
+description = "Remove all generated e2e test infrastructure"
+run = "rm -rf e2e/"
+
+[tasks."run:cli"]
+description = "Run the CLI tool (arguments after -- go to spikard)"
+run = "cargo run --package spikard-cli --"
+
+[tasks."run:http"]
+description = "Run the HTTP server"
+run = "cargo run --package spikard-http"
+
+[tasks."fixtures:parity"]
+description = "Check fixtures/ and testing_data/ fixture trees for drift (not yet part of `mise run check`)"
+run = "python3 scripts/ci/python/fixture_parity_check.py"
+
+[tasks."pre-commit:run"]
+description = "Run poly hooks on all files"
+run = "poly hooks run --all-files"
+
+[tasks."pre-commit:uninstall"]
+description = "Uninstall poly git hooks"
+run = "poly hooks uninstall || true"
+
+# ---- Versions ----------------------------------------------------------------------------------
+
+[tasks."version:check"]
+description = "Check if versions are synchronized (dry-run)"
+run = [{ task = "version:show" }, "{{vars.alef}} validate versions"]
+
+[tasks."version:show"]
+description = "Show current version from Cargo.toml"
+run = "grep -m 1 'version = ' Cargo.toml | sed 's/version = \"\\(.*\\)\"/\\1/'"
+
+[tasks."version:bump:major"]
+description = "Bump major version (X.0.0) and sync"
+run = ["{{vars.alef}} sync-versions --bump major", { task = "version:sync" }]
+
+[tasks."version:bump:minor"]
+description = "Bump minor version (0.X.0) and sync"
+run = ["{{vars.alef}} sync-versions --bump minor", { task = "version:sync" }]
+
+[tasks."version:bump:patch"]
+description = "Bump patch version (0.0.X) and sync"
+run = ["{{vars.alef}} sync-versions --bump patch", { task = "version:sync" }]
+
+[tasks."version:set"]
+description = "Set explicit version and sync (usage: mise run version:set 0.7.0-rc.1)"
+usage = 'arg "<version>" help="Version to set, e.g. 0.7.0-rc.1"'
+run = ['{{vars.alef}} sync-versions --set "{{usage.version}}"', { task = "version:sync" }]
+
+# ---- Alef --------------------------------------------------------------------------------------
+
+[tasks."alef:verify"]
+description = "Check Alef-generated files are up to date"
+depends = ["alef:check-pin"]
+run = "{{vars.alef}} verify"
+
+[tasks."alef:build"]
+description = "Build all language bindings"
+alias = "build:bindings"
+run = "{{vars.alef}} build"
+
+[tasks."alef:format"]
+description = "Format Alef-managed generated output"
+run = "{{vars.alef}} fmt"
+
+[tasks."alef:sync"]
+description = "Sync version from Cargo.toml to all manifests"
+run = "{{vars.alef}} sync-versions"
+
+[tasks."alef:docs"]
+description = "Generate API reference documentation"
+run = "{{vars.alef}} docs"
+
+[tasks."alef:extract"]
+description = "Extract API surface from Rust source"
+run = "{{vars.alef}} extract"
+
+[tasks."alef:scaffold"]
+description = "Generate package scaffolding (Cargo.toml, pyproject.toml, etc.)"
+run = "cargo run --package spikard-alef -- scaffold"
+
+# ---- E2E ---------------------------------------------------------------------------------------
+
+[tasks."e2e:generate"]
+description = "Generate E2E tests for all languages from fixtures"
+run = "{{vars.alef}} e2e generate"
+
+[tasks."e2e:build"]
+description = "Build all language bindings used by e2e suites (release)"
+run = "alef build --release --lang python,node,ruby,php,ffi,go,java,csharp,elixir,wasm,dart,kotlin,swift,zig"
+
+[tasks."e2e:all"]
+description = "Generate, build, and run all e2e test suites"
+run = [{ task = "e2e:generate" }, { task = "e2e:build" }, { task = "e2e:test" }]
+
+[tasks."e2e:test"]
+description = "Run all e2e test suites across all languages"
+run = "alef test --e2e --lang rust,python,node,ruby,php,go,java,csharp,elixir,wasm,dart,kotlin,swift,zig"
+
+[tasks."e2e:lint"]
+description = "Validate e2e fixtures"
+run = "{{vars.alef}} e2e validate"
+
+[tasks."e2e:verify"]
+description = "Verify generated e2e tests are up to date"
+alias = "verify:tests"
+run = ["{{vars.alef}} e2e generate", "git diff --exit-code e2e/"]
+
+[tasks."rust:e2e"]
+description = "Run Rust e2e tests via alef"
+alias = "e2e:quick"
+run = "alef test --e2e --lang rust"
+
+[tasks."python:e2e"]
+description = "Run Python e2e tests via alef"
+run = "alef test --e2e --lang python"
+
+[tasks."node:e2e"]
+description = "Run Node e2e tests via alef"
+run = "alef test --e2e --lang node"
+
+[tasks."ruby:e2e"]
+description = "Run Ruby e2e tests via alef"
+run = "alef test --e2e --lang ruby"
+
+[tasks."php:e2e"]
+description = "Run PHP e2e tests via alef"
+run = "alef test --e2e --lang php"
+
+[tasks."elixir:e2e"]
+description = "Run Elixir e2e tests via alef"
+run = "alef test --e2e --lang elixir"
+
+[tasks."go:e2e"]
+description = "Run Go e2e tests via alef"
+run = "alef test --e2e --lang go"
+
+[tasks."java:e2e"]
+description = "Run Java e2e tests via alef"
+run = "alef test --e2e --lang java"
+
+[tasks."csharp:e2e"]
+description = "Run C# e2e tests via alef"
+run = "alef test --e2e --lang csharp"
+
+[tasks."kotlin:e2e"]
+description = "Run Kotlin e2e tests via alef"
+alias = "kotlin-android:e2e"
+run = "alef test --e2e --lang kotlin"
+
+[tasks."dart:e2e"]
+description = "Run Dart e2e tests via alef"
+run = "alef test --e2e --lang dart"
+
+[tasks."swift:e2e"]
+description = "Run Swift e2e tests via alef"
+run = "alef test --e2e --lang swift"
+
+[tasks."zig:e2e"]
+description = "Run Zig e2e tests via alef"
+run = "alef test --e2e --lang zig"
+
+[tasks."wasm:e2e"]
+description = "Run WASM e2e tests via alef"
+run = "alef test --e2e --lang wasm"
+
+# ---- Rust --------------------------------------------------------------------------------------
+
+[tasks."rust:install"]
+description = "Install the rust-toolchain.toml toolchain and its components"
+run = ["rustup toolchain install", "cargo --version", "rustc --version"]
+run_windows = [
+  "rustup toolchain install",
+  "rustup component add llvm-tools",
+  "cargo --version",
+  "rustc --version",
+]
+
+[tasks."rust:build"]
+description = "Build all Rust crates with the BUILD_PROFILE profile (dev, release or ci; default release)"
+run = 'mise run "rust:build:${BUILD_PROFILE:-release}"'
+
+[tasks."rust:build:dev"]
+description = "Build all Rust crates in debug mode"
+run = "cargo build --locked --workspace --all-features {{vars.alef_excludes}}"
+
+[tasks."rust:build:release"]
+description = "Build all Rust crates in release mode"
+alias = "build:release"
+run = "cargo build --locked --release --workspace --all-features {{vars.alef_excludes}}"
+
+[tasks."rust:build:ci"]
+description = "Build for CI with debug info enabled"
+alias = "build:ci"
+env = { RUSTFLAGS = "-C debuginfo=2" }
+run = "cargo build --locked --release --workspace --all-features {{vars.alef_excludes}}"
+
+[tasks."rust:cli:build"]
+description = "Build CLI binary"
+alias = "build:cli"
+usage = 'flag "--target <triple>" help="Rust target triple to build for"'
+run = 'cargo build --locked --release --package spikard-cli ${usage_target:+--target "$usage_target"}'
+
+[tasks."rust:cli:build:dev"]
+description = "Build CLI binary in debug mode"
+run = "cargo build --locked --package spikard-cli"
+
+[tasks."rust:cli:install"]
+description = "Install CLI binary"
+run = "cargo install --path crates/spikard-cli"
+
+[tasks."rust:ffi:build"]
+description = "Build FFI library for go/java/csharp/kotlin/dart bindings (arguments after -- go to cargo)"
+run = "cargo build --locked --release --package spikard-ffi"
+
+[tasks."rust:ffi:build:dev"]
+description = "Build FFI library in debug mode (arguments after -- go to cargo)"
+run = "cargo build --locked --package spikard-ffi"
+
+[tasks."rust:ffi:build:ci"]
+description = "Build FFI library in CI mode with debug info (arguments after -- go to cargo)"
+env = { RUSTFLAGS = "-C debuginfo=2" }
+run = "cargo build --locked --release --package spikard-ffi"
+
+[tasks."rust:test"]
+description = "Run all Rust tests"
+# ~keep PyO3 builds and tests need the interpreter uv manages and PYTHONHOME at its prefix, not the
+# first python on PATH.
+run = """
+export PYO3_PYTHON="$(uv run which python 2>/dev/null || command -v python3 || echo python)"
+export PYTHONHOME="$(uv run python -c 'import sys; print(sys.base_prefix)' 2>/dev/null || echo '')"
+cargo test --locked --workspace --release {{vars.alef_excludes}}
+"""
+
+[tasks."rust:test:ci"]
+description = "Run Rust tests in CI mode"
+alias = "cov:rust"
+env = { CARGO_TERM_COLOR = "always" }
+run = 'RUST_BACKTRACE="${RUST_BACKTRACE:-1}" mise run rust:test'
+
+[tasks."rust:test:quick"]
+description = "Run fast Rust tests (unit tests only)"
+run = "cargo test --locked --lib --workspace {{vars.alef_excludes}}"
+
+[tasks."rust:lint"]
+description = "Lint Rust code WITH auto-fix (cargo fmt + cargo clippy --fix)"
+run = [
+  "cargo fmt --all",
+  "cargo clippy --locked --workspace --fix --allow-dirty --allow-staged --all-features {{vars.alef_excludes}} -- -D warnings",
+]
+
+[tasks."rust:lint:check"]
+description = "Lint Rust code WITHOUT auto-fix (check-only)"
+run = [
+  "cargo fmt --all -- --check",
+  "cargo clippy --locked --workspace --all-features {{vars.alef_excludes}} -- -D warnings",
+]
+
+[tasks."rust:format:check"]
+description = "Check Rust formatting without modifications"
+run = "cargo fmt --all -- --check"
+
+[tasks."rust:licenses"]
+description = "Check Rust dependency licenses with cargo-deny"
+run = "cargo deny check licenses"
+
+[tasks."rust:doc"]
+description = "Generate Rust documentation and open in browser"
+run = "cargo doc --no-deps --open"
+
+[tasks."rust:doc:build"]
+description = "Build Rust documentation (without opening)"
+run = "cargo doc --no-deps"
+
+[tasks."rust:update"]
+description = "Update Rust dependencies (compatible only)"
+run = [
+  "cargo update",
+  "cargo update --manifest-path packages/ruby/ext/spikard_rb/native/Cargo.toml || true",
+  "cargo update --manifest-path packages/swift/rust/Cargo.toml || true",
+]
+
+[tasks."rust:upgrade"]
+description = "Upgrade Rust dependencies aggressively (cargo upgrade --incompatible)"
+# cargo upgrade comes from cargo-edit (cargo install cargo-edit --locked); it is not part of stock
+# cargo, and cargo-edit publishes no release binaries for mise to install. ~keep
+run = [
+  "cargo upgrade --incompatible",
+  "cargo update",
+  "cargo upgrade --incompatible --manifest-path packages/ruby/ext/spikard_rb/native/Cargo.toml || true",
+  "cargo update --manifest-path packages/ruby/ext/spikard_rb/native/Cargo.toml || true",
+  "cargo upgrade --incompatible --manifest-path packages/swift/rust/Cargo.toml || true",
+  "cargo update --manifest-path packages/swift/rust/Cargo.toml || true",
+]
+
+[tasks."rust:e2e:format"]
+description = "Format generated Rust E2E sources"
+run = "cargo fmt --manifest-path e2e/rust/Cargo.toml || true"
+
+[tasks."rust:e2e:lint"]
+description = "Lint Rust E2E crate with clippy"
+run = "cargo clippy -p e2e-rust -- -D warnings || true"
+
+[tasks."rust:e2e:test"]
+description = "Run Rust E2E tests"
+env = { RUST_TEST_THREADS = "1", PYTHONPATH = "packages/python" }
+run = "cargo test --manifest-path e2e/rust/Cargo.toml --release || true"
+
+# ---- Per-binding checks ------------------------------------------------------------------------
+
+[tasks."elixir:typecheck"]
+description = "Typecheck Elixir binding with dialyzer"
+# ~keep Salvaged from `[crates.lint.elixir] typecheck` in alef.toml, which alef 0.82.0
+# removed with no replacement config key. Every other check those tables carried is
+# covered elsewhere (poly, per-language mise tasks, or the CI actions); dialyzer
+# was the only one with no other home.
+dir = "packages/elixir"
+run = "mix dialyzer"
+
+[tasks."go:lint"]
+description = "Lint Go binding with golangci-lint"
+dir = "packages/go"
+run = "golangci-lint run ./..."
+
+[tasks."ruby:format"]
+description = "Format Ruby binding with rubocop"
+dir = "packages/ruby"
+run = "bundle exec rubocop --autocorrect-all"
+
+[tasks."ruby:lint"]
+description = "Lint Ruby binding with rubocop and steep"
+dir = "packages/ruby"
+run = ["bundle exec rubocop", "bundle exec steep check"]
+
+[tasks."php:format"]
+description = "Format PHP binding with poly"
+run = "poly fmt --fix packages/php"
+
+[tasks."php:lint"]
+description = "Lint PHP binding with poly"
+run = "poly lint packages/php"
+
+[tasks."csharp:format"]
+description = "Format C# binding with dotnet format"
+dir = "packages/csharp"
+run = "dotnet format"
+
+[tasks."csharp:lint"]
+description = "Lint C# binding with dotnet format --verify-no-changes"
+dir = "packages/csharp"
+run = "dotnet format --verify-no-changes"
+
+[tasks."csharp:build:release"]
+description = "Build the C# binding in Release configuration"
+dir = "packages/csharp"
+run = "dotnet build --configuration Release"
+
+[tasks."csharp:package"]
+description = "Pack the C# binding into a NuGet package (arguments after -- go to dotnet pack)"
+dir = "packages/csharp"
+run = "dotnet pack --configuration Release"
+
+[tasks."java:build:release"]
+description = "Build the Java binding via Maven (mvn package)"
+dir = "packages/java"
+run = "mvn -B -DskipTests package"
+
+[tasks."kotlin-android:format"]
+description = "Format Kotlin/Android binding with ktlint via gradle"
+dir = "packages/kotlin"
+run = "gradle ktlintFormat --no-daemon"
+
+[tasks."kotlin-android:lint"]
+description = "Lint Kotlin/Android binding with ktlint via gradle"
+dir = "packages/kotlin"
+run = "gradle ktlintCheck --no-daemon"
+
+[tasks."kotlin-android:test"]
+description = "Run Kotlin/Android binding tests"
+dir = "packages/kotlin"
+run = ["cargo build --locked --release -p spikard-ffi", "gradle test --no-daemon"]
+
+[tasks."dart:format"]
+description = "Format Dart binding with dart format"
+dir = "packages/dart"
+run = "dart format ."
+
+[tasks."dart:lint"]
+description = "Lint Dart binding with dart analyze"
+dir = "packages/dart"
+run = "dart analyze"
+
+[tasks."dart:test"]
+description = "Run Dart binding tests"
+dir = "packages/dart"
+run = [
+  "cargo build --locked --release --manifest-path packages/dart/rust/Cargo.toml",
+  "dart pub get",
+  "dart test",
+]
+
+[tasks."swift:format"]
+description = "Format Swift binding with swift format"
+dir = "packages/swift"
+run = "swift format --in-place --recursive Sources"
+
+[tasks."swift:lint"]
+description = "Lint Swift binding with swift format lint"
+dir = "packages/swift"
+run = "swift format lint --recursive Sources"
+
+[tasks."swift:test"]
+description = "Run Swift binding tests"
+dir = "packages/swift"
+run = ["cargo build --locked --release -p spikard-ffi", "swift test"]
+
+[tasks."zig:format"]
+description = "Format Zig binding with zig fmt"
+dir = "packages/zig"
+run = "zig fmt src"
+
+[tasks."zig:lint"]
+description = "Lint Zig binding with zig fmt --check"
+dir = "packages/zig"
+run = "zig fmt --check src"
+
+[tasks."zig:test"]
+description = "Run Zig binding tests"
+dir = "packages/zig"
+run = "zig build test"
+
+# ---- Docs and READMEs --------------------------------------------------------------------------
+
+[tasks."docs:check"]
+description = "Check that every language manifest matches the Cargo.toml workspace version"
+run = "{{vars.alef}} validate versions"
+
+[tasks."docs:gaps"]
+description = "Report documentation snippet coverage gaps (informational; exits non-zero while gaps exist)"
+# Not part of `mise run check`: gaps are the tracked good-first-issue backlog, so this is expected to
+# exit 1 until every language reaches snippet parity. ~keep
+run = "{{vars.alef}} snippets gaps --snippets docs/snippets"
+
+[tasks."docs:snippets:list"]
+description = "List all discovered documentation snippets"
+run = "alef snippets list --snippets docs"
+
+[tasks."docs:snippets:validate"]
+description = "Validate documentation snippets at syntax level"
+run = [
+  "alef snippets audit --docs docs/snippets --snippets docs/snippets",
+  """\
+  alef snippets gaps --docs docs --snippets docs/snippets --include-base-path docs/snippets \
+  --include-base-path docs --include-base-path .""",
+  "alef snippets validate --snippets docs/snippets --level syntax",
+]
+
+[tasks."docs:build"]
+description = "Build documentation site"
+run = "uv run --frozen --only-group docs zensical build --clean"
+
+[tasks."docs:serve"]
+description = "Serve documentation locally"
+run = "uv run --frozen --only-group docs zensical serve"
+
+[tasks."docs:deploy"]
+description = "Build and deploy documentation"
+run = ["alef docs", "uv run --frozen --only-group docs zensical build --clean --strict"]
+
+[tasks."docs:lint:links"]
+description = "Check links in docs and READMEs with lychee"
+run = "lychee --config .lychee.toml docs/ README.md crates/*/README.md packages/*/README.md"
+
+[tasks."readme:generate"]
+description = "Generate all README files from templates"
+run = ["alef readme", { task = "readme:root" }]
+
+[tasks."readme:validate"]
+description = "Validate that generated READMEs are up to date"
+run = ["alef readme", { task = "readme:root" }, "git diff --exit-code"]
+
+# ---- OpenAPI code generation -------------------------------------------------------------------
+
+[tasks."codegen:python"]
+description = "Generate Python server code from OpenAPI schema"
+depends = ["build:cli"]
+usage = '''
+arg "<schema>" help="OpenAPI schema file"
+arg "<output>" help="Generated Python file"
+'''
+run = [
+  'target/release/spikard generate "{{usage.schema}}" --lang python --output "{{usage.output}}"',
+  'echo "Generated Python code: {{usage.output}}"',
+]
+
+[tasks."codegen:python:format"]
+description = "Format generated Python code with ruff"
+usage = 'arg "<file>" help="Python file to format"'
+run = ['uv run ruff format "{{usage.file}}"', 'uv run ruff check --fix "{{usage.file}}"']
+
+[tasks."codegen:python:lint"]
+description = "Lint generated Python code with ruff and pyrefly"
+usage = 'arg "<file>" help="Python file to lint"'
+run = ['uv run ruff check "{{usage.file}}"', 'uv run pyrefly check "{{usage.file}}"']
+
+[tasks."codegen:python:verify"]
+description = "Generate, format, and validate Python code from OpenAPI schema"
+usage = '''
+arg "<schema>" help="OpenAPI schema file"
+arg "<output>" help="Generated Python file"
+'''
+run = [
+  'mise run codegen:python "{{usage.schema}}" "{{usage.output}}"',
+  'mise run codegen:python:format "{{usage.output}}"',
+  'mise run codegen:python:lint "{{usage.output}}"',
+  'echo "Generated Python code validated successfully: {{usage.output}}"',
+]
+
+[tasks."codegen:typescript"]
+description = "Generate TypeScript server code from OpenAPI schema"
+depends = ["build:cli"]
+usage = '''
+arg "<schema>" help="OpenAPI schema file"
+arg "<output>" help="Generated TypeScript file"
+'''
+run = [
+  'target/release/spikard generate "{{usage.schema}}" --lang type-script --output "{{usage.output}}"',
+  'echo "Generated TypeScript code: {{usage.output}}"',
+]
+
+[tasks."codegen:typescript:format"]
+description = "Format generated TypeScript code with Biome"
+usage = 'arg "<file>" help="TypeScript file to format"'
+dir = "crates/spikard-node"
+run = 'pnpm biome format --write "{{usage.file}}"'
+
+[tasks."codegen:typescript:lint"]
+description = "Lint generated TypeScript code with oxlint and Biome"
+usage = 'arg "<file>" help="TypeScript file to lint"'
+dir = "crates/spikard-node"
+run = ['pnpm oxlint "{{usage.file}}"', 'pnpm biome check "{{usage.file}}"']
+
+[tasks."codegen:typescript:typecheck"]
+description = "Type check generated TypeScript code with tsc"
+usage = 'arg "<file>" help="TypeScript file to type check"'
+dir = "crates/spikard-node"
+run = 'pnpm tsc --noEmit "{{usage.file}}"'
+
+[tasks."codegen:typescript:verify"]
+description = "Generate, format, and validate TypeScript code from OpenAPI schema"
+usage = '''
+arg "<schema>" help="OpenAPI schema file"
+arg "<output>" help="Generated TypeScript file"
+'''
+run = [
+  'mise run codegen:typescript "{{usage.schema}}" "{{usage.output}}"',
+  'mise run codegen:typescript:format "{{usage.output}}"',
+  'mise run codegen:typescript:lint "{{usage.output}}"',
+  'mise run codegen:typescript:typecheck "{{usage.output}}"',
+  'echo "Generated TypeScript code validated successfully: {{usage.output}}"',
+]
+
+# ---- Published-package test apps ---------------------------------------------------------------
+
+[tasks."test-apps:mock-server"]
+description = "Build the e2e mock-server that published-package test app harnesses spawn"
+run = "cargo build --manifest-path e2e/rust/Cargo.toml --bin mock-server --release"
+
+[tasks."test-apps:python"]
+description = "Run Python published package test app"
+dir = "test_apps/python"
+run = ["uv sync --all-extras", "uv run pytest -v"]
+
+[tasks."test-apps:node"]
+description = "Run Node.js published package test app"
+dir = "test_apps/node"
+run = ["pnpm install --ignore-workspace", "pnpm test"]
+
+[tasks."test-apps:ruby"]
+description = "Run Ruby published package test app"
+dir = "test_apps/ruby"
+run = ["bundle install", "bundle exec rspec"]
+
+[tasks."test-apps:php"]
+description = "Run PHP published package test app"
+dir = "test_apps/php"
+run = [
+  "cd ../rust && cargo build --release --bin mock-server",
+  "composer install --no-interaction",
+  "composer test",
+]
+
+[tasks."test-apps:rust"]
+description = "Run Rust published package test app"
+dir = "test_apps/rust"
+run = "cargo test"
+
+[tasks."test-apps:elixir"]
+description = "Run Elixir published package test app"
+dir = "test_apps/elixir"
+run = ["mix deps.get", "mix test"]
+
+[tasks."test-apps:go"]
+description = "Run Go published package test app"
+dir = "test_apps/go"
+run = ["go mod download", "go build -o cmd/harness/harness ./cmd/harness/", "go test ./..."]
+
+[tasks."test-apps:java"]
+description = "Run Java published package test app"
+depends = ["test-apps:mock-server"]
+dir = "test_apps/java"
+run = "./mvnw test"
+
+[tasks."test-apps:csharp"]
+description = "Run C# published package test app"
+depends = ["test-apps:mock-server"]
+dir = "test_apps/csharp"
+run = "dotnet test"
+
+[tasks."test-apps:dart"]
+description = "Run Dart published package test app"
+dir = "test_apps/dart"
+run = ["dart pub get", "dart test"]
+
+[tasks."test-apps:swift"]
+description = "Run Swift published package test app"
+dir = "test_apps/swift_e2e"
+run = "swift test"
+
+[tasks."test-apps:zig"]
+description = "Run Zig published package test app"
+dir = "test_apps/zig"
+# build.zig.zon ships a placeholder dep hash: the real hash only exists once the release tarball is
+# published. Recompute and inject it via `zig fetch` before building (mirrors alef's canonical zig
+# run prelude). ~keep
+run = [
+  "rm -rf zig-pkg .zig-cache",
+  "python3 ../../scripts/ci/zig-inject-dep-hashes.py",
+  "zig build test",
+]
+
+[tasks."test-apps:wasm"]
+description = "Run WASM published package test app"
+dir = "test_apps/wasm"
+run = [
+  "cd ../rust && cargo build --release --bin mock-server",
+  "pnpm install --ignore-workspace",
+  "pnpm test",
+]
+
+[tasks."test-apps:kotlin"]
+description = "Run Kotlin published package test app"
+dir = "test_apps/kotlin"
+run = "./gradlew test"
+
+[tasks."test-apps:kotlin_android"]
+description = "Run Kotlin Android published package test app"
+dir = "test_apps/kotlin_android"
+run = "./gradlew test"
+
+[tasks."test-apps:all"]
+description = "Run all published package test apps"
+run = [
+  { task = "test-apps:python" },
+  { task = "test-apps:node" },
+  { task = "test-apps:ruby" },
+  { task = "test-apps:php" },
+  { task = "test-apps:rust" },
+  { task = "test-apps:elixir" },
+  { task = "test-apps:go" },
+  { task = "test-apps:java" },
+  { task = "test-apps:csharp" },
+  { task = "test-apps:dart" },
+  { task = "test-apps:swift" },
+  { task = "test-apps:zig" },
+  { task = "test-apps:wasm" },
+  { task = "test-apps:kotlin" },
+  { task = "test-apps:kotlin_android" },
+]
+
+# ---- Agent plugin and governance ---------------------------------------------------------------
+
+[tasks."plugin:generate"]
+description = "Generate all plugin runtimes and public skill exports"
+run = [
+  "python3 scripts/sync_plugin_version.py",
+  "npx -y ai-rulez@latest generate --plugin --no-local",
+  "python3 scripts/sync_public_skills.py",
+  "npx -y ai-rulez@latest lock --content-only",
+  "npx -y ai-rulez@latest -C plugin/.ai-rulez lock --content-only",
+]
+
+[tasks."plugin:verify"]
+description = "Verify plugin versions, provenance and public skills"
+run = [
+  "python3 scripts/sync_plugin_version.py --check",
+  "npx -y ai-rulez@latest verify --plugin",
+  "python3 scripts/sync_public_skills.py --check",
+]
+
+[tasks."ai:check"]
+description = "Validate both governance configurations and generated outputs"
+run = [
+  "npx -y ai-rulez@latest migrate okf --check",
+  "npx -y ai-rulez@latest -C plugin/.ai-rulez migrate okf --check",
+  "npx -y ai-rulez@latest validate --strict",
+  "npx -y ai-rulez@latest -C plugin/.ai-rulez validate --strict",
+  "npx -y ai-rulez@latest lock --check",
+  "npx -y ai-rulez@latest -C plugin/.ai-rulez lock --check",
+  "npx -y ai-rulez@latest generate --no-local --check",
+  { task = "plugin:verify" },
+]

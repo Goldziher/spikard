@@ -159,10 +159,6 @@ AGENTS.md
 CLAUDE.md
 GEMINI.md
 
-# --- Task runner cache (versioned task includes live under .task/{config,languages,tools,workflows}/) ---
-.task/checksum/
-.task/timestamp/
-
 # --- Per-language project state ---
 crates/spikard-node/index.js
 crates/spikard-node/npm/
@@ -236,13 +232,15 @@ poly.local.toml
 **/.alef/
 
 # BEGIN ai-rulez (DO NOT EDIT - managed by ai-rulez)
+.ai-rulez/.config.local.*
 .ai-rulez/.generated-manifest.local.json
+.ai-rulez/config.local.*
 .ai-rulez/local/
 .opencode/agents/
 .opencode/commands/
 .pi/agents/
 .pi/prompts/
-opencode.json
+/opencode.json
 # END ai-rulez
 
 # Machine-only SDK fixture downloads and migration backups. ~keep
