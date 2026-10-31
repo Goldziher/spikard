@@ -148,8 +148,11 @@ jobs:
           install-cppcheck: "false"
           install-shellcheck: "false"
 
+      # ~keep mise.toml pins poly, so alef verify and lint format with the same release locally.
       - name: Install poly
-        uses: Goldziher/polylint@v0
+        uses: xberg-io/actions/setup-mise@v1
+        with:
+          tools: github:Goldziher/poly
 
       # ~keep alef:verify re-runs the generated-file formatters to reproduce the committed
       # bytes, so it must run with poly AND the language toolchains (JDK, clang-format, shfmt,

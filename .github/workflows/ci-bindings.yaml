@@ -211,9 +211,12 @@ jobs:
         if: matrix.language == 'swift'
         run: cd packages/swift && swift build
 
+      # ~keep mise.toml pins poly, so alef verify and lint format with the same release locally.
       - name: Install poly
         if: matrix.language == 'php'
-        uses: Goldziher/polylint@v0
+        uses: xberg-io/actions/setup-mise@v1
+        with:
+          tools: github:Goldziher/poly
 
       - name: Run binding check
         if: matrix.language != 'swift'

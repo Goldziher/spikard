@@ -126,9 +126,12 @@ jobs:
       # The codegen quality-gate tests (spikard-cli) shell out to `poly lint` to
       # validate generated Python instead of requiring a standalone `ruff`/`uv`
       # install in CI. Only needed by the test suite, which runs those tests.
+      # ~keep mise.toml pins poly, so alef verify and lint format with the same release locally.
       - name: Install poly
         if: matrix.suite == 'test'
-        uses: Goldziher/polylint@v0
+        uses: xberg-io/actions/setup-mise@v1
+        with:
+          tools: github:Goldziher/poly
 
       - name: Run clippy and format check
         if: matrix.suite == 'lint'
