@@ -80,6 +80,7 @@ user_owned = [
   "e2e/kotlin/build.gradle.kts",
   "e2e/kotlin_android/build.gradle.kts",
   "e2e/node/package.json",
+  "e2e/php/composer.json",
   "e2e/wasm/package.json",
   "e2e/zig/build.zig",
   "test_apps/csharp/Spikard.E2eTests.csproj",
@@ -92,6 +93,7 @@ user_owned = [
   "test_apps/kotlin_android/build.gradle.kts",
   "test_apps/kotlin_android/gradle/wrapper/gradle-wrapper.properties",
   "test_apps/node/package.json",
+  "test_apps/php/composer.json",
   "test_apps/ruby/Gemfile",
   "test_apps/wasm/package.json",
   "test_apps/zig/build.zig",
@@ -169,7 +171,17 @@ remove-todos = false
 remove-fixme = false
 remove-docs = false
 use-default-ignores = true
-preserve-patterns = ["SAFETY", "SPDX", "Copyright", "License", "licensed under", "HACK", "WORKAROUND", "NOTE", "~keep"]
+preserve-patterns = [
+  "SAFETY",
+  "SPDX",
+  "Copyright",
+  "License",
+  "licensed under",
+  "HACK",
+  "WORKAROUND",
+  "NOTE",
+  "~keep",
+]
 
 [workspace.poly.typos.extend-words]
 bre = "bre"
@@ -217,7 +229,16 @@ hooks = ["ai-rulez-validate", "ai-rulez-plugin-verify"]
 "crates/spikard-py/**" = ["comment", "doc-comment"]
 "crates/spikard-wasm/**" = ["comment", "doc-comment"]
 "packages/**" = ["comment", "doc-comment", "no-unused-vars"]
-"e2e/**" = ["comment", "doc-comment", "D101", "D415", "no-loss-of-precision", "PTH100", "PTH118", "PTH120"]
+"e2e/**" = [
+  "comment",
+  "doc-comment",
+  "D101",
+  "D415",
+  "no-loss-of-precision",
+  "PTH100",
+  "PTH118",
+  "PTH120",
+]
 "test_apps/**" = ["comment", "doc-comment", "no-loss-of-precision"]
 "Package.swift" = ["comment", "doc-comment"]
 # Hand-written Python package modules with intentionally wide constructors/factories.
@@ -251,7 +272,11 @@ suppress_validation_codes = [
 
 [[crates.source_crates]]
 name = "spikard"
-sources = ["crates/spikard/src/lib.rs", "crates/spikard/src/upload.rs", "crates/spikard/src/testing.rs"]
+sources = [
+  "crates/spikard/src/lib.rs",
+  "crates/spikard/src/upload.rs",
+  "crates/spikard/src/testing.rs",
+]
 
 [[crates.source_crates]]
 name = "spikard-core"
@@ -399,7 +424,13 @@ exclude_types = [
 ]
 
 [crates.wasm.extra_dependencies]
-axum = { version = "0.8", default-features = false, features = ["http1", "json", "matched-path", "query", "tower-log"] }
+axum = { version = "0.8", default-features = false, features = [
+  "http1",
+  "json",
+  "matched-path",
+  "query",
+  "tower-log",
+] }
 http-body-util = "0.1"
 serde = { version = "1", features = ["derive"] }
 serde_bytes = "0.11"
