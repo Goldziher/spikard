@@ -4,5 +4,5 @@ description: "Generate HTTP applications, schema handlers and fixtures using Spi
 author: "Goldziher"
 kind: "standalone"
 python_dependencies:
-  - "mcp==1.28.1"
+  - "mcp==1.30.0"
   - "PyYAML==6.0.3"

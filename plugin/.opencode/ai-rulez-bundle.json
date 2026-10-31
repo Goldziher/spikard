@@ -1,5 +1,4 @@
 {
-  "plugin": "spikard",
   "mcp": {
     "spikard": {
       "type": "local",
