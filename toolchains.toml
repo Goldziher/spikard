@@ -1,4 +1,4 @@
-baseline = "v1.12.3"
+baseline = "v1.13.0"
 task_sets = ["alef-bindings", "alef-publish", "governance", "lint-format", "rust"]
 
 [task_overrides]
