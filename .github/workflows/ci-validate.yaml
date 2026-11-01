@@ -107,8 +107,12 @@ jobs:
       # packages/dart. Without these toolchains on PATH each hook fails with
       # `poly-hook: 1: <tool>: not found` (exit 201) instead of actually linting. Mirrors the
       # sibling repos' `reusable-validate.yml` inputs (see liter-llm's ci-lint.yaml).
+      # ~keep mise's Go does not put GOPATH/bin on PATH, so add it for the later poly steps.
       - name: Install golangci-lint
-        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
+        run: |
+          go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
+          gobin="$(go env GOBIN)"
+          echo "${gobin:-$(go env GOPATH)/bin}" >> "$GITHUB_PATH"
 
       - name: Install Ruby binding dependencies
         working-directory: packages/ruby
