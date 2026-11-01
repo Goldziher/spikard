@@ -12,6 +12,7 @@ feature-depth = 1
 [advisories]
 ignore = [
   { id = "RUSTSEC-2023-0071", reason = "rsa is a transitive dep via jsonwebtoken; no safe upgrade available yet" },
+  { id = "RUSTSEC-2026-0387", reason = "crypto-bigint 0.5 via jsonwebtoken 11.1 (latest) -> p256 -> elliptic-curve 0.13; the fix is only in 0.7" },
 ]
 
 [licenses]
