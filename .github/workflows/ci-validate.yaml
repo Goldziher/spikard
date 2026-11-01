@@ -108,9 +108,10 @@ jobs:
       # `poly-hook: 1: <tool>: not found` (exit 201) instead of actually linting. Mirrors the
       # sibling repos' `reusable-validate.yml` inputs (see liter-llm's ci-lint.yaml).
       # ~keep mise's Go does not put GOPATH/bin on PATH, so add it for the later poly steps.
+      # ~keep v2.15 is the first that reads Go 1.27 export data; v2.12 fails typecheck on the stdlib.
       - name: Install golangci-lint
         run: |
-          go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
+          go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0
           gobin="$(go env GOBIN)"
           echo "${gobin:-$(go env GOPATH)/bin}" >> "$GITHUB_PATH"
 
