@@ -100,6 +100,10 @@ unexpected_cfgs = { level = "allow", check-cfg = ['cfg(tarpaulin_include)'] }
 all = { level = "deny", priority = 0 }
 pedantic = { level = "deny", priority = 0 }
 nursery = { level = "deny", priority = 0 }
+# Pedantic since Rust 1.99; its fix, `assert_eq!(v, [] as [T; 0])`, reads worse than `assert!(v.is_empty())`.
+assert_is_empty = { level = "allow", priority = 1 }
+# Pedantic since Rust 1.99; an async trait impl that never awaits is the trait's contract, not dead async.
+unused_async_trait_impl = { level = "allow", priority = 1 }
 
 [workspace.metadata.cargo-llvm-cov]
 exclude = []
