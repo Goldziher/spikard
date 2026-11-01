@@ -65,5 +65,9 @@ include_outputs = false
 
 [codex]
 project_doc_max_bytes = 65536
+[lint]
+# The repository's own /review command intentionally replaces the Claude Code and OpenCode built-in /review (AR808, AR9U0).
+allow_overrides = ["claude:review", "opencode:review"]
+
 [lint.load_budgets]
 "codex-agents-chain" = 65536
