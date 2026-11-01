@@ -79,6 +79,13 @@ disable = ["MD025", "MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046
 [fmt.markdown.rumdl]
 disable = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051", "MD076", "MD025"]
 
+# sqruff defaults to ansi, which cannot lex the `$1` placeholders in the Postgres SQL handler fixtures.
+[lint.sql.sqruff]
+dialect = "postgres"
+
+[fmt.sql.sqruff]
+dialect = "postgres"
+
 [lint.python.ruff]
 select = [
   "F",
