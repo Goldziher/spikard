@@ -74,3 +74,6 @@ allow_overrides = ["claude:review", "opencode:review"]
 
 [lint.load_budgets]
 "codex-agents-chain" = 65536
+# ~keep AR964's 8000-char Codex skill-listing figure is unverified; the counted listing (9018 chars under
+# ai-rulez 5.9.8), plus 5%. Trim skill descriptions to lower it; re-measure when ai-rulez output changes.
+codex-skill-listing = 9500
