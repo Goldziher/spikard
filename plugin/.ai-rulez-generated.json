@@ -1,6 +1,6 @@
 {
   "schema_version": "v1",
-  "source_hash": "blake3:a219347b4d2aad909b974d29f82e208111d7d1beb70c61c52a5543cf385bba44",
+  "source_hash": "blake3:0909135361673ec671cac5be323506fce190b3f5ab5125c07835dbb35074d922",
   "outputs": {
     ".claude-plugin/plugin.json": {
       "content_hash": "blake3:b6978b7e39b6a964f334c39defde8f167c322395ebe34c5cf34325c48bf48985",
@@ -19,7 +19,7 @@
       "mode": "0644"
     },
     ".cursor-plugin/skills/spikard/index.md": {
-      "content_hash": "blake3:d5040555a979a73f90bb62a79248d944de2d652dd5f5f4f433addba7431ca9bd",
+      "content_hash": "blake3:67172f7b3bbd5fce4eba5a28e600f072916cd61f04900fe7a69febcac678317b",
       "mode": "0644"
     },
     ".cursor-plugin/skills/spikard/references/cli-reference.md": {
@@ -71,7 +71,7 @@
       "mode": "0644"
     },
     ".hermes/package/src/spikard_hermes_plugin/skills/spikard/index.md": {
-      "content_hash": "blake3:d5040555a979a73f90bb62a79248d944de2d652dd5f5f4f433addba7431ca9bd",
+      "content_hash": "blake3:67172f7b3bbd5fce4eba5a28e600f072916cd61f04900fe7a69febcac678317b",
       "mode": "0644"
     },
     ".hermes/package/src/spikard_hermes_plugin/skills/spikard/references/cli-reference.md": {
@@ -115,7 +115,7 @@
       "mode": "0644"
     },
     ".hermes/plugins/spikard/skills/spikard/index.md": {
-      "content_hash": "blake3:d5040555a979a73f90bb62a79248d944de2d652dd5f5f4f433addba7431ca9bd",
+      "content_hash": "blake3:67172f7b3bbd5fce4eba5a28e600f072916cd61f04900fe7a69febcac678317b",
       "mode": "0644"
     },
     ".hermes/plugins/spikard/skills/spikard/references/cli-reference.md": {
@@ -163,7 +163,7 @@
       "mode": "0644"
     },
     ".opencode/skills/spikard/index.md": {
-      "content_hash": "blake3:d5040555a979a73f90bb62a79248d944de2d652dd5f5f4f433addba7431ca9bd",
+      "content_hash": "blake3:67172f7b3bbd5fce4eba5a28e600f072916cd61f04900fe7a69febcac678317b",
       "mode": "0644"
     },
     ".opencode/skills/spikard/references/cli-reference.md": {
@@ -195,7 +195,7 @@
       "mode": "0644"
     },
     ".pi/skills/spikard/index.md": {
-      "content_hash": "blake3:d5040555a979a73f90bb62a79248d944de2d652dd5f5f4f433addba7431ca9bd",
+      "content_hash": "blake3:67172f7b3bbd5fce4eba5a28e600f072916cd61f04900fe7a69febcac678317b",
       "mode": "0644"
     },
     ".pi/skills/spikard/references/cli-reference.md": {
@@ -255,7 +255,7 @@
       "mode": "0644"
     },
     "skills/spikard/index.md": {
-      "content_hash": "blake3:d5040555a979a73f90bb62a79248d944de2d652dd5f5f4f433addba7431ca9bd",
+      "content_hash": "blake3:67172f7b3bbd5fce4eba5a28e600f072916cd61f04900fe7a69febcac678317b",
       "mode": "0644"
     },
     "skills/spikard/references/cli-reference.md": {

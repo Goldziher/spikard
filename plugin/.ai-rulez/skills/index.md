@@ -1,3 +1,3 @@
 # Subdirectories
 
-* [spikard](spikard/index.md)
+- [spikard](spikard/index.md)
