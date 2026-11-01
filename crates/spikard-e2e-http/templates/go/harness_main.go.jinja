@@ -27,8 +27,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
-
-{%- for import_name in imports %}
+{% for import_name in imports %}
 	{{ import_alias }} "{{ import_name }}"
 {%- endfor %}
 )

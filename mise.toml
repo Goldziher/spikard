@@ -46,12 +46,7 @@ run = "mise tasks ls"
 
 [tasks.setup]
 description = "Install all dependencies and setup development environment"
-run = [
-  "mise install",
-  { task = "rust:install" },
-  "alef setup",
-  { task = "governance:hooks:install" },
-]
+run = ["mise install", { task = "rust:install" }, "alef setup", { task = "governance:hooks:install" }]
 
 [tasks.build]
 description = "Build Rust core library only (debug)"
@@ -280,12 +275,7 @@ run = "alef test --e2e --lang wasm"
 [tasks."rust:install"]
 description = "Install the rust-toolchain.toml toolchain and its components"
 run = ["rustup toolchain install", "cargo --version", "rustc --version"]
-run_windows = [
-  "rustup toolchain install",
-  "rustup component add llvm-tools",
-  "cargo --version",
-  "rustc --version",
-]
+run_windows = ["rustup toolchain install", "rustup component add llvm-tools", "cargo --version", "rustc --version"]
 
 [tasks."rust:build"]
 description = "Build all Rust crates with the BUILD_PROFILE profile (dev, release or ci; default release)"
@@ -515,11 +505,7 @@ run = "dart analyze"
 [tasks."dart:test"]
 description = "Run Dart binding tests"
 dir = "packages/dart"
-run = [
-  "cargo build --locked --release --manifest-path packages/dart/rust/Cargo.toml",
-  "dart pub get",
-  "dart test",
-]
+run = ["cargo build --locked --release --manifest-path packages/dart/rust/Cargo.toml", "dart pub get", "dart test"]
 
 [tasks."swift:format"]
 description = "Format Swift binding with swift format"
@@ -569,13 +555,9 @@ run = "alef snippets list --snippets docs"
 
 [tasks."docs:snippets:validate"]
 description = "Validate documentation snippets at syntax level"
-run = [
-  "alef snippets audit --docs docs/snippets --snippets docs/snippets",
-  """\
+run = ["alef snippets audit --docs docs/snippets --snippets docs/snippets", """\
   alef snippets gaps --docs docs --snippets docs/snippets --include-base-path docs/snippets \
-  --include-base-path docs --include-base-path .""",
-  "alef snippets validate --snippets docs/snippets --level syntax",
-]
+  --include-base-path docs --include-base-path .""", "alef snippets validate --snippets docs/snippets --level syntax"]
 
 [tasks."docs:build"]
 description = "Build documentation site"
@@ -706,11 +688,7 @@ run = ["bundle install", "bundle exec rspec"]
 [tasks."test-apps:php"]
 description = "Run PHP published package test app"
 dir = "test_apps/php"
-run = [
-  "cd ../rust && cargo build --release --bin mock-server",
-  "composer install --no-interaction",
-  "composer test",
-]
+run = ["cd ../rust && cargo build --release --bin mock-server", "composer install --no-interaction", "composer test"]
 
 [tasks."test-apps:rust"]
 description = "Run Rust published package test app"
@@ -755,20 +733,12 @@ dir = "test_apps/zig"
 # build.zig.zon ships a placeholder dep hash: the real hash only exists once the release tarball is
 # published. Recompute and inject it via `zig fetch` before building (mirrors alef's canonical zig
 # run prelude). ~keep
-run = [
-  "rm -rf zig-pkg .zig-cache",
-  "python3 ../../scripts/ci/zig-inject-dep-hashes.py",
-  "zig build test",
-]
+run = ["rm -rf zig-pkg .zig-cache", "python3 ../../scripts/ci/zig-inject-dep-hashes.py", "zig build test"]
 
 [tasks."test-apps:wasm"]
 description = "Run WASM published package test app"
 dir = "test_apps/wasm"
-run = [
-  "cd ../rust && cargo build --release --bin mock-server",
-  "pnpm install --ignore-workspace",
-  "pnpm test",
-]
+run = ["cd ../rust && cargo build --release --bin mock-server", "pnpm install --ignore-workspace", "pnpm test"]
 
 [tasks."test-apps:kotlin"]
 description = "Run Kotlin published package test app"

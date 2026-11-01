@@ -167,3 +167,24 @@ pub fn emit(
         generated_header: true,
     }])
 }
+
+#[cfg(test)]
+mod tests {
+    use super::render_harness_main;
+    use alef::e2e::config::E2eConfig;
+
+    #[test]
+    fn harness_main_puts_the_binding_import_in_its_own_group() {
+        let config: E2eConfig = serde_json::from_value(serde_json::json!({
+            "call": { "function": "run", "module": "spikard" }
+        }))
+        .expect("minimal e2e config");
+
+        let main_go = render_harness_main(&config, &[], "github.com/Goldziher/spikard/packages/go");
+
+        assert!(
+            main_go.contains("\t\"syscall\"\n\n\tgo_ \"github.com/Goldziher/spikard/packages/go\"\n)"),
+            "binding import must follow the standard library group after one blank line:\n{main_go}"
+        );
+    }
+}
