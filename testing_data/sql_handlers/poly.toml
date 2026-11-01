@@ -1,0 +1,6 @@
+# sqruff defaults to ansi, which cannot lex the `$1` placeholders in these Postgres handler fixtures.
+[lint.sql.sqruff]
+dialect = "postgres"
+
+[fmt.sql.sqruff]
+dialect = "postgres"
