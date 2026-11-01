@@ -68,7 +68,8 @@ jobs:
             os: ubuntu-latest
             mise-tools: ruby
           - language: php
-            os: ubuntu-latest
+            # ~keep ubuntu-26.04 ships LLVM 21, whose SSE headers fail ext-php-rs bindgen (clang-sys 1.9).
+            os: ubuntu-24.04
           - language: elixir
             os: ubuntu-latest
             timeout-minutes: 90
