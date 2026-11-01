@@ -1,6 +1,6 @@
 # AI-RULEZ :: GENERATED FILE — DO NOT EDIT
-# Content-Hash: blake3:44048ec561c188e9d1914269d3fadfc3e32313bebdcd53887cb3a427758104dd
-# Source-Hash: blake3:0909135361673ec671cac5be323506fce190b3f5ab5125c07835dbb35074d922
+# Content-Hash: blake3:c2ba181b460dd10d396de5f7770c93c429495fb1af9acd6284d505f6c93d867c
+# Source-Hash: blake3:6ce2fb06ea35e1723d9c4b97abfb515db05b7e9052ba746196665eeef918c097
 # Schema-Version: v1
 
 """Register product skills and a local MCP tool bridge with Hermes."""
@@ -11,7 +11,6 @@ import asyncio
 import json
 import os
 import shutil
-from builtins import ExceptionGroup
 from datetime import timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING

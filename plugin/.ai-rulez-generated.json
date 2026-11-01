@@ -1,6 +1,6 @@
 {
   "schema_version": "v1",
-  "source_hash": "blake3:0909135361673ec671cac5be323506fce190b3f5ab5125c07835dbb35074d922",
+  "source_hash": "blake3:6ce2fb06ea35e1723d9c4b97abfb515db05b7e9052ba746196665eeef918c097",
   "outputs": {
     ".claude-plugin/plugin.json": {
       "content_hash": "blake3:b6978b7e39b6a964f334c39defde8f167c322395ebe34c5cf34325c48bf48985",
@@ -59,7 +59,7 @@
       "mode": "0644"
     },
     ".hermes/package/src/spikard_hermes_plugin/hermes.py": {
-      "content_hash": "blake3:44048ec561c188e9d1914269d3fadfc3e32313bebdcd53887cb3a427758104dd",
+      "content_hash": "blake3:c2ba181b460dd10d396de5f7770c93c429495fb1af9acd6284d505f6c93d867c",
       "mode": "0644"
     },
     ".hermes/package/src/spikard_hermes_plugin/plugin.yaml": {
@@ -103,7 +103,7 @@
       "mode": "0644"
     },
     ".hermes/plugins/spikard/hermes.py": {
-      "content_hash": "blake3:44048ec561c188e9d1914269d3fadfc3e32313bebdcd53887cb3a427758104dd",
+      "content_hash": "blake3:c2ba181b460dd10d396de5f7770c93c429495fb1af9acd6284d505f6c93d867c",
       "mode": "0644"
     },
     ".hermes/plugins/spikard/plugin.yaml": {

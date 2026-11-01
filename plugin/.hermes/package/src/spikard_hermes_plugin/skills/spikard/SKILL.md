@@ -10,7 +10,7 @@ name: spikard
 <!--
 AI-RULEZ :: GENERATED FILE — DO NOT EDIT
 Content-Hash: blake3:5f4f9aed1c6ad96d229173f0cacb330816c4c11870832ef3cdd63ecc0c629dc8
-Source-Hash: blake3:0909135361673ec671cac5be323506fce190b3f5ab5125c07835dbb35074d922
+Source-Hash: blake3:6ce2fb06ea35e1723d9c4b97abfb515db05b7e9052ba746196665eeef918c097
 Schema-Version: v1
 -->
 

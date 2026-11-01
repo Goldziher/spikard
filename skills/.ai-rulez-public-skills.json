@@ -2,13 +2,13 @@
   "source": "plugin/skills",
   "skill_count": 1,
   "files": {
-    "spikard/SKILL.md": "fadcdf6a2f74597f1266fd942b2b90cbf3e459b2db949ed4d533c20632e3fde6",
-    "spikard/index.md": "2e543404497928de84cda465814d88c5a55d78edf0793fb4f4436227bd8ffa1f",
-    "spikard/references/cli-reference.md": "db18fc57df91eb4546a632ffb38c2e0e0d9507f9e4cb9581738dda582c4c68c5",
-    "spikard/references/codegen-workflows.md": "71368a5ae5118083ea75ac258daa1dccd8c236fab624541bed21c7904969a02c",
-    "spikard/references/language-bindings.md": "44521164fe26573190b3b5324401c07361d56376a37ea0797da760afafc1c822",
-    "spikard/references/mcp-tools.md": "1b6100aa26aea9b62ff5831d97225e288207a2f0c8699c7d67ae98783224da4e",
-    "spikard/references/project-scaffolding.md": "5c9f4c9f369a77f480c5d3df459a427a3fbedc6a1aad36e38b388a3d621bf89d",
-    "spikard/references/testing-and-fixtures.md": "bfa8f9c40dda3aed42b515481026e7000ac197d56ec6b67198549b068915c8e5"
+    "spikard/SKILL.md": "352f42401811741ec61a07e20ce9ff1027175d38a835b91c0da7fe1b6e437b88",
+    "spikard/index.md": "a605ae4975847e8f883a2ede4e9324d17306e3febc2156617a0ea173136ba536",
+    "spikard/references/cli-reference.md": "55e2a366a750976687515a334ac5778a0ba274b513e4e28c0b6f4f9a0e63f431",
+    "spikard/references/codegen-workflows.md": "dc92b071db71d7061fb5991bee0cecfdf28766c252a81f83911ee1caef9f50bb",
+    "spikard/references/language-bindings.md": "c99df8e7daab04a999e64f2cca2ef8d57674700b16786e31f705fd4926c782ab",
+    "spikard/references/mcp-tools.md": "555c311d12f338d48d05b4442cde1b2ca85c32d97d1ce7994738a97d510f59b3",
+    "spikard/references/project-scaffolding.md": "a7cb54279db1e4b78d6398d22cc08af8e7f106db939500b66d3de9c22c69efaa",
+    "spikard/references/testing-and-fixtures.md": "4ad8a19d3011395cce909fae5f4256240129e916e89da7376559307c9634e093"
   }
 }
