@@ -47,7 +47,7 @@
 ## Installation snippets
 
 - **Rust**: `cargo add spikard`
-- **Python**: `pip install spikard` (Python ≥ 3.10)
+- **Python**: `pip install spikard` (Python ≥ 3.11)
 - **TypeScript**: `pnpm add @spikard/node` (Node ≥ 18)
 - **Ruby**: `gem install spikard` (Ruby ≥ 3.2)
 - **PHP**: `composer require goldziher/spikard` (PHP ≥ 8.2)

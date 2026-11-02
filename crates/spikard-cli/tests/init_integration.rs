@@ -65,7 +65,7 @@ fn test_init_python_pyproject_toml_content() -> anyhow::Result<()> {
     assert!(content.contains("[project]"));
     assert!(content.contains("name = \"test_proj\""));
     assert!(content.contains("version = \"0.1.0\""));
-    assert!(content.contains("requires-python = \">=3.10\""));
+    assert!(content.contains("requires-python = \">=3.11\""));
     assert!(content.contains("spikard"));
     assert!(content.contains("pytest"));
     assert!(content.contains("pyrefly"));

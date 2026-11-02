@@ -20,7 +20,7 @@ use anyhow::Result;
 ///
 /// Parses the GraphQL schema string and generates complete Python code with type
 /// definitions, resolver implementations, and schema configuration based on the
-/// target specification. Generated code follows Python 3.10+ conventions using
+/// target specification. Generated code follows Python 3.11+ conventions using
 /// msgspec for type-safe data serialization and Ariadne for GraphQL schema binding.
 ///
 /// # Generated Code Features
@@ -30,7 +30,7 @@ use anyhow::Result;
 /// * **Enums**: Python enums inheriting from `str` for GraphQL enum types
 /// * **Input Objects**: msgspec Structs for GraphQL input types
 /// * **Union Types**: Python type aliases (e.g., `User | Post | Any`)
-/// * **Type Hints**: Full type annotations using Python 3.10+ syntax (e.g., `str | None`
+/// * **Type Hints**: Full type annotations using Python 3.11+ syntax (e.g., `str | None`
 ///   instead of `Optional[str]`, `list[Item]` instead of `List[Item]`)
 /// * **Resolvers**: Async resolver functions with proper type hints and parameter handling
 /// * **Schema Definition**: Ariadne-compatible schema with embedded SDL and resolver setup

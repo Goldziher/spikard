@@ -30,7 +30,7 @@ impl PythonScaffolder {
 name = "{project_name}"
 version = "0.1.0"
 description = "A Spikard application"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "spikard>={version}",
 ]

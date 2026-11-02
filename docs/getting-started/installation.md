@@ -10,7 +10,7 @@ Spikard ships a Rust core plus 14 language bindings. Install only what you need;
     pip install spikard
     ```
 
-    Requires Python ≥ 3.10. Wheels ship for CPython 3.10–3.13 on Linux (amd64, arm64), macOS (amd64, arm64), and Windows.
+    Requires Python ≥ 3.11. Wheels ship for CPython 3.11–3.13 on Linux (amd64, arm64), macOS (amd64, arm64), and Windows.
 
 === "TypeScript / Node"
 

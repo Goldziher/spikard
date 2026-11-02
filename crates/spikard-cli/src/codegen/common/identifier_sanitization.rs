@@ -31,7 +31,7 @@
 /// Target programming language for identifier sanitization.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TargetLanguage {
-    /// Python 3.10+
+    /// Python 3.11+
     Python,
     /// TypeScript/JavaScript
     TypeScript,
@@ -80,7 +80,7 @@ impl TargetLanguage {
     }
 }
 
-/// Python 3.10+ reserved keywords.
+/// Python 3.11+ reserved keywords.
 /// <https://docs.python.org/3/reference/lexical_analysis.html#keywords>
 const PYTHON_KEYWORDS: &[&str] = &[
     "False", "None", "True", "and", "as", "assert", "async", "await", "break", "class", "continue", "def", "del",

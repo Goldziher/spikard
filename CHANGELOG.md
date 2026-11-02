@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Python 3.11 is now the minimum supported version; Python 3.10 reached end of life.
+
 ## [0.17.2] - 2026-10-09
 
 Upgrades the code generator from alef 0.85.15 to 0.107.11 and regenerates every binding, E2E suite

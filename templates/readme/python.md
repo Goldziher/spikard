@@ -36,7 +36,7 @@
 pip install spikard
 ```
 
-**System requirements:** Python 3.10+. Pre-built wheels for Linux (x86_64, aarch64), macOS (arm64, x86_64), Windows (x86_64).
+**System requirements:** Python 3.11+. Pre-built wheels for Linux (x86_64, aarch64), macOS (arm64, x86_64), Windows (x86_64).
 
 ## Quick example
 

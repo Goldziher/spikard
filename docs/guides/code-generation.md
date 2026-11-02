@@ -55,7 +55,7 @@ Output Files
 
 All generators support these six target languages:
 
-- **Python**: Type hints (3.10+), dataclasses, pyrefly strict compatible
+- **Python**: Type hints (3.11+), dataclasses, pyrefly strict compatible
 - **TypeScript**: Strict mode, interfaces, biome/eslint compatible
 - **Rust**: Strongly-typed structs, cargo clippy clean
 - **Ruby**: RBS signatures, steep type checking

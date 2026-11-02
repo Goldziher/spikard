@@ -39,7 +39,7 @@ use crate::codegen::graphql::spec_parser::GraphQLSchema;
 /// Target programming language for type mapping
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TargetLanguage {
-    /// Python 3.10+ with type hints
+    /// Python 3.11+ with type hints
     Python,
     /// TypeScript 5.x with strict typing
     TypeScript,

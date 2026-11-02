@@ -29,7 +29,7 @@
 /// - **Rust**: Raw strings and standard escape sequences
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EscapeContext {
-    /// Python (3.10+): Handles single/double quotes and triple-quoted strings
+    /// Python (3.11+): Handles single/double quotes and triple-quoted strings
     Python,
     /// JavaScript/TypeScript: Template literals with backtick support
     JavaScript,

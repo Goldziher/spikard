@@ -8,7 +8,7 @@
 //! Full integration tests for Python GraphQL code generation
 //!
 //! Validates that the Python generator produces code conforming to CLAUDE.md requirements:
-//! - Python 3.10+ syntax (union types with |, not Optional)
+//! - Python 3.11+ syntax (union types with |, not Optional)
 //! - msgspec.Struct with frozen=True, kw_only=True
 //! - Type hints: list[T] not List[T]
 //! - Snake_case field name conversion
@@ -331,7 +331,7 @@ fn test_python_generate_query_resolvers() -> Result<()> {
         "resolvers should be async"
     );
 
-    assert!(!result.contains("Optional["), "should not use Optional (Python 3.10+)");
+    assert!(!result.contains("Optional["), "should not use Optional (Python 3.11+)");
 
     assert!(
         result.contains("id:") || result.contains("User"),
@@ -537,7 +537,7 @@ fn test_python_complex_nested_types() -> Result<()> {
 
     assert!(
         result.contains("list[") || result.contains('['),
-        "list notation should be Python 3.10+ style (list[T])"
+        "list notation should be Python 3.11+ style (list[T])"
     );
 
     Ok(())
@@ -670,7 +670,7 @@ fn test_python_no_any_type_usage() -> Result<()> {
 
     assert!(
         !types.contains("Optional["),
-        "Must use | None syntax (Python 3.10+), NOT Optional"
+        "Must use | None syntax (Python 3.11+), NOT Optional"
     );
 
     Ok(())

@@ -1,7 +1,7 @@
 //! Python GraphQL code generator.
 //!
 //! This generator produces type-safe Python code for GraphQL resolver implementations.
-//! Generated code uses type hints compatible with Python 3.10+, msgspec for serialization,
+//! Generated code uses type hints compatible with Python 3.11+, msgspec for serialization,
 //! and Ariadne for GraphQL schema binding.
 
 use super::GraphQLGenerator;

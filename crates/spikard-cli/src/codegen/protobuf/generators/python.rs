@@ -1,7 +1,7 @@
 //! Python Protobuf code generator.
 //!
 //! This generator produces type-safe Python code for Protobuf message and service definitions.
-//! Generated code uses type hints compatible with Python 3.10+ and the google.protobuf library.
+//! Generated code uses type hints compatible with Python 3.11+ and the google.protobuf library.
 
 use super::ProtobufGenerator;
 use super::base::{escape_string, map_proto_type_to_language, sanitize_identifier};
