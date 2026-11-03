@@ -71,6 +71,7 @@ mod tests {
             setup: Vec::new(),
             call: None,
             input: serde_json::Value::Null,
+            client_options: None,
             mock_response: None,
             visitor: None,
             args: vec![],
