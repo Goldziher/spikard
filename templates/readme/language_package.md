@@ -30,11 +30,11 @@
 {% elif language == "rust" %}
 - **Canonical Rust implementation** — the core HTTP server used by all other bindings
 {% elif language == "ruby" %}
-- **Magnus-backed native extension** — Ruby 3.2+ with native performance for routing and validation
+- **Magnus-backed native extension** — Ruby 3.3+ with native performance for routing and validation
 {% elif language == "php" %}
-- **PHP 8.2+ extension** — native ext-php-rs bindings for the shared HTTP core
+- **PHP 8.3+ extension** — native ext-php-rs bindings for the shared HTTP core
 {% elif language == "elixir" %}
-- **OTP-integrated Rustler bindings** — Elixir 1.14+ with Erlang 25+ for distributed systems
+- **OTP-integrated Rustler bindings** — Elixir 1.17+ with Erlang 25+ for distributed systems
 {% elif language == "ffi" %}
 - **C ABI stable interface** — shared and static library surface for custom hosts
 {% elif language == "go" %}
@@ -46,11 +46,11 @@
 {% elif language == "kotlin" %}
 - **Kotlin coroutines** — JVM binding with Kotlin 1.9+ data classes and suspend functions
 {% elif language == "dart" %}
-- **Flutter-compatible FFI** — Dart 3.0+ with Future and Stream APIs
+- **Flutter-compatible FFI** — Dart 3.13+ with Future and Stream APIs
 {% elif language == "wasm" %}
-- **Browser and server WASM** — wasm-bindgen for browsers, Node.js 18+, and Deno 1.0+
+- **Browser and server WASM** — wasm-bindgen for browsers, Node.js 22+, and Deno 1.0+
 {% elif language == "swift" %}
-- **SwiftPM package** — Swift 5.9+ with swift-bridge for macOS 13+ and Linux
+- **SwiftPM package** — Swift 6.2+ with swift-bridge for macOS 26+ and Linux
 {% elif language == "zig" %}
 - **Zig wrapper** — explicit memory management over the C FFI stable surface
 {% else %}

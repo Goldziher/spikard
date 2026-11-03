@@ -1031,7 +1031,7 @@ name = "Spikard"
 package_name = "goldziher/spikard"
 badge_url = "https://img.shields.io/packagist/v/goldziher/spikard?label=PHP&color=007ec6"
 docs_url = "https://spikard.dev"
-description = "Codegen-first polyglot web toolkit on a Rust core: OpenAPI/AsyncAPI/GraphQL/JSON-RPC/gRPC codegen, SQL-to-HTTP, tower-http middleware, and an MCP server. Experimental, pre-1.0. PHP 8.2+ bindings via ext-php-rs."
+description = "Codegen-first polyglot web toolkit on a Rust core: OpenAPI/AsyncAPI/GraphQL/JSON-RPC/gRPC codegen, SQL-to-HTTP, tower-http middleware, and an MCP server. Experimental, pre-1.0. PHP 8.3+ bindings via ext-php-rs."
 package_manager = ["composer"]
 snippets = { quickstart = "quickstart_routes.md", hello_route = "hello_route.md", routing_basic = "routing_basic.md", validation_basic = "validation_basic.md" }
 

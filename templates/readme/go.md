@@ -35,7 +35,7 @@ Go bindings for the spikard polyglot web toolkit. Backed by the Rust core via CG
 go get {{ package_name }}@latest
 ```
 
-**System requirements:** Go 1.21+, CGO enabled (default). You need the `spikard-ffi` static library at build time — see [Static linking](#static-linking).
+**System requirements:** Go 1.27+, CGO enabled (default). You need the `spikard-ffi` static library at build time — see [Static linking](#static-linking).
 
 ## Quick example
 

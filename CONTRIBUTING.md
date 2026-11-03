@@ -16,11 +16,11 @@ Before opening a PR, run `mise run check` (formatting, linting, and docs consist
 
 ## Prerequisites
 
-- Rust 1.85+ (edition 2024)
+- Rust 1.99+ (edition 2024)
 - Node.js 22+ and pnpm 12.11.2
 - Python 3.11+
-- Ruby 3.2+
-- PHP 8.2+ (optional)
+- Ruby 3.3+
+- PHP 8.3+ (optional)
 - Elixir 1.18+ with OTP 27+ (optional)
 - [mise](https://mise.jdx.dev/) (toolchain and task runner)
 

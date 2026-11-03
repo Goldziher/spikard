@@ -1,6 +1,6 @@
 module ergonomic-smoke
 
-go 1.26
+go 1.27
 
 require github.com/Goldziher/spikard v0.16.1
 

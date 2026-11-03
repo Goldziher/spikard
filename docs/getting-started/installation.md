@@ -18,7 +18,7 @@ Spikard ships a Rust core plus 14 language bindings. Install only what you need;
     pnpm add @spikard/node
     ```
 
-    Requires Node ≥ 18. Prebuilt binaries available for Linux, macOS, and Windows.
+    Requires Node ≥ 22. Prebuilt binaries available for Linux, macOS, and Windows.
 
 === "Ruby"
 
@@ -26,7 +26,7 @@ Spikard ships a Rust core plus 14 language bindings. Install only what you need;
     gem install spikard
     ```
 
-    Requires Ruby ≥ 3.2. Precompiled gems available; source builds require Rust.
+    Requires Ruby ≥ 3.3. Precompiled gems available; source builds require Rust.
 
 === "PHP"
 
@@ -34,7 +34,7 @@ Spikard ships a Rust core plus 14 language bindings. Install only what you need;
     composer require goldziher/spikard
     ```
 
-    Requires PHP ≥ 8.2. For CI or non-interactive Composer runs:
+    Requires PHP ≥ 8.3. For CI or non-interactive Composer runs:
 
     ```bash
     composer config allow-plugins.goldziher/spikard true
@@ -49,7 +49,7 @@ Spikard ships a Rust core plus 14 language bindings. Install only what you need;
     {:spikard, "~> 0.17"}
     ```
 
-    Requires Elixir ≥ 1.14, OTP ≥ 25. Precompiled NIFs available; source builds require Rust.
+    Requires Elixir ≥ 1.17, OTP ≥ 25. Precompiled NIFs available; source builds require Rust.
 
 === "Go"
 
@@ -123,7 +123,7 @@ Spikard ships a Rust core plus 14 language bindings. Install only what you need;
     },
     ```
 
-    Requires Zig 0.13 or later.
+    Requires Zig 0.17 or later.
 
 === "C"
 
@@ -148,7 +148,7 @@ Spikard ships a Rust core plus 14 language bindings. Install only what you need;
     cargo add spikard
     ```
 
-    Requires Rust ≥ 1.80.
+    Requires Rust ≥ 1.99.
 
 ## CLI
 

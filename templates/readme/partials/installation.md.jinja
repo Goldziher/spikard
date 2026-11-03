@@ -150,32 +150,32 @@ gem '{{ package_name }}'
 - **Python 3.11+** required
 - Pre-built wheels for Linux (x86_64, aarch64), macOS (arm64, x86_64), Windows (x86_64)
 {% elif language == "typescript" %}
-- **Node.js 18+** required (NAPI-RS native bindings)
+- **Node.js 22+** required (NAPI-RS native bindings)
 - Pre-built binaries for Linux (x86_64), macOS (arm64, x86_64), Windows (x86_64)
 {% elif language == "go" %}
-- **Go 1.21+** required; needs `spikard-ffi` static library at link time
+- **Go 1.27+** required; needs `spikard-ffi` static library at link time
 {% elif language == "java" %}
 - **Java 17+** required
 {% elif language == "ruby" %}
-- **Ruby 3.2+** required
+- **Ruby 3.3+** required
 {% elif language == "php" %}
-- **PHP 8.2+** required
+- **PHP 8.3+** required
 {% elif language == "csharp" %}
 - **.NET 8.0+** required
 {% elif language == "elixir" %}
-- **Elixir 1.14+** and **Erlang/OTP 25+** required
+- **Elixir 1.17+** and **Erlang/OTP 25+** required
 {% elif language == "wasm" %}
-- Modern browser with WebAssembly support, or Node.js 18+, or Deno 1.0+
+- Modern browser with WebAssembly support, or Node.js 22+, or Deno 1.0+
 {% elif language == "kotlin" %}
 - **Kotlin 1.9+ / JVM 17+** required
 {% elif language == "dart" %}
-- **Dart 3.0+** required
+- **Dart 3.13+** required
 {% elif language == "gleam" %}
 - **Gleam 1.0+** and **Erlang/OTP 25+** required
 {% elif language == "swift" %}
-- **Swift 5.9+** / macOS 13+ or Linux required
+- **Swift 6.2+** / macOS 26+ or Linux required
 {% elif language == "zig" %}
-- **Zig 0.13+** required; needs `spikard-ffi` static library at link time
+- **Zig 0.17+** required; needs `spikard-ffi` static library at link time
 {% elif language == "ffi" %}
 - C99 or C++11 compiler; `spikard-ffi` static/shared library from [GitHub Releases](https://github.com/Goldziher/spikard/releases)
 {% else %}
