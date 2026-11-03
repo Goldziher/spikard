@@ -170,7 +170,7 @@ wheels = [
 
 [[package]]
 name = "spikard"
-version = "0.17.0rc11"
+version = "0.17.2"
 source = { directory = "../../packages/python" }
 dependencies = [
     { name = "msgspec" },

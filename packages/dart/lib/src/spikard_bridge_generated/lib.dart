@@ -10,8 +10,8 @@ import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
 part 'lib.freezed.dart';
 
 // These functions are ignored because they are not marked as `pub`: `try_convert_method_from_core`, `try_convert_security_scheme_info_from_core`, `try_convert_snapshot_error_from_core`, `try_convert_web_socket_message_from_core`
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `HandlerResult`, `HookRegistry`, `ParseRequest`, `RequestData`, `Request`, `TestingSseEvent`, `ValidateRequest`, `ValidationResponse`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `AlefBridgeErrorWire`, `HandlerResult`, `HookRegistry`, `ParseRequest`, `RequestData`, `Request`, `TestingSseEvent`, `ValidateRequest`, `ValidationResponse`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `try_from`, `try_from`, `try_from`
 
 /// Create a simple schema configuration with only Query type.
 ///
@@ -251,7 +251,7 @@ abstract class RouteBuilder implements RustOpaqueInterface {
 
   Future<RouteBuilder> requestSchemaJson({required String schema});
 
-  Future<RouteBuilder> requestTimeout({required PlatformInt64 seconds});
+  Future<RouteBuilder> requestTimeout({required BigInt seconds});
 
   Future<RouteBuilder> responseSchemaJson({required String schema});
 
@@ -471,7 +471,7 @@ class BackgroundTaskConfig {
   final bool enabled;
   final PlatformInt64 maxQueueSize;
   final PlatformInt64 maxConcurrentTasks;
-  final PlatformInt64 drainTimeoutSecs;
+  final BigInt drainTimeoutSecs;
 
   const BackgroundTaskConfig({
     required this.enabled,
@@ -946,7 +946,7 @@ class GrpcConfig {
   final bool enableCompression;
 
   /// Timeout for gRPC requests in seconds (None = no timeout)
-  final PlatformInt64? requestTimeout;
+  final BigInt? requestTimeout;
 
   /// Maximum number of concurrent streams per connection (HTTP/2 advisory)
   ///
@@ -969,10 +969,10 @@ class GrpcConfig {
   final bool enableKeepalive;
 
   /// HTTP/2 keepalive interval in seconds
-  final PlatformInt64 keepaliveInterval;
+  final BigInt keepaliveInterval;
 
   /// HTTP/2 keepalive timeout in seconds
-  final PlatformInt64 keepaliveTimeout;
+  final BigInt keepaliveTimeout;
 
   /// Total byte cap across an entire streaming response.
   ///
@@ -1181,7 +1181,7 @@ class JwtAuthConfig {
   final String? issuer;
 
   /// Leeway for expiration checks (seconds)
-  final PlatformInt64 leeway;
+  final BigInt leeway;
 
   const JwtAuthConfig({
     required this.enabled,
@@ -1232,7 +1232,7 @@ class JwtConfig {
   final String? issuer;
 
   /// Leeway for expiration checks (seconds)
-  final PlatformInt64 leeway;
+  final BigInt leeway;
 
   const JwtConfig({
     required this.secret,
@@ -1763,7 +1763,7 @@ class QueryOnlyConfig {
 /// Rate limiting configuration shared across runtimes
 class RateLimitConfig {
   /// Requests per second
-  final PlatformInt64 perSecond;
+  final BigInt perSecond;
 
   /// Burst allowance
   final PlatformInt64 burst;
@@ -1941,7 +1941,7 @@ sealed class SecuritySchemeInfo with _$SecuritySchemeInfo {
 
   const factory SecuritySchemeInfo.http({
     required String scheme,
-    required String bearerFormat,
+    String? bearerFormat,
   }) = SecuritySchemeInfo_Http;
   const factory SecuritySchemeInfo.apiKey({
     required String location,
@@ -1967,7 +1967,7 @@ class ServerConfig {
   final PlatformInt64? maxBodySize;
 
   /// Request timeout in seconds (None = no timeout)
-  final PlatformInt64? requestTimeout;
+  final BigInt? requestTimeout;
 
   /// Enable compression middleware
   final CompressionConfig? compression;
@@ -1988,7 +1988,7 @@ class ServerConfig {
   final bool gracefulShutdown;
 
   /// Graceful shutdown timeout (seconds)
-  final PlatformInt64 shutdownTimeout;
+  final BigInt shutdownTimeout;
 
   /// AsyncAPI HTTP endpoint configuration
   final AsyncApiConfig? asyncapi;
@@ -2145,7 +2145,7 @@ class SseEvent {
   final String? id;
 
   /// Retry timeout in milliseconds (optional)
-  final PlatformInt64? retry;
+  final BigInt? retry;
 
   const SseEvent({this.eventType, required this.data, this.id, this.retry});
 
@@ -2290,7 +2290,7 @@ sealed class WebSocketMessage with _$WebSocketMessage {
     required PlatformInt64 code,
 
     /// Optional human-readable reason string.
-    required String reason,
+    String? reason,
   }) = WebSocketMessage_Close;
 
   /// A ping message.

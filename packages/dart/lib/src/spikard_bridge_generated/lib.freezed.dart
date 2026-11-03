@@ -250,7 +250,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'AppError.route(field0: $field0)';
+  return "Failed to register route: " + field0.toString() + "";
 }
 
 
@@ -318,7 +318,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'AppError.server(field0: $field0)';
+  return "Failed to build server: " + field0.toString() + "";
 }
 
 
@@ -386,7 +386,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'AppError.decode(field0: $field0)';
+  return "Failed to decode payload: " + field0.toString() + "";
 }
 
 
@@ -454,7 +454,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'AppError.graphQl(field0: $field0)';
+  return "Failed to register GraphQL route: " + field0.toString() + "";
 }
 
 
@@ -766,7 +766,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'GraphQLError.executionError(field0: $field0)';
+  return "execution error: " + field0.toString() + "";
 }
 
 
@@ -834,7 +834,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'GraphQLError.schemaBuildError(field0: $field0)';
+  return "schema build error: " + field0.toString() + "";
 }
 
 
@@ -902,7 +902,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'GraphQLError.requestHandlingError(field0: $field0)';
+  return "request handling error: " + field0.toString() + "";
 }
 
 
@@ -970,7 +970,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'GraphQLError.serializationError(field0: $field0)';
+  return "serialization error: " + field0.toString() + "";
 }
 
 
@@ -1038,7 +1038,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'GraphQLError.jsonError(field0: $field0)';
+  return "JSON error: " + field0.toString() + "";
 }
 
 
@@ -1106,7 +1106,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'GraphQLError.validationError(field0: $field0)';
+  return "GraphQL validation error: " + field0.toString() + "";
 }
 
 
@@ -1174,7 +1174,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'GraphQLError.parseError(field0: $field0)';
+  return "GraphQL parse error: " + field0.toString() + "";
 }
 
 
@@ -1242,7 +1242,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'GraphQLError.authenticationError(field0: $field0)';
+  return "Authentication error: " + field0.toString() + "";
 }
 
 
@@ -1310,7 +1310,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'GraphQLError.authorizationError(field0: $field0)';
+  return "Authorization error: " + field0.toString() + "";
 }
 
 
@@ -1378,7 +1378,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'GraphQLError.notFound(field0: $field0)';
+  return "Not found: " + field0.toString() + "";
 }
 
 
@@ -1446,7 +1446,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'GraphQLError.rateLimitExceeded(field0: $field0)';
+  return "Rate limit exceeded: " + field0.toString() + "";
 }
 
 
@@ -1514,7 +1514,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'GraphQLError.invalidInput(message: $message)';
+  return "Invalid input: " + message.toString() + "";
 }
 
 
@@ -1575,7 +1575,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-    return 'GraphQLError.complexityLimitExceeded()';
+  return "Query complexity limit exceeded";
 }
 
 
@@ -1607,7 +1607,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-    return 'GraphQLError.depthLimitExceeded()';
+  return "Query depth limit exceeded";
 }
 
 
@@ -1639,7 +1639,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-    return 'GraphQLError.introspectionDisabled()';
+  return "GraphQL introspection is disabled";
 }
 
 
@@ -1678,7 +1678,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'GraphQLError.internalError(field0: $field0)';
+  return "Internal server error: " + field0.toString() + "";
 }
 
 
@@ -1918,7 +1918,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'SchemaError.buildingFailed(field0: $field0)';
+  return "Schema building failed: " + field0.toString() + "";
 }
 
 
@@ -1986,7 +1986,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'SchemaError.validationError(field0: $field0)';
+  return "Configuration validation failed: " + field0.toString() + "";
 }
 
 
@@ -2055,7 +2055,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'SchemaError.complexityLimitExceeded(limit: $limit, actual: $actual)';
+  return "Query complexity limit exceeded: limit=" + limit.toString() + ", actual=" + actual.toString() + "";
 }
 
 
@@ -2125,7 +2125,7 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'SchemaError.depthLimitExceeded(limit: $limit, actual: $actual)';
+  return "Query depth limit exceeded: limit=" + limit.toString() + ", actual=" + actual.toString() + "";
 }
 
 
@@ -2272,7 +2272,7 @@ return apiKey(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String scheme,  String bearerFormat)?  http,TResult Function( String location,  String name)?  apiKey,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String scheme,  String? bearerFormat)?  http,TResult Function( String location,  String name)?  apiKey,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case SecuritySchemeInfo_Http() when http != null:
 return http(_that.scheme,_that.bearerFormat);case SecuritySchemeInfo_ApiKey() when apiKey != null:
@@ -2294,7 +2294,7 @@ return apiKey(_that.location,_that.name);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String scheme,  String bearerFormat)  http,required TResult Function( String location,  String name)  apiKey,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String scheme,  String? bearerFormat)  http,required TResult Function( String location,  String name)  apiKey,}) {final _that = this;
 switch (_that) {
 case SecuritySchemeInfo_Http():
 return http(_that.scheme,_that.bearerFormat);case SecuritySchemeInfo_ApiKey():
@@ -2312,7 +2312,7 @@ return apiKey(_that.location,_that.name);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String scheme,  String bearerFormat)?  http,TResult? Function( String location,  String name)?  apiKey,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String scheme,  String? bearerFormat)?  http,TResult? Function( String location,  String name)?  apiKey,}) {final _that = this;
 switch (_that) {
 case SecuritySchemeInfo_Http() when http != null:
 return http(_that.scheme,_that.bearerFormat);case SecuritySchemeInfo_ApiKey() when apiKey != null:
@@ -2328,11 +2328,11 @@ return apiKey(_that.location,_that.name);case _:
 
 
 class SecuritySchemeInfo_Http extends SecuritySchemeInfo {
-  const SecuritySchemeInfo_Http({required this.scheme, required this.bearerFormat}): super._();
+  const SecuritySchemeInfo_Http({required this.scheme, this.bearerFormat}): super._();
 
 
  final  String scheme;
- final  String bearerFormat;
+ final  String? bearerFormat;
 
 /// Create a copy of SecuritySchemeInfo
 /// with the given fields replaced by the non-null parameter values.
@@ -2366,7 +2366,7 @@ abstract mixin class $SecuritySchemeInfo_HttpCopyWith<$Res> implements $Security
   factory $SecuritySchemeInfo_HttpCopyWith(SecuritySchemeInfo_Http value, $Res Function(SecuritySchemeInfo_Http) _then) = _$SecuritySchemeInfo_HttpCopyWithImpl;
 @useResult
 $Res call({
- String scheme, String bearerFormat
+ String scheme, String? bearerFormat
 });
 
 
@@ -2383,11 +2383,11 @@ class _$SecuritySchemeInfo_HttpCopyWithImpl<$Res>
 
 /// Create a copy of SecuritySchemeInfo
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? scheme = null,Object? bearerFormat = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? scheme = null,Object? bearerFormat = freezed,}) {
   return _then(SecuritySchemeInfo_Http(
 scheme: null == scheme ? _self.scheme : scheme // ignore: cast_nullable_to_non_nullable
-as String,bearerFormat: null == bearerFormat ? _self.bearerFormat : bearerFormat // ignore: cast_nullable_to_non_nullable
-as String,
+as String,bearerFormat: freezed == bearerFormat ? _self.bearerFormat : bearerFormat // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -2913,7 +2913,7 @@ return pong(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String field0)?  text,TResult Function( Uint8List field0)?  binary,TResult Function( PlatformInt64 code,  String reason)?  close,TResult Function( Uint8List field0)?  ping,TResult Function( Uint8List field0)?  pong,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String field0)?  text,TResult Function( Uint8List field0)?  binary,TResult Function( PlatformInt64 code,  String? reason)?  close,TResult Function( Uint8List field0)?  ping,TResult Function( Uint8List field0)?  pong,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case WebSocketMessage_Text() when text != null:
 return text(_that.field0);case WebSocketMessage_Binary() when binary != null:
@@ -2938,7 +2938,7 @@ return pong(_that.field0);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String field0)  text,required TResult Function( Uint8List field0)  binary,required TResult Function( PlatformInt64 code,  String reason)  close,required TResult Function( Uint8List field0)  ping,required TResult Function( Uint8List field0)  pong,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String field0)  text,required TResult Function( Uint8List field0)  binary,required TResult Function( PlatformInt64 code,  String? reason)  close,required TResult Function( Uint8List field0)  ping,required TResult Function( Uint8List field0)  pong,}) {final _that = this;
 switch (_that) {
 case WebSocketMessage_Text():
 return text(_that.field0);case WebSocketMessage_Binary():
@@ -2959,7 +2959,7 @@ return pong(_that.field0);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String field0)?  text,TResult? Function( Uint8List field0)?  binary,TResult? Function( PlatformInt64 code,  String reason)?  close,TResult? Function( Uint8List field0)?  ping,TResult? Function( Uint8List field0)?  pong,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String field0)?  text,TResult? Function( Uint8List field0)?  binary,TResult? Function( PlatformInt64 code,  String? reason)?  close,TResult? Function( Uint8List field0)?  ping,TResult? Function( Uint8List field0)?  pong,}) {final _that = this;
 switch (_that) {
 case WebSocketMessage_Text() when text != null:
 return text(_that.field0);case WebSocketMessage_Binary() when binary != null:
@@ -3114,13 +3114,13 @@ as Uint8List,
 
 
 class WebSocketMessage_Close extends WebSocketMessage {
-  const WebSocketMessage_Close({required this.code, required this.reason}): super._();
+  const WebSocketMessage_Close({required this.code, this.reason}): super._();
 
 
 /// RFC 6455 close code.
  final  PlatformInt64 code;
 /// Optional human-readable reason string.
- final  String reason;
+ final  String? reason;
 
 /// Create a copy of WebSocketMessage
 /// with the given fields replaced by the non-null parameter values.
@@ -3154,7 +3154,7 @@ abstract mixin class $WebSocketMessage_CloseCopyWith<$Res> implements $WebSocket
   factory $WebSocketMessage_CloseCopyWith(WebSocketMessage_Close value, $Res Function(WebSocketMessage_Close) _then) = _$WebSocketMessage_CloseCopyWithImpl;
 @useResult
 $Res call({
- PlatformInt64 code, String reason
+ PlatformInt64 code, String? reason
 });
 
 
@@ -3171,11 +3171,11 @@ class _$WebSocketMessage_CloseCopyWithImpl<$Res>
 
 /// Create a copy of WebSocketMessage
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? code = null,Object? reason = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? code = null,Object? reason = freezed,}) {
   return _then(WebSocketMessage_Close(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
-as PlatformInt64,reason: null == reason ? _self.reason : reason // ignore: cast_nullable_to_non_nullable
-as String,
+as PlatformInt64,reason: freezed == reason ? _self.reason : reason // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

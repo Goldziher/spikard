@@ -1389,7 +1389,7 @@ fn wire__crate__RouteBuilder_request_timeout_impl(
             };
             let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_that = <RouteBuilder>::sse_decode(&mut deserializer);
-            let api_seconds = <i64>::sse_decode(&mut deserializer);
+            let api_seconds = <u64>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, ()>((move || {
@@ -3069,7 +3069,7 @@ const _: fn() = || {
         let _: bool = BackgroundTaskConfig.enabled;
         let _: i64 = BackgroundTaskConfig.max_queue_size;
         let _: i64 = BackgroundTaskConfig.max_concurrent_tasks;
-        let _: i64 = BackgroundTaskConfig.drain_timeout_secs;
+        let _: u64 = BackgroundTaskConfig.drain_timeout_secs;
     }
     {
         let CompressionConfig = None::<crate::CompressionConfig>.unwrap();
@@ -3168,11 +3168,11 @@ const _: fn() = || {
         let _: bool = GrpcConfig.enabled;
         let _: i64 = GrpcConfig.max_message_size;
         let _: bool = GrpcConfig.enable_compression;
-        let _: Option<i64> = GrpcConfig.request_timeout;
+        let _: Option<u64> = GrpcConfig.request_timeout;
         let _: i64 = GrpcConfig.max_concurrent_streams;
         let _: bool = GrpcConfig.enable_keepalive;
-        let _: i64 = GrpcConfig.keepalive_interval;
-        let _: i64 = GrpcConfig.keepalive_timeout;
+        let _: u64 = GrpcConfig.keepalive_interval;
+        let _: u64 = GrpcConfig.keepalive_timeout;
         let _: Option<i64> = GrpcConfig.max_stream_response_bytes;
     }
     {
@@ -3199,7 +3199,7 @@ const _: fn() = || {
         let _: String = JwtAuthConfig.algorithm;
         let _: Option<Vec<String>> = JwtAuthConfig.audience;
         let _: Option<String> = JwtAuthConfig.issuer;
-        let _: i64 = JwtAuthConfig.leeway;
+        let _: u64 = JwtAuthConfig.leeway;
     }
     {
         let JwtConfig = None::<crate::JwtConfig>.unwrap();
@@ -3207,7 +3207,7 @@ const _: fn() = || {
         let _: String = JwtConfig.algorithm;
         let _: Option<Vec<String>> = JwtConfig.audience;
         let _: Option<String> = JwtConfig.issuer;
-        let _: i64 = JwtConfig.leeway;
+        let _: u64 = JwtConfig.leeway;
     }
     {
         let LicenseInfo = None::<crate::LicenseInfo>.unwrap();
@@ -3294,7 +3294,7 @@ const _: fn() = || {
     }
     {
         let RateLimitConfig = None::<crate::RateLimitConfig>.unwrap();
-        let _: i64 = RateLimitConfig.per_second;
+        let _: u64 = RateLimitConfig.per_second;
         let _: i64 = RateLimitConfig.burst;
         let _: bool = RateLimitConfig.ip_based;
     }
@@ -3339,7 +3339,7 @@ const _: fn() = || {
     match None::<crate::SecuritySchemeInfo>.unwrap() {
         crate::SecuritySchemeInfo::Http { scheme, bearer_format } => {
             let _: String = scheme;
-            let _: String = bearer_format;
+            let _: Option<String> = bearer_format;
         }
         crate::SecuritySchemeInfo::ApiKey { location, name } => {
             let _: String = location;
@@ -3353,14 +3353,14 @@ const _: fn() = || {
         let _: i64 = ServerConfig.workers;
         let _: bool = ServerConfig.enable_request_id;
         let _: Option<i64> = ServerConfig.max_body_size;
-        let _: Option<i64> = ServerConfig.request_timeout;
+        let _: Option<u64> = ServerConfig.request_timeout;
         let _: Option<crate::CompressionConfig> = ServerConfig.compression;
         let _: Option<crate::RateLimitConfig> = ServerConfig.rate_limit;
         let _: Option<crate::JwtConfig> = ServerConfig.jwt_auth;
         let _: Option<crate::ApiKeyConfig> = ServerConfig.api_key_auth;
         let _: Vec<crate::StaticFilesConfig> = ServerConfig.static_files;
         let _: bool = ServerConfig.graceful_shutdown;
-        let _: i64 = ServerConfig.shutdown_timeout;
+        let _: u64 = ServerConfig.shutdown_timeout;
         let _: Option<crate::AsyncApiConfig> = ServerConfig.asyncapi;
         let _: Option<crate::OpenApiConfig> = ServerConfig.openapi;
         let _: Option<crate::JsonRpcConfig> = ServerConfig.jsonrpc;
@@ -3386,7 +3386,7 @@ const _: fn() = || {
         let _: Option<String> = SseEvent.event_type;
         let _: String = SseEvent.data;
         let _: Option<String> = SseEvent.id;
-        let _: Option<i64> = SseEvent.retry;
+        let _: Option<u64> = SseEvent.retry;
     }
     {
         let StaticFilesConfig = None::<crate::StaticFilesConfig>.unwrap();
@@ -3412,7 +3412,7 @@ const _: fn() = || {
         }
         crate::WebSocketMessage::Close { code, reason } => {
             let _: i64 = code;
-            let _: String = reason;
+            let _: Option<String> = reason;
         }
         crate::WebSocketMessage::Ping { field0 } => {
             let _: Vec<u8> = field0;
@@ -3699,7 +3699,7 @@ impl SseDecode for crate::BackgroundTaskConfig {
         let mut var_enabled = <bool>::sse_decode(deserializer);
         let mut var_maxQueueSize = <i64>::sse_decode(deserializer);
         let mut var_maxConcurrentTasks = <i64>::sse_decode(deserializer);
-        let mut var_drainTimeoutSecs = <i64>::sse_decode(deserializer);
+        let mut var_drainTimeoutSecs = <u64>::sse_decode(deserializer);
         return crate::BackgroundTaskConfig {
             enabled: var_enabled,
             max_queue_size: var_maxQueueSize,
@@ -3905,11 +3905,11 @@ impl SseDecode for crate::GrpcConfig {
         let mut var_enabled = <bool>::sse_decode(deserializer);
         let mut var_maxMessageSize = <i64>::sse_decode(deserializer);
         let mut var_enableCompression = <bool>::sse_decode(deserializer);
-        let mut var_requestTimeout = <Option<i64>>::sse_decode(deserializer);
+        let mut var_requestTimeout = <Option<u64>>::sse_decode(deserializer);
         let mut var_maxConcurrentStreams = <i64>::sse_decode(deserializer);
         let mut var_enableKeepalive = <bool>::sse_decode(deserializer);
-        let mut var_keepaliveInterval = <i64>::sse_decode(deserializer);
-        let mut var_keepaliveTimeout = <i64>::sse_decode(deserializer);
+        let mut var_keepaliveInterval = <u64>::sse_decode(deserializer);
+        let mut var_keepaliveTimeout = <u64>::sse_decode(deserializer);
         let mut var_maxStreamResponseBytes = <Option<i64>>::sse_decode(deserializer);
         return crate::GrpcConfig {
             enabled: var_enabled,
@@ -3991,7 +3991,7 @@ impl SseDecode for crate::JwtAuthConfig {
         let mut var_algorithm = <String>::sse_decode(deserializer);
         let mut var_audience = <Option<Vec<String>>>::sse_decode(deserializer);
         let mut var_issuer = <Option<String>>::sse_decode(deserializer);
-        let mut var_leeway = <i64>::sse_decode(deserializer);
+        let mut var_leeway = <u64>::sse_decode(deserializer);
         return crate::JwtAuthConfig {
             enabled: var_enabled,
             secret: var_secret,
@@ -4011,7 +4011,7 @@ impl SseDecode for crate::JwtConfig {
         let mut var_algorithm = <String>::sse_decode(deserializer);
         let mut var_audience = <Option<Vec<String>>>::sse_decode(deserializer);
         let mut var_issuer = <Option<String>>::sse_decode(deserializer);
-        let mut var_leeway = <i64>::sse_decode(deserializer);
+        let mut var_leeway = <u64>::sse_decode(deserializer);
         return crate::JwtConfig {
             secret: var_secret,
             algorithm: var_algorithm,
@@ -4410,6 +4410,17 @@ impl SseDecode for Option<crate::RateLimitConfig> {
     }
 }
 
+impl SseDecode for Option<u64> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<u64>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<Vec<String>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -4534,7 +4545,7 @@ impl SseDecode for crate::QueryOnlyConfig {
 impl SseDecode for crate::RateLimitConfig {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_perSecond = <i64>::sse_decode(deserializer);
+        let mut var_perSecond = <u64>::sse_decode(deserializer);
         let mut var_burst = <i64>::sse_decode(deserializer);
         let mut var_ipBased = <bool>::sse_decode(deserializer);
         return crate::RateLimitConfig {
@@ -4656,7 +4667,7 @@ impl SseDecode for crate::SecuritySchemeInfo {
         match tag_ {
             0 => {
                 let mut var_scheme = <String>::sse_decode(deserializer);
-                let mut var_bearerFormat = <String>::sse_decode(deserializer);
+                let mut var_bearerFormat = <Option<String>>::sse_decode(deserializer);
                 return crate::SecuritySchemeInfo::Http {
                     scheme: var_scheme,
                     bearer_format: var_bearerFormat,
@@ -4685,14 +4696,14 @@ impl SseDecode for crate::ServerConfig {
         let mut var_workers = <i64>::sse_decode(deserializer);
         let mut var_enableRequestId = <bool>::sse_decode(deserializer);
         let mut var_maxBodySize = <Option<i64>>::sse_decode(deserializer);
-        let mut var_requestTimeout = <Option<i64>>::sse_decode(deserializer);
+        let mut var_requestTimeout = <Option<u64>>::sse_decode(deserializer);
         let mut var_compression = <Option<crate::CompressionConfig>>::sse_decode(deserializer);
         let mut var_rateLimit = <Option<crate::RateLimitConfig>>::sse_decode(deserializer);
         let mut var_jwtAuth = <Option<crate::JwtConfig>>::sse_decode(deserializer);
         let mut var_apiKeyAuth = <Option<crate::ApiKeyConfig>>::sse_decode(deserializer);
         let mut var_staticFiles = <Vec<crate::StaticFilesConfig>>::sse_decode(deserializer);
         let mut var_gracefulShutdown = <bool>::sse_decode(deserializer);
-        let mut var_shutdownTimeout = <i64>::sse_decode(deserializer);
+        let mut var_shutdownTimeout = <u64>::sse_decode(deserializer);
         let mut var_asyncapi = <Option<crate::AsyncApiConfig>>::sse_decode(deserializer);
         let mut var_openapi = <Option<crate::OpenApiConfig>>::sse_decode(deserializer);
         let mut var_jsonrpc = <Option<crate::JsonRpcConfig>>::sse_decode(deserializer);
@@ -4761,7 +4772,7 @@ impl SseDecode for crate::SseEvent {
         let mut var_eventType = <Option<String>>::sse_decode(deserializer);
         let mut var_data = <String>::sse_decode(deserializer);
         let mut var_id = <Option<String>>::sse_decode(deserializer);
-        let mut var_retry = <Option<i64>>::sse_decode(deserializer);
+        let mut var_retry = <Option<u64>>::sse_decode(deserializer);
         return crate::SseEvent {
             event_type: var_eventType,
             data: var_data,
@@ -4784,6 +4795,13 @@ impl SseDecode for crate::StaticFilesConfig {
             index_file: var_indexFile,
             cache_control: var_cacheControl,
         };
+    }
+}
+
+impl SseDecode for u64 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        deserializer.cursor.read_u64::<NativeEndian>().unwrap()
     }
 }
 
@@ -4839,7 +4857,7 @@ impl SseDecode for crate::WebSocketMessage {
             }
             2 => {
                 let mut var_code = <i64>::sse_decode(deserializer);
-                let mut var_reason = <String>::sse_decode(deserializer);
+                let mut var_reason = <Option<String>>::sse_decode(deserializer);
                 return crate::WebSocketMessage::Close {
                     code: var_code,
                     reason: var_reason,
@@ -6218,7 +6236,7 @@ impl SseEncode for crate::BackgroundTaskConfig {
         <bool>::sse_encode(self.enabled, serializer);
         <i64>::sse_encode(self.max_queue_size, serializer);
         <i64>::sse_encode(self.max_concurrent_tasks, serializer);
-        <i64>::sse_encode(self.drain_timeout_secs, serializer);
+        <u64>::sse_encode(self.drain_timeout_secs, serializer);
     }
 }
 
@@ -6376,11 +6394,11 @@ impl SseEncode for crate::GrpcConfig {
         <bool>::sse_encode(self.enabled, serializer);
         <i64>::sse_encode(self.max_message_size, serializer);
         <bool>::sse_encode(self.enable_compression, serializer);
-        <Option<i64>>::sse_encode(self.request_timeout, serializer);
+        <Option<u64>>::sse_encode(self.request_timeout, serializer);
         <i64>::sse_encode(self.max_concurrent_streams, serializer);
         <bool>::sse_encode(self.enable_keepalive, serializer);
-        <i64>::sse_encode(self.keepalive_interval, serializer);
-        <i64>::sse_encode(self.keepalive_timeout, serializer);
+        <u64>::sse_encode(self.keepalive_interval, serializer);
+        <u64>::sse_encode(self.keepalive_timeout, serializer);
         <Option<i64>>::sse_encode(self.max_stream_response_bytes, serializer);
     }
 }
@@ -6437,7 +6455,7 @@ impl SseEncode for crate::JwtAuthConfig {
         <String>::sse_encode(self.algorithm, serializer);
         <Option<Vec<String>>>::sse_encode(self.audience, serializer);
         <Option<String>>::sse_encode(self.issuer, serializer);
-        <i64>::sse_encode(self.leeway, serializer);
+        <u64>::sse_encode(self.leeway, serializer);
     }
 }
 
@@ -6448,7 +6466,7 @@ impl SseEncode for crate::JwtConfig {
         <String>::sse_encode(self.algorithm, serializer);
         <Option<Vec<String>>>::sse_encode(self.audience, serializer);
         <Option<String>>::sse_encode(self.issuer, serializer);
-        <i64>::sse_encode(self.leeway, serializer);
+        <u64>::sse_encode(self.leeway, serializer);
     }
 }
 
@@ -6781,6 +6799,16 @@ impl SseEncode for Option<crate::RateLimitConfig> {
     }
 }
 
+impl SseEncode for Option<u64> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <u64>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for Option<Vec<String>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -6863,7 +6891,7 @@ impl SseEncode for crate::QueryOnlyConfig {
 impl SseEncode for crate::RateLimitConfig {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i64>::sse_encode(self.per_second, serializer);
+        <u64>::sse_encode(self.per_second, serializer);
         <i64>::sse_encode(self.burst, serializer);
         <bool>::sse_encode(self.ip_based, serializer);
     }
@@ -6955,7 +6983,7 @@ impl SseEncode for crate::SecuritySchemeInfo {
             crate::SecuritySchemeInfo::Http { scheme, bearer_format } => {
                 <i32>::sse_encode(0, serializer);
                 <String>::sse_encode(scheme, serializer);
-                <String>::sse_encode(bearer_format, serializer);
+                <Option<String>>::sse_encode(bearer_format, serializer);
             }
             crate::SecuritySchemeInfo::ApiKey { location, name } => {
                 <i32>::sse_encode(1, serializer);
@@ -6977,14 +7005,14 @@ impl SseEncode for crate::ServerConfig {
         <i64>::sse_encode(self.workers, serializer);
         <bool>::sse_encode(self.enable_request_id, serializer);
         <Option<i64>>::sse_encode(self.max_body_size, serializer);
-        <Option<i64>>::sse_encode(self.request_timeout, serializer);
+        <Option<u64>>::sse_encode(self.request_timeout, serializer);
         <Option<crate::CompressionConfig>>::sse_encode(self.compression, serializer);
         <Option<crate::RateLimitConfig>>::sse_encode(self.rate_limit, serializer);
         <Option<crate::JwtConfig>>::sse_encode(self.jwt_auth, serializer);
         <Option<crate::ApiKeyConfig>>::sse_encode(self.api_key_auth, serializer);
         <Vec<crate::StaticFilesConfig>>::sse_encode(self.static_files, serializer);
         <bool>::sse_encode(self.graceful_shutdown, serializer);
-        <i64>::sse_encode(self.shutdown_timeout, serializer);
+        <u64>::sse_encode(self.shutdown_timeout, serializer);
         <Option<crate::AsyncApiConfig>>::sse_encode(self.asyncapi, serializer);
         <Option<crate::OpenApiConfig>>::sse_encode(self.openapi, serializer);
         <Option<crate::JsonRpcConfig>>::sse_encode(self.jsonrpc, serializer);
@@ -7027,7 +7055,7 @@ impl SseEncode for crate::SseEvent {
         <Option<String>>::sse_encode(self.event_type, serializer);
         <String>::sse_encode(self.data, serializer);
         <Option<String>>::sse_encode(self.id, serializer);
-        <Option<i64>>::sse_encode(self.retry, serializer);
+        <Option<u64>>::sse_encode(self.retry, serializer);
     }
 }
 
@@ -7038,6 +7066,13 @@ impl SseEncode for crate::StaticFilesConfig {
         <String>::sse_encode(self.route_prefix, serializer);
         <bool>::sse_encode(self.index_file, serializer);
         <Option<String>>::sse_encode(self.cache_control, serializer);
+    }
+}
+
+impl SseEncode for u64 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        serializer.cursor.write_u64::<NativeEndian>(self).unwrap();
     }
 }
 
@@ -7086,7 +7121,7 @@ impl SseEncode for crate::WebSocketMessage {
             crate::WebSocketMessage::Close { code, reason } => {
                 <i32>::sse_encode(2, serializer);
                 <i64>::sse_encode(code, serializer);
-                <String>::sse_encode(reason, serializer);
+                <Option<String>>::sse_encode(reason, serializer);
             }
             crate::WebSocketMessage::Ping { field0 } => {
                 <i32>::sse_encode(3, serializer);

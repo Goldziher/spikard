@@ -491,7 +491,7 @@ abstract class RustLibApi extends BaseApi {
 
   Future<RouteBuilder> crateRouteBuilderRequestTimeout({
     required RouteBuilder that,
-    required PlatformInt64 seconds,
+    required BigInt seconds,
   });
 
   Future<RouteBuilder> crateRouteBuilderResponseSchemaJson({
@@ -2246,7 +2246,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @override
   Future<RouteBuilder> crateRouteBuilderRequestTimeout({
     required RouteBuilder that,
-    required PlatformInt64 seconds,
+    required BigInt seconds,
   }) {
     return handler.executeNormal(
       NormalTask(
@@ -2256,7 +2256,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that,
             serializer,
           );
-          sse_encode_i_64(seconds, serializer);
+          sse_encode_u_64(seconds, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -4064,22 +4064,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
       Box<String>? rawOutput;
       Box<AnyhowException>? rawError;
+      SseSerializer? serializer;
       try {
         rawOutput = Box(await raw(arg0));
-      } catch (e, s) {
-        rawError = Box(AnyhowException("$e\n\n$s"));
-      }
-
-      final serializer = SseSerializer(generalizedFrbRustBinding);
-      assert((rawOutput != null) ^ (rawError != null));
-      if (rawOutput != null) {
+        serializer = SseSerializer(generalizedFrbRustBinding);
         serializer.buffer.putUint8(0);
         sse_encode_String(rawOutput.value, serializer);
-      } else {
+      } catch (e, s) {
+        rawOutput = null;
+        rawError = Box(AnyhowException("$e\n\n$s"));
+        if (serializer != null) {
+          final failed = serializer.intoRaw();
+          // The partial success buffer owns a native Vec until explicitly released.
+          if (!const bool.fromEnvironment('dart.library.js_interop')) {
+            (generalizedFrbRustBinding as dynamic).rustVecU8Free(
+              failed.ptr,
+              failed.rustVecLen,
+            );
+          }
+        }
+        serializer = SseSerializer(generalizedFrbRustBinding);
         serializer.buffer.putUint8(1);
-        sse_encode_AnyhowException(rawError!.value, serializer);
+        sse_encode_AnyhowException(rawError.value, serializer);
       }
-      final output = serializer.intoRaw();
+      assert((rawOutput != null) ^ (rawError != null));
+      final output = serializer!.intoRaw();
 
       generalizedFrbRustBinding.dartFnDeliverOutput(
         callId: callId,
@@ -4381,7 +4390,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       enabled: dco_decode_bool(arr[0]),
       maxQueueSize: dco_decode_i_64(arr[1]),
       maxConcurrentTasks: dco_decode_i_64(arr[2]),
-      drainTimeoutSecs: dco_decode_i_64(arr[3]),
+      drainTimeoutSecs: dco_decode_u_64(arr[3]),
     );
   }
 
@@ -4511,6 +4520,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ServerConfig dco_decode_box_autoadd_server_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_server_config(raw);
+  }
+
+  @protected
+  BigInt dco_decode_box_autoadd_u_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_u_64(raw);
   }
 
   @protected
@@ -4673,11 +4688,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       enabled: dco_decode_bool(arr[0]),
       maxMessageSize: dco_decode_i_64(arr[1]),
       enableCompression: dco_decode_bool(arr[2]),
-      requestTimeout: dco_decode_opt_box_autoadd_i_64(arr[3]),
+      requestTimeout: dco_decode_opt_box_autoadd_u_64(arr[3]),
       maxConcurrentStreams: dco_decode_i_64(arr[4]),
       enableKeepalive: dco_decode_bool(arr[5]),
-      keepaliveInterval: dco_decode_i_64(arr[6]),
-      keepaliveTimeout: dco_decode_i_64(arr[7]),
+      keepaliveInterval: dco_decode_u_64(arr[6]),
+      keepaliveTimeout: dco_decode_u_64(arr[7]),
       maxStreamResponseBytes: dco_decode_opt_box_autoadd_i_64(arr[8]),
     );
   }
@@ -4743,7 +4758,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       algorithm: dco_decode_String(arr[3]),
       audience: dco_decode_opt_list_String(arr[4]),
       issuer: dco_decode_opt_String(arr[5]),
-      leeway: dco_decode_i_64(arr[6]),
+      leeway: dco_decode_u_64(arr[6]),
     );
   }
 
@@ -4758,7 +4773,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       algorithm: dco_decode_String(arr[1]),
       audience: dco_decode_opt_list_String(arr[2]),
       issuer: dco_decode_opt_String(arr[3]),
-      leeway: dco_decode_i_64(arr[4]),
+      leeway: dco_decode_u_64(arr[4]),
     );
   }
 
@@ -4987,6 +5002,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BigInt? dco_decode_opt_box_autoadd_u_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_u_64(raw);
+  }
+
+  @protected
   List<String>? dco_decode_opt_list_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_list_String(raw);
@@ -5096,7 +5117,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (arr.length != 3)
       throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return RateLimitConfig(
-      perSecond: dco_decode_i_64(arr[0]),
+      perSecond: dco_decode_u_64(arr[0]),
       burst: dco_decode_i_64(arr[1]),
       ipBased: dco_decode_bool(arr[2]),
     );
@@ -5202,7 +5223,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 0:
         return SecuritySchemeInfo_Http(
           scheme: dco_decode_String(raw[1]),
-          bearerFormat: dco_decode_String(raw[2]),
+          bearerFormat: dco_decode_opt_String(raw[2]),
         );
       case 1:
         return SecuritySchemeInfo_ApiKey(
@@ -5226,14 +5247,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       workers: dco_decode_i_64(arr[2]),
       enableRequestId: dco_decode_bool(arr[3]),
       maxBodySize: dco_decode_opt_box_autoadd_i_64(arr[4]),
-      requestTimeout: dco_decode_opt_box_autoadd_i_64(arr[5]),
+      requestTimeout: dco_decode_opt_box_autoadd_u_64(arr[5]),
       compression: dco_decode_opt_box_autoadd_compression_config(arr[6]),
       rateLimit: dco_decode_opt_box_autoadd_rate_limit_config(arr[7]),
       jwtAuth: dco_decode_opt_box_autoadd_jwt_config(arr[8]),
       apiKeyAuth: dco_decode_opt_box_autoadd_api_key_config(arr[9]),
       staticFiles: dco_decode_list_static_files_config(arr[10]),
       gracefulShutdown: dco_decode_bool(arr[11]),
-      shutdownTimeout: dco_decode_i_64(arr[12]),
+      shutdownTimeout: dco_decode_u_64(arr[12]),
       asyncapi: dco_decode_opt_box_autoadd_async_api_config(arr[13]),
       openapi: dco_decode_opt_box_autoadd_open_api_config(arr[14]),
       jsonrpc: dco_decode_opt_box_autoadd_json_rpc_config(arr[15]),
@@ -5278,7 +5299,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       eventType: dco_decode_opt_String(arr[0]),
       data: dco_decode_String(arr[1]),
       id: dco_decode_opt_String(arr[2]),
-      retry: dco_decode_opt_box_autoadd_i_64(arr[3]),
+      retry: dco_decode_opt_box_autoadd_u_64(arr[3]),
     );
   }
 
@@ -5294,6 +5315,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       indexFile: dco_decode_bool(arr[2]),
       cacheControl: dco_decode_opt_String(arr[3]),
     );
+  }
+
+  @protected
+  BigInt dco_decode_u_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dcoDecodeU64(raw);
   }
 
   @protected
@@ -5342,7 +5369,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 2:
         return WebSocketMessage_Close(
           code: dco_decode_i_64(raw[1]),
-          reason: dco_decode_String(raw[2]),
+          reason: dco_decode_opt_String(raw[2]),
         );
       case 3:
         return WebSocketMessage_Ping(
@@ -5644,7 +5671,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_enabled = sse_decode_bool(deserializer);
     var var_maxQueueSize = sse_decode_i_64(deserializer);
     var var_maxConcurrentTasks = sse_decode_i_64(deserializer);
-    var var_drainTimeoutSecs = sse_decode_i_64(deserializer);
+    var var_drainTimeoutSecs = sse_decode_u_64(deserializer);
     return BackgroundTaskConfig(
       enabled: var_enabled,
       maxQueueSize: var_maxQueueSize,
@@ -5807,6 +5834,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_server_config(deserializer));
+  }
+
+  @protected
+  BigInt sse_decode_box_autoadd_u_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_u_64(deserializer));
   }
 
   @protected
@@ -5973,11 +6006,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_enabled = sse_decode_bool(deserializer);
     var var_maxMessageSize = sse_decode_i_64(deserializer);
     var var_enableCompression = sse_decode_bool(deserializer);
-    var var_requestTimeout = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_requestTimeout = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_maxConcurrentStreams = sse_decode_i_64(deserializer);
     var var_enableKeepalive = sse_decode_bool(deserializer);
-    var var_keepaliveInterval = sse_decode_i_64(deserializer);
-    var var_keepaliveTimeout = sse_decode_i_64(deserializer);
+    var var_keepaliveInterval = sse_decode_u_64(deserializer);
+    var var_keepaliveTimeout = sse_decode_u_64(deserializer);
     var var_maxStreamResponseBytes = sse_decode_opt_box_autoadd_i_64(
       deserializer,
     );
@@ -6057,7 +6090,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_algorithm = sse_decode_String(deserializer);
     var var_audience = sse_decode_opt_list_String(deserializer);
     var var_issuer = sse_decode_opt_String(deserializer);
-    var var_leeway = sse_decode_i_64(deserializer);
+    var var_leeway = sse_decode_u_64(deserializer);
     return JwtAuthConfig(
       enabled: var_enabled,
       secret: var_secret,
@@ -6076,7 +6109,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_algorithm = sse_decode_String(deserializer);
     var var_audience = sse_decode_opt_list_String(deserializer);
     var var_issuer = sse_decode_opt_String(deserializer);
-    var var_leeway = sse_decode_i_64(deserializer);
+    var var_leeway = sse_decode_u_64(deserializer);
     return JwtConfig(
       secret: var_secret,
       algorithm: var_algorithm,
@@ -6485,6 +6518,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BigInt? sse_decode_opt_box_autoadd_u_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_u_64(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
   List<String>? sse_decode_opt_list_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -6600,7 +6644,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   RateLimitConfig sse_decode_rate_limit_config(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_perSecond = sse_decode_i_64(deserializer);
+    var var_perSecond = sse_decode_u_64(deserializer);
     var var_burst = sse_decode_i_64(deserializer);
     var var_ipBased = sse_decode_bool(deserializer);
     return RateLimitConfig(
@@ -6717,7 +6761,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     switch (tag_) {
       case 0:
         var var_scheme = sse_decode_String(deserializer);
-        var var_bearerFormat = sse_decode_String(deserializer);
+        var var_bearerFormat = sse_decode_opt_String(deserializer);
         return SecuritySchemeInfo_Http(
           scheme: var_scheme,
           bearerFormat: var_bearerFormat,
@@ -6742,7 +6786,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_workers = sse_decode_i_64(deserializer);
     var var_enableRequestId = sse_decode_bool(deserializer);
     var var_maxBodySize = sse_decode_opt_box_autoadd_i_64(deserializer);
-    var var_requestTimeout = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_requestTimeout = sse_decode_opt_box_autoadd_u_64(deserializer);
     var var_compression = sse_decode_opt_box_autoadd_compression_config(
       deserializer,
     );
@@ -6755,7 +6799,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     );
     var var_staticFiles = sse_decode_list_static_files_config(deserializer);
     var var_gracefulShutdown = sse_decode_bool(deserializer);
-    var var_shutdownTimeout = sse_decode_i_64(deserializer);
+    var var_shutdownTimeout = sse_decode_u_64(deserializer);
     var var_asyncapi = sse_decode_opt_box_autoadd_async_api_config(
       deserializer,
     );
@@ -6818,7 +6862,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_eventType = sse_decode_opt_String(deserializer);
     var var_data = sse_decode_String(deserializer);
     var var_id = sse_decode_opt_String(deserializer);
-    var var_retry = sse_decode_opt_box_autoadd_i_64(deserializer);
+    var var_retry = sse_decode_opt_box_autoadd_u_64(deserializer);
     return SseEvent(
       eventType: var_eventType,
       data: var_data,
@@ -6842,6 +6886,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       indexFile: var_indexFile,
       cacheControl: var_cacheControl,
     );
+  }
+
+  @protected
+  BigInt sse_decode_u_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getBigUint64();
   }
 
   @protected
@@ -6892,7 +6942,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return WebSocketMessage_Binary(field0: var_field0);
       case 2:
         var var_code = sse_decode_i_64(deserializer);
-        var var_reason = sse_decode_String(deserializer);
+        var var_reason = sse_decode_opt_String(deserializer);
         return WebSocketMessage_Close(code: var_code, reason: var_reason);
       case 3:
         var var_field0 = sse_decode_list_prim_u_8_strict(deserializer);
@@ -7218,7 +7268,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_bool(self.enabled, serializer);
     sse_encode_i_64(self.maxQueueSize, serializer);
     sse_encode_i_64(self.maxConcurrentTasks, serializer);
-    sse_encode_i_64(self.drainTimeoutSecs, serializer);
+    sse_encode_u_64(self.drainTimeoutSecs, serializer);
   }
 
   @protected
@@ -7405,6 +7455,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_u_64(BigInt self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_64(self, serializer);
+  }
+
+  @protected
   void sse_encode_compression_config(
     CompressionConfig self,
     SseSerializer serializer,
@@ -7539,11 +7595,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_bool(self.enabled, serializer);
     sse_encode_i_64(self.maxMessageSize, serializer);
     sse_encode_bool(self.enableCompression, serializer);
-    sse_encode_opt_box_autoadd_i_64(self.requestTimeout, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.requestTimeout, serializer);
     sse_encode_i_64(self.maxConcurrentStreams, serializer);
     sse_encode_bool(self.enableKeepalive, serializer);
-    sse_encode_i_64(self.keepaliveInterval, serializer);
-    sse_encode_i_64(self.keepaliveTimeout, serializer);
+    sse_encode_u_64(self.keepaliveInterval, serializer);
+    sse_encode_u_64(self.keepaliveTimeout, serializer);
     sse_encode_opt_box_autoadd_i_64(self.maxStreamResponseBytes, serializer);
   }
 
@@ -7603,7 +7659,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.algorithm, serializer);
     sse_encode_opt_list_String(self.audience, serializer);
     sse_encode_opt_String(self.issuer, serializer);
-    sse_encode_i_64(self.leeway, serializer);
+    sse_encode_u_64(self.leeway, serializer);
   }
 
   @protected
@@ -7613,7 +7669,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.algorithm, serializer);
     sse_encode_opt_list_String(self.audience, serializer);
     sse_encode_opt_String(self.issuer, serializer);
-    sse_encode_i_64(self.leeway, serializer);
+    sse_encode_u_64(self.leeway, serializer);
   }
 
   @protected
@@ -7977,6 +8033,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_opt_box_autoadd_u_64(BigInt? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_u_64(self, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_opt_list_String(
     List<String>? self,
     SseSerializer serializer,
@@ -8069,7 +8135,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_64(self.perSecond, serializer);
+    sse_encode_u_64(self.perSecond, serializer);
     sse_encode_i_64(self.burst, serializer);
     sse_encode_bool(self.ipBased, serializer);
   }
@@ -8170,7 +8236,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       ):
         sse_encode_i_32(0, serializer);
         sse_encode_String(scheme, serializer);
-        sse_encode_String(bearerFormat, serializer);
+        sse_encode_opt_String(bearerFormat, serializer);
       case SecuritySchemeInfo_ApiKey(
         location: final location,
         name: final name,
@@ -8189,14 +8255,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_i_64(self.workers, serializer);
     sse_encode_bool(self.enableRequestId, serializer);
     sse_encode_opt_box_autoadd_i_64(self.maxBodySize, serializer);
-    sse_encode_opt_box_autoadd_i_64(self.requestTimeout, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.requestTimeout, serializer);
     sse_encode_opt_box_autoadd_compression_config(self.compression, serializer);
     sse_encode_opt_box_autoadd_rate_limit_config(self.rateLimit, serializer);
     sse_encode_opt_box_autoadd_jwt_config(self.jwtAuth, serializer);
     sse_encode_opt_box_autoadd_api_key_config(self.apiKeyAuth, serializer);
     sse_encode_list_static_files_config(self.staticFiles, serializer);
     sse_encode_bool(self.gracefulShutdown, serializer);
-    sse_encode_i_64(self.shutdownTimeout, serializer);
+    sse_encode_u_64(self.shutdownTimeout, serializer);
     sse_encode_opt_box_autoadd_async_api_config(self.asyncapi, serializer);
     sse_encode_opt_box_autoadd_open_api_config(self.openapi, serializer);
     sse_encode_opt_box_autoadd_json_rpc_config(self.jsonrpc, serializer);
@@ -8231,7 +8297,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_opt_String(self.eventType, serializer);
     sse_encode_String(self.data, serializer);
     sse_encode_opt_String(self.id, serializer);
-    sse_encode_opt_box_autoadd_i_64(self.retry, serializer);
+    sse_encode_opt_box_autoadd_u_64(self.retry, serializer);
   }
 
   @protected
@@ -8244,6 +8310,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.routePrefix, serializer);
     sse_encode_bool(self.indexFile, serializer);
     sse_encode_opt_String(self.cacheControl, serializer);
+  }
+
+  @protected
+  void sse_encode_u_64(BigInt self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putBigUint64(_alefCheckU64BeforeEncode(self));
   }
 
   @protected
@@ -8270,7 +8342,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_usize(BigInt self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putBigUint64(self);
+    serializer.buffer.putBigUint64(_alefCheckU64BeforeEncode(self));
   }
 
   @protected
@@ -8289,7 +8361,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case WebSocketMessage_Close(code: final code, reason: final reason):
         sse_encode_i_32(2, serializer);
         sse_encode_i_64(code, serializer);
-        sse_encode_String(reason, serializer);
+        sse_encode_opt_String(reason, serializer);
       case WebSocketMessage_Ping(field0: final field0):
         sse_encode_i_32(3, serializer);
         sse_encode_list_prim_u_8_strict(field0, serializer);
@@ -8592,11 +8664,10 @@ class RouteBuilderImpl extends RustOpaque implements RouteBuilder {
       .api
       .crateRouteBuilderRequestSchemaJson(that: this, schema: schema);
 
-  Future<RouteBuilder> requestTimeout({required PlatformInt64 seconds}) =>
-      RustLib.instance.api.crateRouteBuilderRequestTimeout(
-        that: this,
-        seconds: seconds,
-      );
+  Future<RouteBuilder> requestTimeout({required BigInt seconds}) => RustLib
+      .instance
+      .api
+      .crateRouteBuilderRequestTimeout(that: this, seconds: seconds);
 
   Future<RouteBuilder> responseSchemaJson({required String schema}) => RustLib
       .instance
@@ -8673,4 +8744,13 @@ class TestClientImpl extends RustOpaque implements TestClient {
     variables: variables,
     operationName: operationName,
   );
+}
+
+BigInt _alefCheckU64BeforeEncode(BigInt value) {
+  if (value.isNegative || value.bitLength > 64) {
+    throw RangeError(
+      'u64 unsigned value must be between 0 and 18446744073709551615: $value',
+    );
+  }
+  return value;
 }
